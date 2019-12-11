@@ -4986,14 +4986,14 @@ export function botActionsTests(
             });
         });
 
-        describe('mod.import()', () => {
+        describe('getMod()', () => {
             it('should create a diff that applies the given tags from the given bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
+                                'applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
                     otherBot: {
@@ -5038,7 +5038,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.import(getBots("name", "bob").first()))',
+                                'applyMod(this, getMod(getBots("name", "bob").first()))',
                         },
                     },
                     otherBot: {
@@ -5085,7 +5085,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.import({abc: true, val: 123}, "val"))',
+                                'applyMod(this, getMod({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -5115,7 +5115,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `applyMod(this, mod.import('{"abc": true, "val": 123}', "val"))`,
+                            'test()': `applyMod(this, getMod('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };

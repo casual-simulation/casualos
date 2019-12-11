@@ -1646,7 +1646,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
+function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1681,18 +1681,6 @@ function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     }
 
     return diff;
-}
-
-/**
- * Saves the given diff to a string of JSON.
- * @param bot The diff to save.
- */
-function exportMod(bot: any): string {
-    if (isBot(bot)) {
-        return JSON.stringify(bot.tags);
-    } else {
-        return JSON.stringify(bot);
-    }
 }
 
 /**
@@ -2122,18 +2110,9 @@ function __energyCheck() {
 // NOTE: Make sure to add functions that don't
 // match their exported name here so that builtin code editors can figure out what they are.
 export const typeDefinitionMap = new Map([
-    ['mod.import', 'load'],
     ['mod.export', 'save'],
     ['player.getBot', 'getUser'],
 ]);
-
-/**
- * Defines a set of functions that are able to make Bot Diffs.
- */
-const mod = {
-    import: importMod,
-    export: exportMod,
-};
 
 /**
  * Defines a set of functions that relate to common player operations.
@@ -2210,7 +2189,6 @@ const actionNamespace = {
 
 export default {
     // Namespaces
-    mod,
     math,
     player,
     server,
@@ -2231,6 +2209,7 @@ export default {
 
     // Mod functions
     applyMod,
+    getMod,
     addToContextMod,
     removeFromContextMod,
     addToMenuMod,
