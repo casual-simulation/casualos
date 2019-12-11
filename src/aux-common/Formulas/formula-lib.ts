@@ -39,6 +39,7 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
+    hideHtml as hideHtmlMessage,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
@@ -1885,6 +1886,14 @@ function showHtml(html: string) {
 }
 
 /**
+ * Hides the HTML from the user.
+ */
+function hideHtml() {
+    const event = hideHtmlMessage();
+    return addAction(event);
+}
+
+/**
  * Tweens the user's camera to view the given bot.
  * @param bot The bot to view.
  * @param zoomValue The zoom value to use.
@@ -2125,6 +2134,7 @@ const player = {
     playSound,
     toast,
     showHtml,
+    hideHtml,
     tweenTo,
     moveTo,
     openQRCodeScanner,

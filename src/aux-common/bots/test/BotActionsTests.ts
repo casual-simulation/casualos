@@ -32,6 +32,7 @@ import {
     saveFile,
     replaceDragBot,
     setupChannel,
+    hideHtml,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3745,6 +3746,32 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([html('hello, world!')]);
+            });
+        });
+
+        describe('player.hideHtml()', () => {
+            it('should issue a hide_html action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.hideHtml()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([hideHtml()]);
             });
         });
 
