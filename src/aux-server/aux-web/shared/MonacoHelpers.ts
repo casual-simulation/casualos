@@ -393,7 +393,9 @@ function watchModel(
                 if (info.isFormula) {
                     val = '=' + val;
                 } else if (info.isScript) {
-                    val = '@' + val;
+                    if (val.indexOf('@') !== 0) {
+                        val = '@' + val;
+                    }
                 }
                 updateLanguage(model, tag, val);
                 await simulation.editBot(bot, tag, val);
@@ -440,6 +442,23 @@ function updateDecorators(
     value: string
 ) {
     if (isFormula(value)) {
+        const wasFormula = info.isFormula;
+        info.isFormula = true;
+        info.isScript = false;
+        if (!wasFormula) {
+            const text = model.getValue();
+            if (text.indexOf('=') === 0) {
+                // Delete the first character from the model cause
+                // it is a formula marker
+                model.applyEdits([
+                    {
+                        range: new monaco.Range(1, 1, 1, 2),
+                        text: '',
+                    },
+                ]);
+            }
+        }
+
         info.decorators = model.deltaDecorations(info.decorators, [
             {
                 range: new monaco.Range(1, 1, 1, 1),
@@ -449,9 +468,25 @@ function updateDecorators(
                 },
             },
         ]);
-
-        info.isFormula = true;
     } else if (isScript(value)) {
+        const wasScript = info.isScript;
+        info.isScript = true;
+        info.isFormula = false;
+
+        if (!wasScript) {
+            const text = model.getValue();
+            if (text.indexOf('@') === 0) {
+                // Delete the first character from the model cause
+                // it is a script marker
+                model.applyEdits([
+                    {
+                        range: new monaco.Range(1, 1, 1, 2),
+                        text: '',
+                    },
+                ]);
+            }
+        }
+
         info.decorators = model.deltaDecorations(info.decorators, [
             {
                 range: new monaco.Range(1, 1, 1, 1),
@@ -461,10 +496,10 @@ function updateDecorators(
                 },
             },
         ]);
-        info.isScript = true;
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = false;
+        info.isScript = false;
     }
 }
 
