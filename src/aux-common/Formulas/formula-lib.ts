@@ -1777,7 +1777,7 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function subtract(bot: any, ...diffs: Mod[]) {
+function subtractMods(bot: any, ...diffs: Mod[]) {
     let subtractedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
@@ -1809,7 +1809,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
  * @param y The Y position that the bot should be added at.
  * @param index The index that the bot should be added at.
  */
-function addToContext(
+function addToContextMod(
     context: string,
     x: number = 0,
     y: number = 0,
@@ -1823,7 +1823,7 @@ function addToContext(
  * Gets a diff that removes a bot from the given context.
  * @param context The context.
  */
-function removeFromContext(context: string) {
+function removeFromContextMod(context: string) {
     const calc = getCalculationContext();
     return calcRemoveFromContextDiff(calc, context);
 }
@@ -1835,7 +1835,12 @@ function removeFromContext(context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-function setPosition(context: string, x?: number, y?: number, index?: number) {
+function setPositionMod(
+    context: string,
+    x?: number,
+    y?: number,
+    index?: number
+) {
     const calc = getCalculationContext();
     return calcSetPositionDiff(calc, context, x, y, index);
 }
@@ -1843,10 +1848,10 @@ function setPosition(context: string, x?: number, y?: number, index?: number) {
 /**
  * Gets a diff that adds a bot to the current user's menu.
  */
-function addToMenu(): BotTags {
+function addToMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...addToContext(context),
+        ...addToContextMod(context),
         [`${context}Id`]: uuid(),
     };
 }
@@ -1854,10 +1859,10 @@ function addToMenu(): BotTags {
 /**
  * Gets a diff that removes a bot from the current user's menu.
  */
-function removeFromMenu(): BotTags {
+function removeFromMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...removeFromContext(context),
+        ...removeFromContextMod(context),
         [`${context}Id`]: null,
     };
 }
@@ -2126,14 +2131,8 @@ export const typeDefinitionMap = new Map([
  * Defines a set of functions that are able to make Bot Diffs.
  */
 const mod = {
-    addToContext,
-    removeFromContext,
-    addToMenu,
-    removeFromMenu,
-    setPosition,
     import: importMod,
     export: exportMod,
-    subtract,
 };
 
 /**
@@ -2230,7 +2229,16 @@ export default {
     webhook,
     from,
 
+    // Mod functions
     applyMod,
+    addToContextMod,
+    removeFromContextMod,
+    addToMenuMod,
+    removeFromMenuMod,
+    setPositionMod,
+    subtractMods,
+
+    // Get bot functions
     getBot,
     getBots,
     getBotTagValues,
@@ -2242,6 +2250,8 @@ export default {
     neighboring,
     either,
     not,
+
+    // other util functions
     getTag,
     setTag,
     removeTags,

@@ -3134,14 +3134,14 @@ export function botActionsTests(
             });
         });
 
-        describe('addToMenuDiff()', () => {
+        describe('addToMenuMod()', () => {
             it('should add the given bot to the users menu', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'addItem()':
-                                'applyMod(getBot("#name", "bob"), mod.addToMenu())',
+                                'applyMod(getBot("#name", "bob"), addToMenuMod())',
                         },
                     },
                     userBot: {
@@ -3187,14 +3187,14 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromMenuDiff()', () => {
+        describe('removeFromMenuMod()', () => {
             it('should remove the given bot from the users menu', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'addItem()':
-                                'applyMod(getBots("name", "bob").first(), mod.removeFromMenu())',
+                                'applyMod(getBots("name", "bob").first(), removeFromMenuMod())',
                         },
                     },
                     userBot: {
@@ -3444,13 +3444,13 @@ export function botActionsTests(
             });
         });
 
-        describe('addToContextDiff()', () => {
+        describe('addToContextMod()', () => {
             it('should add the bot to the given context', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'applyMod(this, mod.addToContext("abc"))',
+                            'test()': 'applyMod(this, addToContextMod("abc"))',
                         },
                     },
                 };
@@ -3479,7 +3479,7 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromContextDiff()', () => {
+        describe('removeFromContextMod()', () => {
             it('should remove the bot from the given context', () => {
                 const state: BotsState = {
                     thisBot: {
@@ -3487,7 +3487,7 @@ export function botActionsTests(
                         tags: {
                             abc: true,
                             'test()':
-                                'applyMod(this, mod.removeFromContext("abc"))',
+                                'applyMod(this, removeFromContextMod("abc"))',
                         },
                     },
                 };
@@ -3516,14 +3516,14 @@ export function botActionsTests(
             });
         });
 
-        describe('setPositionDiff()', () => {
-            it('should return a diff that sets the bot position in a context when applied', () => {
+        describe('setPositionMod()', () => {
+            it('should return a mod that sets the bot position in a context when applied', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.setPosition("abc", 1, 2))',
+                                'applyMod(this, setPositionMod("abc", 1, 2))',
                         },
                     },
                 };
@@ -3555,7 +3555,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.setPosition("abc", undefined, 2))',
+                                'applyMod(this, setPositionMod("abc", undefined, 2))',
                         },
                     },
                 };
@@ -3586,7 +3586,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'applyMod(this, mod.setPosition("abc", undefined, undefined, 2))',
+                                'applyMod(this, setPositionMod("abc", undefined, undefined, 2))',
                         },
                     },
                 };
@@ -3606,6 +3606,47 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             abcSortOrder: 2,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('subtractMods()', () => {
+            it('should set the tags from the given mod to null', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            value1: 123,
+                            value2: true,
+                            value3: 'abc',
+                            'test()': `subtractMods(this, {
+                                value1: 'anything1',
+                                value2: 'anything2',
+                                value3: 'anything3',
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            value1: null,
+                            value2: null,
+                            value3: null,
                         },
                     }),
                 ]);
