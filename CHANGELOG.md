@@ -12,8 +12,6 @@
         -   `create()` no longer takes a bot/bot ID as the first parameter. Instead, you need to use the `from()` function to set the creator ID.
         -   e.g. `create(from(bot))`.
 
-### Changes:
-
 -   Improvements
     -   Added in inventory tags to limit panning movements on the inventory context: `auxContextInventoryPannableMinX`, `auxContextInventoryPannableMaxX`, `auxContextInventoryPannableMinY`, `auxContextInventoryPannableMaxY`.
     -   Reformatted new selection id logic by removing the `._` character from its return.
