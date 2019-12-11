@@ -663,7 +663,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
             id: idFactory(),
             tags: {},
         };
-        apply(bot.tags, ...v);
+        applyMod(bot.tags, ...v);
         return bot;
     });
 
@@ -1700,7 +1700,7 @@ function exportMod(bot: any): string {
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function apply(bot: any, ...diffs: Mod[]) {
+function applyMod(bot: any, ...diffs: Mod[]) {
     let appliedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
@@ -2125,7 +2125,7 @@ export const typeDefinitionMap = new Map([
 /**
  * Defines a set of functions that are able to make Bot Diffs.
  */
-const modNamespace = {
+const mod = {
     addToContext,
     removeFromContext,
     addToMenu,
@@ -2135,14 +2135,6 @@ const modNamespace = {
     export: exportMod,
     subtract,
 };
-
-type ModNamespace = typeof modNamespace;
-interface ModInterface extends ModNamespace {
-    (bot: Bot, ...mods: Mod[]): void;
-}
-
-const mod: ModInterface = <any>apply;
-Object.assign(mod, modNamespace);
 
 /**
  * Defines a set of functions that relate to common player operations.
@@ -2238,6 +2230,7 @@ export default {
     webhook,
     from,
 
+    applyMod,
     getBot,
     getBots,
     getBotTagValues,
