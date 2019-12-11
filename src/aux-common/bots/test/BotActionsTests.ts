@@ -4953,39 +4953,6 @@ export function botActionsTests(
             });
         });
 
-        describe('mod.export()', () => {
-            it('should serialize the given object to JSON', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'test()':
-                                'setTag(this, "#json", mod.export({ abc: "def" }))',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            json: '{"abc":"def"}',
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('getMod()', () => {
             it('should create a diff that applies the given tags from the given bot', () => {
                 const state: BotsState = {
