@@ -61,6 +61,8 @@ import {
     getUserBotColor,
     cleanBot,
     convertToCopiableValue,
+    isScript,
+    parseScript,
 } from './BotCalculations';
 import {
     Bot,
@@ -93,6 +95,28 @@ describe('BotCalculations', () => {
 
         it('should be false when value does not start with a "=" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
+        });
+    });
+
+    describe('isScript()', () => {
+        it('should be true when value starts with a "@" sign', () => {
+            expect(isScript('@')).toBeTruthy();
+            expect(isScript('a@')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "@" sign', () => {
+            expect(isScript('abc')).toBeFalsy();
+        });
+    });
+
+    describe('parseScript()', () => {
+        it('should return the script when value starts with a "@" sign', () => {
+            expect(parseScript('@')).toBe('');
+            expect(parseScript('@abc')).toBe('abc');
+        });
+
+        it('should return null when the value does not start with an "@" sign', () => {
+            expect(parseScript('abc')).toBe(null);
         });
     });
 

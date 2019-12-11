@@ -84,7 +84,7 @@ describe('NodeAuxChannel', () => {
         const globals = channel.helper.botsState[GLOBALS_BOT_ID];
         await channel.helper.updateBot(globals, {
             tags: {
-                'onChannelAction()': 'action.reject(that.action)',
+                onChannelAction: '@action.reject(that.action)',
             },
         });
 

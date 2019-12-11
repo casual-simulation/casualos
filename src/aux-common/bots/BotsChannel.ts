@@ -16,6 +16,8 @@ import {
     getCreatorVariable,
     getScriptBot,
     isBot,
+    isScript,
+    parseScript,
 } from './BotCalculations';
 import {
     getActions,
@@ -165,41 +167,10 @@ function eventActions(
         return;
     }
 
-    let filters: FilterParseResult[];
-
-    // Workaround for combining bots with custom arguments
-    if (eventName === COMBINE_ACTION_NAME) {
-        const otherObjects = objects.filter(o => o !== bot);
-        filters = filtersMatchingArguments(
-            context,
-            bot,
-            eventName,
-            otherObjects
-        );
-        if (typeof argument === 'object') {
-            argument = {
-                ...argument,
-                bot: otherObjects[0],
-            };
-        } else {
-            argument = {
-                bot: otherObjects[0],
-            };
-        }
-    } else {
-        filters = filtersOnBot(context, bot, eventName);
-    }
-
-    const scripts = filters
-        .map(f => {
-            const result = calculateBotValue(context, bot, f.tag);
-            if (result) {
-                return `(function() { \n${result.toString()}\n }).call(this)`;
-            } else {
-                return result;
-            }
-        })
-        .filter(r => hasValue(r));
+    const scripts = [calculateBotValue(context, bot, eventName)]
+        .map(parseScript)
+        .filter(hasValue)
+        .map(script => `(function() { \n${script.toString()}\n }).call(this)`);
 
     const [events, results] = formulaActions(
         state,

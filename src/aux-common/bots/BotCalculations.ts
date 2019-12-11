@@ -531,6 +531,27 @@ export function isAssignment(object: any): any {
 }
 
 /**
+ * Determines if the given value represents a script.
+ * @param value The value.
+ */
+export function isScript(value: unknown): value is string {
+    return typeof value === 'string' && value.indexOf('@') === 0;
+}
+
+/**
+ * Parses the given value into a script.
+ * Returns the script if the value is a script.
+ * Returns null if the value is not a script.
+ * @param value The value to parse.
+ */
+export function parseScript(value: unknown): string | null {
+    if (isScript(value)) {
+        return value.substring(1);
+    }
+    return null;
+}
+
+/**
  * Determines if the given value contains a formula.
  * This is different from isFormula() because it checks arrays for containing formulas in their elements.
  * @param value The value to check.

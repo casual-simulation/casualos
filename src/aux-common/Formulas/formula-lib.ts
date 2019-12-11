@@ -1101,7 +1101,7 @@ function checkout(options: CheckoutOptions) {
  * @example
  * // Finish the checkout process
  * server.finishCheckout({
- *   token: 'token from onCheckou()',
+ *   token: 'token from onCheckout',
  *
  *   // 1000 cents == $10.00
  *   amount: 1000,
