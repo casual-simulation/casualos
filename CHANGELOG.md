@@ -10,6 +10,11 @@
     -   Changed `create()` and `createTemp()` to automatically set `auxCreator` to the current `this` bot.
         -   `create()` no longer takes a bot/bot ID as the first parameter. Instead, you need to use the `from()` function to set the creator ID.
         -   e.g. `create(from(bot))`.
+    -   Renamed all listen tags to not use the `()` at the end.
+        -   Every tag is now the same. This means that `()` to the end of a tag does nothing special.
+        -   i.e. There is no difference between a "normal" tag and a "listen" tag.
+        -   Instead, tags can listen by prefixing their script with a `@` symbol.
+        -   e.g. `player.toast("Hi!")` becomes `@player.toast("Hi!")`.
     -   Renamed `mod()` to `applyMod()`.
     -   Renamed `mod.addToMenu()` to `addToMenuMod()`.
     -   Renamed `mod.removeFromMenu()` to `removeFromMenuMod()`.
