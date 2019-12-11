@@ -6,6 +6,7 @@ import {
     isFormula,
     Transpiler,
     KNOWN_TAGS,
+    isScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -85,6 +86,7 @@ interface ModelInfo {
     tag: string;
     decorators: string[];
     isFormula: boolean;
+    isScript: boolean;
     model: monaco.editor.ITextModel;
     sub: Subscription;
 }
@@ -301,7 +303,9 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFilterTag(tag) || isFormula(script) ? 'javascript' : 'plaintext';
+    return isFilterTag(tag) || isFormula(script) || isScript(script)
+        ? 'javascript'
+        : 'plaintext';
 }
 
 /**
@@ -338,7 +342,7 @@ export function shouldKeepModelLoaded(
 }
 
 function shouldKeepModelWithTagLoaded(tag: string): boolean {
-    return isFilterTag(tag);
+    return isFilterTag(tag) || isScript(tag);
 }
 
 function watchModel(
@@ -353,6 +357,7 @@ function watchModel(
         tag: tag,
         decorators: [],
         isFormula: false,
+        isScript: false,
         model: model,
         sub: sub,
     };
@@ -387,6 +392,8 @@ function watchModel(
                 let val = model.getValue();
                 if (info.isFormula) {
                     val = '=' + val;
+                } else if (info.isScript) {
+                    val = '@' + val;
                 }
                 updateLanguage(model, tag, val);
                 await simulation.editBot(bot, tag, val);
@@ -444,6 +451,17 @@ function updateDecorators(
         ]);
 
         info.isFormula = true;
+    } else if (isScript(value)) {
+        info.decorators = model.deltaDecorations(info.decorators, [
+            {
+                range: new monaco.Range(1, 1, 1, 1),
+                options: {
+                    isWholeLine: true,
+                    linesDecorationsClassName: 'script-marker',
+                },
+            },
+        ]);
+        info.isScript = true;
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = false;
