@@ -2109,10 +2109,7 @@ function __energyCheck() {
 
 // NOTE: Make sure to add functions that don't
 // match their exported name here so that builtin code editors can figure out what they are.
-export const typeDefinitionMap = new Map([
-    ['mod.export', 'save'],
-    ['player.getBot', 'getUser'],
-]);
+export const typeDefinitionMap = new Map([['player.getBot', 'getUser']]);
 
 /**
  * Defines a set of functions that relate to common player operations.

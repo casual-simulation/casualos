@@ -294,6 +294,10 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         value: () => rawTags,
         writable: false,
         enumerable: false,
+
+        // This is so the function can be wrapped with another proxy
+        // if needed. (Like for VM2Sandbox)
+        configurable: true,
     });
 
     const script: ScriptBot = {

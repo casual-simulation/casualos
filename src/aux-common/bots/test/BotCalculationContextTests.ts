@@ -2179,7 +2179,7 @@ export function botCalculationContextTests(
                 it('should not throw error serializing tags', () => {
                     const bot = createBot('bot', {
                         auxColor: 'red',
-                        formula: '=mod.export(tags)',
+                        formula: '=JSON.stringify(tags)',
                     });
 
                     const context = createCalculationContext([bot]);
@@ -2188,7 +2188,7 @@ export function botCalculationContextTests(
                     expect(value).toEqual(
                         JSON.stringify({
                             auxColor: 'red',
-                            formula: '=mod.export(tags)',
+                            formula: '=JSON.stringify(tags)',
                         })
                     );
                 });
@@ -2223,7 +2223,7 @@ export function botCalculationContextTests(
                 it('should not throw error serializing tags', () => {
                     const bot = createBot('bot', {
                         auxColor: 'red',
-                        formula: '=mod.export(raw)',
+                        formula: '=JSON.stringify(raw)',
                     });
 
                     const context = createCalculationContext([bot]);
@@ -2232,7 +2232,7 @@ export function botCalculationContextTests(
                     expect(value).toEqual(
                         JSON.stringify({
                             auxColor: 'red',
-                            formula: '=mod.export(raw)',
+                            formula: '=JSON.stringify(raw)',
                         })
                     );
                 });
