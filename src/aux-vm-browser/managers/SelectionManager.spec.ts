@@ -94,7 +94,7 @@ describe('SelectionManager', () => {
                         tags: {
                             _auxSelectionMode: 'multi',
                             _auxEditingBot: 'bot2',
-                            _auxSelection: 'aux._selection_abc',
+                            _auxSelection: '_auxSelectionabc',
                         },
                     })
                 );
@@ -102,12 +102,12 @@ describe('SelectionManager', () => {
                 expect(vm.events.slice(1)).toEqual([
                     botUpdated('bot1', {
                         tags: {
-                            ['aux._selection_abc']: true,
+                            ['_auxSelectionabc']: true,
                         },
                     }),
                     botUpdated('bot2', {
                         tags: {
-                            ['aux._selection_abc']: true,
+                            ['_auxSelectionabc']: true,
                         },
                     }),
                 ]);
@@ -135,7 +135,7 @@ describe('SelectionManager', () => {
                     botUpdated('user', {
                         tags: {
                             _auxEditingBot: 'bot1',
-                            _auxSelection: 'aux._selection_abc',
+                            _auxSelection: '_auxSelectionabc',
                         },
                     })
                 );
@@ -143,7 +143,7 @@ describe('SelectionManager', () => {
                 expect(vm.events.slice(1)).toEqual([
                     botUpdated('bot1', {
                         tags: {
-                            ['aux._selection_abc']: true,
+                            ['_auxSelectionabc']: true,
                         },
                     }),
                 ]);
@@ -212,7 +212,7 @@ describe('SelectionManager', () => {
             expect(vm.events[0]).toEqual(
                 botUpdated('user', {
                     tags: {
-                        _auxSelection: 'aux._selection_abc',
+                        _auxSelection: '_auxSelectionabc',
                         _auxSelectionMode: 'multi',
                     },
                 })
@@ -221,17 +221,17 @@ describe('SelectionManager', () => {
             expect(vm.events.slice(1)).toEqual([
                 botUpdated('bot2', {
                     tags: {
-                        ['aux._selection_abc']: true,
+                        ['_auxSelectionabc']: true,
                     },
                 }),
                 botUpdated('bot1', {
                     tags: {
-                        ['aux._selection_abc']: true,
+                        ['_auxSelectionabc']: true,
                     },
                 }),
                 botUpdated('bot3', {
                     tags: {
-                        ['aux._selection_abc']: true,
+                        ['_auxSelectionabc']: true,
                     },
                 }),
             ]);

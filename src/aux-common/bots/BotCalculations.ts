@@ -796,7 +796,7 @@ export function toggleBotSelection(
  * Creates a new selection id.
  */
 export function newSelectionId() {
-    return `aux._selection_${shortUuid()}`;
+    return `_auxSelection${shortUuid()}`;
 }
 
 /**

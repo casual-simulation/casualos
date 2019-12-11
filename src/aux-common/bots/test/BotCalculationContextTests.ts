@@ -2797,7 +2797,7 @@ export function botCalculationContextTests(
             first.tags[`aux._context_1234567X`] = 1;
             first.tags[`aux._context_1234567Y`] = 2;
             first.tags[`aux._context_1234567Z`] = 3;
-            first.tags[`aux._selection_99999`] = true;
+            first.tags[`_auxSelection99999`] = true;
 
             const calc = createCalculationContext([first]);
             const second = duplicateBot(calc, first);
@@ -2815,7 +2815,7 @@ export function botCalculationContextTests(
                 'aux._context_1234567X': 1,
                 'aux._context_1234567Y': 2,
                 'aux._context_1234567Z': 3,
-                'aux._selection_99999': true,
+                _auxSelection99999: true,
             });
         });
 
@@ -2827,7 +2827,7 @@ export function botCalculationContextTests(
             const calc = createCalculationContext([first]);
             const second = duplicateBot(calc, first, {
                 tags: {
-                    [`aux._selection_99999`]: true,
+                    [`_auxSelection99999`]: true,
                     [`aux._context_abcdefg`]: true,
                 },
             });
@@ -2837,7 +2837,7 @@ export function botCalculationContextTests(
                 'aux.other': 100,
                 myTag: 'Hello',
                 'aux._context_abcdefg': true,
-                'aux._selection_99999': true,
+                _auxSelection99999: true,
             });
         });
 

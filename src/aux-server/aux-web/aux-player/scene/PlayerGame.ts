@@ -244,6 +244,54 @@ export class PlayerGame extends Game {
         return null;
     }
 
+    getInventoryPanMinX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMinX != null) {
+                return sim.inventoryPanMinX;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMaxX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMaxX != null) {
+                return sim.inventoryPanMaxX;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMinY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMinY != null) {
+                return sim.inventoryPanMinY;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMaxY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMaxY != null) {
+                return sim.inventoryPanMaxY;
+            }
+        }
+
+        return null;
+    }
+
     getInventoryZoomable(): boolean {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
@@ -1011,6 +1059,25 @@ export class PlayerGame extends Game {
             this.invController.controls.enablePan = this.getInventoryPannable();
             this.invController.controls.enableRotate = this.getInventoryRotatable();
             this.invController.controls.enableZoom = this.getInventoryZoomable();
+
+            this.invController.controls.minPanX = this.getInventoryPanMinX();
+            this.invController.controls.maxPanX = this.getInventoryPanMaxX();
+
+            //this.invController.controls.minPanY = this.getPanMinY();
+
+            if (this.getInventoryPanMinY() != null) {
+                this.invController.controls.minPanY =
+                    this.getInventoryPanMinY() * -1;
+            } else {
+                this.invController.controls.minPanY = null;
+            }
+
+            if (this.getInventoryPanMaxY() != null) {
+                this.invController.controls.maxPanY =
+                    this.getInventoryPanMaxY() * -1;
+            } else {
+                this.invController.controls.maxPanY = null;
+            }
         }
 
         const mainControls = this.interaction.cameraRigControllers.find(
