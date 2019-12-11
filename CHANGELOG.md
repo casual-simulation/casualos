@@ -31,6 +31,7 @@
         -   This lets you write things like `myBot.tags.name = "bob"`.
         -   Should also work with bots in the `that` variable.
     -   Added a `data` variable which equals `that`.
+    -   Added the `player.hideHtml()` function which hides the HTML modal.
 
 ## V0.11.10
 
