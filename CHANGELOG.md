@@ -16,6 +16,7 @@
 
 -   Improvements
     -   Added in inventory tags to limit panning movements on the inventory context: `auxContextInventoryPannableMinX`, `auxContextInventoryPannableMaxX`, `auxContextInventoryPannableMinY`, `auxContextInventoryPannableMaxY`.
+    -   Reformated new selection id logic by removing the `._` character from its return.
 
 ## V0.11.10
 
