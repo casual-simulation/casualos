@@ -17,6 +17,8 @@
     -   Renamed `mod.removeFromContext()` to `removeFromContextMod()`.
     -   Renamed `mod.setPosition()` to `setPositionMod()`.
     -   Renamed `mod.subtract()` to `subtractMods()`.
+    -   Renamed `mod.import()` to `getMod()`.
+    -   Removed `mod.export()`.
 -   Improvements
     -   Added a `creator` variable to scripts and formulas which gets the bot that created the `this` bot.
         -   `creator` is null if the current bot has no creator.
