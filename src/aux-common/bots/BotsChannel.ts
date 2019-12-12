@@ -13,7 +13,11 @@ import {
     ON_SHOUT_ACTION_NAME,
     FilterParseResult,
     filtersOnBot,
-    getBotValues,
+    getCreatorVariable,
+    getScriptBot,
+    isBot,
+    isScript,
+    parseScript,
 } from './BotCalculations';
 import {
     getActions,
@@ -25,8 +29,11 @@ import {
     setCalculationContext,
     getEnergy,
     setEnergy,
+    getCurrentBot,
+    setCurrentBot,
 } from '../Formulas/formula-lib-globals';
 import sortBy from 'lodash/sortBy';
+import transform from 'lodash/transform';
 
 /**
  * Calculates the set of events that should be run as the result of the given action using the given context.
@@ -160,41 +167,10 @@ function eventActions(
         return;
     }
 
-    let filters: FilterParseResult[];
-
-    // Workaround for combining bots with custom arguments
-    if (eventName === COMBINE_ACTION_NAME) {
-        const otherObjects = objects.filter(o => o !== bot);
-        filters = filtersMatchingArguments(
-            context,
-            bot,
-            eventName,
-            otherObjects
-        );
-        if (typeof argument === 'object') {
-            argument = {
-                ...argument,
-                bot: otherObjects[0],
-            };
-        } else {
-            argument = {
-                bot: otherObjects[0],
-            };
-        }
-    } else {
-        filters = filtersOnBot(context, bot, eventName);
-    }
-
-    const scripts = filters
-        .map(f => {
-            const result = calculateBotValue(context, bot, f.tag);
-            if (result) {
-                return `(function() { \n${result.toString()}\n }).call(this)`;
-            } else {
-                return result;
-            }
-        })
-        .filter(r => hasValue(r));
+    const scripts = [calculateBotValue(context, bot, eventName)]
+        .map(parseScript)
+        .filter(hasValue)
+        .map(script => `(function() { \n${script.toString()}\n }).call(this)`);
 
     const [events, results] = formulaActions(
         state,
@@ -219,6 +195,7 @@ export function formulaActions(
     let prevState = getBotState();
     let prevUserId = getUserId();
     let prevEnergy = getEnergy();
+    let prevBot = getCurrentBot();
     let actions: BotAction[] = [];
     let vars: {
         [key: string]: any;
@@ -227,16 +204,26 @@ export function formulaActions(
     setBotState(state);
     setCalculationContext(context);
 
+    const scriptBot = getScriptBot(context, thisObject);
+
     // TODO: Allow configuring energy per action
     setEnergy(DEFAULT_ENERGY);
+    setCurrentBot(scriptBot);
+
+    // BUG: This causes issues with onChannelAction() and action.reject() because the
+    // input action is cloned and it causes resolveRejectedActions() to fail the SameValueZero check in Set.has().
+    // arg = mapBotsToScriptBots(context, arg);
 
     vars['that'] = arg;
-    vars['bot'] = thisObject;
-    vars['tags'] = getBotValues(context, thisObject);
+    vars['data'] = arg;
+    vars['bot'] = scriptBot;
+    vars['tags'] = scriptBot ? scriptBot.tags : null;
+    vars['raw'] = scriptBot ? scriptBot.raw : null;
+    vars['creator'] = getCreatorVariable(context, scriptBot);
 
     let results: any[] = [];
     for (let script of scripts) {
-        const result = context.sandbox.run(script, {}, thisObject, vars);
+        const result = context.sandbox.run(script, {}, scriptBot, vars);
         if (result.error) {
             throw result.error;
         }
@@ -246,5 +233,29 @@ export function formulaActions(
     setBotState(prevState);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
+    setCurrentBot(prevBot);
     return [actions, results];
+}
+
+function mapBotsToScriptBots(context: BotSandboxContext, value: any): any {
+    if (isBot(value)) {
+        return getScriptBot(context, value);
+    } else if (Array.isArray(value) && value.some(isBot)) {
+        return value.map(b => (isBot(b) ? getScriptBot(context, b) : b));
+    } else if (!Array.isArray(value) && typeof value === 'object') {
+        return transform(value, (result, value, key) =>
+            transformBotsToScriptBots(context, result, value, key)
+        );
+    }
+
+    return value;
+}
+
+function transformBotsToScriptBots(
+    context: BotSandboxContext,
+    result: any,
+    value: any,
+    key: any
+) {
+    result[key] = mapBotsToScriptBots(context, value);
 }

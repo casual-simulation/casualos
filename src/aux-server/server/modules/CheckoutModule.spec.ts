@@ -167,8 +167,8 @@ describe('CheckoutModule', () => {
                 await processingChannel.simulation.helper.createBot(
                     'checkoutBot',
                     {
-                        'onCheckout()':
-                            'player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session)',
+                        onCheckout:
+                            '@player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session)',
                     }
                 );
 
@@ -307,7 +307,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         stripeSecretKey: 'secret_key',
-                        'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
+                        onPaymentFailed: `@setTag(this, 'failedMessage', that.error.message)`,
                     },
                 });
 
@@ -352,7 +352,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         stripeSecretKey: 'secret_key',
-                        'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
+                        onPaymentFailed: `@setTag(this, 'failed', that.extra)`,
                     },
                 });
 
@@ -384,7 +384,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         stripeSecretKey: 'secret_key',
-                        'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
+                        onPaymentSuccessful: `@setTag(this, 'successId', that.bot.id)`,
                     },
                 });
 
@@ -415,7 +415,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         stripeSecretKey: 'secret_key',
-                        'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
+                        onPaymentSuccessful: `@setTag(this, 'success', that.extra)`,
                     },
                 });
 

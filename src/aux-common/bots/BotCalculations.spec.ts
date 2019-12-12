@@ -61,6 +61,8 @@ import {
     getUserBotColor,
     cleanBot,
     convertToCopiableValue,
+    isScript,
+    parseScript,
 } from './BotCalculations';
 import {
     Bot,
@@ -93,6 +95,28 @@ describe('BotCalculations', () => {
 
         it('should be false when value does not start with a "=" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
+        });
+    });
+
+    describe('isScript()', () => {
+        it('should be true when value starts with a "@" sign', () => {
+            expect(isScript('@')).toBeTruthy();
+            expect(isScript('a@')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "@" sign', () => {
+            expect(isScript('abc')).toBeFalsy();
+        });
+    });
+
+    describe('parseScript()', () => {
+        it('should return the script when value starts with a "@" sign', () => {
+            expect(parseScript('@')).toBe('');
+            expect(parseScript('@abc')).toBe('abc');
+        });
+
+        it('should return null when the value does not start with an "@" sign', () => {
+            expect(parseScript('abc')).toBe(null);
         });
     });
 
@@ -899,9 +923,9 @@ describe('BotCalculations', () => {
         );
 
         const selectionCases = [
-            ['aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
-            ['aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
-            ['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'],
+            ['_auxSelection09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
+            ['_auxSelection6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
+            ['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'],
         ];
         it.each(selectionCases)(
             'should return true for selection tag %s',
@@ -962,9 +986,9 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            first.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            second.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
             const result = doBotsAppearEqual(first, second);
@@ -990,9 +1014,9 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            first.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            second.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
             const result = doBotsAppearEqual(first, second);

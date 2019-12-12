@@ -53,8 +53,10 @@ export default class HtmlModal extends Vue {
         sub.add(
             sim.localEvents.subscribe(e => {
                 if (e.type === 'show_html') {
-                    this.innerHtml = e.html;
-                    this.open = true;
+                    if (e.visible) {
+                        this.innerHtml = e.html;
+                    }
+                    this.open = e.visible;
                 }
             })
         );

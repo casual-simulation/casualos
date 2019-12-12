@@ -278,7 +278,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onChannelAction()': `
+                    onChannelAction: `@
                         if (that.action.type === 'add_bot') {
                             action.reject(that.action);
                         }
@@ -299,7 +299,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onChannelAction()': `
+                    onChannelAction: `@
                         if (that.action.type === 'remove_bot') {
                             action.reject(that.action);
                         }
@@ -322,7 +322,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onChannelAction()': `
+                    onChannelAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -349,7 +349,7 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onChannelAction()': `
+                    onChannelAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }

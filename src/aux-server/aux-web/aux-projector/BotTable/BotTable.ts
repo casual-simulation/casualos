@@ -792,16 +792,12 @@ export default class BotTable extends Vue {
 
         let blacklist: (string | boolean)[][] = [];
 
-        let actionList: (string | boolean)[] = [];
         let hiddenList: (string | boolean)[] = [];
         let generalList: (string | boolean)[] = [];
 
         for (let i = sortedArray.length - 1; i >= 0; i--) {
             if (isHiddenTag(sortedArray[i])) {
                 hiddenList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
-            } else if (sortedArray[i].includes('()')) {
-                actionList.push(sortedArray[i]);
                 sortedArray.splice(i, 1);
             }
         }
@@ -862,26 +858,6 @@ export default class BotTable extends Vue {
             } else {
                 blacklist.push(tempArray);
             }
-        }
-
-        if (actionList.length > 0) {
-            let activeCheck = false;
-
-            if (this.tagBlacklist.length > 0) {
-                this.tagBlacklist.forEach(element => {
-                    if (element[0] === 'actions()') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            actionList.unshift(activeCheck);
-            actionList.unshift('actions()');
-            blacklist.unshift(actionList);
-        } else {
-            actionList.forEach(actionTags => {
-                sortedArray.push(<string>actionTags);
-            });
         }
 
         if (hiddenList.length > 0) {

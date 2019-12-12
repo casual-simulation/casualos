@@ -212,7 +212,7 @@ describe('SetupChannelModule2', () => {
 
                 await simulation.helper.transaction(
                     setupChannel('newChannel', {
-                        'onCreate()': 'setTag(this, "created", true)',
+                        onCreate: '@setTag(this, "created", true)',
                     })
                 );
 
@@ -235,7 +235,7 @@ describe('SetupChannelModule2', () => {
                 );
                 expect(result).toEqual(
                     createBot(result.id, {
-                        'onCreate()': 'setTag(this, "created", true)',
+                        onCreate: '@setTag(this, "created", true)',
                         created: true,
                     })
                 );

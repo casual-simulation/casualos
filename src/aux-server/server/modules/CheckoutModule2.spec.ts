@@ -188,7 +188,7 @@ describe('CheckoutModule2', () => {
                 );
 
                 await processingSimulation.helper.createBot('checkoutBot', {
-                    'onCheckout()': `remote(
+                    onCheckout: `@remote(
                                 player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session),
                                 {
                                     session: 'processing'
@@ -336,7 +336,7 @@ describe('CheckoutModule2', () => {
                     {
                         tags: {
                             stripeSecretKey: 'secret_key',
-                            'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
+                            onPaymentFailed: `@setTag(this, 'failedMessage', that.error.message)`,
                         },
                     }
                 );
@@ -384,7 +384,7 @@ describe('CheckoutModule2', () => {
                     {
                         tags: {
                             stripeSecretKey: 'secret_key',
-                            'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
+                            onPaymentFailed: `@setTag(this, 'failed', that.extra)`,
                         },
                     }
                 );
@@ -419,7 +419,7 @@ describe('CheckoutModule2', () => {
                     {
                         tags: {
                             stripeSecretKey: 'secret_key',
-                            'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
+                            onPaymentSuccessful: `@setTag(this, 'successId', that.bot.id)`,
                         },
                     }
                 );
@@ -453,7 +453,7 @@ describe('CheckoutModule2', () => {
                     {
                         tags: {
                             stripeSecretKey: 'secret_key',
-                            'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
+                            onPaymentSuccessful: `@setTag(this, 'success', that.extra)`,
                         },
                     }
                 );
@@ -494,7 +494,7 @@ describe('CheckoutModule2', () => {
                 await processingSimulation.init();
 
                 await processingSimulation.helper.createBot('checkoutBot', {
-                    'onCheckout()': `server.finishCheckout({
+                    onCheckout: `@server.finishCheckout({
                         token: that.token,
                         currency: 'usd',
                         amount: 123,
@@ -510,7 +510,7 @@ describe('CheckoutModule2', () => {
                     {
                         tags: {
                             stripeSecretKey: 'secret_key',
-                            'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
+                            onPaymentSuccessful: `@setTag(this, 'success', that.extra)`,
                         },
                     }
                 );

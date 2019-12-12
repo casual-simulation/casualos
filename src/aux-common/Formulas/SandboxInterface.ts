@@ -1,4 +1,4 @@
-import { Bot } from '../bots/Bot';
+import { Bot, ScriptBot } from '../bots/Bot';
 import { UpdateBotAction } from '../bots/BotEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
@@ -15,7 +15,7 @@ export interface SandboxInterface {
     /**
      * The list of objects contained by the interface.
      */
-    objects: Bot[];
+    objects: ScriptBot[];
 
     /**
      * Calculates the list of tag values for the given tag.
@@ -37,24 +37,13 @@ export interface SandboxInterface {
      * Calculates the list of objects that match the given filters.
      * @param filters The filters.
      */
-    listObjects(...filters: BotFilterFunction[]): Bot[];
-
-    /**
-     * Lists the objects on the same grid space as the given object.
-     * @param obj The object.
-     */
-    list(obj: any, context: string): any;
-
-    /**
-     * Calculates a new UUID.
-     */
-    uuid(): string;
+    listObjects(...filters: BotFilterFunction[]): ScriptBot[];
 
     /**
      * Adds the given bot to the interface.
      * @param bot
      */
-    addBot(bot: Bot): Bot;
+    addBot(bot: Bot): ScriptBot;
 
     /**
      * Removes the given bot ID from the interface.
@@ -68,11 +57,23 @@ export interface SandboxInterface {
     userId(): string;
 
     /**
+     * Gets the bot with the given ID.
+     * @param id The ID of the bot to get.
+     */
+    getBot(id: string): ScriptBot;
+
+    /**
+     * Returns a normal bot for the given script bot.
+     * @param bot The bot to unwrap.
+     */
+    unwrapBot(bot: ScriptBot): Bot;
+
+    /**
      * Gets the given tag for the given bot.
      * @param bot
      * @param tag
      */
-    getTag(bot: Bot, tag: string): any;
+    getTag(bot: ScriptBot, tag: string): any;
 
     /**
      * Sets the given tag on the given bot.
@@ -80,7 +81,7 @@ export interface SandboxInterface {
      * @param tag
      * @param value
      */
-    setTag(bot: Bot, tag: string, value: any): any;
+    setTag(bot: ScriptBot, tag: string, value: any): any;
 
     /**
      * Gets the list of bot updates that happened.

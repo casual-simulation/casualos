@@ -23,6 +23,7 @@ import {
     BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
+    ScriptBot,
 } from './Bot';
 
 import {
@@ -53,6 +54,8 @@ import {
     getActions,
     getEnergy,
     setEnergy,
+    getCurrentBot,
+    setCurrentBot,
 } from '../Formulas/formula-lib-globals';
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
@@ -528,6 +531,27 @@ export function isAssignment(object: any): any {
 }
 
 /**
+ * Determines if the given value represents a script.
+ * @param value The value.
+ */
+export function isScript(value: unknown): value is string {
+    return typeof value === 'string' && value.indexOf('@') === 0;
+}
+
+/**
+ * Parses the given value into a script.
+ * Returns the script if the value is a script.
+ * Returns null if the value is not a script.
+ * @param value The value to parse.
+ */
+export function parseScript(value: unknown): string | null {
+    if (isScript(value)) {
+        return value.substring(1);
+    }
+    return null;
+}
+
+/**
  * Determines if the given value contains a formula.
  * This is different from isFormula() because it checks arrays for containing formulas in their elements.
  * @param value The value to check.
@@ -585,6 +609,17 @@ export function isNumber(value: string): boolean {
 export function isBot(object: any): object is AuxObject {
     if (object) {
         return !!object.id && !!object.tags;
+    }
+    return false;
+}
+
+/**
+ * Determines if the given object is a script bot.
+ * @param object The object.
+ */
+export function isScriptBot(object: any): object is ScriptBot {
+    if (object) {
+        return !!object.id && !!object.tags && !!object.raw;
     }
     return false;
 }
@@ -761,7 +796,7 @@ export function toggleBotSelection(
  * Creates a new selection id.
  */
 export function newSelectionId() {
-    return `aux._selection_${shortUuid()}`;
+    return `_auxSelection${shortUuid()}`;
 }
 
 /**
@@ -1445,49 +1480,6 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
-}
-
-/**
- * Gets a mod for the bot.
- * @param calc The sandbox calculation context.
- * @param bot The bot to get the values of.
- */
-export function getBotValues(
-    calc: BotSandboxContext,
-    bot: Bot
-): PrecalculatedTags {
-    if (!bot) {
-        return null;
-    }
-    if (isPrecalculated(bot)) {
-        return bot.values;
-    }
-
-    const o = {
-        ...bot.tags,
-    };
-    const p = new Proxy(o, {
-        get(target, key, proxy) {
-            if (key === 'toJSON') {
-                return Reflect.get(target, key, proxy);
-            }
-            return calc.sandbox.interface.getTag(bot, key as string);
-        },
-        set(target, key, proxy) {
-            return false;
-        },
-    });
-
-    // Define a toJSON() function but
-    // make it not enumerable so it is not included
-    // in Object.keys() and for..in expressions.
-    Object.defineProperty(p, 'toJSON', {
-        value: () => bot.tags,
-        writable: false,
-        enumerable: false,
-    });
-
-    return p;
 }
 
 /**
@@ -2585,15 +2577,18 @@ export function calculateFormulaValue(
 ) {
     const prevCalc = getCalculationContext();
     const prevEnergy = getEnergy();
+    const prevBot = getCurrentBot();
     setCalculationContext(context);
 
     // TODO: Allow configuring energy per formula
     setEnergy(DEFAULT_ENERGY);
+    setCurrentBot(null);
 
     const result = context.sandbox.run(formula, extras, context);
 
     setCalculationContext(prevCalc);
     setEnergy(prevEnergy);
+    setCurrentBot(prevBot);
     return result;
 }
 
@@ -2773,7 +2768,12 @@ export function convertToCopiableValue(value: any): any {
     } else if (value instanceof Error) {
         return `${value.name}: ${value.message}`;
     } else if (typeof value === 'object') {
-        if (isBot(value)) {
+        if (isScriptBot(value)) {
+            return {
+                id: value.id,
+                tags: value.raw,
+            };
+        } else if (isBot(value)) {
             return {
                 id: value.id,
                 tags: value.tags,
@@ -2787,6 +2787,27 @@ export function convertToCopiableValue(value: any): any {
     return value;
 }
 
+export function getCreatorVariable(context: BotSandboxContext, bot: ScriptBot) {
+    if (!bot) {
+        return null;
+    }
+    let creatorId = context.sandbox.interface.getTag(bot, 'auxCreator');
+    if (creatorId) {
+        let obj = context.sandbox.interface.getBot(creatorId);
+        if (obj) {
+            return obj;
+        }
+    }
+    return null;
+}
+
+export function getScriptBot(context: BotSandboxContext, bot: Bot) {
+    if (!bot) {
+        return null;
+    }
+    return context.sandbox.interface.getBot(bot.id);
+}
+
 function _calculateFormulaValue(
     context: BotSandboxContext,
     object: Bot,
@@ -2795,11 +2816,17 @@ function _calculateFormulaValue(
     energy?: number
 ) {
     const prevCalc = getCalculationContext();
+    const prevBot = getCurrentBot();
     setCalculationContext(context);
 
+    const scriptBot = getScriptBot(context, object);
+    setCurrentBot(scriptBot);
+
     let vars = {
-        bot: object,
-        tags: getBotValues(context, object),
+        bot: scriptBot,
+        tags: scriptBot ? scriptBot.tags : null,
+        raw: scriptBot ? scriptBot.raw : null,
+        creator: getCreatorVariable(context, scriptBot),
     };
 
     // NOTE: The energy should not get reset
@@ -2811,10 +2838,11 @@ function _calculateFormulaValue(
             tag,
             context,
         },
-        object,
+        scriptBot,
         vars
     );
 
     setCalculationContext(prevCalc);
+    setCurrentBot(prevBot);
     return result;
 }

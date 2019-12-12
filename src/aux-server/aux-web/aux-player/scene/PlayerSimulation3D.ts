@@ -51,6 +51,11 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryVisible: boolean = true;
 
     private _inventoryPannable: boolean = false;
+    private _inventoryPanMinX: number = null;
+    private _inventoryPanMaxX: number = null;
+    private _inventoryPanMinY: number = null;
+    private _inventoryPanMaxY: number = null;
+
     private _inventoryResizable: boolean = true;
     private _inventoryRotatable: boolean = true;
     private _inventoryZoomable: boolean = true;
@@ -206,6 +211,50 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._inventoryPannable;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Gets the minimum value the inventory's pan can be set to on the x axis
+     */
+    get inventoryPanMinX() {
+        if (this._inventoryPanMinX != null) {
+            return this._inventoryPanMinX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the inventory's pan can be set to on the x axis
+     */
+    get inventoryPanMaxX() {
+        if (this._inventoryPanMaxX != null) {
+            return this._inventoryPanMaxX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the minimum value the inventory's pan can be set to on the y axis
+     */
+    get inventoryPanMinY() {
+        if (this._inventoryPanMinY != null) {
+            return this._inventoryPanMinY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the inventory's pan can be set to on the y axis
+     */
+    get inventoryPanMaxY() {
+        if (this._inventoryPanMaxY != null) {
+            return this._inventoryPanMaxY;
+        } else {
+            return null;
         }
     }
 
@@ -471,6 +520,34 @@ export class PlayerSimulation3D extends Simulation3D {
                                 bot,
                                 `auxContextInventoryPannable`,
                                 false
+                            );
+
+                            this._inventoryPanMinX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMinX`,
+                                null
+                            );
+
+                            this._inventoryPanMaxX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMaxX`,
+                                null
+                            );
+
+                            this._inventoryPanMinY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMinY`,
+                                null
+                            );
+
+                            this._inventoryPanMaxY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMaxY`,
+                                null
                             );
 
                             this._inventoryResizable = calculateBooleanTagValue(

@@ -4,6 +4,7 @@ import {
     getActiveObjects,
     calculateFormulaValue,
     isDestroyable,
+    convertToCopiableValue,
 } from './BotCalculations';
 import {
     BotCalculationContext,
@@ -54,7 +55,7 @@ export function searchBotState(
         createSandbox
     );
     const result = calculateFormulaValue(context, formula);
-    return result;
+    return convertToCopiableValue(result);
 }
 
 export function calculateActionResults(

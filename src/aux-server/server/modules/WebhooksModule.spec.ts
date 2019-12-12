@@ -121,7 +121,7 @@ describe('WebhooksModule', () => {
                 });
 
                 await channel.helper.createBot('test', {
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
                 await channel.sendEvents([
@@ -135,7 +135,7 @@ describe('WebhooksModule', () => {
                 await waitAsync();
 
                 expect(channel.helper.botsState['test'].tags).toEqual({
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                     data: {
                         test: true,
                     },
@@ -152,12 +152,12 @@ describe('WebhooksModule', () => {
                 });
 
                 await channel.helper.createBot('test', {
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'onChannelAction()': `
+                        onChannelAction: `@
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }
@@ -180,7 +180,7 @@ describe('WebhooksModule', () => {
                 await waitAsync();
 
                 expect(channel.helper.botsState['test'].tags).toEqual({
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                     data: {
                         test: true,
                     },

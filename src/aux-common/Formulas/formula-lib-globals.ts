@@ -1,10 +1,11 @@
-import { BotsState } from '../bots/Bot';
+import { BotsState, ScriptBot } from '../bots/Bot';
 import { BotAction } from '../bots/BotEvents';
 import { BotSandboxContext } from '../bots/BotCalculationContext';
 
 let actions: BotAction[] = [];
 let state: BotsState = null;
 let calc: BotSandboxContext = null;
+let currentBot: ScriptBot = null;
 let currentEnergy: number = 0;
 
 export function setActions(value: BotAction[]) {
@@ -51,4 +52,12 @@ export function getEnergy(): number {
 
 export function setEnergy(energy: number) {
     currentEnergy = energy;
+}
+
+export function getCurrentBot() {
+    return currentBot;
+}
+
+export function setCurrentBot(bot: ScriptBot) {
+    currentBot = bot;
 }
