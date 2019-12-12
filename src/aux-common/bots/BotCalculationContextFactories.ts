@@ -248,6 +248,7 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
 
     const constantTags = {
         id: bot.id,
+        type: bot.type,
     };
     let changedRawTags: BotTags = {};
     let rawTags: ScriptTags = <ScriptTags>{
@@ -300,12 +301,16 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         configurable: true,
     });
 
-    const script: ScriptBot = {
+    let script: ScriptBot = {
         id: bot.id,
         tags: tagsProxy,
         raw: rawProxy,
         changes: changedRawTags,
     };
+
+    if ('type' in bot) {
+        script.type = bot.type;
+    }
 
     return script;
 }

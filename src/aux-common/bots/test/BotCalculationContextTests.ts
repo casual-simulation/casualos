@@ -262,18 +262,33 @@ export function botCalculationContextTests(
             expect(value).toEqual(['test(a', 'b', 'c)', 1.23, true]);
         });
 
-        it('should unwrap proxies in arrays', () => {
-            const bot = createBot('test', {
-                formula: '=[getTag(this, "#num._1"),getTag(this, "#num._2")]',
-                'num._1': '1',
-                'num._2': '2',
-            });
+        it('should return the bot ID for the id tag', () => {
+            const bot = createBot('test', {});
 
             const context = createCalculationContext([bot]);
-            const value = calculateBotValue(context, bot, 'formula');
+            const value = calculateBotValue(context, bot, 'id');
 
-            expect(Array.isArray(value)).toBe(true);
-            expect(value).toEqual([1, 2]);
+            expect(value).toEqual('test');
+        });
+
+        describe('type', () => {
+            it('should return null if the type is not defined', () => {
+                const bot = createBot('test', {});
+
+                const context = createCalculationContext([bot]);
+                const value = calculateBotValue(context, bot, 'type');
+
+                expect(value).toEqual(null);
+            });
+
+            it('should return the type if it is defined', () => {
+                const bot = createBot('test', {}, 'channel');
+
+                const context = createCalculationContext([bot]);
+                const value = calculateBotValue(context, bot, 'type');
+
+                expect(value).toEqual('channel');
+            });
         });
 
         describe('filterBotsBySelection()', () => {
@@ -317,6 +332,21 @@ export function botCalculationContextTests(
         });
 
         describe('formulas', () => {
+            it('should unwrap proxies in arrays', () => {
+                const bot = createBot('test', {
+                    formula:
+                        '=[getTag(this, "#num._1"),getTag(this, "#num._2")]',
+                    'num._1': '1',
+                    'num._2': '2',
+                });
+
+                const context = createCalculationContext([bot]);
+                const value = calculateBotValue(context, bot, 'formula');
+
+                expect(Array.isArray(value)).toBe(true);
+                expect(value).toEqual([1, 2]);
+            });
+
             const quoteCases = [['‘', '’'], ['“', '”']];
 
             it.each(quoteCases)(

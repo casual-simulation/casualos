@@ -25,6 +25,7 @@ import {
     DEFAULT_USER_DELETION_TIME,
     ScriptBot,
     BotPositioningMode,
+    BotType,
 } from './Bot';
 
 import {
@@ -487,6 +488,14 @@ export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
+export function getBotType(bot: Bot) {
+    const type = bot.type;
+    if (!hasValue(type)) {
+        return null;
+    }
+    return type;
+}
+
 export function calculateBotValue(
     context: BotCalculationContext,
     object: Object | PrecalculatedBot,
@@ -495,6 +504,8 @@ export function calculateBotValue(
 ) {
     if (tag === 'id') {
         return object.id;
+    } else if (tag === 'type') {
+        return getBotType(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
@@ -1019,13 +1030,23 @@ export function createContextId() {
 
 /**
  * Creates a bot with a new ID and the given tags.
- * @param id
- * @param tags
+ * @param id The ID of the bot.
+ * @param tags The tags to use in the bot.
+ * @param type The type of the bot.
  */
-export function createBot(id = uuid(), tags: Object['tags'] = {}) {
-    const bot: Bot = { id: id, tags: tags };
-
-    return bot;
+export function createBot(
+    id = uuid(),
+    tags: Object['tags'] = {},
+    type?: BotType
+): Bot {
+    if (hasValue(type)) {
+        return {
+            id,
+            tags,
+            type,
+        };
+    }
+    return { id, tags };
 }
 
 export function createPrecalculatedBot(

@@ -174,6 +174,38 @@ export function botActionsTests(
             ]);
         });
 
+        it('should be able to get the type from the bot variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    type: 'temp',
+                    tags: {
+                        num: '=123',
+                        test: '@setTag(this, "val", bot.type)',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        val: 'temp',
+                    },
+                }),
+            ]);
+        });
+
         it('should be able to set tag values in the bot variable', () => {
             const state: BotsState = {
                 thisBot: {
@@ -531,6 +563,39 @@ export function botActionsTests(
                             tags.id = 'wrong';
                             raw.id = 'wrong';
                             setTag(this, 'id', 'wrong');
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(false);
+            expect(result.events).toEqual([]);
+        });
+
+        it('should not allow changing the type', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@
+                            tags.type = 'wrong';
+                            raw.type = 'wrong';
+                            setTag(this, 'type', 'wrong');
                         `,
                     },
                 },
@@ -1028,6 +1093,8 @@ export function botActionsTests(
 
             expect(events.events).toEqual([toast('test')]);
         });
+
+        // describe('')
 
         describe('onAnyListen()', () => {
             it('should send a onAnyListen() for actions', () => {
@@ -5290,6 +5357,118 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it('should not allow setting the ID', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@setTag(this, "id", "wrong")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+            });
+
+            it('should not allow setting the type', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@setTag(this, "type", "wrong")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+            });
+
+            it('should not allow setting the type on another mod', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@
+                                let mod = {};
+                                setTag(mod, "type", "wrong");
+                                tags.equal = mod.type === "wrong";
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            equal: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not allow setting the id on another mod', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@
+                                let mod = {};
+                                setTag(mod, "id", "wrong");
+                                tags.equal = mod.id === "wrong";
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            equal: false,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('server.echo()', () => {
@@ -6580,7 +6759,168 @@ export function botActionsTests(
                     }),
                 ]);
             });
+            it('should copy the type of another bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@${name}(getBots("test", true))`,
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        type: 'temp',
+                        tags: {
+                            test: true,
+                            hello: true,
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        type: 'temp',
+                        tags: {
+                            auxCreator: 'thisBot',
+                            test: true,
+                            hello: true,
+                        },
+                    }),
+                ]);
+            });
+            describe('asType()', () => {
+                it('should set the type of the bot', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}(from(null), asType("cookie"))`,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            type: 'cookie',
+                            tags: {
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
 
+                it('should use the last asType()', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}(from(null), asType("cookie"), asType("temp"))`,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            type: 'temp',
+                            tags: {
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should use the last asType() even if it is null', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}(from(null), asType("cookie"), asType(null))`,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            tags: {
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                const normalCases = [
+                    ['null', null],
+                    ['undefined', undefined],
+                    ['(empty string)', ''],
+                ];
+
+                it.each(normalCases)(
+                    'should treat %s as the default type',
+                    (desc, value) => {
+                        const state: BotsState = {
+                            thisBot: {
+                                id: 'thisBot',
+                                tags: {
+                                    test: `@${name}(from(null), asType(${value}))`,
+                                },
+                            },
+                        };
+                        // specify the UUID to use next
+                        uuidMock.mockReturnValue(id);
+                        const botAction = action('test', ['thisBot']);
+                        const result = calculateActionEvents(
+                            state,
+                            botAction,
+                            createSandbox
+                        );
+                        expect(result.hasUserDefinedEvents).toBe(true);
+                        expect(result.events).toEqual([
+                            botAdded({
+                                id: expectedId,
+                                tags: {
+                                    auxCreator: null,
+                                },
+                            }),
+                        ]);
+                    }
+                );
+            });
             describe('from()', () => {
                 it('should set the auxCreator to the given bot', () => {
                     const state: BotsState = {

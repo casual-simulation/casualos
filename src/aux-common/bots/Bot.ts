@@ -37,10 +37,25 @@ export interface Bot {
     id: string;
 
     /**
+     * The type of the bot.
+     */
+    type?: BotType;
+
+    /**
      * The set of tags that the bot contains.
      */
     tags: BotTags;
 }
+
+/**
+ * The possible bot types.
+ *
+ * - null means that the bot is a normal bot.
+ * - "channel" means that the bot is a special bot which contains configuration for the channel.
+ * - "cookie" means that the bot is stored in the cookie partition.
+ * - "temp" means that the bot is stored in the temporary partition.
+ */
+export type BotType = null | 'channel' | 'cookie' | 'temp';
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -52,6 +67,7 @@ export interface Bot {
  */
 export interface ScriptBot {
     id: string;
+    type?: BotType;
 
     tags: ScriptTags;
     raw: BotTags;

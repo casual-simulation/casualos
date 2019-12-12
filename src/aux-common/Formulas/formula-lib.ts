@@ -325,6 +325,11 @@ interface Bot {
     id: string;
 
     /**
+     * The type of the bot.
+     */
+    type?: BotType;
+
+    /**
      * The calculated tag values that the bot contains.
      */
     tags: BotTags;
@@ -341,6 +346,11 @@ interface Bot {
      */
     changes: BotTags;
 }
+
+/**
+ * The possible bot types.
+ */
+type BotType = null | 'channel' | 'cookie' | 'temp';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -660,10 +670,20 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     }
 
     let bots: NormalBot[] = variants.map(v => {
-        let bot = {
+        let bot: NormalBot = {
             id: idFactory(),
             tags: {},
         };
+        for (let i = v.length - 1; i >= 0; i--) {
+            const mod = v[i];
+            if (mod && 'type' in mod) {
+                const type = mod['type'];
+                if (hasValue(type)) {
+                    bot.type = type;
+                }
+                break;
+            }
+        }
         applyMod(bot.tags, ...v);
         return bot;
     });
@@ -757,6 +777,17 @@ function create(...mods: Mod[]) {
  */
 function createTemp(...mods: Mod[]) {
     return createBase(() => `T-${uuid()}`, ...mods);
+}
+
+/**
+ * Creates a mod that sets the type of a new bot.
+ * Using applyMod() with asType() does nothing.
+ * @param type The type.
+ */
+function asType(type: BotType): Mod {
+    return {
+        type: type,
+    };
 }
 
 /**
@@ -1636,7 +1667,9 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
-        (<BotTags>bot)[tag] = value;
+        if (tag !== 'id' && tag !== 'type') {
+            (<BotTags>bot)[tag] = value;
+        }
         return value;
     }
 }
@@ -2213,6 +2246,7 @@ export default {
     remote,
     webhook,
     from,
+    asType,
 
     // Mod functions
     applyMod,
