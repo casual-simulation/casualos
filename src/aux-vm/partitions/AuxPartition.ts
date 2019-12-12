@@ -32,7 +32,8 @@ export type AuxPartition =
     | MemoryPartition
     | RemoteCausalTreePartition
     | CausalRepoPartition
-    | RemoteCausalRepoPartition;
+    | RemoteCausalRepoPartition
+    | LocalStoragePartition;
 
 /**
  * Base interface for partitions.
@@ -180,6 +181,19 @@ export interface MemoryPartition extends AuxPartitionBase {
      * The current state for the partition.
      */
     state: BotsState;
+}
+
+/**
+ * Defines a local storage partition.
+ * Needs to run on the main thread.
+ */
+export interface LocalStoragePartition extends AuxPartitionBase {
+    type: 'local_storage';
+
+    /**
+     * The namespace that bots should be stored under.
+     */
+    namespace: string;
 }
 
 /**

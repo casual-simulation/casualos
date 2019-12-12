@@ -116,7 +116,7 @@ export class AuxVMImpl implements AuxVM {
         this._proxy = await new wrapper(
             location.origin,
             this._initialUser,
-            this._config
+            processPartitions(this._config)
         );
 
         let statusMapper = remapProgressPercent(0.2, 1);
@@ -210,4 +210,14 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
+}
+
+function processPartitions(config: AuxConfig): AuxConfig {
+    for (let key in config.partitions) {
+        const partition = config.partitions[key];
+        if (partition.type === 'proxy') {
+            partition.partition = proxy(partition.partition);
+        }
+    }
+    return config;
 }
