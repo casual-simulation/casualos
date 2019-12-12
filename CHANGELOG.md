@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.11.12
+
+### Date: TBD
+
+### Changes:
+
+-   **Breaking Changes**
+
+    -   Removed `auxStackable` and replaced it with `auxPositioningMode`.
+        -   `auxPositioningMode` has two possible values:
+            -   `stack` - Indicates that the bot will stack on top of other bots (default)
+            -   `absolute` - Indicates that the bot will ignore other bots when positioning.
+
 ## V0.11.11
 
 ### Date: 12/12/2019
