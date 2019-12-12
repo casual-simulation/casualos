@@ -74,7 +74,7 @@ export interface BotTags {
     ['auxColor']?: unknown;
     ['auxDraggable']?: unknown;
     ['auxDraggableMode']?: BotDragMode;
-    ['auxStackable']?: unknown;
+    ['auxPositioningMode']?: unknown;
     ['auxDestroyable']?: unknown;
     ['auxEditable']?: unknown;
     ['auxStrokeColor']?: unknown;
@@ -262,6 +262,14 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
  * "moveOnly" means that the bot should be able to be dragged within a context but not across contexts.
  */
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
+
+/**
+ * Defines the possible positioning modes that a bot can have.
+ *
+ * "stack" means the bot is able to stack with other bots.
+ * "absolute" means the bot will ignore other bots.
+ */
+export type BotPositioningMode = 'stack' | 'absolute';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -459,7 +467,7 @@ export const KNOWN_TAGS: string[] = [
     'auxCreator',
     'auxDraggable',
     'auxDraggableMode',
-    'auxStackable',
+    'auxPositioningMode',
     'auxDestroyable',
     'auxEditable',
     'auxStrokeColor',

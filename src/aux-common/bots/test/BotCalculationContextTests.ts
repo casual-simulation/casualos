@@ -57,6 +57,7 @@ import {
     getBotPosition,
     getBotRotation,
     botContextSortOrder,
+    getBotPositioningMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2396,14 +2397,16 @@ export function botCalculationContextTests(
 
     describe('isMergeable()', () => {
         it('should return true if the bot is stackable', () => {
-            const bot1 = createBot(undefined, { auxStackable: true });
+            const bot1 = createBot(undefined, { auxPositioningMode: 'stack' });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(true);
         });
 
         it('should return false if the bot is not stackable', () => {
-            const bot1 = createBot(undefined, { auxStackable: false });
+            const bot1 = createBot(undefined, {
+                auxPositioningMode: 'absolute',
+            });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(false);
@@ -2984,34 +2987,82 @@ export function botCalculationContextTests(
     });
 
     describe('isBotStackable()', () => {
-        it('should return true when auxStackable has no value', () => {
+        it('should return true when auxPositioningMode is stackable', () => {
             let bot = createBot('test', {});
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
         });
 
-        it('should return false when auxStackable is false', () => {
+        it('should return false when auxPositioningMode is absolute', () => {
             let bot = createBot('test', {
-                ['auxStackable']: false,
+                auxPositioningMode: 'absolute',
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return false when auxStackable calculates to false', () => {
+        it('should return false when auxPositioningMode calculates to absolute', () => {
             let bot = createBot('test', {
-                ['auxStackable']: '=false',
+                auxPositioningMode: '="absolute"',
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return true when auxStackable has any other value', () => {
+        it('should return true when auxPositioningMode has any other value', () => {
             let bot = createBot('test', {
-                ['auxStackable']: 'anything',
+                auxPositioningMode: 'anything',
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
+        });
+    });
+
+    describe('getBotPositioningMode()', () => {
+        it('should return stack when auxPositioningMode is not set', () => {
+            const bot1 = createBot('bot1', {});
+            const result = getBotPositioningMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('stack');
+        });
+
+        it('should return absolute when auxPositioningMode is set to it', () => {
+            const bot1 = createBot('bot1', {
+                auxPositioningMode: 'absolute',
+            });
+            const result = getBotPositioningMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('absolute');
+        });
+
+        it('should return stack when auxPositioningMode is set to it', () => {
+            const bot1 = createBot('bot1', {
+                auxPositioningMode: 'stack',
+            });
+            const result = getBotPositioningMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('stack');
+        });
+
+        it('should return stack when auxPositioningMode is set to a random value', () => {
+            const bot1 = createBot('bot1', {
+                auxPositioningMode: <any>'abc',
+            });
+            const result = getBotPositioningMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('stack');
         });
     });
 

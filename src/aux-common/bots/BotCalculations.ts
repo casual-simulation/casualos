@@ -24,6 +24,7 @@ import {
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
     ScriptBot,
+    BotPositioningMode,
 } from './Bot';
 
 import {
@@ -1617,7 +1618,28 @@ export function getBotDragMode(
  * @param bot The bot to check.
  */
 export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
-    return calculateBooleanTagValue(calc, bot, 'auxStackable', true);
+    return getBotPositioningMode(calc, bot) === 'stack';
+}
+
+/**
+ * Gets the positioning mode for the bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotPositioningMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotPositioningMode {
+    const mode = calculateStringTagValue(
+        calc,
+        bot,
+        'auxPositioningMode',
+        'stack'
+    );
+    if (mode === 'stack' || mode === 'absolute') {
+        return mode;
+    }
+    return 'stack';
 }
 
 /**
