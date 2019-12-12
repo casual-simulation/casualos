@@ -11,8 +11,34 @@
     -   Changed `create()` and `createTemp()` to automatically set `auxCreator` to the current `this` bot.
         -   `create()` no longer takes a bot/bot ID as the first parameter. Instead, you need to use the `from()` function to set the creator ID.
         -   e.g. `create(from(bot))`.
+    -   Renamed all listen tags to not use the `()` at the end.
+        -   Every tag is now the same. This means that `()` to the end of a tag does nothing special.
+        -   i.e. There is no difference between a "normal" tag and a "listen" tag.
+        -   Instead, tags can listen by prefixing their script with a `@` symbol.
+        -   e.g. `player.toast("Hi!")` becomes `@player.toast("Hi!")`.
+    -   Renamed `mod()` to `applyMod()`.
+    -   Renamed `mod.addToMenu()` to `addToMenuMod()`.
+    -   Renamed `mod.removeFromMenu()` to `removeFromMenuMod()`.
+    -   Renamed `mod.addToContext()` to `addToContextMod()`.
+    -   Renamed `mod.removeFromContext()` to `removeFromContextMod()`.
+    -   Renamed `mod.setPosition()` to `setPositionMod()`.
+    -   Renamed `mod.subtract()` to `subtractMods()`.
+    -   Renamed `mod.import()` to `getMod()`.
+    -   Removed `mod.export()`.
 
 -   Improvements
+    -   Added a `creator` variable to scripts and formulas which gets the bot that created the `this` bot.
+        -   `creator` is null if the current bot has no creator.
+    -   Added a `raw` variable to scripts and formulas which gets direct access to the `this` bot's tag values.
+        -   This is similar to the `tags` variable but does not do any pre-processing on the tag value. This means you will get formula scripts back instead of the calculated formula values.
+    -   Improved the `tags` variable to handle setting tag values on it.
+        -   This lets you write scripts like `tags.name = "joe"` or `bot.tags.myContext = true`.
+        -   Also works with the `raw` variable.
+    -   Improved bots returned from `getBots()` and `getBot()` to support setting tag values on their `tags` property.
+        -   This lets you write things like `myBot.tags.name = "bob"`.
+        -   Should also work with bots in the `that` variable.
+    -   Added a `data` variable which equals `that`.
+    -   Added the `player.hideHtml()` function which hides the HTML modal.
     -   Added in inventory tags to limit panning movements on the inventory context: `auxContextInventoryPannableMinX`, `auxContextInventoryPannableMaxX`, `auxContextInventoryPannableMinY`, `auxContextInventoryPannableMaxY`.
     -   Reformatted new selection id logic by removing the `._` character from its return.
 

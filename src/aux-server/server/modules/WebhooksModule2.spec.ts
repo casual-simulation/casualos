@@ -105,7 +105,7 @@ describe('WebhooksModule2', () => {
                 });
 
                 await simulation.helper.createBot('test', {
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
                 await simulation.helper.transaction(
@@ -119,7 +119,7 @@ describe('WebhooksModule2', () => {
                 await waitAsync();
 
                 expect(simulation.helper.botsState['test'].tags).toEqual({
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                     data: {
                         test: true,
                     },
@@ -136,14 +136,14 @@ describe('WebhooksModule2', () => {
                 });
 
                 await simulation.helper.createBot('test', {
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
                 await simulation.helper.updateBot(
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'onChannelAction()': `
+                            onChannelAction: `@
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }
@@ -165,7 +165,7 @@ describe('WebhooksModule2', () => {
                 await waitAsync();
 
                 expect(simulation.helper.botsState['test'].tags).toEqual({
-                    'onResponse()': 'setTag(this, "data", that.response.data)',
+                    onResponse: '@setTag(this, "data", that.response.data)',
                     data: {
                         test: true,
                     },

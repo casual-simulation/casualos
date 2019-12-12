@@ -32,6 +32,7 @@ import {
     saveFile,
     replaceDragBot,
     setupChannel,
+    hideHtml,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -63,7 +64,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'test()': 'create(from(null), this);',
+                        test: '@create(from(null), this);',
                     },
                 },
                 thatBot: {
@@ -93,7 +94,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'test()': 'create(from(null), this);',
+                        test: '@create(from(null), this);',
                         auxCreator: null,
 
                         // the new bot is not destroyed
@@ -109,7 +110,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'test()': 'setTag(this, "equal", this === bot)',
+                        test: '@setTag(this, "equal", this === bot)',
                     },
                 },
                 thatBot: {
@@ -142,13 +143,75 @@ export function botActionsTests(
             ]);
         });
 
-        it('should pass in a tags variable which equals getMod(this)', () => {
+        it('should be able to get tag values from the bot variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        num: '=123',
+                        test: '@setTag(this, "val", bot.tags.num)',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        val: 123,
+                    },
+                }),
+            ]);
+        });
+
+        it('should be able to set tag values in the bot variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        num: '=123',
+                        test: '@bot.tags.num = 10;',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        num: 10,
+                    },
+                }),
+            ]);
+        });
+
+        it('should pass in a tags variable which equals this.tags', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         auxColor: 'red',
-                        'test()': 'setTag(this, "other", tags.auxColor)',
+                        test: '@setTag(this, "equal", tags === this.tags)',
                     },
                 },
                 thatBot: {
@@ -173,7 +236,7 @@ export function botActionsTests(
             expect(result.events).toEqual([
                 botUpdated('thisBot', {
                     tags: {
-                        other: 'red',
+                        equal: true,
                     },
                 }),
             ]);
@@ -185,7 +248,7 @@ export function botActionsTests(
                     id: 'thisBot',
                     tags: {
                         auxColor: 'red',
-                        'test()': `
+                        test: `@
                             setTag(this, "other", tags.auxColor);
                             setTag(this, "final", tags.other);
                         `,
@@ -220,6 +283,278 @@ export function botActionsTests(
             ]);
         });
 
+        it('should support updating the tags variable directly', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        auxColor: 'red',
+                        test: `@
+                            tags.auxColor = 'blue';
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        auxColor: 'blue',
+                    },
+                }),
+            ]);
+        });
+
+        it('should pass in a raw variable which equals this.raw', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@
+                            tags.equal = raw === this.raw;
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        equal: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should support getting formula scripts from the raw variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        formula: '=10',
+                        test: `@
+                            tags.calculated = tags.formula;
+                            tags.normal = raw.formula;
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        calculated: 10,
+                        normal: '=10',
+                    },
+                }),
+            ]);
+        });
+
+        it('should support setting formula scripts to the raw variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@
+                            raw.formula = '=10';
+                            tags.calculated = tags.formula;
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        calculated: 10,
+                        formula: '=10',
+                    },
+                }),
+            ]);
+        });
+
+        it('should support setting formula scripts to the tags variable', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@
+                            tags.formula = '=10';
+                            tags.calculated = tags.formula;
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        calculated: 10,
+                        formula: '=10',
+                    },
+                }),
+            ]);
+        });
+
+        it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        auxCreator: 'thatBot',
+                        test: '@setTag(this, "creatorId", creator.id)',
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        creatorId: 'thatBot',
+                    },
+                }),
+            ]);
+        });
+
+        it('should not allow changing the ID', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@
+                            tags.id = 'wrong';
+                            raw.id = 'wrong';
+                            setTag(this, 'id', 'wrong');
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(false);
+            expect(result.events).toEqual([]);
+        });
+
         it('should preserve formulas when copying', () => {
             const state: BotsState = {
                 thisBot: {
@@ -229,8 +564,8 @@ export function botActionsTests(
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'test()':
-                            'create(from(null), this, that, { testFormula: "=this.name" });',
+                        test:
+                            '@create(from(null), this, that, { testFormula: "=this.name" });',
                     },
                 },
                 thatBot: {
@@ -267,8 +602,8 @@ export function botActionsTests(
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'test()':
-                            'create(from(null), this, that, { testFormula: "=this.name" });',
+                        test:
+                            '@create(from(null), this, that, { testFormula: "=this.name" });',
                         name: 'Friend',
                         testFormula: '=this.name',
                         auxCreator: null,
@@ -286,7 +621,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'create(from(null), this)',
+                        abcdef: '@create(from(null), this)',
                     },
                 },
                 thatBot: {
@@ -316,7 +651,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'create(from(null), this)',
+                        abcdef: '@create(from(null), this)',
                         auxCreator: null,
                     },
                 }),
@@ -330,7 +665,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'create(from(null), this)',
+                        abcdef: '@create(from(null), this)',
                     },
                 },
                 thatBot: {
@@ -360,7 +695,7 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'create(from(null), this)',
+                        abcdef: '@create(from(null), this)',
                         auxCreator: null,
                     },
                 }),
@@ -374,8 +709,8 @@ export function botActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()':
-                            'setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
+                        abcdef:
+                            '@setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
                     },
                 },
             };
@@ -406,8 +741,8 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'abcdef()':
-                            'setTag(getBot("#name", "test"), "#abc", "def")',
+                        abcdef:
+                            '@setTag(getBot("#name", "test"), "#abc", "def")',
                     },
                 },
                 editBot: {
@@ -443,8 +778,8 @@ export function botActionsTests(
                     id: 'thisBot',
                     tags: {
                         formula: '=getBot("#name", "test")',
-                        'abcdef()':
-                            'setTag(getTag(this, "#formula"), "#abc", "def")',
+                        abcdef:
+                            '@setTag(getTag(this, "#formula"), "#abc", "def")',
                     },
                 },
                 editBot: {
@@ -480,8 +815,46 @@ export function botActionsTests(
                     id: 'thisBot',
                     tags: {
                         formula: '=getBots("name", "test").first()',
-                        'abcdef()':
-                            'setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
+                        abcdef:
+                            '@setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
+                    },
+                },
+                editBot: {
+                    id: 'editBot',
+                    tags: {
+                        name: 'test',
+                        num: 1,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            const botAction = action('abcdef', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('editBot', {
+                    tags: {
+                        num: 3,
+                    },
+                }),
+            ]);
+        });
+
+        it('should be able to set tag values on bots returned from formulas', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        formula: '=getBots("name", "test").first()',
+                        abcdef: `@let bot = tags.formula;
+                             bot.tags.num += 2;`,
                     },
                 },
                 editBot: {
@@ -521,9 +894,9 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'abcdef()': 'shout("sayHello")',
-                        'sayHello()':
-                            'setTag(this, "#userId", player.getBot().id)',
+                        abcdef: '@shout("sayHello")',
+                        sayHello:
+                            '@setTag(this, "#userId", player.getBot().id)',
                     },
                 },
             };
@@ -557,7 +930,7 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'test()': 'while(true) {}',
+                        test: '@while(true) {}',
                     },
                 },
             };
@@ -582,7 +955,7 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'test()': '=true',
+                        test: '="@true"',
                     },
                 },
             };
@@ -610,7 +983,7 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'test()': 'player.toast("test"); // this is a test',
+                        test: '@player.toast("test"); // this is a test',
                     },
                 },
             };
@@ -638,8 +1011,8 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'test()':
-                            'player.toast("test"); // comment 1\n// this is a test',
+                        test:
+                            '@player.toast("test"); // comment 1\n// this is a test',
                     },
                 },
             };
@@ -664,7 +1037,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -676,13 +1049,13 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'test()': 'return 1;',
+                            test: '@return 1;',
                         },
                     },
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'test()': 'return 2;',
+                            test: '@return 2;',
                         },
                     },
                     bot4: {
@@ -729,7 +1102,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -790,7 +1163,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 if (that.name !== 'whisper') {
                                     return;
                                 }
@@ -805,7 +1178,7 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'whisper()': 'return 1;',
+                            whisper: '@return 1;',
                         },
                     },
                     bot3: {
@@ -815,7 +1188,7 @@ export function botActionsTests(
                     bot4: {
                         id: 'bot4',
                         tags: {
-                            'test()': `whisper(getBots('id', 'bot2'), 'whisper')`,
+                            test: `@whisper(getBots('id', 'bot2'), 'whisper')`,
                         },
                     },
                 };
@@ -850,13 +1223,13 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `player.toast('Hi!');`,
+                            onAnyListen: `@player.toast('Hi!');`,
                         },
                     },
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'test()': 'return 1;',
+                            test: '@return 1;',
                         },
                     },
                 };
@@ -880,7 +1253,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -893,19 +1266,19 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'number()': 'return 1;',
+                            number: '@return 1;',
                         },
                     },
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'number()': 'return 2;',
+                            number: '@return 2;',
                         },
                     },
                     bot4: {
                         id: 'bot4',
                         tags: {
-                            'test()': `
+                            test: `@
                                 setTag(this, 'responses', shout('number'))
                             `,
                         },
@@ -937,7 +1310,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -948,19 +1321,19 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'number()': 'return 1;',
+                            number: '@return 1;',
                         },
                     },
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'number()': 'return 2;',
+                            number: '@return 2;',
                         },
                     },
                     bot4: {
                         id: 'bot4',
                         tags: {
-                            'test()': `
+                            test: `@
                                 setTag(this, 'responses', shout('number'))
                             `,
                         },
@@ -992,7 +1365,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onAnyListen()': `
+                            onAnyListen: `@
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -1003,19 +1376,19 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'number()': 'return 1;',
+                            number: '@return 1;',
                         },
                     },
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'number()': 'return 2;',
+                            number: '@return 2;',
                         },
                     },
                     bot4: {
                         id: 'bot4',
                         tags: {
-                            'test()': `
+                            test: `@
                                 setTag(this, 'responses', shout('number'))
                             `,
                         },
@@ -1049,8 +1422,8 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'test()': 'return 1;',
-                            'onListen()': `
+                            test: '@return 1;',
+                            onListen: `@
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -1062,7 +1435,7 @@ export function botActionsTests(
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'test()': 'return 2;',
+                            test: '@return 2;',
                         },
                     },
                     bot4: {
@@ -1109,7 +1482,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onListen()': `
+                            onListen: `@
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -1121,13 +1494,13 @@ export function botActionsTests(
                     bot2: {
                         id: 'bot2',
                         tags: {
-                            'test()': 'return 1;',
+                            test: '@return 1;',
                         },
                     },
                     bot3: {
                         id: 'bot3',
                         tags: {
-                            'test()': 'return 2;',
+                            test: '@return 2;',
                         },
                     },
                     bot4: {
@@ -1157,12 +1530,12 @@ export function botActionsTests(
         });
 
         describe('arguments', () => {
-            it('should not convert the argument to a proxy object if it is a bot', () => {
+            it('should not convert the argument to a script bot if it is a bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.hi',
+                            test: '@that.tags.hi = "changed"',
                         },
                     },
                     otherBot: {
@@ -1189,17 +1562,25 @@ export function botActionsTests(
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(false);
-
                 expect(result.events).toEqual([]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should not convert the argument to a list of proxy objects if it is a list of bots', () => {
+            it('should not convert the argument to a list of script bots if it is a list of bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'this.hi = that[0].hi; this.l = that.length',
+                            test:
+                                '@that[0].tags.hi = "changed"; this.tags.l = that.length',
                         },
                     },
                     otherBot: {
@@ -1222,17 +1603,36 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            l: 1,
+                        },
+                    }),
+                ]);
 
-                expect(result.events).toEqual([]);
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                //     botUpdated('thisBot', {
+                //         tags: {
+                //             l: 1,
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should not convert the argument fields to proxy objects if they are bots', () => {
+            it('should not convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.bot.hi',
+                            test: '@that.bot.tags.hi = "changed";',
                         },
                     },
                     otherBot: {
@@ -1257,16 +1657,24 @@ export function botActionsTests(
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(false);
-
                 expect(result.events).toEqual([]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should not convert nested fields to proxy objects', () => {
+            it('should not convert bots in arrays to script bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.bots[0].hi',
+                            test: '@that.bots[0].tags.hi = "changed"',
                         },
                     },
                     otherBot: {
@@ -1290,8 +1698,16 @@ export function botActionsTests(
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(false);
-
                 expect(result.events).toEqual([]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
             it('should handle null arguments', () => {
@@ -1299,7 +1715,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'setTag(this, "#hi", "test")',
+                            test: '@setTag(this, "#hi", "test")',
                         },
                     },
                 };
@@ -1323,6 +1739,48 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it('should specify a data variable which equals that', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.equal = that === data;',
+                        },
+                    },
+                    otherBot: {
+                        id: 'otherBot',
+                        tags: {
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot'],
+                    null,
+                    state.otherBot
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            equal: true,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('action.perform()', () => {
@@ -1333,7 +1791,7 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': `action.perform({
+                            abcdef: `@action.perform({
                                 type: 'test',
                                 message: 'abc'
                             })`,
@@ -1367,7 +1825,7 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': `action.perform(player.toast('abc'))`,
+                            abcdef: `@action.perform(player.toast('abc'))`,
                         },
                     },
                 };
@@ -1393,7 +1851,7 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': `
+                            abcdef: `@
                                 const toast = player.toast('abc');
                                 action.reject(toast);
                                 action.perform(toast);
@@ -1429,7 +1887,7 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': `action.reject({
+                            abcdef: `@action.reject({
                                 type: 'test',
                                 message: 'abc'
                             })`,
@@ -1471,14 +1929,14 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'shout("sayHello")',
-                            'sayHello()': 'setTag(this, "#hello", true)',
+                            abcdef: '@shout("sayHello")',
+                            sayHello: '@setTag(this, "#hello", true)',
                         },
                     },
                     otherBot: {
                         id: 'otherBot',
                         tags: {
-                            'sayHello()': 'setTag(this, "#hello", true)',
+                            sayHello: '@setTag(this, "#hello", true)',
                         },
                     },
                 };
@@ -1515,9 +1973,9 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'let o = { hi: "test" }; shout("sayHello", o)',
-                            'sayHello()': 'setTag(this, "#hello", that.hi)',
+                            abcdef:
+                                '@let o = { hi: "test" }; shout("sayHello", o)',
+                            sayHello: '@setTag(this, "#hello", that.hi)',
                         },
                     },
                 };
@@ -1549,10 +2007,10 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'shout("sayHello", getBot("#name", "other"))',
-                            'sayHello()':
-                                'setTag(this, "#hello", getTag(that, "#hi"))',
+                            abcdef:
+                                '@shout("sayHello", getBot("#name", "other"))',
+                            sayHello:
+                                '@setTag(this, "#hello", getTag(that, "#hi"))',
                         },
                     },
                     otherBot: {
@@ -1591,9 +2049,9 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'shout("sayHello", getBot("#name", "other"))',
-                            'sayHello()': 'setTag(that, "#hello", "test")',
+                            abcdef:
+                                '@shout("sayHello", getBot("#name", "other"))',
+                            sayHello: '@setTag(that, "#hello", "test")',
                         },
                     },
                     otherBot: {
@@ -1631,10 +2089,9 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
-                            'sayHello()':
-                                'setTag(that.other, "#hello", "test")',
+                            abcdef:
+                                '@let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
+                            sayHello: '@setTag(that.other, "#hello", "test")',
                         },
                     },
                     otherBot: {
@@ -1672,8 +2129,8 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'shout("sayHello", true)',
-                            'sayHello()': 'setTag(this, "#hello", that)',
+                            abcdef: '@shout("sayHello", true)',
+                            sayHello: '@setTag(this, "#hello", that)',
                         },
                     },
                 };
@@ -1705,9 +2162,9 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
-                            'sayHello()': 'setTag(that, "#hello", "test")',
+                            abcdef:
+                                '@shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
+                            sayHello: '@setTag(that, "#hello", "test")',
                         },
                     },
                     otherBot: {
@@ -1750,15 +2207,15 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'let results = shout("sayHello", "test"); setTag(this, "result", results);',
-                            'sayHello()': 'return "Wrong, " + that;',
+                            abcdef:
+                                '@let results = shout("sayHello", "test"); setTag(this, "result", results);',
+                            sayHello: '@return "Wrong, " + that;',
                         },
                     },
                     aBot: {
                         id: 'aBot',
                         tags: {
-                            'sayHello()': 'return "Hello, " + that;',
+                            sayHello: '@return "Hello, " + that;',
                         },
                     },
                 };
@@ -1792,8 +2249,8 @@ export function botActionsTests(
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
-                                'abcdef()': `shout("${eventName}")`,
-                                'sayHello()': 'setTag(this, "#hello", true)',
+                                abcdef: `@shout("${eventName}")`,
+                                sayHello: '@setTag(this, "#hello", true)',
                             },
                         },
                     };
@@ -1828,7 +2285,7 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'superShout("sayHello")',
+                            abcdef: '@superShout("sayHello")',
                         },
                     },
                 };
@@ -1856,7 +2313,7 @@ export function botActionsTests(
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
-                                'abcdef()': `superShout("${eventName}")`,
+                                abcdef: `@superShout("${eventName}")`,
                             },
                         },
                     };
@@ -1885,14 +2342,14 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'whisper(this, "sayHello")',
-                            'sayHello()': 'setTag(this, "#hello", true)',
+                            abcdef: '@whisper(this, "sayHello")',
+                            sayHello: '@setTag(this, "#hello", true)',
                         },
                     },
                     otherBot: {
                         id: 'otherBot',
                         tags: {
-                            'sayHello()': 'setTag(this, "#hello", true)',
+                            sayHello: '@setTag(this, "#hello", true)',
                         },
                     },
                 };
@@ -1924,22 +2381,21 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'whisper(getBots("#hello"), "sayHello")',
+                            abcdef: '@whisper(getBots("#hello"), "sayHello")',
                         },
                     },
                     thatBot: {
                         id: 'thatBot',
                         tags: {
                             hello: true,
-                            'sayHello()': 'setTag(this, "#saidHello", true)',
+                            sayHello: '@setTag(this, "#saidHello", true)',
                         },
                     },
                     otherBot: {
                         id: 'otherBot',
                         tags: {
                             hello: true,
-                            'sayHello()': 'setTag(this, "#saidHello", true)',
+                            sayHello: '@setTag(this, "#saidHello", true)',
                         },
                     },
                 };
@@ -1976,15 +2432,15 @@ export function botActionsTests(
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()':
-                                'let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
-                            'sayHello()': 'return "Wrong, " + that',
+                            abcdef:
+                                '@let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
+                            sayHello: '@return "Wrong, " + that',
                         },
                     },
                     bBot: {
                         id: 'bBot',
                         tags: {
-                            'sayHello()': 'return "Hello, " + that',
+                            sayHello: '@return "Hello, " + that',
                         },
                     },
                 };
@@ -2018,8 +2474,8 @@ export function botActionsTests(
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
-                                'abcdef()': `whisper(this, "${eventName}")`,
-                                'sayHello()': 'setTag(this, "#hello", true)',
+                                abcdef: `@whisper(this, "${eventName}")`,
+                                sayHello: '@setTag(this, "#hello", true)',
                             },
                         },
                     };
@@ -2052,7 +2508,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'test()': `webhook({
+                            test: `@webhook({
                                 method: 'POST',
                                 url: 'https://example.com',
                                 data: {
@@ -2094,7 +2550,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'test()': `webhook.post('https://example.com', { test: 'abc' }, {
+                            test: `@webhook.post('https://example.com', { test: 'abc' }, {
                                 responseShout: 'test.response()'
                             })`,
                         },
@@ -2131,8 +2587,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'create()':
-                                'let newBot = create(from(this), { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
+                            create:
+                                '@let newBot = create(from(this), { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
                         },
                     },
                 };
@@ -2188,8 +2644,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'create()':
-                                'let bots = getBots("abc", true); removeTags(bots, "abc");',
+                            create:
+                                '@let bots = getBots("abc", true); removeTags(bots, "abc");',
                         },
                     },
                 };
@@ -2226,13 +2682,13 @@ export function botActionsTests(
         createBotTests('create', 'uuid');
         createBotTests('createTemp', 'uuid', 'T-uuid');
 
-        describe('combine()', () => {
+        describe.skip('combine()', () => {
             it('should send the combine event to the given bots', () => {
                 const state: BotsState = {
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'test()': 'combine(this, getBot("#abc", true))',
+                            test: '@combine(this, getBot("#abc", true))',
                             'onCombine(#abc:true)':
                                 'setTag(this, "otherId", that.bot.id)',
                             def: true,
@@ -2276,8 +2732,8 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'test()':
-                                'combine(this, getBot("#abc", true), { context: "myContext" })',
+                            test:
+                                '@combine(this, getBot("#abc", true), { context: "myContext" })',
                             'onCombine(#abc:true)':
                                 'setTag(this, "otherId", that.context)',
                             def: true,
@@ -2323,7 +2779,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'destroy(this)',
+                            test: '@destroy(this)',
                         },
                     },
                     childBot: {
@@ -2354,7 +2810,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'destroy(this)',
+                            test: '@destroy(this)',
                         },
                     },
                     childBot: {
@@ -2406,7 +2862,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'destroy(getBots("clone"));',
+                            test: '@destroy(getBots("clone"));',
                         },
                     },
                     bot1: {
@@ -2446,9 +2902,9 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'onDestroy()':
-                                'setTag(getBot("#name", "other"), "#num", 100)',
-                            'test()': 'destroy(this)',
+                            onDestroy:
+                                '@setTag(getBot("#name", "other"), "#num", 100)',
+                            test: '@destroy(this)',
                         },
                     },
                     otherBot: {
@@ -2485,9 +2941,9 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'destroy(this)',
-                            'onDestroy()':
-                                'setTag(getBot("abc", "def"), "name", "bob")',
+                            test: '@destroy(this)',
+                            onDestroy:
+                                '@setTag(getBot("abc", "def"), "name", "bob")',
                             auxDestroyable: false,
                         },
                     },
@@ -2521,7 +2977,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'destroy(this)',
+                            test: '@destroy(this)',
                         },
                     },
                     childBot: {
@@ -2555,7 +3011,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'let bot = create(); destroy(bot)',
+                            test: '@let bot = create(); destroy(bot)',
                         },
                     },
                 };
@@ -2585,8 +3041,8 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()':
-                                'destroy(this); player.toast(getBot("abc", true));',
+                            test:
+                                '@destroy(this); player.toast(getBot("abc", true));',
                         },
                     },
                 };
@@ -2614,8 +3070,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(player.getBot(), "#name", "Test")',
+                            test: '@setTag(player.getBot(), "#name", "Test")',
                         },
                     },
                     userBot: {
@@ -2656,7 +3111,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()': 'player.replaceDragBot(this)',
+                            test: '@player.replaceDragBot(this)',
                         },
                     },
                 };
@@ -2677,14 +3132,14 @@ export function botActionsTests(
             });
         });
 
-        describe('addToMenuDiff()', () => {
+        describe('addToMenuMod()', () => {
             it('should add the given bot to the users menu', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'addItem()':
-                                'mod(getBot("#name", "bob"), mod.addToMenu())',
+                            addItem:
+                                '@applyMod(getBot("#name", "bob"), addToMenuMod())',
                         },
                     },
                     userBot: {
@@ -2730,14 +3185,14 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromMenuDiff()', () => {
+        describe('removeFromMenuMod()', () => {
             it('should remove the given bot from the users menu', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'addItem()':
-                                'mod(getBots("name", "bob").first(), mod.removeFromMenu())',
+                            addItem:
+                                '@applyMod(getBots("name", "bob").first(), removeFromMenuMod())',
                         },
                     },
                     userBot: {
@@ -2785,14 +3240,14 @@ export function botActionsTests(
             });
         });
 
-        describe('mod()', () => {
+        describe('applyMod()', () => {
             it('should update the given bot with the given diff', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, { abc: "def", ghi: true, num: 1 })',
+                            test:
+                                '@applyMod(this, { abc: "def", ghi: true, num: 1 })',
                         },
                     },
                 };
@@ -2824,8 +3279,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                            test:
+                                '@applyMod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                         },
                     },
                 };
@@ -2858,8 +3313,8 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: 123,
-                            'test()':
-                                'mod(this, { abc: "def", ghi: true, num: 1 }); mod(this, { "abc": getTag(this, "#abc") })',
+                            test:
+                                '@applyMod(this, { abc: "def", ghi: true, num: 1 }); applyMod(this, { "abc": getTag(this, "#abc") })',
                         },
                     },
                 };
@@ -2892,9 +3347,9 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: 123,
-                            'onMod()': 'setTag(this, "#diffed", true)',
-                            'test()':
-                                'mod(this, { abc: "def", ghi: true, num: 1 });',
+                            onMod: '@setTag(this, "#diffed", true)',
+                            test:
+                                '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
                         },
                     },
                 };
@@ -2927,7 +3382,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `let m = { abc: true }; mod(m, { def: 123 }); mod(this, m);`,
+                            test: `@let m = { abc: true }; applyMod(m, { def: 123 }); applyMod(this, m);`,
                         },
                     },
                 };
@@ -2961,7 +3416,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()': 'server.loadFile("path")',
+                            test: '@server.loadFile("path")',
                         },
                     },
                 };
@@ -2987,13 +3442,13 @@ export function botActionsTests(
             });
         });
 
-        describe('addToContextDiff()', () => {
+        describe('addToContextMod()', () => {
             it('should add the bot to the given context', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'mod(this, mod.addToContext("abc"))',
+                            test: '@applyMod(this, addToContextMod("abc"))',
                         },
                     },
                 };
@@ -3022,14 +3477,15 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromContextDiff()', () => {
+        describe('removeFromContextMod()', () => {
             it('should remove the bot from the given context', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()': 'mod(this, mod.removeFromContext("abc"))',
+                            test:
+                                '@applyMod(this, removeFromContextMod("abc"))',
                         },
                     },
                 };
@@ -3058,13 +3514,14 @@ export function botActionsTests(
             });
         });
 
-        describe('setPositionDiff()', () => {
-            it('should return a diff that sets the bot position in a context when applied', () => {
+        describe('setPositionMod()', () => {
+            it('should return a mod that sets the bot position in a context when applied', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'mod(this, mod.setPosition("abc", 1, 2))',
+                            test:
+                                '@applyMod(this, setPositionMod("abc", 1, 2))',
                         },
                     },
                 };
@@ -3095,8 +3552,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, mod.setPosition("abc", undefined, 2))',
+                            test:
+                                '@applyMod(this, setPositionMod("abc", undefined, 2))',
                         },
                     },
                 };
@@ -3126,8 +3583,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, mod.setPosition("abc", undefined, undefined, 2))',
+                            test:
+                                '@applyMod(this, setPositionMod("abc", undefined, undefined, 2))',
                         },
                     },
                 };
@@ -3153,14 +3610,55 @@ export function botActionsTests(
             });
         });
 
+        describe('subtractMods()', () => {
+            it('should set the tags from the given mod to null', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            value1: 123,
+                            value2: true,
+                            value3: 'abc',
+                            test: `@subtractMods(this, {
+                                value1: 'anything1',
+                                value2: 'anything2',
+                                value3: 'anything3',
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            value1: null,
+                            value2: null,
+                            value3: null,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('getUserMenuContext()', () => {
             it('should return the _auxUserMenuContext tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#context", player.getMenuContext())',
+                            test:
+                                '@setTag(this, "#context", player.getMenuContext())',
                         },
                     },
                     userBot: {
@@ -3202,7 +3700,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.toast("hello, world!")',
+                            test: '@player.toast("hello, world!")',
                         },
                     },
                 };
@@ -3228,7 +3726,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showHtml("hello, world!")',
+                            test: '@player.showHtml("hello, world!")',
                         },
                     },
                 };
@@ -3248,13 +3746,39 @@ export function botActionsTests(
             });
         });
 
+        describe('player.hideHtml()', () => {
+            it('should issue a hide_html action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.hideHtml()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([hideHtml()]);
+            });
+        });
+
         describe('player.tweenTo()', () => {
             it('should emit a TweenToAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.tweenTo("test")',
+                            test: '@player.tweenTo("test")',
                         },
                     },
                 };
@@ -3278,7 +3802,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.tweenTo(this)',
+                            test: '@player.tweenTo(this)',
                         },
                     },
                 };
@@ -3302,8 +3826,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'player.tweenTo("test", undefined, undefined, undefined, 10)',
+                            test:
+                                '@player.tweenTo("test", undefined, undefined, undefined, 10)',
                         },
                     },
                 };
@@ -3331,7 +3855,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.moveTo("test")',
+                            test: '@player.moveTo("test")',
                         },
                     },
                 };
@@ -3365,7 +3889,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openQRCodeScanner()',
+                            test: '@player.openQRCodeScanner()',
                         },
                     },
                 };
@@ -3389,7 +3913,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openQRCodeScanner("front")',
+                            test: '@player.openQRCodeScanner("front")',
                         },
                     },
                 };
@@ -3417,7 +3941,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.closeQRCodeScanner()',
+                            test: '@player.closeQRCodeScanner()',
                         },
                     },
                 };
@@ -3443,7 +3967,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showQRCode("hello")',
+                            test: '@player.showQRCode("hello")',
                         },
                     },
                 };
@@ -3469,7 +3993,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.hideQRCode()',
+                            test: '@player.hideQRCode()',
                         },
                     },
                 };
@@ -3495,7 +4019,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openBarcodeScanner()',
+                            test: '@player.openBarcodeScanner()',
                         },
                     },
                 };
@@ -3519,7 +4043,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openBarcodeScanner("front")',
+                            test: '@player.openBarcodeScanner("front")',
                         },
                     },
                 };
@@ -3547,7 +4071,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.closeBarcodeScanner()',
+                            test: '@player.closeBarcodeScanner()',
                         },
                     },
                 };
@@ -3573,7 +4097,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showBarcode("hello")',
+                            test: '@player.showBarcode("hello")',
                         },
                     },
                 };
@@ -3597,7 +4121,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showBarcode("hello", "format")',
+                            test: '@player.showBarcode("hello", "format")',
                         },
                     },
                 };
@@ -3625,7 +4149,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.hideBarcode()',
+                            test: '@player.hideBarcode()',
                         },
                     },
                 };
@@ -3651,7 +4175,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.loadChannel("abc")',
+                            test: '@player.loadChannel("abc")',
                         },
                     },
                 };
@@ -3677,7 +4201,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.unloadChannel("abc")',
+                            test: '@player.unloadChannel("abc")',
                         },
                     },
                 };
@@ -3703,7 +4227,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.importAUX("abc")',
+                            test: '@player.importAUX("abc")',
                         },
                     },
                 };
@@ -3729,8 +4253,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#fun", player.isConnected())',
+                            test: '@setTag(this, "#fun", player.isConnected())',
                         },
                     },
                     userBot: {
@@ -3766,8 +4289,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#fun", player.isConnected())',
+                            test: '@setTag(this, "#fun", player.isConnected())',
                         },
                     },
                 };
@@ -3797,8 +4319,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#fun", player.isConnected())',
+                            test: '@setTag(this, "#fun", player.isConnected())',
                         },
                     },
                     userBot: {
@@ -3834,8 +4355,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#inContext", player.isInContext("context"))',
+                            test:
+                                '@setTag(this, "#inContext", player.isInContext("context"))',
                         },
                     },
                     userBot: {
@@ -3871,8 +4392,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#inContext", player.isInContext("abc"))',
+                            test:
+                                '@setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
                     userBot: {
@@ -3908,8 +4429,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#inContext", player.isInContext("abc"))',
+                            test:
+                                '@setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
                     userBot: {
@@ -3945,8 +4466,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#context", player.getCurrentContext())',
+                            test:
+                                '@setTag(this, "#context", player.getCurrentContext())',
                         },
                     },
                     userBot: {
@@ -3982,8 +4503,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#context", player.getCurrentContext())',
+                            test:
+                                '@setTag(this, "#context", player.getCurrentContext())',
                         },
                     },
                     userBot: {
@@ -4019,8 +4540,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#context", player.getCurrentChannel())',
+                            test:
+                                '@setTag(this, "#context", player.getCurrentChannel())',
                         },
                     },
                     userBot: {
@@ -4056,8 +4577,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#context", player.getCurrentChannel())',
+                            test:
+                                '@setTag(this, "#context", player.getCurrentChannel())',
                         },
                     },
                     userBot: {
@@ -4093,8 +4614,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#isBuilder", player.isDesigner())',
+                            test:
+                                '@setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -4136,8 +4657,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#isBuilder", player.isDesigner())',
+                            test:
+                                '@setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -4179,8 +4700,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#isBuilder", player.isDesigner())',
+                            test:
+                                '@setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -4222,7 +4743,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showInputForTag(this, "abc")',
+                            test: '@player.showInputForTag(this, "abc")',
                         },
                     },
                 };
@@ -4248,7 +4769,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.showInputForTag("test", "abc")',
+                            test: '@player.showInputForTag("test", "abc")',
                         },
                     },
                 };
@@ -4272,8 +4793,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
+                            test:
+                                '@player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
                         },
                     },
                 };
@@ -4300,8 +4821,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
+                            test:
+                                '@player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
                         },
                     },
                 };
@@ -4332,7 +4853,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.goToContext("abc")',
+                            test: '@player.goToContext("abc")',
                         },
                     },
                 };
@@ -4356,7 +4877,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.goToContext("sim", "abc")',
+                            test: '@player.goToContext("sim", "abc")',
                         },
                     },
                 };
@@ -4382,7 +4903,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.goToURL("abc")',
+                            test: '@player.goToURL("abc")',
                         },
                     },
                 };
@@ -4408,7 +4929,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openURL("abc")',
+                            test: '@player.openURL("abc")',
                         },
                     },
                 };
@@ -4434,7 +4955,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.openDevConsole()',
+                            test: '@player.openDevConsole()',
                         },
                     },
                 };
@@ -4453,47 +4974,14 @@ export function botActionsTests(
             });
         });
 
-        describe('mod.export()', () => {
-            it('should serialize the given object to JSON', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'test()':
-                                'setTag(this, "#json", mod.export({ abc: "def" }))',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            json: '{"abc":"def"}',
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('mod.import()', () => {
+        describe('getMod()', () => {
             it('should create a diff that applies the given tags from the given bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
+                            test:
+                                '@applyMod(this, getMod(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
                     otherBot: {
@@ -4537,8 +5025,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, mod.import(getBots("name", "bob").first()))',
+                            test:
+                                '@applyMod(this, getMod(getBots("name", "bob").first()))',
                         },
                     },
                     otherBot: {
@@ -4584,8 +5072,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod(this, mod.import({abc: true, val: 123}, "val"))',
+                            test:
+                                '@applyMod(this, getMod({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -4615,7 +5103,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `mod(this, mod.import('{"abc": true, "val": 123}', "val"))`,
+                            test: `@applyMod(this, getMod('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };
@@ -4642,7 +5130,7 @@ export function botActionsTests(
         });
 
         describe('renameTagsFromDotCaseToCamelCase()', () => {
-            it('should return a mod which renames each tag from dot.case to camelCase', () => {
+            it('should rename each tag from dot.case to camelCase', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4652,7 +5140,7 @@ export function botActionsTests(
                             '1.2.3': 456,
                             'aux._hidden': true,
                             noUpdateNeeded: true,
-                            'test()': `
+                            test: `@
                                 renameTagsFromDotCaseToCamelCase(this);
                             `,
                         },
@@ -4703,7 +5191,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'setTag(this, "#name", "bob")',
+                            test: '@setTag(this, "#name", "bob")',
                         },
                     },
                 };
@@ -4733,14 +5221,14 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'setTag(this, "#name", "bob")',
+                            test: '@setTag(this, "#name", "bob")',
                         },
                     },
 
                     thatBot: {
                         id: 'thatBot',
                         tags: {
-                            'test()': 'setTag(getBots("id"), "#name", "bob")',
+                            test: '@setTag(getBots("id"), "#name", "bob")',
                         },
                     },
                 };
@@ -4776,8 +5264,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
+                            test:
+                                '@setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
                         },
                     },
                 };
@@ -4810,7 +5298,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.echo("message")',
+                            test: '@server.echo("message")',
                         },
                     },
                     userBot: {
@@ -4846,7 +5334,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.sayHello()',
+                            test: '@server.sayHello()',
                         },
                     },
                     userBot: {
@@ -4882,7 +5370,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.setupChannel("channel", this)',
+                            test: '@server.setupChannel("channel", this)',
                         },
                     },
                     userBot: {
@@ -4909,8 +5397,7 @@ export function botActionsTests(
                         setupChannel(
                             'channel',
                             createBot('thisBot', {
-                                'test()':
-                                    'server.setupChannel("channel", this)',
+                                test: '@server.setupChannel("channel", this)',
                             })
                         )
                     ),
@@ -4924,7 +5411,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.shell("abc")',
+                            test: '@server.shell("abc")',
                         },
                     },
                 };
@@ -4950,7 +5437,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.backupToGithub("abc")',
+                            test: '@server.backupToGithub("abc")',
                         },
                     },
                 };
@@ -4976,8 +5463,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
+                            test:
+                                '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
                         },
                     },
                 };
@@ -5011,7 +5498,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `player.checkout({
+                            test: `@player.checkout({
                                 productId: 'ID1',
                                 title: 'Product 1',
                                 description: '$50.43',
@@ -5049,7 +5536,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `server.finishCheckout({
+                            test: `@server.finishCheckout({
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -5080,7 +5567,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `server.finishCheckout({
+                            test: `@server.finishCheckout({
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -5162,7 +5649,7 @@ export function botActionsTests(
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                'test()': `remote(${script})`,
+                                test: `@remote(${script})`,
                             },
                         },
                     };
@@ -5187,7 +5674,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `remote(player.toast("Hi!"), {
+                            test: `@remote(player.toast("Hi!"), {
                                 session: 's',
                                 username: 'u',
                                 device: 'd'
@@ -5236,7 +5723,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `="return ${val}"`,
+                            test: `="@return ${val}"`,
                         },
                     },
                 };
@@ -5270,7 +5757,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `=${val}`,
+                            test: `=${val}`,
                         },
                     },
                 };
@@ -5298,7 +5785,7 @@ export function botActionsTests(
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        'test()': 'return 10',
+                        test: '@return 10',
                     },
                 },
             };
@@ -5609,7 +6096,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}({ abc: "def" })`,
+                            test: `@${name}({ abc: "def" })`,
                         },
                     },
                 };
@@ -5637,7 +6124,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}("otherBot", { abc: "def" })`,
+                            test: `@${name}("otherBot", { abc: "def" })`,
                         },
                     },
                 };
@@ -5665,7 +6152,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}({ abc: "def" }, { ghi: 123 })`,
+                            test: `@${name}({ abc: "def" }, { ghi: 123 })`,
                         },
                     },
                 };
@@ -5694,7 +6181,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}(getBots("name", "that"))`,
+                            test: `@${name}(getBots("name", "that"))`,
                         },
                     },
                     thatBot: {
@@ -5732,7 +6219,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `setTag(this, "#newBotId", ${name}(from(null), { abc: "def" }).id)`,
+                            test: `@setTag(this, "#newBotId", ${name}(from(null), { abc: "def" }).id)`,
                         },
                     },
                 };
@@ -5765,7 +6252,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `let newBot = ${name}(from(null), { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
+                            test: `@let newBot = ${name}(from(null), { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
                         },
                     },
                 };
@@ -5799,7 +6286,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}(from(null), { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
+                            test: `@${name}(from(null), { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
                         },
                     },
                 };
@@ -5832,7 +6319,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `let newBot = ${name}(from(null), { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
+                            test: `@let newBot = ${name}(from(null), { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
                         },
                     },
                 };
@@ -5867,7 +6354,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             num: 100,
-                            'test()': `let newBot = ${name}({ abc: getTag(this, "#num") });`,
+                            test: `@let newBot = ${name}({ abc: getTag(this, "#num") });`,
                         },
                     },
                 };
@@ -5896,7 +6383,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             num: 1,
-                            'test()': `${name}({ abc: getTag(this, "#num"), "onCreate()": "setTag(this, \\"#num\\", 100)" });`,
+                            test: `@${name}({ abc: getTag(this, "#num"), "onCreate": "@setTag(this, \\"#num\\", 100)" });`,
                         },
                     },
                 };
@@ -5915,7 +6402,7 @@ export function botActionsTests(
                         tags: {
                             auxCreator: 'thisBot',
                             abc: 1,
-                            'onCreate()': 'setTag(this, "#num", 100)',
+                            onCreate: '@setTag(this, "#num", 100)',
                         },
                     }),
                     botUpdated(expectedId, {
@@ -5930,7 +6417,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ]).length)`,
+                            test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ]).length)`,
                         },
                     },
                 };
@@ -5971,7 +6458,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)`,
+                            test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)`,
                         },
                     },
                 };
@@ -6046,7 +6533,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}(getBots("test", true))`,
+                            test: `@${name}(getBots("test", true))`,
                         },
                     },
                     aBot: {
@@ -6100,7 +6587,7 @@ export function botActionsTests(
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                'test()': `${name}(from(getBot("other", true)), { abc: "def" })`,
+                                test: `@${name}(from(getBot("other", true)), { abc: "def" })`,
                             },
                         },
                         otherBot: {
@@ -6135,7 +6622,7 @@ export function botActionsTests(
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                'test()': `${name}(from(null), { abc: "def" })`,
+                                test: `@${name}(from(null), { abc: "def" })`,
                             },
                         },
                         otherBot: {

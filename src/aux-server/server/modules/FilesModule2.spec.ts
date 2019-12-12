@@ -137,7 +137,7 @@ describe('FilesModule2', () => {
 
             it('should send a callback shout when done', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "called", true)',
+                    callback: '@setTag(this, "called", true)',
                 });
 
                 await simulation.helper.transaction(
@@ -157,7 +157,7 @@ describe('FilesModule2', () => {
 
             it('should send a callback shout with an error if the file already exists', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
@@ -180,7 +180,7 @@ describe('FilesModule2', () => {
 
             it('should overwrite files if indicated', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
@@ -233,7 +233,7 @@ describe('FilesModule2', () => {
         describe('load_file', () => {
             it('should load the first file that matches the given path in one of the directories', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await simulation.helper.transaction(
@@ -252,7 +252,7 @@ describe('FilesModule2', () => {
 
             it('should load the files that matches the given path exactly', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await simulation.helper.transaction(
@@ -271,7 +271,7 @@ describe('FilesModule2', () => {
 
             it('should be able to load files without the /drives prefix', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await simulation.helper.transaction(
@@ -290,7 +290,7 @@ describe('FilesModule2', () => {
 
             it('should send a callback sound with an error if the file does not exist', async () => {
                 await simulation.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 await simulation.helper.transaction(

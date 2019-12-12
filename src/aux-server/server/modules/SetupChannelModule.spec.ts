@@ -204,7 +204,7 @@ describe('SetupChannelModule', () => {
 
                 await channel.sendEvents([
                     setupChannel('newChannel', {
-                        'onCreate()': 'setTag(this, "created", true)',
+                        onCreate: '@setTag(this, "created", true)',
                     }),
                 ]);
 
@@ -225,7 +225,7 @@ describe('SetupChannelModule', () => {
                 const newBot = newChannel.simulation.helper.botsState['newBot'];
                 expect(newBot).toEqual(
                     createPrecalculatedBot('newBot', {
-                        'onCreate()': 'setTag(this, "created", true)',
+                        onCreate: '@setTag(this, "created", true)',
                         created: true,
                     })
                 );

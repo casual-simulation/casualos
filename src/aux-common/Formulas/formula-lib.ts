@@ -1,4 +1,9 @@
-import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
+import {
+    GLOBALS_BOT_ID,
+    DEVICE_BOT_ID,
+    Bot as NormalBot,
+    ScriptBot,
+} from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -34,6 +39,7 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
+    hideHtml as hideHtmlMessage,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
@@ -63,7 +69,7 @@ import {
     trimEvent,
     hasValue,
     createBot,
-    getBotValues,
+    isScriptBot,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -305,7 +311,9 @@ export interface SessionSelector {
     session?: string;
 }
 
-type BotTags = any;
+interface BotTags {
+    [key: string]: any;
+}
 
 /**
  * Defines the basic structure of a bot.
@@ -317,11 +325,21 @@ interface Bot {
     id: string;
 
     /**
+     * The calculated tag values that the bot contains.
+     */
+    tags: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
-     * Otherwise, use getTag().
+     * Otherwise, use the tags property.
      */
-    tags: any;
+    raw: BotTags;
+
+    /**
+     * The tags that have been changed on this bot.
+     */
+    changes: BotTags;
 }
 
 /**
@@ -438,20 +456,6 @@ function stdDev(list: any) {
 }
 
 /**
- * Sorts the given array in ascending order and returns the sorted values in a new array.
- * @param array The array of numbers to sort.
- */
-function sort(array: any[], direction: 'ASC' | 'DESC' = 'ASC'): any[] {
-    let newArray = array.slice();
-    let isAscending = direction.toUpperCase() !== 'DESC';
-    if (isAscending) {
-        return newArray.sort((a, b) => a - b);
-    } else {
-        return newArray.sort((a, b) => b - a);
-    }
-}
-
-/**
  * Generates a random integer number between min and max.
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
@@ -478,19 +482,6 @@ function random(min: number = 0, max?: number): number {
         return rand * (max - min) + min;
     } else {
         return rand + min;
-    }
-}
-
-/**
- * Joins the given list of values into a single string.
- * @param values The values to make the string out of.
- * @param separator The separator used to separate values.
- */
-function join(values: any, separator: string = ','): string {
-    if (Array.isArray(values)) {
-        return values.join(separator);
-    } else {
-        return values;
     }
 }
 
@@ -668,19 +659,19 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         }
     }
 
-    let bots: Bot[] = variants.map(v => {
+    let bots: NormalBot[] = variants.map(v => {
         let bot = {
             id: idFactory(),
             tags: {},
         };
-        apply(bot.tags, ...v);
+        applyMod(bot.tags, ...v);
         return bot;
     });
 
     let actions = getActions();
     actions.push(...bots.map(f => botAdded(f)));
 
-    let ret = new Array<Bot>(bots.length);
+    let ret = new Array<ScriptBot>(bots.length);
     const calc = getCalculationContext();
     for (let i = 0; i < bots.length; i++) {
         ret[i] = calc.sandbox.interface.addBot(bots[i]);
@@ -691,7 +682,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         );
     }
 
-    event(CREATE_ACTION_NAME, bots);
+    event(CREATE_ACTION_NAME, ret);
 
     if (ret.length === 1) {
         return ret[0];
@@ -1007,7 +998,7 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
  * @param bot The bot or mod that should be dragged instead of the original.
  */
 function replaceDragBot(bot: Mod) {
-    const event = calcReplaceDragBot(bot);
+    const event = calcReplaceDragBot(unwrapBotOrMod(bot));
     return addAction(event);
 }
 
@@ -1110,7 +1101,7 @@ function checkout(options: CheckoutOptions) {
  * @example
  * // Finish the checkout process
  * server.finishCheckout({
- *   token: 'token from onCheckou()',
+ *   token: 'token from onCheckout',
  *
  *   // 1000 cents == $10.00
  *   amount: 1000,
@@ -1555,11 +1546,24 @@ function not(filter: BotFilterFunction): BotFilterFunction {
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
+            } else {
+                current = bot.tags[tag];
+            }
+        } else if (isBot(current)) {
+            const tag = trimTag(tags[i]);
+            const calc = getCalculationContext();
+            if (calc) {
+                const script = calc.sandbox.interface.getBot(current.id);
+                if (script) {
+                    current = calc.sandbox.interface.getTag(script, tag);
+                } else {
+                    current = bot.tags[tag];
+                }
             } else {
                 current = bot.tags[tag];
             }
@@ -1587,7 +1591,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
     const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1622,13 +1626,13 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isBot(bot[0])) {
+    if (Array.isArray(bot) && bot.length > 0 && isScriptBot(bot[0])) {
         const calc = getCalculationContext();
         for (let i = 0; i < bot.length; i++) {
-            calc.sandbox.interface.setTag(bot[i], tag, value);
+            calc.sandbox.interface.setTag(bot[i] as ScriptBot, tag, value);
         }
         return value;
-    } else if (bot && isBot(bot)) {
+    } else if (bot && isScriptBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
@@ -1643,7 +1647,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
+function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1681,38 +1685,20 @@ function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
 }
 
 /**
- * Saves the given diff to a string of JSON.
- * @param bot The diff to save.
- */
-function exportMod(bot: any): string {
-    if (isBot(bot)) {
-        return JSON.stringify(bot.tags);
-    } else {
-        return JSON.stringify(bot);
-    }
-}
-
-/**
- * Gets a mod of the tags from the given bot.
- * @param bot The bot.
- */
-function getMod(bot: Bot): Mod {
-    return getBotValues(getCalculationContext(), bot);
-}
-
-/**
  * Applies the given diff to the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function apply(bot: any, ...diffs: Mod[]) {
+function applyMod(bot: any, ...diffs: Mod[]) {
     let appliedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
             return;
         }
         let tags: BotTags;
-        if (isBot(diff)) {
+        if (isScriptBot(diff)) {
+            tags = diff.raw;
+        } else if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1723,7 +1709,7 @@ function apply(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
         });
@@ -1780,7 +1766,7 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function subtract(bot: any, ...diffs: Mod[]) {
+function subtractMods(bot: any, ...diffs: Mod[]) {
     let subtractedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
@@ -1798,7 +1784,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });
@@ -1812,7 +1798,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
  * @param y The Y position that the bot should be added at.
  * @param index The index that the bot should be added at.
  */
-function addToContext(
+function addToContextMod(
     context: string,
     x: number = 0,
     y: number = 0,
@@ -1826,7 +1812,7 @@ function addToContext(
  * Gets a diff that removes a bot from the given context.
  * @param context The context.
  */
-function removeFromContext(context: string) {
+function removeFromContextMod(context: string) {
     const calc = getCalculationContext();
     return calcRemoveFromContextDiff(calc, context);
 }
@@ -1838,7 +1824,12 @@ function removeFromContext(context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-function setPosition(context: string, x?: number, y?: number, index?: number) {
+function setPositionMod(
+    context: string,
+    x?: number,
+    y?: number,
+    index?: number
+) {
     const calc = getCalculationContext();
     return calcSetPositionDiff(calc, context, x, y, index);
 }
@@ -1846,10 +1837,10 @@ function setPosition(context: string, x?: number, y?: number, index?: number) {
 /**
  * Gets a diff that adds a bot to the current user's menu.
  */
-function addToMenu(): BotTags {
+function addToMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...addToContext(context),
+        ...addToContextMod(context),
         [`${context}Id`]: uuid(),
     };
 }
@@ -1857,10 +1848,10 @@ function addToMenu(): BotTags {
 /**
  * Gets a diff that removes a bot from the current user's menu.
  */
-function removeFromMenu(): BotTags {
+function removeFromMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...removeFromContext(context),
+        ...removeFromContextMod(context),
         [`${context}Id`]: null,
     };
 }
@@ -1891,6 +1882,14 @@ function playSound(url: string) {
  */
 function showHtml(html: string) {
     const event = htmlMessage(html);
+    return addAction(event);
+}
+
+/**
+ * Hides the HTML from the user.
+ */
+function hideHtml() {
+    const event = hideHtmlMessage();
     return addAction(event);
 }
 
@@ -2039,13 +2038,22 @@ function echo(message: string) {
     actions.push(calcRemote(calcEcho(message)));
 }
 
+function unwrapBotOrMod(botOrMod: Mod) {
+    if (isScriptBot(botOrMod)) {
+        const calc = getCalculationContext();
+        return calc.sandbox.interface.unwrapBot(botOrMod);
+    } else {
+        return botOrMod;
+    }
+}
+
 /**
  * Sends an event to the server to setup a new channel if it does not exist.
  * @param channel The channel.
  * @param botOrMod The bot or mod that should be cloned into the new channel.
  */
 function setupChannel(channel: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(channel, botOrMod));
+    return remote(calcSetupChannel(channel, unwrapBotOrMod(botOrMod)));
 }
 
 /**
@@ -2110,33 +2118,7 @@ function __energyCheck() {
 
 // NOTE: Make sure to add functions that don't
 // match their exported name here so that builtin code editors can figure out what they are.
-export const typeDefinitionMap = new Map([
-    ['mod.import', 'load'],
-    ['mod.export', 'save'],
-    ['player.getBot', 'getUser'],
-]);
-
-/**
- * Defines a set of functions that are able to make Bot Diffs.
- */
-const modNamespace = {
-    addToContext,
-    removeFromContext,
-    addToMenu,
-    removeFromMenu,
-    setPosition,
-    import: importMod,
-    export: exportMod,
-    subtract,
-};
-
-type ModNamespace = typeof modNamespace;
-interface ModInterface extends ModNamespace {
-    (bot: Bot, ...mods: Mod[]): void;
-}
-
-const mod: ModInterface = <any>apply;
-Object.assign(mod, modNamespace);
+export const typeDefinitionMap = new Map([['player.getBot', 'getUser']]);
 
 /**
  * Defines a set of functions that relate to common player operations.
@@ -2152,6 +2134,7 @@ const player = {
     playSound,
     toast,
     showHtml,
+    hideHtml,
     tweenTo,
     moveTo,
     openQRCodeScanner,
@@ -2204,14 +2187,6 @@ const math = {
 };
 
 /**
- * Defines a set of functions that relate to common data operations.
- */
-const data = {
-    sort,
-    join,
-};
-
-/**
  * Defines a set of functions that handle actions.
  */
 const actionNamespace = {
@@ -2221,8 +2196,6 @@ const actionNamespace = {
 
 export default {
     // Namespaces
-    data,
-    mod,
     math,
     player,
     server,
@@ -2241,9 +2214,19 @@ export default {
     webhook,
     from,
 
+    // Mod functions
+    applyMod,
+    getMod,
+    addToContextMod,
+    removeFromContextMod,
+    addToMenuMod,
+    removeFromMenuMod,
+    setPositionMod,
+    subtractMods,
+
+    // Get bot functions
     getBot,
     getBots,
-    getMod,
     getBotTagValues,
     byTag,
     byMod,
@@ -2253,6 +2236,8 @@ export default {
     neighboring,
     either,
     not,
+
+    // other util functions
     getTag,
     setTag,
     removeTags,

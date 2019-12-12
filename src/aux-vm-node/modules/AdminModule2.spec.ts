@@ -149,14 +149,14 @@ describe('AdminModule2', () => {
         describe('device', () => {
             it('should pipe device events through onChannelAction()', async () => {
                 await simulation.helper.createBot('test', {
-                    'testShout()': 'setTag(this, "abc", true)',
+                    testShout: '@setTag(this, "abc", true)',
                 });
 
                 await simulation.helper.updateBot(
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'onChannelAction()': `
+                            onChannelAction: `@
                                 if (that.action.type === 'device') {
                                     action.perform(that.action.event);
                                 }
