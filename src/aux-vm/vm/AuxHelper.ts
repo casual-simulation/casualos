@@ -41,6 +41,8 @@ import {
     resolveRejectedActions,
     reject,
     USERS_CONTEXT,
+    BotType,
+    getBotType,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -225,12 +227,16 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param id (Optional) The ID that the bot should have.
      * @param tags (Optional) The tags that the bot should have.
      */
-    async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
+    async createBot(
+        id?: string,
+        tags?: Bot['tags'],
+        type?: BotType
+    ): Promise<string> {
         if (AuxHelper._debug) {
             console.log('[AuxHelper] Create Bot');
         }
 
-        const bot = createBot(id, tags);
+        const bot = createBot(id, tags, type);
         await this._sendEvents([botAdded(bot)]);
         // await this._tree.addBot(bot);
 
@@ -514,38 +520,32 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotEvent(event: BotActions): AuxPartition {
-        return this._partitionForBotId(this._botId(event));
+        return this._partitionForBotType(this._botType(event));
     }
 
-    private _partitionForBotId(id: string): AuxPartition {
-        const idPartition = this._partitions[id];
+    private _partitionForBotType(type: string): AuxPartition {
+        const partitionId = type === null ? '*' : type;
+        const idPartition = this._partitions[partitionId];
         if (idPartition) {
             return idPartition;
         }
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            const index = key.indexOf('*');
-            // Only include partitions which
-            // have at least one character before a *
-            if (index > 0) {
-                let prefix = key.substring(0, index);
-                if (id.startsWith(prefix)) {
-                    return partition;
-                }
-            }
-        }
-        return this._partitions['*'];
+        return null;
     }
 
-    private _botId(event: BotActions): string {
+    private _botType(event: BotActions): string {
+        let bot: Bot;
         if (event.type === 'add_bot') {
-            return event.bot.id;
+            bot = event.bot;
         } else if (event.type === 'remove_bot') {
-            return event.id;
+            bot = this.botsState[event.id];
         } else if (event.type === 'update_bot') {
-            return event.id;
-        } else {
-            return '*';
+            bot = this.botsState[event.id];
         }
+
+        if (!bot) {
+            return null;
+        }
+        return getBotType(bot);
     }
 
     private _sendOtherEvents(events: BotAction[]) {

@@ -120,7 +120,7 @@ describe('AuxHelper', () => {
                 abc: createMemoryPartition({
                     type: 'memory',
                     initialState: {
-                        abc: createBot('abc'),
+                        test: createBot('test', undefined, <any>'abc'),
                     },
                 }),
             });
@@ -130,7 +130,7 @@ describe('AuxHelper', () => {
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(
-                botUpdated('abc', {
+                botUpdated('test', {
                     tags: {
                         test: 123,
                     },
@@ -140,7 +140,7 @@ describe('AuxHelper', () => {
             await waitAsync();
 
             expect(events).toEqual([
-                botUpdated('abc', {
+                botUpdated('test', {
                     tags: {
                         test: 123,
                     },
@@ -148,7 +148,7 @@ describe('AuxHelper', () => {
             ]);
         });
 
-        it('should support prefixes for bot IDs', async () => {
+        it('should place bots in partitions based on the bot type', async () => {
             let mem = createMemoryPartition({
                 type: 'memory',
                 initialState: {},
@@ -158,15 +158,25 @@ describe('AuxHelper', () => {
                     type: 'memory',
                     initialState: {},
                 }),
-                'TEST-*': mem,
+                TEST: mem,
             });
 
-            await helper.createBot('TEST-abcdefghijklmnop');
+            await helper.createBot('abcdefghijklmnop', undefined, <any>'TEST');
 
-            expect(Object.keys(helper.botsState)).toEqual([
-                'TEST-abcdefghijklmnop',
-            ]);
-            expect(Object.keys(mem.state)).toEqual(['TEST-abcdefghijklmnop']);
+            expect(Object.keys(helper.botsState)).toEqual(['abcdefghijklmnop']);
+            expect(Object.keys(mem.state)).toEqual(['abcdefghijklmnop']);
+        });
+
+        it('should ignore bots going to partitions that dont exist', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+            });
+
+            await helper.createBot('abcdefghijklmnop', undefined, <any>'TEST');
+            expect(Object.keys(helper.botsState)).toEqual([]);
         });
 
         it('should prevent partitions from overriding other partitions', async () => {
@@ -179,7 +189,7 @@ describe('AuxHelper', () => {
                         }),
                     },
                 }),
-                'TEST-*': createMemoryPartition({
+                TEST: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test', {
