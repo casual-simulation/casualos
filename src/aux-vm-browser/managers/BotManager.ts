@@ -7,6 +7,7 @@ import {
     LOCAL_BOT_ID,
     botUpdated,
     TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
     COOKIE_BOT_ID,
     BotTags,
     isBotTags,
@@ -137,7 +138,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                       } as const);
             return {
                 '*': primaryPartiton,
-                [COOKIE_BOT_ID]: {
+                [COOKIE_BOT_PARTITION_ID]: {
                     type: 'memory',
                     initialState: {
                         [COOKIE_BOT_ID]:
