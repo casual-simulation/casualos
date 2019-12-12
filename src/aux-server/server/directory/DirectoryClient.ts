@@ -6,7 +6,7 @@ import {
 } from './DirectoryClientSettings';
 import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
-import { sha256 } from 'sha.js';
+import { sha256 } from 'hash.js';
 import axios from 'axios';
 import sortBy from 'lodash/sortBy';
 import {
@@ -214,9 +214,9 @@ function retryUntilFailedTimes<T>(
 
 function getKey() {
     const bytes = randomBytes(32);
-    const hash = new sha256();
+    const hash = sha256();
     hash.update(bytes);
-    return hash.digest().toString('hex');
+    return hash.digest('hex');
 }
 
 function generatePassword() {

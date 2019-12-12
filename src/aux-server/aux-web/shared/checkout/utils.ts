@@ -7,7 +7,7 @@ export function getStripeKey(sim: Simulation): string {
     const key = calculateStringTagValue(
         calc,
         config,
-        'stripe.publishableKey',
+        'stripePublishableKey',
         null
     );
     return key;

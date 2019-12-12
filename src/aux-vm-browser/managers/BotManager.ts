@@ -1,6 +1,5 @@
 import {
     Bot,
-    UserMode,
     merge,
     parseSimulationId,
     createBot,
@@ -33,6 +32,7 @@ import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import pickBy from 'lodash/pickBy';
+import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -97,7 +97,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     constructor(
         user: AuxUser,
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean }
+        config: { isBuilder: boolean; isPlayer: boolean; version: number }
     ) {
         super(
             id,
@@ -122,13 +122,21 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
+            const primaryPartiton =
+                config.version === 1
+                    ? ({
+                          type: 'remote_causal_tree',
+                          id: id,
+                          host: parsedId.host,
+                          treeName: getTreeName(parsedId.channel),
+                      } as const)
+                    : ({
+                          type: 'remote_causal_repo',
+                          branch: parsedId.channel,
+                          host: getFinalUrl(location.origin, parsedId.host),
+                      } as const);
             return {
-                '*': {
-                    type: 'remote_causal_tree',
-                    id: id,
-                    host: parsedId.host,
-                    treeName: getTreeName(parsedId.channel),
-                },
+                '*': primaryPartiton,
                 [COOKIE_BOT_ID]: {
                     type: 'memory',
                     initialState: {
@@ -145,18 +153,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 },
             };
         }
-    }
-
-    /**
-     * Sets the bot mode that the user should be in.
-     * @param mode The mode that the user should use.
-     */
-    setUserMode(mode: UserMode) {
-        return this.helper.updateBot(this.helper.userBot, {
-            tags: {
-                'aux._mode': mode,
-            },
-        });
     }
 
     async editBot(bot: Bot | BotTags, tag: string, value: any): Promise<void> {

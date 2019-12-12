@@ -15,6 +15,7 @@ export interface Config {
     mongodb: MongoDbConfig;
     redis: RedisConfig;
     trees: CausalTreeServerConfig;
+    repos: CausalReposServerConfig;
     directory: DirectoryConfig;
     proxy: ProxyConfig;
     dist: string;
@@ -43,6 +44,11 @@ export interface RedisConfig {
 
 export interface CausalTreeServerConfig {
     dbName: string;
+}
+
+export interface CausalReposServerConfig {
+    dbName: string;
+    objectsCollectionName: string;
 }
 
 export interface DirectoryConfig {

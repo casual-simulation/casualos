@@ -157,6 +157,30 @@ describe('ChannelManager', () => {
 
             expect(channel2.tree).not.toBe(channel.tree);
         });
+
+        it('should not create a new tree if automaticallyCreateTrees is set to false', async () => {
+            manager.automaticallyCreateTrees = false;
+
+            const channel = await manager.loadChannel({
+                id: 'notTest',
+                type: 'number',
+            });
+
+            expect(channel).toBe(null);
+        });
+
+        it('should be able to load an existing tree if automaticallyCreateTrees is set to false', async () => {
+            manager.automaticallyCreateTrees = false;
+
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            expect(channel.tree).toBeInstanceOf(Tree);
+            expect(channel.events).toBeInstanceOf(Subject);
+            expect(channel.tree.weave.atoms).toEqual(stored.weave.atoms);
+        });
     });
 
     describe('whileCausalTreeLoaded()', () => {

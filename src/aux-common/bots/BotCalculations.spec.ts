@@ -61,6 +61,8 @@ import {
     getUserBotColor,
     cleanBot,
     convertToCopiableValue,
+    isScript,
+    parseScript,
 } from './BotCalculations';
 import {
     Bot,
@@ -93,6 +95,28 @@ describe('BotCalculations', () => {
 
         it('should be false when value does not start with a "=" sign', () => {
             expect(isFormula('abc')).toBeFalsy();
+        });
+    });
+
+    describe('isScript()', () => {
+        it('should be true when value starts with a "@" sign', () => {
+            expect(isScript('@')).toBeTruthy();
+            expect(isScript('a@')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "@" sign', () => {
+            expect(isScript('abc')).toBeFalsy();
+        });
+    });
+
+    describe('parseScript()', () => {
+        it('should return the script when value starts with a "@" sign', () => {
+            expect(parseScript('@')).toBe('');
+            expect(parseScript('@abc')).toBe('abc');
+        });
+
+        it('should return null when the value does not start with an "@" sign', () => {
+            expect(parseScript('abc')).toBe(null);
         });
     });
 
@@ -658,11 +682,11 @@ describe('BotCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.context.x',
-                'aux.context.y',
-                'aux.context.z',
-                'aux.context.visualize',
-                'aux.context',
+                'auxContextX',
+                'auxContextY',
+                'auxContextZ',
+                'auxContextVisualize',
+                'auxContext',
             ]);
         });
     });
@@ -705,30 +729,6 @@ describe('BotCalculations', () => {
                 state['second'],
                 state['workspace'],
             ]);
-        });
-
-        it('should include destroyed objects', () => {
-            const state: BotsState = {
-                first: {
-                    id: 'first',
-                    tags: {
-                        'aux._destroyed': true,
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test',
-                    },
-                },
-                second: {
-                    id: 'second',
-                    tags: {
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test',
-                    },
-                },
-            };
-
-            const objects = getActiveObjects(state);
-
-            expect(objects).toEqual([state['first'], state['second']]);
         });
     });
 
@@ -852,28 +852,28 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should use input context id if given', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['aux.context']).toEqual('userSetID');
+            expect(workspace.tags['auxContext']).toEqual('userSetID');
         });
 
         // Test for the context type changes
@@ -881,14 +881,14 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
+            expect(workspace.tags['auxContextLocked']).toEqual(undefined);
         });
 
         it('should allow setting the workspace to be unlocked', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID', false);
 
-            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
+            expect(workspace.tags['auxContextLocked']).toEqual(undefined);
         });
     });
 
@@ -923,9 +923,9 @@ describe('BotCalculations', () => {
         );
 
         const selectionCases = [
-            ['aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
-            ['aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
-            ['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'],
+            ['_auxSelection09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
+            ['_auxSelection6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
+            ['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'],
         ];
         it.each(selectionCases)(
             'should return true for selection tag %s',
@@ -935,16 +935,16 @@ describe('BotCalculations', () => {
         );
 
         const normalCases = [
-            [false, 'aux.draggable'],
-            [false, 'aux.stackable'],
-            [false, 'aux.color'],
-            [false, 'aux.label.color'],
+            [false, 'auxDraggable'],
+            [false, 'auxStackable'],
+            [false, 'auxColor'],
+            [false, 'auxLabelColor'],
             [false, 'aux.line'],
-            [false, 'aux.scale.x'],
-            [false, 'aux.scale.y'],
-            [false, 'aux.scale.z'],
-            [false, 'aux.scale'],
-            [true, 'aux._destroyed'],
+            [false, 'auxScaleX'],
+            [false, 'auxScaleY'],
+            [false, 'auxScaleZ'],
+            [false, 'auxScale'],
+            [true, 'aux._hidden'],
             [false, '+(#tag:"value")'],
             [false, 'onCombine(#tag:"value")'],
             [true, '_context_test'],
@@ -986,9 +986,9 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            first.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            second.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
             const result = doBotsAppearEqual(first, second);
@@ -1014,9 +1014,9 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            first.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+            second.tags['_auxSelection83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
             const result = doBotsAppearEqual(first, second);
@@ -1043,8 +1043,8 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._context_A.x'] = 1;
-            second.tags['aux._context_B.x'] = 0;
+            first.tags['aux._context_AX'] = 1;
+            second.tags['aux._context_BX'] = 0;
 
             const result = doBotsAppearEqual(first, second);
 
@@ -1652,7 +1652,7 @@ describe('BotCalculations', () => {
         it('should be true for tags that start with underscores after dots', () => {
             expect(isHiddenTag('aux._')).toBe(true);
             expect(isHiddenTag('aux._context_')).toBe(true);
-            expect(isHiddenTag('aux._selection')).toBe(true);
+            expect(isHiddenTag('_auxSelection')).toBe(true);
             expect(isHiddenTag('domain._hidden')).toBe(true);
 
             expect(isHiddenTag('._')).toBe(false);

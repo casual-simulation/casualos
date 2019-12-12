@@ -1,5 +1,248 @@
 # AUX Changelog
 
+## V0.11.11
+
+### Date: 12/12/2019
+
+### Changes:
+
+-   **Breaking Changes**
+
+    -   Changed `create()` and `createTemp()` to automatically set `auxCreator` to the current `this` bot.
+        -   `create()` no longer takes a bot/bot ID as the first parameter. Instead, you need to use the `from()` function to set the creator ID.
+        -   e.g. `create(from(bot))`.
+    -   Renamed all listen tags to not use the `()` at the end.
+        -   Every tag is now the same. This means that `()` to the end of a tag does nothing special.
+        -   i.e. There is no difference between a "normal" tag and a "listen" tag.
+        -   Instead, tags can listen by prefixing their script with a `@` symbol.
+        -   e.g. `player.toast("Hi!")` becomes `@player.toast("Hi!")`.
+    -   Renamed `mod()` to `applyMod()`.
+    -   Renamed `mod.addToMenu()` to `addToMenuMod()`.
+    -   Renamed `mod.removeFromMenu()` to `removeFromMenuMod()`.
+    -   Renamed `mod.addToContext()` to `addToContextMod()`.
+    -   Renamed `mod.removeFromContext()` to `removeFromContextMod()`.
+    -   Renamed `mod.setPosition()` to `setPositionMod()`.
+    -   Renamed `mod.subtract()` to `subtractMods()`.
+    -   Renamed `mod.import()` to `getMod()`.
+    -   Removed `mod.export()`.
+
+-   Improvements
+    -   Added a `creator` variable to scripts and formulas which gets the bot that created the `this` bot.
+        -   `creator` is null if the current bot has no creator.
+    -   Added a `raw` variable to scripts and formulas which gets direct access to the `this` bot's tag values.
+        -   This is similar to the `tags` variable but does not do any pre-processing on the tag value. This means you will get formula scripts back instead of the calculated formula values.
+    -   Improved the `tags` variable to handle setting tag values on it.
+        -   This lets you write scripts like `tags.name = "joe"` or `bot.tags.myContext = true`.
+        -   Also works with the `raw` variable.
+    -   Improved bots returned from `getBots()` and `getBot()` to support setting tag values on their `tags` property.
+        -   This lets you write things like `myBot.tags.name = "bob"`.
+        -   Should also work with bots in the `that` variable.
+    -   Added a `data` variable which equals `that`.
+    -   Added the `player.hideHtml()` function which hides the HTML modal.
+    -   Added in inventory tags to limit panning movements on the inventory context: `auxContextInventoryPannableMinX`, `auxContextInventoryPannableMaxX`, `auxContextInventoryPannableMinY`, `auxContextInventoryPannableMaxY`.
+    -   Reformatted new selection id logic by removing the `._` character from its return.
+
+## V0.11.10
+
+### Date: 12/9/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issue of hidden tags showing up when no filter has been selected on the table.
+
+## V0.11.9
+
+### Date: 12/6/2019
+
+### Changes:
+
+-   **Breaking Changes**
+    -   `removeTags()` now checks if a tag starts with the given search value.
+        -   Previously it would check if the search value matched the first part of a tag up do the dot (`.`).
+        -   Now, it will remove all tags that start with the given search value.
+        -   e.g. `removeTags(bot, "hello")` will remove `hello`, `helloAbc`, and `helloX`.
+    -   The bot table tag blacklist has been updated to support camel cased tags.
+    -   Renamed several functions:
+        -   Renamed `onAnyAction()` to `onChannelAction()`.
+        -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
+        -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
+        -   Renamed `mod.apply()` to `mod()`.
+            -   All the other `mod.` functions remain the same.
+            -   ex. `mod.export()` still works.
+    -   Renamed all of the built-in tags to use `camelCase` instead of `dot.case`.
+        -   Renamed all the scene tags to channel tags.
+            -   `aux.scene.color` is now `auxChannelColor`
+            -   `aux.scene.user.player.color` is now `auxChannelUserPlayerColor`
+            -   `aux.scene.user.builder.color` is now `auxChannelUserBuilderColor`
+        -   Renamed `aux.inventory.height` to `auxInventoryHeight`.
+        -   Renamed `aux.channel` to `auxChannel`.
+        -   Renamed `aux.connectedSessions` to `auxConnectedSessions`.
+        -   Renamed `aux.color` to `auxColor`.
+        -   Renamed `aux.creator` to `auxCreator`.
+        -   Renamed `aux.draggable` to `auxDraggable`.
+        -   Renamed `aux.draggable.mode` to `auxDraggableMode`.
+        -   Renamed `aux.stackable` to `auxStackable`.
+        -   Renamed `aux.destroyable` to `auxDestroyable`.
+        -   Renamed `aux.editable` to `auxEditable`.
+        -   Renamed `aux.stroke.color` to `auxStrokeColor`.
+        -   Renamed `aux.stroke.width` to `auxStrokeWidth`.
+        -   Renamed `aux.line.to` to `auxLineTo`.
+        -   Renamed `aux.line.width` to `auxLineWidth`.
+        -   Renamed `aux.line.style` to `auxLineStyle`.
+        -   Renamed `aux.line.color` to `auxLineColor`.
+        -   Renamed `aux.label` to `auxLabel`.
+        -   Renamed `aux.label.color` to `auxLabelColor`.
+        -   Renamed `aux.label.size` to `auxLabelSize`.
+        -   Renamed `aux.label.size.mode` to `auxLabelSizeMode`.
+        -   Renamed `aux.label.anchor` to `auxLabelAnchor`.
+        -   Renamed `aux.listening` to `auxListening`.
+        -   Renamed `aux.shape` to `auxShape`.
+        -   Renamed `aux.scale` to `auxScale`.
+        -   Renamed `aux.scale.x` to `auxScaleX`.
+        -   Renamed `aux.scale.y` to `auxScaleY`.
+        -   Renamed `aux.scale.z` to `auxScaleZ`.
+        -   Renamed `aux.image` to `auxImage`.
+        -   Renamed `aux.iframe` to `auxIframe`.
+        -   Renamed `aux.iframe.x` to `auxIframeX`.
+        -   Renamed `aux.iframe.y` to `auxIframeY`.
+        -   Renamed `aux.iframe.z` to `auxIframeZ`.
+        -   Renamed `aux.iframe.size.x` to `auxIframeSizeX`.
+        -   Renamed `aux.iframe.size.y` to `auxIframeSizeY`.
+        -   Renamed `aux.iframe.rotation.x` to `auxIframeRotationX`.
+        -   Renamed `aux.iframe.rotation.y` to `auxIframeRotationY`.
+        -   Renamed `aux.iframe.rotation.z` to `auxIframeRotationZ`.
+        -   Renamed `aux.iframe.element.width` to `auxIframeElementWidth`.
+        -   Renamed `aux.iframe.scale` to `auxIframeScale`.
+        -   Renamed `aux.progressBar` to `auxProgressBar`.
+        -   Renamed `aux.progressBar.color` to `auxProgressBarColor`.
+        -   Renamed `aux.progressBar.backgroundColor` to `auxProgressBarBackgroundColor`.
+        -   Renamed `aux.progressBar.anchor` to `auxProgressBarAnchor`.
+        -   Renamed `aux._selection` to `_auxSelection`.
+        -   Renamed `aux._user` to `_auxUser`.
+        -   Renamed `aux.user.active` to `auxUserActive`.
+        -   Renamed `aux.version` to `auxVersion`.
+        -   Renamed `aux._userChannel` to `_auxUserChannel`.
+        -   Renamed `aux._userContext` to `_auxUserContext`.
+        -   Renamed `aux._userInventoryContext` to `_auxUserInventoryContext`.
+        -   Renamed `aux._userMenuContext` to `_auxUserMenuContext`.
+        -   Renamed `aux._userSimulationsContext` to `_auxUserChannelsContext`.
+        -   Renamed `aux._editingBot` to `_auxEditingBot`.
+        -   Renamed `aux._selectionMode` to `_auxSelectionMode`.
+        -   Renamed `aux.runningTasks` to `auxRunningTasks`.
+        -   Renamed `aux.finishedTasks` to `auxFinishedTasks`.
+        -   Renamed `aux.task.output` to `auxTaskOutput`.
+        -   Renamed `aux.task.error` to `auxTaskError`.
+        -   Renamed `aux.task.time` to `auxTaskTime`.
+        -   Renamed `aux.task.shell` to `auxTaskShell`.
+        -   Renamed `aux.task.backup` to `auxTaskBackup`.
+        -   Renamed `aux.task.backup.type` to `auxTaskBackupType`.
+        -   Renamed `aux.task.backup.url` to `auxTaskBackupUrl`.
+        -   Renamed `aux.context` to `auxContext`.
+        -   Renamed `aux.context.color` to `auxContextColor`.
+        -   Renamed `aux.context.locked` to `auxContextLocked`.
+        -   Renamed `aux.context.grid.scale` to `auxContextGridScale`.
+        -   Renamed `aux.context.visualize` to `auxContextVisualize`.
+        -   Renamed `aux.context.x` to `auxContextX`.
+        -   Renamed `aux.context.y` to `auxContextY`.
+        -   Renamed `aux.context.z` to `auxContextZ`.
+        -   Renamed `aux.context.rotation.x` to `auxContextRotationX`.
+        -   Renamed `aux.context.rotation.y` to `auxContextRotationY`.
+        -   Renamed `aux.context.rotation.z` to `auxContextRotationZ`.
+        -   Renamed `aux.context.surface.scale` to `auxContextSurfaceScale`.
+        -   Renamed `aux.context.surface.size` to `auxContextSurfaceSize`.
+        -   Renamed `aux.context.surface.minimized` to `auxContextSurfaceMinimized`.
+        -   Renamed `aux.context.surface.defaultHeight` to `auxContextSurfaceDefaultHeight`.
+        -   Renamed `aux.context.surface.movable` to `auxContextSurfaceMovable`.
+        -   Renamed `aux.context.player.rotation.x` to `auxContextPlayerRotationX`.
+        -   Renamed `aux.context.player.rotation.y` to `auxContextPlayerRotationY`.
+        -   Renamed `aux.context.player.zoom` to `auxContextPlayerZoom`.
+        -   Renamed `aux.context.devices.visible` to `auxContextDevicesVisible`.
+        -   Renamed `aux.context.inventory.color` to `auxContextInventoryColor`.
+        -   Renamed `aux.context.inventory.height` to `auxContextInventoryHeight`.
+        -   Renamed `aux.context.inventory.pannable` to `auxContextInventoryPannable`.
+        -   Renamed `aux.context.inventory.resizable` to `auxContextInventoryResizable`.
+        -   Renamed `aux.context.inventory.rotatable` to `auxContextInventoryRotatable`.
+        -   Renamed `aux.context.inventory.zoomable` to `auxContextInventoryZoomable`.
+        -   Renamed `aux.context.inventory.visible` to `auxContextInventoryVisible`.
+        -   Renamed `aux.context.pannable` to `auxContextPannable`.
+        -   Renamed `aux.context.pannable.min.x` to `auxContextPannableMinX`.
+        -   Renamed `aux.context.pannable.max.x` to `auxContextPannableMaxX`.
+        -   Renamed `aux.context.pannable.min.y` to `auxContextPannableMinY`.
+        -   Renamed `aux.context.pannable.max.y` to `auxContextPannableMaxY`.
+        -   Renamed `aux.context.zoomable` to `auxContextZoomable`.
+        -   Renamed `aux.context.zoomable.min` to `auxContextZoomableMin`.
+        -   Renamed `aux.context.zoomable.max` to `auxContextZoomableMax`.
+        -   Renamed `aux.context.rotatable` to `auxContextRotatable`.
+        -   Renamed `stripe.publishableKey` to `stripePublishableKey`.
+        -   Renamed `stripe.secretKey` to `stripeSecretKey`.
+        -   Renamed `stripe.charges` to `stripeCharges`.
+        -   Renamed `stripe.successfulCharges` to `stripeSuccessfulCharges`.
+        -   Renamed `stripe.failedCharges` to `stripeFailedCharges`.
+        -   Renamed `stripe.charge` to `stripeCharge`.
+        -   Renamed `stripe.charge.receipt.url` to `stripeChargeReceiptUrl`.
+        -   Renamed `stripe.charge.receipt.number` to `stripeChargeReceiptNumber`.
+        -   Renamed `stripe.charge.description` to `stripeChargeDescription`.
+        -   Renamed `stripe.outcome.networkStatus` to `stripeOutcomeNetworkStatus`.
+        -   Renamed `stripe.outcome.reason` to `stripeOutcomeReason`.
+        -   Renamed `stripe.outcome.riskLevel` to `stripeOutcomeRiskLevel`.
+        -   Renamed `stripe.outcome.riskScore` to `stripeOutcomeRiskScore`.
+        -   Renamed `stripe.outcome.rule` to `stripeOutcomeRule`.
+        -   Renamed `stripe.outcome.sellerMessage` to `stripeOutcomeSellerMessage`.
+        -   Renamed `stripe.outcome.type` to `stripeOutcomeType`.
+        -   Renamed `stripe.errors` to `stripeErrors`.
+        -   Renamed `stripe.error` to `stripeError`.
+        -   Renamed `stripe.error.type` to `stripeErrorType`.
+-   Improvements
+    -   Added the `renameTagsFromDotCaseToCamelCase()` function to help with updating bots from the old tag style to the new tag style.
+        -   Use this function on bots that were using the old tag naming style but you want to use the new style.
+        -   Note that this only renames the tags already existing on the bot. It does not fix any code that might be stored in the bot.
+        -   Usage: `renameTagsFromDotCaseToCamelCase(bot)`
+    -   Added the `bot` variable to all functions and formulas.
+        -   Replacement for `this`.
+    -   Added the `getMod()` function to be able to get all the tags on a bot.
+        -   Returns a mod containing all the tag values on the bot.
+        -   The returned mod is always up to date with the bot's current values.
+        -   Calling `mod.export()` on the returned mod will save the tag code to JSON.
+            -   For example, if you have a formula `=123`, then `mod.export(getMod(bot))` will return JSON containing `tag: "=123"` instead of `tag: 123`.
+    -   Added the `tags` variable to all functions and formulas.
+        -   This is a quick shortcut for `let tags = getMod(bot)` at the beginning of a script/formula.
+        -   The `tags` variable has some caveats when used in formulas. Namely that the formulas won't be automatically updated when another tag referenced from the formula is updated. (Use `getTag()` for full support)
+        -   Supports autocomplete for all tags.
+
+## V0.11.8
+
+### Date: 12/3/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a new system for managing causal trees.
+        -   This new system has improvements for performance and reliability.
+        -   It also adds support for revision history. (The controls will be coming in a future update)
+        -   Every new channel will use the new system while old channels will continue to use the old one.
+        -   Everything should function exactly the same as before.
+    -   Changed the .aux file format.
+        -   The new format is based on the bots state and is easily human readable/writable.
+        -   This is different from the old format where a list of atoms was stored.
+        -   Downloading a channel will give you a .aux file with the new format.
+        -   Uploading a channel supports both the old format and the new format.
+
+## V0.11.7
+
+### Date: 11/27/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed the functionality of the table view's filterying system to be inverted.
+    -   Attempting to drag a bot onto a bot with `aux.stackable` set to false will now cause the dragged bot to pass through the other bot as if it was not there.
+-   Bug Fixes
+    -   Resolved issue of player inventory resizing showing a reset on each change.
+    -   Tag values that are objects are displayed as JSON.Stringified text. ie `{ field: "myValue" }`
+        -   Known Issue: Modifying these displayed strings will convert the tag value to a string
+    -   When Moving the camera via `player.MoveTo()`, the pan distance is now set correctly so pan limits are absolute.
+
 ## V0.11.6
 
 ### Date: 11/6/2019

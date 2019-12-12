@@ -5,6 +5,8 @@ import {
     tagsOnBot,
     isFormula,
     Transpiler,
+    KNOWN_TAGS,
+    isScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -15,6 +17,9 @@ import { SubscriptionLike, Subscription } from 'rxjs';
 import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import union from 'lodash/union';
+import sortBy from 'lodash/sortBy';
+import { propertyInsertText } from './CompletionHelpers';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -81,6 +86,7 @@ interface ModelInfo {
     tag: string;
     decorators: string[];
     isFormula: boolean;
+    isScript: boolean;
     model: monaco.editor.ITextModel;
     sub: Subscription;
 }
@@ -183,19 +189,23 @@ export function watchSimulation(simulation: BrowserSimulation) {
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',
         {
-            triggerCharacters: ['#'],
+            triggerCharacters: ['#', '.'],
             async provideCompletionItems(
                 model,
                 position,
                 context,
                 token
             ): Promise<monaco.languages.CompletionList> {
-                const tags = await simulation.code.getTags();
                 const lineText = model.getLineContent(position.lineNumber);
                 const textBeforeCursor = lineText.substring(0, position.column);
-                const tagIndex = textBeforeCursor.lastIndexOf('#');
-                const tagColumn = tagIndex + 1;
-                const completionStart = tagColumn + 1;
+                let tagIndex = textBeforeCursor.lastIndexOf('#');
+                let offset = '#'.length;
+
+                // TODO: Allow configuring which variables tag autocomplete shows up for
+                if (tagIndex < 0) {
+                    tagIndex = textBeforeCursor.lastIndexOf('tags.');
+                    offset = 'tags.'.length;
+                }
 
                 if (tagIndex < 0) {
                     return {
@@ -203,13 +213,34 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     };
                 }
 
+                const usedTags = await simulation.code.getTags();
+                const knownTags = KNOWN_TAGS;
+                const allTags = sortBy(union(usedTags, knownTags)).filter(
+                    t => !/[()]/g.test(t)
+                );
+
+                const tagColumn = tagIndex + offset;
+                const completionStart = tagColumn + 1;
+
                 return {
-                    suggestions: tags.map(
+                    suggestions: allTags.map(
                         t =>
                             <monaco.languages.CompletionItem>{
                                 kind: monaco.languages.CompletionItemKind.Field,
                                 label: t,
-                                insertText: t,
+                                insertText: propertyInsertText(t),
+                                additionalTextEdits: [
+                                    {
+                                        text: '',
+                                        range: new monaco.Range(
+                                            position.lineNumber,
+                                            tagColumn,
+                                            position.lineNumber,
+                                            tagColumn + 1
+                                        ),
+                                        forceMoveMarkers: true,
+                                    },
+                                ],
                                 range: new monaco.Range(
                                     position.lineNumber,
                                     completionStart,
@@ -272,7 +303,9 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFilterTag(tag) || isFormula(script) ? 'javascript' : 'plaintext';
+    return isFilterTag(tag) || isFormula(script) || isScript(script)
+        ? 'javascript'
+        : 'plaintext';
 }
 
 /**
@@ -309,7 +342,7 @@ export function shouldKeepModelLoaded(
 }
 
 function shouldKeepModelWithTagLoaded(tag: string): boolean {
-    return isFilterTag(tag);
+    return isFilterTag(tag) || isScript(tag);
 }
 
 function watchModel(
@@ -324,6 +357,7 @@ function watchModel(
         tag: tag,
         decorators: [],
         isFormula: false,
+        isScript: false,
         model: model,
         sub: sub,
     };
@@ -358,6 +392,10 @@ function watchModel(
                 let val = model.getValue();
                 if (info.isFormula) {
                     val = '=' + val;
+                } else if (info.isScript) {
+                    if (val.indexOf('@') !== 0) {
+                        val = '@' + val;
+                    }
                 }
                 updateLanguage(model, tag, val);
                 await simulation.editBot(bot, tag, val);
@@ -404,6 +442,23 @@ function updateDecorators(
     value: string
 ) {
     if (isFormula(value)) {
+        const wasFormula = info.isFormula;
+        info.isFormula = true;
+        info.isScript = false;
+        if (!wasFormula) {
+            const text = model.getValue();
+            if (text.indexOf('=') === 0) {
+                // Delete the first character from the model cause
+                // it is a formula marker
+                model.applyEdits([
+                    {
+                        range: new monaco.Range(1, 1, 1, 2),
+                        text: '',
+                    },
+                ]);
+            }
+        }
+
         info.decorators = model.deltaDecorations(info.decorators, [
             {
                 range: new monaco.Range(1, 1, 1, 1),
@@ -413,11 +468,38 @@ function updateDecorators(
                 },
             },
         ]);
+    } else if (isScript(value)) {
+        const wasScript = info.isScript;
+        info.isScript = true;
+        info.isFormula = false;
 
-        info.isFormula = true;
+        if (!wasScript) {
+            const text = model.getValue();
+            if (text.indexOf('@') === 0) {
+                // Delete the first character from the model cause
+                // it is a script marker
+                model.applyEdits([
+                    {
+                        range: new monaco.Range(1, 1, 1, 2),
+                        text: '',
+                    },
+                ]);
+            }
+        }
+
+        info.decorators = model.deltaDecorations(info.decorators, [
+            {
+                range: new monaco.Range(1, 1, 1, 1),
+                options: {
+                    isWholeLine: true,
+                    linesDecorationsClassName: 'script-marker',
+                },
+            },
+        ]);
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = false;
+        info.isScript = false;
     }
 }
 
@@ -433,6 +515,9 @@ export function getScript(bot: Bot, tag: string) {
     let val = bot.tags[tag];
     if (typeof val !== 'undefined' && val !== null) {
         let str = val.toString();
+        if (typeof val === 'object') {
+            str = JSON.stringify(val);
+        }
         if (isFormula(str)) {
             return transpiler.replaceMacros(str);
         } else {

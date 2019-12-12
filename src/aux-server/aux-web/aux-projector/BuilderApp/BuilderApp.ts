@@ -8,9 +8,7 @@ import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
-    UserMode,
     Object,
-    getUserMode,
     getBotsStateFromStoredTree,
     ShowInputForTagAction,
     ShowInputOptions,
@@ -35,7 +33,12 @@ import BotSearch from '../BotSearch/BotSearch';
 
 import vueBotPond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
+import {
+    Simulation,
+    AuxUser,
+    LoginState,
+    getBotsStateFromStoredAux,
+} from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -121,11 +124,6 @@ export default class BuilderApp extends Vue {
      * Whether the user is logged in.
      */
     loggedIn: boolean = false;
-
-    /**
-     * The current user mode.
-     */
-    userMode: boolean = true;
 
     /**
      * Whether to show the QR Code.
@@ -231,16 +229,6 @@ export default class BuilderApp extends Vue {
         this.showConsole = false;
     }
 
-    async toggleUserMode() {
-        this.userMode = !this.userMode;
-        const mode: UserMode = this.userMode ? 'bots' : 'worksurfaces';
-        await appManager.simulationManager.primary.setUserMode(mode);
-    }
-
-    private _calculateUserMode(bot: Object): boolean {
-        return bot && getUserMode(bot) === 'bots';
-    }
-
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -332,10 +320,6 @@ export default class BuilderApp extends Vue {
 
     getBarcodeFormat() {
         return this.barcodeFormat || '';
-    }
-
-    currentUserMode() {
-        return this.userMode ? 'Bots' : 'Worksurfaces';
     }
 
     forcedOffline() {
@@ -498,16 +482,6 @@ export default class BuilderApp extends Vue {
                     botManager.consoleMessages.subscribe(m => {
                         recordMessage(m);
                     })
-                );
-
-                subs.push(
-                    userBotChanged(botManager)
-                        .pipe(
-                            tap(bot => {
-                                this.userMode = this._calculateUserMode(bot);
-                            })
-                        )
-                        .subscribe()
                 );
 
                 subs.push(
@@ -884,7 +858,7 @@ export default class BuilderApp extends Vue {
 
     private async _importAUX(sim: Simulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getBotsStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredAux(stored);
         await sim.helper.addState(state);
     }
 

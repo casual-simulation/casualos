@@ -94,9 +94,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
-    abstract get botsMode(): boolean;
-    abstract get workspacesMode(): boolean;
-
     private _onUpdate: Subject<void> = new Subject<void>();
 
     constructor(gameView: IGameView) {

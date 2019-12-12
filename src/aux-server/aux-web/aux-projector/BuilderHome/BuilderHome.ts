@@ -4,10 +4,7 @@ import Component from 'vue-class-component';
 import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
 import {
     Bot,
-    getUserMode,
-    UserMode,
     SelectionMode,
-    DEFAULT_USER_MODE,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
     isBot,
@@ -57,7 +54,6 @@ export default class BuilderHome extends Vue {
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
-    mode: UserMode = DEFAULT_USER_MODE;
     selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
     isOpen: boolean = false;
     isVis: boolean = false;
@@ -76,14 +72,6 @@ export default class BuilderHome extends Vue {
 
     get hasBots() {
         return this.bots && this.bots.length > 0;
-    }
-
-    get botsMode() {
-        return this.mode === 'bots';
-    }
-
-    get workspacesMode() {
-        return this.mode === 'worksurfaces';
     }
 
     get singleSelection() {
@@ -169,8 +157,6 @@ export default class BuilderHome extends Vue {
                 userBotChanged(this._simulation)
                     .pipe(
                         tap(bot => {
-                            this.mode = getUserMode(bot);
-
                             let previousSelectionMode = this.selectionMode;
                             this.selectionMode = getSelectionMode(bot);
                         })

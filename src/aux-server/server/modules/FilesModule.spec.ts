@@ -114,21 +114,6 @@ describe('FilesModule', () => {
 
         await channel.initAndWait();
 
-        await channel.sendEvents([
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            ),
-        ]);
-
         manager = new TestChannelManager();
 
         subject = new FilesModule('/test/storage-dir');
@@ -209,7 +194,7 @@ describe('FilesModule', () => {
 
             it('should send a callback shout when done', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "called", true)',
+                    callback: '@setTag(this, "called", true)',
                 });
 
                 await channel.sendEvents([
@@ -229,7 +214,7 @@ describe('FilesModule', () => {
 
             it('should send a callback shout with an error if the file already exists', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
@@ -252,7 +237,7 @@ describe('FilesModule', () => {
 
             it('should overwrite files if indicated', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
@@ -305,7 +290,7 @@ describe('FilesModule', () => {
         describe('load_file', () => {
             it('should load the first file that matches the given path in one of the directories', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await channel.sendEvents([
@@ -324,7 +309,7 @@ describe('FilesModule', () => {
 
             it('should load the files that matches the given path exactly', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await channel.sendEvents([
@@ -343,7 +328,7 @@ describe('FilesModule', () => {
 
             it('should be able to load files without the /drives prefix', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "data", that.data)',
+                    callback: '@setTag(this, "data", that.data)',
                 });
 
                 await channel.sendEvents([
@@ -362,7 +347,7 @@ describe('FilesModule', () => {
 
             it('should send a callback sound with an error if the file does not exist', async () => {
                 await channel.helper.createBot('callback', {
-                    'callback()': 'setTag(this, "err", that.error)',
+                    callback: '@setTag(this, "err", that.error)',
                 });
 
                 await channel.sendEvents([

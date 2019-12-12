@@ -96,21 +96,6 @@ describe('AdminModule', () => {
 
         await channel.initAndWait();
 
-        // await channel.sendEvents([
-        //     botAdded(
-        //         createBot('userId', {
-        //             'aux.account.username': 'username',
-        //             'aux.account.roles': [ADMIN_ROLE],
-        //         })
-        //     ),
-        //     botAdded(
-        //         createBot('userTokenId', {
-        //             'aux.token.username': 'username',
-        //             'aux.token': 'adminToken',
-        //         })
-        //     ),
-        // ]);
-
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
 
@@ -143,7 +128,7 @@ describe('AdminModule', () => {
                 );
             });
 
-            it('should run the given shell command and output the results to the aux.finishedTasks context', async () => {
+            it('should run the given shell command and output the results to the auxFinishedTasks context', async () => {
                 expect.assertions(1);
 
                 require('child_process').__setMockOutput(
@@ -159,23 +144,23 @@ describe('AdminModule', () => {
                 expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
-                        'aux.task.shell': 'echo "Hello, World!"',
-                        'aux.task.output': 'Hello, World!',
+                        auxFinishedTasks: true,
+                        auxTaskShell: 'echo "Hello, World!"',
+                        auxTaskOutput: 'Hello, World!',
                     },
                 });
             });
         });
 
         describe('device', () => {
-            it('should pipe device events through onAnyAction()', async () => {
+            it('should pipe device events through onChannelAction()', async () => {
                 await channel.helper.createBot('test', {
-                    'testShout()': 'setTag(this, "abc", true)',
+                    testShout: '@setTag(this, "abc", true)',
                 });
 
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'onAnyAction()': `
+                        onChannelAction: `@
                                 if (that.action.type === 'device') {
                                     action.perform(that.action.event);
                                 }
@@ -220,7 +205,7 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 2,
+                    auxConnectedSessions: 2,
                 },
             });
 
@@ -229,7 +214,7 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 1,
+                    auxConnectedSessions: 1,
                 },
             });
 
@@ -241,12 +226,12 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 0,
+                    auxConnectedSessions: 0,
                 },
             });
         });
 
-        it('should set the aux.user.active tag based on the session ID', async () => {
+        it('should set the auxUserActive tag based on the session ID', async () => {
             await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
 
             let testDevice1: DeviceInfo = {
@@ -262,7 +247,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -271,7 +256,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
 
@@ -280,7 +265,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -289,7 +274,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
         });

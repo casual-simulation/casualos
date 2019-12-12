@@ -32,7 +32,8 @@ export class DeviceManagerImpl implements DeviceManager {
     }
 
     getConnectedDevices(info: RealtimeChannelInfo): DeviceConnection<any>[] {
-        let devices = this._activeChannels.get(info.id) || [];
+        const id = channelId(info);
+        let devices = this._activeChannels.get(id) || [];
         return devices.slice();
     }
 
@@ -88,10 +89,11 @@ export class DeviceManagerImpl implements DeviceManager {
             const list = this._connectedDevices.get(device);
             list.push(channel);
         }
-        let list = this._activeChannels.get(info.id);
+        const id = channelId(info);
+        let list = this._activeChannels.get(id);
         if (!list) {
             list = [];
-            this._activeChannels.set(info.id, list);
+            this._activeChannels.set(id, list);
         }
         list.push(device);
 
@@ -106,16 +108,17 @@ export class DeviceManagerImpl implements DeviceManager {
         device: DeviceConnection<TExtra>,
         info: RealtimeChannelInfo
     ): Promise<void> {
+        const id = channelId(info);
         if (this._connectedDevices.has(device)) {
             const list = this._connectedDevices.get(device);
-            const index = list.findIndex(c => c.info.id === info.id);
+            const index = list.findIndex(c => channelId(c.info) === id);
             if (index >= 0) {
                 const channel = list[index];
                 channel.subs.forEach(s => s.unsubscribe());
                 list.splice(index, 1);
             }
         }
-        let list = this._activeChannels.get(info.id);
+        let list = this._activeChannels.get(id);
         if (list) {
             const index = list.findIndex(d => d === device);
             if (index >= 0) {
@@ -127,4 +130,8 @@ export class DeviceManagerImpl implements DeviceManager {
 
 interface ActiveDeviceChannelConnection extends DeviceChannelConnection {
     subs: SubscriptionLike[];
+}
+
+function channelId(info: RealtimeChannelInfo): string {
+    return `${info.id}:${info.type}`;
 }

@@ -22,6 +22,7 @@ import {
     DRAG_ACTION_NAME,
     BotTags,
     isBot,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -268,7 +269,8 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2,
-        index: number
+        index: number,
+        calc: BotCalculationContext
     ) {
         if (!this._context) {
             return;
@@ -289,14 +291,29 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
-            let tags = {
-                tags: {
-                    [this._context]: true,
-                    [`${this._context}.x`]: gridPosition.x,
-                    [`${this._context}.y`]: gridPosition.y,
-                    [`${this._context}.sortOrder`]: index + i,
-                },
-            };
+            let tags;
+
+            if (
+                !calculateBooleanTagValue(calc, bots[i], 'auxStackable', true)
+            ) {
+                tags = {
+                    tags: {
+                        [this._context]: true,
+                        [`${this._context}X`]: gridPosition.x,
+                        [`${this._context}Y`]: gridPosition.y,
+                        [`${this._context}SortOrder`]: 0,
+                    },
+                };
+            } else {
+                tags = {
+                    tags: {
+                        [this._context]: true,
+                        [`${this._context}X`]: gridPosition.x,
+                        [`${this._context}Y`]: gridPosition.y,
+                        [`${this._context}SortOrder`]: index + i,
+                    },
+                };
+            }
             if (this._previousContext) {
                 tags.tags[this._previousContext] = null;
             }
@@ -342,8 +359,8 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         const botTemp = createBot(this._bots[0].id, {
             ...this._bots[0].tags,
-            [this._context + '.x']: toX,
-            [this._context + '.y']: toY,
+            [`${this._context}X`]: toX,
+            [`${this._context}Y`]: toY,
         });
 
         let fromX;

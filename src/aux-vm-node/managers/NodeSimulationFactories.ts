@@ -18,6 +18,12 @@ import {
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
 import { AuxVMNode } from '../vm/AuxVMNode';
+import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import {
+    AuxPartitionConfig,
+    CausalRepoClientPartitionConfig,
+} from '@casual-simulation/aux-vm/partitions';
 
 /**
  * Creates a new NodeSimulation for the given AuxCausalTree using the given user, channel ID, and config.
@@ -70,9 +76,76 @@ export function nodeSimulationForRemote(
         },
         cfg =>
             new AuxVMNode(
-                new RemoteAuxChannel(host, user, cfg, {
-                    store: new NullCausalTreeStore(),
-                    crypto: new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+                new RemoteAuxChannel(user, cfg, {
+                    sandboxFactory: lib => getSandbox(lib),
+                    partitionOptions: {
+                        defaultHost: host,
+                        store: new NullCausalTreeStore(),
+                        crypto: new NodeSigningCryptoImpl(
+                            'ECDSA-SHA256-NISTP256'
+                        ),
+                    },
+                })
+            )
+    );
+}
+
+export function nodeSimulationForBranch(
+    user: AuxUser,
+    client: CausalRepoClient,
+    branch: string,
+    extraOptions?: Partial<CausalRepoClientPartitionConfig>
+) {
+    return new RemoteSimulationImpl(
+        branch,
+        null,
+        {
+            '*': {
+                type: 'causal_repo_client',
+                ...(extraOptions || {}),
+                branch: branch,
+                client: client,
+            },
+        },
+        cfg =>
+            new AuxVMNode(
+                new RemoteAuxChannel(user, cfg, {
+                    sandboxFactory: lib => getSandbox(lib),
+                })
+            )
+    );
+}
+
+export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
+    return new RemoteSimulationImpl(
+        id,
+        null,
+        {
+            '*': {
+                type: 'causal_repo',
+            },
+        },
+        cfg =>
+            new AuxVMNode(
+                new RemoteAuxChannel(user, cfg, {
+                    sandboxFactory: lib => getSandbox(lib),
+                })
+            )
+    );
+}
+
+export function nodeSimulationWithConfig(
+    user: AuxUser,
+    id: string,
+    config: AuxConfig
+) {
+    return new RemoteSimulationImpl(
+        id,
+        config.config,
+        config.partitions,
+        cfg =>
+            new AuxVMNode(
+                new RemoteAuxChannel(user, cfg, {
                     sandboxFactory: lib => getSandbox(lib),
                 })
             )

@@ -1,4 +1,3 @@
-import { UserMode } from '@casual-simulation/aux-common';
 import { RecentBotManager } from './RecentBotManager';
 import SelectionManager from './SelectionManager';
 import { BotPanelManager } from './BotPanelManager';
@@ -36,12 +35,6 @@ export interface BrowserSimulation extends RemoteSimulation {
      * The observable list of console messages from the simulation.
      */
     consoleMessages: Observable<ConsoleMessages>;
-
-    /**
-     * Sets the bot mode that the user should be in.
-     * @param mode The mode that the user should use.
-     */
-    setUserMode(mode: UserMode): Promise<void>;
 
     /**
      * Edits the given bot and tag as if the user edited it manually.

@@ -64,7 +64,7 @@ describe('BotHelper', () => {
     });
 
     describe('setEditingBot()', () => {
-        it('should set the aux._editingBot tag on the user bot', async () => {
+        it('should set the _auxEditingBot tag on the user bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
@@ -74,7 +74,7 @@ describe('BotHelper', () => {
             expect(vm.events).toEqual([
                 botUpdated('user', {
                     tags: {
-                        'aux._editingBot': 'test',
+                        _auxEditingBot: 'test',
                     },
                 }),
             ]);
@@ -85,7 +85,7 @@ describe('BotHelper', () => {
         it('should create a new simulation bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._userSimulationsContext': 'abc',
+                    _auxUserChannelsContext: 'abc',
                 }),
             };
 
@@ -96,13 +96,13 @@ describe('BotHelper', () => {
                 botAdded(
                     createBot('botId', {
                         abc: true,
-                        'aux.channel': 'test',
+                        auxChannel: 'test',
                     })
                 ),
                 botAdded(
                     createBot('botId2', {
                         abc: true,
-                        'aux.channel': 'test2',
+                        auxChannel: 'test2',
                     })
                 ),
             ]);
@@ -111,11 +111,11 @@ describe('BotHelper', () => {
         it('should not create a new simulation when one already exists for the given channel ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._userSimulationsContext': 'abc',
+                    _auxUserChannelsContext: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    'aux.channel': 'test',
+                    auxChannel: 'test',
                 }),
             };
 
@@ -129,15 +129,15 @@ describe('BotHelper', () => {
         it('should destroy the simulations that load the given ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._userSimulationsContext': 'abc',
+                    _auxUserChannelsContext: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    'aux.channel': 'test',
+                    auxChannel: 'test',
                 }),
                 bot2: createPrecalculatedBot('bot2', {
                     abc: true,
-                    'aux.channel': 'test',
+                    auxChannel: 'test',
                 }),
             };
 
@@ -165,7 +165,7 @@ describe('BotHelper', () => {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1'),
                 bot2: createPrecalculatedBot('bot2', {
-                    'aux.creator': 'bot1',
+                    auxCreator: 'bot1',
                 }),
             };
 
@@ -179,7 +179,7 @@ describe('BotHelper', () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1', {
-                    'aux.destroyable': false,
+                    auxDestroyable: false,
                 }),
             };
 

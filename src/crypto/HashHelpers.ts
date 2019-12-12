@@ -1,4 +1,4 @@
-import { sha256 } from 'sha.js';
+import { sha256 } from 'hash.js';
 import stringify from 'fast-json-stable-stringify';
 
 /**
@@ -7,7 +7,7 @@ import stringify from 'fast-json-stable-stringify';
  */
 export function getHash(obj: any): string {
     const json = stringify(obj);
-    let sha = new sha256();
+    let sha = sha256();
     sha.update(json);
     return sha.digest('hex');
 }
@@ -19,7 +19,7 @@ export function getHash(obj: any): string {
  */
 export function getHashBuffer(obj: any): Buffer {
     const json = stringify(obj);
-    let sha = new sha256();
+    let sha = sha256();
     sha.update(json);
-    return sha.digest();
+    return Buffer.from(sha.digest());
 }

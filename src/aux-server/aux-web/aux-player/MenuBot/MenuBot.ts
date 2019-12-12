@@ -52,23 +52,23 @@ export default class MenuBot extends Vue {
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
-        if (bot.tags['aux.color']) {
-            this.backgroundColor = calculateBotValue(calc, bot, 'aux.color');
+        if (bot.tags['auxColor']) {
+            this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
         } else {
             this.backgroundColor = '#FFF';
         }
     }
 
     private _updateLabel(calc: BotCalculationContext, bot: Bot) {
-        let label = bot.tags['aux.label'];
+        let label = bot.tags['auxLabel'];
         if (label) {
-            this.label = calculateFormattedBotValue(calc, bot, 'aux.label');
-            const labelColor = bot.tags['aux.label.color'];
+            this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
+            const labelColor = bot.tags['auxLabelColor'];
             if (labelColor) {
                 this.labelColor = calculateFormattedBotValue(
                     calc,
                     bot,
-                    'aux.label.color'
+                    'auxLabelColor'
                 );
             } else {
                 this.labelColor = '#000';

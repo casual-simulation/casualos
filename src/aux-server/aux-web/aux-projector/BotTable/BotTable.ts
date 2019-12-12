@@ -586,9 +586,7 @@ export default class BotTable extends Vue {
             const stored = await this.getBotManager().exportBots(
                 this.bots.map(f => f.id)
             );
-            let tree = new AuxCausalTree(stored);
-            await tree.import(stored);
-            downloadAuxState(tree, `selection-${Date.now()}`);
+            downloadAuxState(stored, `selection-${Date.now()}`);
         }
     }
 
@@ -794,7 +792,6 @@ export default class BotTable extends Vue {
 
         let blacklist: (string | boolean)[][] = [];
 
-        let actionList: (string | boolean)[] = [];
         let hiddenList: (string | boolean)[] = [];
         let generalList: (string | boolean)[] = [];
 
@@ -802,16 +799,18 @@ export default class BotTable extends Vue {
             if (isHiddenTag(sortedArray[i])) {
                 hiddenList.push(sortedArray[i]);
                 sortedArray.splice(i, 1);
-            } else if (sortedArray[i].includes('()')) {
-                actionList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
             }
         }
+
+        let camelCaseRegex = /(?=[A-Z])/g;
 
         let current = '';
         let tempArray: (string | boolean)[] = [];
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
+            if (
+                current.split(camelCaseRegex)[0] !=
+                sortedArray[i].split(camelCaseRegex)[0]
+            ) {
                 if (tempArray.length > 0) {
                     if (blacklist.length === 0) {
                         blacklist = [tempArray];
@@ -829,9 +828,9 @@ export default class BotTable extends Vue {
                 // if the temp array has been reset
 
                 // add the section name in slot 0
-                tempArray.push(current.split('.')[0]);
+                tempArray.push(current.split(camelCaseRegex)[0]);
 
-                let activeCheck = true;
+                let activeCheck = false;
                 // add the section visibility in slot 1
                 if (this.tagBlacklist.length > 0) {
                     this.tagBlacklist.forEach(element => {
@@ -859,26 +858,6 @@ export default class BotTable extends Vue {
             } else {
                 blacklist.push(tempArray);
             }
-        }
-
-        if (actionList.length > 0) {
-            let activeCheck = true;
-
-            if (this.tagBlacklist.length > 0) {
-                this.tagBlacklist.forEach(element => {
-                    if (element[0] === 'actions()') {
-                        activeCheck = <boolean>element[1];
-                    }
-                });
-            }
-
-            actionList.unshift(activeCheck);
-            actionList.unshift('actions()');
-            blacklist.unshift(actionList);
-        } else {
-            actionList.forEach(actionTags => {
-                sortedArray.push(<string>actionTags);
-            });
         }
 
         if (hiddenList.length > 0) {
@@ -943,7 +922,7 @@ export default class BotTable extends Vue {
                 (<string>this.tagBlacklist[index][0]).substring(0, 15) + '..';
         } else {
             newBlacklist =
-                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '.*';
+                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '*';
         }
 
         return '#' + newBlacklist;

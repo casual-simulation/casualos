@@ -19,6 +19,7 @@ import {
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { CausalTreePartition } from './AuxPartition';
 import { filter, map, switchMap } from 'rxjs/operators';
+import { PartitionConfigBase } from './AuxPartitionConfig';
 
 export interface CausalTreePartitionOptions {
     treeOptions?: RealtimeCausalTreeOptions;
@@ -45,6 +46,7 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
     type = 'causal_tree' as const;
 
     sync: RealtimeCausalTree<AuxCausalTree>;
+    private: boolean;
 
     get tree(): AuxCausalTree {
         return this.sync.tree;
@@ -91,9 +93,14 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
         return this._sub.closed;
     }
 
-    constructor(options: CausalTreePartitionOptions, user: User) {
+    constructor(
+        options: CausalTreePartitionOptions,
+        user: User,
+        config: PartitionConfigBase
+    ) {
         this._user = user;
         this._treeOptions = options.treeOptions || {};
+        this.private = config.private || false;
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {

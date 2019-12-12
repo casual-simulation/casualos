@@ -10,6 +10,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable } from 'rxjs';
 import { BotDependentInfo } from '../managers/DependencyManager';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -107,12 +108,12 @@ export interface AuxChannel {
      * Exports the atoms for the given bots.
      * @param botIds The bots to export.
      */
-    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredAux>;
 
     /**
      * Exports the causal tree for the simulation.
      */
-    exportTree(): Promise<StoredCausalTree<AuxOp>>;
+    export(): Promise<StoredAux>;
 
     /**
      * Gets the list of references to the given tag.

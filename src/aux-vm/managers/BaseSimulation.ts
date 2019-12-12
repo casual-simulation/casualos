@@ -16,15 +16,12 @@ import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import {
-    RealtimeCausalTree,
-    StoredCausalTree,
-} from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
+import { StoredAux } from '../StoredAux';
 import {
     PartitionConfig,
     AuxPartitionConfig,
@@ -185,7 +182,7 @@ export class BaseSimulation implements Simulation {
         const botIds = Object.keys(state);
         const bots = botIds.map(id => state[id]);
         const nonUserOrGlobalBots = bots.filter(
-            f => !f.tags['aux._user'] && f.id !== GLOBALS_BOT_ID
+            f => !f.tags['_auxUser'] && f.id !== GLOBALS_BOT_ID
         );
         const deleteOps = nonUserOrGlobalBots.map(f => botRemoved(f.id));
         await this.helper.transaction(...deleteOps);
@@ -209,8 +206,8 @@ export class BaseSimulation implements Simulation {
     /**
      * Exports the causal tree for the simulation.
      */
-    exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._vm.exportTree();
+    export(): Promise<StoredAux> {
+        return this._vm.export();
     }
 
     private _getTreeName(id: string) {

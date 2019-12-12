@@ -10,10 +10,23 @@ import {
     AuxObject,
     hasValue,
     getActiveObjects,
+    AddBotAction,
+    RemoveBotAction,
+    UpdateBotAction,
+    breakIntoIndividualEvents,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import {
+    DeviceAction,
+    StatusUpdate,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    USER_ROLE,
+} from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
+import flatMap from 'lodash/flatMap';
+import union from 'lodash/union';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -38,6 +51,7 @@ class MemoryPartitionImpl implements MemoryPartition {
 
     type = 'memory' as const;
     state: BotsState;
+    private: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));
@@ -64,13 +78,63 @@ class MemoryPartitionImpl implements MemoryPartition {
     }
 
     constructor(config: MemoryPartitionConfig) {
+        this.private = config.private || false;
         this.state = config.initialState;
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
+        let finalEvents = flatMap(events, e => {
+            if (e.type === 'apply_state') {
+                return breakIntoIndividualEvents(this.state, e);
+            } else if (
+                e.type === 'add_bot' ||
+                e.type === 'remove_bot' ||
+                e.type === 'update_bot'
+            ) {
+                return [e] as const;
+            } else {
+                return [];
+            }
+        });
+
+        this._applyEvents(finalEvents);
+
+        return events;
+    }
+
+    connect(): void {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
+    }
+
+    unsubscribe(): void {
+        this.closed = true;
+    }
+    closed: boolean;
+
+    private _applyEvents(
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+    ) {
         let added: Bot[] = [];
         let removed: string[] = [];
-        let updated: UpdatedBot[] = [];
+        let updated = new Map<string, UpdatedBot>();
         for (let event of events) {
             if (event.type === 'add_bot') {
                 this.state = Object.assign({}, this.state, {
@@ -105,10 +169,16 @@ class MemoryPartitionImpl implements MemoryPartition {
 
                 this.state[event.id] = newBot;
 
-                updated.push({
-                    bot: <AuxObject>newBot,
-                    tags: changedTags,
-                });
+                let update = updated.get(event.id);
+                if (update) {
+                    update.bot = <AuxObject>newBot;
+                    update.tags = union(update.tags, changedTags);
+                } else {
+                    updated.set(event.id, {
+                        bot: <AuxObject>newBot,
+                        tags: changedTags,
+                    });
+                }
             }
         }
 
@@ -118,26 +188,8 @@ class MemoryPartitionImpl implements MemoryPartition {
         if (removed.length > 0) {
             this._onBotsRemoved.next(removed);
         }
-        if (updated.length > 0) {
-            this._onBotsUpdated.next(updated);
+        if (updated.size > 0) {
+            this._onBotsUpdated.next([...updated.values()]);
         }
-
-        return events;
     }
-
-    connect(): void {
-        this._onStatusUpdated.next({
-            type: 'connection',
-            connected: true,
-        });
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: true,
-        });
-    }
-
-    unsubscribe(): void {
-        this.closed = true;
-    }
-    closed: boolean;
 }

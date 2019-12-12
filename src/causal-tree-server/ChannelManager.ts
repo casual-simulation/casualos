@@ -25,6 +25,12 @@ export type ChannelLoadedListener<
  */
 export interface ChannelManager {
     /**
+     * Gets or sets whether trees can be automatically created.
+     * (Defaults to true)
+     */
+    automaticallyCreateTrees: boolean;
+
+    /**
      * Determines if the channel for the given info can be loaded without creating a new channel from scratch.
      * @param info The info that describes the channel which should be loaded.
      */

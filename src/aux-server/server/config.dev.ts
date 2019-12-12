@@ -28,6 +28,10 @@ const config: Config = {
     trees: {
         dbName: 'aux-trees',
     },
+    repos: {
+        dbName: 'aux-repos',
+        objectsCollectionName: 'objects',
+    },
     directory: {
         server: {
             secret: 'test',

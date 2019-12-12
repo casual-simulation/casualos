@@ -1,9 +1,9 @@
-import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import download from 'downloadjs';
+import { StoredAux } from '@casual-simulation/aux-vm';
 
-export function downloadAuxState(tree: AuxCausalTree, name: string) {
+export function downloadAuxState(state: StoredAux, name: string) {
     return downloadFile(
-        new Blob([JSON.stringify(tree.export())], {
+        new Blob([JSON.stringify(state)], {
             type: 'application/json',
         }),
         `${name}.aux`,

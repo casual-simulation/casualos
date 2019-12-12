@@ -42,152 +42,168 @@ export interface Bot {
     tags: BotTags;
 }
 
+/**
+ * Defines an interface for a bot in a script/formula.
+ *
+ * The difference between this and Bot is that the tags
+ * are calculated values and raw is the original tag values.
+ *
+ * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ */
+export interface ScriptBot {
+    id: string;
+
+    tags: ScriptTags;
+    raw: BotTags;
+    changes: BotTags;
+}
+
+export interface ScriptTags extends PrecalculatedTags {
+    toJSON(): any;
+}
+
 export interface BotTags {
     // Global bot tags
-    ['aux.scene.color']?: string;
-    ['aux.scene.user.player.color']?: unknown;
-    ['aux.scene.user.builder.color']?: unknown;
-    ['aux.inventory.height']?: unknown;
-    ['aux.version']?: unknown;
+    ['auxChannelColor']?: string;
+    ['auxChannelUserPlayerColor']?: unknown;
+    ['auxChannelUserBuilderColor']?: unknown;
+    ['auxInventoryHeight']?: unknown;
+    ['auxVersion']?: unknown;
 
     // Normal bot tags
-    ['aux.color']?: unknown;
-    ['aux.draggable']?: unknown;
-    ['aux.draggable.mode']?: BotDragMode;
-    ['aux.stackable']?: unknown;
-    ['aux.destroyable']?: unknown;
-    ['aux.editable']?: unknown;
-    ['aux.stroke.color']?: unknown;
-    ['aux.stroke.width']?: unknown;
-    ['aux.line.to']?: unknown;
-    ['aux.line.width']?: number;
-    ['aux.line.style']?: unknown;
-    ['aux.line.color']?: unknown;
-    ['aux.label']?: unknown;
-    ['aux.label.color']?: unknown;
-    ['aux.label.size']?: unknown;
-    ['aux.label.size.mode']?: 'auto' | null;
-    ['aux.label.anchor']?: BotLabelAnchor | null | string;
-    ['aux.listening']?: unknown;
-    ['aux.shape']?: BotShape;
-    ['aux.image']?: string;
-    ['aux.iframe']?: string;
-    ['aux.iframe.x']?: number;
-    ['aux.iframe.y']?: number;
-    ['aux.iframe.z']?: number;
-    ['aux.iframe.size.x']?: number;
-    ['aux.iframe.size.y']?: number;
-    ['aux.iframe.rotation.x']?: number;
-    ['aux.iframe.rotation.y']?: number;
-    ['aux.iframe.rotation.z']?: number;
-    ['aux.iframe.element.width']?: number;
-    ['aux.iframe.scale']?: number;
-    ['aux.channel']?: string;
-    ['aux.creator']?: string;
-    ['aux.progressBar']?: unknown;
-    ['aux.progressBar.color']?: unknown;
-    ['aux.progressBar.backgroundColor']?: unknown;
-    ['aux.progressBar.anchor']?: unknown;
+    ['auxColor']?: unknown;
+    ['auxDraggable']?: unknown;
+    ['auxDraggableMode']?: BotDragMode;
+    ['auxStackable']?: unknown;
+    ['auxDestroyable']?: unknown;
+    ['auxEditable']?: unknown;
+    ['auxStrokeColor']?: unknown;
+    ['auxStrokeWidth']?: unknown;
+    ['auxScale']?: number;
+    ['auxScaleX']?: number;
+    ['auxScaleY']?: number;
+    ['auxScaleZ']?: number;
+    ['auxLineTo']?: unknown;
+    ['auxLineWidth']?: number;
+    ['auxLineStyle']?: unknown;
+    ['auxLineColor']?: unknown;
+    ['auxLabel']?: unknown;
+    ['auxLabelColor']?: unknown;
+    ['auxLabelSize']?: unknown;
+    ['auxLabelSizeMode']?: 'auto' | null;
+    ['auxLabelAnchor']?: BotLabelAnchor | null | string;
+    ['auxListening']?: unknown;
+    ['auxShape']?: BotShape;
+    ['auxImage']?: string;
+    ['auxIframe']?: string;
+    ['auxIframeX']?: number;
+    ['auxIframeY']?: number;
+    ['auxIframeZ']?: number;
+    ['auxIframeSizeX']?: number;
+    ['auxIframeSizeY']?: number;
+    ['auxIframeRotationX']?: number;
+    ['auxIframeRotationY']?: number;
+    ['auxIframeRotationZ']?: number;
+    ['auxIframeElementWidth']?: number;
+    ['auxIframeScale']?: number;
+    ['auxChannel']?: string;
+    ['auxCreator']?: string;
+    ['auxProgressBar']?: unknown;
+    ['auxProgressBarColor']?: unknown;
+    ['auxProgressBarBackgroundColor']?: unknown;
+    ['auxProgressBarAnchor']?: unknown;
 
     // User tags
-    ['aux._selection']?: string;
-    ['aux._user']?: string;
-    ['aux.user.active']?: boolean;
-    ['aux._userContext']?: string;
-    ['aux._userChannel']?: string;
-    ['aux._userInventoryContext']?: string;
-    ['aux._userMenuContext']?: string;
-    ['aux._userSimulationsContext']?: string;
-    ['aux._mode']?: UserMode;
-    ['aux._editingBot']?: string;
-    ['aux._selectionMode']?: SelectionMode;
-
-    // Admin channel user tags
-    ['aux.account.username']?: string;
-    ['aux.account.roles']?: string[];
-    ['aux.account.locked']?: boolean;
-    ['aux.roles']?: string[];
-
-    // Admin channel token tags
-    ['aux.token.username']?: string;
-    ['aux.token']?: string;
-    ['aux.token.locked']?: boolean;
+    ['_auxSelection']?: string;
+    ['_auxUser']?: string;
+    ['auxUserActive']?: boolean;
+    ['_auxUserContext']?: string;
+    ['_auxUserChannel']?: string;
+    ['_auxUserInventoryContext']?: string;
+    ['_auxUserMenuContext']?: string;
+    ['_auxUserChannelsContext']?: string;
+    ['_auxEditingBot']?: string;
+    ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
-    ['aux.channel.locked']?: boolean;
-    ['aux.channel.connectedSessions']?: number;
-    ['aux.channel.maxSessionsAllowed']?: number;
+    ['auxChannelConnectedSessions']?: number;
 
     // Admin channel tags
-    ['aux.connectedSessions']?: number;
-    ['aux.maxSessionsAllowed']?: number;
+    ['auxConnectedSessions']?: number;
 
     // Admin channel task tags
-    ['aux.runningTasks']?: boolean;
-    ['aux.finishedTasks']?: boolean;
-    ['aux.task.output']?: unknown;
-    ['aux.task.error']?: unknown;
-    ['aux.task.time']?: unknown;
-    ['aux.task.shell']?: string;
-    ['aux.task.backup']?: boolean;
-    ['aux.task.backup.type']?: BackupType;
-    ['aux.task.backup.url']?: string;
+    ['auxRunningTasks']?: boolean;
+    ['auxFinishedTasks']?: boolean;
+    ['auxTaskOutput']?: unknown;
+    ['auxTaskError']?: unknown;
+    ['auxTaskTime']?: unknown;
+    ['auxTaskShell']?: string;
+    ['auxTaskBackup']?: boolean;
+    ['auxTaskBackupType']?: BackupType;
+    ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['aux.context']?: string | number | boolean;
-    ['aux.context.color']?: string;
-    ['aux.context.locked']?: unknown;
-    ['aux.context.grid.scale']?: number;
-    ['aux.context.visualize']?: ContextVisualizeMode;
-    ['aux.context.x']?: number;
-    ['aux.context.y']?: number;
-    ['aux.context.z']?: number;
-    ['aux.context.surface.scale']?: number;
-    ['aux.context.surface.defaultHeight']?: number;
-    ['aux.context.surface.size']?: number;
-    ['aux.context.surface.minimized']?: boolean | null;
-    ['aux.context.surface.movable']?: unknown;
-    ['aux.context.player.rotation.x']?: number;
-    ['aux.context.player.rotation.y']?: number;
-    ['aux.context.player.zoom']?: number;
-    ['aux.context.devices.visible']?: boolean | null;
-    ['aux.context.inventory.color']?: string;
-    ['aux.context.inventory.height']?: unknown;
-    ['aux.context.inventory.pannable']?: boolean;
-    ['aux.context.inventory.resizable']?: boolean;
-    ['aux.context.inventory.rotatable']?: boolean;
-    ['aux.context.inventory.zoomable']?: boolean;
-    ['aux.context.inventory.visible']?: unknown;
-    ['aux.context.pannable']?: number | null;
-    [`aux.context.pannable.min.x`]?: number | null;
-    [`aux.context.pannable.max.x`]?: number | null;
-    [`aux.context.pannable.min.y`]?: number | null;
-    [`aux.context.pannable.max.y`]?: number | null;
-    ['aux.context.zoomable']?: number | null;
-    [`aux.context.zoomable.min`]?: number | null;
-    [`aux.context.zoomable.max`]?: number | null;
-    ['aux.context.rotatable']?: number | null;
+    ['auxContext']?: string | number | boolean;
+    ['auxContextColor']?: string;
+    ['auxContextLocked']?: unknown;
+    ['auxContextGridScale']?: number;
+    ['auxContextVisualize']?: ContextVisualizeMode;
+    ['auxContextX']?: number;
+    ['auxContextY']?: number;
+    ['auxContextZ']?: number;
+    ['auxContextRotationX']?: number;
+    ['auxContextRotationY']?: number;
+    ['auxContextRotationZ']?: number;
+    ['auxContextSurfaceScale']?: number;
+    ['auxContextSurfaceSize']?: number;
+    ['auxContextSurfaceMinimized']?: boolean | null;
+    ['auxContextSurfaceDefaultHeight']?: number;
+    ['auxContextSurfaceMovable']?: unknown;
+    ['auxContextPlayerRotationX']?: number;
+    ['auxContextPlayerRotationY']?: number;
+    ['auxContextPlayerZoom']?: number;
+    ['auxContextDevicesVisible']?: boolean | null;
+    ['auxContextInventoryColor']?: string;
+    ['auxContextInventoryHeight']?: unknown;
+    ['auxContextInventoryPannable']?: boolean;
+    [`auxContextInventoryPannableMinX`]?: number | null;
+    [`auxContextInventoryPannableMaxX`]?: number | null;
+    [`auxContextInventoryPannableMinY`]?: number | null;
+    [`auxContextInventoryPannableMaxY`]?: number | null;
+    ['auxContextInventoryResizable']?: boolean;
+    ['auxContextInventoryRotatable']?: boolean;
+    ['auxContextInventoryZoomable']?: boolean;
+    ['auxContextInventoryVisible']?: unknown;
+    ['auxContextPannable']?: number | null;
+    [`auxContextPannableMinX`]?: number | null;
+    [`auxContextPannableMaxX`]?: number | null;
+    [`auxContextPannableMinY`]?: number | null;
+    [`auxContextPannableMaxY`]?: number | null;
+    ['auxContextZoomable']?: number | null;
+    [`auxContextZoomableMin`]?: number | null;
+    [`auxContextZoomableMax`]?: number | null;
+    ['auxContextRotatable']?: number | null;
 
     // Stripe tags
-    ['stripe.publishableKey']?: string;
-    ['stripe.secretKey']?: string;
-    ['stripe.charges']?: boolean;
-    ['stripe.successfulCharges']?: boolean;
-    ['stripe.failedCharges']?: boolean;
-    ['stripe.charge']?: string;
-    ['stripe.charge.receipt.url']?: string;
-    ['stripe.charge.receipt.number']?: string;
-    ['stripe.charge.description']?: string;
-    ['stripe.outcome.networkStatus']?: string;
-    ['stripe.outcome.reason']?: string;
-    ['stripe.outcome.riskLevel']?: string;
-    ['stripe.outcome.riskScore']?: number;
-    ['stripe.outcome.rule']?: string | string[];
-    ['stripe.outcome.sellerMessage']?: string;
-    ['stripe.outcome.type']?: string;
-    ['stripe.errors']?: boolean;
-    ['stripe.error']?: string;
-    ['stripe.error.type']?: string;
+    ['stripePublishableKey']?: string;
+    ['stripeSecretKey']?: string;
+    ['stripeCharges']?: boolean;
+    ['stripeSuccessfulCharges']?: boolean;
+    ['stripeFailedCharges']?: boolean;
+    ['stripeCharge']?: string;
+    ['stripeChargeReceiptUrl']?: string;
+    ['stripeChargeReceiptNumber']?: string;
+    ['stripeChargeDescription']?: string;
+    ['stripeOutcomeNetworkStatus']?: string;
+    ['stripeOutcomeReason']?: string;
+    ['stripeOutcomeRiskLevel']?: string;
+    ['stripeOutcomeRiskScore']?: number;
+    ['stripeOutcomeRule']?: string | string[];
+    ['stripeOutcomeSellerMessage']?: string;
+    ['stripeOutcomeType']?: string;
+    ['stripeErrors']?: boolean;
+    ['stripeError']?: string;
+    ['stripeErrorType']?: string;
 
     [key: string]: any;
 }
@@ -200,10 +216,24 @@ export interface BotsState {
 }
 
 /**
+ * Defines an interface for a partial bot state.
+ */
+export interface PartialBotsState {
+    [id: string]: PartialBot;
+}
+
+/**
  * Defines an interface for a set of bots that have precalculated formulas.
  */
 export interface PrecalculatedBotsState {
     [id: string]: PrecalculatedBot;
+}
+
+/**
+ * Defines an interface for a partial set of bots that have precalculated formulas.
+ */
+export interface PartialPrecalculatedBotsState {
+    [id: string]: Partial<PrecalculatedBot>;
 }
 
 /**
@@ -212,11 +242,6 @@ export interface PrecalculatedBotsState {
 export interface WorkspaceHex {
     height: number;
 }
-
-/**
- * Defines the possible modes a user can be in.
- */
-export type UserMode = 'bots' | 'worksurfaces';
 
 /**
  * Defines the possible selection modes a user can be in.
@@ -262,11 +287,6 @@ export type BackupType = 'github' | 'download';
  * "surface" means the context is visible and renders a worksurface.
  */
 export type ContextVisualizeMode = true | false | 'surface';
-
-/**
- * The default user mode.
- */
-export const DEFAULT_USER_MODE: UserMode = 'bots';
 
 /**
  * The default selection mode.
@@ -392,181 +412,177 @@ export const AUX_BOT_VERSION: number = 1;
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    'aux._selection',
-    'aux._destroyed',
-    'aux._user',
-    'aux.user.active',
-    'aux._userContext',
-    'aux._userChannel',
-    'aux._userInventoryContext',
-    'aux._userMenuContext',
-    'aux._userSimulationsContext',
-    'aux._mode',
-    'aux._editingBot',
-    'aux._selectionMode',
-    'aux.account.username',
-    'aux.account.locked',
-    'aux.connectedSessions',
-    'aux.maxSessionsAllowed',
-    'aux.token',
-    'aux.token.username',
-    'aux.token.locked',
-    'aux.inventory.height',
-    'aux.context.inventory.color',
-    'aux.context.inventory.height',
-    'aux.context.inventory.visible',
-    'aux.context.inventory.pannable',
-    'aux.context.inventory.resizable',
-    'aux.context.inventory.rotatable',
-    'aux.context.inventory.zoomable',
+    '_auxSelection',
+    '_auxUser',
+    'auxUserActive',
+    '_auxUserContext',
+    '_auxUserChannel',
+    '_auxUserInventoryContext',
+    '_auxUserMenuContext',
+    '_auxUserChannelsContext',
+    '_auxEditingBot',
+    '_auxSelectionMode',
+    'auxConnectedSessions',
+    'auxInventoryHeight',
+    'auxContextInventoryColor',
+    'auxContextInventoryHeight',
+    'auxContextInventoryVisible',
+    'auxContextInventoryPannable',
+    `auxContextInventoryPannableMinX`,
+    `auxContextInventoryPannableMaxX`,
+    `auxContextInventoryPannableMinY`,
+    `auxContextInventoryPannableMaxY`,
 
-    'aux.context.pannable',
+    'auxContextInventoryResizable',
+    'auxContextInventoryRotatable',
+    'auxContextInventoryZoomable',
 
-    `aux.context.pannable.min.x`,
-    `aux.context.pannable.max.x`,
+    'auxContextPannable',
 
-    `aux.context.pannable.min.y`,
-    `aux.context.pannable.max.y`,
+    `auxContextPannableMinX`,
+    `auxContextPannableMaxX`,
 
-    'aux.context.zoomable',
+    `auxContextPannableMinY`,
+    `auxContextPannableMaxY`,
 
-    `aux.context.zoomable.min`,
-    `aux.context.zoomable.max`,
+    'auxContextZoomable',
 
-    'aux.context.rotatable',
-    'aux.scene.color',
-    'aux.scene.user.player.color',
-    'aux.scene.user.builder.color',
+    `auxContextZoomableMin`,
+    `auxContextZoomableMax`,
 
-    'aux.color',
-    'aux.creator',
-    'aux.draggable',
-    'aux.draggable.mode',
-    'aux.stackable',
-    'aux.destroyable',
-    'aux.editable',
-    'aux.stroke.color',
-    'aux.stroke.width',
-    'aux.line.to',
-    'aux.line.style',
-    'aux.line.width',
-    'aux.line.color',
-    'aux.label',
-    'aux.label.color',
-    'aux.label.size',
-    'aux.label.size.mode',
-    'aux.label.anchor',
-    'aux.listening',
-    'aux.scale',
-    'aux.scale.x',
-    'aux.scale.y',
-    'aux.scale.z',
-    'aux.image',
-    'aux.shape',
-    'aux.progressBar',
-    'aux.progressBar.color',
-    'aux.progressBar.backgroundColor',
-    'aux.progressBar.anchor',
-    'aux.channel',
-    'aux.channel.locked',
-    'aux.channel.connectedSessions',
-    'aux.channel.maxSessionsAllowed',
-    'aux.iframe',
-    'aux.iframe.x',
-    'aux.iframe.y',
-    'aux.iframe.z',
-    'aux.iframe.size.x',
-    'aux.iframe.size.y',
-    'aux.iframe.rotation.x',
-    'aux.iframe.rotation.y',
-    'aux.iframe.rotation.z',
-    'aux.iframe.element.width',
-    'aux.iframe.scale',
-    'aux.context',
-    'aux.context.color',
-    'aux.context.locked',
-    'aux.context.grid.scale',
-    'aux.context.x',
-    'aux.context.y',
-    'aux.context.z',
-    'aux.context.rotation.x',
-    'aux.context.rotation.y',
-    'aux.context.rotation.z',
-    'aux.context.surface.scale',
-    'aux.context.surface.size',
-    'aux.context.surface.minimized',
-    'aux.context.surface.movable',
-    'aux.context.visualize',
-    'aux.context.devices.visible',
-    `aux.context.player.zoom`,
-    `aux.context.player.rotation.x`,
-    `aux.context.player.rotation.y`,
-    'aux.task.output',
-    'aux.task.error',
-    'aux.task.time',
-    'aux.task.shell',
-    'aux.task.backup',
-    'aux.task.backup.type',
-    'aux.task.backup.url',
+    'auxContextRotatable',
+    'auxChannelColor',
+    'auxChannelUserPlayerColor',
+    'auxChannelUserBuilderColor',
 
-    'stripe.publishableKey',
-    'stripe.secretKey',
-    'stripe.charges',
-    'stripe.successfulCharges',
-    'stripe.failedCharges',
-    'stripe.charge',
-    'stripe.charge.receipt.url',
-    'stripe.charge.receipt.number',
-    'stripe.charge.description',
-    'stripe.outcome.networkStatus',
-    'stripe.outcome.reason',
-    'stripe.outcome.riskLevel',
-    'stripe.outcome.riskScore',
-    'stripe.outcome.rule',
-    'stripe.outcome.sellerMessage',
-    'stripe.outcome.type',
-    'stripe.errors',
-    'stripe.error',
-    'stripe.error.type',
+    'auxColor',
+    'auxCreator',
+    'auxDraggable',
+    'auxDraggableMode',
+    'auxStackable',
+    'auxDestroyable',
+    'auxEditable',
+    'auxStrokeColor',
+    'auxStrokeWidth',
+    'auxLineTo',
+    'auxLineStyle',
+    'auxLineWidth',
+    'auxLineColor',
+    'auxLabel',
+    'auxLabelColor',
+    'auxLabelSize',
+    'auxLabelSizeMode',
+    'auxLabelAnchor',
+    'auxListening',
+    'auxScale',
+    'auxScaleX',
+    'auxScaleY',
+    'auxScaleZ',
+    'auxImage',
+    'auxShape',
+    'auxProgressBar',
+    'auxProgressBarColor',
+    'auxProgressBarBackgroundColor',
+    'auxProgressBarAnchor',
+    'auxChannel',
+    'auxChannelConnectedSessions',
+    'auxIframe',
+    'auxIframeX',
+    'auxIframeY',
+    'auxIframeZ',
+    'auxIframeSizeX',
+    'auxIframeSizeY',
+    'auxIframeRotationX',
+    'auxIframeRotationY',
+    'auxIframeRotationZ',
+    'auxIframeElementWidth',
+    'auxIframeScale',
+    'auxContext',
+    'auxContextColor',
+    'auxContextLocked',
+    'auxContextGridScale',
+    'auxContextX',
+    'auxContextY',
+    'auxContextZ',
+    'auxContextSurfaceDefaultHeight',
+    'auxContextRotationX',
+    'auxContextRotationY',
+    'auxContextRotationZ',
+    'auxContextSurfaceScale',
+    'auxContextSurfaceSize',
+    'auxContextSurfaceMinimized',
+    'auxContextSurfaceMovable',
+    'auxContextVisualize',
+    'auxContextDevicesVisible',
+    `auxContextPlayerZoom`,
+    `auxContextPlayerRotationX`,
+    `auxContextPlayerRotationY`,
+    'auxTaskOutput',
+    'auxTaskError',
+    'auxTaskTime',
+    'auxTaskShell',
+    'auxTaskBackup',
+    'auxTaskBackupType',
+    'auxTaskBackupUrl',
 
-    'onClick()',
-    'onAnyBotClicked()',
-    'onCombine(#tag:"value")',
-    'onCombineEnter()',
-    'onCombineExit()',
-    'onMod()',
-    'onSaveInput()',
-    'onCloseInput()',
-    'onCreate()',
-    'onDestroy()',
-    'onBotDrop()',
-    'onAnyBotDrop()',
-    'onBotDrag()',
-    'onAnyBotDrag()',
-    'onTapCode()',
-    'onQRCodeScanned()',
-    'onQRCodeScannerClosed()',
-    'onQRCodeScannerOpened()',
-    'onBarcodeScanned()',
-    'onBarcodeScannerClosed()',
-    'onBarcodeScannerOpened()',
-    'onPointerEnter()',
-    'onPointerExit()',
-    'onPointerDown()',
-    'onPointerUp()',
-    'onChannelStreaming()',
-    'onChannelStreamLost()',
-    'onChannelSubscribed()',
-    'onChannelUnsubscribed()',
-    'onPlayerEnterContext()',
-    'onKeyDown()',
-    'onKeyUp()',
-    'onGridClick()',
-    'onCheckout()',
-    'onPaymentSuccessful()',
-    'onPaymentFailed()',
-    'onWebhook()',
-    'onAnyListen()',
-    'onListen()',
-    'onAnyAction()',
+    'stripePublishableKey',
+    'stripeSecretKey',
+    'stripeCharges',
+    'stripeSuccessfulCharges',
+    'stripeFailedCharges',
+    'stripeCharge',
+    'stripeChargeReceiptUrl',
+    'stripeChargeReceiptNumber',
+    'stripeChargeDescription',
+    'stripeOutcomeNetworkStatus',
+    'stripeOutcomeReason',
+    'stripeOutcomeRiskLevel',
+    'stripeOutcomeRiskScore',
+    'stripeOutcomeRule',
+    'stripeOutcomeSellerMessage',
+    'stripeOutcomeType',
+    'stripeErrors',
+    'stripeError',
+    'stripeErrorType',
+
+    'onClick',
+    'onAnyBotClicked',
+    'onCombine',
+    'onCombineEnter',
+    'onCombineExit',
+    'onMod',
+    'onSaveInput',
+    'onCloseInput',
+    'onCreate',
+    'onDestroy',
+    'onBotDrop',
+    'onAnyBotDrop',
+    'onBotDrag',
+    'onAnyBotDrag',
+    'onTapCode',
+    'onQRCodeScanned',
+    'onQRCodeScannerClosed',
+    'onQRCodeScannerOpened',
+    'onBarcodeScanned',
+    'onBarcodeScannerClosed',
+    'onBarcodeScannerOpened',
+    'onPointerEnter',
+    'onPointerExit',
+    'onPointerDown',
+    'onPointerUp',
+    'onChannelStreaming',
+    'onChannelStreamLost',
+    'onChannelSubscribed',
+    'onChannelUnsubscribed',
+    'onPlayerEnterContext',
+    'onKeyDown',
+    'onKeyUp',
+    'onGridClick',
+    'onCheckout',
+    'onPaymentSuccessful',
+    'onPaymentFailed',
+    'onWebhook',
+    'onAnyListen',
+    'onListen',
+    'onChannelAction',
 ];

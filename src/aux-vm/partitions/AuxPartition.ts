@@ -14,6 +14,7 @@ import {
     User,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.
@@ -29,7 +30,9 @@ export interface AuxPartitions {
 export type AuxPartition =
     | CausalTreePartition
     | MemoryPartition
-    | RemoteCausalTreePartition;
+    | RemoteCausalTreePartition
+    | CausalRepoPartition
+    | RemoteCausalRepoPartition;
 
 /**
  * Base interface for partitions.
@@ -38,6 +41,13 @@ export type AuxPartition =
  * They allow working on and manipulating bots that are stored in multiple different places.
  */
 export interface AuxPartitionBase extends SubscriptionLike {
+    /**
+     * Whether the partition is private or not.
+     * If true, then the partition will be skipped when exporting state.
+     * If false, then the partition will be included when exporting state.
+     */
+    private: boolean;
+
     /**
      * Applies the given events to the partition.
      * Returns events that should be sent as local events.
@@ -100,6 +110,26 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
+}
+
+/**
+ * Defines a causal repo partition.
+ */
+export interface CausalRepoPartition extends AuxPartitionBase {
+    type: 'causal_repo';
+
+    state: BotsState;
+}
+
+/**
+ * Defines a remote causal repo partition.
+ * That is, a partition that was loaded from a remote server.
+ */
+export interface RemoteCausalRepoPartition extends CausalRepoPartition {
+    /**
+     * Gets or sets whether the partition has been forced offline.
+     */
+    forcedOffline: boolean;
 }
 
 /**

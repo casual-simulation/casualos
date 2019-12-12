@@ -28,10 +28,13 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     protected _socketManager: SocketManager;
 
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
-        super(defaultHost, user, config, {
-            store: new NullCausalTreeStore(),
-            crypto: new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+        super(user, config, {
             sandboxFactory: lib => new EvalSandbox(lib),
+            partitionOptions: {
+                defaultHost: defaultHost,
+                store: new NullCausalTreeStore(),
+                crypto: new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+            },
         });
 
         EvalSandbox.messages.subscribe(m => {

@@ -5,3 +5,11 @@
 .formula-marker {
     text-align: right;
 }
+
+.script-marker::before {
+    content: '@';
+}
+
+.script-marker {
+    text-align: right;
+}

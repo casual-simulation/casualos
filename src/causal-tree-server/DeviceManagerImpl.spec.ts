@@ -108,6 +108,26 @@ describe('CausalTreeServerImpl', () => {
             const devices = server.getConnectedDevices(channel.info);
             expect(devices).toEqual([device]);
         });
+
+        it('should allow joining channels with the same ID but different types', async () => {
+            const channel1 = await server.joinChannel(device, {
+                id: 'test',
+                type: 'number',
+            });
+            const channel2 = await server.joinChannel(device, {
+                id: 'test',
+                type: 'different',
+            });
+
+            const devices1 = server.getConnectedDevices(channel1.info);
+            expect(devices1).toEqual([device]);
+
+            const devices2 = server.getConnectedDevices(channel2.info);
+            expect(devices2).toEqual([device]);
+
+            const channels = server.getConnectedChannels(device);
+            expect(channels).toEqual([channel1, channel2]);
+        });
     });
 
     describe('leaveChannel()', () => {

@@ -1,4 +1,9 @@
-import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
+import {
+    GLOBALS_BOT_ID,
+    DEVICE_BOT_ID,
+    Bot as NormalBot,
+    ScriptBot,
+} from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -34,6 +39,7 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
+    hideHtml as hideHtmlMessage,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
@@ -63,6 +69,7 @@ import {
     trimEvent,
     hasValue,
     createBot,
+    isScriptBot,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -76,8 +83,13 @@ import {
     getEnergy,
     setEnergy,
     addAction,
+    getCurrentBot,
 } from './formula-lib-globals';
-import { remote as calcRemote } from '@casual-simulation/causal-trees';
+import {
+    remote as calcRemote,
+    DeviceSelector,
+} from '@casual-simulation/causal-trees';
+import { dotCaseToCamelCase } from '../utils';
 
 /**
  * The list of possible barcode formats.
@@ -299,7 +311,9 @@ export interface SessionSelector {
     session?: string;
 }
 
-type BotTags = any;
+interface BotTags {
+    [key: string]: any;
+}
 
 /**
  * Defines the basic structure of a bot.
@@ -311,11 +325,21 @@ interface Bot {
     id: string;
 
     /**
+     * The calculated tag values that the bot contains.
+     */
+    tags: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
-     * Otherwise, use getTag().
+     * Otherwise, use the tags property.
      */
-    tags: any;
+    raw: BotTags;
+
+    /**
+     * The tags that have been changed on this bot.
+     */
+    changes: BotTags;
 }
 
 /**
@@ -432,20 +456,6 @@ function stdDev(list: any) {
 }
 
 /**
- * Sorts the given array in ascending order and returns the sorted values in a new array.
- * @param array The array of numbers to sort.
- */
-function sort(array: any[], direction: 'ASC' | 'DESC' = 'ASC'): any[] {
-    let newArray = array.slice();
-    let isAscending = direction.toUpperCase() !== 'DESC';
-    if (isAscending) {
-        return newArray.sort((a, b) => a - b);
-    } else {
-        return newArray.sort((a, b) => b - a);
-    }
-}
-
-/**
  * Generates a random integer number between min and max.
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
@@ -472,19 +482,6 @@ function random(min: number = 0, max?: number): number {
         return rand * (max - min) + min;
     } else {
         return rand + min;
-    }
-}
-
-/**
- * Joins the given list of values into a single string.
- * @param values The values to make the string out of.
- * @param separator The separator used to separate values.
- */
-function join(values: any, separator: string = ','): string {
-    if (Array.isArray(values)) {
-        return values.join(separator);
-    } else {
-        return values;
     }
 }
 
@@ -565,22 +562,8 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     if (tagSection.test(tags[i])) {
                         setTag(currentBot, tags[i], null);
                     }
-                } else if (tags[i].includes(tagSection)) {
-                    let doRemoveTag = false;
-
-                    if (tags[i].includes('.')) {
-                        if (tags[i].split('.')[0] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    } else {
-                        if (tags[i] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    }
-
-                    if (doRemoveTag) {
-                        setTag(currentBot, tags[i], null);
-                    }
+                } else if (tags[i].indexOf(tagSection) === 0) {
+                    setTag(currentBot, tags[i], null);
                 }
             }
         }
@@ -593,30 +576,36 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                 if (tagSection.test(tags[i])) {
                     setTag(bot, tags[i], null);
                 }
-            } else if (tags[i].includes(tagSection)) {
-                let doRemoveTag = false;
-                // if this tag has a period in it, check for first word to match
-                if (tags[i].includes('.')) {
-                    if (
-                        tagSection.includes('.') &&
-                        tags[i].startsWith(tagSection)
-                    ) {
-                        doRemoveTag = true;
-                    } else if (tags[i].split('.')[0] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                } else {
-                    // check if tag is equal to the tag section and that it doesn't just have the tagsection as a part of its
-                    if (tags[i] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                }
-
-                // if it has been verified that the tag matches the tag section for removal
-                if (doRemoveTag) {
-                    setTag(bot, tags[i], null);
-                }
+            } else if (tags[i].indexOf(tagSection) === 0) {
+                // if the tag starts with the tag section
+                setTag(bot, tags[i], null);
             }
+        }
+    }
+}
+
+/**
+ * Renames the tags on the given bot or bots from using dot casing (dot.case) to camel casing (camelCasing).
+ * This is a helper function to make it easier to update your bots.
+ * @param bot The bot or array of bots that should be updated.
+ */
+function renameTagsFromDotCaseToCamelCase(bot: Bot | Bot[]) {
+    if (Array.isArray(bot)) {
+        for (let b of bot) {
+            renameTagsSingle(b);
+        }
+    } else {
+        renameTagsSingle(bot);
+    }
+}
+
+function renameTagsSingle(bot: Bot) {
+    for (let tag of tagsOnBot(bot)) {
+        let updated = dotCaseToCamelCase(tag);
+        if (updated !== tag) {
+            const val = getTag(bot, tag);
+            setTag(bot, updated, val);
+            setTag(bot, tag, null);
         }
     }
 }
@@ -624,7 +613,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
 function destroyChildren(id: string) {
     const calc = getCalculationContext();
     const children: Bot[] = calc.sandbox.interface.listObjectsWithTag(
-        'aux.creator',
+        'auxCreator',
         id
     );
     children.forEach(child => {
@@ -663,26 +652,26 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
             }
 
             variants = newVariants;
-        } else {
+        } else if (typeof diff === 'object') {
             for (let b = 0; b < variants.length; b++) {
                 variants[b].push(diff);
             }
         }
     }
 
-    let bots: Bot[] = variants.map(v => {
+    let bots: NormalBot[] = variants.map(v => {
         let bot = {
             id: idFactory(),
             tags: {},
         };
-        apply(bot.tags, ...v);
+        applyMod(bot.tags, ...v);
         return bot;
     });
 
     let actions = getActions();
     actions.push(...bots.map(f => botAdded(f)));
 
-    let ret = new Array<Bot>(bots.length);
+    let ret = new Array<ScriptBot>(bots.length);
     const calc = getCalculationContext();
     for (let i = 0; i < bots.length; i++) {
         ret[i] = calc.sandbox.interface.addBot(bots[i]);
@@ -693,7 +682,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         );
     }
 
-    event(CREATE_ACTION_NAME, bots);
+    event(CREATE_ACTION_NAME, ret);
 
     if (ret.length === 1) {
         return ret[0];
@@ -714,18 +703,16 @@ function getBotId(bot: Bot | string): string {
     }
 }
 
-function createBase(
-    idFactory: () => string,
-    parent: Bot | string,
-    ...datas: Mod[]
-) {
-    let parentId = getBotId(parent);
-    let parentDiff = parentId
-        ? {
-              'aux.creator': parentId,
-          }
-        : {};
-    return createFromMods(idFactory, ...datas, parentDiff);
+function createBase(idFactory: () => string, ...datas: Mod[]) {
+    // let parentId = getBotId(parent);
+    // let parentDiff = parentId
+    //     ? {
+    //           auxCreator: parentId,
+    //       }
+    //     : {};
+    let parent = getCurrentBot();
+    let parentDiff = parent ? from(parent) : {};
+    return createFromMods(idFactory, parentDiff, ...datas);
 }
 
 /**
@@ -736,18 +723,18 @@ function createBase(
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = create(null, { "aux.color": "red" });
+ * let redBot = create(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = create(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
-function create(parent: Bot | string, ...mods: Mod[]) {
-    return createBase(() => uuid(), parent, ...mods);
+function create(...mods: Mod[]) {
+    return createBase(() => uuid(), ...mods);
 }
 
 /**
@@ -758,18 +745,34 @@ function create(parent: Bot | string, ...mods: Mod[]) {
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = createTemp(null, { "aux.color": "red" });
+ * let redBot = createTemp(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = createTemp(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
-function createTemp(parent: Bot | string, ...mods: Mod[]) {
-    return createBase(() => `T-${uuid()}`, parent, ...mods);
+function createTemp(...mods: Mod[]) {
+    return createBase(() => `T-${uuid()}`, ...mods);
+}
+
+/**
+ * Creates a mod that sets the auxCreator of a bot to the given bot.
+ * @param creator The bot or Bot ID of the creator.
+ */
+function from(creator: Bot | string): Mod {
+    let parentId = getBotId(creator);
+    let parentDiff = parentId
+        ? {
+              auxCreator: parentId,
+          }
+        : {
+              auxCreator: null,
+          };
+    return parentDiff;
 }
 
 /**
@@ -925,11 +928,11 @@ webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
  *
  * @example
  * // Tell all the red bots to reset themselves.
- * whisper(getBots("#aux.color", "red"), "reset()");
+ * whisper(getBots("#auxColor", "red"), "reset()");
  *
  * @example
  * // Ask all the tall bots for their names.
- * const names = whisper(getBots("aux.scale.z", height => height >= 2), "getName()");
+ * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
  *
  * @example
  * // Tell every friendly bot to say "Hi" to you.
@@ -970,16 +973,7 @@ function remote(event: BotAction, selector?: SessionSelector) {
         return;
     }
     let actions = getActions();
-    const r = calcRemote(
-        event,
-        selector
-            ? {
-                  sessionId: selector.session,
-                  username: selector.username,
-                  deviceId: selector.device,
-              }
-            : undefined
-    );
+    const r = calcRemote(event, convertSessionSelector(selector));
     const index = actions.indexOf(event);
     if (index >= 0) {
         actions[index] = r;
@@ -988,13 +982,23 @@ function remote(event: BotAction, selector?: SessionSelector) {
     }
 }
 
+function convertSessionSelector(selector: SessionSelector): DeviceSelector {
+    return selector
+        ? {
+              sessionId: selector.session,
+              username: selector.username,
+              deviceId: selector.device,
+          }
+        : undefined;
+}
+
 /**
  * Replaces the bot that the user is beginning to drag.
  * Only works from inside a onBotDrag() or onAnyBotDrag() listen tag.
  * @param bot The bot or mod that should be dragged instead of the original.
  */
 function replaceDragBot(bot: Mod) {
-    const event = calcReplaceDragBot(bot);
+    const event = calcReplaceDragBot(unwrapBotOrMod(bot));
     return addAction(event);
 }
 
@@ -1046,14 +1050,14 @@ function openURL(url: string) {
  *
  * @example
  * // Show an input box for `this` bot's label.
- * player.showInputForTag(this, "aux.label", {
+ * player.showInputForTag(this, "auxLabel", {
  *            title: "Change the label",
  *            type: "text"
  * });
  *
  * @example
  * // Show a color picker for the bot's color.
- * player.showInputForTag(this, "aux.color", {
+ * player.showInputForTag(this, "auxColor", {
  *            title: "Change the color",
  *            type: "color",
  *            subtype: "advanced"
@@ -1097,7 +1101,7 @@ function checkout(options: CheckoutOptions) {
  * @example
  * // Finish the checkout process
  * server.finishCheckout({
- *   token: 'token from onCheckou()',
+ *   token: 'token from onCheckout',
  *
  *   // 1000 cents == $10.00
  *   amount: 1000,
@@ -1130,7 +1134,7 @@ function isDesigner(): boolean {
                 calc,
                 globals,
                 'aux.designers',
-                getTag(user, 'aux._user')
+                getTag(user, '_auxUser')
             );
         }
     }
@@ -1142,16 +1146,18 @@ function isDesigner(): boolean {
  * @param context The context.
  */
 function isInContext(givenContext: string) {
-    return currentContext() === givenContext && currentContext() != undefined;
+    return (
+        getCurrentContext() === givenContext && getCurrentContext() != undefined
+    );
 }
 
 /**
  * Gets the context that the player is currently in.
  */
-function currentContext(): string {
+function getCurrentContext(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._userContext');
+        const context = getTag(user, '_auxUserContext');
         return context || undefined;
     }
     return undefined;
@@ -1160,13 +1166,13 @@ function currentContext(): string {
 /**
  * Gets the channel that the player is currently in.
  */
-function currentChannel(): string {
+function getCurrentChannel(): string {
     const user = getUser();
     if (user) {
-        const channel = getTag(user, 'aux._userChannel');
+        const channel = getTag(user, '_auxUserChannel') as string;
 
-        if ((<string>channel).includes('/')) {
-            return (<string>channel).split('/')[1];
+        if (channel && channel.includes('/')) {
+            return channel.split('/')[1];
         }
 
         return channel || undefined;
@@ -1232,7 +1238,7 @@ function getGlobals(): Bot {
 function getMenuContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userMenuContext');
+        return getTag(user, '_auxUserMenuContext');
     } else {
         return null;
     }
@@ -1244,7 +1250,7 @@ function getMenuContext(): string {
 function getInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userInventoryContext');
+        return getTag(user, '_auxUserInventoryContext');
     } else {
         return null;
     }
@@ -1302,7 +1308,7 @@ function getBot(): Bot {
  *
  * @example
  * // Get all the bots that are red.
- * let bots = getBots(byTag("aux.color", "red"));
+ * let bots = getBots(byTag("auxColor", "red"));
  */
 function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
 
@@ -1313,8 +1319,8 @@ function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
  *
  * @example
  * // Get all the bots that are red.
- * // Shorthand for getBots(byTag("aux.color", "red"))
- * let bots = getBots("aux.color", "red");
+ * // Shorthand for getBots(byTag("auxColor", "red"))
+ * let bots = getBots("auxColor", "red");
  */
 function getBots(tag: string, filter?: any | TagFilter): Bot[];
 
@@ -1397,9 +1403,9 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
  * @param mod The mod that bots should be checked against.
  *
  * @example
- * // Find all the bots with a height set to 1 and aux.color set to "red".
+ * // Find all the bots with a height set to 1 and auxColor set to "red".
  * let bots = getBots(byMod({
- *      "aux.color": "red",
+ *      "auxColor": "red",
  *      height: 1
  * }));
  */
@@ -1435,10 +1441,10 @@ function inContext(context: string): BotFilterFunction {
  */
 function atPosition(context: string, x: number, y: number): BotFilterFunction {
     const inCtx = inContext(context);
-    const atX = byTag(`${context}.x`, x);
-    const atY = byTag(`${context}.y`, y);
+    const atX = byTag(`${context}X`, x);
+    const atY = byTag(`${context}Y`, y);
     const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-    filter.sort = b => getTag(b, `${context}.sortOrder`) || 0;
+    filter.sort = b => getTag(b, `${context}SortOrder`) || 0;
     return filter;
 }
 
@@ -1449,10 +1455,10 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  *
  * @example
  * // Find all the bots created by the yellow bot.
- * let bots = getBots(createdBy(getBot('aux.color','yellow')));
+ * let bots = getBots(createdBy(getBot('auxColor','yellow')));
  */
 function createdBy(bot: Bot) {
-    return byTag('aux.creator', bot.id);
+    return byTag('auxCreator', bot.id);
 }
 
 /**
@@ -1469,8 +1475,8 @@ function createdBy(bot: Bot) {
 function inStack(bot: Bot, context: string): BotFilterFunction {
     return atPosition(
         context,
-        getTag(bot, `${context}.x`),
-        getTag(bot, `${context}.y`)
+        getTag(bot, `${context}X`),
+        getTag(bot, `${context}Y`)
     );
 }
 
@@ -1493,8 +1499,8 @@ function neighboring(
     const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
     const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
 
-    const x = getTag(bot, `${context}.x`);
-    const y = getTag(bot, `${context}.y`);
+    const x = getTag(bot, `${context}X`);
+    const y = getTag(bot, `${context}Y`);
 
     return atPosition(context, x + offsetX, y + offsetY);
 }
@@ -1534,17 +1540,30 @@ function not(filter: BotFilterFunction): BotFilterFunction {
  * @param tag The tag.
  *
  * @example
- * // Get the "aux.color" tag from the `this` bot.
- * let color = getTag(this, "aux.color");
+ * // Get the "auxColor" tag from the `this` bot.
+ * let color = getTag(this, "auxColor");
  */
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
+            } else {
+                current = bot.tags[tag];
+            }
+        } else if (isBot(current)) {
+            const tag = trimTag(tags[i]);
+            const calc = getCalculationContext();
+            if (calc) {
+                const script = calc.sandbox.interface.getBot(current.id);
+                if (script) {
+                    current = calc.sandbox.interface.getTag(script, tag);
+                } else {
+                    current = bot.tags[tag];
+                }
             } else {
                 current = bot.tags[tag];
             }
@@ -1562,8 +1581,8 @@ function getTag(bot: Bot, ...tags: string[]): any {
  * @param tag The tag to check.
  *
  * @example
- * // Determine if the "aux.label" tag exists on the `this` bot.
- * let hasLabel = hasTag(this, "aux.label");
+ * // Determine if the "auxLabel" tag exists on the `this` bot.
+ * let hasLabel = hasTag(this, "auxLabel");
  * if (hasLabel) {
  *   // Do something...
  * }
@@ -1572,7 +1591,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
     const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1603,17 +1622,17 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  *
  * @example
  * // Set a bot's color to "green".
- * setTag(this, "aux.color", "green");
+ * setTag(this, "auxColor", "green");
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isBot(bot[0])) {
+    if (Array.isArray(bot) && bot.length > 0 && isScriptBot(bot[0])) {
         const calc = getCalculationContext();
         for (let i = 0; i < bot.length; i++) {
-            calc.sandbox.interface.setTag(bot[i], tag, value);
+            calc.sandbox.interface.setTag(bot[i] as ScriptBot, tag, value);
         }
         return value;
-    } else if (bot && isBot(bot)) {
+    } else if (bot && isScriptBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
@@ -1628,7 +1647,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
+function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1666,30 +1685,20 @@ function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
 }
 
 /**
- * Saves the given diff to a string of JSON.
- * @param bot The diff to save.
- */
-function exportMod(bot: any): string {
-    if (isBot(bot)) {
-        return JSON.stringify(bot.tags);
-    } else {
-        return JSON.stringify(bot);
-    }
-}
-
-/**
  * Applies the given diff to the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function apply(bot: any, ...diffs: Mod[]) {
+function applyMod(bot: any, ...diffs: Mod[]) {
     let appliedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
             return;
         }
         let tags: BotTags;
-        if (isBot(diff)) {
+        if (isScriptBot(diff)) {
+            tags = diff.raw;
+        } else if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1700,7 +1709,7 @@ function apply(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
         });
@@ -1757,7 +1766,7 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function subtract(bot: any, ...diffs: Mod[]) {
+function subtractMods(bot: any, ...diffs: Mod[]) {
     let subtractedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
@@ -1775,7 +1784,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });
@@ -1789,7 +1798,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
  * @param y The Y position that the bot should be added at.
  * @param index The index that the bot should be added at.
  */
-function addToContext(
+function addToContextMod(
     context: string,
     x: number = 0,
     y: number = 0,
@@ -1803,7 +1812,7 @@ function addToContext(
  * Gets a diff that removes a bot from the given context.
  * @param context The context.
  */
-function removeFromContext(context: string) {
+function removeFromContextMod(context: string) {
     const calc = getCalculationContext();
     return calcRemoveFromContextDiff(calc, context);
 }
@@ -1815,7 +1824,12 @@ function removeFromContext(context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-function setPosition(context: string, x?: number, y?: number, index?: number) {
+function setPositionMod(
+    context: string,
+    x?: number,
+    y?: number,
+    index?: number
+) {
     const calc = getCalculationContext();
     return calcSetPositionDiff(calc, context, x, y, index);
 }
@@ -1823,22 +1837,22 @@ function setPosition(context: string, x?: number, y?: number, index?: number) {
 /**
  * Gets a diff that adds a bot to the current user's menu.
  */
-function addToMenu(): BotTags {
+function addToMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...addToContext(context),
-        [`${context}.id`]: uuid(),
+        ...addToContextMod(context),
+        [`${context}Id`]: uuid(),
     };
 }
 
 /**
  * Gets a diff that removes a bot from the current user's menu.
  */
-function removeFromMenu(): BotTags {
+function removeFromMenuMod(): BotTags {
     const context = getMenuContext();
     return {
-        ...removeFromContext(context),
-        [`${context}.id`]: null,
+        ...removeFromContextMod(context),
+        [`${context}Id`]: null,
     };
 }
 
@@ -1868,6 +1882,14 @@ function playSound(url: string) {
  */
 function showHtml(html: string) {
     const event = htmlMessage(html);
+    return addAction(event);
+}
+
+/**
+ * Hides the HTML from the user.
+ */
+function hideHtml() {
+    const event = hideHtmlMessage();
     return addAction(event);
 }
 
@@ -2016,13 +2038,22 @@ function echo(message: string) {
     actions.push(calcRemote(calcEcho(message)));
 }
 
+function unwrapBotOrMod(botOrMod: Mod) {
+    if (isScriptBot(botOrMod)) {
+        const calc = getCalculationContext();
+        return calc.sandbox.interface.unwrapBot(botOrMod);
+    } else {
+        return botOrMod;
+    }
+}
+
 /**
  * Sends an event to the server to setup a new channel if it does not exist.
  * @param channel The channel.
  * @param botOrMod The bot or mod that should be cloned into the new channel.
  */
 function setupChannel(channel: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(channel, botOrMod));
+    return remote(calcSetupChannel(channel, unwrapBotOrMod(botOrMod)));
 }
 
 /**
@@ -2048,7 +2079,9 @@ function backupToGithub(auth: string) {
  */
 function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
-    actions.push(calcRemote(calcBackupAsDownload(target)));
+    actions.push(
+        calcRemote(calcBackupAsDownload(convertSessionSelector(target)))
+    );
 }
 
 /**
@@ -2085,26 +2118,7 @@ function __energyCheck() {
 
 // NOTE: Make sure to add functions that don't
 // match their exported name here so that builtin code editors can figure out what they are.
-export const typeDefinitionMap = new Map([
-    ['mod.import', 'load'],
-    ['mod.export', 'save'],
-    ['player.getBot', 'getUser'],
-]);
-
-/**
- * Defines a set of functions that are able to make Bot Diffs.
- */
-const mod = {
-    addToContext,
-    removeFromContext,
-    addToMenu,
-    removeFromMenu,
-    setPosition,
-    import: importMod,
-    export: exportMod,
-    apply,
-    subtract,
-};
+export const typeDefinitionMap = new Map([['player.getBot', 'getUser']]);
 
 /**
  * Defines a set of functions that relate to common player operations.
@@ -2120,6 +2134,7 @@ const player = {
     playSound,
     toast,
     showHtml,
+    hideHtml,
     tweenTo,
     moveTo,
     openQRCodeScanner,
@@ -2135,8 +2150,8 @@ const player = {
     showQRCode,
     hideQRCode,
     isConnected,
-    currentContext,
-    currentChannel,
+    getCurrentContext,
+    getCurrentChannel,
     isDesigner,
     showInputForTag,
     checkout,
@@ -2172,14 +2187,6 @@ const math = {
 };
 
 /**
- * Defines a set of functions that relate to common data operations.
- */
-const data = {
-    sort,
-    join,
-};
-
-/**
  * Defines a set of functions that handle actions.
  */
 const actionNamespace = {
@@ -2189,8 +2196,6 @@ const actionNamespace = {
 
 export default {
     // Namespaces
-    data,
-    mod,
     math,
     player,
     server,
@@ -2207,7 +2212,19 @@ export default {
     whisper,
     remote,
     webhook,
+    from,
 
+    // Mod functions
+    applyMod,
+    getMod,
+    addToContextMod,
+    removeFromContextMod,
+    addToMenuMod,
+    removeFromMenuMod,
+    setPositionMod,
+    subtractMods,
+
+    // Get bot functions
     getBot,
     getBots,
     getBotTagValues,
@@ -2219,10 +2236,12 @@ export default {
     neighboring,
     either,
     not,
+
+    // other util functions
     getTag,
-    hasTag,
     setTag,
     removeTags,
+    renameTagsFromDotCaseToCamelCase,
 
     // Engine functions
     __energyCheck,

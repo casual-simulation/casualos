@@ -4,12 +4,24 @@ import {
     getActiveObjects,
     calculateFormulaValue,
     isDestroyable,
+    convertToCopiableValue,
 } from './BotCalculations';
 import {
     BotCalculationContext,
     BotSandboxContext,
 } from './BotCalculationContext';
-import { ShoutAction, botRemoved, BotAction } from './BotEvents';
+import {
+    ShoutAction,
+    botRemoved,
+    BotAction,
+    ApplyStateAction,
+    BotActions,
+    botAdded,
+    botUpdated,
+    AddBotAction,
+    RemoveBotAction,
+    UpdateBotAction,
+} from './BotEvents';
 import {
     createCalculationContextFromState,
     createCalculationContext,
@@ -43,7 +55,7 @@ export function searchBotState(
         createSandbox
     );
     const result = calculateFormulaValue(context, formula);
-    return result;
+    return convertToCopiableValue(result);
 }
 
 export function calculateActionResults(
@@ -144,7 +156,7 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [botEvents] = formulaActions(state, context, [], null, [formula]);
+    let [botEvents] = formulaActions(state, context, null, null, [formula]);
 
     return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 }
@@ -184,7 +196,7 @@ function destroyChildren(
     id: string
 ) {
     const result = calc.objects.filter(
-        o => calculateBotValue(calc, o, 'aux.creator') === id
+        o => calculateBotValue(calc, o, 'auxCreator') === id
     );
 
     result.forEach(child => {
@@ -218,4 +230,34 @@ export function resolveRejectedActions(actions: BotAction[]): BotAction[] {
     }
 
     return uniq(final);
+}
+
+/**
+ * Calculates the individual bot update events for the given event.
+ * @param currentState The current state.
+ * @param event The event.
+ */
+export function breakIntoIndividualEvents(
+    currentState: BotsState,
+    event: ApplyStateAction
+): (AddBotAction | RemoveBotAction | UpdateBotAction)[] {
+    let actions = [] as (AddBotAction | RemoveBotAction | UpdateBotAction)[];
+
+    let update = event.state;
+    for (let id in update) {
+        const botUpdate = update[id];
+        const currentBot = currentState[id];
+        if (!currentBot && botUpdate) {
+            // new bot
+            actions.push(botAdded(botUpdate));
+        } else if (currentBot && !botUpdate) {
+            // deleted bot
+            actions.push(botRemoved(id));
+        } else if (currentBot && botUpdate) {
+            // updated bot
+            actions.push(botUpdated(id, botUpdate));
+        }
+    }
+
+    return actions;
 }

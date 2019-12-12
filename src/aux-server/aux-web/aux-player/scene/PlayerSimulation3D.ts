@@ -51,6 +51,11 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryVisible: boolean = true;
 
     private _inventoryPannable: boolean = false;
+    private _inventoryPanMinX: number = null;
+    private _inventoryPanMaxX: number = null;
+    private _inventoryPanMinY: number = null;
+    private _inventoryPanMaxY: number = null;
+
     private _inventoryResizable: boolean = true;
     private _inventoryRotatable: boolean = true;
     private _inventoryZoomable: boolean = true;
@@ -206,6 +211,50 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._inventoryPannable;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Gets the minimum value the inventory's pan can be set to on the x axis
+     */
+    get inventoryPanMinX() {
+        if (this._inventoryPanMinX != null) {
+            return this._inventoryPanMinX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the inventory's pan can be set to on the x axis
+     */
+    get inventoryPanMaxX() {
+        if (this._inventoryPanMaxX != null) {
+            return this._inventoryPanMaxX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the minimum value the inventory's pan can be set to on the y axis
+     */
+    get inventoryPanMinY() {
+        if (this._inventoryPanMinY != null) {
+            return this._inventoryPanMinY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the inventory's pan can be set to on the y axis
+     */
+    get inventoryPanMaxY() {
+        if (this._inventoryPanMaxY != null) {
+            return this._inventoryPanMaxY;
+        } else {
+            return null;
         }
     }
 
@@ -382,12 +431,12 @@ export class PlayerSimulation3D extends Simulation3D {
                             const bot = update;
                             // Update the context background color.
                             //let contextBackgroundColor =
-                            //bot.tags['aux.context.color'];
+                            //bot.tags['auxContextColor'];
 
                             let contextBackgroundColor = calculateBotValue(
                                 calc,
                                 bot,
-                                `aux.context.color`
+                                `auxContextColor`
                             );
 
                             this._contextBackground = hasValue(
@@ -399,133 +448,161 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._pannable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable`,
+                                `auxContextPannable`,
                                 true
                             );
 
                             this._panMinX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.min.x`,
+                                `auxContextPannableMinX`,
                                 null
                             );
 
                             this._panMaxX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.max.x`,
+                                `auxContextPannableMaxX`,
                                 null
                             );
 
                             this._panMinY = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.min.y`,
+                                `auxContextPannableMinY`,
                                 null
                             );
 
                             this._panMaxY = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.max.y`,
+                                `auxContextPannableMaxY`,
                                 null
                             );
 
                             this._zoomable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.zoomable`,
+                                `auxContextZoomable`,
                                 true
                             );
 
                             this._zoomMin = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.zoomable.min`,
+                                `auxContextZoomableMin`,
                                 null
                             );
 
                             this._zoomMax = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.zoomable.max`,
+                                `auxContextZoomableMax`,
                                 null
                             );
 
                             this._rotatable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.rotatable`,
+                                `auxContextRotatable`,
                                 true
                             );
 
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.visible`,
+                                `auxContextInventoryVisible`,
                                 true
                             );
 
                             this._inventoryPannable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.pannable`,
+                                `auxContextInventoryPannable`,
                                 false
+                            );
+
+                            this._inventoryPanMinX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMinX`,
+                                null
+                            );
+
+                            this._inventoryPanMaxX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMaxX`,
+                                null
+                            );
+
+                            this._inventoryPanMinY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMinY`,
+                                null
+                            );
+
+                            this._inventoryPanMaxY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `auxContextInventoryPannableMaxY`,
+                                null
                             );
 
                             this._inventoryResizable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.resizable`,
+                                `auxContextInventoryResizable`,
                                 true
                             );
 
                             this._inventoryRotatable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.rotatable`,
+                                `auxContextInventoryRotatable`,
                                 true
                             );
 
                             this._inventoryZoomable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.zoomable`,
+                                `auxContextInventoryZoomable`,
                                 true
                             );
 
                             this._inventoryHeight = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.height`,
+                                `auxContextInventoryHeight`,
                                 0
                             );
 
                             this._playerZoom = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.player.zoom`,
+                                `auxContextPlayerZoom`,
                                 null
                             );
 
                             this._playerRotationX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.player.rotation.x`,
+                                `auxContextPlayerRotationX`,
                                 null
                             );
 
                             this._playerRotationY = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.player.rotation.y`,
+                                `auxContextPlayerRotationY`,
                                 null
                             );
 
                             let invColor = calculateBotValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.color`
+                                `auxContextInventoryColor`
                             );
 
                             this._inventoryColor = hasValue(invColor)
@@ -556,7 +633,7 @@ export class PlayerSimulation3D extends Simulation3D {
     // ) {
     //     if (bot.id === this.simulation.helper.userId) {
     //         const userSimulationContextValue =
-    //             bot.values['aux._userSimulationsContext'];
+    //             bot.values['_auxUserChannelsContext'];
     //         if (
     //             !this.simulationContext ||
     //             this.simulationContext.context !== userSimulationContextValue
@@ -587,8 +664,8 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
         return (
-            event.tag === 'aux._userMenuContext' ||
-            event.tag === 'aux._userSimulationsContext'
+            event.tag === '_auxUserMenuContext' ||
+            event.tag === '_auxUserChannelsContext'
         );
     }
 
@@ -639,16 +716,16 @@ export class PlayerSimulation3D extends Simulation3D {
         let userBackgroundColor = calculateBotValue(
             calc,
             bot,
-            `aux.context.color`
+            `auxContextColor`
         );
         this._userInventoryColor = hasValue(userBackgroundColor)
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { 'aux._userContext': this.context },
+            tags: { _auxUserContext: this.context },
         });
         await this.simulation.helper.updateBot(userBot, {
-            tags: { 'aux._userChannel': this.simulation.id },
+            tags: { _auxUserChannel: this.simulation.id },
         });
         this._subs.push(
             this.simulation.watcher
@@ -659,7 +736,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         let userBackgroundColor = calculateBotValue(
                             calc,
                             bot,
-                            `aux.context.color`
+                            `auxContextColor`
                         );
                         this._userInventoryColor = hasValue(userBackgroundColor)
                             ? new Color(userBackgroundColor)

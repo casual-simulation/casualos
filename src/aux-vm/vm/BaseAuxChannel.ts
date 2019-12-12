@@ -28,6 +28,7 @@ import {
     ON_ACTION_ACTION_NAME,
     BotTags,
     atomToEvent,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -60,6 +61,8 @@ import {
 } from '../partitions/AuxPartition';
 import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
+import { StoredAux } from '../StoredAux';
+import pick from 'lodash/pick';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -360,21 +363,26 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportBots(botIds: string[]): Promise<StoredAux> {
         return this._helper.exportBots(botIds);
     }
 
     /**
      * Exports the causal tree for the simulation.
      */
-    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            if (partition.type === 'causal_tree') {
-                return partition.tree.export();
-            }
+    async export(): Promise<StoredAux> {
+        let final: BotsState = {};
+        const state = this._helper.publicBotsState;
+
+        for (let key in state) {
+            const bot = state[key];
+            final[key] = pick(bot, 'id', 'tags');
         }
 
-        return undefined;
+        return {
+            version: 1,
+            state: final,
+        };
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
@@ -545,7 +553,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _initUserBot() {
         if (!this.user) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user bot because user is null'
+                '[BaseAuxChannel] Not initializing user bot because user is null. (User needs to be specified)'
             );
             return;
         }
@@ -560,7 +568,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _deleteAndUpdateOldUserBots() {
         let events: BotAction[] = [];
         for (let bot of this._helper.objects) {
-            if (bot.tags['aux._user']) {
+            if (bot.tags['_auxUser']) {
                 if (shouldDeleteUser(bot)) {
                     console.log('[BaseAuxChannel] Removing User', bot.id);
                     events.push(botRemoved(bot.id));
@@ -617,15 +625,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }
         }
 
-        if (!this._helper.userBot || !this._deviceInfo) {
+        if (!this._helper.userBot) {
             return false;
-        }
-
-        if (
-            this._deviceInfo.roles.indexOf(ADMIN_ROLE) >= 0 ||
-            this._deviceInfo.roles.indexOf(SERVER_ROLE) >= 0
-        ) {
-            return true;
         }
 
         return true;

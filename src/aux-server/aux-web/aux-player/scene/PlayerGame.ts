@@ -42,11 +42,10 @@ import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 import { ItemContext } from '../ItemContext';
 import { ContextItem } from '../ContextItem';
+import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
-    botsMode: boolean;
-    workspacesMode: boolean;
 
     playerSimulations: PlayerSimulation3D[] = [];
     inventorySimulations: InventorySimulation3D[] = [];
@@ -239,6 +238,54 @@ export class PlayerGame extends Game {
 
             if (sim.inventoryPannable != null) {
                 return sim.inventoryPannable;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMinX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMinX != null) {
+                return sim.inventoryPanMinX;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMaxX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMaxX != null) {
+                return sim.inventoryPanMaxX;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMinY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMinY != null) {
+                return sim.inventoryPanMinY;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryPanMaxY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPanMaxY != null) {
+                return sim.inventoryPanMaxY;
             }
         }
 
@@ -450,7 +497,7 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        let simulations = new ItemContext(['_auxUserChannelsContext']);
         this.subs.push(simulations);
         this.subs.push(
             simulations.itemsUpdated.subscribe(items =>
@@ -578,7 +625,7 @@ export class PlayerGame extends Game {
 
     private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getBotsStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredAux(stored);
         await sim.helper.addState(state);
     }
 
@@ -713,13 +760,14 @@ export class PlayerGame extends Game {
 
         if (this.defaultHeightCurrent != this.getInventoryHeight()) {
             this.inventoryHeightOverride = null;
+            this.defaultHeightCurrent = this.getInventoryHeight();
         }
 
         if (defaultHeight === null || defaultHeight === 0) {
             defaultHeight = calculateNumericalTagValue(
                 context,
                 globalsBot,
-                'aux.inventory.height',
+                'auxInventoryHeight',
                 null
             );
         }
@@ -734,7 +782,6 @@ export class PlayerGame extends Game {
             }
         }
 
-        this.defaultHeightCurrent = defaultHeight;
         this.invVisibleCurrent = this.getInventoryVisible();
 
         if (this.invVisibleCurrent === false) {
@@ -1012,6 +1059,25 @@ export class PlayerGame extends Game {
             this.invController.controls.enablePan = this.getInventoryPannable();
             this.invController.controls.enableRotate = this.getInventoryRotatable();
             this.invController.controls.enableZoom = this.getInventoryZoomable();
+
+            this.invController.controls.minPanX = this.getInventoryPanMinX();
+            this.invController.controls.maxPanX = this.getInventoryPanMaxX();
+
+            //this.invController.controls.minPanY = this.getPanMinY();
+
+            if (this.getInventoryPanMinY() != null) {
+                this.invController.controls.minPanY =
+                    this.getInventoryPanMinY() * -1;
+            } else {
+                this.invController.controls.minPanY = null;
+            }
+
+            if (this.getInventoryPanMaxY() != null) {
+                this.invController.controls.maxPanY =
+                    this.getInventoryPanMaxY() * -1;
+            } else {
+                this.invController.controls.maxPanY = null;
+            }
         }
 
         const mainControls = this.interaction.cameraRigControllers.find(

@@ -20,10 +20,12 @@ import {
     CausalTreePartitionConfig,
     createMemoryPartition,
     createAuxPartition,
+    createCausalRepoPartition,
     PartitionConfig,
     AuxPartition,
     iteratePartitions,
     filterAtomFactory,
+    createCausalRepoClientPartition,
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
@@ -37,10 +39,10 @@ import {
     RemoteCausalTreePartitionOptions,
     RemoteCausalTreePartitionImpl,
 } from '../partitions/RemoteCausalTreePartition';
+import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartitionFactory';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {
-    store?: CausalTreeStore;
-    crypto?: SigningCryptoImpl;
+    partitionOptions?: RemoteCausalTreePartitionOptions;
 }
 
 export class RemoteAuxChannel extends BaseAuxChannel {
@@ -49,20 +51,27 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     protected _partitionOptions: RemoteCausalTreePartitionOptions;
 
     constructor(
-        defaultHost: string,
         user: AuxUser,
         config: AuxConfig,
         options: RemoteAuxChannelOptions
     ) {
         super(user, config, options);
         this._partitionOptions = {
-            defaultHost: defaultHost,
-            store: options.store,
-            crypto: options.crypto,
+            ...(options.partitionOptions || {
+                defaultHost: null,
+            }),
             treeOptions: {
                 filter: filterAtomFactory(() => this.helper),
             },
         };
+        //  {
+        //     defaultHost: defaultHost,
+        //     store: options.store,
+        //     crypto: options.crypto,
+        //     treeOptions: {
+        //         filter: filterAtomFactory(() => this.helper),
+        //     },
+        // };
     }
 
     protected async _createPartition(
@@ -74,7 +83,10 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 this._partitionOptions,
                 this.user
             ),
-            createMemoryPartition
+            createMemoryPartition,
+            config => createCausalRepoPartition(config, this.user),
+            config => createRemoteCausalRepoPartition(config, this.user),
+            config => createCausalRepoClientPartition(config, this.user)
         );
     }
 
@@ -95,10 +107,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 for (let [key, partition] of iteratePartitions(
                     this._partitions
                 )) {
-                    if (partition.type === 'causal_tree') {
-                        if ('forcedOffline' in partition) {
-                            partition.forcedOffline = event.offline;
-                        }
+                    if ('forcedOffline' in partition) {
+                        partition.forcedOffline = event.offline;
                     }
                 }
             }

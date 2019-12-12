@@ -19,8 +19,6 @@ export class BuilderGame extends Game {
     gameView: BuilderGameView;
     simulation3D: BuilderSimulation3D = null;
     simulation: BrowserSimulation;
-    botsMode: boolean;
-    workspacesMode: boolean;
 
     private gridMesh: GridHelper;
 

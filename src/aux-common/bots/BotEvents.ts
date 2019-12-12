@@ -38,6 +38,7 @@ export type ExtraActions =
     | RejectAction
     | ShowToastAction
     | ShowHtmlAction
+    | HideHtmlAction
     | TweenToAction
     | OpenQRCodeScannerAction
     | OpenBarcodeScannerAction
@@ -386,9 +387,22 @@ export interface ShowHtmlAction extends Action {
     type: 'show_html';
 
     /**
+     * Whether the HTML should be visible.
+     */
+    visible: true;
+
+    /**
      * The HTML that should be shown.
      */
     html: string;
+}
+
+/**
+ * An event that is used to hide the HTML from the user.
+ */
+export interface HideHtmlAction extends Action {
+    type: 'show_html';
+    visible: false;
 }
 
 /**
@@ -1037,7 +1051,18 @@ export function toast(message: string, duration?: number): ShowToastAction {
 export function html(html: string): ShowHtmlAction {
     return {
         type: 'show_html',
+        visible: true,
         html: html,
+    };
+}
+
+/**
+ * Creates a new HideHtmlAction.
+ */
+export function hideHtml(): HideHtmlAction {
+    return {
+        type: 'show_html',
+        visible: false,
     };
 }
 

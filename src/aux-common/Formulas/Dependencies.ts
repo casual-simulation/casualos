@@ -500,26 +500,26 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.currentContext': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentContext': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userContext',
+                    name: '_auxUserContext',
                     dependencies: [],
                 },
             ];
         },
-        'player.currentChannel': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentChannel': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userChannel',
+                    name: '_auxUserChannel',
                     dependencies: [],
                 },
             ];
@@ -531,7 +531,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userMenuContext',
+                    name: '_auxUserMenuContext',
                     dependencies: [],
                 },
             ];
@@ -543,7 +543,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userInventoryContext',
+                    name: '_auxUserInventoryContext',
                     dependencies: [],
                 },
             ];

@@ -16,6 +16,7 @@ import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotContextManager } from './BotContextManager';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -102,10 +103,10 @@ export interface Simulation extends Initable {
      * Exports the atoms for the given bots.
      * @param botIds The bots to export.
      */
-    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredAux>;
 
     /**
      * Exports the causal tree for the simulation.
      */
-    exportTree(): Promise<StoredCausalTree<AuxOp>>;
+    export(): Promise<StoredAux>;
 }

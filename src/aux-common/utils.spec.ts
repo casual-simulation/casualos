@@ -1,4 +1,4 @@
-import { merge, parseRealtimeChannelId } from './utils';
+import { merge, parseRealtimeChannelId, dotCaseToCamelCase } from './utils';
 
 describe('utils', () => {
     describe('merge()', () => {
@@ -84,6 +84,24 @@ describe('utils', () => {
 
         it.each(cases)('should convert %s to %s', (given, expected) => {
             expect(parseRealtimeChannelId(given)).toBe(expected);
+        });
+    });
+
+    describe('dotCaseToCamelCase()', () => {
+        const cases = [
+            ['', ''],
+            ['noChange', 'noChange'],
+            ['1.2.3', '123'],
+            ['dot.case', 'dotCase'],
+            ['dot1.case2', 'dot1Case2'],
+            ['dot1.2case', 'dot12case'],
+            ['TITLE.CASE', 'TITLECASE'],
+            ['dot._case', '_dotCase'],
+            ['_dot._case', '_dotCase'],
+        ];
+
+        it.each(cases)('should convert %s to %s', (given, expected) => {
+            expect(dotCaseToCamelCase(given)).toBe(expected);
         });
     });
 });
