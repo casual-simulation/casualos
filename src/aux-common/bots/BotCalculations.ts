@@ -2814,7 +2814,7 @@ export function convertToCopiableValue(value: any): any {
         if (isScriptBot(value)) {
             return {
                 id: value.id,
-                tags: value.raw,
+                tags: value.tags.toJSON(),
             };
         } else if (isBot(value)) {
             return {

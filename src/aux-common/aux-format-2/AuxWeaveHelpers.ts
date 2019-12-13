@@ -6,6 +6,7 @@ import {
     Atom,
     SiteStatus,
     addAtom,
+    first,
 } from '@casual-simulation/causal-trees/core2';
 import reducer from './AuxWeaveReducer';
 
@@ -15,9 +16,29 @@ import reducer from './AuxWeaveReducer';
  * @param id The bot ID.
  */
 export function findBotNode(weave: Weave<AuxOp>, id: string): WeaveNode<BotOp> {
-    return (weave.roots.find(
-        r => r.atom.value.type === AuxOpType.bot && r.atom.value.id === id
-    ) || null) as WeaveNode<BotOp>;
+    return first(findBotNodes(weave, id)) || null;
+}
+
+/**
+ * Finds all of the weave nodes that define a bot with the given ID.
+ * @param weave The weave to search through.
+ * @param id The bot ID.
+ */
+export function* findBotNodes(
+    weave: Weave<AuxOp>,
+    id: string
+): IterableIterator<WeaveNode<BotOp>> {
+    for (let root of weave.roots) {
+        if (
+            root.atom.value.type === AuxOpType.bot &&
+            root.atom.value.id === id
+        ) {
+            const firstAtom = first(iterateCausalGroup(root));
+            if (!firstAtom || firstAtom.atom.value.type !== AuxOpType.delete) {
+                yield root as WeaveNode<BotOp>;
+            }
+        }
+    }
 }
 
 /**

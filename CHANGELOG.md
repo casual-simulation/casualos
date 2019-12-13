@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.11.12
+## V0.11.14
 
 ### Date: TBD
 
@@ -12,6 +12,24 @@
         -   `auxPositioningMode` has two possible values:
             -   `stack` - Indicates that the bot will stack on top of other bots (default)
             -   `absolute` - Indicates that the bot will ignore other bots when positioning.
+
+## V0.11.13
+
+### Date: 12/13/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where having duplicate bot atoms could cause the bot values to be locked because it would chose the wrong bot to update.
+
+## V0.11.12
+
+### Date: 12/12/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where script bots were not being converted back into normal bots correctly.
 
 ## V0.11.11
 
