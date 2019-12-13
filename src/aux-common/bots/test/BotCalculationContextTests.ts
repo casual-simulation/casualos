@@ -279,7 +279,7 @@ export function botCalculationContextTests(
                 const bot = createBot('test', {});
 
                 const context = createCalculationContext([bot]);
-                const value = calculateBotValue(context, bot, 'type');
+                const value = calculateBotValue(context, bot, 'space');
 
                 expect(value).toEqual('shared');
             });
@@ -288,7 +288,7 @@ export function botCalculationContextTests(
                 const bot = createBot('test', {}, 'local');
 
                 const context = createCalculationContext([bot]);
-                const value = calculateBotValue(context, bot, 'type');
+                const value = calculateBotValue(context, bot, 'space');
 
                 expect(value).toEqual('local');
             });

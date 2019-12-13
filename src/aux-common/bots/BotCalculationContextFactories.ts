@@ -6,6 +6,7 @@ import {
     ScriptBot,
     PrecalculatedTags,
     ScriptTags,
+    BOT_SPACE_TAG,
 } from './Bot';
 import {
     BotCalculationContext,
@@ -308,7 +309,7 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         changes: changedRawTags,
     };
 
-    if ('space' in bot) {
+    if (BOT_SPACE_TAG in bot) {
         script.space = bot.space;
     }
 

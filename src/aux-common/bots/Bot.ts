@@ -429,6 +429,12 @@ export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 export const USERS_CONTEXT = 'aux-users';
 
 /**
+ * The name of the tag used to represent the space that the bot is
+ * stored in.
+ */
+export const BOT_SPACE_TAG = 'space';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots

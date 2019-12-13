@@ -3,6 +3,7 @@ import {
     DEVICE_BOT_ID,
     Bot as NormalBot,
     ScriptBot,
+    BOT_SPACE_TAG,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -676,8 +677,8 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         };
         for (let i = v.length - 1; i >= 0; i--) {
             const mod = v[i];
-            if (mod && 'space' in mod) {
-                const space = mod['space'];
+            if (mod && BOT_SPACE_TAG in mod) {
+                const space = mod[BOT_SPACE_TAG];
                 if (hasValue(space)) {
                     bot.space = space;
                 }
@@ -1667,7 +1668,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
-        if (tag !== 'id' && tag !== 'space') {
+        if (tag !== 'id' && tag !== BOT_SPACE_TAG) {
             (<BotTags>bot)[tag] = value;
         }
         return value;

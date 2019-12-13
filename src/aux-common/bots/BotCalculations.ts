@@ -26,6 +26,7 @@ import {
     ScriptBot,
     BotPositioningMode,
     BotSpace,
+    BOT_SPACE_TAG,
 } from './Bot';
 
 import {
@@ -508,7 +509,7 @@ export function calculateBotValue(
 ) {
     if (tag === 'id') {
         return object.id;
-    } else if (tag === 'type') {
+    } else if (tag === BOT_SPACE_TAG) {
         return getBotSpace(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
