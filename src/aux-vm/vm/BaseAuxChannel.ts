@@ -376,7 +376,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         for (let key in state) {
             const bot = state[key];
-            final[key] = pick(bot, 'id', 'tags');
+            final[key] = pick(bot, 'id', 'tags', 'space');
         }
 
         return {

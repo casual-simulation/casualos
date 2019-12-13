@@ -416,12 +416,12 @@ export const COOKIE_BOT_ID = 'cookie';
 /**
  * THe partition ID for cookie bots.
  */
-export const COOKIE_BOT_PARTITION_ID = 'cookie';
+export const COOKIE_BOT_PARTITION_ID = 'local';
 
 /**
  * The partition ID for temporary bots.
  */
-export const TEMPORARY_BOT_PARTITION_ID = 'temp';
+export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
  * The context ID that all users should be placed in.
