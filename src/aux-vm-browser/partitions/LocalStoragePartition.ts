@@ -1,12 +1,24 @@
-import { Bot, UpdatedBot, BotAction } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    UpdatedBot,
+    BotAction,
+    createBot,
+    AddBotAction,
+    RemoveBotAction,
+    UpdateBotAction,
+    botAdded,
+    botRemoved,
+    botUpdated,
+} from '@casual-simulation/aux-common';
 import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
 import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
 } from '@casual-simulation/aux-vm';
 import flatMap from 'lodash/flatMap';
-import { Subject, Subscription, Observable } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
+import { startWith, filter, map } from 'rxjs/operators';
+import { pickBy } from 'lodash';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();
@@ -69,21 +81,21 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        // const finalEvents = flatMap(events, e => {
-        //     if (e.type === 'apply_state') {
-        //         return breakIntoIndividualEvents(this.state, e);
-        //     } else if (
-        //         e.type === 'add_bot' ||
-        //         e.type === 'remove_bot' ||
-        //         e.type === 'update_bot'
-        //     ) {
-        //         return [e] as const;
-        //     } else {
-        //         return [];
-        //     }
-        // });
+        const finalEvents = flatMap(events, e => {
+            if (e.type === 'apply_state') {
+                return breakIntoIndividualEvents(this.state, e);
+            } else if (
+                e.type === 'add_bot' ||
+                e.type === 'remove_bot' ||
+                e.type === 'update_bot'
+            ) {
+                return [e] as const;
+            } else {
+                return [];
+            }
+        });
 
-        // this._applyEvents(finalEvents);
+        this._applyEvents(finalEvents);
 
         return [];
     }
@@ -91,6 +103,12 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     async init(): Promise<void> {}
 
     connect(): void {
+        this._sub.add(
+            storageUpdated().pipe(
+                filter(e => e.key.indexOf(this.namespace) === 0)
+            )
+        );
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,
@@ -112,25 +130,60 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         });
     }
 
-    // private _applyEvents(
-    //     events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
-    // ) {
-    //     let { tree, updates } = applyEvents(this._tree, events);
-    //     this._tree = tree;
+    private _applyEvents(
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+    ) {
+        // let { tree, updates } = applyEvents(this._tree, events);
+        // this._tree = tree;
+        // if (updates.addedBots.length > 0) {
+        //     this._onBotsAdded.next(updates.addedBots);
+        // }
+        // if (updates.removedBots.length > 0) {
+        //     this._onBotsRemoved.next(updates.removedBots);
+        // }
+        // if (updates.updatedBots.length > 0) {
+        //     this._onBotsUpdated.next(
+        //         updates.updatedBots.map(u => ({
+        //             bot: <any>u.bot,
+        //             tags: [...u.tags.values()],
+        //         }))
+        //     );
+        // }
+    }
+}
 
-    //     if (updates.addedBots.length > 0) {
-    //         this._onBotsAdded.next(updates.addedBots);
-    //     }
-    //     if (updates.removedBots.length > 0) {
-    //         this._onBotsRemoved.next(updates.removedBots);
-    //     }
-    //     if (updates.updatedBots.length > 0) {
-    //         this._onBotsUpdated.next(
-    //             updates.updatedBots.map(u => ({
-    //                 bot: <any>u.bot,
-    //                 tags: [...u.tags.values()],
-    //             }))
-    //         );
-    //     }
-    // }
+function storedBotUpdated(
+    namespace: string
+): Observable<AddBotAction | RemoveBotAction | UpdateBotAction> {
+    return storageUpdated().pipe(
+        filter(e => e.key.indexOf(namespace) === 0),
+        map(e => {
+            const newBot: Bot = JSON.parse(e.newValue) || null;
+            const oldBot: Bot = JSON.parse(e.oldValue) || null;
+            if (!oldBot && newBot) {
+                return botAdded(newBot);
+            } else if (!newBot && oldBot) {
+                return botRemoved(oldBot.id);
+            } else if (newBot && oldBot) {
+                const differentTags = pickBy(
+                    newBot.tags,
+                    (val, tag) => oldBot.tags[tag] !== val
+                );
+
+                if (Object.keys(differentTags).length > 0) {
+                    return botUpdated(oldBot.id, {
+                        tags: differentTags,
+                    });
+                }
+            }
+        }),
+        filter(event => event !== null)
+    );
+}
+
+function storageUpdated(): Observable<StorageEvent> {
+    return fromEventPattern(
+        h => window.addEventListener('storage', h),
+        h => window.removeEventListener('storage', h)
+    );
 }
