@@ -19,6 +19,7 @@ import {
     PartitionConfig,
     AuxPartition,
     filterAtomFactory,
+    createProxyClientPartition,
 } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
@@ -66,7 +67,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
                 this._device
             ),
             createMemoryPartition,
-            config => createCausalRepoPartition(config, this.user)
+            config => createCausalRepoPartition(config, this.user),
+            config => createProxyClientPartition(config)
         );
     }
 

@@ -7,6 +7,7 @@ import {
     AuxUser,
     StateUpdatedEvent,
     BotDependentInfo,
+    ProxyBridgePartitionImpl,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -216,7 +217,11 @@ function processPartitions(config: AuxConfig): AuxConfig {
     for (let key in config.partitions) {
         const partition = config.partitions[key];
         if (partition.type === 'proxy') {
-            partition.partition = proxy(partition.partition);
+            const bridge = new ProxyBridgePartitionImpl(partition.partition);
+            config.partitions[key] = {
+                type: 'proxy_client',
+                bridge: proxy(bridge),
+            };
         }
     }
     return config;

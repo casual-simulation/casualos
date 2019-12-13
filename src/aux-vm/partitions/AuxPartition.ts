@@ -114,6 +114,29 @@ export interface AuxPartitionBase extends SubscriptionLike {
 }
 
 /**
+ * Defines a special aux partition that can act as a basic bridge for the observables.
+ */
+export interface ProxyBridgePartition extends AuxPartitionBase {
+    addListeners(
+        onBotsAdded?: (bot: Bot[]) => void,
+        onBotsRemoved?: (bot: string[]) => void,
+        onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onError?: (error: any) => void,
+        onEvents?: (actions: DeviceAction[]) => void,
+        onStatusUpdated?: (status: StatusUpdate) => void
+    ): Promise<void>;
+}
+
+/**
+ * Defines a partition that is able to proxy requests from the engine to the given partition bridge.
+ */
+export interface ProxyClientPartition extends AuxPartitionBase {
+    type: 'proxy_client';
+
+    state: BotsState;
+}
+
+/**
  * Defines a causal repo partition.
  */
 export interface CausalRepoPartition extends AuxPartitionBase {
