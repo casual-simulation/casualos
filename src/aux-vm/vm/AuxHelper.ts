@@ -41,7 +41,7 @@ import {
     resolveRejectedActions,
     reject,
     USERS_CONTEXT,
-    BotType,
+    BotSpace,
     getBotType,
 } from '@casual-simulation/aux-common';
 import {
@@ -230,7 +230,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async createBot(
         id?: string,
         tags?: Bot['tags'],
-        type?: BotType
+        type?: BotSpace
     ): Promise<string> {
         if (AuxHelper._debug) {
             console.log('[AuxHelper] Create Bot');
@@ -524,7 +524,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotType(type: string): AuxPartition {
-        const partitionId = type === null ? '*' : type;
+        const partitionId = type;
         const idPartition = this._partitions[partitionId];
         if (idPartition) {
             return idPartition;
@@ -543,7 +543,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
 
         if (!bot) {
-            return null;
+            return 'shared';
         }
         return getBotType(bot);
     }

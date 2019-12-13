@@ -248,7 +248,7 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
 
     const constantTags = {
         id: bot.id,
-        type: bot.type,
+        space: bot.space,
     };
     let changedRawTags: BotTags = {};
     let rawTags: ScriptTags = <ScriptTags>{
@@ -308,8 +308,8 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         changes: changedRawTags,
     };
 
-    if ('type' in bot) {
-        script.type = bot.type;
+    if ('space' in bot) {
+        script.space = bot.space;
     }
 
     return script;

@@ -274,23 +274,23 @@ export function botCalculationContextTests(
             expect(value).toEqual('test');
         });
 
-        describe('type', () => {
-            it('should return null if the type is not defined', () => {
+        describe('space', () => {
+            it('should return shared if the space is not defined', () => {
                 const bot = createBot('test', {});
 
                 const context = createCalculationContext([bot]);
                 const value = calculateBotValue(context, bot, 'type');
 
-                expect(value).toEqual(null);
+                expect(value).toEqual('shared');
             });
 
-            it('should return the type if it is defined', () => {
-                const bot = createBot('test', {}, 'channel');
+            it('should return the space if it is defined', () => {
+                const bot = createBot('test', {}, 'local');
 
                 const context = createCalculationContext([bot]);
                 const value = calculateBotValue(context, bot, 'type');
 
-                expect(value).toEqual('channel');
+                expect(value).toEqual('local');
             });
         });
 

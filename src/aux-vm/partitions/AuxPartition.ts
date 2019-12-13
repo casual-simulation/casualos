@@ -20,7 +20,7 @@ import { StoredAux } from '../StoredAux';
  * Defines an interface that maps Bot IDs to their corresponding partitions.
  */
 export interface AuxPartitions {
-    '*': AuxPartition;
+    shared: AuxPartition;
     [key: string]: AuxPartition;
 }
 
@@ -194,6 +194,11 @@ export interface LocalStoragePartition extends AuxPartitionBase {
      * The namespace that bots should be stored under.
      */
     namespace: string;
+
+    /**
+     * The current state of the partition.
+     */
+    state: BotsState;
 }
 
 /**

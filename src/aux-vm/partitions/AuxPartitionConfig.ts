@@ -8,7 +8,7 @@ import { AuxPartition } from './AuxPartition';
  * Bot IDs are mapped to
  */
 export interface AuxPartitionConfig {
-    '*': PartitionConfig;
+    shared: PartitionConfig;
     [key: string]: PartitionConfig;
 }
 

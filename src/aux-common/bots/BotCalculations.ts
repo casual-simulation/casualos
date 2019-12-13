@@ -25,7 +25,7 @@ import {
     DEFAULT_USER_DELETION_TIME,
     ScriptBot,
     BotPositioningMode,
-    BotType,
+    BotSpace,
 } from './Bot';
 
 import {
@@ -488,10 +488,10 @@ export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
-export function getBotType(bot: Bot) {
-    const type = bot.type;
+export function getBotType(bot: Bot): BotSpace {
+    const type = bot.space;
     if (!hasValue(type)) {
-        return null;
+        return 'shared';
     }
     return type;
 }
@@ -1032,18 +1032,18 @@ export function createContextId() {
  * Creates a bot with a new ID and the given tags.
  * @param id The ID of the bot.
  * @param tags The tags to use in the bot.
- * @param type The type of the bot.
+ * @param space The space of the bot.
  */
 export function createBot(
     id = uuid(),
     tags: Object['tags'] = {},
-    type?: BotType
+    space?: BotSpace
 ): Bot {
-    if (hasValue(type)) {
+    if (hasValue(space)) {
         return {
             id,
             tags,
-            type,
+            space,
         };
     }
     return { id, tags };

@@ -137,7 +137,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           host: getFinalUrl(location.origin, parsedId.host),
                       } as const);
             return {
-                '*': primaryPartiton,
+                shared: primaryPartiton,
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'memory',
                     initialState: {

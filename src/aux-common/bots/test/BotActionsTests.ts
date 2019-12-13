@@ -174,14 +174,14 @@ export function botActionsTests(
             ]);
         });
 
-        it('should be able to get the type from the bot variable', () => {
+        it('should be able to get the space from the bot variable', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
-                    type: 'temp',
+                    space: 'tempLocal',
                     tags: {
                         num: '=123',
-                        test: '@setTag(this, "val", bot.type)',
+                        test: '@setTag(this, "val", bot.space)',
                     },
                 },
             };
@@ -200,7 +200,7 @@ export function botActionsTests(
             expect(result.events).toEqual([
                 botUpdated('thisBot', {
                     tags: {
-                        val: 'temp',
+                        val: 'tempLocal',
                     },
                 }),
             ]);
@@ -587,15 +587,15 @@ export function botActionsTests(
             expect(result.events).toEqual([]);
         });
 
-        it('should not allow changing the type', () => {
+        it('should not allow changing the space', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test: `@
-                            tags.type = 'wrong';
-                            raw.type = 'wrong';
-                            setTag(this, 'type', 'wrong');
+                            tags.space = 'wrong';
+                            raw.space = 'wrong';
+                            setTag(this, 'space', 'wrong');
                         `,
                     },
                 },
@@ -5381,12 +5381,12 @@ export function botActionsTests(
                 expect(result.events).toEqual([]);
             });
 
-            it('should not allow setting the type', () => {
+            it('should not allow setting the space', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@setTag(this, "type", "wrong")',
+                            test: '@setTag(this, "space", "wrong")',
                         },
                     },
                 };
@@ -5404,15 +5404,15 @@ export function botActionsTests(
                 expect(result.events).toEqual([]);
             });
 
-            it('should not allow setting the type on another mod', () => {
+            it('should not allow setting the space on another mod', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test: `@
                                 let mod = {};
-                                setTag(mod, "type", "wrong");
-                                tags.equal = mod.type === "wrong";
+                                setTag(mod, "space", "wrong");
+                                tags.equal = mod.space === "wrong";
                             `,
                         },
                     },
@@ -6759,7 +6759,7 @@ export function botActionsTests(
                     }),
                 ]);
             });
-            it('should copy the type of another bot', () => {
+            it('should copy the space of another bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -6769,7 +6769,7 @@ export function botActionsTests(
                     },
                     aBot: {
                         id: 'aBot',
-                        type: 'temp',
+                        space: 'tempLocal',
                         tags: {
                             test: true,
                             hello: true,
@@ -6788,7 +6788,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botAdded({
                         id: expectedId,
-                        type: 'temp',
+                        space: 'tempLocal',
                         tags: {
                             auxCreator: 'thisBot',
                             test: true,
@@ -6803,7 +6803,7 @@ export function botActionsTests(
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), asType("cookie"))`,
+                                test: `@${name}(from(null), asType("local"))`,
                             },
                         },
                     };
@@ -6819,7 +6819,7 @@ export function botActionsTests(
                     expect(result.events).toEqual([
                         botAdded({
                             id: expectedId,
-                            type: 'cookie',
+                            space: 'local',
                             tags: {
                                 auxCreator: null,
                             },
@@ -6832,7 +6832,7 @@ export function botActionsTests(
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), asType("cookie"), asType("temp"))`,
+                                test: `@${name}(from(null), asType("cookie"), asType("local"))`,
                             },
                         },
                     };
@@ -6848,7 +6848,7 @@ export function botActionsTests(
                     expect(result.events).toEqual([
                         botAdded({
                             id: expectedId,
-                            type: 'temp',
+                            space: 'local',
                             tags: {
                                 auxCreator: null,
                             },

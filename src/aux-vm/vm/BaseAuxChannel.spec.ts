@@ -87,7 +87,7 @@ describe('BaseAuxChannel', () => {
         config = {
             config: { isBuilder: false, isPlayer: false },
             partitions: {
-                '*': {
+                shared: {
                     type: 'causal_tree',
                     id: 'auxId',
                     tree: tree,
@@ -190,7 +190,7 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'causal_tree',
                         id: 'auxId',
                         tree: tree,
@@ -207,7 +207,7 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'remote_causal_tree',
                         id: 'auxId',
                         host: 'host',
@@ -218,7 +218,7 @@ describe('BaseAuxChannel', () => {
             channel = new AuxChannelImpl(user, device, config);
 
             await expect(channel.initAndWait()).rejects.toEqual(
-                new Error('[BaseAuxChannel] Unable to build partition: *')
+                new Error('[BaseAuxChannel] Unable to build partition: shared')
             );
         });
 
@@ -474,7 +474,7 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'causal_tree',
                         id: 'auxId',
                         tree: tree,

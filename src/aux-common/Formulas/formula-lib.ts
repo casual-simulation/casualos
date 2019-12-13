@@ -325,9 +325,9 @@ interface Bot {
     id: string;
 
     /**
-     * The type of the bot.
+     * The space the bot lives in.
      */
-    type?: BotType;
+    space?: BotType;
 
     /**
      * The calculated tag values that the bot contains.
@@ -350,7 +350,7 @@ interface Bot {
 /**
  * The possible bot types.
  */
-type BotType = null | 'channel' | 'cookie' | 'temp';
+type BotType = 'shared' | 'local' | 'tempLocal';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -676,10 +676,10 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         };
         for (let i = v.length - 1; i >= 0; i--) {
             const mod = v[i];
-            if (mod && 'type' in mod) {
-                const type = mod['type'];
-                if (hasValue(type)) {
-                    bot.type = type;
+            if (mod && 'space' in mod) {
+                const space = mod['space'];
+                if (hasValue(space)) {
+                    bot.space = space;
                 }
                 break;
             }
@@ -780,13 +780,13 @@ function createTemp(...mods: Mod[]) {
 }
 
 /**
- * Creates a mod that sets the type of a new bot.
+ * Creates a mod that sets the space of a new bot.
  * Using applyMod() with asType() does nothing.
- * @param type The type.
+ * @param space The space.
  */
-function asType(type: BotType): Mod {
+function asType(space: BotType): Mod {
     return {
-        type: type,
+        space: space,
     };
 }
 
@@ -1667,7 +1667,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
-        if (tag !== 'id' && tag !== 'type') {
+        if (tag !== 'id' && tag !== 'space') {
             (<BotTags>bot)[tag] = value;
         }
         return value;

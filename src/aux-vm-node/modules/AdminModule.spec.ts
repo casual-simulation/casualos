@@ -64,7 +64,7 @@ describe('AdminModule', () => {
                 isPlayer: false,
             },
             partitions: {
-                '*': {
+                shared: {
                     type: 'causal_tree',
                     tree: tree,
                     id: 'id',
