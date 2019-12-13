@@ -42,7 +42,8 @@ import {
     reject,
     USERS_CONTEXT,
     BotSpace,
-    getBotType,
+    getBotSpace,
+    breakIntoIndividualEvents,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -66,6 +67,7 @@ import {
     CausalTreePartition,
 } from '../partitions/AuxPartition';
 import { StoredAux } from '../StoredAux';
+import transform from 'lodash/transform';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -142,7 +144,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         // We need to rebuild the entire state
         // if a single partition changes.
         // We have to do this since bots could be deleted
-        let state: AuxState = null;
+        let state: BotsState = null;
 
         let keys = Object.keys(this._partitions);
         let sorted = sortBy(keys, k => k !== '*');
@@ -154,19 +156,25 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             const bots = <AuxState>getPartitionState(partition);
             this._partitionStates.set(key, bots);
 
+            const finalBots = transform<Bot, Bot>(bots, (result, value, id) => {
+                result[id] = {
+                    ...value,
+                    space: <any>key,
+                };
+            });
             if (!state) {
-                state = { ...bots };
+                state = { ...finalBots };
             } else {
                 for (let id in bots) {
                     if (!state[id]) {
-                        state[id] = bots[id];
+                        state[id] = finalBots[id];
                     }
                 }
             }
         }
 
-        this._stateCache.set(cacheName, state);
-        return state;
+        this._stateCache.set(cacheName, <AuxState>state);
+        return <AuxState>state;
     }
 
     private _getCachedState(
@@ -394,6 +402,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 resultEvents.push(event);
             } else if (event.type === 'paste_state') {
                 resultEvents.push(...this._pasteState(event));
+            } else if (event.type === 'apply_state') {
+                const events = breakIntoIndividualEvents(this.botsState, event);
+                resultEvents.push(...events);
             } else {
                 resultEvents.push(event);
             }
@@ -511,7 +522,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         } else if (event.type === 'update_bot') {
             return this._partitionForBotEvent(event);
         } else if (event.type === 'apply_state') {
-            return this._partitionForBotEvent(event);
+            return undefined;
         } else if (event.type === 'transaction') {
             return undefined;
         } else {
@@ -520,7 +531,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotEvent(event: BotActions): AuxPartition {
-        return this._partitionForBotType(this._botType(event));
+        return this._partitionForBotType(this._botSpace(event));
     }
 
     private _partitionForBotType(type: string): AuxPartition {
@@ -532,7 +543,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return null;
     }
 
-    private _botType(event: BotActions): string {
+    private _botSpace(event: BotActions): string {
         let bot: Bot;
         if (event.type === 'add_bot') {
             bot = event.bot;
@@ -545,7 +556,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!bot) {
             return 'shared';
         }
-        return getBotType(bot);
+        return getBotSpace(bot);
     }
 
     private _sendOtherEvents(events: BotAction[]) {

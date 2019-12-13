@@ -15,6 +15,7 @@ import {
     botRemoved,
     BotActions,
     USERS_CONTEXT,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -106,7 +107,7 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.botsState).toEqual({
-                test: createBot('test'),
+                test: createBot('test', {}, 'shared'),
             });
             expect(Object.keys(helper.botsState)).toEqual(['test']);
         });
@@ -150,7 +151,7 @@ describe('AuxHelper', () => {
             ]);
         });
 
-        it('should place bots in partitions based on the bot type', async () => {
+        it('should place bots in partitions based on the bot space', async () => {
             let mem = createMemoryPartition({
                 type: 'memory',
                 initialState: {},
@@ -202,9 +203,72 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.botsState).toEqual({
-                test: createBot('test', {
-                    abc: 'def',
-                }),
+                test: createBot(
+                    'test',
+                    {
+                        abc: 'def',
+                    },
+                    'shared'
+                ),
+            });
+        });
+
+        it('should split add_state events into the correct partitions', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = new AuxHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            await helper.transaction(
+                addState({
+                    abc: createBot('abc', {}, <any>'TEST'),
+                    normal: createBot('normal', {}),
+                })
+            );
+
+            expect(Object.keys(helper.botsState)).toEqual(['normal', 'abc']);
+            expect(Object.keys(mem.state)).toEqual(['abc']);
+            expect(Object.keys(shared.state)).toEqual(['normal']);
+        });
+
+        it('should set the correct space on bots from partitions', async () => {
+            let TEST = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    abc: createBot('abc', {}),
+                    def: createBot('def', {}, <any>'wrong'),
+                },
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    normal: createBot('normal', {}),
+                },
+            });
+            helper = new AuxHelper({
+                shared: shared,
+                TEST: TEST,
+            });
+
+            expect(helper.botsState).toEqual({
+                abc: createBot('abc', {}, <any>'TEST'),
+                def: createBot('def', {}, <any>'TEST'),
+                normal: createBot('normal', {}, 'shared'),
+            });
+            expect(TEST.state).toEqual({
+                abc: createBot('abc'),
+                def: createBot('def', {}, <any>'wrong'),
+            });
+            expect(shared.state).toEqual({
+                normal: createBot('normal'),
             });
         });
     });
@@ -229,7 +293,7 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.publicBotsState).toEqual({
-                test: createBot('test'),
+                test: createBot('test', {}, 'shared'),
             });
             expect(Object.keys(helper.publicBotsState)).toEqual(['test']);
         });
@@ -240,7 +304,10 @@ describe('AuxHelper', () => {
             const bot = tree.value['user'];
             const user = helper.userBot;
 
-            expect(user).toBe(bot);
+            expect(user).toEqual({
+                ...bot,
+                space: 'shared',
+            });
         });
     });
 
@@ -251,7 +318,10 @@ describe('AuxHelper', () => {
             const bot = tree.value[GLOBALS_BOT_ID];
             const globals = helper.globalsBot;
 
-            expect(globals).toBe(bot);
+            expect(globals).toEqual({
+                ...bot,
+                space: 'shared',
+            });
         });
     });
 
@@ -263,8 +333,11 @@ describe('AuxHelper', () => {
             const objs = helper.objects;
 
             expect(objs).toEqual([
-                tree.value['test2'],
-                tree.value['test1'],
+                {
+                    ...tree.value['test2'],
+                    space: 'shared',
+                },
+                { ...tree.value['test1'], space: 'shared' },
                 helper.userBot,
             ]);
         });
@@ -1264,8 +1337,8 @@ describe('AuxHelper', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    test: createBot('test'),
-                    abc: createBot('abc'),
+                    test: createBot('test', {}, 'shared'),
+                    abc: createBot('abc', {}, <any>'abc'),
                 },
             });
         });

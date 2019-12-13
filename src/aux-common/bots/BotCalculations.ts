@@ -488,7 +488,11 @@ export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
-export function getBotType(bot: Bot): BotSpace {
+/**
+ * Gets the space that the given bot lives in.
+ * @param bot The bot.
+ */
+export function getBotSpace(bot: Bot): BotSpace {
     const type = bot.space;
     if (!hasValue(type)) {
         return 'shared';
@@ -505,7 +509,7 @@ export function calculateBotValue(
     if (tag === 'id') {
         return object.id;
     } else if (tag === 'type') {
-        return getBotType(object);
+        return getBotSpace(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
