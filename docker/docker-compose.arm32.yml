@@ -2,6 +2,7 @@ version: '3.7'
 services:
     server:
         image: 'casualsimulation/aux-arm32:latest'
+        privileged: true
         restart: always
         ports:
             - '3000:3000'

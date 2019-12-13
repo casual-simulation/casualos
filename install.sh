@@ -72,7 +72,7 @@ boot_config() {
     # Setup Startup Script
     echo "DEBUG: Setting up Crontab..."
     echo "export EDITOR=nano" >>~/.bashrc
-    echo "@reboot sudo -u pi bash /lib/aux-cli/startup" | sudo -u pi crontab -
+    echo "@reboot sleep 10 && sudo -u pi bash /lib/aux-cli/startup" | sudo -u pi crontab -
 }
 
 system_settings() {

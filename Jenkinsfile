@@ -155,7 +155,10 @@ def PublishNPM() {
     # Sleep for 5 seconds to hopefully give NPM time to update the package listing
     sleep 5
     cd ./src/aux-server
-    npm install --package-lock-only
+
+    for i in {1..5}; do 
+        npm install --package-lock-only && break || sleep 5;
+    done
     """
 }
 
