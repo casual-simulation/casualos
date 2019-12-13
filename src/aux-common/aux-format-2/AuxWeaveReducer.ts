@@ -23,6 +23,7 @@ import { Bot, PartialBotsState } from '../bots/Bot';
 import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
+import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
 
 /**
  * Calculates the state update needed for the given weave result from the given weave.
@@ -177,7 +178,7 @@ function deleteBotReducer(
     }
 
     const id = bot.atom.value.id;
-    return deleteBot(id, state);
+    return deleteBot(weave, id, state);
 }
 
 function conflictReducer(
@@ -234,7 +235,16 @@ function addBot(
     return state;
 }
 
-function deleteBot(id: string, state: PartialBotsState): PartialBotsState {
+function deleteBot(
+    weave: Weave<AuxOp>,
+    id: string,
+    state: PartialBotsState
+): PartialBotsState {
+    let nodes = [...findBotNodes(weave, id)];
+    if (nodes.length > 0) {
+        return state;
+    }
+
     lodashMerge(state, {
         [id]: null,
     });
@@ -272,7 +282,7 @@ function removeAtom(
     state: PartialBotsState
 ) {
     if (atom.value.type === AuxOpType.bot) {
-        return deleteBot(atom.value.id, state);
+        return deleteBot(weave, atom.value.id, state);
     } else if (atom.value.type === AuxOpType.value) {
         return valueRemovedAtomReducer(weave, atom, atom.value, state);
     } else {

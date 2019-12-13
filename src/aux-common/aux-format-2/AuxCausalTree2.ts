@@ -27,7 +27,12 @@ import {
     BotStateUpdates,
 } from './AuxStateHelpers';
 import { BotActions } from '../bots/BotEvents';
-import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
+import {
+    findTagNode,
+    findValueNode,
+    findBotNode,
+    findBotNodes,
+} from './AuxWeaveHelpers';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -253,8 +258,7 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
                 newResult = updateTags(node, event.update.tags);
             }
         } else if (event.type == 'remove_bot') {
-            const node = findBotNode(tree.weave, event.id);
-            if (node) {
+            for (let node of findBotNodes(tree.weave, event.id)) {
                 newResult = addAtom(node.atom, del(), 1);
 
                 const newAtom = addedAtom(newResult.results[0]);
