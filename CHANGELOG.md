@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.13
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where having duplicate bot atoms could cause the bot values to be locked because it would chose the wrong bot to update.
+
 ## V0.11.12
 
 ### Date: 12/12/2019
