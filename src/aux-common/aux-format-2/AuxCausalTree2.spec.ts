@@ -212,6 +212,43 @@ describe('AuxCausalTree2', () => {
                     },
                 });
             });
+
+            it('should remove all bots with the given ID', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+                const del1A = atom(atomId('b', 103), bot1A, del());
+
+                const bot1B = atom(atomId('b', 110), null, bot('test2'));
+                const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
+                const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
+
+                ({ tree } = applyAtoms(tree, [
+                    bot1A,
+                    tag1A,
+                    val1A,
+                    bot1B,
+                    tag1B,
+                    val1B,
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'val1B',
+                    }),
+                });
+
+                ({ tree, updates } = applyEvents(tree, [botRemoved('test2')]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+            });
         });
 
         describe('update_bot', () => {
@@ -423,6 +460,134 @@ describe('AuxCausalTree2', () => {
                         next: null,
                         atom: v1,
                     },
+                });
+            });
+
+            it('should handle weird trees that have multiple tags with the same value', () => {
+                const test2 = atom(atomId('b', 100), null, bot('test2'));
+                const tag1 = atom(atomId('b', 101), test2, tag('tag1'));
+                const val1 = atom(atomId('b', 102), tag1, value('val1'));
+
+                const dupTag1 = atom(atomId('b', 103), test2, tag('tag1'));
+                const val2 = atom(atomId('b', 104), dupTag1, value('val2'));
+
+                ({ tree } = applyAtoms(tree, [
+                    test2,
+                    tag1,
+                    val1,
+                    dupTag1,
+                    val2,
+                ]));
+
+                ({ tree, updates } = applyEvents(tree, [
+                    botUpdated('test2', {
+                        tags: {
+                            tag1: 'new',
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'new',
+                    }),
+                });
+            });
+
+            it('should handle weird trees that have duplicate bots but the first bot is deleted', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+                const del1A = atom(atomId('b', 103), bot1A, del());
+
+                const bot1B = atom(atomId('b', 110), null, bot('test2'));
+                const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
+                const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
+
+                ({ tree } = applyAtoms(tree, [
+                    bot1A,
+                    tag1A,
+                    val1A,
+                    del1A,
+                    bot1B,
+                    tag1B,
+                    val1B,
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'val1B',
+                    }),
+                });
+
+                ({ tree, updates } = applyEvents(tree, [
+                    botUpdated('test2', {
+                        tags: {
+                            tag1: 'new',
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'new',
+                    }),
+                });
+            });
+
+            it('should handle weird trees that have duplicate bots but the second bot is deleted', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+
+                const bot1B = atom(atomId('b', 110), null, bot('test2'));
+                const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
+                const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
+                const del1B = atom(atomId('b', 113), bot1B, del());
+
+                ({ tree } = applyAtoms(tree, [
+                    bot1A,
+                    tag1A,
+                    val1A,
+                    bot1B,
+                    tag1B,
+                    val1B,
+                    del1B,
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'val1A',
+                    }),
+                });
+
+                ({ tree, updates } = applyEvents(tree, [
+                    botUpdated('test2', {
+                        tags: {
+                            tag1: 'new',
+                        },
+                    }),
+                ]));
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        tag1: 'new',
+                    }),
                 });
             });
         });

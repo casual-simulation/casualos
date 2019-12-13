@@ -8,6 +8,7 @@ import {
 import reduce from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
 import { apply } from './AuxStateHelpers';
+import { isBot } from '../bots';
 
 describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
@@ -66,7 +67,7 @@ describe('AuxWeaveReducer', () => {
                 const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const bot1B = atom(atomId('a', 1), null, bot('test1'));
+                const bot1B = atom(atomId('a', 4), null, bot('test1'));
                 const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
                 const value1B = atom(atomId('a', 6), tag1B, value(1));
 
@@ -79,6 +80,51 @@ describe('AuxWeaveReducer', () => {
                         tags: {
                             abc: 'def',
                             num: 1,
+                        },
+                    },
+                });
+            });
+
+            it('should gracefully handle duplicate bots with duplicate tags', () => {
+                const bot1A = atom(atomId('a', 1), null, bot('test1'));
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+                const value1A = atom(atomId('a', 3), tag1A, value('def'));
+
+                const bot1B = atom(atomId('a', 4), null, bot('test1'));
+                const tag1B = atom(atomId('a', 5), bot1B, tag('abc'));
+                const value1B = atom(atomId('a', 6), tag1B, value('different'));
+
+                state = add(bot1A, tag1A, value1A);
+                state = add(bot1B, tag1B, value1B);
+
+                expect(state).toEqual({
+                    ['test1']: {
+                        id: 'test1',
+                        tags: {
+                            abc: 'different',
+                        },
+                    },
+                });
+            });
+
+            it('should gracefully handle duplicate bots when the first bot is deleted', () => {
+                const bot1A = atom(atomId('a', 1), null, bot('test1'));
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
+                const value1A = atom(atomId('a', 3), tag1A, value('def'));
+                const del1A = atom(atomId('a', 4), bot1A, del());
+
+                const bot1B = atom(atomId('a', 5), null, bot('test1'));
+                const tag1B = atom(atomId('a', 6), bot1B, tag('abc'));
+                const value1B = atom(atomId('a', 7), tag1B, value('different'));
+
+                state = add(bot1A, tag1A, value1A, del1A);
+                state = add(bot1B, tag1B, value1B);
+
+                expect(state).toEqual({
+                    ['test1']: {
+                        id: 'test1',
+                        tags: {
+                            abc: 'different',
                         },
                     },
                 });
@@ -126,6 +172,42 @@ describe('AuxWeaveReducer', () => {
                     ['test2']: {
                         id: 'test2',
                         tags: {},
+                    },
+                });
+            });
+
+            it('should only delete a bot if all bot atoms are deleted', () => {
+                const bot1A = atom(atomId('b', 100), null, bot('test2'));
+                const tag1A = atom(atomId('b', 101), bot1A, tag('tag1'));
+                const val1A = atom(atomId('b', 102), tag1A, value('val1A'));
+
+                const bot1B = atom(atomId('b', 110), null, bot('test2'));
+                const tag1B = atom(atomId('b', 111), bot1B, tag('tag1'));
+                const val1B = atom(atomId('b', 112), tag1B, value('val1B'));
+                const del1B = atom(atomId('b', 113), bot1B, del());
+
+                state = add(bot1A, tag1A, val1A);
+                state = add(bot1B, tag1B, val1B);
+
+                expect(state).toEqual({
+                    ['test2']: {
+                        id: 'test2',
+                        tags: {
+                            tag1: 'val1B',
+                        },
+                    },
+                });
+
+                state = add(del1B);
+
+                expect(state).toEqual({
+                    ['test2']: {
+                        id: 'test2',
+                        tags: {
+                            // TODO: Fix so that it reverts to the first bot version
+                            // upon delete of the second bot version.
+                            tag1: 'val1B',
+                        },
                     },
                 });
             });
