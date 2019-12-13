@@ -1,4 +1,3 @@
-import { ProxyBridgePartition, ProxyClientPartition } from './AuxPartition';
 import {
     BotsState,
     Bot,
@@ -7,7 +6,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { ProxyClientPartitionConfig } from './AuxPartitionConfig';
+import {
+    ProxyBridgePartition,
+    ProxyClientPartition,
+    ProxyClientPartitionConfig,
+} from '@casual-simulation/aux-vm';
 import { proxy, releaseProxy } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';

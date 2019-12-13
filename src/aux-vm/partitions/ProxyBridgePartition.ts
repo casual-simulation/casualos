@@ -19,7 +19,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     get onBotsRemoved(): Observable<string[]> {
         return this._partition.onBotsRemoved;
     }
-    get onBotsUpdated(): Observable<Bot[]> {
+    get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._partition.onBotsUpdated;
     }
     get onError(): Observable<any> {

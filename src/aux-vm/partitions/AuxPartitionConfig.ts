@@ -1,7 +1,7 @@
 import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import { AuxPartition, AuxPartitionBridge } from './AuxPartition';
+import { AuxPartition, ProxyBridgePartition } from './AuxPartition';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -76,7 +76,7 @@ export interface ProxyClientPartitionConfig extends PartitionConfigBase {
     /**
      * The bridge that should be used.
      */
-    bridge: AuxPartitionBridge;
+    bridge: ProxyBridgePartition;
 }
 
 /**

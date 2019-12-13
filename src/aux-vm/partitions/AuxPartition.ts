@@ -33,7 +33,8 @@ export type AuxPartition =
     | RemoteCausalTreePartition
     | CausalRepoPartition
     | RemoteCausalRepoPartition
-    | LocalStoragePartition;
+    | LocalStoragePartition
+    | ProxyClientPartition;
 
 /**
  * Base interface for partitions.
