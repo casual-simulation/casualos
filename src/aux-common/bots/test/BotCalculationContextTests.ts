@@ -2037,6 +2037,21 @@ export function botCalculationContextTests(
                 });
             });
 
+            describe('inSpace()', () => {
+                it('should return a function that returns true if the bot is in given space', () => {
+                    const bot = createBot('test', {
+                        formula: '=inSpace("test")(getBot("id", "test2"))',
+                    });
+
+                    const bot2 = createBot('test2', {}, <any>'test');
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(true);
+                });
+            });
+
             describe('neighboring()', () => {
                 const directionCases = [
                     ['front', 0, -1],
