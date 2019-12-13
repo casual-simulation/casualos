@@ -6797,13 +6797,13 @@ export function botActionsTests(
                     }),
                 ]);
             });
-            describe('asType()', () => {
+            describe('into()', () => {
                 it('should set the type of the bot', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), asType("local"))`,
+                                test: `@${name}(from(null), into("local"))`,
                             },
                         },
                     };
@@ -6827,12 +6827,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last asType()', () => {
+                it('should use the last into()', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), asType("cookie"), asType("local"))`,
+                                test: `@${name}(from(null), into("cookie"), into("local"))`,
                             },
                         },
                     };
@@ -6856,12 +6856,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last asType() even if it is null', () => {
+                it('should use the last into() even if it is null', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), asType("cookie"), asType(null))`,
+                                test: `@${name}(from(null), into("cookie"), into(null))`,
                             },
                         },
                     };
@@ -6897,7 +6897,7 @@ export function botActionsTests(
                             thisBot: {
                                 id: 'thisBot',
                                 tags: {
-                                    test: `@${name}(from(null), asType(${value}))`,
+                                    test: `@${name}(from(null), into(${value}))`,
                                 },
                             },
                         };
