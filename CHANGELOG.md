@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.12
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where script bots were not being converted back into normal bots correctly.
+
 ## V0.11.11
 
 ### Date: 12/12/2019
