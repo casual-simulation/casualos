@@ -12,6 +12,10 @@
         -   `auxPositioningMode` has two possible values:
             -   `stack` - Indicates that the bot will stack on top of other bots (default)
             -   `absolute` - Indicates that the bot will ignore other bots when positioning.
+    -   Removed the `createTemp()` function.
+        -   It has been replaced with the `intoSpace()` mod function.
+        -   e.g. Instead of `createTemp()` you should use `create(intoSpace("tempLocal"))`.
+    -   Removed the `cookie` bot. It has been replaced with the `local` space.
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.
