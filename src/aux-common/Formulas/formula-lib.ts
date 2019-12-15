@@ -782,10 +782,10 @@ function createTemp(...mods: Mod[]) {
 
 /**
  * Creates a mod that sets the space of a new bot.
- * Using applyMod() with into() does nothing.
+ * Using applyMod() with intoSpace() does nothing.
  * @param space The space.
  */
-function into(space: BotType): Mod {
+function intoSpace(space: BotType): Mod {
     return {
         space: space,
     };
@@ -2255,7 +2255,7 @@ export default {
     remote,
     webhook,
     from,
-    into,
+    intoSpace,
 
     // Mod functions
     applyMod,

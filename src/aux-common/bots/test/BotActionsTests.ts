@@ -6797,13 +6797,13 @@ export function botActionsTests(
                     }),
                 ]);
             });
-            describe('into()', () => {
+            describe('intoSpace()', () => {
                 it('should set the type of the bot', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), into("local"))`,
+                                test: `@${name}(from(null), intoSpace("local"))`,
                             },
                         },
                     };
@@ -6827,12 +6827,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last into()', () => {
+                it('should use the last intoSpace()', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), into("cookie"), into("local"))`,
+                                test: `@${name}(from(null), intoSpace("cookie"), intoSpace("local"))`,
                             },
                         },
                     };
@@ -6856,12 +6856,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last into() even if it is null', () => {
+                it('should use the last intoSpace() even if it is null', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}(from(null), into("cookie"), into(null))`,
+                                test: `@${name}(from(null), intoSpace("cookie"), intoSpace(null))`,
                             },
                         },
                     };
@@ -6897,7 +6897,7 @@ export function botActionsTests(
                             thisBot: {
                                 id: 'thisBot',
                                 tags: {
-                                    test: `@${name}(from(null), into(${value}))`,
+                                    test: `@${name}(from(null), intoSpace(${value}))`,
                                 },
                             },
                         };
