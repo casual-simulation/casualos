@@ -19,9 +19,9 @@
             -   `shared` - This space is shared among multiple users and is persistent. This is the default space for bots if not specified.
             -   `tempLocal` - This space is not shared and is cleared every time the browser refreshes.
             -   `local` - This space is kept on your device and is persistent.
-        -   When creating a bot, you can set the space that it will be stored in using the `into()` function.
-            -   e.g. `create(into("local"))` will create a new bot in the `local` space.
-            -   Creating a bot from another bot will inherit spaces. So cloning a `tempLocal` bot will produce another `tempLocal` bot. You can of course override this using the `into()` function.
+        -   When creating a bot, you can set the space that it will be stored in using the `intoSpace()` function.
+            -   e.g. `create(intoSpace("local"))` will create a new bot in the `local` space.
+            -   Creating a bot from another bot will inherit spaces. So cloning a `tempLocal` bot will produce another `tempLocal` bot. You can of course override this using the `intoSpace()` function.
         -   You can search for bots in a specific space using the `inSpace()` filter function.
             -   e.g. `getBots(inSpace("local"))` will get all the bots in the `local` space.
             -   It is simply an alternative way to do `getBots(byTag("space", value))`.
