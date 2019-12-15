@@ -75,22 +75,32 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         onStatusUpdated?: (status: StatusUpdate) => void
     ): Promise<void> {
         if (onBotsAdded) {
-            this._sub.add(this.onBotsAdded.subscribe(onBotsAdded));
+            this._sub.add(
+                this.onBotsAdded.subscribe(bots => onBotsAdded(bots))
+            );
         }
         if (onBotsRemoved) {
-            this._sub.add(this.onBotsRemoved.subscribe(onBotsRemoved));
+            this._sub.add(
+                this.onBotsRemoved.subscribe(bots => onBotsRemoved(bots))
+            );
         }
         if (onBotsUpdated) {
-            this._sub.add(this.onBotsUpdated.subscribe(onBotsUpdated));
+            this._sub.add(
+                this.onBotsUpdated.subscribe(bots => onBotsUpdated(bots))
+            );
         }
         if (onError) {
-            this._sub.add(this.onError.subscribe(onError));
+            this._sub.add(this.onError.subscribe(err => onError(err)));
         }
         if (onEvents) {
-            this._sub.add(this.onEvents.subscribe(onEvents));
+            this._sub.add(this.onEvents.subscribe(events => onEvents(events)));
         }
         if (onStatusUpdated) {
-            this._sub.add(this.onStatusUpdated.subscribe(onStatusUpdated));
+            this._sub.add(
+                this.onStatusUpdated.subscribe(status =>
+                    onStatusUpdated(status)
+                )
+            );
         }
     }
 

@@ -1,6 +1,6 @@
 import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote } from 'comlink';
+import { wrap, proxy, Remote, expose, transfer } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
@@ -214,15 +214,20 @@ export class AuxVMImpl implements AuxVM {
 }
 
 function processPartitions(config: AuxConfig): AuxConfig {
+    let transferrables = [] as any[];
     for (let key in config.partitions) {
         const partition = config.partitions[key];
         if (partition.type === 'proxy') {
             const bridge = new ProxyBridgePartitionImpl(partition.partition);
+            const channel = new MessageChannel();
+            expose(bridge, channel.port1);
+            transferrables.push(channel.port2);
             config.partitions[key] = {
                 type: 'proxy_client',
-                bridge: proxy(bridge),
+                private: partition.partition.private,
+                port: channel.port2,
             };
         }
     }
-    return config;
+    return transfer(config, transferrables);
 }

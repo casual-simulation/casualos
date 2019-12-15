@@ -11,7 +11,7 @@ import {
     ProxyClientPartition,
     ProxyClientPartitionConfig,
 } from '@casual-simulation/aux-vm';
-import { proxy, releaseProxy } from 'comlink';
+import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';
 
@@ -32,7 +32,7 @@ export async function createProxyClientPartition(
 }
 
 export class ProxyClientPartitionImpl implements ProxyClientPartition {
-    private _bridge: ProxyBridgePartition;
+    private _bridge: Remote<ProxyBridgePartition>;
     private _onBotsAdded: Subject<Bot[]>;
     private _onBotsRemoved: Subject<string[]>;
     private _onBotsUpdated: Subject<UpdatedBot[]>;
@@ -66,8 +66,11 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     }
 
     constructor(config: ProxyClientPartitionConfig) {
-        this._bridge = config.bridge;
+        this._bridge = wrap<ProxyBridgePartition>(config.port);
         this.private = config.private;
+
+        console.log('Got Bridge: ', this._bridge);
+
         this.state = {};
 
         this._onBotsAdded = new Subject<Bot[]>();
@@ -93,24 +96,30 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     }
 
     private _handleOnBotsAdded(bots: Bot[]): void {
+        let newState = Object.assign({}, this.state);
         for (let b of bots) {
-            this.state[b.id] = b;
+            newState[b.id] = b;
         }
+        this.state = newState;
         this._onBotsAdded.next(bots);
     }
 
     private _handleOnBotsRemoved(bots: string[]): void {
+        let newState = Object.assign({}, this.state);
         for (let b of bots) {
-            delete this.state[b];
+            delete newState[b];
         }
+        this.state = newState;
         this._onBotsRemoved.next(bots);
     }
 
     private _handleOnBotsUpdated(bots: UpdatedBot[]): void {
+        let newState = Object.assign({}, this.state);
         for (let b of bots) {
-            const existing = this.state[b.bot.id];
-            this.state[b.bot.id] = merge(existing, b.bot);
+            const existing = newState[b.bot.id];
+            newState[b.bot.id] = merge(existing, b.bot);
         }
+        this.state = newState;
         this._onBotsUpdated.next(bots);
     }
 

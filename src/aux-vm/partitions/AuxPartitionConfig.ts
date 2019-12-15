@@ -74,9 +74,9 @@ export interface ProxyClientPartitionConfig extends PartitionConfigBase {
     type: 'proxy_client';
 
     /**
-     * The bridge that should be used.
+     * The port that should be used for messages.
      */
-    bridge: ProxyBridgePartition;
+    port: MessagePort;
 }
 
 /**
