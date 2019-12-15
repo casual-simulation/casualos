@@ -759,28 +759,6 @@ function create(...mods: Mod[]) {
 }
 
 /**
- * Creates a new temporary bot and returns it.
- * @param parent The bot that should be the parent of the new bot.
- * @param mods The mods which specify the new bot's tag values.
- * @returns The bot(s) that were created.
- *
- * @example
- * // Create a red bot without a parent.
- * let redBot = createTemp(null, { "auxColor": "red" });
- *
- * @example
- * // Create a red bot and a blue bot with `this` as the parent.
- * let [redBot, blueBot] = createTemp(this, [
- *    { "auxColor": "red" },
- *    { "auxColor": "blue" }
- * ]);
- *
- */
-function createTemp(...mods: Mod[]) {
-    return createBase(() => `T-${uuid()}`, ...mods);
-}
-
-/**
  * Creates a mod that sets the space of a new bot.
  * Using applyMod() with intoSpace() does nothing.
  * @param space The space.
@@ -2246,7 +2224,6 @@ export default {
     // Global functions
     combine,
     create,
-    createTemp,
     createdBy,
     destroy,
     shout,

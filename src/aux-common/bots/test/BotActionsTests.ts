@@ -2747,7 +2747,6 @@ export function botActionsTests(
         });
 
         createBotTests('create', 'uuid');
-        createBotTests('createTemp', 'uuid', 'T-uuid');
 
         describe.skip('combine()', () => {
             it('should send the combine event to the given bots', () => {
