@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.14
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issue of orientation inverting then attepting to resize the inventory once the viewport has beeen panned.
+
 ## V0.11.13
 
 ### Date: 12/13/2019
