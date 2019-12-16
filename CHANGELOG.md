@@ -13,7 +13,7 @@
             -   `stack` - Indicates that the bot will stack on top of other bots (default)
             -   `absolute` - Indicates that the bot will ignore other bots when positioning.
     -   Removed the `createTemp()` function.
-        -   It has been replaced with the `{ space: "value" }` mod function.
+        -   It has been replaced with the `{ space: "value" }` mod.
         -   e.g. Instead of `createTemp()` you should use `create({ space: "tempLocal" })`.
     -   Removed the `cookie` bot. It has been replaced with the `local` space.
     -   Removed the following functions:
