@@ -87,7 +87,7 @@ describe('BaseAuxChannel', () => {
         config = {
             config: { isBuilder: false, isPlayer: false },
             partitions: {
-                '*': {
+                shared: {
                     type: 'causal_tree',
                     id: 'auxId',
                     tree: tree,
@@ -190,7 +190,7 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'causal_tree',
                         id: 'auxId',
                         tree: tree,
@@ -207,7 +207,7 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'remote_causal_tree',
                         id: 'auxId',
                         host: 'host',
@@ -218,7 +218,7 @@ describe('BaseAuxChannel', () => {
             channel = new AuxChannelImpl(user, device, config);
 
             await expect(channel.initAndWait()).rejects.toEqual(
-                new Error('[BaseAuxChannel] Unable to build partition: *')
+                new Error('[BaseAuxChannel] Unable to build partition: shared')
             );
         });
 
@@ -474,10 +474,16 @@ describe('BaseAuxChannel', () => {
             config = {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'causal_tree',
                         id: 'auxId',
                         tree: tree,
+                    },
+                    tempLocal: {
+                        type: 'memory',
+                        initialState: {
+                            def: createBot('def'),
+                        },
                     },
                     private: {
                         type: 'memory',
@@ -507,7 +513,28 @@ describe('BaseAuxChannel', () => {
                     config: expect.any(Object),
                     contextBot: expect.any(Object),
                     userId: expect.any(Object),
-                    test: createBot('test'),
+                    test: createBot('test', {}, 'shared'),
+                    def: createBot('def', {}, 'tempLocal'),
+                },
+            });
+        });
+
+        it('should inlcude the ID, tags, and space properties', async () => {
+            uuidMock.mockReturnValue('contextBot');
+            await channel.initAndWait();
+
+            await channel.sendEvents([botAdded(createBot('test'))]);
+
+            const exported = await channel.export();
+
+            expect(exported).toEqual({
+                version: 1,
+                state: {
+                    config: expect.any(Object),
+                    contextBot: expect.any(Object),
+                    userId: expect.any(Object),
+                    test: createBot('test', {}, 'shared'),
+                    def: createBot('def', {}, 'tempLocal'),
                 },
             });
         });

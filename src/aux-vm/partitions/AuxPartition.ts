@@ -20,7 +20,7 @@ import { StoredAux } from '../StoredAux';
  * Defines an interface that maps Bot IDs to their corresponding partitions.
  */
 export interface AuxPartitions {
-    '*': AuxPartition;
+    shared: AuxPartition;
     [key: string]: AuxPartition;
 }
 
@@ -32,7 +32,9 @@ export type AuxPartition =
     | MemoryPartition
     | RemoteCausalTreePartition
     | CausalRepoPartition
-    | RemoteCausalRepoPartition;
+    | RemoteCausalRepoPartition
+    | LocalStoragePartition
+    | ProxyClientPartition;
 
 /**
  * Base interface for partitions.
@@ -113,6 +115,29 @@ export interface AuxPartitionBase extends SubscriptionLike {
 }
 
 /**
+ * Defines a special aux partition that can act as a basic bridge for the observables.
+ */
+export interface ProxyBridgePartition extends AuxPartitionBase {
+    addListeners(
+        onBotsAdded?: (bot: Bot[]) => void,
+        onBotsRemoved?: (bot: string[]) => void,
+        onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onError?: (error: any) => void,
+        onEvents?: (actions: DeviceAction[]) => void,
+        onStatusUpdated?: (status: StatusUpdate) => void
+    ): Promise<void>;
+}
+
+/**
+ * Defines a partition that is able to proxy requests from the engine to the given partition bridge.
+ */
+export interface ProxyClientPartition extends AuxPartitionBase {
+    type: 'proxy_client';
+
+    state: BotsState;
+}
+
+/**
  * Defines a causal repo partition.
  */
 export interface CausalRepoPartition extends AuxPartitionBase {
@@ -178,6 +203,24 @@ export interface MemoryPartition extends AuxPartitionBase {
 
     /**
      * The current state for the partition.
+     */
+    state: BotsState;
+}
+
+/**
+ * Defines a local storage partition.
+ * Needs to run on the main thread.
+ */
+export interface LocalStoragePartition extends AuxPartitionBase {
+    type: 'local_storage';
+
+    /**
+     * The namespace that bots should be stored under.
+     */
+    namespace: string;
+
+    /**
+     * The current state of the partition.
      */
     state: BotsState;
 }

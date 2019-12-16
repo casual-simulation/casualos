@@ -3,6 +3,7 @@ import {
     DEVICE_BOT_ID,
     Bot as NormalBot,
     ScriptBot,
+    BOT_SPACE_TAG,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -51,9 +52,6 @@ import every from 'lodash/every';
 import {
     calculateFormulaValue,
     COMBINE_ACTION_NAME,
-    addToContextDiff as calcAddToContextDiff,
-    removeFromContextDiff as calcRemoveFromContextDiff,
-    setPositionDiff as calcSetPositionDiff,
     isBot,
     // isFormulaObject,
     // unwrapProxy,
@@ -325,6 +323,11 @@ interface Bot {
     id: string;
 
     /**
+     * The space the bot lives in.
+     */
+    space?: BotType;
+
+    /**
      * The calculated tag values that the bot contains.
      */
     tags: BotTags;
@@ -341,6 +344,11 @@ interface Bot {
      */
     changes: BotTags;
 }
+
+/**
+ * The possible bot types.
+ */
+type BotType = 'shared' | 'local' | 'tempLocal';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -660,10 +668,20 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     }
 
     let bots: NormalBot[] = variants.map(v => {
-        let bot = {
+        let bot: NormalBot = {
             id: idFactory(),
             tags: {},
         };
+        for (let i = v.length - 1; i >= 0; i--) {
+            const mod = v[i];
+            if (mod && BOT_SPACE_TAG in mod) {
+                const space = mod[BOT_SPACE_TAG];
+                if (hasValue(space)) {
+                    bot.space = space;
+                }
+                break;
+            }
+        }
         applyMod(bot.tags, ...v);
         return bot;
     });
@@ -695,23 +713,27 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
  * Gets the ID from the given bot.
  * @param bot The bot or string.
  */
-function getBotId(bot: Bot | string): string {
+function getID(bot: Bot | string): string {
     if (typeof bot === 'string') {
-        return bot;
+        return bot || null;
     } else if (bot) {
-        return bot.id;
+        return bot.id || null;
     }
+
+    return null;
+}
+
+/**
+ * Gets JSON for the given data.
+ * @param data The data.
+ */
+function getJSON(data: any): string {
+    return JSON.stringify(data);
 }
 
 function createBase(idFactory: () => string, ...datas: Mod[]) {
-    // let parentId = getBotId(parent);
-    // let parentDiff = parentId
-    //     ? {
-    //           auxCreator: parentId,
-    //       }
-    //     : {};
     let parent = getCurrentBot();
-    let parentDiff = parent ? from(parent) : {};
+    let parentDiff = parent ? { auxCreator: getID(parent) } : {};
     return createFromMods(idFactory, parentDiff, ...datas);
 }
 
@@ -735,44 +757,6 @@ function createBase(idFactory: () => string, ...datas: Mod[]) {
  */
 function create(...mods: Mod[]) {
     return createBase(() => uuid(), ...mods);
-}
-
-/**
- * Creates a new temporary bot and returns it.
- * @param parent The bot that should be the parent of the new bot.
- * @param mods The mods which specify the new bot's tag values.
- * @returns The bot(s) that were created.
- *
- * @example
- * // Create a red bot without a parent.
- * let redBot = createTemp(null, { "auxColor": "red" });
- *
- * @example
- * // Create a red bot and a blue bot with `this` as the parent.
- * let [redBot, blueBot] = createTemp(this, [
- *    { "auxColor": "red" },
- *    { "auxColor": "blue" }
- * ]);
- *
- */
-function createTemp(...mods: Mod[]) {
-    return createBase(() => `T-${uuid()}`, ...mods);
-}
-
-/**
- * Creates a mod that sets the auxCreator of a bot to the given bot.
- * @param creator The bot or Bot ID of the creator.
- */
-function from(creator: Bot | string): Mod {
-    let parentId = getBotId(creator);
-    let parentDiff = parentId
-        ? {
-              auxCreator: parentId,
-          }
-        : {
-              auxCreator: null,
-          };
-    return parentDiff;
 }
 
 /**
@@ -1455,10 +1439,10 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  *
  * @example
  * // Find all the bots created by the yellow bot.
- * let bots = getBots(createdBy(getBot('auxColor','yellow')));
+ * let bots = getBots(byCreator(getBot('auxColor','yellow')));
  */
-function createdBy(bot: Bot) {
-    return byTag('auxCreator', bot.id);
+function byCreator(bot: Bot | string) {
+    return byTag('auxCreator', getID(bot));
 }
 
 /**
@@ -1478,6 +1462,14 @@ function inStack(bot: Bot, context: string): BotFilterFunction {
         getTag(bot, `${context}X`),
         getTag(bot, `${context}Y`)
     );
+}
+
+/**
+ * Creates a function that filters bots by whether they are in the given space.
+ * @param space The space that the bots should be in.
+ */
+function bySpace(space: string): BotFilterFunction {
+    return byTag(BOT_SPACE_TAG, space);
 }
 
 /**
@@ -1636,7 +1628,9 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
-        (<BotTags>bot)[tag] = value;
+        if (tag !== 'id' && tag !== BOT_SPACE_TAG) {
+            (<BotTags>bot)[tag] = value;
+        }
         return value;
     }
 }
@@ -1792,71 +1786,6 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
 }
 
 /**
- * Gets a diff that adds a bot to the given context.
- * @param context The context.
- * @param x The X position that the bot should be added at.
- * @param y The Y position that the bot should be added at.
- * @param index The index that the bot should be added at.
- */
-function addToContextMod(
-    context: string,
-    x: number = 0,
-    y: number = 0,
-    index?: number
-) {
-    const calc = getCalculationContext();
-    return calcAddToContextDiff(calc, context, x, y, index);
-}
-
-/**
- * Gets a diff that removes a bot from the given context.
- * @param context The context.
- */
-function removeFromContextMod(context: string) {
-    const calc = getCalculationContext();
-    return calcRemoveFromContextDiff(calc, context);
-}
-
-/**
- * Gets a diff that sets the position of a bot in the given context when applied.
- * @param context The context.
- * @param x The X position.
- * @param y The Y position.
- * @param index The index.
- */
-function setPositionMod(
-    context: string,
-    x?: number,
-    y?: number,
-    index?: number
-) {
-    const calc = getCalculationContext();
-    return calcSetPositionDiff(calc, context, x, y, index);
-}
-
-/**
- * Gets a diff that adds a bot to the current user's menu.
- */
-function addToMenuMod(): BotTags {
-    const context = getMenuContext();
-    return {
-        ...addToContextMod(context),
-        [`${context}Id`]: uuid(),
-    };
-}
-
-/**
- * Gets a diff that removes a bot from the current user's menu.
- */
-function removeFromMenuMod(): BotTags {
-    const context = getMenuContext();
-    return {
-        ...removeFromContextMod(context),
-        [`${context}Id`]: null,
-    };
-}
-
-/**
  * Shows a toast message to the user.
  * @param message The message to show.
  */
@@ -1905,7 +1834,7 @@ function tweenTo(
     rotY?: number,
     duration?: number
 ) {
-    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY, duration);
+    const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
     return addAction(event);
 }
 
@@ -2204,24 +2133,19 @@ export default {
     // Global functions
     combine,
     create,
-    createTemp,
-    createdBy,
+    byCreator,
     destroy,
     shout,
     superShout,
     whisper,
     remote,
     webhook,
-    from,
+    getID,
+    getJSON,
 
     // Mod functions
     applyMod,
     getMod,
-    addToContextMod,
-    removeFromContextMod,
-    addToMenuMod,
-    removeFromMenuMod,
-    setPositionMod,
     subtractMods,
 
     // Get bot functions
@@ -2232,6 +2156,7 @@ export default {
     byMod,
     inContext,
     inStack,
+    bySpace,
     atPosition,
     neighboring,
     either,

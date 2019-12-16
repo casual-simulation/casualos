@@ -7,6 +7,7 @@ import {
     LOCAL_BOT_ID,
     botUpdated,
     TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
     COOKIE_BOT_ID,
     BotTags,
     isBotTags,
@@ -33,6 +34,7 @@ import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import pickBy from 'lodash/pickBy';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
+import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -112,14 +114,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
 
-        this._subscriptions.push(
-            bindBotToStorage(
-                this,
-                storageId(this.parsedId.channel, LOCAL_BOT_ID),
-                COOKIE_BOT_ID
-            )
-        );
-
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
             const primaryPartiton =
@@ -136,19 +130,18 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           host: getFinalUrl(location.origin, parsedId.host),
                       } as const);
             return {
-                '*': primaryPartiton,
-                [COOKIE_BOT_ID]: {
-                    type: 'memory',
-                    initialState: {
-                        [COOKIE_BOT_ID]:
-                            getStoredBot(
-                                storageId(parsedId.channel, LOCAL_BOT_ID),
-                                COOKIE_BOT_ID
-                            ) || createBot(COOKIE_BOT_ID),
-                    },
+                shared: primaryPartiton,
+                [COOKIE_BOT_PARTITION_ID]: {
+                    type: 'proxy',
+                    partition: new LocalStoragePartitionImpl({
+                        type: 'local_storage',
+                        namespace: `aux/${parsedId.channel}`,
+                        private: true,
+                    }),
                 },
                 [TEMPORARY_BOT_PARTITION_ID]: {
                     type: 'memory',
+                    private: true,
                     initialState: {},
                 },
             };
@@ -188,119 +181,4 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             this._recent
         );
     }
-}
-
-function storageId(...parts: string[]): string {
-    return parts.join('_');
-}
-
-function getStoredBot(key: string, id: string): Bot {
-    const json = localStorage.getItem(key);
-    if (json) {
-        const bot: Bot = JSON.parse(json);
-        bot.id = id;
-        return bot;
-    } else {
-        return null;
-    }
-}
-
-function storeBot(key: string, bot: Bot) {
-    if (bot) {
-        const json = JSON.stringify(bot);
-        localStorage.setItem(key, json);
-    } else {
-        localStorage.removeItem(key);
-    }
-}
-
-function bindBotToStorage(
-    simulation: Simulation,
-    key: string,
-    id: string
-): Subscription {
-    const sub = new Subscription();
-    sub.add(
-        storedBotUpdated(key, id)
-            .pipe(
-                flatMap(async bot => {
-                    let event = botUpdated(id, bot);
-
-                    // Record that this event is only for updating and that local storage
-                    // should be ignored
-                    (<any>event).__remote = true;
-                    await simulation.helper.transaction(event);
-                })
-            )
-            .subscribe()
-    );
-
-    sub.add(
-        simulation.localEvents
-            .pipe(
-                tap(e => {
-                    if (e.type === 'update_bot') {
-                        if ((<any>e).__remote) {
-                            return;
-                        }
-
-                        if (e.id !== id) {
-                            return;
-                        }
-
-                        // Update stored bot
-                        const updatedTags = Object.keys(e.update.tags || {});
-                        if (updatedTags.length > 0) {
-                            updateStoredBot(key, id, e.update);
-                        }
-                    }
-                })
-            )
-            .subscribe()
-    );
-
-    return sub;
-}
-
-function storedBotUpdated(key: string, id: string): Observable<Partial<Bot>> {
-    return storageUpdated().pipe(
-        filter(e => e.key === key),
-        map(e => {
-            const newBot = JSON.parse(e.newValue) || createBot(id);
-            const oldBot = JSON.parse(e.oldValue) || createBot(id);
-            const differentTags = pickBy(
-                newBot.tags,
-                (val, tag) => oldBot.tags[tag] !== val
-            );
-            return {
-                tags: differentTags,
-            };
-        }),
-        filter(bot => Object.keys(bot.tags).length > 0)
-    );
-}
-
-function storageUpdated(): Observable<StorageEvent> {
-    return fromEventPattern(
-        h => window.addEventListener('storage', h),
-        h => window.removeEventListener('storage', h)
-    );
-}
-
-function updateStoredBot(key: string, id: string, update: Partial<Bot>) {
-    if (!update.tags) {
-        return;
-    }
-    const oldBot = getStoredBot(key, id) || createBot(id);
-    const differentTags = pickBy(
-        update.tags,
-        (val, tag) => oldBot.tags[tag] !== val
-    );
-
-    if (Object.keys(differentTags).length <= 0) {
-        return;
-    }
-
-    const merged = merge(oldBot, update);
-    storeBot(key, merged);
 }

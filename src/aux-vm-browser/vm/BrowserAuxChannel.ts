@@ -11,7 +11,6 @@ import {
     CausalTreeManager,
     SocketManager,
 } from '@casual-simulation/causal-tree-client-socketio';
-import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
     NullCausalTreeStore,
@@ -19,9 +18,25 @@ import {
     SERVER_ROLE,
     DeviceAction,
 } from '@casual-simulation/causal-trees';
+import {
+    AuxConfig,
+    BaseAuxChannel,
+    AuxUser,
+    AuxChannelOptions,
+    CausalTreePartitionConfig,
+    createMemoryPartition,
+    createAuxPartition,
+    createCausalRepoPartition,
+    PartitionConfig,
+    AuxPartition,
+    iteratePartitions,
+    filterAtomFactory,
+    createCausalRepoClientPartition,
+} from '@casual-simulation/aux-vm';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { BrowserSigningCryptoImpl } from '@casual-simulation/crypto-browser';
+import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     protected _treeManager: CausalTreeManager;
@@ -53,5 +68,19 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
         if (filtered.length > 0) {
             await this.sendEvents(mapped);
         }
+    }
+
+    protected async _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition> {
+        let partition = await super._createPartition(config);
+        if (!partition) {
+            partition = await createAuxPartition(
+                config,
+                createProxyClientPartition
+            );
+        }
+
+        return partition;
     }
 }

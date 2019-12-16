@@ -39,7 +39,7 @@ export function nodeSimulationFromTree(
         id,
         config,
         {
-            '*': {
+            shared: {
                 type: 'causal_tree',
                 id: id,
                 tree: tree,
@@ -67,7 +67,7 @@ export function nodeSimulationForRemote(
         id,
         config,
         {
-            '*': {
+            shared: {
                 type: 'remote_causal_tree',
                 host: host,
                 id: id,
@@ -100,7 +100,7 @@ export function nodeSimulationForBranch(
         branch,
         null,
         {
-            '*': {
+            shared: {
                 type: 'causal_repo_client',
                 ...(extraOptions || {}),
                 branch: branch,
@@ -121,7 +121,7 @@ export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
         id,
         null,
         {
-            '*': {
+            shared: {
                 type: 'causal_repo',
             },
         },
