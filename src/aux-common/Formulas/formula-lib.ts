@@ -724,14 +724,8 @@ function getID(bot: Bot | string): string {
 }
 
 function createBase(idFactory: () => string, ...datas: Mod[]) {
-    // let parentId = getBotId(parent);
-    // let parentDiff = parentId
-    //     ? {
-    //           auxCreator: parentId,
-    //       }
-    //     : {};
     let parent = getCurrentBot();
-    let parentDiff = parent ? from(parent) : {};
+    let parentDiff = parent ? { auxCreator: getID(parent) } : {};
     return createFromMods(idFactory, parentDiff, ...datas);
 }
 
@@ -766,22 +760,6 @@ function intoSpace(space: BotType): Mod {
     return {
         space: space,
     };
-}
-
-/**
- * Creates a mod that sets the auxCreator of a bot to the given bot.
- * @param creator The bot or Bot ID of the creator.
- */
-function from(creator: Bot | string): Mod {
-    let parentId = getBotId(creator);
-    let parentDiff = parentId
-        ? {
-              auxCreator: parentId,
-          }
-        : {
-              auxCreator: null,
-          };
-    return parentDiff;
 }
 
 /**
@@ -2165,7 +2143,6 @@ export default {
     whisper,
     remote,
     webhook,
-    from,
     intoSpace,
     getID,
 
