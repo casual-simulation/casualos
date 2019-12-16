@@ -2037,10 +2037,10 @@ export function botCalculationContextTests(
                 });
             });
 
-            describe('inSpace()', () => {
+            describe('bySpace()', () => {
                 it('should return a function that returns true if the bot is in given space', () => {
                     const bot = createBot('test', {
-                        formula: '=inSpace("test")(getBot("id", "test2"))',
+                        formula: '=bySpace("test")(getBot("id", "test2"))',
                     });
 
                     const bot2 = createBot('test2', {}, <any>'test');

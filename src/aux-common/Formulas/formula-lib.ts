@@ -1460,7 +1460,7 @@ function inStack(bot: Bot, context: string): BotFilterFunction {
  * Creates a function that filters bots by whether they are in the given space.
  * @param space The space that the bots should be in.
  */
-function inSpace(space: string): BotFilterFunction {
+function bySpace(space: string): BotFilterFunction {
     return byTag(BOT_SPACE_TAG, space);
 }
 
@@ -2147,7 +2147,7 @@ export default {
     byMod,
     inContext,
     inStack,
-    inSpace,
+    bySpace,
     atPosition,
     neighboring,
     either,

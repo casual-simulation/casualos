@@ -35,8 +35,8 @@
         -   When creating a bot, you can set the space that it will be stored in using a `{ space: "value" }` mod.
             -   e.g. `create({ space: "local" })` will create a new bot in the `local` space.
             -   Creating a bot from another bot will inherit spaces. So cloning a `tempLocal` bot will produce another `tempLocal` bot. You can of course override this using a mod.
-        -   You can search for bots in a specific space using the `inSpace()` filter function.
-            -   e.g. `getBots(inSpace("local"))` will get all the bots in the `local` space.
+        -   You can search for bots in a specific space using the `bySpace()` filter function.
+            -   e.g. `getBots(bySpace("local"))` will get all the bots in the `local` space.
             -   It is simply an alternative way to do `getBots(byTag("space", value))`.
     -   Added the following functions:
         -   `getID(bot)` gets the ID of a bot. If given a string, then that will be returned instead.
