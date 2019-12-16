@@ -35,6 +35,8 @@
         -   You can search for bots in a specific space using the `inSpace()` filter function.
             -   e.g. `getBots(inSpace("local"))` will get all the bots in the `local` space.
             -   It is simply an alternative way to do `getBots(byTag("space", value))`.
+    -   Added the following functions:
+        -   `getID(bot)` gets the ID of a bot. If given a string, then that will be returned instead.
 
 ## V0.11.13
 

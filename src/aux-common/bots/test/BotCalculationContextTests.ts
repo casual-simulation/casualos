@@ -2301,6 +2301,44 @@ export function botCalculationContextTests(
                     expect(value).toEqual('other');
                 });
             });
+
+            describe('getID()', () => {
+                it('should get the ID of the given bot', () => {
+                    const bot = createBot('test', {
+                        formula: `=getID(bot)`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('test');
+                });
+
+                it('should return the given ID', () => {
+                    const bot = createBot('test', {
+                        formula: `=getID("haha")`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('haha');
+                });
+
+                it('should handle null values', () => {
+                    const bot = createBot('test', {
+                        formula: `=getID(null)`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual(null);
+                });
+            });
         });
     });
 

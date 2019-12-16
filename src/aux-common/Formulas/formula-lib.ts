@@ -713,12 +713,14 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
  * Gets the ID from the given bot.
  * @param bot The bot or string.
  */
-function getBotId(bot: Bot | string): string {
+function getID(bot: Bot | string): string {
     if (typeof bot === 'string') {
-        return bot;
+        return bot || null;
     } else if (bot) {
-        return bot.id;
+        return bot.id || null;
     }
+
+    return null;
 }
 
 function createBase(idFactory: () => string, ...datas: Mod[]) {
@@ -1857,7 +1859,7 @@ function tweenTo(
     rotY?: number,
     duration?: number
 ) {
-    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY, duration);
+    const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
     return addAction(event);
 }
 
@@ -2165,6 +2167,7 @@ export default {
     webhook,
     from,
     intoSpace,
+    getID,
 
     // Mod functions
     applyMod,
