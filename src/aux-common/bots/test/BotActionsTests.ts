@@ -3198,59 +3198,6 @@ export function botActionsTests(
             });
         });
 
-        describe('addToMenuMod()', () => {
-            it('should add the given bot to the users menu', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            addItem:
-                                '@applyMod(getBot("#name", "bob"), addToMenuMod())',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            _auxUserMenuContext: 'context',
-                        },
-                    },
-                    menuBot: {
-                        id: 'menuBot',
-                        tags: {
-                            name: 'bob',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'addItem',
-                    ['thisBot', 'userBot', 'menuBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('menuBot', {
-                        tags: {
-                            contextId: 'uuid-0',
-                            contextSortOrder: 0,
-                            context: true,
-                            contextX: 0,
-                            contextY: 0,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('removeFromMenuMod()', () => {
             it('should remove the given bot from the users menu', () => {
                 const state: BotsState = {

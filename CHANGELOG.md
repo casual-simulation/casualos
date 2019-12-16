@@ -19,6 +19,7 @@
     -   Removed the following functions:
         -   `addToContextMod()`
         -   `removeFromContextMod()`
+        -   `addToMenuMod()`
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.
