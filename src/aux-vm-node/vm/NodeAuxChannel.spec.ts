@@ -57,7 +57,7 @@ describe('NodeAuxChannel', () => {
             {
                 config: { isBuilder: false, isPlayer: false },
                 partitions: {
-                    '*': {
+                    shared: {
                         type: 'causal_tree',
                         tree: tree,
                         id: id,

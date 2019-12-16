@@ -6,3 +6,4 @@ export * from './CausalTreePartition';
 export * from './LocalCausalTreePartition';
 export * from './CausalRepoPartition';
 export * from './RemoteCausalRepoPartition';
+export * from './ProxyBridgePartition';

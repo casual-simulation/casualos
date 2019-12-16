@@ -13,6 +13,7 @@ import {
     getContextGridHeight,
     cacheFunction,
     calculateBooleanTagValue,
+    isBotStackable,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
@@ -189,7 +190,7 @@ export function calculateObjectPositionInGrid(
 
     let totalScales = 0;
 
-    if (!calculateBooleanTagValue(context, bot.bot, 'auxStackable', true)) {
+    if (!isBotStackable(context, bot.bot)) {
         totalScales = 0;
     } else {
         const objectsAtPosition = objectsAtContextGridPosition(
@@ -204,7 +205,7 @@ export function calculateObjectPositionInGrid(
                 break;
             }
 
-            if (calculateBooleanTagValue(context, obj, 'auxStackable', true)) {
+            if (isBotStackable(context, obj)) {
                 totalScales += calculateVerticalHeight(
                     context,
                     obj,

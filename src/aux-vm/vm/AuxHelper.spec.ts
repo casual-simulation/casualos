@@ -15,6 +15,7 @@ import {
     botRemoved,
     BotActions,
     USERS_CONTEXT,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -49,11 +50,13 @@ describe('AuxHelper', () => {
         uuidMock.mockReset();
         tree = new AuxCausalTree(storedTree(site(1)));
         helper = new AuxHelper({
-            '*': await createLocalCausalTreePartitionFactory({}, null, null)({
-                type: 'causal_tree',
-                tree: tree,
-                id: 'testAux',
-            }),
+            shared: await createLocalCausalTreePartitionFactory({}, null, null)(
+                {
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'testAux',
+                }
+            ),
         });
         helper.userId = userId;
 
@@ -69,7 +72,7 @@ describe('AuxHelper', () => {
         };
         helper = new AuxHelper(
             {
-                '*': await createLocalCausalTreePartitionFactory(
+                shared: await createLocalCausalTreePartitionFactory(
                     {},
                     null,
                     null
@@ -91,7 +94,7 @@ describe('AuxHelper', () => {
     describe('partitions', () => {
         it('should exclude partitions which dont have their bot from the bot state', () => {
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test'),
@@ -104,14 +107,14 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.botsState).toEqual({
-                test: createBot('test'),
+                test: createBot('test', {}, 'shared'),
             });
             expect(Object.keys(helper.botsState)).toEqual(['test']);
         });
 
         it('should send local events for the events that are returned from the partition', async () => {
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test'),
@@ -120,7 +123,7 @@ describe('AuxHelper', () => {
                 abc: createMemoryPartition({
                     type: 'memory',
                     initialState: {
-                        abc: createBot('abc'),
+                        test: createBot('test', undefined, <any>'abc'),
                     },
                 }),
             });
@@ -130,7 +133,7 @@ describe('AuxHelper', () => {
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(
-                botUpdated('abc', {
+                botUpdated('test', {
                     tags: {
                         test: 123,
                     },
@@ -140,7 +143,7 @@ describe('AuxHelper', () => {
             await waitAsync();
 
             expect(events).toEqual([
-                botUpdated('abc', {
+                botUpdated('test', {
                     tags: {
                         test: 123,
                     },
@@ -148,30 +151,40 @@ describe('AuxHelper', () => {
             ]);
         });
 
-        it('should support prefixes for bot IDs', async () => {
+        it('should place bots in partitions based on the bot space', async () => {
             let mem = createMemoryPartition({
                 type: 'memory',
                 initialState: {},
             });
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
                 }),
-                'TEST-*': mem,
+                TEST: mem,
             });
 
-            await helper.createBot('TEST-abcdefghijklmnop');
+            await helper.createBot('abcdefghijklmnop', undefined, <any>'TEST');
 
-            expect(Object.keys(helper.botsState)).toEqual([
-                'TEST-abcdefghijklmnop',
-            ]);
-            expect(Object.keys(mem.state)).toEqual(['TEST-abcdefghijklmnop']);
+            expect(Object.keys(helper.botsState)).toEqual(['abcdefghijklmnop']);
+            expect(Object.keys(mem.state)).toEqual(['abcdefghijklmnop']);
+        });
+
+        it('should ignore bots going to partitions that dont exist', async () => {
+            helper = new AuxHelper({
+                shared: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+            });
+
+            await helper.createBot('abcdefghijklmnop', undefined, <any>'TEST');
+            expect(Object.keys(helper.botsState)).toEqual([]);
         });
 
         it('should prevent partitions from overriding other partitions', async () => {
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test', {
@@ -179,7 +192,7 @@ describe('AuxHelper', () => {
                         }),
                     },
                 }),
-                'TEST-*': createMemoryPartition({
+                TEST: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test', {
@@ -190,9 +203,72 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.botsState).toEqual({
-                test: createBot('test', {
-                    abc: 'def',
-                }),
+                test: createBot(
+                    'test',
+                    {
+                        abc: 'def',
+                    },
+                    'shared'
+                ),
+            });
+        });
+
+        it('should split add_state events into the correct partitions', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = new AuxHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            await helper.transaction(
+                addState({
+                    abc: createBot('abc', {}, <any>'TEST'),
+                    normal: createBot('normal', {}),
+                })
+            );
+
+            expect(Object.keys(helper.botsState)).toEqual(['normal', 'abc']);
+            expect(Object.keys(mem.state)).toEqual(['abc']);
+            expect(Object.keys(shared.state)).toEqual(['normal']);
+        });
+
+        it('should set the correct space on bots from partitions', async () => {
+            let TEST = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    abc: createBot('abc', {}),
+                    def: createBot('def', {}, <any>'wrong'),
+                },
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    normal: createBot('normal', {}),
+                },
+            });
+            helper = new AuxHelper({
+                shared: shared,
+                TEST: TEST,
+            });
+
+            expect(helper.botsState).toEqual({
+                abc: createBot('abc', {}, <any>'TEST'),
+                def: createBot('def', {}, <any>'TEST'),
+                normal: createBot('normal', {}, 'shared'),
+            });
+            expect(TEST.state).toEqual({
+                abc: createBot('abc'),
+                def: createBot('def', {}, <any>'wrong'),
+            });
+            expect(shared.state).toEqual({
+                normal: createBot('normal'),
             });
         });
     });
@@ -200,7 +276,7 @@ describe('AuxHelper', () => {
     describe('publicBotsState', () => {
         it('should return the bots state from all the public partitions', async () => {
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test'),
@@ -217,7 +293,7 @@ describe('AuxHelper', () => {
             });
 
             expect(helper.publicBotsState).toEqual({
-                test: createBot('test'),
+                test: createBot('test', {}, 'shared'),
             });
             expect(Object.keys(helper.publicBotsState)).toEqual(['test']);
         });
@@ -228,7 +304,10 @@ describe('AuxHelper', () => {
             const bot = tree.value['user'];
             const user = helper.userBot;
 
-            expect(user).toBe(bot);
+            expect(user).toEqual({
+                ...bot,
+                space: 'shared',
+            });
         });
     });
 
@@ -239,7 +318,10 @@ describe('AuxHelper', () => {
             const bot = tree.value[GLOBALS_BOT_ID];
             const globals = helper.globalsBot;
 
-            expect(globals).toBe(bot);
+            expect(globals).toEqual({
+                ...bot,
+                space: 'shared',
+            });
         });
     });
 
@@ -251,8 +333,11 @@ describe('AuxHelper', () => {
             const objs = helper.objects;
 
             expect(objs).toEqual([
-                tree.value['test2'],
-                tree.value['test1'],
+                {
+                    ...tree.value['test2'],
+                    space: 'shared',
+                },
+                { ...tree.value['test1'], space: 'shared' },
                 helper.userBot,
             ]);
         });
@@ -263,7 +348,7 @@ describe('AuxHelper', () => {
             it('should return true when in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        '*': await createLocalCausalTreePartitionFactory(
+                        shared: await createLocalCausalTreePartitionFactory(
                             {},
                             null,
                             null
@@ -288,7 +373,7 @@ describe('AuxHelper', () => {
             it('should return false when not in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        '*': await createLocalCausalTreePartitionFactory(
+                        shared: await createLocalCausalTreePartitionFactory(
                             {},
                             null,
                             null
@@ -312,7 +397,7 @@ describe('AuxHelper', () => {
 
             it('should default to not in aux builder or player', async () => {
                 helper = new AuxHelper({
-                    '*': await createLocalCausalTreePartitionFactory(
+                    shared: await createLocalCausalTreePartitionFactory(
                         {},
                         null,
                         null
@@ -354,7 +439,7 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner() in actions', async () => {
             helper = new AuxHelper(
                 {
-                    '*': await createLocalCausalTreePartitionFactory(
+                    shared: await createLocalCausalTreePartitionFactory(
                         {},
                         null,
                         null
@@ -1012,7 +1097,7 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(
                 {
-                    '*': await createLocalCausalTreePartitionFactory(
+                    shared: await createLocalCausalTreePartitionFactory(
                         {},
                         null,
                         null
@@ -1062,7 +1147,7 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(
                 {
-                    '*': await createLocalCausalTreePartitionFactory(
+                    shared: await createLocalCausalTreePartitionFactory(
                         {},
                         null,
                         null
@@ -1095,7 +1180,7 @@ describe('AuxHelper', () => {
         it('should create a bot for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
-                '*': await createLocalCausalTreePartitionFactory(
+                shared: await createLocalCausalTreePartitionFactory(
                     {},
                     null,
                     null
@@ -1173,7 +1258,7 @@ describe('AuxHelper', () => {
         it('should create a context bot for all the users', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
-                '*': await createLocalCausalTreePartitionFactory(
+                shared: await createLocalCausalTreePartitionFactory(
                     {},
                     null,
                     null
@@ -1202,7 +1287,7 @@ describe('AuxHelper', () => {
         it('should not create a context bot for all the users if one already exists', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
-                '*': await createLocalCausalTreePartitionFactory(
+                shared: await createLocalCausalTreePartitionFactory(
                     {},
                     null,
                     null
@@ -1229,7 +1314,7 @@ describe('AuxHelper', () => {
     describe('exportBots()', () => {
         it('should only export bots with the given IDs', () => {
             helper = new AuxHelper({
-                '*': createMemoryPartition({
+                shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
                         test: createBot('test'),
@@ -1252,8 +1337,8 @@ describe('AuxHelper', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    test: createBot('test'),
-                    abc: createBot('abc'),
+                    test: createBot('test', {}, 'shared'),
+                    abc: createBot('abc', {}, <any>'abc'),
                 },
             });
         });

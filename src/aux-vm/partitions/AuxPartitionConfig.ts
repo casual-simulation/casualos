@@ -1,13 +1,14 @@
 import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import { AuxPartition, ProxyBridgePartition } from './AuxPartition';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
  * Bot IDs are mapped to
  */
 export interface AuxPartitionConfig {
-    '*': PartitionConfig;
+    shared: PartitionConfig;
     [key: string]: PartitionConfig;
 }
 
@@ -21,7 +22,10 @@ export type PartitionConfig =
     | CausalRepoPartitionConfig
     | RemoteCausalRepoPartitionConfig
     | CausalRepoClientPartitionConfig
-    | MemoryPartitionConfig;
+    | MemoryPartitionConfig
+    | ProxyPartitionConfig
+    | ProxyClientPartitionConfig
+    | LocalStoragePartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -47,6 +51,44 @@ export interface MemoryPartitionConfig extends PartitionConfigBase {
      * The initial state for the memory partition.
      */
     initialState: BotsState;
+}
+
+/**
+ * Defines a partition that proxies requests from the engine to the given partition instance.
+ * Basically gives a way to run a partition on the main thread instead of in a background thread.
+ * Useful for storing data using APIs that are only available to the main thread.
+ */
+export interface ProxyPartitionConfig extends PartitionConfigBase {
+    type: 'proxy';
+
+    /**
+     * The partition that should be used.
+     */
+    partition: AuxPartition;
+}
+
+/**
+ * Defines a partition that is able to proxy requests from the engine to the given partition bridge.
+ */
+export interface ProxyClientPartitionConfig extends PartitionConfigBase {
+    type: 'proxy_client';
+
+    /**
+     * The port that should be used for messages.
+     */
+    port: MessagePort;
+}
+
+/**
+ * Defines a partition that stores data in local storage.
+ */
+export interface LocalStoragePartitionConfig extends PartitionConfigBase {
+    type: 'local_storage';
+
+    /**
+     * The namespace that the partition should store bots under.
+     */
+    namespace: string;
 }
 
 /**

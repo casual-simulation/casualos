@@ -61,7 +61,7 @@ describe('AdminModule2', () => {
                 isPlayer: false,
             },
             partitions: {
-                '*': {
+                shared: {
                     type: 'causal_repo',
                 },
             },

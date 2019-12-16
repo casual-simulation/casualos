@@ -84,7 +84,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createGlobalsBot() {
         await super._createGlobalsBot();
 
-        const catchAllPartition = this._config.partitions['*'];
+        const catchAllPartition = this._config.partitions['shared'];
         if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
             return;
         }

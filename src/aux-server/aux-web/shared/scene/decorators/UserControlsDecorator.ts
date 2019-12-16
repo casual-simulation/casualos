@@ -44,6 +44,11 @@ export const MAX_UPDATE_RATE = 2;
 export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 
 /**
+ * Whether to update the _auxLastActiveTime tags.
+ */
+const UPDATE_LAST_ACTIVE_TIME = true;
+
+/**
  * Defines a class that represents the controls for an "user" bot.
  */
 export class UserControlsDecorator extends AuxBot3DDecoratorBase {
@@ -183,6 +188,9 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _checkIsActive() {
+        if (!UPDATE_LAST_ACTIVE_TIME) {
+            return;
+        }
         const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
         if (
             !this._lastActiveCheckTime ||

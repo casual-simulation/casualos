@@ -1,12 +1,13 @@
 import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote } from 'comlink';
+import { wrap, proxy, Remote, expose, transfer } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
     AuxUser,
     StateUpdatedEvent,
     BotDependentInfo,
+    ProxyBridgePartitionImpl,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -116,7 +117,7 @@ export class AuxVMImpl implements AuxVM {
         this._proxy = await new wrapper(
             location.origin,
             this._initialUser,
-            this._config
+            processPartitions(this._config)
         );
 
         let statusMapper = remapProgressPercent(0.2, 1);
@@ -210,4 +211,23 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
+}
+
+function processPartitions(config: AuxConfig): AuxConfig {
+    let transferrables = [] as any[];
+    for (let key in config.partitions) {
+        const partition = config.partitions[key];
+        if (partition.type === 'proxy') {
+            const bridge = new ProxyBridgePartitionImpl(partition.partition);
+            const channel = new MessageChannel();
+            expose(bridge, channel.port1);
+            transferrables.push(channel.port2);
+            config.partitions[key] = {
+                type: 'proxy_client',
+                private: partition.partition.private,
+                port: channel.port2,
+            };
+        }
+    }
+    return transfer(config, transferrables);
 }

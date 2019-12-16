@@ -24,6 +24,9 @@ import {
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
     ScriptBot,
+    BotPositioningMode,
+    BotSpace,
+    BOT_SPACE_TAG,
 } from './Bot';
 
 import {
@@ -486,6 +489,18 @@ export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
+/**
+ * Gets the space that the given bot lives in.
+ * @param bot The bot.
+ */
+export function getBotSpace(bot: Bot): BotSpace {
+    const type = bot.space;
+    if (!hasValue(type)) {
+        return 'shared';
+    }
+    return type;
+}
+
 export function calculateBotValue(
     context: BotCalculationContext,
     object: Object | PrecalculatedBot,
@@ -494,6 +509,8 @@ export function calculateBotValue(
 ) {
     if (tag === 'id') {
         return object.id;
+    } else if (tag === BOT_SPACE_TAG) {
+        return getBotSpace(object);
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
@@ -1018,13 +1035,23 @@ export function createContextId() {
 
 /**
  * Creates a bot with a new ID and the given tags.
- * @param id
- * @param tags
+ * @param id The ID of the bot.
+ * @param tags The tags to use in the bot.
+ * @param space The space of the bot.
  */
-export function createBot(id = uuid(), tags: Object['tags'] = {}) {
-    const bot: Bot = { id: id, tags: tags };
-
-    return bot;
+export function createBot(
+    id = uuid(),
+    tags: Object['tags'] = {},
+    space?: BotSpace
+): Bot {
+    if (hasValue(space)) {
+        return {
+            id,
+            tags,
+            space,
+        };
+    }
+    return { id, tags };
 }
 
 export function createPrecalculatedBot(
@@ -1617,7 +1644,28 @@ export function getBotDragMode(
  * @param bot The bot to check.
  */
 export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
-    return calculateBooleanTagValue(calc, bot, 'auxStackable', true);
+    return getBotPositioningMode(calc, bot) === 'stack';
+}
+
+/**
+ * Gets the positioning mode for the bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotPositioningMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotPositioningMode {
+    const mode = calculateStringTagValue(
+        calc,
+        bot,
+        'auxPositioningMode',
+        'stack'
+    );
+    if (mode === 'stack' || mode === 'absolute') {
+        return mode;
+    }
+    return 'stack';
 }
 
 /**
