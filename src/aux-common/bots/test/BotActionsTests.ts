@@ -6520,13 +6520,13 @@ export function botActionsTests(
                     }),
                 ]);
             });
-            describe('intoSpace()', () => {
-                it('should set the type of the bot', () => {
+            describe('space', () => {
+                it('should set the space of the bot', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, intoSpace("local"))`,
+                                test: `@${name}({ auxCreator: null }, { space: "local" })`,
                             },
                         },
                     };
@@ -6550,12 +6550,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last intoSpace()', () => {
+                it('should use the last space', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, intoSpace("cookie"), intoSpace("local"))`,
+                                test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: "local" })`,
                             },
                         },
                     };
@@ -6579,12 +6579,12 @@ export function botActionsTests(
                     ]);
                 });
 
-                it('should use the last intoSpace() even if it is null', () => {
+                it('should use the last space even if it is null', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, intoSpace("cookie"), intoSpace(null))`,
+                                test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: null })`,
                             },
                         },
                     };
@@ -6610,7 +6610,7 @@ export function botActionsTests(
                 const normalCases = [
                     ['null', null],
                     ['undefined', undefined],
-                    ['(empty string)', ''],
+                    ['(empty string)', '""'],
                 ];
 
                 it.each(normalCases)(
@@ -6620,7 +6620,7 @@ export function botActionsTests(
                             thisBot: {
                                 id: 'thisBot',
                                 tags: {
-                                    test: `@${name}({ auxCreator: null }, intoSpace(${value}))`,
+                                    test: `@${name}({ auxCreator: null }, { space: ${value} })`,
                                 },
                             },
                         };
@@ -6645,74 +6645,76 @@ export function botActionsTests(
                 );
             });
 
-            it('should set the auxCreator to the given bot', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test: `@${name}({ auxCreator: getID(getBot("other", true)) }, { abc: "def" })`,
+            describe('auxCreator', () => {
+                it('should set the auxCreator to the given bot', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: getID(getBot("other", true)) }, { abc: "def" })`,
+                            },
                         },
-                    },
-                    otherBot: {
-                        id: 'otherBot',
-                        tags: {
-                            other: true,
+                        otherBot: {
+                            id: 'otherBot',
+                            tags: {
+                                other: true,
+                            },
                         },
-                    },
-                };
-                // specify the UUID to use next
-                uuidMock.mockReturnValue(id);
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
-                    botAdded({
-                        id: expectedId,
-                        tags: {
-                            abc: 'def',
-                            auxCreator: 'otherBot',
-                        },
-                    }),
-                ]);
-            });
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            tags: {
+                                abc: 'def',
+                                auxCreator: 'otherBot',
+                            },
+                        }),
+                    ]);
+                });
 
-            it('should be able to set the auxCreator to null', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test: `@${name}({ auxCreator: null }, { abc: "def" })`,
+                it('should be able to set the auxCreator to null', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: null }, { abc: "def" })`,
+                            },
                         },
-                    },
-                    otherBot: {
-                        id: 'otherBot',
-                        tags: {
-                            other: true,
+                        otherBot: {
+                            id: 'otherBot',
+                            tags: {
+                                other: true,
+                            },
                         },
-                    },
-                };
-                // specify the UUID to use next
-                uuidMock.mockReturnValue(id);
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
-                    botAdded({
-                        id: expectedId,
-                        tags: {
-                            abc: 'def',
-                            auxCreator: null,
-                        },
-                    }),
-                ]);
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            tags: {
+                                abc: 'def',
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
             });
         });
     }

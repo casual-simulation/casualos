@@ -752,17 +752,6 @@ function create(...mods: Mod[]) {
 }
 
 /**
- * Creates a mod that sets the space of a new bot.
- * Using applyMod() with intoSpace() does nothing.
- * @param space The space.
- */
-function intoSpace(space: BotType): Mod {
-    return {
-        space: space,
-    };
-}
-
-/**
  * Combines the two given bots.
  * @param first The first bot.
  * @param second The second bot.
@@ -2143,7 +2132,6 @@ export default {
     whisper,
     remote,
     webhook,
-    intoSpace,
     getID,
 
     // Mod functions
