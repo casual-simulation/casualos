@@ -2237,7 +2237,6 @@ export default {
     // Mod functions
     applyMod,
     getMod,
-    removeFromContextMod,
     addToMenuMod,
     removeFromMenuMod,
     setPositionMod,

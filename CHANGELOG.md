@@ -18,6 +18,7 @@
     -   Removed the `cookie` bot. It has been replaced with the `local` space.
     -   Removed the following functions:
         -   `addToContextMod()`
+        -   `removeFromContextMod()`
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.

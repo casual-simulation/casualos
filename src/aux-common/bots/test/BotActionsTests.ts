@@ -3508,43 +3508,6 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromContextMod()', () => {
-            it('should remove the bot from the given context', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            abc: true,
-                            test:
-                                '@applyMod(this, removeFromContextMod("abc"))',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            abc: null,
-                            abcX: null,
-                            abcY: null,
-                            abcSortOrder: null,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('setPositionMod()', () => {
             it('should return a mod that sets the bot position in a context when applied', () => {
                 const state: BotsState = {
