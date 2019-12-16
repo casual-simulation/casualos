@@ -16,6 +16,8 @@
         -   It has been replaced with the `intoSpace()` mod function.
         -   e.g. Instead of `createTemp()` you should use `create(intoSpace("tempLocal"))`.
     -   Removed the `cookie` bot. It has been replaced with the `local` space.
+    -   Removed the following functions:
+        -   `addToContextMod()`
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.
