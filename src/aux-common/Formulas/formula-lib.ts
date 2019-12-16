@@ -52,9 +52,6 @@ import every from 'lodash/every';
 import {
     calculateFormulaValue,
     COMBINE_ACTION_NAME,
-    addToContextDiff as calcAddToContextDiff,
-    removeFromContextDiff as calcRemoveFromContextDiff,
-    setPositionDiff as calcSetPositionDiff,
     isBot,
     // isFormulaObject,
     // unwrapProxy,
@@ -1809,71 +1806,6 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
             diffs: subtractedDiffs,
         });
     }
-}
-
-/**
- * Gets a diff that adds a bot to the given context.
- * @param context The context.
- * @param x The X position that the bot should be added at.
- * @param y The Y position that the bot should be added at.
- * @param index The index that the bot should be added at.
- */
-function addToContextMod(
-    context: string,
-    x: number = 0,
-    y: number = 0,
-    index?: number
-) {
-    const calc = getCalculationContext();
-    return calcAddToContextDiff(calc, context, x, y, index);
-}
-
-/**
- * Gets a diff that removes a bot from the given context.
- * @param context The context.
- */
-function removeFromContextMod(context: string) {
-    const calc = getCalculationContext();
-    return calcRemoveFromContextDiff(calc, context);
-}
-
-/**
- * Gets a diff that sets the position of a bot in the given context when applied.
- * @param context The context.
- * @param x The X position.
- * @param y The Y position.
- * @param index The index.
- */
-function setPositionMod(
-    context: string,
-    x?: number,
-    y?: number,
-    index?: number
-) {
-    const calc = getCalculationContext();
-    return calcSetPositionDiff(calc, context, x, y, index);
-}
-
-/**
- * Gets a diff that adds a bot to the current user's menu.
- */
-function addToMenuMod(): BotTags {
-    const context = getMenuContext();
-    return {
-        ...addToContextMod(context),
-        [`${context}Id`]: uuid(),
-    };
-}
-
-/**
- * Gets a diff that removes a bot from the current user's menu.
- */
-function removeFromMenuMod(): BotTags {
-    const context = getMenuContext();
-    return {
-        ...removeFromContextMod(context),
-        [`${context}Id`]: null,
-    };
 }
 
 /**
