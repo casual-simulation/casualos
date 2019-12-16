@@ -2237,7 +2237,6 @@ export default {
     // Mod functions
     applyMod,
     getMod,
-    setPositionMod,
     subtractMods,
 
     // Get bot functions
