@@ -20,6 +20,7 @@
         -   `addToContextMod()`
         -   `removeFromContextMod()`
         -   `addToMenuMod()`
+        -   `removeFromMenuMod()`
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.

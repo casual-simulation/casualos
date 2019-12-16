@@ -3198,61 +3198,6 @@ export function botActionsTests(
             });
         });
 
-        describe('removeFromMenuMod()', () => {
-            it('should remove the given bot from the users menu', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            addItem:
-                                '@applyMod(getBots("name", "bob").first(), removeFromMenuMod())',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            _auxUserMenuContext: 'context',
-                        },
-                    },
-                    menuBot: {
-                        id: 'menuBot',
-                        tags: {
-                            name: 'bob',
-                            context: 0,
-                            contextId: 'abcdef',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'addItem',
-                    ['thisBot', 'userBot', 'menuBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('menuBot', {
-                        tags: {
-                            contextId: null,
-                            contextSortOrder: null,
-                            context: null,
-                            contextX: null,
-                            contextY: null,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('applyMod()', () => {
             it('should update the given bot with the given diff', () => {
                 const state: BotsState = {
