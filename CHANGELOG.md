@@ -41,6 +41,7 @@
             -   It is simply an alternative way to do `getBots(byTag("space", value))`.
     -   Added the following functions:
         -   `getID(bot)` gets the ID of a bot. If given a string, then that will be returned instead.
+        -   `getJSON(data)` gets a JSON string for the given data.
 
 ## V0.11.13
 

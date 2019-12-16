@@ -723,6 +723,14 @@ function getID(bot: Bot | string): string {
     return null;
 }
 
+/**
+ * Gets JSON for the given data.
+ * @param data The data.
+ */
+function getJSON(data: any): string {
+    return JSON.stringify(data);
+}
+
 function createBase(idFactory: () => string, ...datas: Mod[]) {
     let parent = getCurrentBot();
     let parentDiff = parent ? { auxCreator: getID(parent) } : {};
@@ -2133,6 +2141,7 @@ export default {
     remote,
     webhook,
     getID,
+    getJSON,
 
     // Mod functions
     applyMod,

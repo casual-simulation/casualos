@@ -309,6 +309,19 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         changes: changedRawTags,
     };
 
+    Object.defineProperty(script, 'toJSON', {
+        value: () => ({
+            id: bot.id,
+            tags: tagsProxy,
+        }),
+        writable: false,
+        enumerable: false,
+
+        // This is so the function can be wrapped with another proxy
+        // if needed. (Like for VM2Sandbox)
+        configurable: true,
+    });
+
     if (BOT_SPACE_TAG in bot) {
         script.space = bot.space;
     }

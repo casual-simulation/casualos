@@ -2401,6 +2401,52 @@ export function botCalculationContextTests(
                     expect(value).toEqual(null);
                 });
             });
+
+            describe('getJSON()', () => {
+                it('should convert objects to JSON', () => {
+                    const bot = createBot('test', {
+                        formula: `=getJSON({ abc: "def" })`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual(
+                        JSON.stringify({
+                            abc: 'def',
+                        })
+                    );
+                });
+
+                it('should convert bots to JSON', () => {
+                    const bot = createBot('test', {
+                        formula: `=getJSON(this)`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual(
+                        JSON.stringify({
+                            id: 'test',
+                            tags: {
+                                formula: `=getJSON(this)`,
+                            },
+                        })
+                    );
+                });
+
+                it('should should be the same as JSON.stringify()', () => {
+                    const bot = createBot('test', {
+                        formula: `=getJSON(this) === JSON.stringify(this)`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(true);
+                });
+            });
         });
     });
 
