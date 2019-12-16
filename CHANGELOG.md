@@ -42,6 +42,8 @@
     -   Added the following functions:
         -   `getID(bot)` gets the ID of a bot. If given a string, then that will be returned instead.
         -   `getJSON(data)` gets a JSON string for the given data.
+-   Bug Fixes
+    -   Resolved issue of orientation inverting then attepting to resize the inventory once the viewport has beeen panned.
 
 ## V0.11.13
 
