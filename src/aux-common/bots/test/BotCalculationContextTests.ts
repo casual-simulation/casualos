@@ -2052,6 +2052,68 @@ export function botCalculationContextTests(
                 });
             });
 
+            describe('byCreator()', () => {
+                it('should return a function that returns true if the bot is created by the given bot', () => {
+                    const bot = createBot('test', {
+                        formula: '=byCreator(this)(getBot("id", "test2"))',
+                    });
+
+                    const bot2 = createBot('test2', {
+                        auxCreator: 'test',
+                    });
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(true);
+                });
+
+                it('should return a function that returns true if the bot is created by the given bot ID', () => {
+                    const bot = createBot('test', {
+                        formula: '=byCreator("test")(getBot("id", "test2"))',
+                    });
+
+                    const bot2 = createBot('test2', {
+                        auxCreator: 'test',
+                    });
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(true);
+                });
+
+                it('should return a function that returns false if the bot not is created by the given bot ID', () => {
+                    const bot = createBot('test', {
+                        formula: '=byCreator("test")(getBot("id", "test2"))',
+                    });
+
+                    const bot2 = createBot('test2', {
+                        auxCreator: 'other',
+                    });
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(false);
+                });
+
+                it('should return a function that returns false if the bot not is created by the given bot', () => {
+                    const bot = createBot('test', {
+                        formula: '=byCreator(this)(getBot("id", "test2"))',
+                    });
+
+                    const bot2 = createBot('test2', {
+                        auxCreator: 'other',
+                    });
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toBe(false);
+                });
+            });
+
             describe('neighboring()', () => {
                 const directionCases = [
                     ['front', 0, -1],

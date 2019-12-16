@@ -1431,10 +1431,10 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  *
  * @example
  * // Find all the bots created by the yellow bot.
- * let bots = getBots(createdBy(getBot('auxColor','yellow')));
+ * let bots = getBots(byCreator(getBot('auxColor','yellow')));
  */
-function createdBy(bot: Bot) {
-    return byTag('auxCreator', bot.id);
+function byCreator(bot: Bot | string) {
+    return byTag('auxCreator', getID(bot));
 }
 
 /**
@@ -2125,7 +2125,7 @@ export default {
     // Global functions
     combine,
     create,
-    createdBy,
+    byCreator,
     destroy,
     shout,
     superShout,

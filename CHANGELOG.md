@@ -25,6 +25,7 @@
         -   `from()`
             -   You can use a mod declaration with the new `getID()` function to achieve the same functionality:
             -   `{ auxCreator: getID(bot) }`
+    -   Renamed the `createdBy()` filter function to `byCreator()`.
 
 -   Improvements
     -   Added the `space` tag which indicates where a bot will be stored.
