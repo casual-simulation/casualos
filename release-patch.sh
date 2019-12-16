@@ -25,3 +25,13 @@ lerna version patch --yes --no-push
 
 # 6. Push to origin with tags
 git push origin --follow-tags
+
+# 7. Get latest CHANGELOG
+CHANGELOG=$(./script/most_recent_changelog.sh)
+
+GIT_REPO_OWNER="casual-simulation"
+GIT_REPO_NAME="aux"
+GITHUB_TOKEN="${AUX_RELEASE_TOKEN}"
+
+# 8. Create release on github
+node ./script/make-github-release.js release -o "${GIT_REPO_OWNER}" -r "${GIT_REPO_NAME}" -t "${CHANGELOG}" -a "${GITHUB_TOKEN}"
