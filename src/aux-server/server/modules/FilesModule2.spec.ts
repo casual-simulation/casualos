@@ -49,7 +49,7 @@ describe('FilesModule2', () => {
                 isPlayer: false,
             },
             partitions: {
-                '*': {
+                shared: {
                     type: 'memory',
                     initialState: {},
                 },

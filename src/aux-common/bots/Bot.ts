@@ -37,10 +37,24 @@ export interface Bot {
     id: string;
 
     /**
+     * The space the bot lives in.
+     */
+    space?: BotSpace;
+
+    /**
      * The set of tags that the bot contains.
      */
     tags: BotTags;
 }
+
+/**
+ * The possible bot types.
+ *
+ * - "shared" means that the bot is a normal bot.
+ * - "local" means that the bot is stored in the local storage partition.
+ * - "tempLocal" means that the bot is stored in the temporary partition.
+ */
+export type BotSpace = 'shared' | 'local' | 'tempLocal';
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -52,6 +66,7 @@ export interface Bot {
  */
 export interface ScriptBot {
     id: string;
+    space?: BotSpace;
 
     tags: ScriptTags;
     raw: BotTags;
@@ -74,7 +89,7 @@ export interface BotTags {
     ['auxColor']?: unknown;
     ['auxDraggable']?: unknown;
     ['auxDraggableMode']?: BotDragMode;
-    ['auxStackable']?: unknown;
+    ['auxPositioningMode']?: unknown;
     ['auxDestroyable']?: unknown;
     ['auxEditable']?: unknown;
     ['auxStrokeColor']?: unknown;
@@ -264,6 +279,14 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
 /**
+ * Defines the possible positioning modes that a bot can have.
+ *
+ * "stack" means the bot is able to stack with other bots.
+ * "absolute" means the bot will ignore other bots.
+ */
+export type BotPositioningMode = 'stack' | 'absolute';
+
+/**
  * Defines the possible anchor positions for a label.
  */
 export type BotLabelAnchor =
@@ -391,14 +414,25 @@ export const LOCAL_BOT_ID = 'local';
 export const COOKIE_BOT_ID = 'cookie';
 
 /**
+ * THe partition ID for cookie bots.
+ */
+export const COOKIE_BOT_PARTITION_ID = 'local';
+
+/**
  * The partition ID for temporary bots.
  */
-export const TEMPORARY_BOT_PARTITION_ID = 'T-*';
+export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
  * The context ID that all users should be placed in.
  */
 export const USERS_CONTEXT = 'aux-users';
+
+/**
+ * The name of the tag used to represent the space that the bot is
+ * stored in.
+ */
+export const BOT_SPACE_TAG = 'space';
 
 /**
  * The current bot format version for AUX Bots.
@@ -459,7 +493,7 @@ export const KNOWN_TAGS: string[] = [
     'auxCreator',
     'auxDraggable',
     'auxDraggableMode',
-    'auxStackable',
+    'auxPositioningMode',
     'auxDestroyable',
     'auxEditable',
     'auxStrokeColor',

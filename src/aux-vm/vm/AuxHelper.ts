@@ -41,6 +41,9 @@ import {
     resolveRejectedActions,
     reject,
     USERS_CONTEXT,
+    BotSpace,
+    getBotSpace,
+    breakIntoIndividualEvents,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -64,6 +67,7 @@ import {
     CausalTreePartition,
 } from '../partitions/AuxPartition';
 import { StoredAux } from '../StoredAux';
+import transform from 'lodash/transform';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -140,7 +144,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         // We need to rebuild the entire state
         // if a single partition changes.
         // We have to do this since bots could be deleted
-        let state: AuxState = null;
+        let state: BotsState = null;
 
         let keys = Object.keys(this._partitions);
         let sorted = sortBy(keys, k => k !== '*');
@@ -152,19 +156,25 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             const bots = <AuxState>getPartitionState(partition);
             this._partitionStates.set(key, bots);
 
+            const finalBots = transform<Bot, Bot>(bots, (result, value, id) => {
+                result[id] = {
+                    ...value,
+                    space: <any>key,
+                };
+            });
             if (!state) {
-                state = { ...bots };
+                state = { ...finalBots };
             } else {
                 for (let id in bots) {
                     if (!state[id]) {
-                        state[id] = bots[id];
+                        state[id] = finalBots[id];
                     }
                 }
             }
         }
 
-        this._stateCache.set(cacheName, state);
-        return state;
+        this._stateCache.set(cacheName, <AuxState>state);
+        return <AuxState>state;
     }
 
     private _getCachedState(
@@ -225,12 +235,16 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param id (Optional) The ID that the bot should have.
      * @param tags (Optional) The tags that the bot should have.
      */
-    async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
+    async createBot(
+        id?: string,
+        tags?: Bot['tags'],
+        type?: BotSpace
+    ): Promise<string> {
         if (AuxHelper._debug) {
             console.log('[AuxHelper] Create Bot');
         }
 
-        const bot = createBot(id, tags);
+        const bot = createBot(id, tags, type);
         await this._sendEvents([botAdded(bot)]);
         // await this._tree.addBot(bot);
 
@@ -388,6 +402,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 resultEvents.push(event);
             } else if (event.type === 'paste_state') {
                 resultEvents.push(...this._pasteState(event));
+            } else if (event.type === 'apply_state') {
+                const events = breakIntoIndividualEvents(this.botsState, event);
+                resultEvents.push(...events);
             } else {
                 resultEvents.push(event);
             }
@@ -505,7 +522,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         } else if (event.type === 'update_bot') {
             return this._partitionForBotEvent(event);
         } else if (event.type === 'apply_state') {
-            return this._partitionForBotEvent(event);
+            return undefined;
         } else if (event.type === 'transaction') {
             return undefined;
         } else {
@@ -514,38 +531,32 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotEvent(event: BotActions): AuxPartition {
-        return this._partitionForBotId(this._botId(event));
+        return this._partitionForBotType(this._botSpace(event));
     }
 
-    private _partitionForBotId(id: string): AuxPartition {
-        const idPartition = this._partitions[id];
+    private _partitionForBotType(type: string): AuxPartition {
+        const partitionId = type;
+        const idPartition = this._partitions[partitionId];
         if (idPartition) {
             return idPartition;
         }
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            const index = key.indexOf('*');
-            // Only include partitions which
-            // have at least one character before a *
-            if (index > 0) {
-                let prefix = key.substring(0, index);
-                if (id.startsWith(prefix)) {
-                    return partition;
-                }
-            }
-        }
-        return this._partitions['*'];
+        return null;
     }
 
-    private _botId(event: BotActions): string {
+    private _botSpace(event: BotActions): string {
+        let bot: Bot;
         if (event.type === 'add_bot') {
-            return event.bot.id;
+            bot = event.bot;
         } else if (event.type === 'remove_bot') {
-            return event.id;
+            bot = this.botsState[event.id];
         } else if (event.type === 'update_bot') {
-            return event.id;
-        } else {
-            return '*';
+            bot = this.botsState[event.id];
         }
+
+        if (!bot) {
+            return 'shared';
+        }
+        return getBotSpace(bot);
     }
 
     private _sendOtherEvents(events: BotAction[]) {

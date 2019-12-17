@@ -1,11 +1,56 @@
 # AUX Changelog
 
-## V0.11.14
+## V0.11.15
 
 ### Date: TBD
 
 ### Changes:
 
+-   Bug Fixes
+    -   Fixed an issue where `player.replaceDragBot()` actions were not getting processed because some data was improperly formatted.
+
+## V0.11.14
+
+### Date: 12/16/2019
+
+### Changes:
+
+-   **Breaking Changes**
+
+    -   Removed `auxStackable` and replaced it with `auxPositioningMode`.
+        -   `auxPositioningMode` has two possible values:
+            -   `stack` - Indicates that the bot will stack on top of other bots (default)
+            -   `absolute` - Indicates that the bot will ignore other bots when positioning.
+    -   Removed the `createTemp()` function.
+        -   It has been replaced with the `{ space: "value" }` mod.
+        -   e.g. Instead of `createTemp()` you should use `create({ space: "tempLocal" })`.
+    -   Removed the `cookie` bot. It has been replaced with the `local` space.
+    -   Removed the following functions:
+        -   `addToContextMod()`
+        -   `removeFromContextMod()`
+        -   `addToMenuMod()`
+        -   `removeFromMenuMod()`
+        -   `setPositionMod()`
+        -   `from()`
+            -   You can use a mod declaration with the new `getID()` function to achieve the same functionality:
+            -   `{ auxCreator: getID(bot) }`
+    -   Renamed the `createdBy()` filter function to `byCreator()`.
+
+-   Improvements
+    -   Added the `space` tag which indicates where a bot will be stored.
+        -   The following spaces are currently available:
+            -   `shared` - This space is shared among multiple users and is persistent. This is the default space for bots if not specified.
+            -   `tempLocal` - This space is not shared and is cleared every time the browser refreshes.
+            -   `local` - This space is kept on your device and is persistent.
+        -   When creating a bot, you can set the space that it will be stored in using a `{ space: "value" }` mod.
+            -   e.g. `create({ space: "local" })` will create a new bot in the `local` space.
+            -   Creating a bot from another bot will inherit spaces. So cloning a `tempLocal` bot will produce another `tempLocal` bot. You can of course override this using a mod.
+        -   You can search for bots in a specific space using the `bySpace()` filter function.
+            -   e.g. `getBots(bySpace("local"))` will get all the bots in the `local` space.
+            -   It is simply an alternative way to do `getBots(byTag("space", value))`.
+    -   Added the following functions:
+        -   `getID(bot)` gets the ID of a bot. If given a string, then that will be returned instead.
+        -   `getJSON(data)` gets a JSON string for the given data.
 -   Bug Fixes
     -   Resolved issue of orientation inverting then attepting to resize the inventory once the viewport has beeen panned.
 

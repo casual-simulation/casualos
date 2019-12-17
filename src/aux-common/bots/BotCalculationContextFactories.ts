@@ -6,6 +6,7 @@ import {
     ScriptBot,
     PrecalculatedTags,
     ScriptTags,
+    BOT_SPACE_TAG,
 } from './Bot';
 import {
     BotCalculationContext,
@@ -180,7 +181,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         }
         return {
             id: bot.id,
-            tags: bot.raw,
+            tags: bot.tags.toJSON(),
         };
     }
 
@@ -248,6 +249,7 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
 
     const constantTags = {
         id: bot.id,
+        space: bot.space,
     };
     let changedRawTags: BotTags = {};
     let rawTags: ScriptTags = <ScriptTags>{
@@ -300,12 +302,29 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
         configurable: true,
     });
 
-    const script: ScriptBot = {
+    let script: ScriptBot = {
         id: bot.id,
         tags: tagsProxy,
         raw: rawProxy,
         changes: changedRawTags,
     };
+
+    Object.defineProperty(script, 'toJSON', {
+        value: () => ({
+            id: bot.id,
+            tags: tagsProxy,
+        }),
+        writable: false,
+        enumerable: false,
+
+        // This is so the function can be wrapped with another proxy
+        // if needed. (Like for VM2Sandbox)
+        configurable: true,
+    });
+
+    if (BOT_SPACE_TAG in bot) {
+        script.space = bot.space;
+    }
 
     return script;
 }
