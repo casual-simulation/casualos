@@ -8,6 +8,7 @@
 
 -   **Breaking Changes**
     -   Renamed `onBotDrag` and `onBotDrop` to `onDrag` and `onDrop` respectively.
+    -   Removed `onCombine`, `onCombineEnter`, and `onCombineExit`.
 -   Improvements
     -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
         -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
