@@ -1,3 +1,8 @@
+import {
+    DROP_EXIT_ACTION_NAME,
+    DROP_ENTER_ACTION_NAME,
+} from './BotCalculations';
+
 export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
@@ -591,6 +596,8 @@ export const KNOWN_TAGS: string[] = [
     'onCloseInput',
     'onCreate',
     'onDestroy',
+    DROP_ENTER_ACTION_NAME,
+    DROP_EXIT_ACTION_NAME,
     'onDrop',
     'onAnyBotDrop',
     'onDrag',

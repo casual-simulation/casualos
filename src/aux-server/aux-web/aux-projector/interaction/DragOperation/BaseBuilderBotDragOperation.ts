@@ -141,7 +141,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         // calculate index for bot
         const result = this._calcWorkspaceDragPosition(calc, gridPosition);
 
-        this._combine = result.combine && this._allowCombine();
         this._merge = result.merge;
         this._other = result.other;
 

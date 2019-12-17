@@ -91,6 +91,16 @@ export const CREATE_ACTION_NAME: string = 'onCreate';
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
+ * The name of the event that represents a bot entering over another bot.
+ */
+export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
+
+/**
+ * The name of the event that represents a bot exiting from over another bot.
+ */
+export const DROP_EXIT_ACTION_NAME: string = 'onDropExit';
+
+/**
  * The name of the event that represents a bot being dropped onto a context.
  */
 export const DROP_ACTION_NAME: string = 'onDrop';
