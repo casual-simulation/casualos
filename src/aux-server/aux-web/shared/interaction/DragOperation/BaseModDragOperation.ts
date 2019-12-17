@@ -209,8 +209,6 @@ export abstract class BaseModDragOperation implements IOperation {
                 botUpdated(this._other.id, update),
                 ...result
             );
-        } else if (this.contextGroup) {
-            this.simulation.helper.transaction(botAdded(this._bot));
         }
     }
 
