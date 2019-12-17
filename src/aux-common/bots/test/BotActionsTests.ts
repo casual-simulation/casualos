@@ -33,6 +33,7 @@ import {
     replaceDragBot,
     setupChannel,
     hideHtml,
+    ReplaceDragBotAction,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -47,10 +48,11 @@ import {
     calculateFormulaEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotsState, DEVICE_BOT_ID } from '../Bot';
+import { BotsState, DEVICE_BOT_ID, Bot } from '../Bot';
 import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
+import { types } from 'util';
 
 export function botActionsTests(
     uuidMock: jest.Mock,
@@ -3195,6 +3197,34 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     replaceDragBot(state['thisBot']),
                 ]);
+            });
+
+            it('should return a copiable bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            test: '@player.replaceDragBot(this)',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                const dragAction = result.events[0] as ReplaceDragBotAction;
+                const bot = dragAction.bot as any;
+                for (let key in bot) {
+                    expect(types.isProxy(bot[key])).toBe(false);
+                }
             });
         });
 

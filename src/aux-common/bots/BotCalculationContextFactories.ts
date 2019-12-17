@@ -181,7 +181,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         }
         return {
             id: bot.id,
-            tags: bot.raw,
+            tags: bot.tags.toJSON(),
         };
     }
 
