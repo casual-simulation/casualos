@@ -98,7 +98,7 @@ export const DROP_ACTION_NAME: string = 'onDrop';
 /**
  * The name of the event that represents any bot being dropped onto a context.
  */
-export const DROP_ANY_ACTION_NAME: string = 'onAnyDrop';
+export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 
 /**
  * The name of the event that represents a bot starting to be dragged.
@@ -108,7 +108,7 @@ export const DRAG_ACTION_NAME: string = 'onDrag';
 /**
  * The name of the event that represents any bot starting to be dragged.
  */
-export const DRAG_ANY_ACTION_NAME: string = 'onAnyDrag';
+export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
 /**
  * The name of the event that is triggered when a QR Code is scanned.
