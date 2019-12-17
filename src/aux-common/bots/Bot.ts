@@ -584,6 +584,8 @@ export const KNOWN_TAGS: string[] = [
     'onCombine',
     'onCombineEnter',
     'onCombineExit',
+    'onModDropEnter',
+    'onModDropExit',
     'onMod',
     'onSaveInput',
     'onCloseInput',

@@ -147,8 +147,6 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             this._other = result.other;
             this._merge = result.merge;
 
-            let sim = this._simulation3D.simulation;
-
             this._sendDropEnterExitEvents(this._merge ? this._other : null);
 
             if (result.stackable || result.index === 0) {
