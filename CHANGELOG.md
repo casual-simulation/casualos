@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.15
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where `player.replaceDragBot()` actions were not getting processed because some data was improperly formatted.
+
 ## V0.11.14
 
 ### Date: 12/16/2019
