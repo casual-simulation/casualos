@@ -178,19 +178,7 @@ export abstract class BaseModDragOperation implements IOperation {
         const mod = this._mod;
         // Combine bots.
         if (this._merge && this._other) {
-            const update = {
-                tags: mod,
-            };
-
-            let actions = [
-                {
-                    eventName: MOD_DROP_ACTION_NAME,
-                    bots: [this._other],
-                    arg: {
-                        diffs: this._mod,
-                    },
-                },
-            ] as { eventName: string; bots: Bot[]; arg?: any }[];
+            let actions = [] as { eventName: string; bots: Bot[]; arg?: any }[];
 
             if (this._dropBot) {
                 actions.unshift({
@@ -203,12 +191,25 @@ export abstract class BaseModDragOperation implements IOperation {
                 });
             }
 
+            let events = [] as BotAction[];
+            if (MOD_DROP_ACTION_NAME in this._other.tags) {
+                actions.unshift({
+                    eventName: MOD_DROP_ACTION_NAME,
+                    bots: [this._other],
+                    arg: {
+                        mod: this._mod,
+                    },
+                });
+            } else {
+                const update = {
+                    tags: mod,
+                };
+                events.push(botUpdated(this._other.id, update));
+            }
+
             const result = this.simulation.helper.actions(actions);
 
-            this.simulation.helper.transaction(
-                botUpdated(this._other.id, update),
-                ...result
-            );
+            this.simulation.helper.transaction(...events, ...result);
         }
     }
 
