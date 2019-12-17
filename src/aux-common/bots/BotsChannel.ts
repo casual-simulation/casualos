@@ -1,4 +1,9 @@
-import { BotsState, Bot } from './Bot';
+import {
+    BotsState,
+    Bot,
+    ON_ANY_SHOUT_ACTION_NAME,
+    ON_SHOUT_ACTION_NAME,
+} from './Bot';
 import { ShoutAction, BotAction, action } from './BotEvents';
 import { BotSandboxContext } from './BotCalculationContext';
 import {
@@ -7,8 +12,6 @@ import {
     isBotListening,
     DEFAULT_ENERGY,
     hasValue,
-    ON_ANY_SHOUT_ACTION_NAME,
-    ON_SHOUT_ACTION_NAME,
     getCreatorVariable,
     getScriptBot,
     isBot,
