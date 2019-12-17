@@ -2747,13 +2747,13 @@ export function botCalculationContextTests(
             expect(update1).toBe(true);
         });
 
-        it('should return false if the bot is not stackable', () => {
+        it('should return true if the bot is not stackable', () => {
             const bot1 = createBot(undefined, {
                 auxPositioningMode: 'absolute',
             });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
-            expect(update1).toBe(false);
+            expect(update1).toBe(true);
         });
     });
 

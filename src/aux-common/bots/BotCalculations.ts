@@ -2007,7 +2007,7 @@ export function isBotTags(value: any): value is BotTags {
  * @param bot The bot to check.
  */
 export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
-    return isBotStackable(calc, bot);
+    return true;
 }
 
 /**

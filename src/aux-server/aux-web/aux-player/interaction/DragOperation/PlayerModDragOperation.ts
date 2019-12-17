@@ -149,7 +149,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
             this._sendDropEnterExitEvents(this._merge ? this._other : null);
 
-            if (result.stackable || result.index === 0) {
+            if (result.merge || result.index === 0) {
                 this._updateModPosition(
                     calc,
                     gridTile.tileCoordinate,

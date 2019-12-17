@@ -10,6 +10,7 @@
     -   Renamed `onBotDrag` and `onBotDrop` to `onDrag` and `onDrop` respectively.
     -   Removed `onCombine`, `onCombineEnter`, and `onCombineExit`.
     -   Dropping a mod in an empty space will no longer create a new bot.
+    -   Setting `auxPositioningMode` to `absolute` will no longer prevent mods.
 -   Improvements
     -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
         -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
