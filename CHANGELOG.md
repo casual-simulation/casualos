@@ -8,6 +8,7 @@
 
 -   Bug Fixes
     -   Fixed an issue where `player.replaceDragBot()` actions were not getting processed because some data was improperly formatted.
+    -   Resolved issue with inventory not remaining in place on resizing.
 
 ## V0.11.14
 
