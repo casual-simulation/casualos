@@ -116,6 +116,16 @@ export const DRAG_ACTION_NAME: string = 'onDrag';
 export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
 /**
+ * The name of the event that represents a mod entering over a bot.
+ */
+export const MOD_DROP_ENTER_ACTION_NAME: string = 'onModDropEnter';
+
+/**
+ * The name of the event that represents a mod exiting from over a bot.
+ */
+export const MOD_DROP_EXIT_ACTION_NAME: string = 'onModDropExit';
+
+/**
  * The name of the event that is triggered when a QR Code is scanned.
  */
 export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';

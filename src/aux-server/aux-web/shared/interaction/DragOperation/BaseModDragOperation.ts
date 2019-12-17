@@ -22,6 +22,8 @@ import {
     BotTags,
     botAdded,
     merge,
+    MOD_DROP_EXIT_ACTION_NAME,
+    MOD_DROP_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -192,7 +194,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
             if (this._dropBot) {
                 actions.unshift({
-                    eventName: 'onModDropExit',
+                    eventName: MOD_DROP_EXIT_ACTION_NAME,
                     bots: [this._dropBot],
                     arg: {
                         mod: this._mod,
@@ -317,14 +319,14 @@ export abstract class BaseModDragOperation implements IOperation {
         if (this._dropBot && changed) {
             const otherBot = this._dropBot;
             this._dropBot = null;
-            sim.helper.action('onModDropExit', [otherBot], {
+            sim.helper.action(MOD_DROP_EXIT_ACTION_NAME, [otherBot], {
                 mod: this._mod,
                 context: this._context,
             });
         }
         if (other && changed) {
             this._dropBot = other;
-            sim.helper.action('onModDropEnter', [this._dropBot], {
+            sim.helper.action(MOD_DROP_ENTER_ACTION_NAME, [this._dropBot], {
                 mod: this._mod,
                 context: this._context,
             });

@@ -1,6 +1,8 @@
 import {
     DROP_EXIT_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
+    MOD_DROP_EXIT_ACTION_NAME,
+    MOD_DROP_ENTER_ACTION_NAME,
 } from './BotCalculations';
 
 export type PartialBot = Partial<Bot>;
@@ -587,8 +589,8 @@ export const KNOWN_TAGS: string[] = [
     'onClick',
     'onAnyBotClicked',
     'onCombine',
-    'onModDropEnter',
-    'onModDropExit',
+    MOD_DROP_ENTER_ACTION_NAME,
+    MOD_DROP_EXIT_ACTION_NAME,
     'onMod',
     'onSaveInput',
     'onCloseInput',
