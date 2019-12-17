@@ -324,8 +324,6 @@ export class CameraControls {
     public setPan(deltaY: number) {
         if (this._camera instanceof PerspectiveCamera) return;
 
-        this.target.copy(this.target0);
-
         const distance: number =
             (deltaY * (this._camera.top - this._camera.bottom)) /
             this._camera.zoom /

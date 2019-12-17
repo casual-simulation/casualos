@@ -3559,6 +3559,21 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('interface.unwrapBot()', () => {
+        it('should return an object that does not include proxies', () => {
+            const test = createBot('test', {
+                auxColor: 'red',
+            });
+
+            const calc = createCalculationContext([test]);
+            const bot = calc.sandbox.interface.getBot('test');
+            const unwrapped = calc.sandbox.interface.unwrapBot(bot) as any;
+            for (let key in unwrapped) {
+                expect(types.isProxy(unwrapped[key])).toBe(false);
+            }
+        });
+    });
+
     describe('botContextSortOrder()', () => {
         it('should return the contextSortOrder tag', () => {
             const bot = createBot('bot', {
