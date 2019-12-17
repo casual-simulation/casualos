@@ -26,6 +26,10 @@ import {
     calculateActionEventsUsingContext,
     DROP_EXIT_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
+    BotDropDestination,
+    onDropArg,
+    onDropExitArg,
+    onDropEnterArg,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -347,6 +351,16 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         let events: BotAction[] = [];
+        const to: BotDropDestination = {
+            x: toX,
+            y: toY,
+            context: this._context,
+        };
+        const from: BotDropDestination = {
+            x: fromX,
+            y: fromY,
+            context: this._originalContext,
+        };
 
         if (this._dropBot) {
             events.push(
@@ -354,61 +368,57 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: [this._dropBot],
-                        arg: {
-                            bot: botTemp,
-                            context: this._context,
-                        },
+                        arg: onDropExitArg(
+                            botTemp,
+                            this._dropBot,
+                            this._context
+                        ),
                     },
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: this._bots,
-                        arg: {
-                            bot: this._dropBot,
-                            context: this._context,
-                        },
+                        arg: onDropExitArg(
+                            botTemp,
+                            this._dropBot,
+                            this._context
+                        ),
                     },
                 ])
             );
         }
 
         // Trigger drag into context
-        let result = this.simulation.helper.actions([
-            {
-                eventName: DROP_ACTION_NAME,
-                bots: this._bots,
-                arg: {
-                    to: {
-                        x: toX,
-                        y: toY,
-                        context: this._context,
-                    },
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        context: this._originalContext,
-                    },
+        events.push(
+            ...this.simulation.helper.actions([
+                {
+                    eventName: DROP_ACTION_NAME,
+                    bots: this._bots,
+                    arg: onDropArg(botTemp, to, from),
                 },
-            },
-            {
-                eventName: DROP_ANY_ACTION_NAME,
-                bots: null,
-                arg: {
-                    bot: botTemp,
-                    to: {
-                        x: toX,
-                        y: toY,
-                        context: this._context,
-                    },
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        context: this._originalContext,
-                    },
-                },
-            },
-        ]);
+            ])
+        );
 
-        events.push(...result);
+        if (this._dropBot) {
+            events.push(
+                ...this.simulation.helper.actions([
+                    {
+                        eventName: DROP_ACTION_NAME,
+                        bots: [this._dropBot],
+                        arg: onDropArg(botTemp, to, from),
+                    },
+                ])
+            );
+        }
+
+        events.push(
+            ...this.simulation.helper.actions([
+                {
+                    eventName: DROP_ANY_ACTION_NAME,
+                    bots: null,
+                    arg: onDropArg(botTemp, to, from),
+                },
+            ])
+        );
 
         this.simulation.helper.transaction(...events);
     }
@@ -427,18 +437,12 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: [otherBot],
-                        arg: {
-                            bot: this._bot,
-                            context: this._context,
-                        },
+                        arg: onDropExitArg(this._bot, otherBot, this._context),
                     },
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: this._bots,
-                        arg: {
-                            bot: otherBot,
-                            context: this._context,
-                        },
+                        arg: onDropExitArg(this._bot, otherBot, this._context),
                     },
                 ])
             );
@@ -450,18 +454,20 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: [this._dropBot],
-                        arg: {
-                            bot: this._bot,
-                            context: this._context,
-                        },
+                        arg: onDropEnterArg(
+                            this._bot,
+                            this._dropBot,
+                            this._context
+                        ),
                     },
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: this._bots,
-                        arg: {
-                            bot: this._dropBot,
-                            context: this._context,
-                        },
+                        arg: onDropEnterArg(
+                            this._bot,
+                            this._dropBot,
+                            this._context
+                        ),
                     },
                 ])
             );

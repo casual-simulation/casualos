@@ -766,3 +766,41 @@ export const KNOWN_TAGS: string[] = [
     'onListen',
     'onChannelAction',
 ];
+
+export function onDropEnterArg(
+    draggedBot: Bot,
+    otherBot: Bot,
+    context: string
+) {
+    return {
+        draggedBot,
+        otherBot,
+        context,
+    };
+}
+
+export function onDropExitArg(draggedBot: Bot, otherBot: Bot, context: string) {
+    return {
+        draggedBot,
+        otherBot,
+        context,
+    };
+}
+
+export function onDropArg(
+    bot: Bot,
+    to: BotDropDestination,
+    from: BotDropDestination
+) {
+    return {
+        bot,
+        to,
+        from,
+    };
+}
+
+export interface BotDropDestination {
+    x: number;
+    y: number;
+    context: string;
+}
