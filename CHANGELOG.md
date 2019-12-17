@@ -20,6 +20,8 @@
     -   Added `onDropEnter` and `onDropExit` listeners for when a bot is dragged onto or off of another bot.
         -   Both the bot that is being dragged and the bot that they are on top of will recieve the `onDropEnter` and `onDropExit` events.
         -   Note that `onDropEnter` and `onDropExit` events will fire even if one of the bots is not stackable.
+    -   Improved `onDrop` to be sent to both the dragged bot and the bot that it is dropped on top of.
+        -   The event will fire on the other bot even if it has `auxPositioningMode` set to `absolute`.
 
 ## V0.11.15
 
