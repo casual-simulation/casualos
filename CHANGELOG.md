@@ -13,6 +13,7 @@
     -   Dropping a mod in an empty space will no longer create a new bot.
     -   Setting `auxPositioningMode` to `absolute` will no longer prevent mods.
     -   Changed `applyMod()` and `subtractMods()` to not send `onMod()` events.
+    -   Renamed the `diffs` property on the `onModDrop` argument to `mod`.
 -   Improvements
     -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
         -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
@@ -20,6 +21,10 @@
     -   Added `onDropEnter` and `onDropExit` listeners for when a bot is dragged onto or off of another bot.
         -   Both the bot that is being dragged and the bot that they are on top of will recieve the `onDropEnter` and `onDropExit` events.
         -   Note that `onDropEnter` and `onDropExit` events will fire even if one of the bots is not stackable.
+        -   They have the following parameters:
+            -   `draggedBot` - the bot that is being dragged.
+            -   `otherBot` - the bot that the dragged bot is on top of.
+            -   `context` - the context that this is happening in.
     -   Improved `onDrop` to be sent to both the dragged bot and the bot that it is dropped on top of.
         -   The event will fire on the other bot even if it has `auxPositioningMode` set to `absolute`.
 
