@@ -95,11 +95,10 @@ export class BuilderModDragOperation extends BaseModDragOperation {
             this._mod
         );
 
-        this._combine = result.combine && this._allowCombine();
         this._merge = result.merge;
         this._other = result.other;
 
-        if (result.stackable || result.index === 0) {
+        if (result.merge || result.index === 0) {
             this._updateModPosition(calc, gridPosition, result.index);
         }
     }

@@ -4,14 +4,11 @@ import {
     isArray,
     updateBot,
     createBot,
-    filtersMatchingArguments,
     calculateBotValue,
-    parseFilterTag,
     validateTag,
     botTags,
     isHiddenTag,
     getActiveObjects,
-    filterMatchesArguments,
     parseArray,
     duplicateBot,
     doBotsAppearEqual,
@@ -27,7 +24,6 @@ import {
     filterBotsBySelection,
     isBot,
     getBotShape,
-    COMBINE_ACTION_NAME,
     getUserMenuId,
     getBotsInMenu,
     addBotToMenu,
@@ -997,263 +993,6 @@ describe('BotCalculations', () => {
         });
     });
 
-    describe('parseFilterTag()', () => {
-        it('should return unsucessful if not in the formula syntax', () => {
-            let result = parseFilterTag('myTag');
-            expect(result.success).toBe(false);
-
-            result = parseFilterTag('onCombinemyTag');
-            expect(result.success).toBe(false);
-
-            result = parseFilterTag('onCombine(myTag)');
-            expect(result.success).toBe(false);
-
-            result = parseFilterTag('onCombine(myTag:"")');
-            expect(result.success).toBe(false);
-
-            result = parseFilterTag('#myTag');
-            expect(result.success).toBe(false);
-        });
-
-        it('should return sucessful if in the formula syntax', () => {
-            let result = parseFilterTag('onCombine(#name:"")');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'name',
-                    value: '',
-                },
-            });
-
-            result = parseFilterTag('onCombine(#name:"abc")');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'name',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('-(#name:"abc")');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: '-',
-                filter: {
-                    tag: 'name',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('craziness(#lalalal:"abc")');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: 'craziness',
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( #lalalal : "abc" )');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( #lalalal : "abc"');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( #lalalal : "abc');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( #lalalal : "abc  ');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc  ',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( # lalalal : "abc  ');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc  ',
-                },
-            });
-
-            result = parseFilterTag('onCombine ( # lal alal : "abc  ');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lal alal',
-                    value: 'abc  ',
-                },
-            });
-
-            result = parseFilterTag('onCombine(#lalalal:abc)');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine(#lalalal:abc');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: 'abc',
-                },
-            });
-
-            result = parseFilterTag('onCombine(#lalalal: abc\t');
-            expect(result).toMatchObject({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                filter: {
-                    tag: 'lalalal',
-                    value: ' abc\t',
-                },
-            });
-        });
-
-        it('should return success if filter is empty', () => {
-            let result = parseFilterTag('event()');
-            expect(result).toEqual({
-                success: true,
-                tag: 'event()',
-                eventName: 'event',
-                filter: null,
-            });
-
-            result = parseFilterTag('event( )');
-            expect(result).toEqual({
-                success: true,
-                tag: 'event( )',
-                eventName: 'event',
-                filter: null,
-            });
-
-            result = parseFilterTag('event( ab)');
-            expect(result).toEqual({
-                success: false,
-                tag: 'event( ab)',
-                eventName: 'event',
-                partialSuccess: true,
-            });
-        });
-
-        let quoteCases = [['“', '”'], ['‘', '’'], ['‘', '”'], ['“', '’']];
-        it.each(quoteCases)(
-            'should return success if using %s%s quotes',
-            (startQuote, endQuote) => {
-                let tag = `onCombine(#name:${startQuote}abc${endQuote})`;
-                let result = parseFilterTag(tag);
-                expect(result).toEqual({
-                    success: true,
-                    tag: tag,
-                    eventName: 'onCombine',
-                    filter: {
-                        tag: 'name',
-                        value: 'abc',
-                    },
-                });
-            }
-        );
-
-        it('should return partial success if it was able to parse the event name', () => {
-            const result = parseFilterTag('onCombine (');
-            expect(result).toEqual({
-                success: false,
-                tag: 'onCombine (',
-                partialSuccess: true,
-                eventName: COMBINE_ACTION_NAME,
-            });
-        });
-
-        it('should parse numbers', () => {
-            let result = parseFilterTag('onCombine(#abc:"123.45")');
-            expect(result).toEqual({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                tag: 'onCombine(#abc:"123.45")',
-                filter: {
-                    tag: 'abc',
-                    value: 123.45,
-                },
-            });
-        });
-
-        it('should parse booleans', () => {
-            let result = parseFilterTag('onCombine(#abc:"true")');
-            expect(result).toEqual({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                tag: 'onCombine(#abc:"true")',
-                filter: {
-                    tag: 'abc',
-                    value: true,
-                },
-            });
-        });
-
-        it('should parse arrays', () => {
-            let result = parseFilterTag(
-                'onCombine(#abc:"[hello, world, 12.34]")'
-            );
-            expect(result).toEqual({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                tag: 'onCombine(#abc:"[hello, world, 12.34]")',
-                filter: {
-                    tag: 'abc',
-                    value: ['hello', 'world', 12.34],
-                },
-            });
-
-            result = parseFilterTag('onCombine(#abc:"[]")');
-            expect(result).toEqual({
-                success: true,
-                eventName: COMBINE_ACTION_NAME,
-                tag: 'onCombine(#abc:"[]")',
-                filter: {
-                    tag: 'abc',
-                    value: [],
-                },
-            });
-        });
-    });
-
     describe('parseSimulationId()', () => {
         it('should default to filling the channel ID', () => {
             let result = parseSimulationId('abc');
@@ -1472,8 +1211,8 @@ describe('BotCalculations', () => {
             });
         });
 
-        it('should allow # when it is a filter', () => {
-            let errors = validateTag(COMBINE_ACTION_NAME);
+        it('should not allow # when it is a filter', () => {
+            let errors = validateTag('onCombine()');
             expect(errors).toEqual({
                 valid: true,
             });
@@ -1485,17 +1224,20 @@ describe('BotCalculations', () => {
 
             errors = validateTag('onCombine(#');
             expect(errors).toEqual({
-                valid: true,
+                'tag.invalidChar': { char: '#' },
+                valid: false,
             });
 
             errors = validateTag('onCombine(#tag:"###test');
             expect(errors).toEqual({
-                valid: true,
+                'tag.invalidChar': { char: '#' },
+                valid: false,
             });
 
             errors = validateTag('onCombine(#tag:"###test")');
             expect(errors).toEqual({
-                valid: true,
+                'tag.invalidChar': { char: '#' },
+                valid: false,
             });
         });
 
