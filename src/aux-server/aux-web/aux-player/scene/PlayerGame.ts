@@ -1195,14 +1195,12 @@ export class PlayerGame extends Game {
                 (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
         }
 
-        if (!this.getInventoryPannable()) {
-            let num = this.invOffsetDelta - this.invOffsetCurr;
-            this.invController.controls.setPan(-this.panValueCurr);
-            this.panValueCurr += num;
+        let num = this.invOffsetDelta - this.invOffsetCurr;
+        this.invController.controls.setPan(-this.panValueCurr);
+        this.panValueCurr += num;
 
-            this.invController.controls.setPan(this.panValueCurr);
-            this.invOffsetCurr = this.invOffsetDelta;
-        }
+        this.invController.controls.setPan(this.panValueCurr);
+        this.invOffsetCurr = this.invOffsetDelta;
     }
 
     /**
@@ -1235,18 +1233,16 @@ export class PlayerGame extends Game {
             }
 
             if (!this.firstPan) {
-                if (!this.getInventoryPannable()) {
-                    let num = this.invOffsetDelta - this.invOffsetCurr;
+                let num = this.invOffsetDelta - this.invOffsetCurr;
 
-                    // try to center it by using the last offset
-                    this.invController.controls.setPan(-this.panValueCurr);
+                // try to center it by using the last offset
+                this.invController.controls.setPan(-this.panValueCurr);
 
-                    // the final pan movement with the current offset
-                    this.panValueCurr += num;
+                // the final pan movement with the current offset
+                this.panValueCurr += num;
 
-                    this.invController.controls.setPan(this.panValueCurr);
-                    this.invOffsetCurr = this.invOffsetDelta;
-                }
+                this.invController.controls.setPan(this.panValueCurr);
+                this.invOffsetCurr = this.invOffsetDelta;
             }
         }
     }
