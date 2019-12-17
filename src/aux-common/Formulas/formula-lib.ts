@@ -1760,12 +1760,6 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
             setTag(bot, key, null);
         }
     });
-
-    if (isScriptBot(bot)) {
-        event(MOD_DROP_ACTION_NAME, [bot], {
-            diffs: subtractedDiffs,
-        });
-    }
 }
 
 /**

@@ -3373,6 +3373,46 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it('should not send a onModDrop() event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            onModDrop: `@tags.modded = true`,
+                            value1: 123,
+                            value2: true,
+                            value3: 'abc',
+                            test: `@subtractMods(this, {
+                                value1: 'anything1',
+                                value2: 'anything2',
+                                value3: 'anything3',
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            value1: null,
+                            value2: null,
+                            value3: null,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('getUserMenuContext()', () => {
