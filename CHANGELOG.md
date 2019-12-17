@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.11.16
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
+        -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
+
 ## V0.11.15
 
 ### Date: 12/17/2019
