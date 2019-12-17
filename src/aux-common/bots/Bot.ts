@@ -587,8 +587,6 @@ export const KNOWN_TAGS: string[] = [
     'onClick',
     'onAnyBotClicked',
     'onCombine',
-    'onCombineEnter',
-    'onCombineExit',
     'onModDropEnter',
     'onModDropExit',
     'onMod',

@@ -24,7 +24,6 @@ import {
     getAtomBot,
     getAtomTag,
     tagsOnBot,
-    parseFilterTag,
     ON_ACTION_ACTION_NAME,
     BotTags,
     atomToEvent,
@@ -331,10 +330,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (globals) {
             console.log('[BaseAuxChannel] Cleaning Config bot.');
             let badTags = tagsOnBot(globals).filter(tag => {
-                let parsed = parseFilterTag(tag);
-                return (
-                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
-                );
+                return tag === ON_ACTION_ACTION_NAME;
             });
             let tags: BotTags = {};
             for (let tag of badTags) {

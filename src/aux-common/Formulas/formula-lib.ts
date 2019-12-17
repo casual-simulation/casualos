@@ -51,7 +51,6 @@ import uuid from 'uuid/v4';
 import every from 'lodash/every';
 import {
     calculateFormulaValue,
-    COMBINE_ACTION_NAME,
     isBot,
     // isFormulaObject,
     // unwrapProxy,
@@ -757,16 +756,6 @@ function createBase(idFactory: () => string, ...datas: Mod[]) {
  */
 function create(...mods: Mod[]) {
     return createBase(() => uuid(), ...mods);
-}
-
-/**
- * Combines the two given bots.
- * @param first The first bot.
- * @param second The second bot.
- * @param argument The argument to include in the script calls.
- */
-function combine(first: Bot | string, second: Bot | string, argument?: any) {
-    return event(COMBINE_ACTION_NAME, [first, second], argument);
 }
 
 /**
@@ -2131,7 +2120,6 @@ export default {
     action: actionNamespace,
 
     // Global functions
-    combine,
     create,
     byCreator,
     destroy,

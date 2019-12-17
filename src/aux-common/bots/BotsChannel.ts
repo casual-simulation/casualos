@@ -3,16 +3,12 @@ import { ShoutAction, BotAction, action } from './BotEvents';
 import { BotSandboxContext } from './BotCalculationContext';
 import {
     getActiveObjects,
-    filtersMatchingArguments,
     calculateBotValue,
     isBotListening,
     DEFAULT_ENERGY,
     hasValue,
-    COMBINE_ACTION_NAME,
     ON_ANY_SHOUT_ACTION_NAME,
     ON_SHOUT_ACTION_NAME,
-    FilterParseResult,
-    filtersOnBot,
     getCreatorVariable,
     getScriptBot,
     isBot,

@@ -11,7 +11,6 @@ import {
     isBotStackable,
     getBotIndex,
     botRemoved,
-    COMBINE_ACTION_NAME,
     isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,

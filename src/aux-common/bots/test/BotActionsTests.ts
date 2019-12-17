@@ -35,11 +35,7 @@ import {
     hideHtml,
     ReplaceDragBotAction,
 } from '../BotEvents';
-import {
-    COMBINE_ACTION_NAME,
-    createBot,
-    getActiveObjects,
-} from '../BotCalculations';
+import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
     calculateActionEvents,
@@ -2749,97 +2745,6 @@ export function botActionsTests(
         });
 
         createBotTests('create', 'uuid');
-
-        describe.skip('combine()', () => {
-            it('should send the combine event to the given bots', () => {
-                const state: BotsState = {
-                    bot1: {
-                        id: 'bot1',
-                        tags: {
-                            test: '@combine(this, getBot("#abc", true))',
-                            'onCombine(#abc:true)':
-                                'setTag(this, "otherId", that.bot.id)',
-                            def: true,
-                        },
-                    },
-                    bot2: {
-                        id: 'bot2',
-                        tags: {
-                            abc: true,
-                            'onCombine(#def:true)':
-                                'setTag(this, "otherId", that.bot.id)',
-                        },
-                    },
-                };
-
-                const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('bot1', {
-                        tags: {
-                            otherId: 'bot2',
-                        },
-                    }),
-                    botUpdated('bot2', {
-                        tags: {
-                            otherId: 'bot1',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should merge the given argument with the bot argument', () => {
-                const state: BotsState = {
-                    bot1: {
-                        id: 'bot1',
-                        tags: {
-                            test:
-                                '@combine(this, getBot("#abc", true), { context: "myContext" })',
-                            'onCombine(#abc:true)':
-                                'setTag(this, "otherId", that.context)',
-                            def: true,
-                        },
-                    },
-                    bot2: {
-                        id: 'bot2',
-                        tags: {
-                            abc: true,
-                            'onCombine(#def:true)':
-                                'setTag(this, "otherId", that.context)',
-                        },
-                    },
-                };
-
-                const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('bot1', {
-                        tags: {
-                            otherId: 'myContext',
-                        },
-                    }),
-                    botUpdated('bot2', {
-                        tags: {
-                            otherId: 'myContext',
-                        },
-                    }),
-                ]);
-            });
-        });
 
         describe('destroy()', () => {
             it('should destroy and bots that have auxCreator set to the bot ID', () => {
