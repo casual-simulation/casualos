@@ -978,7 +978,7 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
 
 /**
  * Replaces the bot that the user is beginning to drag.
- * Only works from inside a onBotDrag() or onAnyBotDrag() listen tag.
+ * Only works from inside a onDrag() or onAnyDrag() listen tag.
  * @param bot The bot or mod that should be dragged instead of the original.
  */
 function replaceDragBot(bot: Mod) {
