@@ -437,7 +437,7 @@ export const BOT_SPACE_TAG = 'space';
 /**
  * The name of the event that represents a bot being diffed into another bot.
  */
-export const DIFF_ACTION_NAME: string = 'onMod';
+export const MOD_DROP_ACTION_NAME: string = 'onModDrop';
 
 /**
  * The name of the event that represents a bot being created.
@@ -726,20 +726,19 @@ export const KNOWN_TAGS: string[] = [
 
     'onClick',
     'onAnyBotClicked',
-    'onCombine',
     MOD_DROP_ENTER_ACTION_NAME,
     MOD_DROP_EXIT_ACTION_NAME,
-    'onMod',
+    MOD_DROP_ACTION_NAME,
     'onSaveInput',
     'onCloseInput',
-    'onCreate',
-    'onDestroy',
+    CREATE_ACTION_NAME,
+    DESTROY_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
     DROP_EXIT_ACTION_NAME,
-    'onDrop',
-    'onAnyBotDrop',
-    'onDrag',
-    'onAnyBotDrag',
+    DROP_ACTION_NAME,
+    DROP_ANY_ACTION_NAME,
+    DRAG_ACTION_NAME,
+    DRAG_ANY_ACTION_NAME,
     'onTapCode',
     'onQRCodeScanned',
     'onQRCodeScannerClosed',

@@ -14,7 +14,7 @@ import {
     isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
-    DIFF_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
     toast,
     createBot,
     DRAG_ANY_ACTION_NAME,
@@ -184,7 +184,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
             let actions = [
                 {
-                    eventName: DIFF_ACTION_NAME,
+                    eventName: MOD_DROP_ACTION_NAME,
                     bots: [this._other],
                     arg: {
                         diffs: this._mod,

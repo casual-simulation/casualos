@@ -480,15 +480,6 @@ export default class BotTable extends Vue {
         this.dropDownUsed = true;
         this.newTagOpen = true;
 
-        if (inputTag.includes('onCombine(')) {
-            this.$nextTick(() => {
-                this.$nextTick(() => {
-                    this.dropDownUsed = false;
-                });
-            });
-            return;
-        }
-
         this.$nextTick(() => {
             this.$nextTick(() => {
                 this.dropDownUsed = false;

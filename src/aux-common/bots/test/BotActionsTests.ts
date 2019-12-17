@@ -3234,13 +3234,13 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should send a onMod() event to the affected bot', () => {
+            it('should not send a onModDrop() event to the affected bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             abc: 123,
-                            onMod: '@setTag(this, "#diffed", true)',
+                            onModDrop: '@setTag(this, "#diffed", true)',
                             test:
                                 '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
                         },
@@ -3261,7 +3261,6 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            diffed: true,
                             abc: 'def',
                             ghi: true,
                             num: 1,

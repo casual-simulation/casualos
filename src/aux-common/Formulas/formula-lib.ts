@@ -6,7 +6,7 @@ import {
     BOT_SPACE_TAG,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    DIFF_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -1691,12 +1691,6 @@ function applyMod(bot: any, ...diffs: Mod[]) {
             setTag(bot, key, tags[key]);
         }
     });
-
-    if (isScriptBot(bot)) {
-        event(DIFF_ACTION_NAME, [bot], {
-            diffs: appliedDiffs,
-        });
-    }
 }
 
 /**
@@ -1768,7 +1762,7 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
     });
 
     if (isScriptBot(bot)) {
-        event(DIFF_ACTION_NAME, [bot], {
+        event(MOD_DROP_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });
     }

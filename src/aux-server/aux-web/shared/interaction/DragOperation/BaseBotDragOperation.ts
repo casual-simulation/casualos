@@ -14,7 +14,7 @@ import {
     isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
-    DIFF_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
     toast,
     createBot,
     DRAG_ANY_ACTION_NAME,
