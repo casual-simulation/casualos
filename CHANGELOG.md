@@ -16,6 +16,7 @@
 -   Improvements
     -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
         -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
+    -   If a custom `onModDrop` listener is provided, then the mod will not be applied. It is up to the `onModDrop` listener to apply the mod via `applyMod(this, that.mod)`.
     -   Added `onDropEnter` and `onDropExit` listeners for when a bot is dragged onto or off of another bot.
         -   Both the bot that is being dragged and the bot that they are on top of will recieve the `onDropEnter` and `onDropExit` events.
         -   Note that `onDropEnter` and `onDropExit` events will fire even if one of the bots is not stackable.
