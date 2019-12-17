@@ -179,9 +179,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._other = result.other;
             this._merge = result.merge;
 
-            this._sendDropEnterExitEvents(
-                result.stackable ? this._other : null
-            );
+            this._sendDropEnterExitEvents(this._other);
 
             if (result.stackable || result.index === 0) {
                 this._updateBotsPositions(
