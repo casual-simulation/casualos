@@ -51,6 +51,7 @@ import {
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
 import VueShortkey from 'vue-shortkey';
+import VueClipboard from 'vue-clipboard2';
 
 import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
 import '../shared/public/fonts/Roboto/Roboto.css';
@@ -94,6 +95,7 @@ Vue.use(MdBadge);
 Vue.use(VueShortkey, {
     prevent: ['input', 'textarea'],
 });
+Vue.use(VueClipboard);
 Vue.use(MdDialogPrompt);
 
 const routes: RouteConfig[] = [

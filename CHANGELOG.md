@@ -27,6 +27,10 @@
             -   `context` - the context that this is happening in.
     -   Improved `onDrop` to be sent to both the dragged bot and the bot that it is dropped on top of.
         -   The event will fire on the other bot even if it has `auxPositioningMode` set to `absolute`.
+    -   Added the `player.setClipboard()` function that is able to set the user's clipboard to the given text.
+        -   ex. `player.setClipboard("abc")` will set the user's clipboard to "abc".
+        -   On Chrome and Firefox, the text will be copied directly to the user's clipboard.
+        -   On Safari and all iOS browsers, a popup will be triggered with a copy button allowing the user to copy the text to their clipboard.
 
 ## V0.11.15
 

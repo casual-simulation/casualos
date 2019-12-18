@@ -60,8 +60,10 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
+import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
+import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 
 const BotPond = vueBotPond();
 
@@ -81,6 +83,7 @@ const BotPond = vueBotPond();
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
+        'clipboard-modal': ClipboardModal,
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
