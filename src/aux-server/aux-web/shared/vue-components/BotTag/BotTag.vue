@@ -1,8 +1,11 @@
 <template>
     <span class="tag bot-tag" :class="{ clonable: allowCloning }">
         <tag-color :tag="tag"></tag-color>
-        <span v-if="!isCombine">
+        <span v-if="!isScript">
             <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span>
+        </span>
+        <span v-else>
+            <span class="at-symbol">@</span><span class="tag-name">{{ tag }}</span>
         </span>
         <!-- <span v-else class="filter">
             <span v-if="!isCombine" class="event-name">{{ filterData.eventName }}</span>

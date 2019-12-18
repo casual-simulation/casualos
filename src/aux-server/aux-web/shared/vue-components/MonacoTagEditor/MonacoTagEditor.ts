@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { Bot } from '@casual-simulation/aux-common';
+import { Bot, isScript } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
@@ -41,6 +41,13 @@ export default class MonacoTagEditor extends Vue {
     @Watch('bot')
     botChanged() {
         this._updateModel();
+    }
+
+    get isScript() {
+        if (this.bot && this.tag) {
+            return isScript(this.bot.tags[this.tag]);
+        }
+        return false;
     }
 
     created() {

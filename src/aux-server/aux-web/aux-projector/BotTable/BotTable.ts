@@ -22,6 +22,7 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     AuxBot,
     PrecalculatedBot,
+    isScript,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -163,6 +164,12 @@ export default class BotTable extends Vue {
 
     isBotReadOnly(bot: Bot): boolean {
         return this.editableMap.get(bot.id) === false;
+    }
+
+    isTagOnlyScripts(tag: string) {
+        return this.bots.every(
+            b => !hasValue(b.tags[tag]) || isScript(b.tags[tag])
+        );
     }
 
     get botTableGridStyle() {

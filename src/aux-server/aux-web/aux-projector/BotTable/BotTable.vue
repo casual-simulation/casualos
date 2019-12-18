@@ -126,7 +126,12 @@
                         class="bot-cell header"
                         @click="searchForTag(tag)"
                     >
-                        <bot-tag ref="tags" :tag="tag" :allowCloning="bots.length === 1"></bot-tag>
+                        <bot-tag
+                            ref="tags"
+                            :tag="tag"
+                            :isScript="isTagOnlyScripts(tag)"
+                            :allowCloning="bots.length === 1"
+                        ></bot-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->
                         <md-button

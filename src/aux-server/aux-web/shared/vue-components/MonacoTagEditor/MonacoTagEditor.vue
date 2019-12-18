@@ -1,7 +1,7 @@
 <template>
     <div class="editor-wrapper">
         <div class="editor-breadcrumbs">
-            <bot-tag :tag="tag"></bot-tag>
+            <bot-tag :tag="tag" :isScript="isScript"></bot-tag>
         </div>
         <div class="code-editor-wrapper">
             <monaco-editor ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
