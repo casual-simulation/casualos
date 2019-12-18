@@ -34,6 +34,7 @@
     -   Tags that contain listeners will now display with a @ symbol in front of the tag name.
     -   Tags that contain formulas will now diwplay with a = sign after the tag name.
     -   Removed the @ symbol from the first line in the code editor when editing a script.
+    -   Added the ability to use an @ symbol while creating a new tag to prefill the editor with an @.
 
 ## V0.11.15
 
