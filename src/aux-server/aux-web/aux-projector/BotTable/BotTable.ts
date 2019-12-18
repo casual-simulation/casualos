@@ -23,6 +23,7 @@ import {
     AuxBot,
     PrecalculatedBot,
     isScript,
+    parseScript,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -418,6 +419,9 @@ export default class BotTable extends Vue {
         }
 
         if (this.isMakingNewTag) {
+            const { tag, isScript } = this._formatNewTag(this.newTag);
+            this.newTag = tag;
+
             this.dropDownUsed = true;
             this.newTagOpen = true;
 
@@ -475,6 +479,10 @@ export default class BotTable extends Vue {
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
+                        // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
+                        if (isScript) {
+                            tag.setInitialValue('@');
+                        }
                         break;
                     }
                 }
@@ -483,6 +491,13 @@ export default class BotTable extends Vue {
             this.newTag = '';
             this.newTagPlacement = placement;
         }
+    }
+
+    private _formatNewTag(newTag: string) {
+        return {
+            tag: parseScript(newTag),
+            isScript: isScript(newTag),
+        };
     }
 
     openNewTag(placement: NewTagPlacement = 'top') {
@@ -496,7 +511,8 @@ export default class BotTable extends Vue {
             return;
         }
 
-        this.newTag = inputTag;
+        const { tag, isScript } = this._formatNewTag(inputTag);
+        this.newTag = tag;
         this.newTagPlacement = 'bottom';
 
         this.dropDownUsed = true;
@@ -553,7 +569,10 @@ export default class BotTable extends Vue {
             for (let tag of tags) {
                 if (tag.tag === addedTag) {
                     tag.$el.focus();
-
+                    // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
+                    if (isScript) {
+                        tag.setInitialValue('@');
+                    }
                     break;
                 }
             }

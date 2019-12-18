@@ -3,7 +3,6 @@ import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
-import CombineIcon from '../../shared/public/icons/combine_icon.svg';
 import { EventBus } from '../../shared/EventBus';
 
 /**
@@ -11,15 +10,11 @@ import { EventBus } from '../../shared/EventBus';
  * Used for new tags and potentially for allowing users to change tag names.
  */
 @Component({
-    components: {
-        'combine-icon': CombineIcon,
-    },
+    components: {},
 })
 export default class TagEditor extends Vue {
     @Prop() value: string;
     @Prop() tagExists: boolean;
-    @Prop({ default: false })
-    isAction: boolean;
     @Prop({ default: false })
     useMaterialInput: boolean;
 
@@ -58,11 +53,7 @@ export default class TagEditor extends Vue {
     }
 
     get placeholder() {
-        if (this.isAction) {
-            return '(#tag:"value")';
-        } else {
-            return 'newTag';
-        }
+        return 'newTag';
     }
 
     get errorMessage() {
@@ -71,13 +62,7 @@ export default class TagEditor extends Vue {
             if (errors['tag.required']) {
                 return 'You must provide a value.';
             } else if (errors['tag.invalidChar']) {
-                if (this.isAction && errors['tag.invalidChar'].char === '#') {
-                    return 'Actions must start with (';
-                } else {
-                    return `Tags cannot contain ${
-                        errors['tag.invalidChar'].char
-                    }.`;
-                }
+                return `Tags cannot contain ${errors['tag.invalidChar'].char}.`;
             }
         }
         if (this.tagExists) {
@@ -88,11 +73,7 @@ export default class TagEditor extends Vue {
     }
 
     get editorValue() {
-        if (this.isAction) {
-            return this.value.slice(1) || '';
-        } else {
-            return this.value || '';
-        }
+        return this.value || '';
     }
 
     onInput(event: any) {
@@ -167,6 +148,6 @@ export default class TagEditor extends Vue {
     }
 
     private _convertToFinalValue(value: string) {
-        return this.isAction ? `+${value}` : value;
+        return value;
     }
 }
