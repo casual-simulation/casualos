@@ -46,6 +46,7 @@ import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
+import sumBy from 'lodash/sumBy';
 
 @Component({
     components: {
@@ -167,9 +168,13 @@ export default class BotTable extends Vue {
     }
 
     isTagOnlyScripts(tag: string) {
-        return this.bots.every(
-            b => !hasValue(b.tags[tag]) || isScript(b.tags[tag])
+        const numScripts = sumBy(this.bots, b =>
+            isScript(b.tags[tag]) ? 1 : 0
         );
+        const emptyScripts = sumBy(this.bots, b =>
+            !hasValue(b.tags[tag]) ? 1 : 0
+        );
+        return numScripts > 0 && this.bots.length === numScripts + emptyScripts;
     }
 
     get botTableGridStyle() {
