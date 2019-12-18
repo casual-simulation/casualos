@@ -32,6 +32,7 @@
         -   On Chrome and Firefox, the text will be copied directly to the user's clipboard.
         -   On Safari and all iOS browsers, a popup will be triggered with a copy button allowing the user to copy the text to their clipboard.
     -   Tags that contain listeners will now display with a @ symbol in front of the tag name.
+    -   Removed the @ symbol from the first line in the code editor when editing a script.
 
 ## V0.11.15
 
