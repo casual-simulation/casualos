@@ -69,7 +69,8 @@ export type ExtraActions =
     | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
-    | SetupChannelAction;
+    | SetupChannelAction
+    | SetClipboardAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -915,6 +916,18 @@ export interface SetupChannelAction {
 }
 
 /**
+ * Defines an event that sets some text on the user's clipboard.
+ */
+export interface SetClipboardAction {
+    type: 'set_clipboard';
+
+    /**
+     * The text that the clipboard should be set to.
+     */
+    text: string;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -1499,5 +1512,16 @@ export function setupChannel(
         type: 'setup_channel',
         channel,
         botOrMod,
+    };
+}
+
+/**
+ * Creates a SetClipboardAction.
+ * @param text The text that should be set to the clipboard.
+ */
+export function setClipboard(text: string): SetClipboardAction {
+    return {
+        type: 'set_clipboard',
+        text,
     };
 }

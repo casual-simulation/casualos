@@ -62,6 +62,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
+import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 
 const BotPond = vueBotPond();
 
@@ -522,6 +523,8 @@ export default class BuilderApp extends Vue {
                             download(e.data, e.botname, e.mimeType);
                         } else if (e.type === 'send_webhook') {
                             sendWebhook(botManager, e);
+                        } else if (e.type === 'set_clipboard') {
+                            writeTextToClipboard(e.text);
                         }
                     }),
                     botManager.login.deviceChanged.subscribe(info => {

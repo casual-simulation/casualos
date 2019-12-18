@@ -48,6 +48,7 @@ import {
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
     setupChannel as calcSetupChannel,
+    setClipboard as calcSetClipboard,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -972,6 +973,15 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
  */
 function replaceDragBot(bot: Mod) {
     const event = calcReplaceDragBot(unwrapBotOrMod(bot));
+    return addAction(event);
+}
+
+/**
+ * Sets the text stored in the player's clipboard.
+ * @param text The text to set to the clipboard.
+ */
+function setClipboard(text: string) {
+    const event = calcSetClipboard(text);
     return addAction(event);
 }
 
@@ -2062,6 +2072,7 @@ const player = {
     showInputForTag,
     checkout,
     replaceDragBot,
+    setClipboard,
 
     openDevConsole,
 };
