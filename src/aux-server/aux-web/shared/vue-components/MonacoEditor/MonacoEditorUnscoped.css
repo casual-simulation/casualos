@@ -1,7 +1,0 @@
-.formula-marker::before {
-    content: '=';
-}
-
-.formula-marker {
-    text-align: right;
-}

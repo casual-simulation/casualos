@@ -130,6 +130,7 @@
                             ref="tags"
                             :tag="tag"
                             :isScript="isTagOnlyScripts(tag)"
+                            :isFormula="isTagOnlyFormulas(tag)"
                             :allowCloning="bots.length === 1"
                         ></bot-tag>
 

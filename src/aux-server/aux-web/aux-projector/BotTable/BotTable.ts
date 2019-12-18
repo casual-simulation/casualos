@@ -171,10 +171,20 @@ export default class BotTable extends Vue {
         const numScripts = sumBy(this.bots, b =>
             isScript(b.tags[tag]) ? 1 : 0
         );
-        const emptyScripts = sumBy(this.bots, b =>
+        const emptyTags = sumBy(this.bots, b =>
             !hasValue(b.tags[tag]) ? 1 : 0
         );
-        return numScripts > 0 && this.bots.length === numScripts + emptyScripts;
+        return numScripts > 0 && this.bots.length === numScripts + emptyTags;
+    }
+
+    isTagOnlyFormulas(tag: string) {
+        const numFormulas = sumBy(this.bots, b =>
+            isFormula(b.tags[tag]) ? 1 : 0
+        );
+        const emptyTags = sumBy(this.bots, b =>
+            !hasValue(b.tags[tag]) ? 1 : 0
+        );
+        return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
     }
 
     get botTableGridStyle() {
