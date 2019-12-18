@@ -1337,6 +1337,46 @@ export function botCalculationContextTests(
                     expect(unwrapped).toEqual(botA);
                 });
 
+                it('should allow using @ symbols when getting bots by tags', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getBot("@name")',
+                    });
+                    const botB = createBot('b', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA, botB]);
+                    const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
+
+                    expect(unwrapped).toEqual(botA);
+                });
+
+                it('should remove the first @ symbol but not the second', () => {
+                    const botA = createBot('a', {
+                        '@name': 'bob',
+                        formula: '=getBot("@@name")',
+                    });
+                    const botB = createBot('b', {
+                        '@name': 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA, botB]);
+                    const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
+
+                    expect(unwrapped).toEqual(botA);
+                });
+
                 it('should get the first bot matching the given filter function', () => {
                     const botA = createBot('a', {
                         name: 'bob',
@@ -1489,6 +1529,30 @@ export function botCalculationContextTests(
                     expect(result).toEqual(['bob', 'alice', 'bob']);
                 });
 
+                it('should support using an @ symbol at the beginning of a tag', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getBotTagValues("@name")',
+                    });
+                    const botB = createBot('b', {
+                        name: 'alice',
+                    });
+                    const botC = createBot('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        botB,
+                        botA,
+                        botC,
+                    ]);
+                    const result = calculateBotValue(context, botA, 'formula');
+
+                    expect(result).toEqual(['bob', 'alice', 'bob']);
+                });
+
                 it('should get the list of bots with the given tag matching the given value', () => {
                     const botA = createBot('a', {
                         name: 'bob',
@@ -1543,6 +1607,20 @@ export function botCalculationContextTests(
                     const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getTag(this, "#name")',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA]);
+                    const result = calculateBotValue(context, botA, 'formula');
+
+                    expect(result).toEqual('bob');
+                });
+
+                it('should support using an @ symbol at the beginning of a tag', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getTag(this, "@name")',
                     });
 
                     // specify the UUID to use next
@@ -1628,6 +1706,44 @@ export function botCalculationContextTests(
                             expect(value(bot2)).toBe(expected);
                         }
                     );
+
+                    it('should support using a hashtag at the beginning of a tag', () => {
+                        const bot = createBot('test', {
+                            formula: '=byTag("#red")',
+                        });
+
+                        const context = createCalculationContext([bot]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        const bot2 = createBot('test', {
+                            red: 'abc',
+                        });
+
+                        expect(value(bot2)).toBe(true);
+                    });
+
+                    it('should support using a @ symbol at the beginning of a tag', () => {
+                        const bot = createBot('test', {
+                            formula: '=byTag("@red")',
+                        });
+
+                        const context = createCalculationContext([bot]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        const bot2 = createBot('test', {
+                            red: 'abc',
+                        });
+
+                        expect(value(bot2)).toBe(true);
+                    });
                 });
 
                 describe('tag + value', () => {
