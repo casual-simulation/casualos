@@ -31,6 +31,7 @@
         -   ex. `player.setClipboard("abc")` will set the user's clipboard to "abc".
         -   On Chrome and Firefox, the text will be copied directly to the user's clipboard.
         -   On Safari and all iOS browsers, a popup will be triggered with a copy button allowing the user to copy the text to their clipboard.
+    -   Tags that contain listeners will now display with a @ symbol in front of the tag name.
 
 ## V0.11.15
 
