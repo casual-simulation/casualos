@@ -35,6 +35,7 @@
     -   Tags that contain formulas will now diwplay with a = sign after the tag name.
     -   Removed the @ symbol from the first line in the code editor when editing a script.
     -   Added the ability to use an @ symbol while creating a new tag to prefill the editor with an @.
+    -   Added the ability to use @ symbols in tags in `getTag()`, `setTag()`, `getBot()`, `getBots()`, `byTag()`, `shout()`, and `whisper()`.
 
 ## V0.11.15
 
