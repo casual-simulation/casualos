@@ -15,6 +15,9 @@ import TagColor from '../TagColor/TagColor';
 export default class BotTag extends Vue {
     @Prop() tag: string;
 
+    @Prop({ default: false }) isScript: boolean;
+    @Prop({ default: false }) isFormula: boolean;
+
     /**
      * Whether the tag is allowed to be dragged from the bot table into the world.
      */

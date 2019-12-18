@@ -1985,6 +1985,8 @@ export function botActionsTests(
             ['parenthesis', 'sayHello()'],
             ['hashtag', '#sayHello'],
             ['hashtag and parenthesis', '#sayHello()'],
+            ['@ symbol', '@sayHello'],
+            ['@ symbol and parenthesis', '@sayHello()'],
         ];
 
         describe('shout()', () => {

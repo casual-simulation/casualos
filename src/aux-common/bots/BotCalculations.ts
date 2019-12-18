@@ -1052,7 +1052,7 @@ export function calculateStateDiff(
  * Trims the leading # symbol off the given tag.
  */
 export function trimTag(tag: string): string {
-    if (tag.indexOf('#') === 0) {
+    if (tag.startsWith('#') || tag.startsWith('@')) {
         return tag.substring(1);
     }
     return tag;
