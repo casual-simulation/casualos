@@ -78,9 +78,9 @@ let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
 Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='@onDestroy'/> for each of the destroyed bots.
 
 Note that only destroyable bots will be destroyed.
-Bots which have <TagLink tag='auxDestroyable'/> set to `false` will not be destroyed.
+Bots that have <TagLink tag='auxDestroyable'/> set to `false` will not be destroyed.
 
-Also note that all bots which have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
+Also note that all bots that have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
 This happens recursively until there are no more bots to destroy.
 
 #### Examples:
@@ -282,7 +282,7 @@ let mod = getMod(bot, /^on/g);
 
 <FunctionCode name='byTag' />
 
-Creates a bot filter which includes bots that have the given tag that matches the given value.
+Creates a bot filter that includes bots that have the given tag that matches the given value.
 
 The **first parameter** is the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
 
@@ -310,7 +310,7 @@ let bots = getBots(byTag("#test"));
 
 <FunctionCode name='inContext' />
 
-Creates a bot filter which includes bots that are in the given context. That is, they have the given tag set to `true`.
+Creates a bot filter that includes bots that are in the given context. That is, they have the given tag set to `true`.
 
 The **first parameter** is the name of the context.
 
@@ -327,7 +327,7 @@ let bots = getBots(inContext("test"));
 
 ### `atPosition(context, x, y)`
 
-Creates a bot filter which includes bots that are in the given context and at the given X and Y position.
+Creates a bot filter that includes bots that are in the given context and at the given X and Y position.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
@@ -347,7 +347,7 @@ let bots = getBots(atPosition("test", 1, 2));
 
 ### `inStack(bot, context)`
 
-Creates a bot filter which includes bots that are in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
+Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
@@ -367,7 +367,7 @@ let bots = getBots(inStack(this, "test"));
 
 <FunctionCode name='byCreator' />
 
-Creates a bot filter which includes bots that were created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
+Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
 
 The **first parameter** is the bot that created the other bots.
 
@@ -386,7 +386,7 @@ let bots = getBots(byCreator(this));
 
 <FunctionCode name='bySpace'/>
 
-Creates a bot filter which includes bots that are in the given space. That is, they have <TagLink tag='space'/> set to the given value.
+Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
 
 The **first parameter** is the space that the bots are in.
 
@@ -485,7 +485,7 @@ player.replaceDragBot({
 
 <FunctionCode name='setupChannel'/>
 
-Sends an action to the server which will create the given channel if it does not exist and places a clone of the given bot or mod in it.
+Sends an action to the server that will create the given channel if it does not exist and places a clone of the given bot or mod in it.
 The new bot will only be added to the channel if the channel did not exist.
 The action is only executed if <TagLink tag='@onChannelAction'/> has been configured to perform events in `device` actions.
 
@@ -497,12 +497,12 @@ The **second parameter** is optional and is the bot or mod that should be cloned
 
 Before `server.setupChannel()` will work, you need to setup the <TagLink tag='@onChannelAction'/> tag to execute events from remote devices.
 This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new channel.
-By default, AUX does not perform actions which are received from a remote device. You must instruct AUX to execute these yourself.
+By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
 Ensure that <TagLink tag='@onChannelAction'/> is setup properly.
-The following script will execute `setup_channel` events which were sent from other devices:
+The following script will execute `setup_channel` events that were sent from other devices:
 ```typescript
-// Device actions are actions which were sent to this computer from another device
+// Device actions are actions that were sent to this computer from another device
 if (that.action.type === 'device') {
 
     // The setup_channel action is the action that is created
