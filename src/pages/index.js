@@ -61,7 +61,7 @@ function Home() {
                 styles.getStarted,
               )}
               to={useBaseUrl('docs/tags')}>
-              Get Started
+              Learn More
             </Link>
           </div>
         </div>
