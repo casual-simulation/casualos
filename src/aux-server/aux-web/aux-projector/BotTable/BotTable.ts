@@ -141,7 +141,7 @@ export default class BotTable extends Vue {
     }
 
     isSpecialTag(tag: string): boolean {
-        if (tag === 'actions()' || tag === 'hidden') {
+        if (tag === '@' || tag === 'hidden') {
             return true;
         } else {
             return false;
@@ -826,11 +826,24 @@ export default class BotTable extends Vue {
 
         let hiddenList: (string | boolean)[] = [];
         let generalList: (string | boolean)[] = [];
+        let listenerList: (string | boolean)[] = [];
 
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (isHiddenTag(sortedArray[i])) {
-                hiddenList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
+            const tag = sortedArray[i];
+            let removed = false;
+            if (isHiddenTag(tag)) {
+                hiddenList.push(tag);
+                if (!removed) {
+                    sortedArray.splice(i, 1);
+                    removed = true;
+                }
+            }
+            if (this.isTagOnlyScripts(tag)) {
+                listenerList.push(tag);
+                if (!removed) {
+                    sortedArray.splice(i, 1);
+                    removed = true;
+                }
             }
         }
 
@@ -910,6 +923,22 @@ export default class BotTable extends Vue {
             hiddenList.forEach(hiddenTags => {
                 sortedArray.push(<string>hiddenTags);
             });
+        }
+
+        if (listenerList.length > 0) {
+            let activeCheck = false;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === '@') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            listenerList.unshift(activeCheck);
+            listenerList.unshift('@');
+            blacklist.unshift(listenerList);
         }
 
         if (sortedArray.length > 0) {
