@@ -722,13 +722,13 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@casual-simulation/aux-common@0.11.7":
-  version "0.11.7"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.7.tgz#cddc84b4b139aa828a442235d221f662783c00f1"
-  integrity sha512-Y48HAdIMNZEufarme6AHi+TpP1kdQeDxw7yPThZIhFHsBwB2Y7VQaB9Eh+woZg6zU/IMuvSfc3LCqYV01vA2Ow==
+"@casual-simulation/aux-common@0.11.15":
+  version "0.11.15"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.15.tgz#c09d2f420d3172bfa8f9ad2ec25572333ef48724"
+  integrity sha512-VLVu9pF7dAWf7zsu/P/5mySDtnPb/olJwwa3GlNoueK2MjhIvaOk3ug78SG9bRNtQriofVnsmtLds6JC4amy8g==
   dependencies:
-    "@casual-simulation/causal-trees" "^0.11.3"
-    "@casual-simulation/crypto" "^0.11.0"
+    "@casual-simulation/causal-trees" "^0.11.8"
+    "@casual-simulation/crypto" "^0.11.8"
     "@types/acorn" "^4.0.5"
     "@types/astring" "^1.3.0"
     "@types/estraverse" "^0.0.6"
@@ -740,28 +740,27 @@
     rxjs "^6.5.2"
     uuid "^3.3.2"
 
-"@casual-simulation/causal-trees@^0.11.3":
-  version "0.11.3"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/causal-trees/-/causal-trees-0.11.3.tgz#145536c4a6a7267c3aef17935dfda83a935d9c8e"
-  integrity sha512-Tgu/rNYAtR+hMwRNK6SYUIHRIdspNNDUQDTpGPzZcvu+zVakEXVWgzEjN1Zb4W4VtBLRYc16V+5KVgJmZPJsSg==
+"@casual-simulation/causal-trees@^0.11.8":
+  version "0.11.8"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/causal-trees/-/causal-trees-0.11.8.tgz#30e440e05e2bb7f18a0f3e6d254cc94b4362700c"
+  integrity sha512-wyqMVpeSgWJ6ldHF31IRYD54C+r6xi3l4FI/4yCtfRueJDsx69tuaw6ej/uG0DswpQtr3p7W873Ff1jfjWinDw==
   dependencies:
-    "@casual-simulation/crypto" "^0.11.0"
+    "@casual-simulation/crypto" "^0.11.8"
     "@types/base64-js" "^1.2.5"
     "@types/lodash" "^4.14.123"
     base64-js "^1.3.0"
     lodash "^4.17.14"
     rxjs "^6.5.2"
 
-"@casual-simulation/crypto@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/crypto/-/crypto-0.11.0.tgz#dd1906bfc4cf588d44acaa45f68ae7d8ad894638"
-  integrity sha512-QeossKEVeoMZz3I2dejBjT5Zkr7V4tCDNesUmOOTULatHBcaV/vDYGFfb26YbhgG5pz3rGtCCLznxXEYw7fyaQ==
+"@casual-simulation/crypto@^0.11.8":
+  version "0.11.8"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/crypto/-/crypto-0.11.8.tgz#5cf0c6b00f8d40ebd42d9f1cd5d23a7acc8df1cf"
+  integrity sha512-wtI8p7T74t4u4MLnTCKzv+vD34+iQGANP3VkFnvB4rk1ppM8FLC7sR/J6fw6XGcMX6HFFazCHuDSQ9fACu78jw==
   dependencies:
     "@types/fast-json-stable-stringify" "^2.0.0"
-    "@types/sha.js" "^2.4.0"
     base64-js "^1.3.0"
     fast-json-stable-stringify "^2.0.0"
-    sha.js "^2.4.11"
+    hash.js "1.1.7"
 
 "@csstools/convert-colors@^1.4.0":
   version "1.4.0"
@@ -1130,13 +1129,6 @@
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/@types/q/-/q-1.5.2.tgz#690a1475b84f2a884fd07cd797c00f5f31356ea8"
   integrity sha512-ce5d3q03Ex0sy4R14722Rmt6MT07Ua+k4FwDfdcToYJcMKNtRVQvJ6JCAPdAmAnbRb6CsX6aYb9m96NGod9uTw==
-
-"@types/sha.js@^2.4.0":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@types/sha.js/-/sha.js-2.4.0.tgz#bce682ef860b40f419d024fa08600c3b8d24bb01"
-  integrity sha512-amxKgPy6WJTKuw8mpUwjX2BSxuBtBmZfRwIUDIuPJKNwGN8CWDli8JTg5ONTWOtcTkHIstvT7oAhhYXqEjStHQ==
-  dependencies:
-    "@types/node" "*"
 
 "@types/source-list-map@*":
   version "0.1.2"
@@ -4064,7 +4056,7 @@ hash-base@^3.0.0:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-hash.js@^1.0.0, hash.js@^1.0.3:
+hash.js@1.1.7, hash.js@^1.0.0, hash.js@^1.0.3:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/hash.js/-/hash.js-1.1.7.tgz#0babca538e8d4ee4a0f8988d68866537a003cf42"
   integrity sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA==
@@ -7887,7 +7879,7 @@ setprototypeof@1.1.1:
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.1.1.tgz#7e95acb24aa92f5885e0abef5ba131330d4ae683"
   integrity sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==
 
-sha.js@^2.4.0, sha.js@^2.4.11, sha.js@^2.4.8:
+sha.js@^2.4.0, sha.js@^2.4.8:
   version "2.4.11"
   resolved "https://registry.yarnpkg.com/sha.js/-/sha.js-2.4.11.tgz#37a5cf0b81ecbc6943de109ba2960d1b26584ae7"
   integrity sha512-QMEp5B7cftE7APOjk5Y6xgrbWu+WkLVQwk8JNjZ8nKRciZaByEW6MubieAiToS7+dwvrjGhH8jRXz3MVd0AYqQ==

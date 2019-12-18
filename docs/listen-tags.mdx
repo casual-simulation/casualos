@@ -22,20 +22,21 @@ import {
 } from './components.mdx';
 
 Listen tags are tags which can receive shouts and whispers from other bots and actions that happen from the user.
+To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
 
 ## Whisper Tags
 
 Whispers are shouts which are sent to specific bots instead of all bots.
 
-### `onCreate()`
+### `@onCreate`
 
 A whisper that is sent to a bot when it is first created.
 
-### `onDestroy()`
+### `@onDestroy`
 
 A whisper that is sent to a bot when it is being destroyed.
 
-### `onMod()`
+### `@onMod`
 
 A whisper that is sent to a bot that a mod was applied to.
 
@@ -51,7 +52,7 @@ let that: {
 };
 ```
 
-### `onCombine()`
+### `@onCombine`
 
 A whisper that is sent to both of the bots that are being combined.
 
@@ -63,7 +64,7 @@ let that: {
 };
 ```
 
-### `onCombineEnter()`
+### `@onCombineEnter`
 
 A whisper that is sent to both of the bots when one bot is dragged onto the other bot.
 
@@ -75,7 +76,7 @@ let that: {
 };
 ```
 
-### `onCombineExit()`
+### `@onCombineExit`
 
 A whisper that is sent to both of the bots when one bot is dragged off of the other bot.
 
@@ -87,7 +88,7 @@ let that: {
 };
 ```
 
-### `onClick()`
+### `@onClick`
 
 A whisper that is sent to the bot that was clicked.
 
@@ -99,7 +100,7 @@ let that: {
 };
 ```
 
-### `onPointerEnter()`
+### `@onPointerEnter`
 
 A whisper that is sent to a bot when the mouse cursor starts to hover over it.
 
@@ -111,7 +112,7 @@ let that: {
 };
 ```
 
-### `onPointerExit()`
+### `@onPointerExit`
 
 A whisper that is sent to a bot when the mouse cursor stops hovering over it.
 
@@ -123,7 +124,7 @@ let that: {
 };
 ```
 
-### `onPointerDown()`
+### `@onPointerDown`
 
 A whipser that is sent to a bot when the user starts clicking it.
 
@@ -135,7 +136,7 @@ let that: {
 };
 ```
 
-### `onPointerUp()`
+### `@onPointerUp`
 
 A whisper that is sent to a bot when the user stops clicking it.
 
@@ -147,7 +148,7 @@ let that: {
 };
 ```
 
-### `onBotDrag()`
+### `@onBotDrag`
 
 A whisper that is sent whenever a bot is starting to be dragged.
 
@@ -162,7 +163,7 @@ let that: {
 };
 ```
 
-### `onBotDrop()`
+### `@onBotDrop`
 
 A whisper that is sent whenever a bot has been dropped after being dragged.
 
@@ -182,7 +183,7 @@ let that: {
 };
 ```
 
-### `onSaveInput()`
+### `@onSaveInput`
 
 A whisper that is sent when the input box for a bot has been changed by the user.
 
@@ -191,7 +192,7 @@ A whisper that is sent when the input box for a bot has been changed by the user
 let that = null;
 ```
 
-### `onCloseInput()`
+### `@onCloseInput`
 
 A whisper that is sent when the input box for a bot has been closed by the user.
 
@@ -200,7 +201,7 @@ A whisper that is sent when the input box for a bot has been closed by the user.
 let that = null;
 ```
 
-### `onListen()`
+### `@onListen`
 
 A whisper that is sent whenever a whisper or shout is sent to this bot.
 
@@ -219,7 +220,7 @@ let that: {
 
 Shouts are events which are sent to all bots.
 
-### `onAnyBotClicked()`
+### `@onAnyBotClicked`
 
 A shout that is sent to all bots when a bot is clicked.
 
@@ -232,7 +233,7 @@ let that: {
 };
 ```
 
-### `onGridClick()`
+### `@onGridClick`
 
 A shout that is sent to all bots when the user clicks on empty space.
 
@@ -247,7 +248,7 @@ let that: {
 };
 ```
 
-### `onPlayerEnterContext()`
+### `@onPlayerEnterContext`
 
 A shout that is sent to all bots when the player enters a context.
 
@@ -258,7 +259,7 @@ let that: {
 };
 ```
 
-### `onBarcodeScanned()`
+### `@onBarcodeScanned`
 
 A shout that is sent to all bots when the player scans a barcode.
 
@@ -267,15 +268,15 @@ A shout that is sent to all bots when the player scans a barcode.
 let that: string;
 ```
 
-### `onBarcodeScannerOpened()`
+### `@onBarcodeScannerOpened`
 
 A shout that is sent to all bots when the barcode scanner is opened.
 
-### `onBarcodeScannerClosed()`
+### `@onBarcodeScannerClosed`
 
 A shout that is sent to all bots when the barcode scanner is closed.
 
-### `onQRCodeScanned()`
+### `@onQRCodeScanned`
 
 A shout that is sent to all bots when a QR Code is scanned.
 
@@ -284,15 +285,15 @@ A shout that is sent to all bots when a QR Code is scanned.
 let that: string;
 ```
 
-### `onQRCodeScannerOpened()`
+### `@onQRCodeScannerOpened`
 
 A shout that is sent to all bots when the QR Code Scanner is opened.
 
-### `onQRCodeScannerClosed()`
+### `@onQRCodeScannerClosed`
 
 A shout that is sent to all bots when the QR Code Scanner is closed.
 
-### `onTapCode()`
+### `@onTapCode`
 
 A shout that is sent to all bots whenever a 4-digit tap code is entered.
 
@@ -301,7 +302,7 @@ A shout that is sent to all bots whenever a 4-digit tap code is entered.
 let that: string;
 ```
 
-### `onKeyDown()`
+### `@onKeyDown`
 
 A shout that is sent to all bots whenever the user starts pressing a key.
 
@@ -312,7 +313,7 @@ let that: {
 };
 ```
 
-### `onKeyUp()`
+### `@onKeyUp`
 
 A shout that is sent to all bots whenever the user stops pressing a key.
 
@@ -323,7 +324,7 @@ let that: {
 };
 ```
 
-### `onChannelSubscribed()`
+### `@onChannelSubscribed`
 
 A shout that is sent when a channel is loaded.
 Sent to every channel that is loaded.
@@ -335,7 +336,7 @@ let that: {
 };
 ```
 
-### `onChannelUnsubscribed()`
+### `@onChannelUnsubscribed`
 
 A shout that is sent when a channel is unloaded.
 Sent to every channel that is loaded.
@@ -347,7 +348,7 @@ let that: {
 };
 ```
 
-### `onChannelStreaming()`
+### `@onChannelStreaming`
 
 A shout that is sent when a channel is connected and fully synced.
 Sent to every channel that is loaded.
@@ -359,7 +360,7 @@ let that: {
 };
 ```
 
-### `onChannelStreamLost()`
+### `@onChannelStreamLost`
 
 A shout that is sent when a channel has been temporarily disconnected from the server.
 Sent to every channel that is loaded.
@@ -371,7 +372,7 @@ let that: {
 };
 ```
 
-### `onCheckout()`
+### `@onCheckout`
 
 A shout that is sent when the user submits their credit card info to purchase something.
 
@@ -388,7 +389,7 @@ let that: {
 };
 ```
 
-### `onPaymentSuccessful()`
+### `@onPaymentSuccessful`
 
 A shout that is sent when payment has been approved for a checkout.
 
@@ -404,7 +405,7 @@ let that: {
 };
 ```
 
-### `onPaymentFailed()`
+### `@onPaymentFailed`
 
 A shout that is sent when payment has been approved for a checkout.
 
@@ -420,7 +421,7 @@ let that: {
 };
 ```
 
-### `onAnyBotDrag()`
+### `@onAnyBotDrag`
 
 A shout that is sent whenever a bot starts to be dragged.
 
@@ -436,7 +437,7 @@ let that: {
 };
 ```
 
-### `onAnyBotDrop()`
+### `@onAnyBotDrop`
 
 A shout that is sent whenever a bot is dropped after being dragged.
 
@@ -457,7 +458,7 @@ let that: {
 };
 ```
 
-### `onAnyListen()`
+### `@onAnyListen`
 
 A shout that is sent whenever a whisper or shout is issued.
 
@@ -472,7 +473,7 @@ let that: {
 };
 ```
 
-### `onWebhook()`
+### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.
 
@@ -486,7 +487,7 @@ let that: {
 };
 ```
 
-### `onChannelAction()`
+### `@onChannelAction`
 
 A whisper that is sent to the config bot whenever an action happens.
 

@@ -34,6 +34,33 @@ AUX has many tags.
 
 The ID of the bot.
 
+Every bot has an automatically generated unique ID which cannot be changed.
+
+### `space`
+
+<Badges>
+  <ReadOnlyBadge/>
+</Badges>
+
+The space the bot lives in.
+
+Every bot is stored in a space which specifies how long the bot lives and if it is shared with other people.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='shared'>
+    The bot is saved on the AUXPlayer and is shared with everyone else. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='local'>
+    The bot is saved on the device it was created from and is not shared with other devices.
+  </PossibleValueCode>
+  <PossibleValueCode value='tempLocal'>
+    The bot is not saved and is not shared with other sessions.
+    When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `auxCreator`
 
 <Badges>
@@ -84,18 +111,18 @@ The mode which controls how a bot can be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxStackable`
+### `auxPositioningMode`
 
-Whether the bot is able to be stacked.
+The positioning mode that the bot uses.
 
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='true'>
+  <PossibleValueCode value='stack'>
     The bot can be stacked upon other bots and other bots can be stacked upon it. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='false'>
-    The bot cannot be stacked upon other bots and other bots cannot be stacked upon it.
+  <PossibleValueCode value='absolute'>
+    The bot will ignore all other bots for positioning.
   </PossibleValueCode>
 </PossibleValuesTable>
 

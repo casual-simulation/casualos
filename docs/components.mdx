@@ -40,7 +40,7 @@ export const AnyColorValues = ({}) => (<>
   </PossibleValue>
 </>);
 
-export const TagLink = ({tag}) => tag.endsWith('()') ? 
+export const TagLink = ({tag}) => tag.startsWith('@') ? 
   (<ListenTagLink tag={tag}/>) : 
   (<DataTagLink tag={tag}/>);
 
@@ -51,8 +51,8 @@ export const DataTagLink = ({tag}) => (
 );
 
 export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)]/g, '').toLowerCase()}>
-    <NormalCode>#{tag}</NormalCode>
+  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)\@]/g, '').toLowerCase()}>
+    <NormalCode>{tag}</NormalCode>
   </a>
 );
 
@@ -88,14 +88,14 @@ export const LabelAnchorValues = ({}) => (<>
 </>)
 
 export const Badges = ({children}) => (
-  <div class='row badge-row'>
-    <div class='col'>
+  <div className='row badge-row'>
+    <div className='col'>
       {children}
     </div>
   </div>
 );
 
-export const Badge = ({type, children}) => (<span class={`badge badge--${type}`}>{children}</span>);
+export const Badge = ({type, children}) => (<span className={`badge badge--${type}`}>{children}</span>);
 
 export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
 
@@ -104,7 +104,7 @@ export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_
 export const UserBotBadge = ({url}) => (<Badge type='primary'>Player Bot</Badge>);
 
 export const Alert = ({type, children}) => (
-    <div class={`alert alert--${type}`} role='alert'>
+    <div className={`alert alert--${type}`} role='alert'>
         {children}
     </div>
 );
