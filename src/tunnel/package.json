@@ -41,7 +41,7 @@
         "access": "public"
     },
     "dependencies": {
-        "commander": "3.0.0",
+        "commander": "4.0.1",
         "jsonwebtoken": "8.5.1",
         "rxjs": "^6.5.2",
         "socket.io": "2.2.0",

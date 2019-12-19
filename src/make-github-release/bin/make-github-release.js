@@ -4,10 +4,10 @@ const childProcess = require('child_process');
 
 program
     .command('release')
-    .option('-o, --owner <owner>', 'The owner of the repo.')
-    .option('-r, --repo <repo>', 'The name of the repo.')
-    .option('-t, --text <text>', 'The release text')
-    .option('-a, --auth <auth>', 'The authorization token to use.')
+    .requiredOption('-o, --owner <owner>', 'The owner of the repo.')
+    .requiredOption('-r, --repo <repo>', 'The name of the repo.')
+    .requiredOption('-t, --text <text>', 'The release text')
+    .requiredOption('-a, --auth <auth>', 'The authorization token to use.')
     .action(cmd => {
         const { auth, text, owner, repo } = cmd;
         const github = new Octokit({

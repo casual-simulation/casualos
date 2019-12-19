@@ -36,6 +36,6 @@
     },
     "dependencies": {
         "@octokit/rest": "16.35.2",
-        "commander": "3.0.0"
+        "commander": "4.0.1"
     }
 }
