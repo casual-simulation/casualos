@@ -176,7 +176,7 @@ def CreateGithubRelease() {
     . ~/.bashrc
     echo \$(pwd)
     CHANGELOG=\$(./script/most_recent_changelog.sh)
-    lerna exec --scope @casual-simulation/make-github-release start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t \"\${CHANGELOG}\" -a ${GITHUB_RELEASE_TOKEN}
+    lerna exec --scope @casual-simulation/make-github-release -- npm start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t \\"\${CHANGELOG}\\" -a ${GITHUB_RELEASE_TOKEN}
     """
 }
 
