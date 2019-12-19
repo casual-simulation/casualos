@@ -494,8 +494,9 @@ export default class BotTable extends Vue {
     }
 
     private _formatNewTag(newTag: string) {
+        const parsed = parseScript(newTag);
         return {
-            tag: parseScript(newTag),
+            tag: parsed !== null ? parsed : newTag,
             isScript: isScript(newTag),
         };
     }
