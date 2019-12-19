@@ -10,9 +10,9 @@ pipeline {
         DOCKER_ARM32_TAG = "casualsimulation/aux-arm32"
         DOCKER_USERNAME = credentials('jenkins-docker-username')
         DOCKER_PASSWORD = credentials('jenkins-docker-password')
-        // GITHUB_RELEASE_TOKEN = credentials('aux-release-token')
-        // AUX_GIT_REPO_OWNER = 'casual-simulation'
-        // AUX_GIT_REPO_NAME = 'aux'
+        GITHUB_RELEASE_TOKEN = credentials('AUX_RELEASE_TOKEN')
+        AUX_GIT_REPO_OWNER = 'casual-simulation'
+        AUX_GIT_REPO_NAME = 'aux'
     }
 
     tools {
@@ -36,11 +36,11 @@ pipeline {
                 InstallNPMPackages()
             }
         }
-        // stage('Create Github Release') {
-        //     steps {
-        //         // CreateGithubRelease()
-        //     }
-        // }
+        stage('Create Github Release') {
+            steps {
+                CreateGithubRelease()
+            }
+        }
         stage('Test') {
             steps {
                 Tests()
@@ -170,15 +170,15 @@ def PublishNPM() {
     """
 }
 
-// def CreateGithubRelease() {
-//     sh """#!/bin/bash
-//     set -e
-//     . ~/.bashrc
-//     echo \$(pwd)
-//     CHANGELOG=\$(./script/most_recent_changelog.sh)
-//     lerna exec --scope @casual-simulation/make-github-release start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t "\${CHANGELOG}" -a ${GITHUB_RELEASE_TOKEN}
-//     """
-// }
+def CreateGithubRelease() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+    echo \$(pwd)
+    CHANGELOG=\$(./script/most_recent_changelog.sh)
+    lerna exec --scope @casual-simulation/make-github-release start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t "\${CHANGELOG}" -a ${GITHUB_RELEASE_TOKEN}
+    """
+}
 
 def PublishDocker() {
     sh """#!/bin/bash
