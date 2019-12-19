@@ -36,6 +36,11 @@ pipeline {
                 InstallNPMPackages()
             }
         }
+        stage('Create Github Release') {
+            steps {
+                CreateGithubRelease()
+            }
+        }
         stage('Test') {
             steps {
                 Tests()
@@ -50,11 +55,6 @@ pipeline {
         stage('Publish Packages') {
             steps {
                 PublishNPM()
-            }
-        }
-        stage('Create Github Release') {
-            steps {
-                CreateGithubRelease()
             }
         }
         stage('Build/Publish Docker x64') {
@@ -171,11 +171,12 @@ def PublishNPM() {
 }
 
 def CreateGithubRelease() {
-    env.CHANGELOG = sh(returnStdout: true, script: './script/most_recent_changelog.sh').trim()
     sh """#!/bin/bash
     set -e
     . ~/.bashrc
-    lerna exec --scope @casual-simulation/make-github-release start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t "${CHANGELOG}" -a ${GITHUB_RELEASE_TOKEN}
+    echo $(pwd)
+    CHANGELOG=\$(./script/most_recent_changelog.sh)
+    lerna exec --scope @casual-simulation/make-github-release start -- release -o ${AUX_GIT_REPO_OWNER} -r ${AUX_GIT_REPO_NAME} -t "\${CHANGELOG}" -a ${GITHUB_RELEASE_TOKEN}
     """
 }
 
