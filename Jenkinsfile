@@ -10,6 +10,9 @@ pipeline {
         DOCKER_ARM32_TAG = "casualsimulation/aux-arm32"
         DOCKER_USERNAME = credentials('jenkins-docker-username')
         DOCKER_PASSWORD = credentials('jenkins-docker-password')
+        GITHUB_RELEASE_TOKEN = credentials('aux-release-token')
+        AUX_GIT_REPO_OWNER = 'casual-simulation'
+        AUX_GIT_REPO_NAME = 'aux'
     }
 
     tools {
@@ -47,6 +50,11 @@ pipeline {
         stage('Publish Packages') {
             steps {
                 PublishNPM()
+            }
+        }
+        stage('Create Github Release') {
+            steps {
+                CreateGithubRelease()
             }
         }
         stage('Build/Publish Docker x64') {
@@ -159,6 +167,16 @@ def PublishNPM() {
     for i in {1..5}; do 
         npm install --package-lock-only && break || sleep 5;
     done
+    """
+}
+
+def CreateGithubRelease() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+    
+    CHANGELOG=$(./script/most_recent_changelog.sh)
+    lerna exec --scope @casual-simulation/make-github-release start -- npm start -- release -o "${AUX_GIT_REPO_OWNER}" -r "${AUX_GIT_REPO_NAME}" -t "${CHANGELOG}" -a "${GITHUB_RELEASE_TOKEN}"
     """
 }
 
