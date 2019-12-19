@@ -44,6 +44,7 @@
             -   Does not detect references via the `bot` or `this` variables. (e.g. `bot.tags.abc`)
             -   Does not detect references via other bots. (e.g. `otherBot.tags.abc`)
             -   Does not detect references if a function is called on the tag. (e.g. `tags.name.toString()`)
+        -   If you need to work around the limitations, use the `getTag()` function.
 
 ## V0.11.15
 
