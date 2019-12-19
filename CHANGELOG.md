@@ -37,6 +37,14 @@
     -   Added the ability to use an @ symbol while creating a new tag to prefill the editor with an @.
     -   Added the ability to use @ symbols in tags in `getTag()`, `setTag()`, `getBot()`, `getBots()`, `byTag()`, `shout()`, and `whisper()`.
     -   Added tag filters for listener tags and formula tags to the bot table.
+    -   Added the ability to detect the `tags` variable in scripts as a reference to tags.
+        -   This is useful for knowing when to update a formula.
+        -   Also works with the `raw` variable.
+        -   Limitations:
+            -   Does not detect references via the `bot` or `this` variables. (e.g. `bot.tags.abc`)
+            -   Does not detect references via other bots. (e.g. `otherBot.tags.abc`)
+            -   Does not detect references if a function is called on the tag. (e.g. `tags.name.toString()`)
+        -   If you need to work around the limitations, use the `getTag()` function.
 
 ## V0.11.15
 

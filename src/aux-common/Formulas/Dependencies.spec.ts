@@ -1053,11 +1053,12 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'def',
+                    dependencies: [],
                 },
             ]);
         });
 
-        it('should include members that the tree is dependent on', () => {
+        it('should not oversimplify members that the tree is dependent on', () => {
             const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
@@ -1076,7 +1077,45 @@ describe('Dependencies', () => {
             expect(result).toEqual([
                 {
                     type: 'member',
-                    name: 'test.abc',
+                    name: 'test',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            name: 'abc',
+                            dependencies: [],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should correctly handle member names with dots', () => {
+            const result = dependencies.simplify({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'member',
+                        identifier: 'abc',
+                        object: {
+                            type: 'member',
+                            identifier: 'test.other',
+                            object: null,
+                        },
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'member',
+                    name: 'test.other',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            name: 'abc',
+                            dependencies: [],
+                        },
+                    ],
                 },
             ]);
         });
@@ -1154,6 +1193,7 @@ describe('Dependencies', () => {
                             {
                                 type: 'member',
                                 name: 'isBuilder',
+                                dependencies: [],
                             },
                             {
                                 type: 'function',
@@ -1331,6 +1371,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'myVar',
+                                    dependencies: [],
                                 },
                             ],
                         },
@@ -1389,6 +1430,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'a',
+                    dependencies: [],
                 },
                 {
                     type: 'literal',
@@ -1397,6 +1439,8 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'a',
+
+                    dependencies: [],
                 },
                 {
                     type: 'literal',
@@ -1425,6 +1469,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'abc',
+                    dependencies: [],
                 },
                 {
                     type: 'function',
@@ -1458,6 +1503,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'this',
+                                    dependencies: [],
                                 },
                             ],
                         },
@@ -1479,6 +1525,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'abc',
+                    dependencies: [],
                 },
                 {
                     type: 'function',
@@ -1521,6 +1568,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'this',
+                                    dependencies: [],
                                 },
                             ],
                         },
@@ -1538,12 +1586,14 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             name: 'this',
+                            dependencies: [],
                         },
                     ],
                 },
                 {
                     type: 'member',
                     name: 'this',
+                    dependencies: [],
                 },
                 {
                     type: 'tag',
@@ -1636,6 +1686,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: name,
+                        dependencies: [],
                     },
                 ]);
             });
@@ -1704,6 +1755,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'getBotTagValues',
+                        dependencies: [],
                     },
                 ]);
             });
@@ -1748,7 +1800,14 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'member',
-                        name: 'player.isDesigner',
+                        name: 'player',
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: 'isDesigner',
+                                dependencies: [],
+                            },
+                        ],
                     },
                 ]);
             });
@@ -1780,19 +1839,38 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'member',
-                        name: 'player.hasBotInInventory',
+                        name: 'player',
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: 'hasBotInInventory',
+                                dependencies: [],
+                            },
+                        ],
                     },
                 ]);
             });
         });
 
         const playerContextCases = [
-            ['player.getMenuContext', '_auxUserMenuContext'],
-            ['player.getInventoryContext', '_auxUserInventoryContext'],
-            ['player.getCurrentContext', '_auxUserContext'],
+            [
+                'player.getMenuContext',
+                '_auxUserMenuContext',
+                ['player', 'getMenuContext'],
+            ],
+            [
+                'player.getInventoryContext',
+                '_auxUserInventoryContext',
+                ['player', 'getInventoryContext'],
+            ],
+            [
+                'player.getCurrentContext',
+                '_auxUserContext',
+                ['player', 'getCurrentContext'],
+            ],
         ];
 
-        describe.each(playerContextCases)('%s()', (name, tag) => {
+        describe.each(playerContextCases)('%s()', (name, tag, names) => {
             it(`should replace with a tag dependency on ${tag}`, () => {
                 const tree = dependencies.dependencyTree(`${name}()`);
                 const simple = dependencies.simplify(tree);
@@ -1831,7 +1909,14 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'member',
-                        name: name,
+                        name: names[0],
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: names[1],
+                                dependencies: [],
+                            },
+                        ],
                     },
                 ]);
             });
@@ -1849,7 +1934,9 @@ describe('Dependencies', () => {
                     {
                         type: 'tag_value',
                         name: 'abc.xyz',
-                        dependencies: [{ type: 'member', name: 'myVar' }],
+                        dependencies: [
+                            { type: 'member', name: 'myVar', dependencies: [] },
+                        ],
                     },
                 ]);
             });
@@ -1865,7 +1952,9 @@ describe('Dependencies', () => {
                     {
                         type: 'tag_value',
                         name: 'abc.xyz',
-                        dependencies: [{ type: 'member', name: 'myVar' }],
+                        dependencies: [
+                            { type: 'member', name: 'myVar', dependencies: [] },
+                        ],
                     },
                     {
                         type: 'tag_value',
@@ -1884,6 +1973,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'getTag',
+                        dependencies: [],
                     },
                 ]);
             });
@@ -1899,6 +1989,99 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'all',
+                    },
+                ]);
+            });
+        });
+
+        const tagsVariableCases = [['tags'], ['raw']];
+
+        describe.each(tagsVariableCases)('%s', (name: string) => {
+            it('should replace with a tag value dependency', () => {
+                const tree = dependencies.dependencyTree(`${name}.abc`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            // TODO: Refactor how functions are converted to dependencies
+            // so we can support this
+            it.skip('should support operations after accessing the tag', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}.abc.toString()`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should support using the tags variable in expressions', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}.num + tags.abc`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'num',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'tag_value',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should support using the tags variable in other functions', () => {
+                const tree = dependencies.dependencyTree(
+                    `testFunction(${name}.num)`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'function',
+                        name: 'testFunction',
+                        dependencies: [
+                            {
+                                type: 'tag_value',
+                                name: 'num',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it('should support using indexer expressions', () => {
+                const tree = dependencies.dependencyTree(`${name}["abc.def"]`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'abc.def',
+                        dependencies: [],
                     },
                 ]);
             });
@@ -1933,7 +2116,9 @@ describe('Dependencies', () => {
                 {
                     type: 'tag_value',
                     name: 'def',
-                    dependencies: [{ type: 'member', name: 'abc' }],
+                    dependencies: [
+                        { type: 'member', name: 'abc', dependencies: [] },
+                    ],
                 },
             ]);
         });

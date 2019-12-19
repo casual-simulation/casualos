@@ -148,16 +148,49 @@ export class Dependencies {
             return this._simpleRootDependencies(root);
         }
 
-        const name = this.getMemberName(node);
-        if (name.indexOf('this') === 0) {
+        let stack = [];
+        let current: AuxScriptObjectDependency = node;
+        while (current) {
+            stack.unshift(current);
+            if (current.type === 'member') {
+                current = current.object;
+            } else if (current.type === 'bot') {
+                current = null;
+            } else if (current.type === 'tag') {
+                current = null;
+            } else if (current.type === 'call') {
+                current = current.identifier;
+                // current = null;
+            }
+        }
+
+        let firstMember: AuxScriptSimpleMemberDependency;
+        let currentMember: AuxScriptSimpleMemberDependency = null;
+        for (let abc of stack) {
+            if (abc.type === 'member') {
+                let nextMember: AuxScriptSimpleMemberDependency = {
+                    type: 'member',
+                    name: abc.identifier,
+                    dependencies: [],
+                };
+
+                if (currentMember) {
+                    currentMember.dependencies.push(nextMember);
+                } else {
+                    firstMember = nextMember;
+                }
+                currentMember = nextMember;
+            }
+        }
+
+        if (!firstMember) {
+            return [];
+        }
+
+        if (firstMember.name === 'this') {
             return [{ type: 'this' }];
         }
-        return [
-            <AuxScriptSimpleMemberDependency>{
-                type: 'member',
-                name: name,
-            },
-        ];
+        return [firstMember];
     }
 
     private _rootMembers(
@@ -431,6 +464,48 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
+        tags: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const extras = node.dependencies;
+                return extras.map((n, i) => {
+                    const name = getMemberName(n);
+                    if (!name) {
+                        return { type: 'all' };
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies: [],
+                    };
+                });
+            }
+
+            return [];
+        },
+        raw: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+            if (node.dependencies.length >= 1) {
+                const extras = node.dependencies;
+                return extras.map((n, i) => {
+                    const name = getMemberName(n);
+                    if (!name) {
+                        return { type: 'all' };
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies: [],
+                    };
+                });
+            }
+
+            return [];
+        },
         getBot: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
@@ -576,6 +651,13 @@ function getNodeValue(node: AuxScriptSimpleDependency): string {
     return null;
 }
 
+function getMemberName(node: AuxScriptSimpleDependency): string {
+    if (node.type === 'member') {
+        return trimTag(node.name);
+    }
+    return null;
+}
+
 export type AuxScriptDependency =
     | AuxScriptTagDependency
     | AuxScriptBotDependency
@@ -685,6 +767,7 @@ export interface AuxScriptSimpleFunctionDependency {
 export interface AuxScriptSimpleMemberDependency {
     type: 'member';
     name: string;
+    dependencies: AuxScriptSimpleDependency[];
 }
 
 export type AuxScriptSimpleLiteralDependency = AuxScriptLiteralDependency;
