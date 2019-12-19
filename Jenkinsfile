@@ -10,9 +10,9 @@ pipeline {
         DOCKER_ARM32_TAG = "casualsimulation/aux-arm32"
         DOCKER_USERNAME = credentials('jenkins-docker-username')
         DOCKER_PASSWORD = credentials('jenkins-docker-password')
-        GITHUB_RELEASE_TOKEN = credentials('aux-release-token')
-        AUX_GIT_REPO_OWNER = 'casual-simulation'
-        AUX_GIT_REPO_NAME = 'aux'
+        // GITHUB_RELEASE_TOKEN = credentials('aux-release-token')
+        // AUX_GIT_REPO_OWNER = 'casual-simulation'
+        // AUX_GIT_REPO_NAME = 'aux'
     }
 
     tools {
