@@ -54,9 +54,7 @@ pipeline {
         }
         stage('Create Github Release') {
             steps {
-                node {
-                    CreateGithubRelease()
-                }
+                CreateGithubRelease()
             }
         }
         stage('Build/Publish Docker x64') {
