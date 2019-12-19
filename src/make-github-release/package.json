@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/make-github-release",
-    "version": "0.11.15",
+    "version": "0.11.16",
     "description": "A CLI to create a github release.",
     "keywords": [
         "cli",
@@ -35,7 +35,7 @@
         "access": "public"
     },
     "dependencies": {
-        "commander": "3.0.0",
-        "@octokit/rest": "16.35.2"
+        "@octokit/rest": "16.35.2",
+        "commander": "3.0.0"
     }
 }
