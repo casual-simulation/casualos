@@ -4,6 +4,9 @@ import {
     Bot as NormalBot,
     ScriptBot,
     BOT_SPACE_TAG,
+    CREATE_ACTION_NAME,
+    DESTROY_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -45,24 +48,21 @@ import {
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
     setupChannel as calcSetupChannel,
+    setClipboard as calcSetClipboard,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
 import every from 'lodash/every';
 import {
     calculateFormulaValue,
-    COMBINE_ACTION_NAME,
     isBot,
     // isFormulaObject,
     // unwrapProxy,
-    CREATE_ACTION_NAME,
-    DESTROY_ACTION_NAME,
     isBotInContext,
     tagsOnBot,
     isDestroyable,
     isInUsernameList,
     getBotUsernameList,
-    DIFF_ACTION_NAME,
     trimTag,
     trimEvent,
     hasValue,
@@ -760,16 +760,6 @@ function create(...mods: Mod[]) {
 }
 
 /**
- * Combines the two given bots.
- * @param first The first bot.
- * @param second The second bot.
- * @param argument The argument to include in the script calls.
- */
-function combine(first: Bot | string, second: Bot | string, argument?: any) {
-    return event(COMBINE_ACTION_NAME, [first, second], argument);
-}
-
-/**
  * Runs an event on the given bots.
  * @param name The name of the event to run.
  * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
@@ -978,11 +968,20 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
 
 /**
  * Replaces the bot that the user is beginning to drag.
- * Only works from inside a onBotDrag() or onAnyBotDrag() listen tag.
+ * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
  * @param bot The bot or mod that should be dragged instead of the original.
  */
 function replaceDragBot(bot: Mod) {
     const event = calcReplaceDragBot(unwrapBotOrMod(bot));
+    return addAction(event);
+}
+
+/**
+ * Sets the text stored in the player's clipboard.
+ * @param text The text to set to the clipboard.
+ */
+function setClipboard(text: string) {
+    const event = calcSetClipboard(text);
     return addAction(event);
 }
 
@@ -1702,12 +1701,6 @@ function applyMod(bot: any, ...diffs: Mod[]) {
             setTag(bot, key, tags[key]);
         }
     });
-
-    if (isScriptBot(bot)) {
-        event(DIFF_ACTION_NAME, [bot], {
-            diffs: appliedDiffs,
-        });
-    }
 }
 
 /**
@@ -1777,12 +1770,6 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
             setTag(bot, key, null);
         }
     });
-
-    if (isScriptBot(bot)) {
-        event(DIFF_ACTION_NAME, [bot], {
-            diffs: subtractedDiffs,
-        });
-    }
 }
 
 /**
@@ -2085,6 +2072,7 @@ const player = {
     showInputForTag,
     checkout,
     replaceDragBot,
+    setClipboard,
 
     openDevConsole,
 };
@@ -2131,7 +2119,6 @@ export default {
     action: actionNamespace,
 
     // Global functions
-    combine,
     create,
     byCreator,
     destroy,

@@ -22,6 +22,8 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     AuxBot,
     PrecalculatedBot,
+    isScript,
+    parseScript,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -45,6 +47,7 @@ import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
+import sumBy from 'lodash/sumBy';
 
 @Component({
     components: {
@@ -138,7 +141,7 @@ export default class BotTable extends Vue {
     }
 
     isSpecialTag(tag: string): boolean {
-        if (tag === 'actions()' || tag === 'hidden') {
+        if (tag === '@' || tag === 'hidden' || tag === '=') {
             return true;
         } else {
             return false;
@@ -163,6 +166,26 @@ export default class BotTable extends Vue {
 
     isBotReadOnly(bot: Bot): boolean {
         return this.editableMap.get(bot.id) === false;
+    }
+
+    isTagOnlyScripts(tag: string) {
+        const numScripts = sumBy(this.bots, b =>
+            isScript(b.tags[tag]) ? 1 : 0
+        );
+        const emptyTags = sumBy(this.bots, b =>
+            !hasValue(b.tags[tag]) ? 1 : 0
+        );
+        return numScripts > 0 && this.bots.length === numScripts + emptyTags;
+    }
+
+    isTagOnlyFormulas(tag: string) {
+        const numFormulas = sumBy(this.bots, b =>
+            isFormula(b.tags[tag]) ? 1 : 0
+        );
+        const emptyTags = sumBy(this.bots, b =>
+            !hasValue(b.tags[tag]) ? 1 : 0
+        );
+        return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
     }
 
     get botTableGridStyle() {
@@ -396,6 +419,9 @@ export default class BotTable extends Vue {
         }
 
         if (this.isMakingNewTag) {
+            const { tag, isScript } = this._formatNewTag(this.newTag);
+            this.newTag = tag;
+
             this.dropDownUsed = true;
             this.newTagOpen = true;
 
@@ -453,6 +479,10 @@ export default class BotTable extends Vue {
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
+                        // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
+                        if (isScript) {
+                            tag.setInitialValue('@');
+                        }
                         break;
                     }
                 }
@@ -461,6 +491,14 @@ export default class BotTable extends Vue {
             this.newTag = '';
             this.newTagPlacement = placement;
         }
+    }
+
+    private _formatNewTag(newTag: string) {
+        const parsed = parseScript(newTag);
+        return {
+            tag: parsed !== null ? parsed : newTag,
+            isScript: isScript(newTag),
+        };
     }
 
     openNewTag(placement: NewTagPlacement = 'top') {
@@ -474,20 +512,12 @@ export default class BotTable extends Vue {
             return;
         }
 
-        this.newTag = inputTag;
+        const { tag, isScript } = this._formatNewTag(inputTag);
+        this.newTag = tag;
         this.newTagPlacement = 'bottom';
 
         this.dropDownUsed = true;
         this.newTagOpen = true;
-
-        if (inputTag.includes('onCombine(')) {
-            this.$nextTick(() => {
-                this.$nextTick(() => {
-                    this.dropDownUsed = false;
-                });
-            });
-            return;
-        }
 
         this.$nextTick(() => {
             this.$nextTick(() => {
@@ -540,7 +570,10 @@ export default class BotTable extends Vue {
             for (let tag of tags) {
                 if (tag.tag === addedTag) {
                     tag.$el.focus();
-
+                    // This is a super hacky way to pre-fill the first bot's tag with an @ symbol
+                    if (isScript) {
+                        tag.setInitialValue('@');
+                    }
                     break;
                 }
             }
@@ -794,11 +827,32 @@ export default class BotTable extends Vue {
 
         let hiddenList: (string | boolean)[] = [];
         let generalList: (string | boolean)[] = [];
+        let listenerList: (string | boolean)[] = [];
+        let formulaList: (string | boolean)[] = [];
 
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (isHiddenTag(sortedArray[i])) {
-                hiddenList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
+            const tag = sortedArray[i];
+            let removed = false;
+            if (isHiddenTag(tag)) {
+                hiddenList.push(tag);
+                if (!removed) {
+                    sortedArray.splice(i, 1);
+                    removed = true;
+                }
+            }
+            if (this.isTagOnlyScripts(tag)) {
+                listenerList.push(tag);
+                if (!removed) {
+                    sortedArray.splice(i, 1);
+                    removed = true;
+                }
+            }
+            if (this.isTagOnlyFormulas(tag)) {
+                formulaList.push(tag);
+                if (!removed) {
+                    sortedArray.splice(i, 1);
+                    removed = true;
+                }
             }
         }
 
@@ -878,6 +932,38 @@ export default class BotTable extends Vue {
             hiddenList.forEach(hiddenTags => {
                 sortedArray.push(<string>hiddenTags);
             });
+        }
+
+        if (listenerList.length > 0) {
+            let activeCheck = false;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === '@') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            listenerList.unshift(activeCheck);
+            listenerList.unshift('@');
+            blacklist.unshift(listenerList);
+        }
+
+        if (formulaList.length > 0) {
+            let activeCheck = false;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === '@') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            formulaList.unshift(activeCheck);
+            formulaList.unshift('=');
+            blacklist.unshift(formulaList);
         }
 
         if (sortedArray.length > 0) {

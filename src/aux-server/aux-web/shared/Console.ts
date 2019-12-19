@@ -6,7 +6,7 @@ import {
     Subject,
     ReplaySubject,
 } from 'rxjs';
-import { share } from 'rxjs/operators';
+import { share, shareReplay } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 
 const externalMessages = new ReplaySubject<ConsoleMessages>(1000);
@@ -19,7 +19,7 @@ export const messages = merge(
     createMessagesObservable('warn'),
     createMessagesObservable('error'),
     externalMessages
-).pipe(share());
+).pipe(shareReplay(100));
 
 /**
  * Records the given console message.

@@ -8,10 +8,8 @@ import {
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
     Object,
-    filtersMatchingArguments,
     AuxBot,
     BotCalculationContext,
-    COMBINE_ACTION_NAME,
     getBotConfigContexts,
     Bot,
 } from '@casual-simulation/aux-common';

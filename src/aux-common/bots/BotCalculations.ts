@@ -71,136 +71,6 @@ export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 export var ShortId_Length: number = 5;
 
 /**
- * The name of the event that represents two bots getting combined.
- */
-export const COMBINE_ACTION_NAME: string = 'onCombine';
-
-/**
- * The name of the event that represents a bot being diffed into another bot.
- */
-export const DIFF_ACTION_NAME: string = 'onMod';
-
-/**
- * The name of the event that represents a bot being created.
- */
-export const CREATE_ACTION_NAME: string = 'onCreate';
-
-/**
- * The name of the event that represents a bot being destroyed.
- */
-export const DESTROY_ACTION_NAME: string = 'onDestroy';
-
-/**
- * The name of the event that represents a bot being dropped onto a context.
- */
-export const DROP_ACTION_NAME: string = 'onBotDrop';
-
-/**
- * The name of the event that represents any bot being dropped onto a context.
- */
-export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
-
-/**
- * The name of the event that represents a bot starting to be dragged.
- */
-export const DRAG_ACTION_NAME: string = 'onBotDrag';
-
-/**
- * The name of the event that represents any bot starting to be dragged.
- */
-export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
-
-/**
- * The name of the event that is triggered when a QR Code is scanned.
- */
-export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
-
-/**
- * The name of the event that is triggered when the QR Code scanner is closed.
- */
-export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
-    'onQRCodeScannerClosed';
-
-/**
- * The name of the event that is triggered when the QR Code scanner is opened.
- */
-export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
-    'onQRCodeScannerOpened';
-
-/**
- * The name of the event that is triggered when the Barcode scanner is closed.
- */
-export const ON_BARCODE_SCANNER_CLOSED_ACTION_NAME: string =
-    'onBarcodeScannerClosed';
-
-/**
- * The name of the event that is triggered when the Barcode scanner is opened.
- */
-export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
-    'onBarcodeScannerOpened';
-
-/**
- * The name of the event that is triggered when a Barcode is scanned.
- */
-export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
-
-/**
- * The name of the event that is triggered when the checkout process is completed.
- */
-export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
-
-/**
- * The name of the event that is triggered when payment has been approved for the checkout.
- */
-export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
-
-/**
- * The name of the event that is triggered when payment has been rejected for the checkout.
- */
-export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
-
-/**
- * The name of the event that is triggered when webhooks have been received.
- */
-export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
-
-/**
- * The name of the event that is triggered on every bot when a shout has been executed.
- */
-export const ON_ANY_SHOUT_ACTION_NAME: string = 'onAnyListen';
-
-/**
- * The name of the event that is triggered when a shout has been executed.
- */
-export const ON_SHOUT_ACTION_NAME: string = 'onListen';
-
-/**
- * The name of the event that is triggered before an action is executed.
- */
-export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
-
-/**
- * The name of the event that is triggered when a channel becomes synced.
- */
-export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
-
-/**
- * The name of the event that is triggered when a channel has become unsynced.
- */
-export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
-
-/**
- * The name of the event that is triggered when a channel is loaded.
- */
-export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
-
-/**
- * The name of the event that is triggered when a channel is unloaded.
- */
-export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
-    'onChannelUnsubscribed';
-
-/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
@@ -216,25 +86,6 @@ export interface Assignment {
     editing: boolean;
     formula: string;
     value?: any;
-}
-
-export type FilterParseResult = FilterParseSuccess | FilterParseFailure;
-
-export interface FilterParseSuccess {
-    success: true;
-    eventName: string;
-    tag: string;
-    filter: {
-        tag: string;
-        value: any;
-    };
-}
-
-export interface FilterParseFailure {
-    success: false;
-    partialSuccess: boolean;
-    tag: string;
-    eventName: string;
 }
 
 export type SimulationIdParseResult =
@@ -650,14 +501,6 @@ export function getActiveObjects(state: BotsState) {
 }
 
 /**
- * Determines if the given tag matches the filter syntax.
- */
-export function isFilterTag(tag: string) {
-    const parsed = parseFilterTag(tag);
-    return parsed.success;
-}
-
-/**
  * Determines if the given tag is "well known".
  * @param tag The tag.
  */
@@ -747,14 +590,7 @@ export function validateTag(tag: string) {
         errors.valid = false;
         errors['tag.required'] = {};
     } else {
-        const filter = parseFilterTag(tag);
-        if (
-            !(
-                filter.success ||
-                (filter.success === false && filter.partialSuccess)
-            ) &&
-            tag.indexOf('#') >= 0
-        ) {
+        if (tag.indexOf('#') >= 0) {
             errors.valid = false;
             errors['tag.invalidChar'] = { char: '#' };
         }
@@ -1216,7 +1052,7 @@ export function calculateStateDiff(
  * Trims the leading # symbol off the given tag.
  */
 export function trimTag(tag: string): string {
-    if (tag.indexOf('#') === 0) {
+    if (tag.startsWith('#') || tag.startsWith('@')) {
         return tag.substring(1);
     }
     return tag;
@@ -1232,87 +1068,6 @@ export function trimEvent(tag: string): string {
         return withoutHash.substring(0, withoutHash.length - 2);
     }
     return withoutHash;
-}
-
-/**
- * Gets a list of tags from the given object that match the given event name and arguments.
- * @param bot The bot to find the tags that match the arguments.
- * @param eventName The event name to test.
- * @param other The arguments to match against.
- */
-export function filtersMatchingArguments(
-    context: BotCalculationContext,
-    bot: Object,
-    eventName: string,
-    args: any[]
-): FilterParseResult[] {
-    if (bot === undefined) {
-        return;
-    }
-
-    const tags = keys(bot.tags);
-    return tags
-        .map(t => parseFilterTag(t))
-        .filter(t => filterMatchesArguments(context, t, eventName, args));
-}
-
-/**
- * Gets a list of tags from the given object that match the given event name.
- * @param bot The bot to find the tags that match the arguments.
- * @param eventName The event name to test.
- */
-export function filtersOnBot(
-    context: BotCalculationContext,
-    bot: Object,
-    eventName: string
-): FilterParseResult[] {
-    if (bot === undefined) {
-        return;
-    }
-
-    const tags = keys(bot.tags);
-    return tags
-        .map(t => parseFilterTag(t))
-        .filter(t => t.success && t.eventName === eventName);
-}
-
-/**
- * Determines if the given tag matches the given object and event.
- * @param tag The tag.
- * @param bot The bot to test.
- * @param eventName The event to test for.
- */
-export function filterMatchesArguments(
-    context: BotCalculationContext,
-    filter: FilterParseResult,
-    eventName: string,
-    args: any[]
-): boolean {
-    if (filter.success && filter.eventName === eventName) {
-        if (!!filter.filter) {
-            const arg = args.length > 0 ? args[0] : null;
-            if (arg) {
-                const calculatedValue = calculateBotValue(
-                    context,
-                    arg,
-                    filter.filter.tag
-                );
-                return (
-                    calculatedValue === filter.filter.value ||
-                    (Array.isArray(filter.filter.value) &&
-                        isEqual(
-                            arg.tags[filter.filter.tag],
-                            filter.filter.value
-                        ))
-                );
-            } else {
-                return false;
-            }
-        } else {
-            return true;
-        }
-    }
-    return false;
 }
 
 /**
@@ -1964,13 +1719,6 @@ export function calculateBotDragStackPosition(
 
     const firstBot = bots[0];
 
-    const canCombine =
-        !canMerge &&
-        objs.length === 1 &&
-        bots.length === 1 &&
-        isBot(firstBot) &&
-        canCombineBots(calc, firstBot, objs[0]);
-
     // Can stack if we're dragging more than one bot,
     // or (if the single bot we're dragging is stackable and
     // the stack we're dragging onto is stackable)
@@ -1982,39 +1730,11 @@ export function calculateBotDragStackPosition(
     const index = nextAvailableObjectIndex(calc, context, bots, objs);
 
     return {
-        combine: canCombine,
         merge: canMerge,
         stackable: canStack,
         other: objs[0],
         index: index,
     };
-}
-
-/**
- * Determines if the two bots can be combined and includes the resolved events if so.
- * @param bot The first bot.
- * @param other The second bot.
- */
-export function canCombineBots(
-    calc: BotCalculationContext,
-    bot: Object,
-    other: Object
-): boolean {
-    // TODO: Make this work even if the bot is a "workspace"
-    if (
-        bot &&
-        other &&
-        getBotConfigContexts(calc, bot).length === 0 &&
-        getBotConfigContexts(calc, other).length === 0 &&
-        bot.id !== other.id
-    ) {
-        const tags = union(
-            filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [other]),
-            filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [bot])
-        );
-        return tags.length > 0;
-    }
-    return false;
 }
 
 /**
@@ -2142,7 +1862,7 @@ export function isBotTags(value: any): value is BotTags {
  * @param bot The bot to check.
  */
 export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
-    return isBotStackable(calc, bot);
+    return true;
 }
 
 /**
@@ -2238,80 +1958,6 @@ export function normalizeAUXBotURL(url: string): string {
     }
 
     return url;
-}
-
-/**
- * Parses the given tag filter into its components.
- * @param tag
- */
-export function parseFilterTag(tag: string): FilterParseResult {
-    let originalTag = tag;
-    tag = tag.replace(/[“”‘’]/g, '"');
-    const firstParenIndex = tag.indexOf('(');
-    const tagIndex = tag.indexOf('#');
-    if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
-        const eventName = tag.slice(0, firstParenIndex).trim();
-
-        if (eventName) {
-            const colonIndex = tag.indexOf(':');
-            if (colonIndex > tagIndex) {
-                const tagName = tag.slice(tagIndex + 1, colonIndex).trim();
-                if (tagName && tagIndex > 0) {
-                    let firstQuote = tag.indexOf('"');
-                    if (firstQuote < 0) {
-                        firstQuote = colonIndex;
-                    }
-                    let lastQuote = tag.lastIndexOf('"');
-                    if (lastQuote < 0) {
-                        lastQuote = tag.lastIndexOf(')');
-                        if (lastQuote < 0) {
-                            lastQuote = tag.length;
-                        }
-                    } else if (lastQuote === firstQuote) {
-                        lastQuote = tag.length;
-                    }
-                    const value = tag.slice(firstQuote + 1, lastQuote);
-                    const finalValue = _parseFilterValue(value);
-                    return {
-                        success: true,
-                        eventName: eventName,
-                        tag: originalTag,
-                        filter: {
-                            tag: tagName,
-                            value: finalValue,
-                        },
-                    };
-                }
-            }
-
-            let lastParen = tag.lastIndexOf(')');
-            if (lastParen > firstParenIndex) {
-                let between = tag.slice(firstParenIndex + 1, lastParen);
-                // Only whitespace is allowed
-                if (/^\s*$/.test(between)) {
-                    return {
-                        success: true,
-                        eventName: eventName,
-                        tag: originalTag,
-                        filter: null,
-                    };
-                }
-            }
-
-            return {
-                success: false,
-                partialSuccess: true,
-                tag: originalTag,
-                eventName: eventName,
-            };
-        }
-    }
-    return {
-        success: false,
-        partialSuccess: false,
-        tag: originalTag,
-        eventName: null,
-    };
 }
 
 /**

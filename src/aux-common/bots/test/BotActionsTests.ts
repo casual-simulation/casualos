@@ -34,12 +34,9 @@ import {
     setupChannel,
     hideHtml,
     ReplaceDragBotAction,
+    setClipboard,
 } from '../BotEvents';
-import {
-    COMBINE_ACTION_NAME,
-    createBot,
-    getActiveObjects,
-} from '../BotCalculations';
+import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
     calculateActionEvents,
@@ -1988,6 +1985,8 @@ export function botActionsTests(
             ['parenthesis', 'sayHello()'],
             ['hashtag', '#sayHello'],
             ['hashtag and parenthesis', '#sayHello()'],
+            ['@ symbol', '@sayHello'],
+            ['@ symbol and parenthesis', '@sayHello()'],
         ];
 
         describe('shout()', () => {
@@ -2750,97 +2749,6 @@ export function botActionsTests(
 
         createBotTests('create', 'uuid');
 
-        describe.skip('combine()', () => {
-            it('should send the combine event to the given bots', () => {
-                const state: BotsState = {
-                    bot1: {
-                        id: 'bot1',
-                        tags: {
-                            test: '@combine(this, getBot("#abc", true))',
-                            'onCombine(#abc:true)':
-                                'setTag(this, "otherId", that.bot.id)',
-                            def: true,
-                        },
-                    },
-                    bot2: {
-                        id: 'bot2',
-                        tags: {
-                            abc: true,
-                            'onCombine(#def:true)':
-                                'setTag(this, "otherId", that.bot.id)',
-                        },
-                    },
-                };
-
-                const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('bot1', {
-                        tags: {
-                            otherId: 'bot2',
-                        },
-                    }),
-                    botUpdated('bot2', {
-                        tags: {
-                            otherId: 'bot1',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should merge the given argument with the bot argument', () => {
-                const state: BotsState = {
-                    bot1: {
-                        id: 'bot1',
-                        tags: {
-                            test:
-                                '@combine(this, getBot("#abc", true), { context: "myContext" })',
-                            'onCombine(#abc:true)':
-                                'setTag(this, "otherId", that.context)',
-                            def: true,
-                        },
-                    },
-                    bot2: {
-                        id: 'bot2',
-                        tags: {
-                            abc: true,
-                            'onCombine(#def:true)':
-                                'setTag(this, "otherId", that.context)',
-                        },
-                    },
-                };
-
-                const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('bot1', {
-                        tags: {
-                            otherId: 'myContext',
-                        },
-                    }),
-                    botUpdated('bot2', {
-                        tags: {
-                            otherId: 'myContext',
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('destroy()', () => {
             it('should destroy and bots that have auxCreator set to the bot ID', () => {
                 const state: BotsState = {
@@ -3329,13 +3237,13 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should send a onMod() event to the affected bot', () => {
+            it('should not send a onModDrop() event to the affected bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             abc: 123,
-                            onMod: '@setTag(this, "#diffed", true)',
+                            onModDrop: '@setTag(this, "#diffed", true)',
                             test:
                                 '@applyMod(this, { abc: "def", ghi: true, num: 1 });',
                         },
@@ -3356,7 +3264,6 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            diffed: true,
                             abc: 'def',
                             ghi: true,
                             num: 1,
@@ -3436,6 +3343,46 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
+                            value1: 123,
+                            value2: true,
+                            value3: 'abc',
+                            test: `@subtractMods(this, {
+                                value1: 'anything1',
+                                value2: 'anything2',
+                                value3: 'anything3',
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            value1: null,
+                            value2: null,
+                            value3: null,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not send a onModDrop() event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            onModDrop: `@tags.modded = true`,
                             value1: 123,
                             value2: true,
                             value3: 'abc',
@@ -3589,6 +3536,32 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([hideHtml()]);
+            });
+        });
+
+        describe('player.setClipboard()', () => {
+            it('should emit a SetClipboardEvent', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.setClipboard("test")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([setClipboard('test')]);
             });
         });
 

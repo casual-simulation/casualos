@@ -7,6 +7,7 @@ import {
     isFormula,
     isAssignment,
     merge,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
 import { appManager } from '../../shared/AppManager';
@@ -43,6 +44,14 @@ export default class BotRow extends Vue {
     @Watch('tag')
     tagChanged() {
         this._updateValue();
+    }
+
+    setInitialValue(value: string) {
+        if (!hasValue(this.value)) {
+            this.value = value;
+            this.$emit('tagChanged', this.bot, this.tag, value);
+            this.getBotManager().editBot(this.bot, this.tag, value);
+        }
     }
 
     valueChanged(bot: Bot, tag: string, value: string) {

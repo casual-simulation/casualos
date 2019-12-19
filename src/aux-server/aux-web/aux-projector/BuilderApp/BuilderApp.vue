@@ -285,6 +285,7 @@
             ></console>
 
             <html-modal></html-modal>
+            <clipboard-modal></clipboard-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>

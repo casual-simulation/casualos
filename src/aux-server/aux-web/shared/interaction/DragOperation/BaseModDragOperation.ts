@@ -11,11 +11,10 @@ import {
     isBotStackable,
     getBotIndex,
     botRemoved,
-    COMBINE_ACTION_NAME,
     isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
-    DIFF_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
     toast,
     createBot,
     DRAG_ANY_ACTION_NAME,
@@ -23,6 +22,8 @@ import {
     BotTags,
     botAdded,
     merge,
+    MOD_DROP_EXIT_ACTION_NAME,
+    MOD_DROP_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -46,13 +47,17 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _lastGridPos: Vector2;
     protected _lastIndex: number;
     protected _lastVRControllerPose: Pose;
-    protected _combine: boolean;
     protected _merge: boolean;
     protected _other: Bot;
     protected _bot: Bot;
     protected _context: string;
     protected _previousContext: string;
     protected _vrController: VRController3D;
+
+    /**
+     * The bot that the onModDropEnter event was sent to.
+     */
+    protected _dropBot: Bot;
 
     private _modMesh: AuxBot3D;
 
@@ -173,35 +178,38 @@ export abstract class BaseModDragOperation implements IOperation {
         const mod = this._mod;
         // Combine bots.
         if (this._merge && this._other) {
-            const update = {
-                tags: mod,
-            };
-            const result = this.simulation.helper.actions([
-                {
-                    eventName: DIFF_ACTION_NAME,
+            let actions = [] as { eventName: string; bots: Bot[]; arg?: any }[];
+
+            if (this._dropBot) {
+                actions.unshift({
+                    eventName: MOD_DROP_EXIT_ACTION_NAME,
+                    bots: [this._dropBot],
+                    arg: {
+                        mod: this._mod,
+                        context: this._context,
+                    },
+                });
+            }
+
+            let events = [] as BotAction[];
+            if (MOD_DROP_ACTION_NAME in this._other.tags) {
+                actions.unshift({
+                    eventName: MOD_DROP_ACTION_NAME,
                     bots: [this._other],
                     arg: {
-                        diffs: this._mod,
+                        mod: this._mod,
                     },
-                },
-            ]);
+                });
+            } else {
+                const update = {
+                    tags: mod,
+                };
+                events.push(botUpdated(this._other.id, update));
+            }
 
-            this.simulation.helper.transaction(
-                botUpdated(this._other.id, update),
-                ...result
-            );
-        } else if (this._combine && this._other) {
-            const arg = { context: this._context };
+            const result = this.simulation.helper.actions(actions);
 
-            this.simulation.helper.action(
-                COMBINE_ACTION_NAME,
-                [this._other],
-                arg
-            );
-
-            this.simulation.helper.action('onCombineExit', [this._other], mod);
-        } else if (this.contextGroup) {
-            this.simulation.helper.transaction(botAdded(this._bot));
+            this.simulation.helper.transaction(...events, ...result);
         }
     }
 
@@ -302,15 +310,33 @@ export abstract class BaseModDragOperation implements IOperation {
         return mesh;
     }
 
+    protected _sendDropEnterExitEvents(other: Bot) {
+        const sim = this._simulation3D.simulation;
+        const otherId = other ? other.id : null;
+        const dropBotId = this._dropBot ? this._dropBot.id : null;
+        const changed = otherId !== dropBotId;
+        if (this._dropBot && changed) {
+            const otherBot = this._dropBot;
+            this._dropBot = null;
+            sim.helper.action(MOD_DROP_EXIT_ACTION_NAME, [otherBot], {
+                mod: this._mod,
+                context: this._context,
+            });
+        }
+        if (other && changed) {
+            this._dropBot = other;
+            sim.helper.action(MOD_DROP_ENTER_ACTION_NAME, [this._dropBot], {
+                mod: this._mod,
+                context: this._context,
+            });
+        }
+    }
+
     protected _onDragReleased(calc: BotCalculationContext): void {}
 
     //
     // Abstractions
     //
 
-    // A checked function to verify that the stacks can combine
-    protected _allowCombine(): boolean {
-        return true;
-    }
     protected abstract _onDrag(calc: BotCalculationContext): void;
 }

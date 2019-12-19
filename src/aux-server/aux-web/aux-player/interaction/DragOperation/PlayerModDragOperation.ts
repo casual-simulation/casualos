@@ -43,9 +43,8 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
     protected _originalContext: string;
 
-    protected _initialCombine: boolean;
-
-    private _botsUsed: [BotTags, Bot];
+    protected _sentDropEnter: boolean;
+    protected _dropEnterBot: Bot;
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -145,35 +144,12 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 this._mod
             );
 
-            this._combine = result.combine && this._allowCombine();
             this._other = result.other;
             this._merge = result.merge;
 
-            let sim = this._simulation3D.simulation;
+            this._sendDropEnterExitEvents(this._merge ? this._other : null);
 
-            if (this._combine && !this._initialCombine) {
-                this._initialCombine = true;
-
-                const objs = objectsAtContextGridPosition(
-                    calc,
-                    this._context,
-                    gridTile.tileCoordinate
-                );
-
-                this._botsUsed = [this._mod, objs[0]];
-
-                sim.helper.action('onCombineEnter', [objs[0]], this._mod);
-            } else if (!this._combine && this._initialCombine) {
-                this._initialCombine = false;
-
-                sim.helper.action(
-                    'onCombineExit',
-                    [this._botsUsed[1]],
-                    this._botsUsed[0]
-                );
-            }
-
-            if (result.stackable || result.index === 0) {
+            if (result.merge || result.index === 0) {
                 this._updateModPosition(
                     calc,
                     gridTile.tileCoordinate,

@@ -12,10 +12,6 @@ import {
     isSimulation,
     isDestroyable,
     isEditable,
-    filtersMatchingArguments,
-    COMBINE_ACTION_NAME,
-    parseFilterTag,
-    filterMatchesArguments,
     duplicateBot,
     isBotMovable,
     getBotDragMode,
@@ -1341,6 +1337,46 @@ export function botCalculationContextTests(
                     expect(unwrapped).toEqual(botA);
                 });
 
+                it('should allow using @ symbols when getting bots by tags', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getBot("@name")',
+                    });
+                    const botB = createBot('b', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA, botB]);
+                    const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
+
+                    expect(unwrapped).toEqual(botA);
+                });
+
+                it('should remove the first @ symbol but not the second', () => {
+                    const botA = createBot('a', {
+                        '@name': 'bob',
+                        formula: '=getBot("@@name")',
+                    });
+                    const botB = createBot('b', {
+                        '@name': 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA, botB]);
+                    const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
+
+                    expect(unwrapped).toEqual(botA);
+                });
+
                 it('should get the first bot matching the given filter function', () => {
                     const botA = createBot('a', {
                         name: 'bob',
@@ -1493,6 +1529,30 @@ export function botCalculationContextTests(
                     expect(result).toEqual(['bob', 'alice', 'bob']);
                 });
 
+                it('should support using an @ symbol at the beginning of a tag', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getBotTagValues("@name")',
+                    });
+                    const botB = createBot('b', {
+                        name: 'alice',
+                    });
+                    const botC = createBot('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        botB,
+                        botA,
+                        botC,
+                    ]);
+                    const result = calculateBotValue(context, botA, 'formula');
+
+                    expect(result).toEqual(['bob', 'alice', 'bob']);
+                });
+
                 it('should get the list of bots with the given tag matching the given value', () => {
                     const botA = createBot('a', {
                         name: 'bob',
@@ -1547,6 +1607,20 @@ export function botCalculationContextTests(
                     const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getTag(this, "#name")',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([botA]);
+                    const result = calculateBotValue(context, botA, 'formula');
+
+                    expect(result).toEqual('bob');
+                });
+
+                it('should support using an @ symbol at the beginning of a tag', () => {
+                    const botA = createBot('a', {
+                        name: 'bob',
+                        formula: '=getTag(this, "@name")',
                     });
 
                     // specify the UUID to use next
@@ -1632,6 +1706,44 @@ export function botCalculationContextTests(
                             expect(value(bot2)).toBe(expected);
                         }
                     );
+
+                    it('should support using a hashtag at the beginning of a tag', () => {
+                        const bot = createBot('test', {
+                            formula: '=byTag("#red")',
+                        });
+
+                        const context = createCalculationContext([bot]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        const bot2 = createBot('test', {
+                            red: 'abc',
+                        });
+
+                        expect(value(bot2)).toBe(true);
+                    });
+
+                    it('should support using a @ symbol at the beginning of a tag', () => {
+                        const bot = createBot('test', {
+                            formula: '=byTag("@red")',
+                        });
+
+                        const context = createCalculationContext([bot]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        const bot2 = createBot('test', {
+                            red: 'abc',
+                        });
+
+                        expect(value(bot2)).toBe(true);
+                    });
                 });
 
                 describe('tag + value', () => {
@@ -2751,13 +2863,13 @@ export function botCalculationContextTests(
             expect(update1).toBe(true);
         });
 
-        it('should return false if the bot is not stackable', () => {
+        it('should return true if the bot is not stackable', () => {
             const bot1 = createBot(undefined, {
                 auxPositioningMode: 'absolute',
             });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
-            expect(update1).toBe(false);
+            expect(update1).toBe(true);
         });
     });
 
@@ -2891,234 +3003,6 @@ export function botCalculationContextTests(
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(false);
-        });
-    });
-
-    describe('filtersMatchingArguments()', () => {
-        it('should return an empty array if no tags match', () => {
-            let bot = createBot();
-            let other = createBot();
-
-            const context = createCalculationContext([bot, other]);
-            const tags = filtersMatchingArguments(
-                context,
-                bot,
-                COMBINE_ACTION_NAME,
-                [other]
-            );
-
-            expect(tags).toEqual([]);
-        });
-
-        it('should match based on tag and exact value', () => {
-            let other = createBot();
-            other.tags.name = 'Test';
-            other.tags.val = '';
-
-            let bot = createBot();
-            bot.tags['onCombine(#name:"Test")'] = 'abc';
-            bot.tags['onCombine(#val:"")'] = 'abc';
-            bot.tags['onCombine(#name:"test")'] = 'def';
-
-            const context = createCalculationContext([bot, other]);
-            const tags = filtersMatchingArguments(
-                context,
-                bot,
-                COMBINE_ACTION_NAME,
-                [other]
-            );
-
-            expect(tags.map(t => t.tag)).toEqual([
-                'onCombine(#name:"Test")',
-                'onCombine(#val:"")',
-            ]);
-        });
-
-        it('should only match tags in the given bot', () => {
-            let bot = createBot();
-            bot.tags['onCombine(#name:"Test")'] = 'abc';
-
-            let other = createBot();
-            other.tags.name = 'Test';
-
-            const context = createCalculationContext([bot, other]);
-            const tags = filtersMatchingArguments(
-                context,
-                bot,
-                COMBINE_ACTION_NAME,
-                [other]
-            );
-
-            expect(tags.map(t => t.tag)).toEqual(['onCombine(#name:"Test")']);
-        });
-    });
-
-    describe('filterMatchesArguments()', () => {
-        it('should match string values', () => {
-            let other = createBot();
-            other.tags.name = 'test';
-
-            const context = createCalculationContext([other]);
-            const filter = parseFilterTag('onCombine(#name:"test")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-        });
-
-        it('should match number values', () => {
-            let other = createBot();
-            other.tags.num = 123456;
-
-            const context = createCalculationContext([other]);
-            let filter = parseFilterTag('onCombine(#num:"123456")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.num = 3.14159;
-            filter = parseFilterTag('onCombine(#num:"3.14159")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-        });
-
-        it('should match boolean values', () => {
-            let other = createBot();
-            other.tags.bool = true;
-            const context = createCalculationContext([other]);
-            let filter = parseFilterTag('onCombine(#bool:"true")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.bool = false;
-
-            filter = parseFilterTag('onCombine(#bool:"false")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-        });
-
-        it('should match array values', () => {
-            let other = createBot();
-            other.tags.array = [];
-            const context = createCalculationContext([other]);
-
-            let filter = parseFilterTag('onCombine(#array:"[]")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            filter = parseFilterTag('onCombine(#array:"["anything"]")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(false);
-
-            other.tags.array = [1];
-            filter = parseFilterTag('onCombine(#array:"[1]")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.array = ['hello', 'world'];
-            filter = parseFilterTag('onCombine(#array:"[hello, world]")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.array = ['hello', 'world', 12.34];
-            filter = parseFilterTag(
-                'onCombine(#array:"[hello, world, 12.34]")'
-            );
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-        });
-
-        it('should evaluate the value filters', () => {
-            let other = createBot();
-            other.tags.name = '=getTag(this, "#cool")';
-            other.tags.cool = 'Test';
-
-            const context = createCalculationContext([other, other]);
-            let filter = parseFilterTag('onCombine(#name:"Test")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.value = '10.15';
-            filter = parseFilterTag('onCombine(#value:10.15)');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            other.tags.value = 'true';
-            filter = parseFilterTag('onCombine(#value:true)');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            filter = parseFilterTag('onCombine(#value:false)');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(false);
-
-            other.tags.value = 'false';
-            filter = parseFilterTag('onCombine(#value:true)');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(false);
-
-            filter = parseFilterTag('onCombine(#value:false)');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
-
-            let newData: PartialBot = {
-                tags: {
-                    assign: ':=getTag(this, "#cool")',
-                },
-            };
-            updateBot(other, 'testId', newData, () => context);
-            other.tags.assign = newData.tags.assign;
-            filter = parseFilterTag('onCombine(#assign:"Test")');
-            expect(
-                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
-                    other,
-                ])
-            ).toBe(true);
         });
     });
 

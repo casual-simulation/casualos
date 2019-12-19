@@ -4,7 +4,6 @@ import {
     AuxCausalTree,
     GLOBALS_BOT_ID,
     tagsOnBot,
-    parseFilterTag,
     ON_ACTION_ACTION_NAME,
     BotTags,
 } from '@casual-simulation/aux-common';

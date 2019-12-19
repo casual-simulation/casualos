@@ -175,6 +175,10 @@ module.exports = {
                 __dirname,
                 'shared/public/vue-qrcode-reader/'
             ),
+            'clipboard-polyfill': path.resolve(
+                __dirname,
+                'shared/public/clipboard-polyfill/clipboard-polyfill.js'
+            ),
         },
     },
     plugins: [

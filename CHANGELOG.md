@@ -1,5 +1,51 @@
 # AUX Changelog
 
+## V0.11.16
+
+### Date: 12/19/2019
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Renamed `onBotDrag` and `onBotDrop` to `onDrag` and `onDrop` respectively.
+    -   Renamed `onMod` to `onModDrop`.
+    -   Removed `onCombine`, `onCombineEnter`, and `onCombineExit`.
+    -   Dropping a mod in an empty space will no longer create a new bot.
+    -   Setting `auxPositioningMode` to `absolute` will no longer prevent mods.
+    -   Changed `applyMod()` and `subtractMods()` to not send `onMod()` events.
+    -   Renamed the `diffs` property on the `onModDrop` argument to `mod`.
+-   Improvements
+    -   Added `onModDropEnter` and `onModDropExit` listeners for when a mod is dragged onto or off of a bot.
+        -   The bot that the mod will be applied to recieves the `onModDropEnter` and `onModDropExit` events.
+    -   If a custom `onModDrop` listener is provided, then the mod will not be applied. It is up to the `onModDrop` listener to apply the mod via `applyMod(this, that.mod)`.
+    -   Added `onDropEnter` and `onDropExit` listeners for when a bot is dragged onto or off of another bot.
+        -   Both the bot that is being dragged and the bot that they are on top of will recieve the `onDropEnter` and `onDropExit` events.
+        -   Note that `onDropEnter` and `onDropExit` events will fire even if one of the bots is not stackable.
+        -   They have the following parameters:
+            -   `draggedBot` - the bot that is being dragged.
+            -   `otherBot` - the bot that the dragged bot is on top of.
+            -   `context` - the context that this is happening in.
+    -   Improved `onDrop` to be sent to both the dragged bot and the bot that it is dropped on top of.
+        -   The event will fire on the other bot even if it has `auxPositioningMode` set to `absolute`.
+    -   Added the `player.setClipboard()` function that is able to set the user's clipboard to the given text.
+        -   ex. `player.setClipboard("abc")` will set the user's clipboard to "abc".
+        -   On Chrome and Firefox, the text will be copied directly to the user's clipboard.
+        -   On Safari and all iOS browsers, a popup will be triggered with a copy button allowing the user to copy the text to their clipboard.
+    -   Tags that contain listeners will now display with a @ symbol in front of the tag name.
+    -   Tags that contain formulas will now display with a = sign after the tag name.
+    -   Removed the @ symbol from the first line in the code editor when editing a script.
+    -   Added the ability to use an @ symbol while creating a new tag to prefill the editor with an @.
+    -   Added the ability to use @ symbols in tags in `getTag()`, `setTag()`, `getBot()`, `getBots()`, `byTag()`, `shout()`, and `whisper()`.
+    -   Added tag filters for listener tags and formula tags to the bot table.
+    -   Added the ability to detect the `tags` variable in scripts as a reference to tags.
+        -   This is useful for knowing when to update a formula.
+        -   Also works with the `raw` variable.
+        -   Limitations:
+            -   Does not detect references via the `bot` or `this` variables. (e.g. `bot.tags.abc`)
+            -   Does not detect references via other bots. (e.g. `otherBot.tags.abc`)
+            -   Does not detect references if a function is called on the tag. (e.g. `tags.name.toString()`)
+        -   If you need to work around the limitations, use the `getTag()` function.
+
 ## V0.11.15
 
 ### Date: 12/17/2019

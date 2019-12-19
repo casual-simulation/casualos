@@ -11,11 +11,10 @@ import {
     isBotStackable,
     getBotIndex,
     botRemoved,
-    COMBINE_ACTION_NAME,
     isMergeable,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
-    DIFF_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
     toast,
     createBot,
     DRAG_ANY_ACTION_NAME,
@@ -23,6 +22,14 @@ import {
     BotTags,
     isBot,
     calculateBooleanTagValue,
+    ShoutAction,
+    calculateActionEventsUsingContext,
+    DROP_EXIT_ACTION_NAME,
+    DROP_ENTER_ACTION_NAME,
+    BotDropDestination,
+    onDropArg,
+    onDropExitArg,
+    onDropEnterArg,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -44,7 +51,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _lastGridPos: Vector2;
     protected _lastIndex: number;
     protected _lastVRControllerPose: Pose;
-    protected _combine: boolean;
     protected _merge: boolean;
     protected _other: Bot;
     protected _context: string;
@@ -52,6 +58,11 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _originalContext: string;
     protected _vrController: VRController3D;
     protected _childOperation: IOperation;
+
+    /**
+     * The bot that the onDropEnter event was sent to.
+     */
+    protected _dropBot: Bot;
 
     private _inContext: boolean;
     private _onDragPromise: Promise<void>;
@@ -225,39 +236,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._bot = null;
     }
 
-    protected _disposeCore() {
-        // Combine bots.
-        if (this._combine && this._other) {
-            const arg = { context: this._context };
-
-            this.simulation.helper.action(
-                COMBINE_ACTION_NAME,
-                [this._bot, this._other],
-                arg
-            );
-
-            this.simulation.helper.action(
-                'onCombineExit',
-                [this._bot],
-                this._other
-            );
-
-            this.simulation.helper.action(
-                'onCombineExit',
-                [this._other],
-                this._bot
-            );
-        } else if (
-            this._other != null &&
-            !this._combine &&
-            this._other.tags['onCombine()'] != undefined &&
-            this._bots.length > 1
-        ) {
-            this.simulation.helper.transaction(
-                toast('Cannot combine more than one bot at a time.')
-            );
-        }
-    }
+    protected _disposeCore() {}
 
     protected _setBots(bots: Bot[]) {
         this._bots = bots;
@@ -372,47 +351,131 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         let events: BotAction[] = [];
+        const to: BotDropDestination = {
+            x: toX,
+            y: toY,
+            context: this._context,
+        };
+        const from: BotDropDestination = {
+            x: fromX,
+            y: fromY,
+            context: this._originalContext,
+        };
+
+        if (this._dropBot) {
+            events.push(
+                ...this.simulation.helper.actions([
+                    {
+                        eventName: DROP_EXIT_ACTION_NAME,
+                        bots: [this._dropBot],
+                        arg: onDropExitArg(
+                            botTemp,
+                            this._dropBot,
+                            this._context
+                        ),
+                    },
+                    {
+                        eventName: DROP_EXIT_ACTION_NAME,
+                        bots: this._bots,
+                        arg: onDropExitArg(
+                            botTemp,
+                            this._dropBot,
+                            this._context
+                        ),
+                    },
+                ])
+            );
+        }
 
         // Trigger drag into context
-        let result = this.simulation.helper.actions([
-            {
-                eventName: DROP_ACTION_NAME,
-                bots: this._bots,
-                arg: {
-                    to: {
-                        x: toX,
-                        y: toY,
-                        context: this._context,
-                    },
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        context: this._originalContext,
-                    },
+        events.push(
+            ...this.simulation.helper.actions([
+                {
+                    eventName: DROP_ACTION_NAME,
+                    bots: this._bots,
+                    arg: onDropArg(botTemp, to, from),
                 },
-            },
-            {
-                eventName: DROP_ANY_ACTION_NAME,
-                bots: null,
-                arg: {
-                    bot: botTemp,
-                    to: {
-                        x: toX,
-                        y: toY,
-                        context: this._context,
-                    },
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        context: this._originalContext,
-                    },
-                },
-            },
-        ]);
+            ])
+        );
 
-        events.push(...result);
+        if (this._dropBot) {
+            events.push(
+                ...this.simulation.helper.actions([
+                    {
+                        eventName: DROP_ACTION_NAME,
+                        bots: [this._dropBot],
+                        arg: onDropArg(botTemp, to, from),
+                    },
+                ])
+            );
+        }
+
+        events.push(
+            ...this.simulation.helper.actions([
+                {
+                    eventName: DROP_ANY_ACTION_NAME,
+                    bots: null,
+                    arg: onDropArg(botTemp, to, from),
+                },
+            ])
+        );
 
         this.simulation.helper.transaction(...events);
+    }
+
+    protected _sendDropEnterExitEvents(other: Bot) {
+        const sim = this._simulation3D.simulation;
+        const otherId = other ? other.id : null;
+        const dropBotId = this._dropBot ? this._dropBot.id : null;
+        const changed = otherId !== dropBotId;
+        let events = [] as ShoutAction[];
+        if (this._dropBot && changed) {
+            const otherBot = this._dropBot;
+            this._dropBot = null;
+            events.push(
+                ...sim.helper.actions([
+                    {
+                        eventName: DROP_EXIT_ACTION_NAME,
+                        bots: [otherBot],
+                        arg: onDropExitArg(this._bot, otherBot, this._context),
+                    },
+                    {
+                        eventName: DROP_EXIT_ACTION_NAME,
+                        bots: this._bots,
+                        arg: onDropExitArg(this._bot, otherBot, this._context),
+                    },
+                ])
+            );
+        }
+        if (other && changed) {
+            this._dropBot = other;
+            events.push(
+                ...sim.helper.actions([
+                    {
+                        eventName: DROP_ENTER_ACTION_NAME,
+                        bots: [this._dropBot],
+                        arg: onDropEnterArg(
+                            this._bot,
+                            this._dropBot,
+                            this._context
+                        ),
+                    },
+                    {
+                        eventName: DROP_ENTER_ACTION_NAME,
+                        bots: this._bots,
+                        arg: onDropEnterArg(
+                            this._bot,
+                            this._dropBot,
+                            this._context
+                        ),
+                    },
+                ])
+            );
+        }
+
+        if (events.length > 0) {
+            sim.helper.transaction(...events);
+        }
     }
 
     //

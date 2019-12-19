@@ -435,6 +435,151 @@ export const USERS_CONTEXT = 'aux-users';
 export const BOT_SPACE_TAG = 'space';
 
 /**
+ * The name of the event that represents a bot being diffed into another bot.
+ */
+export const MOD_DROP_ACTION_NAME: string = 'onModDrop';
+
+/**
+ * The name of the event that represents a bot being created.
+ */
+export const CREATE_ACTION_NAME: string = 'onCreate';
+
+/**
+ * The name of the event that represents a bot being destroyed.
+ */
+export const DESTROY_ACTION_NAME: string = 'onDestroy';
+
+/**
+ * The name of the event that represents a bot entering over another bot.
+ */
+export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
+
+/**
+ * The name of the event that represents a bot exiting from over another bot.
+ */
+export const DROP_EXIT_ACTION_NAME: string = 'onDropExit';
+
+/**
+ * The name of the event that represents a bot being dropped onto a context.
+ */
+export const DROP_ACTION_NAME: string = 'onDrop';
+
+/**
+ * The name of the event that represents any bot being dropped onto a context.
+ */
+export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
+
+/**
+ * The name of the event that represents a bot starting to be dragged.
+ */
+export const DRAG_ACTION_NAME: string = 'onDrag';
+
+/**
+ * The name of the event that represents any bot starting to be dragged.
+ */
+export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
+
+/**
+ * The name of the event that represents a mod entering over a bot.
+ */
+export const MOD_DROP_ENTER_ACTION_NAME: string = 'onModDropEnter';
+
+/**
+ * The name of the event that represents a mod exiting from over a bot.
+ */
+export const MOD_DROP_EXIT_ACTION_NAME: string = 'onModDropExit';
+
+/**
+ * The name of the event that is triggered when a QR Code is scanned.
+ */
+export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is closed.
+ */
+export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
+    'onQRCodeScannerClosed';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is opened.
+ */
+export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
+    'onQRCodeScannerOpened';
+
+/**
+ * The name of the event that is triggered when the Barcode scanner is closed.
+ */
+export const ON_BARCODE_SCANNER_CLOSED_ACTION_NAME: string =
+    'onBarcodeScannerClosed';
+
+/**
+ * The name of the event that is triggered when the Barcode scanner is opened.
+ */
+export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
+    'onBarcodeScannerOpened';
+
+/**
+ * The name of the event that is triggered when a Barcode is scanned.
+ */
+export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
+
+/**
+ * The name of the event that is triggered when the checkout process is completed.
+ */
+export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
+
+/**
+ * The name of the event that is triggered when payment has been approved for the checkout.
+ */
+export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
+
+/**
+ * The name of the event that is triggered when payment has been rejected for the checkout.
+ */
+export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
+
+/**
+ * The name of the event that is triggered when webhooks have been received.
+ */
+export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
+
+/**
+ * The name of the event that is triggered on every bot when a shout has been executed.
+ */
+export const ON_ANY_SHOUT_ACTION_NAME: string = 'onAnyListen';
+
+/**
+ * The name of the event that is triggered when a shout has been executed.
+ */
+export const ON_SHOUT_ACTION_NAME: string = 'onListen';
+
+/**
+ * The name of the event that is triggered before an action is executed.
+ */
+export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
+
+/**
+ * The name of the event that is triggered when a channel becomes synced.
+ */
+export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
+
+/**
+ * The name of the event that is triggered when a channel has become unsynced.
+ */
+export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
+
+/**
+ * The name of the event that is triggered when a channel is loaded.
+ */
+export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
+    'onChannelUnsubscribed';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -581,18 +726,19 @@ export const KNOWN_TAGS: string[] = [
 
     'onClick',
     'onAnyBotClicked',
-    'onCombine',
-    'onCombineEnter',
-    'onCombineExit',
-    'onMod',
+    MOD_DROP_ENTER_ACTION_NAME,
+    MOD_DROP_EXIT_ACTION_NAME,
+    MOD_DROP_ACTION_NAME,
     'onSaveInput',
     'onCloseInput',
-    'onCreate',
-    'onDestroy',
-    'onBotDrop',
-    'onAnyBotDrop',
-    'onBotDrag',
-    'onAnyBotDrag',
+    CREATE_ACTION_NAME,
+    DESTROY_ACTION_NAME,
+    DROP_ENTER_ACTION_NAME,
+    DROP_EXIT_ACTION_NAME,
+    DROP_ACTION_NAME,
+    DROP_ANY_ACTION_NAME,
+    DRAG_ACTION_NAME,
+    DRAG_ANY_ACTION_NAME,
     'onTapCode',
     'onQRCodeScanned',
     'onQRCodeScannerClosed',
@@ -620,3 +766,41 @@ export const KNOWN_TAGS: string[] = [
     'onListen',
     'onChannelAction',
 ];
+
+export function onDropEnterArg(
+    draggedBot: Bot,
+    otherBot: Bot,
+    context: string
+) {
+    return {
+        draggedBot,
+        otherBot,
+        context,
+    };
+}
+
+export function onDropExitArg(draggedBot: Bot, otherBot: Bot, context: string) {
+    return {
+        draggedBot,
+        otherBot,
+        context,
+    };
+}
+
+export function onDropArg(
+    bot: Bot,
+    to: BotDropDestination,
+    from: BotDropDestination
+) {
+    return {
+        bot,
+        to,
+        from,
+    };
+}
+
+export interface BotDropDestination {
+    x: number;
+    y: number;
+    context: string;
+}

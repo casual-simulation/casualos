@@ -1,7 +1,6 @@
 import * as monaco from './MonacoLibs';
 import {
     Bot,
-    isFilterTag,
     tagsOnBot,
     isFormula,
     Transpiler,
@@ -303,9 +302,7 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFilterTag(tag) || isFormula(script) || isScript(script)
-        ? 'javascript'
-        : 'plaintext';
+    return isFormula(script) || isScript(script) ? 'javascript' : 'plaintext';
 }
 
 /**
@@ -342,7 +339,7 @@ export function shouldKeepModelLoaded(
 }
 
 function shouldKeepModelWithTagLoaded(tag: string): boolean {
-    return isFilterTag(tag) || isScript(tag);
+    return isScript(tag);
 }
 
 function watchModel(

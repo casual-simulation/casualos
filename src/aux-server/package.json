@@ -60,7 +60,7 @@
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@hapi/joi": "15.1.1",
         "@juggle/resize-observer": "2.3.0",
-        "@octokit/rest": "16.28.7",
+        "@octokit/rest": "16.35.2",
         "@sentry/browser": "^4.4.2",
         "acorn": "^6.1.1",
         "astring": "^1.3.1",
@@ -106,6 +106,7 @@
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "webvr-polyfill": "^0.10.10"
+        "webvr-polyfill": "^0.10.10",
+        "vue-clipboard2": "0.3.1"
     }
 }
