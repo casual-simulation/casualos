@@ -36,11 +36,11 @@ pipeline {
                 InstallNPMPackages()
             }
         }
-        stage('Create Github Release') {
-            steps {
-                // CreateGithubRelease()
-            }
-        }
+        // stage('Create Github Release') {
+        //     steps {
+        //         // CreateGithubRelease()
+        //     }
+        // }
         stage('Test') {
             steps {
                 Tests()
