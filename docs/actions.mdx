@@ -103,6 +103,26 @@ destroy(getBots("#auxColor", "red"));
 destroy("config");
 ```
 
+### `applyMod(bot, ...mods)`
+
+<FunctionCode name='applyMod' />
+
+Applies the given mods to the given bot.
+
+The **first parameter** is the bot that the mods should be applied to.
+
+The **other parameters** are the mods that should be applied to the bot. If two mods have the same tag, then the mod that is last in the list will win.
+
+#### Examples
+
+1. Set the "test" tag and "name" tag on a bot.
+```typescript
+applyMod(bot, {
+    test: true,
+    name: "bob"
+});
+```
+
 ### `getBots(..filters)`
 
 <FunctionCode name='getBots' />
@@ -459,10 +479,10 @@ whisper(this, "setColor", "red");
 <FunctionCode name='replaceDragBot'/>
 
 Replaces the bot that the user is dragging with the given bot or mod.
-Only works if called from inside a <TagLink tag='@onBotDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
+Only works if called from inside a <TagLink tag='@onDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
 
 The **first parameter** is the bot or mod that should be dragged. 
-If given a bot, then that bot's <TagLink tag='@onBotDrag'/> will be skippped but <TagLink tag='@onBotDrop'/> will be called.
+If given a bot, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
 
 #### Examples:
 
@@ -477,6 +497,22 @@ player.replaceDragBot(clone);
 player.replaceDragBot({
     "auxColor": "red"
 });
+```
+
+### `player.setClipboard(text)`
+
+<FunctionCode name='setClipboard'/>
+
+Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
+On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.
+
+The **first parameter** is the text that should be copied to the player's clipboard.
+
+#### Examples:
+
+1. Copy "hello" to the player's clipboard.
+```typescript
+player.setClipboard("hello");
 ```
 
 ## Server Actions

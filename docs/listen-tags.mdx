@@ -19,6 +19,7 @@ import {
   TagLink,
   NormalCode,
   UserBotBadge,
+  ActionLink,
 } from './components.mdx';
 
 Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
@@ -36,9 +37,11 @@ A whisper that is sent to a bot when it is first created.
 
 A whisper that is sent to a bot when it is being destroyed.
 
-### `@onMod`
+### `@onModDrop`
 
-A whisper that is sent to a bot that a mod was applied to.
+A whisper that is sent to a bot that a mod was dropped on.
+If a custom `@onModDrop` is not specified, then the mod will be applied automatically.
+If a custom `@onModDrop` is specified, then the mod needs to be applied manually via <ActionLink action='applyMod(bot, ...mods)'/>.
 
 #### Arguments:
 ```typescript
@@ -48,42 +51,30 @@ interface Mod {
 }
 
 let that: {
-  diffs: Mod[]
+  mod: Mod
 };
 ```
 
-### `@onCombine`
+### `@onModDropEnter`
 
-A whisper that is sent to both of the bots that are being combined.
+A whisper that is sent to the bot that a mod started to be dragged onto.
 
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
+  mod: Mod,
   context: string
 };
 ```
 
-### `@onCombineEnter`
+### `@onModDropExit`
 
-A whisper that is sent to both of the bots when one bot is dragged onto the other bot.
-
-#### Arguments:
-```typescript
-let that: {
-  bot: Bot,
-  context: string
-};
-```
-
-### `@onCombineExit`
-
-A whisper that is sent to both of the bots when one bot is dragged off of the other bot.
+A whisper that is sent to the bot that a mod was just dragged off of.
 
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
+  mod: Mod,
   context: string
 };
 ```
@@ -148,7 +139,7 @@ let that: {
 };
 ```
 
-### `@onBotDrag`
+### `@onDrag`
 
 A whisper that is sent whenever a bot is starting to be dragged.
 
@@ -163,13 +154,15 @@ let that: {
 };
 ```
 
-### `@onBotDrop`
+### `@onDrop`
 
 A whisper that is sent whenever a bot has been dropped after being dragged.
+The whisper is sent to both the bot that was dropped and the bot that was dropped on.
 
 #### Arguments
 ```typescript
 let that: {
+  bot: Bot,
   to: {
     x: number,
     y: number,
@@ -180,6 +173,32 @@ let that: {
     y: number,
     context: string
   }
+};
+```
+
+### `@onDropEnter`
+
+A whisper that is sent to both bots when a bot is dragged onto another bot.
+
+#### Arguments
+```typescript
+let that: {
+  draggedBot: Bot,
+  otherBot: Bot,
+  context: string
+};
+```
+
+### `@onDropExit`
+
+A whisper that is sent to both bots when a bot is dragged off of another bot.
+
+#### Arguments
+```typescript
+let that: {
+  draggedBot: Bot,
+  otherBot: Bot,
+  context: string
 };
 ```
 
