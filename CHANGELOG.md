@@ -22,6 +22,14 @@
 -   Improvements
     -   `create()` will now automatically set the `auxCreator` tag to `null` if it references a bot that is in a different space from the created bot.
     -   Also `create()` will not set the `auxCreator` tag to `null` if it references a non-existent bot.
+    -   Added the `changeState(bot, stateName, groupName)` function to help with building state machines.
+        -   Sets the `[groupName]` tag to `[stateName]` on `bot` and sends "on enter" and "on exit" whispers to the bot that was updated.
+        -   `groupName` defaults to `"state"` if not specified.
+        -   If the state has changed, then a `@[groupName][previousStateName]OnExit()` and `@[groupName][stateName]OnEnter()` whispers are sent to the updated bot.
+            -   `that` is a object with the following properties:
+                -   `from` - The previous state name.
+                -   `to` - The next state name.
+        -   Example: Running `changeState(bot, "Running")` will set the `state` tag to `"Running"` and will send a `@stateRunningOnEnter()` whisper to the bot.
 
 ## V0.11.16
 
