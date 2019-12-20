@@ -28,8 +28,7 @@ import {
     DROP_ENTER_ACTION_NAME,
     BotDropDestination,
     onDropArg,
-    onDropExitArg,
-    onDropEnterArg,
+    BotDropToDestination,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -324,64 +323,21 @@ export abstract class BaseBotDragOperation implements IOperation {
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {
-        let toX;
-        let toY;
-        if (!this._toCoord) {
-            toX = null;
-            toY = null;
-        } else {
-            toX = this._toCoord.x;
-            toY = this._toCoord.y;
-        }
+        const arg = this._calculateDropArg(this._dropBot);
 
-        const botTemp = createBot(this._bots[0].id, {
-            ...this._bots[0].tags,
-            [`${this._context}X`]: toX,
-            [`${this._context}Y`]: toY,
-        });
-
-        let fromX;
-        let fromY;
-        if (!this._fromCoord) {
-            fromX = null;
-            fromY = null;
-        } else {
-            fromX = this._fromCoord.x;
-            fromY = this._fromCoord.y;
-        }
-
-        let events: BotAction[] = [];
-        const to: BotDropDestination = {
-            x: toX,
-            y: toY,
-            context: this._context,
-        };
-        const from: BotDropDestination = {
-            x: fromX,
-            y: fromY,
-            context: this._originalContext,
-        };
-
+        const events = [] as BotAction[];
         if (this._dropBot) {
             events.push(
                 ...this.simulation.helper.actions([
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: [this._dropBot],
-                        arg: onDropExitArg(
-                            botTemp,
-                            this._dropBot,
-                            this._context
-                        ),
+                        arg,
                     },
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: this._bots,
-                        arg: onDropExitArg(
-                            botTemp,
-                            this._dropBot,
-                            this._context
-                        ),
+                        arg,
                     },
                 ])
             );
@@ -393,7 +349,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                 {
                     eventName: DROP_ACTION_NAME,
                     bots: this._bots,
-                    arg: onDropArg(botTemp, to, from),
+                    arg,
                 },
             ])
         );
@@ -404,7 +360,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                     {
                         eventName: DROP_ACTION_NAME,
                         bots: [this._dropBot],
-                        arg: onDropArg(botTemp, to, from),
+                        arg,
                     },
                 ])
             );
@@ -415,12 +371,51 @@ export abstract class BaseBotDragOperation implements IOperation {
                 {
                     eventName: DROP_ANY_ACTION_NAME,
                     bots: null,
-                    arg: onDropArg(botTemp, to, from),
+                    arg,
                 },
             ])
         );
 
         this.simulation.helper.transaction(...events);
+    }
+
+    private _calculateDropArg(toBot: Bot) {
+        let toX;
+        let toY;
+        if (!this._toCoord) {
+            toX = null;
+            toY = null;
+        } else {
+            toX = this._toCoord.x;
+            toY = this._toCoord.y;
+        }
+        const botTemp = createBot(this._bot.id, {
+            ...this._bot.tags,
+            [`${this._context}X`]: toX,
+            [`${this._context}Y`]: toY,
+        });
+        let fromX;
+        let fromY;
+        if (!this._fromCoord) {
+            fromX = null;
+            fromY = null;
+        } else {
+            fromX = this._fromCoord.x;
+            fromY = this._fromCoord.y;
+        }
+        const to: BotDropToDestination = {
+            bot: toBot,
+            x: toX,
+            y: toY,
+            context: this._context,
+        };
+        const from: BotDropDestination = {
+            x: fromX,
+            y: fromY,
+            context: this._originalContext,
+        };
+        const arg = onDropArg(botTemp, to, from);
+        return arg;
     }
 
     protected _sendDropEnterExitEvents(other: Bot) {
@@ -432,42 +427,37 @@ export abstract class BaseBotDragOperation implements IOperation {
         if (this._dropBot && changed) {
             const otherBot = this._dropBot;
             this._dropBot = null;
+
+            const arg = this._calculateDropArg(otherBot);
             events.push(
                 ...sim.helper.actions([
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: [otherBot],
-                        arg: onDropExitArg(this._bot, otherBot, this._context),
+                        arg: arg,
                     },
                     {
                         eventName: DROP_EXIT_ACTION_NAME,
                         bots: this._bots,
-                        arg: onDropExitArg(this._bot, otherBot, this._context),
+                        arg: arg,
                     },
                 ])
             );
         }
         if (other && changed) {
             this._dropBot = other;
+            const arg = this._calculateDropArg(this._dropBot);
             events.push(
                 ...sim.helper.actions([
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: [this._dropBot],
-                        arg: onDropEnterArg(
-                            this._bot,
-                            this._dropBot,
-                            this._context
-                        ),
+                        arg: arg,
                     },
                     {
                         eventName: DROP_ENTER_ACTION_NAME,
                         bots: this._bots,
-                        arg: onDropEnterArg(
-                            this._bot,
-                            this._dropBot,
-                            this._context
-                        ),
+                        arg: arg,
                     },
                 ])
             );
