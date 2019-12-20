@@ -1,5 +1,25 @@
 # AUX Changelog
 
+## V0.11.17
+
+### Date: TBD
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Changed `@onDrop`, `@onDropEnter`, and `@onDropExit` to use the same parameters.
+        -   `that` is an object with the following properties:
+            -   `dragBot` - The bot that is being dragged.
+            -   `to` - an object with the following properties:
+                -   `context` - The context the bot is being dragged into.
+                -   `x` - The X grid position the bot is being dragged to.
+                -   `y` - The Y grid position the bot is being dragged to.
+                -   `bot` - The bot that the `dragBot` is being dragged onto.
+            -   `from` - an object with the following properties:
+                -   `context` The context the bot is being dragged from.
+                -   `x` - The X grid position the bot is being dragged from.
+                -   `y` - The Y grid position the bot is being dragged from.
+
 ## V0.11.16
 
 ### Date: 12/19/2019
