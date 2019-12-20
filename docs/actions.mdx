@@ -16,6 +16,8 @@ import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode,
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
 By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `"shared"`.
 
+If <TagLink tag='auxCreator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='auxCreator'/> will be set to `null`.
+
 **Each parameter** is a mod that should be applied to the new bot(s).
 If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `"shared"`.
 If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
@@ -121,6 +123,33 @@ applyMod(bot, {
     test: true,
     name: "bob"
 });
+```
+
+### `changeState(bot, stateName, groupName?)`
+
+<FunctionCode name='changeState'/>
+
+Changes the state that the given bot occupies in the given group.
+If the state was changed, then the <TagLink tag='@[groupName][stateName]OnExit'/> and <TagLink tag='@[groupName][stateName]OnEnter'/> whispers are sent to the `bot`.
+
+The **first parameter** is the bot whose state should be changed.
+
+The **second parameter** is the value that should be set on the bot.
+
+The **third parameter** is the name of the tag that should be changed on the bot. If not specified, then the `#state` tag will be used.
+
+#### Examples:
+
+1. Change the `#state` of the bot to "Running".
+```typescript
+// Triggers @stateRunningOnEnter
+changeState(bot, "Running");
+```
+
+2. Change the `#playbackState` of the bot to "Playing".
+```typescript
+// Triggers @playbackStatePlayingOnEnter
+changeState(bot, "Playing", "playbackState");
 ```
 
 ### `getBots(..filters)`

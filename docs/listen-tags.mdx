@@ -162,8 +162,9 @@ The whisper is sent to both the bot that was dropped and the bot that was droppe
 #### Arguments
 ```typescript
 let that: {
-  bot: Bot,
+  dragBot: Bot,
   to: {
+    bot: Bot,
     x: number,
     y: number,
     context: string
@@ -183,9 +184,18 @@ A whisper that is sent to both bots when a bot is dragged onto another bot.
 #### Arguments
 ```typescript
 let that: {
-  draggedBot: Bot,
-  otherBot: Bot,
-  context: string
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
 };
 ```
 
@@ -196,9 +206,18 @@ A whisper that is sent to both bots when a bot is dragged off of another bot.
 #### Arguments
 ```typescript
 let that: {
-  draggedBot: Bot,
-  otherBot: Bot,
-  context: string
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
 };
 ```
 
@@ -232,6 +251,44 @@ let that: {
   targets: Bot[],
   listeners: Bot[],
   responses: any[]
+};
+```
+
+### `@[groupName][stateName]OnEnter`
+
+A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
+};
+```
+
+### `@[groupName][stateName]OnExit`
+
+A whisper that is sent whenever the `[groupName]` tag is changed from `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
 };
 ```
 
