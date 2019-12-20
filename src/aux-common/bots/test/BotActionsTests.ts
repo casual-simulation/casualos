@@ -6516,7 +6516,7 @@ export function botActionsTests(
                         id: expectedId,
                         space: 'tempLocal',
                         tags: {
-                            auxCreator: 'thisBot',
+                            auxCreator: null,
                             test: true,
                             hello: true,
                         },
@@ -6713,6 +6713,70 @@ export function botActionsTests(
                             id: expectedId,
                             tags: {
                                 abc: 'def',
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should set auxCreator to null if it references a bot in a different space', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: "otherBot" }, { space: "def" })`,
+                            },
+                        },
+                        otherBot: {
+                            id: 'otherBot',
+                            space: 'shared',
+                            tags: {
+                                other: true,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            space: <any>'def',
+                            tags: {
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should set auxCreator to null if it references a bot that does not exist', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: "otherBot" })`,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            tags: {
                                 auxCreator: null,
                             },
                         }),

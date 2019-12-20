@@ -68,6 +68,7 @@ import {
     hasValue,
     createBot,
     isScriptBot,
+    getBotSpace,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -683,6 +684,26 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
             }
         }
         applyMod(bot.tags, ...v);
+
+        if ('auxCreator' in bot.tags) {
+            const creatorId = bot.tags['auxCreator'];
+            const creator = getBot('id', creatorId);
+            let clearCreator = false;
+            if (!creator) {
+                clearCreator = true;
+            } else {
+                const creatorSpace = getBotSpace(creator);
+                const currentSpace = getBotSpace(bot);
+                if (creatorSpace !== currentSpace) {
+                    clearCreator = true;
+                }
+            }
+
+            if (clearCreator) {
+                applyMod(bot.tags, { auxCreator: null });
+            }
+        }
+
         return bot;
     });
 
