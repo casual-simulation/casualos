@@ -3040,6 +3040,166 @@ export function botActionsTests(
             });
         });
 
+        describe('changeState()', () => {
+            it('should set the state tag to the given value', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@changeState(this, "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            state: 'abc',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should send an @onEnter whisper to the bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            state: 'Xyz',
+                            test: '@changeState(this, "Abc")',
+                            stateAbcOnEnter:
+                                '@tags.enter = that.from + "-" + that.to',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            state: 'Abc',
+                            enter: 'Xyz-Abc',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should send an @onExit whisper to the bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            state: 'Xyz',
+                            test: '@changeState(this, "Abc")',
+                            stateXyzOnExit:
+                                '@tags.exit = that.from + "-" + that.to',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            state: 'Abc',
+                            exit: 'Xyz-Abc',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should use the given group name', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            fun: 'Xyz',
+                            test: '@changeState(this, "Abc", "fun")',
+                            funXyzOnExit:
+                                '@tags.exit = that.from + "-" + that.to',
+                            funAbcOnEnter:
+                                '@tags.enter = that.from + "-" + that.to',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            fun: 'Abc',
+                            enter: 'Xyz-Abc',
+                            exit: 'Xyz-Abc',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should do nothing if the state does not change', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            state: 'Xyz',
+                            test: '@changeState(this, "Xyz")',
+                            funXyzOnExit:
+                                '@tags.exit = that.from + "-" + that.to',
+                            funXyzOnEnter:
+                                '@tags.enter = that.from + "-" + that.to',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+            });
+        });
+
         describe('player.getBot()', () => {
             it('should get the current users bot', () => {
                 const state: BotsState = {
@@ -6516,7 +6676,7 @@ export function botActionsTests(
                         id: expectedId,
                         space: 'tempLocal',
                         tags: {
-                            auxCreator: 'thisBot',
+                            auxCreator: null,
                             test: true,
                             hello: true,
                         },
@@ -6713,6 +6873,70 @@ export function botActionsTests(
                             id: expectedId,
                             tags: {
                                 abc: 'def',
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should set auxCreator to null if it references a bot in a different space', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: "otherBot" }, { space: "def" })`,
+                            },
+                        },
+                        otherBot: {
+                            id: 'otherBot',
+                            space: 'shared',
+                            tags: {
+                                other: true,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            space: <any>'def',
+                            tags: {
+                                auxCreator: null,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should set auxCreator to null if it references a bot that does not exist', () => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@${name}({ auxCreator: "otherBot" })`,
+                            },
+                        },
+                    };
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue(id);
+                    const botAction = action('test', ['thisBot']);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botAdded({
+                            id: expectedId,
+                            tags: {
                                 auxCreator: null,
                             },
                         }),

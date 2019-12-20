@@ -1,5 +1,36 @@
 # AUX Changelog
 
+## V0.11.17
+
+### Date: 12/20/2019
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Changed `@onDrop`, `@onDropEnter`, and `@onDropExit` to use the same parameters.
+        -   `that` is an object with the following properties:
+            -   `dragBot` - The bot that is being dragged.
+            -   `to` - an object with the following properties:
+                -   `context` - The context the bot is being dragged into.
+                -   `x` - The X grid position the bot is being dragged to.
+                -   `y` - The Y grid position the bot is being dragged to.
+                -   `bot` - The bot that the `dragBot` is being dragged onto.
+            -   `from` - an object with the following properties:
+                -   `context` The context the bot is being dragged from.
+                -   `x` - The X grid position the bot is being dragged from.
+                -   `y` - The Y grid position the bot is being dragged from.
+-   Improvements
+    -   `create()` will now automatically set the `auxCreator` tag to `null` if it references a bot that is in a different space from the created bot.
+    -   Also `create()` will not set the `auxCreator` tag to `null` if it references a non-existent bot.
+    -   Added the `changeState(bot, stateName, groupName)` function to help with building state machines.
+        -   Sets the `[groupName]` tag to `[stateName]` on `bot` and sends "on enter" and "on exit" whispers to the bot that was updated.
+        -   `groupName` defaults to `"state"` if not specified.
+        -   If the state has changed, then a `@[groupName][previousStateName]OnExit()` and `@[groupName][stateName]OnEnter()` whispers are sent to the updated bot.
+            -   `that` is a object with the following properties:
+                -   `from` - The previous state name.
+                -   `to` - The next state name.
+        -   Example: Running `changeState(bot, "Running")` will set the `state` tag to `"Running"` and will send a `@stateRunningOnEnter()` whisper to the bot.
+
 ## V0.11.16
 
 ### Date: 12/19/2019
