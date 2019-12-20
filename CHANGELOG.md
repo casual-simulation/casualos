@@ -19,6 +19,9 @@
                 -   `context` The context the bot is being dragged from.
                 -   `x` - The X grid position the bot is being dragged from.
                 -   `y` - The Y grid position the bot is being dragged from.
+-   Improvements
+    -   `create()` will now automatically set the `auxCreator` tag to `null` if it references a bot that is in a different space from the created bot.
+    -   Also `create()` will not set the `auxCreator` tag to `null` if it references a non-existent bot.
 
 ## V0.11.16
 
