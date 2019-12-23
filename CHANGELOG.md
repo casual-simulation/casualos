@@ -9,6 +9,7 @@
 -   Improvements
     -   Showing hidden tags in the bot table will now also show the `shared` tag.
     -   Removed the multi-select button from the bot table.
+    -   Removed the create context button from the bot table.
     -   Hid all other buttons when a mod is selected in the bot table.
 
 ## V0.11.17

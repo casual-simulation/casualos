@@ -108,11 +108,6 @@ export default class BotTable extends Vue {
     tagWhitelist: (string | boolean)[][] = [];
     editableMap: Map<string, boolean>;
 
-    showCreateWorksurfaceDialog: boolean = false;
-    worksurfaceContext: string = '';
-    worksurfaceAllowPlayer: boolean = false;
-    showSurface: boolean = true;
-
     private _simulation: BrowserSimulation;
     private _isMobile: boolean;
 
@@ -612,69 +607,6 @@ export default class BotTable extends Vue {
             );
             downloadAuxState(stored, `selection-${Date.now()}`);
         }
-    }
-
-    public createSurface(): void {
-        this.worksurfaceContext = createContextId();
-        this.showSurface = true;
-        this.worksurfaceAllowPlayer = false;
-        this.showCreateWorksurfaceDialog = true;
-    }
-
-    /**
-     * Confirm event from the create worksurface dialog.
-     */
-    async onConfirmCreateWorksurface() {
-        this.showCreateWorksurfaceDialog = false;
-
-        const nextPosition = nextAvailableWorkspacePosition(
-            this.getBotManager().helper.createContext()
-        );
-        const finalPosition = gridPosToRealPos(
-            nextPosition,
-            DEFAULT_WORKSPACE_SCALE * 1.1
-        );
-        const workspace = await this.getBotManager().helper.createWorkspace(
-            undefined,
-            this.worksurfaceContext,
-            this.worksurfaceAllowPlayer,
-            this.showSurface,
-            finalPosition.x,
-            finalPosition.y
-        );
-
-        if (!this.diffSelected) {
-            const calc = this.getBotManager().helper.createContext();
-            for (let i = 0; i < this.bots.length; i++) {
-                const bot = this.bots[i];
-                await this.getBotManager().helper.updateBot(bot, {
-                    tags: {
-                        ...addToContextDiff(
-                            calc,
-                            this.worksurfaceContext,
-                            0,
-                            0,
-                            i
-                        ),
-                    },
-                });
-            }
-        }
-
-        this.resetCreateWorksurfaceDialog();
-    }
-
-    /**
-     * Cancel event from the create worksurface dialog.
-     */
-    onCancelCreateWorksurface() {
-        this.resetCreateWorksurfaceDialog();
-    }
-
-    resetCreateWorksurfaceDialog() {
-        this.showCreateWorksurfaceDialog = false;
-        this.worksurfaceAllowPlayer = false;
-        this.showSurface = true;
     }
 
     onTagChanged(bot: Bot, tag: string, value: string) {

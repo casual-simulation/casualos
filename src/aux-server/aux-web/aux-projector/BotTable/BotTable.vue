@@ -19,14 +19,6 @@
                         <cube-icon></cube-icon>
                         <md-tooltip>Create Empty Bot</md-tooltip>
                     </md-button>
-                    <md-button
-                        class="md-icon-button create-surface"
-                        v-if="!diffSelected"
-                        @click="createSurface()"
-                    >
-                        <hex-icon></hex-icon>
-                        <md-tooltip>Create Context from Selection</md-tooltip>
-                    </md-button>
 
                     <md-button
                         v-if="selectionMode === 'single' && !diffSelected && bots.length === 1"
@@ -276,31 +268,6 @@
                 ></tag-value-editor>
             </div>
         </div>
-
-        <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title v-if="diffSelected">Create Context</md-dialog-title>
-            <md-dialog-title v-else>Create Context from Selection</md-dialog-title>
-
-            <md-dialog-content>
-                <md-field>
-                    <label>Context</label>
-                    <md-input
-                        ref="input"
-                        v-model="worksurfaceContext"
-                        maxlength="40"
-                        @keydown.enter.native="onConfirmCreateWorksurface"
-                    />
-                </md-field>
-
-                <md-checkbox v-model="showSurface">Show Surface</md-checkbox>
-                <md-checkbox v-model="worksurfaceAllowPlayer">Lock Context</md-checkbox>
-            </md-dialog-content>
-
-            <md-dialog-actions>
-                <md-button class="md-primary" @click="onCancelCreateWorksurface">Cancel</md-button>
-                <md-button class="md-primary" @click="onConfirmCreateWorksurface">Save</md-button>
-            </md-dialog-actions>
-        </md-dialog>
 
         <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showBotDestroyed">
             <span>Destroyed {{ deletedBotId }}</span>
