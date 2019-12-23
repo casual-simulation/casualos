@@ -24,6 +24,9 @@ import {
     PrecalculatedBot,
     isScript,
     parseScript,
+    BOT_SPACE_TAG,
+    getBotSpace,
+    getBotTag,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -87,6 +90,7 @@ export default class BotTable extends Vue {
     updateTime: number;
 
     tags: string[] = [];
+    readOnlyTags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
     focusedBot: Bot = null;
@@ -156,8 +160,13 @@ export default class BotTable extends Vue {
         EventBus.$emit('toggleSheetSize');
     }
 
-    isBlacklistTagActive(index: number): boolean {
-        return <boolean>this.tagBlacklist[index][1];
+    isBlacklistTagActive(index: number | string): boolean {
+        if (typeof index === 'number') {
+            return <boolean>this.tagBlacklist[index][1];
+        } else {
+            const idx = this.tagBlacklist.findIndex(bl => bl[0] === index);
+            return this.isBlacklistTagActive(idx);
+        }
     }
 
     getBlacklistCount(index: number): number {
@@ -191,31 +200,16 @@ export default class BotTable extends Vue {
     get botTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
 
-        if (this.diffSelected) {
-            if (this.tags.length === 0) {
-                return {
-                    [`grid-template-${sizeType}`]: `auto auto auto`,
-                };
-            }
-
+        if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto repeat(${
-                    this.tags.length
-                }, auto) auto`,
-            };
-        } else {
-            if (this.tags.length === 0) {
-                return {
-                    [`grid-template-${sizeType}`]: `auto auto auto`,
-                };
-            }
-
-            return {
-                [`grid-template-${sizeType}`]: `auto auto repeat(${
-                    this.tags.length
-                }, auto) auto`,
+                [`grid-template-${sizeType}`]: `auto auto auto`,
             };
         }
+
+        return {
+            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
+                .length + this.readOnlyTags.length}, auto) auto`,
+        };
     }
 
     getBotManager() {
@@ -757,6 +751,10 @@ export default class BotTable extends Vue {
         return getShortId(bot);
     }
 
+    getBotValue(bot: Bot, tag: string) {
+        return getBotTag(bot, tag);
+    }
+
     getTagCellClass(bot: Bot, tag: string) {
         return {
             focused: bot === this.focusedBot && tag === this.focusedTag,
@@ -808,6 +806,13 @@ export default class BotTable extends Vue {
             true,
             this.tagBlacklist
         ).sort();
+
+        const isHiddenActive = this.isBlacklistTagActive('hidden');
+        if (isHiddenActive) {
+            this.readOnlyTags = [BOT_SPACE_TAG];
+        } else {
+            this.readOnlyTags = [];
+        }
     }
 
     toggleBlacklistIndex(index: number) {

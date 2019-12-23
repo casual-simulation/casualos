@@ -119,6 +119,16 @@
                         <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
+                    <!-- Read only tags -->
+                    <div
+                        v-for="(tag, tagIndex) in readOnlyTags"
+                        :key="`read-only-${tagIndex}`"
+                        class="bot-cell header"
+                        @click="searchForTag(tag)"
+                    >
+                        <bot-tag :tag="tag" :allowCloning="false"></bot-tag>
+                    </div>
+
                     <!-- Other tags -->
                     <div
                         v-for="(tag, index) in tags"
@@ -167,6 +177,15 @@
                             class="bot-cell header"
                         >
                         </bot-id>
+
+                        <!-- Read Only Tags -->
+                        <span
+                            v-for="(tag, tagIndex) in readOnlyTags"
+                            :key="`${bot.id}-read-only-${tagIndex}`"
+                            class="bot-cell header tag"
+                        >
+                            {{ getBotValue(bot, tag) }}
+                        </span>
 
                         <!-- Bot Tags -->
                         <div
