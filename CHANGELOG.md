@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.18
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Showing hidden tags in the bot table will now also show the `shared` tag.
+
 ## V0.11.17
 
 ### Date: 12/20/2019
