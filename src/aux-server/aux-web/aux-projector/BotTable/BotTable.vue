@@ -12,17 +12,20 @@
                         <md-tooltip>Add Tag</md-tooltip>
                     </md-button>
                     <md-button
-                        v-if="!isSearch"
+                        v-if="!isSearch && !diffSelected"
                         class="md-icon-button create-bot"
                         @click="createBot()"
                     >
                         <cube-icon></cube-icon>
                         <md-tooltip>Create Empty Bot</md-tooltip>
                     </md-button>
-                    <md-button class="md-icon-button create-surface" @click="createSurface()">
+                    <md-button
+                        class="md-icon-button create-surface"
+                        v-if="!diffSelected"
+                        @click="createSurface()"
+                    >
                         <hex-icon></hex-icon>
-                        <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
-                        <md-tooltip v-else>Create Context from Selection</md-tooltip>
+                        <md-tooltip>Create Context from Selection</md-tooltip>
                     </md-button>
 
                     <md-button
@@ -62,7 +65,7 @@
                             </div>
                         </form>
                     </div>
-                    <div v-else-if="hasBots">
+                    <div v-else-if="hasBots && !diffSelected">
                         <md-button
                             v-if="!isSearch && selectionMode != 'multi'"
                             class="md-icon-button create-surface"
