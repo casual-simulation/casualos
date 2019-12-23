@@ -228,36 +228,36 @@
                         </div>
                     </template>
                 </div>
-                <div class="bot-section-holder-outer" v-if="getTagBlacklist().length > 0">
+                <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
                     <div class="bot-section-holder-inner">
                         <div
-                            v-for="(tagBlacklist, index) in getTagBlacklist()"
+                            v-for="(tagWhitelist, index) in getTagWhitelist()"
                             :key="index"
                             class="bot-section"
                         >
                             <md-button
-                                v-if="isBlacklistTagActive(index)"
+                                v-if="isWhitelistTagActive(index)"
                                 class="bot-section active"
-                                @click="toggleBlacklistIndex(index)"
+                                @click="toggleWhitelistIndex(index)"
                             >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }}</span
+                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
+                                <span v-else-if="isSpecialTag(tagWhitelist)">
+                                    {{ tagWhitelist }}</span
                                 >
-                                <span v-else>{{ getVisualTagBlacklist(index) }}</span>
+                                <span v-else>{{ getVisualTagWhitelist(index) }}</span>
                             </md-button>
                             <md-button
                                 v-else
                                 class="bot-section inactive"
-                                @click="toggleBlacklistIndex(index)"
+                                @click="toggleWhitelistIndex(index)"
                             >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }} {{ getBlacklistCount(index) }}</span
+                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
+                                <span v-else-if="isSpecialTag(tagWhitelist)">
+                                    {{ tagWhitelist }} {{ getWhitelistCount(index) }}</span
                                 >
                                 <span v-else
-                                    >{{ getVisualTagBlacklist(index) }}
-                                    {{ getBlacklistCount(index) }}</span
+                                    >{{ getVisualTagWhitelist(index) }}
+                                    {{ getWhitelistCount(index) }}</span
                                 >
                             </md-button>
                         </div>
