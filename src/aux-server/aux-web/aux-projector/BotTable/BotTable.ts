@@ -27,7 +27,6 @@ import {
     BOT_SPACE_TAG,
     getBotSpace,
     getBotTag,
-    calculateBotValue,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -225,19 +224,6 @@ export default class BotTable extends Vue {
         return this.tagExists(this.newTag);
     }
 
-    get hasContextSelected() {
-        return this.bots.some(b => 'auxContext' in b.tags);
-    }
-
-    getSelectedContext() {
-        const bot = this.bots.find(b => 'auxContext' in b.tags);
-        if (bot) {
-            const calc = appManager.simulationManager.primary.helper.createContext();
-            return calculateBotValue(calc, bot, 'auxContext');
-        }
-        return '<none>';
-    }
-
     isEmptyDiff(): boolean {
         if (this.diffSelected) {
             if (this.bots[0].id === 'empty' && this.addedTags.length === 0) {
@@ -399,12 +385,7 @@ export default class BotTable extends Vue {
     }
 
     async createBot() {
-        const tags = this.hasContextSelected
-            ? {
-                  [this.getSelectedContext()]: true,
-              }
-            : undefined;
-        const id = await this.getBotManager().helper.createBot(undefined, tags);
+        const id = await this.getBotManager().helper.createBot();
 
         this.getBotManager()
             .watcher.botChanged(id)
