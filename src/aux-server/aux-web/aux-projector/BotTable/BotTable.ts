@@ -605,10 +605,6 @@ export default class BotTable extends Vue {
         appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
-    async multiSelect() {
-        await this.getBotManager().selection.setSelectedBots(this.bots);
-    }
-
     async downloadBots() {
         if (this.hasBots) {
             const stored = await this.getBotManager().exportBots(

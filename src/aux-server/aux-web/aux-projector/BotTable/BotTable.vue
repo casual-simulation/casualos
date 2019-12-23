@@ -67,15 +67,6 @@
                     </div>
                     <div v-else-if="hasBots && !diffSelected">
                         <md-button
-                            v-if="!isSearch && selectionMode != 'multi'"
-                            class="md-icon-button create-surface"
-                            @click="multiSelect()"
-                        >
-                            <multi-icon></multi-icon>
-                            <md-tooltip>Multiselect Bots</md-tooltip>
-                        </md-button>
-
-                        <md-button
                             v-if="!isMobile()"
                             class="md-icon-button create-surface"
                             @click="toggleSheet()"
