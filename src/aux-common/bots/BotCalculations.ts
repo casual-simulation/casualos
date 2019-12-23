@@ -859,6 +859,11 @@ export function getTag(bot: PartialBot, tag: string) {
  * @param tag The tag to retrieve.
  */
 export function getBotTag(bot: Bot, tag: string) {
+    if (tag === 'id') {
+        return bot.id;
+    } else if (tag === BOT_SPACE_TAG) {
+        return getBotSpace(bot);
+    }
     return getTag(bot, tag);
 }
 
