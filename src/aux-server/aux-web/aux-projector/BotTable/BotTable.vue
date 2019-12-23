@@ -12,12 +12,12 @@
                         <md-tooltip>Add Tag</md-tooltip>
                     </md-button>
                     <md-button
-                        v-if="!isSearch && !diffSelected"
+                        v-if="!isSearch && !diffSelected && hasContextSelected"
                         class="md-icon-button create-bot"
                         @click="createBot()"
                     >
                         <cube-icon></cube-icon>
-                        <md-tooltip>Create Empty Bot</md-tooltip>
+                        <md-tooltip>Create Empty Bot in {{ getSelectedContext() }}</md-tooltip>
                     </md-button>
 
                     <md-button
