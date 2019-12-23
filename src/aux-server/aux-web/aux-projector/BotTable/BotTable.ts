@@ -160,6 +160,9 @@ export default class BotTable extends Vue {
 
     isWhitelistTagActive(index: number | string): boolean {
         if (typeof index === 'number') {
+            if (index < 0) {
+                return false;
+            }
             return <boolean>this.tagWhitelist[index][1];
         } else {
             const idx = this.tagWhitelist.findIndex(bl => bl[0] === index);
