@@ -253,12 +253,11 @@
                             >
                                 <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
                                 <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
+                                    {{ tagBlacklist }} {{ getBlacklistCount(index) }}</span
                                 >
                                 <span v-else
-                                    >{{ getVisualTagBlacklist(index) }} [{{
-                                        getBlacklistCount(index)
-                                    }}]</span
+                                    >{{ getVisualTagBlacklist(index) }}
+                                    {{ getBlacklistCount(index) }}</span
                                 >
                             </md-button>
                         </div>
