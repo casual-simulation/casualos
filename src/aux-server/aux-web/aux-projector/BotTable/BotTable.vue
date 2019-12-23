@@ -89,10 +89,7 @@
                 >
                     <!-- Remove all button -->
                     <div class="bot-cell remove-item" v-if="!diffSelected">
-                        <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
-                            Clear Search
-                        </md-button>
-                        <div v-else-if="selectionMode === 'multi'">
+                        <div v-if="selectionMode === 'multi'">
                             <!-- keep place here so it shows up as empty-->
                         </div>
                     </div>
