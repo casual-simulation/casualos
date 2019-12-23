@@ -46,6 +46,8 @@ export abstract class BaseEmptyClickOperation implements IOperation {
             // Store the screen position of the input when the click occured.
             this._startScreenPos = this._game.getInput().getMouseScreenPos();
         }
+
+        this._interaction.hideContextMenu();
     }
 
     public update(calc: BotCalculationContext): void {
