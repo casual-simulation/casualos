@@ -3,6 +3,7 @@ module.exports = {
     testEnvironment: 'node',
     moduleFileExtensions: ['ts', 'tsx', 'js'],
     testPathIgnorePatterns: ['/node_modules/', '/temp/', '/lib/', '/dist/'],
+    watchPathIgnorePatterns: ['/node_modules/'],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
         '^three/examples/js/renderers/CSS3DRenderer$':
