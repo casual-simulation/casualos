@@ -215,7 +215,7 @@ export function botTags(
     currentTags: string[],
     extraTags: string[],
     includeHidden: boolean = false,
-    tagBlacklist: (string | boolean)[][] = []
+    tagWhitelist: (string | boolean)[][] = []
 ) {
     const botTags = flatMap(bots, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
@@ -228,22 +228,22 @@ export function botTags(
     let allInactive = true;
 
     // if there is a blacklist index and the  first index [all] is not selected
-    if (tagBlacklist != undefined && tagBlacklist.length > 0) {
+    if (tagWhitelist != undefined && tagWhitelist.length > 0) {
         let filteredTags: string[] = [];
 
-        for (let i = tagBlacklist.length - 1; i >= 0; i--) {
-            if (tagBlacklist[i][1]) {
+        for (let i = tagWhitelist.length - 1; i >= 0; i--) {
+            if (tagWhitelist[i][1]) {
                 allInactive = false;
             }
         }
 
         if (!allInactive) {
-            for (let i = tagBlacklist.length - 1; i >= 0; i--) {
-                if (!tagBlacklist[i][1]) {
-                    for (let j = 2; j < tagBlacklist[i].length; j++) {
+            for (let i = tagWhitelist.length - 1; i >= 0; i--) {
+                if (!tagWhitelist[i][1]) {
+                    for (let j = 2; j < tagWhitelist[i].length; j++) {
                         for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
                             if (
-                                onlyTagsToKeep[k] === <string>tagBlacklist[i][j]
+                                onlyTagsToKeep[k] === <string>tagWhitelist[i][j]
                             ) {
                                 onlyTagsToKeep.splice(k, 1);
                                 break;
@@ -859,6 +859,11 @@ export function getTag(bot: PartialBot, tag: string) {
  * @param tag The tag to retrieve.
  */
 export function getBotTag(bot: Bot, tag: string) {
+    if (tag === 'id') {
+        return bot.id;
+    } else if (tag === BOT_SPACE_TAG) {
+        return getBotSpace(bot);
+    }
     return getTag(bot, tag);
 }
 

@@ -32,6 +32,12 @@ export default class MiniBot extends Vue {
     @Prop({ default: false })
     isSearch: boolean;
 
+    /**
+     * Whether the bot should create a mod when dragged.
+     */
+    @Prop({ default: false })
+    createMod: boolean;
+
     image: string = '';
     label: string = '';
     labelColor: string = '#000';

@@ -59,6 +59,7 @@ import {
     convertToCopiableValue,
     isScript,
     parseScript,
+    getBotTag,
 } from './BotCalculations';
 import {
     Bot,
@@ -192,6 +193,28 @@ describe('BotCalculations', () => {
 
             expect(isBot(null)).toBe(false);
             expect(isBot({})).toBe(false);
+        });
+    });
+
+    describe('getBotTag()', () => {
+        it('should return the bot ID', () => {
+            const bot = createBot('test');
+
+            expect(getBotTag(bot, 'id')).toEqual('test');
+        });
+
+        it('should return the bot space', () => {
+            const bot = createBot('test', {}, <any>'abc');
+
+            expect(getBotTag(bot, 'space')).toEqual('abc');
+        });
+
+        it('should return the given tag', () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            expect(getBotTag(bot, 'abc')).toEqual('def');
         });
     });
 

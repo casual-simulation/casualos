@@ -55,6 +55,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
+        this._interaction.hideContextMenu();
         if (
             this.game.getInput().getKeyHeld('Meta') ||
             this.game.getInput().getKeyHeld('Ctrl') ||
@@ -133,7 +134,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
             // If we're clicking on a workspace show the context menu for it.
         } else if (workspace) {
-            this._interaction.showContextMenu(calc);
+            this._interaction.toggleContextMenu(calc);
         }
     }
 

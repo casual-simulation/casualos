@@ -207,6 +207,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const table = vueElement.$parent.$parent;
             const bot = vueElement.bot;
 
+            if (vueElement.createMod) {
+                return new BuilderModClickOperation(
+                    this._game.simulation3D,
+                    this,
+                    bot.tags,
+                    vrController
+                );
+            }
+
             if (state[bot.id]) {
                 return new BuilderBotIDClickOperation(
                     this._game.simulation3D,
