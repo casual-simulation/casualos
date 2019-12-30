@@ -19,19 +19,6 @@
                         <cube-icon></cube-icon>
                         <md-tooltip>Create Empty Bot</md-tooltip>
                     </md-button>
-
-                    <md-button
-                        v-if="selectionMode === 'single' && !diffSelected && bots.length === 1"
-                        class="md-icon-button create-surface"
-                        @click="clearSelection()"
-                    >
-                        <picture>
-                            <source srcset="../public/icons/make-merge.webp" type="image/webp" />
-                            <source srcset="../public/icons/make-merge.png" type="image/png" />
-                            <img alt="Make Merge" src="../public/icons/make-merge.png" />
-                        </picture>
-                        <md-tooltip>Create Mod From Selection</md-tooltip>
-                    </md-button>
                 </div>
                 <div class="bot-table-actions">
                     <div v-if="isMakingNewTag">
