@@ -50,7 +50,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
-import MiniBot from '../MiniBot/MiniBot';
+import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
 import BotTable from '../BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';

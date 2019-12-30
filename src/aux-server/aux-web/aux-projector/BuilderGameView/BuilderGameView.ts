@@ -19,7 +19,7 @@ import {
 
 import { appManager } from '../../shared/AppManager';
 import BuilderApp from '../BuilderApp/BuilderApp';
-import MiniBot from '../MiniBot/MiniBot';
+import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import { isMac, copyBotsFromSimulation } from '../../shared/SharedUtils';

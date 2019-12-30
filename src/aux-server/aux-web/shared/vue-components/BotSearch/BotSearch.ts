@@ -1,19 +1,16 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
-import { EventBus } from '../../shared/EventBus';
 import {
     Bot,
     getShortId,
     formatValue,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
-import { appManager } from '../../shared/AppManager';
+import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
-import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
-import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import MiniBot from '../MiniBot/MiniBot';
-import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
+import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
 import Cube from '../public/icons/Cube.svg';
 import CubeSearch from '../public/icons/CubeSearch.svg';
 
@@ -29,8 +26,6 @@ export default class BotSearch extends Vue {
     bots: Bot[] = [];
     recentBot: Bot = null;
     search: string = '';
-
-    protected _gameView: BuilderGameView;
 
     @Provide() botRenderer: BotRenderer = getRenderer();
 

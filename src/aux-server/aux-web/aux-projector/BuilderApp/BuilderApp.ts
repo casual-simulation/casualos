@@ -29,7 +29,7 @@ import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
 import BotTableToggle from '../BotTableToggle/BotTableToggle';
-import BotSearch from '../BotSearch/BotSearch';
+import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
 
 import vueBotPond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
