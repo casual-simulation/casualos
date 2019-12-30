@@ -587,15 +587,19 @@ export default class BotTable extends Vue {
     }
 
     async clearSelection() {
+        await this.selectMod(this.bots[0]);
+    }
+
+    async selectMod(bot: Bot) {
         this.addedTags = [];
 
         await this.getBotManager().selection.selectBot(
-            <AuxBot>this.bots[0],
+            <AuxBot>bot,
             false,
             this.getBotManager().botPanel
         );
 
-        this.getBotManager().recent.addBotDiff(this.bots[0], true);
+        this.getBotManager().recent.addBotDiff(bot, true);
         await this.getBotManager().selection.clearSelection();
         appManager.simulationManager.primary.botPanel.isOpen = true;
     }

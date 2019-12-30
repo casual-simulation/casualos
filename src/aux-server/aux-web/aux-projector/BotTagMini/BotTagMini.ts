@@ -18,8 +18,18 @@ export default class BotTagMini extends Vue {
     @Prop({ default: true })
     allowCloning: boolean;
 
+    /**
+     * Whether the tag should create a mod when dragged.
+     */
+    @Prop({ default: false })
+    createMod: boolean;
+
     @Prop()
     bots: AuxBot;
+
+    click() {
+        this.$emit('click');
+    }
 
     constructor() {
         super();

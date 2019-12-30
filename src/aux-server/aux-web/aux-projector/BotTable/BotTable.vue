@@ -147,7 +147,14 @@
                     <template v-for="bot in bots">
                         <!-- deselect button -->
                         <div :key="`${bot.id}-remove`" class="bot-cell remove-item">
-                            <mini-bot :bots="bot" ref="tags" :allowCloning="true"> </mini-bot>
+                            <mini-bot
+                                :bots="bot"
+                                ref="tags"
+                                :allowCloning="true"
+                                :createMod="true"
+                                @click="selectMod(bot)"
+                            >
+                            </mini-bot>
                         </div>
 
                         <!-- Bot ID -->
