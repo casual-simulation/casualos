@@ -98,7 +98,7 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div class="bot-cell header" @click="searchForTag('id')">
+                    <div v-if="showID" class="bot-cell header" @click="searchForTag('id')">
                         <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
@@ -160,6 +160,7 @@
                         <!-- Bot ID -->
                         <bot-id
                             ref="tags"
+                            v-if="showID"
                             :key="bot.id"
                             :bots="bot"
                             :allowCloning="true"

@@ -193,18 +193,24 @@ export default class BotTable extends Vue {
         return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
     }
 
+    get showID() {
+        return !this.diffSelected;
+    }
+
     get botTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
 
+        const idTemplate = this.showID ? 'auto' : '';
+
         if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto auto`,
+                [`grid-template-${sizeType}`]: `auto ${idTemplate} auto`,
             };
         }
 
         return {
-            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
-                .length + this.readOnlyTags.length}, auto) auto`,
+            [`grid-template-${sizeType}`]: `auto ${idTemplate} repeat(${this
+                .tags.length + this.readOnlyTags.length}, auto) auto`,
         };
     }
 
