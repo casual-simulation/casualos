@@ -12,30 +12,12 @@
                         <md-tooltip>Add Tag</md-tooltip>
                     </md-button>
                     <md-button
-                        v-if="!isSearch"
+                        v-if="!isSearch && !diffSelected"
                         class="md-icon-button create-bot"
                         @click="createBot()"
                     >
                         <cube-icon></cube-icon>
                         <md-tooltip>Create Empty Bot</md-tooltip>
-                    </md-button>
-                    <md-button class="md-icon-button create-surface" @click="createSurface()">
-                        <hex-icon></hex-icon>
-                        <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
-                        <md-tooltip v-else>Create Context from Selection</md-tooltip>
-                    </md-button>
-
-                    <md-button
-                        v-if="selectionMode === 'single' && !diffSelected && bots.length === 1"
-                        class="md-icon-button create-surface"
-                        @click="clearSelection()"
-                    >
-                        <picture>
-                            <source srcset="../public/icons/make-merge.webp" type="image/webp" />
-                            <source srcset="../public/icons/make-merge.png" type="image/png" />
-                            <img alt="Make Merge" src="../public/icons/make-merge.png" />
-                        </picture>
-                        <md-tooltip>Create Mod From Selection</md-tooltip>
                     </md-button>
                 </div>
                 <div class="bot-table-actions">
@@ -62,16 +44,7 @@
                             </div>
                         </form>
                     </div>
-                    <div v-else-if="hasBots">
-                        <md-button
-                            v-if="!isSearch && selectionMode != 'multi'"
-                            class="md-icon-button create-surface"
-                            @click="multiSelect()"
-                        >
-                            <multi-icon></multi-icon>
-                            <md-tooltip>Multiselect Bots</md-tooltip>
-                        </md-button>
-
+                    <div v-else-if="hasBots && !diffSelected">
                         <md-button
                             v-if="!isMobile()"
                             class="md-icon-button create-surface"
@@ -103,10 +76,7 @@
                 >
                     <!-- Remove all button -->
                     <div class="bot-cell remove-item" v-if="!diffSelected">
-                        <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
-                            Clear Search
-                        </md-button>
-                        <div v-else-if="selectionMode === 'multi'">
+                        <div v-if="selectionMode === 'multi'">
                             <!-- keep place here so it shows up as empty-->
                         </div>
                     </div>
@@ -115,7 +85,7 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div class="bot-cell header" @click="searchForTag('id')">
+                    <div v-if="showID" class="bot-cell header" @click="searchForTag('id')">
                         <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
@@ -164,12 +134,20 @@
                     <template v-for="bot in bots">
                         <!-- deselect button -->
                         <div :key="`${bot.id}-remove`" class="bot-cell remove-item">
-                            <mini-bot :bots="bot" ref="tags" :allowCloning="true"> </mini-bot>
+                            <mini-bot
+                                :bots="bot"
+                                ref="tags"
+                                :allowCloning="true"
+                                :createMod="true"
+                                @click="selectMod(bot)"
+                            >
+                            </mini-bot>
                         </div>
 
                         <!-- Bot ID -->
                         <bot-id
                             ref="tags"
+                            v-if="showID"
                             :key="bot.id"
                             :bots="bot"
                             :allowCloning="true"
@@ -228,37 +206,36 @@
                         </div>
                     </template>
                 </div>
-                <div class="bot-section-holder-outer" v-if="getTagBlacklist().length > 0">
+                <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
                     <div class="bot-section-holder-inner">
                         <div
-                            v-for="(tagBlacklist, index) in getTagBlacklist()"
+                            v-for="(tagWhitelist, index) in getTagWhitelist()"
                             :key="index"
                             class="bot-section"
                         >
                             <md-button
-                                v-if="isBlacklistTagActive(index)"
+                                v-if="isWhitelistTagActive(index)"
                                 class="bot-section active"
-                                @click="toggleBlacklistIndex(index)"
+                                @click="toggleWhitelistIndex(index)"
                             >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }}</span
+                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
+                                <span v-else-if="isSpecialTag(tagWhitelist)">
+                                    {{ tagWhitelist }}</span
                                 >
-                                <span v-else>{{ getVisualTagBlacklist(index) }}</span>
+                                <span v-else>{{ getVisualTagWhitelist(index) }}</span>
                             </md-button>
                             <md-button
                                 v-else
                                 class="bot-section inactive"
-                                @click="toggleBlacklistIndex(index)"
+                                @click="toggleWhitelistIndex(index)"
                             >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
+                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
+                                <span v-else-if="isSpecialTag(tagWhitelist)">
+                                    {{ tagWhitelist }} {{ getWhitelistCount(index) }}</span
                                 >
                                 <span v-else
-                                    >{{ getVisualTagBlacklist(index) }} [{{
-                                        getBlacklistCount(index)
-                                    }}]</span
+                                    >{{ getVisualTagWhitelist(index) }}
+                                    {{ getWhitelistCount(index) }}</span
                                 >
                             </md-button>
                         </div>
@@ -283,31 +260,6 @@
                 ></tag-value-editor>
             </div>
         </div>
-
-        <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title v-if="diffSelected">Create Context</md-dialog-title>
-            <md-dialog-title v-else>Create Context from Selection</md-dialog-title>
-
-            <md-dialog-content>
-                <md-field>
-                    <label>Context</label>
-                    <md-input
-                        ref="input"
-                        v-model="worksurfaceContext"
-                        maxlength="40"
-                        @keydown.enter.native="onConfirmCreateWorksurface"
-                    />
-                </md-field>
-
-                <md-checkbox v-model="showSurface">Show Surface</md-checkbox>
-                <md-checkbox v-model="worksurfaceAllowPlayer">Lock Context</md-checkbox>
-            </md-dialog-content>
-
-            <md-dialog-actions>
-                <md-button class="md-primary" @click="onCancelCreateWorksurface">Cancel</md-button>
-                <md-button class="md-primary" @click="onConfirmCreateWorksurface">Save</md-button>
-            </md-dialog-actions>
-        </md-dialog>
 
         <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showBotDestroyed">
             <span>Destroyed {{ deletedBotId }}</span>

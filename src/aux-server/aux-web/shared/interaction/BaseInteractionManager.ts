@@ -73,6 +73,7 @@ export abstract class BaseInteractionManager {
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
     private _pressedBot: AuxBot3D;
+    private _contextMenuOpen: boolean = false;
 
     constructor(game: Game) {
         this._draggableGroupsDirty = true;
@@ -246,6 +247,10 @@ export abstract class BaseInteractionManager {
                 // Always allow the iframes to recieve input when no inputs are being held.
                 const webglCanvas = this._game.getRenderer().domElement;
                 webglCanvas.style.pointerEvents = 'none';
+            }
+
+            if (!noMouseInput) {
+                this.hideContextMenu();
             }
 
             if (this._operations.length === 0) {
@@ -590,6 +595,14 @@ export abstract class BaseInteractionManager {
         }
     }
 
+    toggleContextMenu(calc: BotCalculationContext) {
+        if (this._contextMenuOpen) {
+            this.hideContextMenu();
+        } else {
+            this.showContextMenu(calc);
+        }
+    }
+
     showContextMenu(calc: BotCalculationContext) {
         if (WebVRDisplays.isPresenting()) {
             // Context menu does nothing in VR yet...
@@ -605,6 +618,7 @@ export abstract class BaseInteractionManager {
         const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {
+            this._contextMenuOpen = true;
             this.setCameraControlsEnabled(false);
 
             // Now send the actual context menu event.
@@ -614,6 +628,11 @@ export abstract class BaseInteractionManager {
             };
             this._game.gameView.$emit('onContextMenu', menuEvent);
         }
+    }
+
+    hideContextMenu() {
+        this._contextMenuOpen = false;
+        this._game.gameView.$emit('onContextMenuHide');
     }
 
     async selectBot(bot: AuxBot3D) {

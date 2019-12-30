@@ -8,6 +8,14 @@
 
 -   Improvements
     -   Showing hidden tags in the bot table will now also show the `shared` tag.
+    -   Removed the multi-select button from the bot table.
+    -   Removed the create context button from the bot table.
+    -   Removed the clear search button from the bot table.
+    -   Removed the "create mod from selection" button from the bot table.
+    -   Added the ability to click/tap on a bot preview in the bot table to select a mod of it.
+    -   Added the ability to drag a bot preview in the bot table to drag a mod of it.
+    -   Hid the ID tag when a mod is selected.
+    -   Hid all other buttons when a mod is selected in the bot table.
 
 ## V0.11.17
 

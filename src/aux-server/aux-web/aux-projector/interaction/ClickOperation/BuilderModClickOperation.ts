@@ -25,16 +25,25 @@ export class BuilderModClickOperation extends BaseModClickOperation {
     // This overrides the base class Simulation3D
     protected _simulation3D: BuilderSimulation3D;
 
+    // protected _allowSelection: boolean;
+
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
         mod: BotTags,
         vrController: VRController3D | null
+        // allowSelection: boolean = false
     ) {
         super(simulation, interaction, mod, vrController);
+        // this._allowSelection = allowSelection;
     }
 
     protected _performClick(calc: BotCalculationContext): void {
+        // if (this._allowSelection) {
+        //     this._simulation3D.simulation.recent.addBotDiff(this._mod, true);
+        //     this._simulation3D.simulation.selection.clearSelection();
+        //     this._simulation3D.simulation.botPanel.isOpen = true;
+        // }
         // Do nothing by default
     }
 

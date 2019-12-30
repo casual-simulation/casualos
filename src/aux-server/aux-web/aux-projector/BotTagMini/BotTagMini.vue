@@ -7,6 +7,8 @@
             ref="mini"
             :isSearch="true"
             class="bot-tag-mini"
+            :createMod="createMod"
+            @click="click()"
         ></mini-bot>
     </span>
 </template>

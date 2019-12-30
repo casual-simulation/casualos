@@ -107,6 +107,8 @@ export abstract class BaseClickOperation implements IOperation {
                       );
 
                 if (dragThresholdPassed) {
+                    this._interaction.hideContextMenu();
+
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 

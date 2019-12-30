@@ -25,8 +25,6 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
         appManager.simulationManager.primary.botPanel.restrictVisible(false);
 
         this.removeSelected();
-
-        this._game.gameView.$emit('onContextMenuHide');
     }
 
     async removeSelected() {
