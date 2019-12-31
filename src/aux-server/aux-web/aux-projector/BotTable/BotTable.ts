@@ -35,7 +35,6 @@ import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
 import BotID from '../BotID/BotID';
-import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import Cube from '../../shared/public/icons/Cube.svg';
@@ -58,7 +57,6 @@ import sumBy from 'lodash/sumBy';
         'bot-id': BotID,
         'bot-tag': BotTag,
         'tag-editor': TagEditor,
-        'bot-table-toggle': BotTableToggle,
         'tree-view': TreeView,
         'cube-icon': Cube,
         'hex-icon': Hexagon,

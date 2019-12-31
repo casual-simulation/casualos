@@ -28,7 +28,6 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../../shared/public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../../shared/public/icons/repo-forked.svg';
-import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
 
 import vueBotPond from 'vue-filepond';
@@ -78,7 +77,6 @@ const BotPond = vueBotPond();
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
         'bot-search': BotSearch,
-        'bot-table-toggle': BotTableToggle,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,

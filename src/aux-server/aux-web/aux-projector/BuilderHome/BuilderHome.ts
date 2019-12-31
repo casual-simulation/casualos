@@ -16,7 +16,6 @@ import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap, switchMap } from 'rxjs/operators';
-import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { EventBus } from '../../shared/EventBus';
 import {
     BrowserSimulation,
@@ -30,7 +29,6 @@ import { appManager } from '../../shared/AppManager';
         'bot-table': BotTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'bot-table-toggle': BotTableToggle,
     },
 })
 export default class BuilderHome extends Vue {
