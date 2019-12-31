@@ -4,7 +4,7 @@ import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
 import { map, scan } from 'rxjs/operators';
-import { downloadAuxState, readFileJson } from '../aux-projector/download';
+import { downloadAuxState, readFileJson } from './DownloadHelpers';
 import {
     StoredCausalTree,
     ProgressMessage,

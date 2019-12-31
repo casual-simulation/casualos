@@ -28,24 +28,24 @@ import {
     getBotSpace,
     getBotTag,
 } from '@casual-simulation/aux-common';
-import { EventBus } from '../../shared/EventBus';
+import { EventBus } from '../../EventBus';
 
-import BotValue from '../../shared/vue-components/BotValue/BotValue';
-import TagEditor from '../../shared/vue-components/TagEditor/TagEditor';
-import AlertDialogOptions from '../../shared/AlertDialogOptions';
-import BotTag from '../../shared/vue-components/BotTag/BotTag';
-import BotID from '../../shared/vue-components/BotID/BotID';
+import BotValue from '../BotValue/BotValue';
+import TagEditor from '../TagEditor/TagEditor';
+import AlertDialogOptions from '../../AlertDialogOptions';
+import BotTag from '../BotTag/BotTag';
+import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
-import { downloadAuxState } from '../download';
+import { downloadAuxState } from '../../DownloadHelpers';
 import Cube from '../../shared/public/icons/Cube.svg';
 import Hexagon from '../../shared/public/icons/Hexagon.svg';
 import ResizeIcon from '../../shared/public/icons/Resize.svg';
 import MultiIcon from '../../shared/public/icons/Multi.svg';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { appManager } from '../../shared/AppManager';
+import { appManager } from '../../AppManager';
 import Bowser from 'bowser';
-import BotTagMini from '../../shared/vue-components/BotTagMini/BotTagMini';
-import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
+import BotTagMini from '../BotTagMini/BotTagMini';
+import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
 

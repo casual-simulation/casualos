@@ -52,7 +52,7 @@ import { BaseInteractionManager } from '../../shared/interaction/BaseInteraction
 import { GameObject } from '../../shared/scene/GameObject';
 import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
-import BotTable from '../BotTable/BotTable';
+import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';

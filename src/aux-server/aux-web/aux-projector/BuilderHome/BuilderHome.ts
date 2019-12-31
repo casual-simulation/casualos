@@ -10,7 +10,7 @@ import {
     isBot,
 } from '@casual-simulation/aux-common';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import BotTable from '../BotTable/BotTable';
+import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../../shared/vue-components/TagEditor/TagEditor';
