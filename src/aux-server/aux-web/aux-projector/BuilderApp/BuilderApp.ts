@@ -25,9 +25,9 @@ import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap, mergeMap, filter, switchMap, first } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
+import QRAuxBuilder from '../../shared/public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
-import ForkIcon from '../public/icons/repo-forked.svg';
+import ForkIcon from '../../shared/public/icons/repo-forked.svg';
 import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
 

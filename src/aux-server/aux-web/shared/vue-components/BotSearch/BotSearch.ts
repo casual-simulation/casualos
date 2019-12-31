@@ -11,8 +11,8 @@ import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
 import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
-import Cube from '../public/icons/Cube.svg';
-import CubeSearch from '../public/icons/CubeSearch.svg';
+import Cube from '../../public/icons/Cube.svg';
+import CubeSearch from '../../public/icons/CubeSearch.svg';
 
 @Component({
     components: {

@@ -71,7 +71,7 @@ import {
     navigateToUrl,
 } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
-import BotTagMini from '../BotTagMini/BotTagMini';
+import BotTagMini from '../../shared/vue-components/BotTagMini/BotTagMini';
 import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
 import { BuilderModClickOperation } from './ClickOperation/BuilderModClickOperation';
 
