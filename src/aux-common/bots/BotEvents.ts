@@ -71,7 +71,8 @@ export type ExtraActions =
     | ReplaceDragBotAction
     | SetupChannelAction
     | SetClipboardAction
-    | ShowRunBarAction;
+    | ShowRunBarAction
+    | RunScriptAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -946,6 +947,18 @@ export interface ShowRunBarAction {
 }
 
 /**
+ * Defines an event that executes a script.
+ */
+export interface RunScriptAction {
+    type: 'run_script';
+
+    /**
+     * The script that should be executed.
+     */
+    script: string;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -1570,5 +1583,16 @@ export function setClipboard(text: string): SetClipboardAction {
     return {
         type: 'set_clipboard',
         text,
+    };
+}
+
+/**
+ * Creates a RunScriptAction.
+ * @param script The script that should be executed.
+ */
+export function runScript(script: string): RunScriptAction {
+    return {
+        type: 'run_script',
+        script,
     };
 }

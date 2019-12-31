@@ -7,6 +7,7 @@ import {
     formatValue,
     tagsOnBot,
     hasValue,
+    runScript,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
@@ -37,9 +38,9 @@ export default class BotSearch extends Vue {
     }
 
     async executeSearch() {
-        await appManager.simulationManager.primary.helper.formulaBatch([
-            this.search,
-        ]);
+        await appManager.simulationManager.primary.helper.transaction(
+            runScript(this.search)
+        );
     }
 
     @Watch('search')

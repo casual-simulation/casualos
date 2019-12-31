@@ -51,6 +51,7 @@ import {
     setClipboard as calcSetClipboard,
     showRun as calcShowRun,
     hideRun as calcHideRun,
+    runScript,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1926,6 +1927,14 @@ function showBarcode(code: string, format?: BarcodeFormat) {
 }
 
 /**
+ * Hides the barcode.
+ */
+function hideBarcode() {
+    const event = calcShowBarcode(false);
+    return addAction(event);
+}
+
+/**
  * Shows the run bar.
  * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
  */
@@ -1941,11 +1950,11 @@ function hideRun() {
 }
 
 /**
- * Hides the barcode.
+ * Enqueues the given script to execute after this script is done running.
+ * @param script The script that should be executed.
  */
-function hideBarcode() {
-    const event = calcShowBarcode(false);
-    return addAction(event);
+function run(script: string) {
+    return addAction(runScript(script));
 }
 
 /**
@@ -2136,6 +2145,7 @@ const player = {
     setClipboard,
     showRun,
     hideRun,
+    run,
 
     openDevConsole,
 };

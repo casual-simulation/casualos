@@ -16,6 +16,7 @@ import {
     BotActions,
     USERS_CONTEXT,
     BotsState,
+    runScript,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -432,6 +433,16 @@ describe('AuxHelper', () => {
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
+
+            expect(helper.botsState['test'].tags.hit).toBe(true);
+        });
+
+        it('should run script events', async () => {
+            await helper.createBot('test', {});
+
+            await helper.transaction(
+                runScript(`setTag(getBot("#id", "test"), "#hit", true)`)
+            );
 
             expect(helper.botsState['test'].tags.hit).toBe(true);
         });
