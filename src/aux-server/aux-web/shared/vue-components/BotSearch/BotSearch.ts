@@ -6,6 +6,7 @@ import {
     getShortId,
     formatValue,
     tagsOnBot,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
@@ -27,6 +28,8 @@ export default class BotSearch extends Vue {
     recentBot: Bot = null;
     search: string = '';
 
+    @Prop({ default: null }) prefill: string;
+
     @Provide() botRenderer: BotRenderer = getRenderer();
 
     toggleOpen() {
@@ -43,6 +46,16 @@ export default class BotSearch extends Vue {
     onSearchChanged() {
         appManager.simulationManager.primary.botPanel.search = this.search;
         appManager.simulationManager.primary.botPanel.isOpen = true;
+    }
+
+    @Watch('prefill')
+    onPrefillChanged() {
+        if (!this.prefill) {
+            return;
+        }
+        if (!hasValue(this.search)) {
+            this.search = this.prefill;
+        }
     }
 
     get placeholder() {
@@ -107,6 +120,8 @@ export default class BotSearch extends Vue {
             );
             return subs;
         });
+
+        this.onPrefillChanged();
     }
 
     isEmptyOrDiff(f: Bot): boolean {

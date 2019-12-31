@@ -65,14 +65,7 @@ import ClipboardModal from '../../shared/vue-components/ClipboardModal/Clipboard
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
-
-export interface SidebarItem {
-    id: string;
-    group: string;
-    text: string;
-    icon: string;
-    click: () => void;
-}
+import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
 
 @Component({
     components: {
@@ -86,6 +79,7 @@ export interface SidebarItem {
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
         'clipboard-modal': ClipboardModal,
+        'bot-search': BotSearch,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -190,6 +184,9 @@ export default class PlayerApp extends Vue {
     showAuthorize: boolean = false;
 
     authorized: boolean = false;
+
+    showRunBar: boolean = false;
+    runBarPrefill: string = null;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -622,6 +619,9 @@ export default class PlayerApp extends Vue {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
                     sendWebhook(simulation, e);
+                } else if (e.type === 'show_run_bar') {
+                    this.showRunBar = e.visible;
+                    this.runBarPrefill = e.prefill;
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

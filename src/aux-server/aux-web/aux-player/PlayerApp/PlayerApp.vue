@@ -1,7 +1,15 @@
 <template>
     <div id="app">
         <load-app>
-            <md-button class="show-navigation-button md-icon-button" @click="menuClicked()">
+            <md-toolbar v-if="showRunBar">
+                <div class="md-toolbar-section-start">
+                    <md-button class="md-icon-button" @click="menuClicked()">
+                        <md-icon>menu</md-icon>
+                    </md-button>
+                    <bot-search ref="searchBar" :prefill="runBarPrefill"></bot-search>
+                </div>
+            </md-toolbar>
+            <md-button v-else class="show-navigation-button md-icon-button" @click="menuClicked()">
                 <md-icon>menu</md-icon>
             </md-button>
 

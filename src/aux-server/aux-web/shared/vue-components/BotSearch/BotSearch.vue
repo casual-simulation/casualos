@@ -8,7 +8,6 @@
         <md-field md-inline>
             <label>{{ placeholder }}</label>
             <md-input class="search-input" ref="searchInput" v-model="search"></md-input>
-            <!-- <span class="md-suffix num-bots" @click="toggleOpen()">1</span> -->
         </md-field>
         <md-button v-show="search" class="md-icon-button" @click="executeSearch()">
             <md-icon>play_arrow</md-icon>
