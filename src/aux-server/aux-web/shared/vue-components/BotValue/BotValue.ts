@@ -15,7 +15,7 @@ import { EventBus } from '../../EventBus';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
-export default class BotRow extends Vue {
+export default class BotValue extends Vue {
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
