@@ -8,7 +8,7 @@ import {
     getShortId,
     AuxObject,
 } from '@casual-simulation/aux-common';
-import BotValue from '../BotValue/BotValue';
+import BotValue from '../../shared/vue-components/BotValue/BotValue';
 import { appManager } from '../../shared/AppManager';
 
 @Component({

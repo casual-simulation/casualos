@@ -10,8 +10,8 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
-import { appManager } from '../../shared/AppManager';
-import { EventBus } from '../../shared/EventBus';
+import { appManager } from '../../AppManager';
+import { EventBus } from '../../EventBus';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})

@@ -30,7 +30,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
-import BotValue from '../BotValue/BotValue';
+import BotValue from '../../shared/vue-components/BotValue/BotValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
