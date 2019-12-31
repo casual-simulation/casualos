@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.19
+
+### Date: 12/31/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where the "Create Empty Bot" button in the bot table was hidden when a mod was selected.
+
 ## V0.11.18
 
 ### Date: 12/30/2019
