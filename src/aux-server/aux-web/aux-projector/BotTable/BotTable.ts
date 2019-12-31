@@ -31,7 +31,7 @@ import {
 import { EventBus } from '../../shared/EventBus';
 
 import BotValue from '../../shared/vue-components/BotValue/BotValue';
-import TagEditor from '../TagEditor/TagEditor';
+import TagEditor from '../../shared/vue-components/TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
 import BotID from '../../shared/vue-components/BotID/BotID';
@@ -41,8 +41,6 @@ import Cube from '../../shared/public/icons/Cube.svg';
 import Hexagon from '../../shared/public/icons/Hexagon.svg';
 import ResizeIcon from '../../shared/public/icons/Resize.svg';
 import MultiIcon from '../../shared/public/icons/Multi.svg';
-import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
-import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';

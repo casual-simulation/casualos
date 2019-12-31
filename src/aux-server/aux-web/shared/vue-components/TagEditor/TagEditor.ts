@@ -2,8 +2,8 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
-import { appManager } from '../../shared/AppManager';
-import { EventBus } from '../../shared/EventBus';
+import { appManager } from '../../AppManager';
+import { EventBus } from '../../EventBus';
 
 /**
  * A component that manages the logic for editing a tag name.

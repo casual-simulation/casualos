@@ -13,7 +13,7 @@ import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import BotTable from '../BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
-import TagEditor from '../TagEditor/TagEditor';
+import TagEditor from '../../shared/vue-components/TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap, switchMap } from 'rxjs/operators';
 import { EventBus } from '../../shared/EventBus';
