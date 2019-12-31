@@ -12,7 +12,7 @@
                         <md-tooltip>Add Tag</md-tooltip>
                     </md-button>
                     <md-button
-                        v-if="!isSearch && !diffSelected"
+                        v-if="!isSearch"
                         class="md-icon-button create-bot"
                         @click="createBot()"
                     >
