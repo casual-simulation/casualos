@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
 import { AuxBot } from '@casual-simulation/aux-common';
-import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
+import MiniBot from '../MiniBot/MiniBot';
 
 @Component({
     components: {

@@ -47,7 +47,7 @@ import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
-import BotTagMini from '../BotTagMini/BotTagMini';
+import BotTagMini from '../../shared/vue-components/BotTagMini/BotTagMini';
 import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
