@@ -622,6 +622,10 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'show_run_bar') {
                     this.showRunBar = e.visible;
                     this.runBarPrefill = e.prefill;
+                    const searchBar = this.$refs.searchBar as BotSearch;
+                    if (searchBar) {
+                        searchBar.setPrefill(e.prefill);
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

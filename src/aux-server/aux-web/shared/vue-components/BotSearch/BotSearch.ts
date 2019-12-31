@@ -48,13 +48,12 @@ export default class BotSearch extends Vue {
         appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
-    @Watch('prefill')
-    onPrefillChanged() {
-        if (!this.prefill) {
+    setPrefill(prefill: string) {
+        if (!prefill) {
             return;
         }
         if (!hasValue(this.search)) {
-            this.search = this.prefill;
+            this.search = prefill;
         }
     }
 
@@ -121,7 +120,7 @@ export default class BotSearch extends Vue {
             return subs;
         });
 
-        this.onPrefillChanged();
+        this.setPrefill(this.prefill);
     }
 
     isEmptyOrDiff(f: Bot): boolean {
