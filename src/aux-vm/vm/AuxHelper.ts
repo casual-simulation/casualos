@@ -44,6 +44,7 @@ import {
     BotSpace,
     getBotSpace,
     breakIntoIndividualEvents,
+    ON_RUN_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -395,14 +396,24 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 );
                 resultEvents.push(...this._flattenEvents(result.events));
             } else if (event.type === 'run_script') {
-                const events = calculateFormulaEvents(
-                    this.botsState,
-                    event.script,
-                    this.userId,
-                    undefined,
-                    this._sandboxFactory,
-                    this._lib
-                );
+                const events = [
+                    ...this._flattenEvents([
+                        action(
+                            ON_RUN_ACTION_NAME,
+                            null,
+                            this.userId,
+                            event.script
+                        ),
+                    ]),
+                    ...calculateFormulaEvents(
+                        this.botsState,
+                        event.script,
+                        this.userId,
+                        undefined,
+                        this._sandboxFactory,
+                        this._lib
+                    ),
+                ];
                 resultEvents.push(...this._flattenEvents(events));
             } else if (event.type === 'update_bot') {
                 const bot = this.botsState[event.id];

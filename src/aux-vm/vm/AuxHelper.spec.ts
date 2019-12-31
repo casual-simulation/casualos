@@ -17,6 +17,7 @@ import {
     USERS_CONTEXT,
     BotsState,
     runScript,
+    ON_RUN_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -445,6 +446,16 @@ describe('AuxHelper', () => {
             );
 
             expect(helper.botsState['test'].tags.hit).toBe(true);
+        });
+
+        it('should issue a onRun() shout when a script is run', async () => {
+            await helper.createBot('test', {
+                [ON_RUN_ACTION_NAME]: '@tags.script = that;',
+            });
+
+            await helper.transaction(runScript(`let a = true;`));
+
+            expect(helper.botsState['test'].tags.script).toBe('let a = true;');
         });
 
         it('should support player.inDesigner() in actions', async () => {
