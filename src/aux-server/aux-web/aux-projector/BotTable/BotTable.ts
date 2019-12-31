@@ -34,7 +34,7 @@ import BotValue from '../../shared/vue-components/BotValue/BotValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
-import BotID from '../BotID/BotID';
+import BotID from '../../shared/vue-components/BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import Cube from '../../shared/public/icons/Cube.svg';

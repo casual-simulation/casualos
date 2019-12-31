@@ -56,7 +56,7 @@ import BotTable from '../BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import BotID from '../BotID/BotID';
+import BotID from '../../shared/vue-components/BotID/BotID';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
