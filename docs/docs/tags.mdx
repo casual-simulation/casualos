@@ -104,10 +104,10 @@ The mode that controls how a bot can be dragged.
     The bot cannot be dragged.
   </PossibleValueCode>
   <PossibleValueCode value='moveOnly'>
-    The bot can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUXPlayer)
+    The bot can be moved anywhere within the dimension it is currently in but not moved to another dimension. (only applies to AUXPlayer)
   </PossibleValueCode>
   <PossibleValueCode value='pickupOnly'>
-    The bot can be moved to another context but not within the context it is currently in. (only applies to AUXPlayer)
+    The bot can be moved to another dimension but not within the dimension it is currently in. (only applies to AUXPlayer)
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -427,26 +427,26 @@ The anchor position for the progress bar.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
-## Context Tags
+## Dimension Tags
 
-### `[context]`
+### `[dimension]`
 
-Add a bot to a context. 
+Add a bot to a dimension. 
 
-> **Example:**  Set `#room1` to `true` for the bot to appear in a context named `room1`.
+> **Example:**  Set `#room1` to `true` for the bot to appear in a dimension named `room1`.
 
 #### Possible values are:
 
 <PossibleValuesTable>
   <PossibleValueCode value='false'>
-    Removes the bot from the context. (default)
+    Removes the bot from the dimension. (default)
   </PossibleValueCode>
   <PossibleValueCode value='true'>
-    Puts the bot into the context.
+    Puts the bot into the dimension.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `[context]SortOrder`
+### `[dimension]SortOrder`
 
 The order that the bot should be in a stack of bots.
 
@@ -460,92 +460,92 @@ When bots are stacked, they are placed from the bottom to the top based on the s
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context]X`
+### `[dimension]X`
 
-The X (east-west) position of a bot on the grid in the specified context.
-
-Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the X position of a bot in a context. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `[context]Y`
-
-The Y (north-south) position of a bot on the grid in the specified context.
+The X (east-west) position of a bot on the grid in the specified dimension.
 
 Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the Y position of a bot in a context. (Default is 0)
+    Specifies the X position of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context]Z`
+### `[dimension]Y`
+
+The Y (north-south) position of a bot on the grid in the specified dimension.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Z`
 
 The Z (up-down) offset that the bot is offset above/below the grid.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the Z position of a bot in a context. (Default is 0)
+    Specifies the Z position of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context]RotationX`
+### `[dimension]RotationX`
 
 The X (pitch) rotation in radians that the bot should be rotated by.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the X rotation of a bot in a context. (Default is 0)
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context]RotationY`
+### `[dimension]RotationY`
 
 The Y (roll) rotation in radians that the bot should be rotated by.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the Y rotation of a bot in a context. (Default is 0)
+    Specifies the Y rotation of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context]RotationZ`
+### `[dimension]RotationZ`
 
 The Z (yaw) rotation in radians that the bot should be rotated by.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the Z rotation of a bot in a context. (Default is 0)
+    Specifies the Z rotation of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
-## Context Config Tags
+## dimension Config Tags
 
-These tags are used to configure contexts.
+These tags are used to configure dimensions.
 
 ### `auxDimension`
 
-Set with a name to create a context. The bot with the tag becomes the "context bot".
+Set with a name to create a dimension. The bot with the tag becomes the "dimension bot".
 
 <Alert type='info'>
-  Remember to set the <TagLink tag='auxDimensionVisualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+  Remember to set the <TagLink tag='auxDimensionVisualize'/> tag to <NormalCode>surface</NormalCode> to see the dimension in Channel Designer.
 </Alert>
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any String'>
-    The name of the context.
+    The name of the dimension.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -555,7 +555,7 @@ Set with a name to create a context. The bot with the tag becomes the "context b
   <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
 </Badges>
 
-The color of the background while in the context in AUXPlayer. Also the color of the surface in Channel Designer.
+The color of the background while in the dimension in AUXPlayer. Also the color of the surface in Channel Designer.
 
 #### Possible values are:
 <PossibleValuesTable>
