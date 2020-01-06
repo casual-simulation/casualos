@@ -165,7 +165,7 @@ export function isVisibleContext(
     calc: BotCalculationContext,
     contextBot: Bot
 ): boolean {
-    const result = calculateBotValue(calc, contextBot, 'auxContextVisualize');
+    const result = calculateBotValue(calc, contextBot, 'auxDimensionVisualize');
 
     if (typeof result === 'string' && hasValue(result)) {
         return true;
@@ -928,23 +928,23 @@ export function createWorkspace(
         return {
             id: id,
             tags: {
-                auxContextX: 0,
-                auxContextY: 0,
-                auxContextZ: 0,
-                auxContextVisualize: 'surface',
-                auxContextLocked: true,
-                auxContext: builderContextId,
+                auxDimensionX: 0,
+                auxDimensionY: 0,
+                auxDimensionZ: 0,
+                auxDimensionVisualize: 'surface',
+                auxDimensionLocked: true,
+                auxDimension: builderContextId,
             },
         };
     } else {
         return {
             id: id,
             tags: {
-                auxContextX: 0,
-                auxContextY: 0,
-                auxContextZ: 0,
-                auxContextVisualize: 'surface',
-                auxContext: builderContextId,
+                auxDimensionX: 0,
+                auxDimensionY: 0,
+                auxDimensionZ: 0,
+                auxDimensionVisualize: 'surface',
+                auxDimension: builderContextId,
             },
         };
     }
@@ -997,13 +997,13 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxContextSurfaceScale`,
+            `auxDimensionSurfaceScale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxContextGridScale`,
+            `auxDimensionGridScale`,
             DEFAULT_WORKSPACE_GRID_SCALE
         );
         return scale * gridScale;
@@ -1313,7 +1313,7 @@ export function isConfigForContext(
 
 /**
  * Gets whether the context(s) that the given bot represents are locked.
- * Uses at the auxContextLocked tag to determine whether it is locked.
+ * Uses at the auxDimensionLocked tag to determine whether it is locked.
  * Defaults to false if the bot is a context. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1323,7 +1323,7 @@ export function isContextLocked(
     bot: Bot
 ): boolean {
     if (isContext(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'auxContextLocked', false);
+        return calculateBooleanTagValue(calc, bot, 'auxDimensionLocked', false);
     }
     return true;
 }
@@ -1337,7 +1337,7 @@ export function getBotConfigContexts(
     calc: BotCalculationContext,
     bot: Bot
 ): string[] {
-    const result = calculateBotValue(calc, bot, 'auxContext');
+    const result = calculateBotValue(calc, bot, 'auxDimension');
     return parseBotConfigContexts(result);
 }
 
@@ -1369,7 +1369,7 @@ export function getContextValue(
     contextBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, contextBot, `auxContext${name}`);
+    return calculateBotValue(calc, contextBot, `auxDimension${name}`);
 }
 
 /**
@@ -1460,7 +1460,7 @@ export function isContextMovable(
     return calculateBooleanTagValue(
         calc,
         bot,
-        'auxContextSurfaceMovable',
+        'auxDimensionSurfaceMovable',
         true
     );
 }
@@ -1475,9 +1475,9 @@ export function getContextPosition(
     contextBot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextBot, `auxContextX`, 0),
-        y: calculateNumericalTagValue(calc, contextBot, `auxContextY`, 0),
-        z: calculateNumericalTagValue(calc, contextBot, `auxContextZ`, 0),
+        x: calculateNumericalTagValue(calc, contextBot, `auxDimensionX`, 0),
+        y: calculateNumericalTagValue(calc, contextBot, `auxDimensionY`, 0),
+        z: calculateNumericalTagValue(calc, contextBot, `auxDimensionZ`, 0),
     };
 }
 
@@ -1494,19 +1494,19 @@ export function getContextRotation(
         x: calculateNumericalTagValue(
             calc,
             contextBot,
-            `auxContextRotationX`,
+            `auxDimensionRotationX`,
             0
         ),
         y: calculateNumericalTagValue(
             calc,
             contextBot,
-            `auxContextRotationY`,
+            `auxDimensionRotationY`,
             0
         ),
         z: calculateNumericalTagValue(
             calc,
             contextBot,
-            `auxContextRotationZ`,
+            `auxDimensionRotationZ`,
             0
         ),
     };
@@ -1549,7 +1549,7 @@ export function getContextSize(
         return calculateNumericalTagValue(
             calc,
             contextBot,
-            `auxContextSurfaceSize`,
+            `auxDimensionSurfaceSize`,
             DEFAULT_WORKSPACE_SIZE
         );
     }
@@ -1557,7 +1557,7 @@ export function getContextSize(
 }
 
 /**
- * Gets the auxContextVisualize mode from the given bot.
+ * Gets the auxDimensionVisualize mode from the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1565,7 +1565,7 @@ export function getContextVisualizeMode(
     calc: BotCalculationContext,
     bot: Bot
 ): ContextVisualizeMode {
-    const val = calculateBotValue(calc, bot, 'auxContextVisualize');
+    const val = calculateBotValue(calc, bot, 'auxDimensionVisualize');
     if (typeof val === 'boolean') {
         return val;
     }
@@ -1587,13 +1587,13 @@ export function getBuilderContextGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(contextBot);
     const gridTags = tags.filter(
-        t => t.indexOf('auxContext.surface.grid.') === 0 && t.indexOf(':') > 0
+        t => t.indexOf('auxDimension.surface.grid.') === 0 && t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('auxContext.surface.grid.'.length)
+            tag.substr('auxDimension.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, contextBot, tag, undefined);
     }
 

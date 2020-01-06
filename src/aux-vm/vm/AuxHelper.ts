@@ -334,8 +334,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return;
         }
         await this.createBot(undefined, {
-            auxContext: USERS_CONTEXT,
-            auxContextVisualize: true,
+            auxDimension: USERS_CONTEXT,
+            auxDimensionVisualize: true,
         });
     }
 
@@ -663,15 +663,15 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (oldContextBot) {
             workspace = duplicateBot(oldCalc, oldContextBot, {
                 tags: {
-                    auxContext: context,
+                    auxDimension: context,
                 },
             });
         } else {
             workspace = createWorkspace(undefined, context);
         }
-        workspace.tags['auxContextX'] = event.options.x;
-        workspace.tags['auxContextY'] = event.options.y;
-        workspace.tags['auxContextZ'] = event.options.z;
+        workspace.tags['auxDimensionX'] = event.options.x;
+        workspace.tags['auxDimensionY'] = event.options.y;
+        workspace.tags['auxDimensionZ'] = event.options.z;
         events.push(botAdded(workspace));
         if (!oldContext) {
             oldContext = context;

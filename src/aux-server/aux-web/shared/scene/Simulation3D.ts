@@ -363,7 +363,7 @@ export abstract class Simulation3D extends Object3D
      * Gets the list of tags that should be watched for context values.
      */
     protected _getContextTags(): string[] {
-        return ['auxContext'];
+        return ['auxDimension'];
     }
 
     /**
@@ -423,11 +423,11 @@ export abstract class Simulation3D extends Object3D
 
     /**
      * Determines if the given event is for a context group.
-     * By default, only events that affect the 'auxContext' tag count.
+     * By default, only events that affect the 'auxDimension' tag count.
      * @param event The event.
      */
     protected _isContextGroupEvent(event: BotIndexEvent) {
-        return event.tag === 'auxContext';
+        return event.tag === 'auxDimension';
     }
 
     protected _frameUpdateCore(calc: BotCalculationContext) {

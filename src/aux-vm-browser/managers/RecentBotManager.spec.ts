@@ -69,7 +69,7 @@ describe('RecentBotManager', () => {
         it('should ignore context tags', () => {
             helper.botsState = {
                 context: createPrecalculatedBot('context', {
-                    auxContext: 'abc',
+                    auxDimension: 'abc',
                 }),
             };
 
@@ -98,7 +98,7 @@ describe('RecentBotManager', () => {
         it('should be an empty bot if no tags can be used as a diff', async () => {
             helper.botsState = {
                 context: createPrecalculatedBot('context', {
-                    auxContext: 'abc',
+                    auxDimension: 'abc',
                 }),
             };
 

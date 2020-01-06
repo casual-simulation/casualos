@@ -326,7 +326,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             tags: {},
         };
 
-        partial.tags[`auxContext.surface.grid.0:0`] = height;
+        partial.tags[`auxDimension.surface.grid.0:0`] = height;
 
         this._game.simulation3D.simulation.helper.updateBot(bot.bot, partial);
     }
@@ -551,7 +551,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceSize`]: (size || 0) - 1,
+                    [`auxDimensionSurfaceSize`]: (size || 0) - 1,
                 },
             });
         }
@@ -584,7 +584,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const minimized = !isMinimized(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceMinimized`]: minimized,
+                    [`auxDimensionSurfaceMinimized`]: minimized,
                 },
             });
         }
@@ -622,7 +622,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceSize`]: (size || 0) + 1,
+                    [`auxDimensionSurfaceSize`]: (size || 0) + 1,
                 },
             });
         }

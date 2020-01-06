@@ -534,12 +534,12 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 
 These tags are used to configure contexts.
 
-### `auxContext`
+### `auxDimension`
 
 Set with a name to create a context. The bot with the tag becomes the "context bot".
 
 <Alert type='info'>
-  Remember to set the <TagLink tag='auxContextVisualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+  Remember to set the <TagLink tag='auxDimensionVisualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
 </Alert>
 
 #### Possible values are:
@@ -549,7 +549,7 @@ Set with a name to create a context. The bot with the tag becomes the "context b
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextColor`
+### `auxDimensionColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
@@ -565,7 +565,7 @@ The color of the background while in the context in AUXPlayer. Also the color of
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxContextLocked`
+### `auxDimensionLocked`
 
 Determines if the context can be loaded in AUXPlayer.
 
@@ -579,7 +579,7 @@ Determines if the context can be loaded in AUXPlayer.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextVisualize`
+### `auxDimensionVisualize`
 
 How the context should be visualized in Channel Designer.
 
@@ -596,7 +596,7 @@ How the context should be visualized in Channel Designer.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextX`
+### `auxDimensionX`
 
 The X (east-west) position of the context in Channel Designer.
 
@@ -607,7 +607,7 @@ The X (east-west) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextY`
+### `auxDimensionY`
 
 The Y (north-south) position of the context in Channel Designer.
 
@@ -618,7 +618,7 @@ The Y (north-south) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextZ`
+### `auxDimensionZ`
 
 The Z (east-west) position of the context in Channel Designer.
 
@@ -629,7 +629,7 @@ The Z (east-west) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextRotationX`
+### `auxDimensionRotationX`
 
 The X (pitch) rotation in radians of the context in Channel Designer.
 
@@ -640,7 +640,7 @@ The X (pitch) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextRotationY`
+### `auxDimensionRotationY`
 
 The Y (roll) rotation in radians of the context in Channel Designer.
 
@@ -651,7 +651,7 @@ The Y (roll) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextRotationZ`
+### `auxDimensionRotationZ`
 
 The Z (roll) rotation in radians of the context in Channel Designer.
 
@@ -662,7 +662,7 @@ The Z (roll) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextInventoryColor`
+### `auxDimensionInventoryColor`
 
 The color of the background for the inventory viewport.
 
@@ -671,7 +671,7 @@ The color of the background for the inventory viewport.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxContextInventoryHeight`
+### `auxDimensionInventoryHeight`
 
 Sets the initial height of the inventory viewport for the context.
 
@@ -682,7 +682,7 @@ Sets the initial height of the inventory viewport for the context.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextInventoryVisible`
+### `auxDimensionInventoryVisible`
 
 Whether the inventory is visible in this context.
 
@@ -696,7 +696,7 @@ Whether the inventory is visible in this context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextInventoryPannable`
+### `auxDimensionInventoryPannable`
 
 Whether the player will be able to pan the camera inside the inventory in this context.
 
@@ -710,23 +710,23 @@ Whether the player will be able to pan the camera inside the inventory in this c
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextInventoryPannableMinX`
+### `auxDimensionInventoryPannableMinX`
 
 The minimum X value that the inventory can be panned to while in this context.
 
-### `auxContextInventoryPannableMaxX`
+### `auxDimensionInventoryPannableMaxX`
 
 The maximum X value that the inventory can be panned to while in this context.
 
-### `auxContextInventoryPannableMinY`
+### `auxDimensionInventoryPannableMinY`
 
 The minimum Y value that the inventory can be panned to while in this context.
 
-### `auxContextInventoryPannableMaxY`
+### `auxDimensionInventoryPannableMaxY`
 
 The maximum Y value that the inventory can be panned to while in this context.
 
-### `auxContextInventoryResizable`
+### `auxDimensionInventoryResizable`
 
 Whether the player will be able to resize the viewport for the inventory in this context.
 
@@ -740,7 +740,7 @@ Whether the player will be able to resize the viewport for the inventory in this
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextInventoryRotatable`
+### `auxDimensionInventoryRotatable`
 
 Whether the player will be able to rotate the camera inside the inventory in this context.
 
@@ -754,7 +754,7 @@ Whether the player will be able to rotate the camera inside the inventory in thi
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextInventoryZoomable`
+### `auxDimensionInventoryZoomable`
 
 Whether the player will be able to zoom the camera inside the inventory in this context.
 
@@ -768,7 +768,7 @@ Whether the player will be able to zoom the camera inside the inventory in this 
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextGridScale`
+### `auxDimensionGridScale`
 
 The size of bots in the context.
 
@@ -779,7 +779,7 @@ The size of bots in the context.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextSurfaceSize`
+### `auxDimensionSurfaceSize`
 
 The radius of hexes around the center of the context surface.
 
@@ -790,7 +790,7 @@ The radius of hexes around the center of the context surface.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextSurfaceScale`
+### `auxDimensionSurfaceScale`
 
 The scale of the context surface in Channel Designer.
 
@@ -801,7 +801,7 @@ The scale of the context surface in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxContextSurfaceMinimized`
+### `auxDimensionSurfaceMinimized`
 
 Whether the context's surface is minimized. i.e. Collapsed so no bots are shown.
 
@@ -815,7 +815,7 @@ Whether the context's surface is minimized. i.e. Collapsed so no bots are shown.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextSurfaceMovable`
+### `auxDimensionSurfaceMovable`
 
 Whether the context's surface can be moved in Channel Designer when minimized.
 
@@ -829,7 +829,7 @@ Whether the context's surface can be moved in Channel Designer when minimized.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextDevicesVisible`
+### `auxDimensionDevicesVisible`
 
 Whether other user bots will be visible in AUXPlayer when viewing this context.
 
@@ -843,7 +843,7 @@ Whether other user bots will be visible in AUXPlayer when viewing this context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextPannable`
+### `auxDimensionPannable`
 
 Whether the player will be able to pan the camera inside the context.
 
@@ -857,7 +857,7 @@ Whether the player will be able to pan the camera inside the context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextRotatable`
+### `auxDimensionRotatable`
 
 Whether the player will be able to rotate the camera inside the context.
 
@@ -871,7 +871,7 @@ Whether the player will be able to rotate the camera inside the context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxContextZoomable`
+### `auxDimensionZoomable`
 
 Whether the player will be able to zoom the camera inside the context.
 
@@ -892,7 +892,7 @@ These tags are set on the config bot and affect the entire channel.
 ### `auxSceneColor`
 
 The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
-The value can be overridden on a per-context basis in AUXPlayer by using the <TagLink tag='auxContextColor'/> tag.
+The value can be overridden on a per-context basis in AUXPlayer by using the <TagLink tag='auxDimensionColor'/> tag.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -930,7 +930,7 @@ The color of other users that are in Channel Designer.
 
 Sets the initial height of the inventory viewport for all contexts.
 
-This value is overridden by <TagLink tag='auxContextInventoryHeight'/>.
+This value is overridden by <TagLink tag='auxDimensionInventoryHeight'/>.
 
 #### Possible values are:
 <PossibleValuesTable>

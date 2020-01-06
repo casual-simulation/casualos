@@ -80,7 +80,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
         let userVisible = calculateBooleanTagValue(
             calc,
             this.bot3D.contextGroup.bot,
-            'auxContextDevicesVisible',
+            'auxDimensionDevicesVisible',
             true
         );
 

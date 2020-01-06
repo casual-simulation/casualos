@@ -158,46 +158,46 @@ export interface BotTags {
     ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['auxContext']?: string | number | boolean;
-    ['auxContextColor']?: string;
-    ['auxContextLocked']?: unknown;
-    ['auxContextGridScale']?: number;
-    ['auxContextVisualize']?: ContextVisualizeMode;
-    ['auxContextX']?: number;
-    ['auxContextY']?: number;
-    ['auxContextZ']?: number;
-    ['auxContextRotationX']?: number;
-    ['auxContextRotationY']?: number;
-    ['auxContextRotationZ']?: number;
-    ['auxContextSurfaceScale']?: number;
-    ['auxContextSurfaceSize']?: number;
-    ['auxContextSurfaceMinimized']?: boolean | null;
-    ['auxContextSurfaceDefaultHeight']?: number;
-    ['auxContextSurfaceMovable']?: unknown;
-    ['auxContextPlayerRotationX']?: number;
-    ['auxContextPlayerRotationY']?: number;
-    ['auxContextPlayerZoom']?: number;
-    ['auxContextDevicesVisible']?: boolean | null;
-    ['auxContextInventoryColor']?: string;
-    ['auxContextInventoryHeight']?: unknown;
-    ['auxContextInventoryPannable']?: boolean;
-    [`auxContextInventoryPannableMinX`]?: number | null;
-    [`auxContextInventoryPannableMaxX`]?: number | null;
-    [`auxContextInventoryPannableMinY`]?: number | null;
-    [`auxContextInventoryPannableMaxY`]?: number | null;
-    ['auxContextInventoryResizable']?: boolean;
-    ['auxContextInventoryRotatable']?: boolean;
-    ['auxContextInventoryZoomable']?: boolean;
-    ['auxContextInventoryVisible']?: unknown;
-    ['auxContextPannable']?: number | null;
-    [`auxContextPannableMinX`]?: number | null;
-    [`auxContextPannableMaxX`]?: number | null;
-    [`auxContextPannableMinY`]?: number | null;
-    [`auxContextPannableMaxY`]?: number | null;
-    ['auxContextZoomable']?: number | null;
-    [`auxContextZoomableMin`]?: number | null;
-    [`auxContextZoomableMax`]?: number | null;
-    ['auxContextRotatable']?: number | null;
+    ['auxDimension']?: string | number | boolean;
+    ['auxDimensionColor']?: string;
+    ['auxDimensionLocked']?: unknown;
+    ['auxDimensionGridScale']?: number;
+    ['auxDimensionVisualize']?: ContextVisualizeMode;
+    ['auxDimensionX']?: number;
+    ['auxDimensionY']?: number;
+    ['auxDimensionZ']?: number;
+    ['auxDimensionRotationX']?: number;
+    ['auxDimensionRotationY']?: number;
+    ['auxDimensionRotationZ']?: number;
+    ['auxDimensionSurfaceScale']?: number;
+    ['auxDimensionSurfaceSize']?: number;
+    ['auxDimensionSurfaceMinimized']?: boolean | null;
+    ['auxDimensionSurfaceDefaultHeight']?: number;
+    ['auxDimensionSurfaceMovable']?: unknown;
+    ['auxDimensionPlayerRotationX']?: number;
+    ['auxDimensionPlayerRotationY']?: number;
+    ['auxDimensionPlayerZoom']?: number;
+    ['auxDimensionDevicesVisible']?: boolean | null;
+    ['auxDimensionInventoryColor']?: string;
+    ['auxDimensionInventoryHeight']?: unknown;
+    ['auxDimensionInventoryPannable']?: boolean;
+    [`auxDimensionInventoryPannableMinX`]?: number | null;
+    [`auxDimensionInventoryPannableMaxX`]?: number | null;
+    [`auxDimensionInventoryPannableMinY`]?: number | null;
+    [`auxDimensionInventoryPannableMaxY`]?: number | null;
+    ['auxDimensionInventoryResizable']?: boolean;
+    ['auxDimensionInventoryRotatable']?: boolean;
+    ['auxDimensionInventoryZoomable']?: boolean;
+    ['auxDimensionInventoryVisible']?: unknown;
+    ['auxDimensionPannable']?: number | null;
+    [`auxDimensionPannableMinX`]?: number | null;
+    [`auxDimensionPannableMaxX`]?: number | null;
+    [`auxDimensionPannableMinY`]?: number | null;
+    [`auxDimensionPannableMaxY`]?: number | null;
+    ['auxDimensionZoomable']?: number | null;
+    [`auxDimensionZoomableMin`]?: number | null;
+    [`auxDimensionZoomableMax`]?: number | null;
+    ['auxDimensionRotatable']?: number | null;
 
     // Stripe tags
     ['stripePublishableKey']?: string;
@@ -603,33 +603,33 @@ export const KNOWN_TAGS: string[] = [
     '_auxSelectionMode',
     'auxConnectedSessions',
     'auxInventoryHeight',
-    'auxContextInventoryColor',
-    'auxContextInventoryHeight',
-    'auxContextInventoryVisible',
-    'auxContextInventoryPannable',
-    `auxContextInventoryPannableMinX`,
-    `auxContextInventoryPannableMaxX`,
-    `auxContextInventoryPannableMinY`,
-    `auxContextInventoryPannableMaxY`,
+    'auxDimensionInventoryColor',
+    'auxDimensionInventoryHeight',
+    'auxDimensionInventoryVisible',
+    'auxDimensionInventoryPannable',
+    `auxDimensionInventoryPannableMinX`,
+    `auxDimensionInventoryPannableMaxX`,
+    `auxDimensionInventoryPannableMinY`,
+    `auxDimensionInventoryPannableMaxY`,
 
-    'auxContextInventoryResizable',
-    'auxContextInventoryRotatable',
-    'auxContextInventoryZoomable',
+    'auxDimensionInventoryResizable',
+    'auxDimensionInventoryRotatable',
+    'auxDimensionInventoryZoomable',
 
-    'auxContextPannable',
+    'auxDimensionPannable',
 
-    `auxContextPannableMinX`,
-    `auxContextPannableMaxX`,
+    `auxDimensionPannableMinX`,
+    `auxDimensionPannableMaxX`,
 
-    `auxContextPannableMinY`,
-    `auxContextPannableMaxY`,
+    `auxDimensionPannableMinY`,
+    `auxDimensionPannableMaxY`,
 
-    'auxContextZoomable',
+    'auxDimensionZoomable',
 
-    `auxContextZoomableMin`,
-    `auxContextZoomableMax`,
+    `auxDimensionZoomableMin`,
+    `auxDimensionZoomableMax`,
 
-    'auxContextRotatable',
+    'auxDimensionRotatable',
     'auxChannelColor',
     'auxChannelUserPlayerColor',
     'auxChannelUserBuilderColor',
@@ -676,26 +676,26 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'auxContext',
-    'auxContextColor',
-    'auxContextLocked',
-    'auxContextGridScale',
-    'auxContextX',
-    'auxContextY',
-    'auxContextZ',
-    'auxContextSurfaceDefaultHeight',
-    'auxContextRotationX',
-    'auxContextRotationY',
-    'auxContextRotationZ',
-    'auxContextSurfaceScale',
-    'auxContextSurfaceSize',
-    'auxContextSurfaceMinimized',
-    'auxContextSurfaceMovable',
-    'auxContextVisualize',
-    'auxContextDevicesVisible',
-    `auxContextPlayerZoom`,
-    `auxContextPlayerRotationX`,
-    `auxContextPlayerRotationY`,
+    'auxDimension',
+    'auxDimensionColor',
+    'auxDimensionLocked',
+    'auxDimensionGridScale',
+    'auxDimensionX',
+    'auxDimensionY',
+    'auxDimensionZ',
+    'auxDimensionSurfaceDefaultHeight',
+    'auxDimensionRotationX',
+    'auxDimensionRotationY',
+    'auxDimensionRotationZ',
+    'auxDimensionSurfaceScale',
+    'auxDimensionSurfaceSize',
+    'auxDimensionSurfaceMinimized',
+    'auxDimensionSurfaceMovable',
+    'auxDimensionVisualize',
+    'auxDimensionDevicesVisible',
+    `auxDimensionPlayerZoom`,
+    `auxDimensionPlayerRotationX`,
+    `auxDimensionPlayerRotationY`,
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',

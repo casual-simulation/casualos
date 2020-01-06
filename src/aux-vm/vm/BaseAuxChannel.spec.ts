@@ -258,7 +258,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     _auxUser: 'user',
-                    auxContext: `_user_user_1`,
+                    auxDimension: `_user_user_1`,
                 })
             );
 
@@ -268,7 +268,7 @@ describe('BaseAuxChannel', () => {
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
                 _auxUser: 'user',
-                auxContext: '_user_user_1',
+                auxDimension: '_user_user_1',
             });
         });
     });

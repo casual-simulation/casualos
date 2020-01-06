@@ -124,8 +124,8 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
 
             this.simulation.helper.updateBot(this._workspace.bot, {
                 tags: {
-                    [`auxContextX`]: final.x,
-                    [`auxContextY`]: final.z,
+                    [`auxDimensionX`]: final.x,
+                    [`auxDimensionY`]: final.z,
                 },
             });
         }
