@@ -79,7 +79,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    context: string;
+    dimension: string;
     grid3D: PlayerGrid3D;
 
     /**
@@ -351,7 +351,7 @@ export class PlayerSimulation3D extends Simulation3D {
     constructor(context: string, game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 
-        this.context = context;
+        this.dimension = context;
         this._botBackBuffer = new Map();
 
         const calc = this.simulation.helper.createContext();
@@ -379,10 +379,10 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     setContext(context: string) {
-        if (this.context === context) {
+        if (this.dimension === context) {
             return;
         }
-        this.context = context;
+        this.dimension = context;
         this.unsubscribe();
         this.closed = false;
         this.init();
@@ -409,7 +409,7 @@ export class PlayerSimulation3D extends Simulation3D {
             return null;
         }
         // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
-        const result = doesBotDefinePlayerContext(bot, this.context, calc);
+        const result = doesBotDefinePlayerContext(bot, this.dimension, calc);
         const contextLocked = isContextLocked(calc, bot);
         if (result.matchFound && !contextLocked) {
             // Create ContextGroup3D for this bot that we will use to render all bots in the context.
@@ -615,7 +615,8 @@ export class PlayerSimulation3D extends Simulation3D {
 
             return this._contextGroup;
         } else if (result.matchFound && contextLocked) {
-            let message: string = 'The ' + this.context + ' context is locked.';
+            let message: string =
+                'The ' + this.dimension + ' context is locked.';
 
             this.simulation.helper.transaction(toast(message));
 
@@ -684,7 +685,7 @@ export class PlayerSimulation3D extends Simulation3D {
         // need to cause an action when another user joins
         // Send an event to all bots indicating that the given context was loaded.
         this.simulation.helper.action('onPlayerEnterContext', null, {
-            context: this.context,
+            dimension: this.dimension,
             player: this.simulation.helper.userBot,
         });
     }
@@ -711,7 +712,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
         const userBot = this.simulation.helper.userBot;
         console.log(
-            "[PlayerSimulation3D] Setting user's context to: " + this.context
+            "[PlayerSimulation3D] Setting user's context to: " + this.dimension
         );
         let userBackgroundColor = calculateBotValue(
             calc,
@@ -722,7 +723,7 @@ export class PlayerSimulation3D extends Simulation3D {
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserContext: this.context },
+            tags: { _auxUserContext: this.dimension },
         });
         await this.simulation.helper.updateBot(userBot, {
             tags: { _auxUserChannel: this.simulation.id },

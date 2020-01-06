@@ -159,28 +159,28 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     handlePointerEnter(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerEnter', [bot], {
-            context: simulation.parsedId.context,
+            dimension: simulation.parsedId.context,
             bot: bot,
         });
     }
 
     handlePointerExit(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [bot], {
-            context: simulation.parsedId.context,
+            dimension: simulation.parsedId.context,
             bot: bot,
         });
     }
 
     handlePointerDown(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [bot], {
-            context: simulation.parsedId.context,
+            dimension: simulation.parsedId.context,
             bot: bot,
         });
     }
 
     handlePointerUp(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerUp', [bot], {
-            context: simulation.parsedId.context,
+            dimension: simulation.parsedId.context,
             bot: bot,
         });
     }

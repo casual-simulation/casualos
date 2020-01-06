@@ -24,6 +24,7 @@ import {
     merge,
     MOD_DROP_EXIT_ACTION_NAME,
     MOD_DROP_ENTER_ACTION_NAME,
+    onModDropArg,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -180,14 +181,12 @@ export abstract class BaseModDragOperation implements IOperation {
         if (this._merge && this._other) {
             let actions = [] as { eventName: string; bots: Bot[]; arg?: any }[];
 
+            const arg = this._createModDropArg();
             if (this._dropBot) {
                 actions.unshift({
                     eventName: MOD_DROP_EXIT_ACTION_NAME,
                     bots: [this._dropBot],
-                    arg: {
-                        mod: this._mod,
-                        context: this._context,
-                    },
+                    arg,
                 });
             }
 
@@ -196,9 +195,7 @@ export abstract class BaseModDragOperation implements IOperation {
                 actions.unshift({
                     eventName: MOD_DROP_ACTION_NAME,
                     bots: [this._other],
-                    arg: {
-                        mod: this._mod,
-                    },
+                    arg,
                 });
             } else {
                 const update = {
@@ -315,21 +312,20 @@ export abstract class BaseModDragOperation implements IOperation {
         const otherId = other ? other.id : null;
         const dropBotId = this._dropBot ? this._dropBot.id : null;
         const changed = otherId !== dropBotId;
+        const arg = this._createModDropArg();
         if (this._dropBot && changed) {
             const otherBot = this._dropBot;
             this._dropBot = null;
-            sim.helper.action(MOD_DROP_EXIT_ACTION_NAME, [otherBot], {
-                mod: this._mod,
-                context: this._context,
-            });
+            sim.helper.action(MOD_DROP_EXIT_ACTION_NAME, [otherBot], arg);
         }
         if (other && changed) {
             this._dropBot = other;
-            sim.helper.action(MOD_DROP_ENTER_ACTION_NAME, [this._dropBot], {
-                mod: this._mod,
-                context: this._context,
-            });
+            sim.helper.action(MOD_DROP_ENTER_ACTION_NAME, [this._dropBot], arg);
         }
+    }
+
+    protected _createModDropArg() {
+        return onModDropArg(this._mod, this._context);
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {}

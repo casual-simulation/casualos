@@ -27,7 +27,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
 
-    protected faceClicked: { face: string; context: string };
+    protected _argument: { face: string; dimension: string };
 
     constructor(
         simulation3D: Simulation3D,
@@ -38,20 +38,19 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     ) {
         super(simulation3D, interaction, bot.bot, bot, vrController);
 
-        this.faceClicked = { face: faceValue, context: null };
+        this._argument = { face: faceValue, dimension: null };
     }
 
     protected _performClick(calc: BotCalculationContext): void {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
-        this.faceClicked.context = bot3D.context;
+        this._argument.dimension = bot3D.context;
 
-        this.simulation.helper.action('onClick', [this._bot], this.faceClicked);
+        this.simulation.helper.action('onClick', [this._bot], this._argument);
 
         this.simulation.helper.action('onAnyBotClicked', null, {
-            face: this.faceClicked.face,
+            ...this._argument,
             bot: this._bot,
-            context: bot3D.context,
         });
     }
 

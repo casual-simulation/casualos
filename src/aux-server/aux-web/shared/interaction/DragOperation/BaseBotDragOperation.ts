@@ -407,12 +407,12 @@ export abstract class BaseBotDragOperation implements IOperation {
             bot: toBot,
             x: toX,
             y: toY,
-            context: this._context,
+            dimension: this._context,
         };
         const from: BotDropDestination = {
             x: fromX,
             y: fromY,
-            context: this._originalContext,
+            dimension: this._originalContext,
         };
         const arg = onDropArg(botTemp, to, from);
         return arg;

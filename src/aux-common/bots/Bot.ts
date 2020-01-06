@@ -767,25 +767,12 @@ export const KNOWN_TAGS: string[] = [
     'onChannelAction',
 ];
 
-// export function onDropEnterArg(
-//     draggedBot: Bot,
-//     otherBot: Bot,
-//     context: string
-// ) {
-//     return {
-//         draggedBot,
-//         otherBot,
-//         context,
-//     };
-// }
-
-// export function onDropExitArg(draggedBot: Bot, otherBot: Bot, context: string) {
-//     return {
-//         draggedBot,
-//         otherBot,
-//         context,
-//     };
-// }
+export function onModDropArg(mod: BotTags, dimension: string) {
+    return {
+        mod,
+        dimension,
+    };
+}
 
 export function onDropArg(
     dragBot: Bot,
@@ -802,7 +789,7 @@ export function onDropArg(
 export interface BotDropDestination {
     x: number;
     y: number;
-    context: string;
+    dimension: string;
 }
 
 export interface BotDropToDestination extends BotDropDestination {

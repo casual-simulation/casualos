@@ -107,7 +107,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _onDrag(calc: BotCalculationContext): void {
         const mode = getBotDragMode(calc, this._bots[0]);
 
-        let nextContext = this._simulation3D.context;
+        let nextContext = this._simulation3D.dimension;
 
         if (!this._vrController) {
             // Test to see if we are hovering over the inventory simulation view.

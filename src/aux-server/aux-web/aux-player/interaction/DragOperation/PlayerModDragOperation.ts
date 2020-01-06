@@ -68,7 +68,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         // TODO: This needs a refactor to share more code with
         //       PlayerBotDragOperation.
 
-        let nextContext = this._simulation3D.context;
+        let nextContext = this._simulation3D.dimension;
 
         if (!this._vrController) {
             // Test to see if we are hovering over the inventory simulation view.
@@ -100,7 +100,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 )
             );
         } else {
-            const context = this._simulation3D.context;
+            const context = this._simulation3D.dimension;
             this.contextGroup = <ContextGroup3D>(
                 this._simulation3D.contexts.find(c => c.contexts.has(context))
             );
