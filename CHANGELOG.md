@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.11.20
+
+### Date: TBD
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Renamed context to dimension.
+        -   All the `auxContext*` tags have been renamed to `auxDimension*`.
+        -   Listeners like `@onDrop`, `@onModDrop`, `@onClick`, etc. now have a `dimension` property in the `data` argument instead of `context`.
+        -   The `@onPlayerEnterContext` listener has been renamed to `@onPlayerEnterDimension`.
+        -   The `_auxUserContext`, `_auxUserMenuContext`, `_auxUserInventoryContext`, and `_auxUserChannelsContext` have been renamed to use dimension instead of context.
+    -   Renamed channel to universe.
+        -   The `_auxUserChannelsContext` tag has been renamed to `_auxUserUniversesDimension`.
+
 ## V0.11.19
 
 ### Date: 12/31/2019
