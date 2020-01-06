@@ -687,7 +687,7 @@ export function getUserBotColor(
  * @param userBot The bot for the user.
  */
 export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
-    return calculateBotValue(calc, userBot, '_auxUserMenuContext');
+    return calculateBotValue(calc, userBot, '_auxUserMenuDimension');
 }
 
 /**
@@ -2226,7 +2226,7 @@ export function isBotInContext(
         const userContextValue = calculateBotValue(
             context,
             bot,
-            '_auxUserContext'
+            '_auxUserDimension'
         );
         result = userContextValue == contextId;
     }

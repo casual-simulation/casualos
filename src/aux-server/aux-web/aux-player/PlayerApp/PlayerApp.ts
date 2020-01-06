@@ -668,7 +668,7 @@ export default class PlayerApp extends Vue {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
-                                    _auxUserContext:
+                                    _auxUserDimension:
                                         simulation.parsedId.context,
                                 },
                             });

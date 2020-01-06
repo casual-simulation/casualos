@@ -296,22 +296,22 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             await this.createBot(user.id, {
                 [USERS_CONTEXT]: true,
                 ['_auxUser']: user.username,
-                ['_auxUserInventoryContext']: userInventoryContext,
-                ['_auxUserMenuContext']: userMenuContext,
+                ['_auxUserInventoryDimension']: userInventoryContext,
+                ['_auxUserMenuDimension']: userMenuContext,
                 ['_auxUserChannelsContext']: userSimulationsContext,
             });
         } else {
-            if (!userBot.tags['_auxUserMenuContext']) {
+            if (!userBot.tags['_auxUserMenuDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserMenuContext']: userMenuContext,
+                        ['_auxUserMenuDimension']: userMenuContext,
                     },
                 });
             }
-            if (!userBot.tags['_auxUserInventoryContext']) {
+            if (!userBot.tags['_auxUserInventoryDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserInventoryContext']: userInventoryContext,
+                        ['_auxUserInventoryDimension']: userInventoryContext,
                     },
                 });
             }

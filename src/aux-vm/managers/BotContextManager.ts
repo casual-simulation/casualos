@@ -211,7 +211,7 @@ export function processIndexEvents(
         }
 
         // Check for user bots
-        if (event.tag === '_auxUserContext') {
+        if (event.tag === '_auxUserDimension') {
             if (event.type === 'bot_tag_updated') {
                 const currentContext = calculateStringTagValue(
                     calc,
@@ -315,7 +315,7 @@ function addContext(
     tag: string
 ) {
     let botsWithContextTag = index.findBotsWithTag(context);
-    let userBots = index.findBotsWithTag('_auxUserContext');
+    let userBots = index.findBotsWithTag('_auxUserDimension');
     let allBots = union(userBots, botsWithContextTag);
     let botsInContext = allBots.filter(b => isBotInContext(calc, b, context));
     contextEvents.push({

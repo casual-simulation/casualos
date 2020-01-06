@@ -1161,7 +1161,7 @@ function isInContext(givenContext: string) {
 function getCurrentContext(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, '_auxUserContext');
+        const context = getTag(user, '_auxUserDimension');
         return context || undefined;
     }
     return undefined;
@@ -1242,7 +1242,7 @@ function getGlobals(): Bot {
 function getMenuContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserMenuContext');
+        return getTag(user, '_auxUserMenuDimension');
     } else {
         return null;
     }
@@ -1254,7 +1254,7 @@ function getMenuContext(): string {
 function getInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserInventoryContext');
+        return getTag(user, '_auxUserInventoryDimension');
     } else {
         return null;
     }

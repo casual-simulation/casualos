@@ -1209,18 +1209,18 @@ describe('AuxHelper', () => {
                 tags: {
                     [USERS_CONTEXT]: true,
                     ['_auxUser']: 'username',
-                    ['_auxUserInventoryContext']: '_user_username_inventory',
-                    ['_auxUserMenuContext']: '_user_username_menu',
+                    ['_auxUserInventoryDimension']: '_user_username_inventory',
+                    ['_auxUserMenuDimension']: '_user_username_menu',
                     ['_auxUserChannelsContext']: '_user_username_simulations',
                 },
             });
         });
 
         const contextCases = [
-            ['menu context', '_auxUserMenuContext', '_user_username_menu'],
+            ['menu context', '_auxUserMenuDimension', '_user_username_menu'],
             [
                 'inventory context',
-                '_auxUserInventoryContext',
+                '_auxUserInventoryDimension',
                 '_user_username_inventory',
             ],
             [

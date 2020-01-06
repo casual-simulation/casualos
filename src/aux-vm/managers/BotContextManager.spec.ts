@@ -181,10 +181,10 @@ describe('BotContextManager', () => {
                 });
             });
 
-            it('should include user bots with _auxUserContext set to the context', () => {
+            it('should include user bots with _auxUserDimension set to the context', () => {
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserContext: 'abc',
+                    _auxUserDimension: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
                     auxDimension: 'abc',
@@ -213,7 +213,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['_auxUser', '_auxUserContext']),
+                            tags: new Set(['_auxUser', '_auxUserDimension']),
                         },
                         {
                             bot: test,
@@ -458,12 +458,12 @@ describe('BotContextManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserContext: 'abc',
+                    _auxUserDimension: 'abc',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['_auxUserContext']),
+                        tags: new Set(['_auxUserDimension']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -486,7 +486,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['_auxUserContext']),
+                            tags: new Set(['_auxUserDimension']),
                         },
                     ],
                 });
@@ -555,7 +555,7 @@ describe('BotContextManager', () => {
                 });
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserContext: 'abc',
+                    _auxUserDimension: 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -570,12 +570,12 @@ describe('BotContextManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserContext: 'different',
+                    _auxUserDimension: 'different',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['_auxUserContext']),
+                        tags: new Set(['_auxUserDimension']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -598,7 +598,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['_auxUserContext']),
+                            tags: new Set(['_auxUserDimension']),
                         },
                     ],
                 });

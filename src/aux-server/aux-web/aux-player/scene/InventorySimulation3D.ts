@@ -65,7 +65,7 @@ export class InventorySimulation3D extends Simulation3D {
                 .pipe(
                     tap(bot => {
                         const userInventoryContextValue =
-                            bot.values['_auxUserInventoryContext'];
+                            bot.values['_auxUserInventoryDimension'];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext !== userInventoryContextValue
@@ -86,7 +86,7 @@ export class InventorySimulation3D extends Simulation3D {
     }
 
     protected _getContextTags() {
-        return ['_auxUserInventoryContext'];
+        return ['_auxUserInventoryDimension'];
     }
 
     protected _filterContextEvent(

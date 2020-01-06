@@ -3579,7 +3579,7 @@ export function botActionsTests(
         });
 
         describe('getUserMenuContext()', () => {
-            it('should return the _auxUserMenuContext tag from the user bot', () => {
+            it('should return the _auxUserMenuDimension tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3591,7 +3591,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserMenuContext: 'abc',
+                            _auxUserMenuDimension: 'abc',
                         },
                     },
                 };
@@ -4303,7 +4303,7 @@ export function botActionsTests(
         });
 
         describe('player.isInContext()', () => {
-            it('should return true when _auxUserContext equals the given value', () => {
+            it('should return true when _auxUserDimension equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4315,7 +4315,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'context',
                         },
                     },
                 };
@@ -4340,7 +4340,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserContext does not equal the given value', () => {
+            it('should return false when _auxUserDimension does not equal the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4352,7 +4352,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'context',
                         },
                     },
                 };
@@ -4377,7 +4377,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserContext is not set', () => {
+            it('should return false when _auxUserDimension is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4414,7 +4414,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentContext()', () => {
-            it('should return _auxUserContext', () => {
+            it('should return _auxUserDimension', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4426,7 +4426,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'context',
                         },
                     },
                 };
@@ -4451,7 +4451,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserContext is not set', () => {
+            it('should return undefined when _auxUserDimension is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',

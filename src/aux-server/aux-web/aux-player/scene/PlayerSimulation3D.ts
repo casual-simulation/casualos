@@ -665,7 +665,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
         return (
-            event.tag === '_auxUserMenuContext' ||
+            event.tag === '_auxUserMenuDimension' ||
             event.tag === '_auxUserChannelsContext'
         );
     }
@@ -723,7 +723,7 @@ export class PlayerSimulation3D extends Simulation3D {
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserContext: this.dimension },
+            tags: { _auxUserDimension: this.dimension },
         });
         await this.simulation.helper.updateBot(userBot, {
             tags: { _auxUserChannel: this.simulation.id },

@@ -132,10 +132,10 @@ export interface BotTags {
     ['_auxSelection']?: string;
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
-    ['_auxUserContext']?: string;
+    ['_auxUserDimension']?: string;
     ['_auxUserChannel']?: string;
-    ['_auxUserInventoryContext']?: string;
-    ['_auxUserMenuContext']?: string;
+    ['_auxUserInventoryDimension']?: string;
+    ['_auxUserMenuDimension']?: string;
     ['_auxUserChannelsContext']?: string;
     ['_auxEditingBot']?: string;
     ['_auxSelectionMode']?: SelectionMode;
@@ -594,10 +594,10 @@ export const KNOWN_TAGS: string[] = [
     '_auxSelection',
     '_auxUser',
     'auxUserActive',
-    '_auxUserContext',
+    '_auxUserDimension',
     '_auxUserChannel',
-    '_auxUserInventoryContext',
-    '_auxUserMenuContext',
+    '_auxUserInventoryDimension',
+    '_auxUserMenuDimension',
     '_auxUserChannelsContext',
     '_auxEditingBot',
     '_auxSelectionMode',
