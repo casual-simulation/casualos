@@ -23,7 +23,7 @@ import {
     unloadSimulation as calcUnloadSimulation,
     superShout as calcSuperShout,
     showQRCode as calcShowQRCode,
-    goToContext as calcGoToContext,
+    goToDimension as calcGoToContext,
     goToURL as calcGoToURL,
     playSound as calcPlaySound,
     openURL as calcOpenURL,
@@ -367,10 +367,10 @@ type TagFilter =
  *
  * Common bot filters are:
  * - `byTag(tag, value)`
- * - `inContext(context)`
- * - `atPosition(context, x, y)`
- * - `inStack(bot, context)`
- * - `neighboring(bot, context, direction)`
+ * - `inDimension(dimension)`
+ * - `atPosition(dimension, x, y)`
+ * - `inStack(bot, dimension)`
+ * - `neighboring(bot, dimension, direction)`
  * - `either(filter1, filter2)`
  * - `not(filter)`
  */
@@ -1007,15 +1007,15 @@ function setClipboard(text: string) {
 }
 
 /**
- * Redirects the user to the given context.
- * @param context The context to go to.
+ * Redirects the user to the given dimension.
+ * @param dimension The dimension to go to.
  *
  * @example
- * // Send the player to the "welcome" context.
- * player.goToContext("welcome");
+ * // Send the player to the "welcome" dimension.
+ * player.goToDimension("welcome");
  */
-function goToContext(context: string) {
-    const event = calcGoToContext(context);
+function goToDimension(dimension: string) {
+    const event = calcGoToContext(dimension);
     return addAction(event);
 }
 
@@ -1146,23 +1146,24 @@ function isDesigner(): boolean {
 }
 
 /**
- * Derermines whether the player is in the given context.
- * @param context The context.
+ * Derermines whether the player is in the given dimension.
+ * @param dimension The dimension.
  */
-function isInContext(givenContext: string) {
+function isInDimension(givenDimension: string) {
     return (
-        getCurrentContext() === givenContext && getCurrentContext() != undefined
+        getCurrentDimension() === givenDimension &&
+        getCurrentDimension() != undefined
     );
 }
 
 /**
- * Gets the context that the player is currently in.
+ * Gets the dimension that the player is currently in.
  */
-function getCurrentContext(): string {
+function getCurrentDimension(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, '_auxUserDimension');
-        return context || undefined;
+        const dimension = getTag(user, '_auxUserDimension');
+        return dimension || undefined;
     }
     return undefined;
 }
@@ -1194,7 +1195,7 @@ function hasBotInInventory(bots: Bot | Bot[]): boolean {
     }
 
     return every(bots, f =>
-        isBotInContext(getCalculationContext(), <any>f, getInventoryContext())
+        isBotInContext(getCalculationContext(), <any>f, getInventoryDimension())
     );
 }
 
@@ -1237,9 +1238,9 @@ function getGlobals(): Bot {
 }
 
 /**
- * Gets the name of the context that is used for the current user's menu.
+ * Gets the name of the dimension that is used for the current user's menu.
  */
-function getMenuContext(): string {
+function getMenuDimension(): string {
     const user = getUser();
     if (user) {
         return getTag(user, '_auxUserMenuDimension');
@@ -1249,9 +1250,9 @@ function getMenuContext(): string {
 }
 
 /**
- * Gets the name of the context that is used for the current user's inventory.
+ * Gets the name of the dimension that is used for the current user's inventory.
  */
-function getInventoryContext(): string {
+function getInventoryDimension(): string {
     const user = getUser();
     if (user) {
         return getTag(user, '_auxUserInventoryDimension');
@@ -1420,35 +1421,39 @@ function byMod(mod: Mod): BotFilterFunction {
 }
 
 /**
- * Creates a filter function that checks whether bots are in the given context.
- * @param context The context to check.
- * @returns A function that returns true if the given bot is in the context and false if it is not.
+ * Creates a filter function that checks whether bots are in the given dimension.
+ * @param dimension The dimension to check.
+ * @returns A function that returns true if the given bot is in the dimension and false if it is not.
  *
  * @example
- * // Find all the bots in the "test" context.
- * let bots = getBots(inContext("test"));
+ * // Find all the bots in the "test" dimension.
+ * let bots = getBots(inDimension("test"));
  */
-function inContext(context: string): BotFilterFunction {
-    return byTag(context, true);
+function inDimension(dimension: string): BotFilterFunction {
+    return byTag(dimension, true);
 }
 
 /**
- * Creates a filter function that checks whether bots are at the given position in the given context.
- * @param context The context that the bots should be in.
- * @param x The X position in the context that the bots should be at.
- * @param y The Y position in the context that the bots should be at.
+ * Creates a filter function that checks whether bots are at the given position in the given dimension.
+ * @param dimension The dimension that the bots should be in.
+ * @param x The X position in the dimension that the bots should be at.
+ * @param y The Y position in the dimension that the bots should be at.
  * @returns A function that returns true if the given bot is at the given position and false if it is not.
  *
  * @example
- * // Find all the bots at (1, 2) in the "test" context.
+ * // Find all the bots at (1, 2) in the "test" dimension.
  * let bots = getBots(atPosition("test", 1, 2));
  */
-function atPosition(context: string, x: number, y: number): BotFilterFunction {
-    const inCtx = inContext(context);
-    const atX = byTag(`${context}X`, x);
-    const atY = byTag(`${context}Y`, y);
+function atPosition(
+    dimension: string,
+    x: number,
+    y: number
+): BotFilterFunction {
+    const inCtx = inDimension(dimension);
+    const atX = byTag(`${dimension}X`, x);
+    const atY = byTag(`${dimension}Y`, y);
     const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-    filter.sort = b => getTag(b, `${context}SortOrder`) || 0;
+    filter.sort = b => getTag(b, `${dimension}SortOrder`) || 0;
     return filter;
 }
 
@@ -1468,19 +1473,19 @@ function byCreator(bot: Bot | string) {
 /**
  * Creates a filter function that checks whether bots are in the same stack as the given bot.
  * @param bot The bot that other bots should be checked against.
- * @param context The context that other bots should be checked in.
+ * @param dimension The dimension that other bots should be checked in.
  * @returns A function that returns true if the given bot is in the same stack as the original bot.
  *
  * @example
- * // Find all bots in the same stack as `this` in the "test" context.
+ * // Find all bots in the same stack as `this` in the "test" dimension.
  * let bots = getBots(inStack(this, "test"));
  *
  */
-function inStack(bot: Bot, context: string): BotFilterFunction {
+function inStack(bot: Bot, dimension: string): BotFilterFunction {
     return atPosition(
-        context,
-        getTag(bot, `${context}X`),
-        getTag(bot, `${context}Y`)
+        dimension,
+        getTag(bot, `${dimension}X`),
+        getTag(bot, `${dimension}Y`)
     );
 }
 
@@ -1495,26 +1500,26 @@ function bySpace(space: string): BotFilterFunction {
 /**
  * Creates a function that filters bots by whether they are neighboring the given bot.
  * @param bot The bot that other bots should be checked against.
- * @param context The context that other bots should be checked in.
+ * @param dimension The dimension that other bots should be checked in.
  * @param direction The neighboring direction to check.
  * @returns A function that returns true if the given bot is next to the original bot.
  *
  * @example
- * // Find all bots in front of `this` bot in the "test" context.
+ * // Find all bots in front of `this` bot in the "test" dimension.
  * let bots = getBots(neighboring(this, "test", "front"));
  */
 function neighboring(
     bot: Bot,
-    context: string,
+    dimension: string,
     direction: 'front' | 'left' | 'right' | 'back'
 ): BotFilterFunction {
     const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
     const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
 
-    const x = getTag(bot, `${context}X`);
-    const y = getTag(bot, `${context}Y`);
+    const x = getTag(bot, `${dimension}X`);
+    const y = getTag(bot, `${dimension}Y`);
 
-    return atPosition(context, x + offsetX, y + offsetY);
+    return atPosition(dimension, x + offsetX, y + offsetY);
 }
 
 /**
@@ -1539,8 +1544,8 @@ function either(...filters: BotFilterFunction[]): BotFilterFunction {
  * @param filter The function whose results should be negated.
  *
  * @example
- * // Find all bots that are not in the "test" context.
- * let bots = getBots(not(inContext("test")));
+ * // Find all bots that are not in the "test" dimension.
+ * let bots = getBots(not(inDimension("test")));
  */
 function not(filter: BotFilterFunction): BotFilterFunction {
     return bot => !filter(bot);
@@ -1805,7 +1810,7 @@ function toast(message: string, duration: number = 2) {
 /**
  *   Play given url's audio
  * @example
- * // Send the player to the "welcome" context.
+ * // Send the player to the "welcome" dimension.
  * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
  */
 function playSound(url: string) {
@@ -2084,13 +2089,13 @@ export const typeDefinitionMap = new Map([['player.getBot', 'getUser']]);
  * Defines a set of functions that relate to common player operations.
  */
 const player = {
-    isInContext,
-    goToContext,
+    isInDimension,
+    goToDimension,
     goToURL,
     openURL,
     getBot: getUser,
-    getMenuContext,
-    getInventoryContext,
+    getMenuDimension,
+    getInventoryDimension,
     playSound,
     toast,
     showHtml,
@@ -2110,7 +2115,7 @@ const player = {
     showQRCode,
     hideQRCode,
     isConnected,
-    getCurrentContext,
+    getCurrentDimension,
     getCurrentChannel,
     isDesigner,
     showInputForTag,
@@ -2186,7 +2191,7 @@ export default {
     getBotTagValues,
     byTag,
     byMod,
-    inContext,
+    inDimension,
     inStack,
     bySpace,
     atPosition,

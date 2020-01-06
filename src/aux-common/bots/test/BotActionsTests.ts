@@ -12,7 +12,7 @@ import {
     unloadSimulation,
     importAUX,
     showInputForTag,
-    goToContext,
+    goToDimension,
     goToURL,
     openURL,
     sayHello,
@@ -3578,14 +3578,14 @@ export function botActionsTests(
             });
         });
 
-        describe('getUserMenuContext()', () => {
+        describe('getUserMenuDimension()', () => {
             it('should return the _auxUserMenuDimension tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getMenuContext())',
+                                '@setTag(this, "#dimension", player.getMenuDimension())',
                         },
                     },
                     userBot: {
@@ -3614,7 +3614,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'abc',
+                            dimension: 'abc',
                         },
                     }),
                 ]);
@@ -4302,20 +4302,20 @@ export function botActionsTests(
             });
         });
 
-        describe('player.isInContext()', () => {
+        describe('player.isInDimension()', () => {
             it('should return true when _auxUserDimension equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("context"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("dimension"))',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4334,7 +4334,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: true,
+                            inDimension: true,
                         },
                     }),
                 ]);
@@ -4346,13 +4346,13 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("abc"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("abc"))',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4371,7 +4371,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: false,
+                            inDimension: false,
                         },
                     }),
                 ]);
@@ -4383,7 +4383,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("abc"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("abc"))',
                         },
                     },
                     userBot: {
@@ -4406,27 +4406,27 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: false,
+                            inDimension: false,
                         },
                     }),
                 ]);
             });
         });
 
-        describe('player.getCurrentContext()', () => {
+        describe('player.getCurrentDimension()', () => {
             it('should return _auxUserDimension', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentContext())',
+                                '@setTag(this, "#dimension", player.getCurrentDimension())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4445,7 +4445,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'context',
+                            dimension: 'dimension',
                         },
                     }),
                 ]);
@@ -4457,7 +4457,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentContext())',
+                                '@setTag(this, "#dimension", player.getCurrentDimension())',
                         },
                     },
                     userBot: {
@@ -4480,7 +4480,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: undefined,
+                            dimension: undefined,
                         },
                     }),
                 ]);
@@ -4494,13 +4494,13 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentChannel())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserChannel: 'context',
+                            _auxUserChannel: 'dimension',
                         },
                     },
                 };
@@ -4519,7 +4519,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'context',
+                            dimension: 'dimension',
                         },
                     }),
                 ]);
@@ -4531,7 +4531,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentChannel())',
                         },
                     },
                     userBot: {
@@ -4554,7 +4554,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: undefined,
+                            dimension: undefined,
                         },
                     }),
                 ]);
@@ -4800,13 +4800,13 @@ export function botActionsTests(
             });
         });
 
-        describe('goToContext()', () => {
-            it('should issue a GoToContext event', () => {
+        describe('goToDimension()', () => {
+            it('should issue a GoToDimension event', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.goToContext("abc")',
+                            test: '@player.goToDimension("abc")',
                         },
                     },
                 };
@@ -4822,7 +4822,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([goToContext('abc')]);
+                expect(result.events).toEqual([goToDimension('abc')]);
             });
 
             it('should ignore extra parameters', () => {
@@ -4830,7 +4830,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.goToContext("sim", "abc")',
+                            test: '@player.goToDimension("sim", "abc")',
                         },
                     },
                 };
@@ -4846,7 +4846,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([goToContext('sim')]);
+                expect(result.events).toEqual([goToDimension('sim')]);
             });
         });
 
@@ -5667,7 +5667,10 @@ export function botActionsTests(
         describe('remote()', () => {
             const cases = [
                 ['player.toast("My Message!")', toast('My Message!')],
-                ['player.goToContext("context")', goToContext('context')],
+                [
+                    'player.goToDimension("dimension")',
+                    goToDimension('dimension'),
+                ],
                 ['player.openURL("url")', openURL('url')],
                 ['player.goToURL("url")', goToURL('url')],
                 ['player.tweenTo("id")', tweenTo('id')],

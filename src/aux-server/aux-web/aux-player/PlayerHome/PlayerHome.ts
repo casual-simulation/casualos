@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Watch, Prop } from 'vue-property-decorator';
-import { goToContext } from '@casual-simulation/aux-common';
+import { goToDimension } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
@@ -42,7 +42,7 @@ export default class PlayerHome extends Vue {
             this.context
         ) {
             await appManager.simulationManager.primary.helper.transaction(
-                goToContext(this.context)
+                goToDimension(this.context)
             );
         }
     }

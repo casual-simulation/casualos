@@ -55,8 +55,8 @@ let myBot = create({ space: "tempLocal" });
 
 5. Create a bot from multiple mods:
 ```typescript
-// myBot is placed in the "myContext" context and is colored green
-let myBot = create({ myContext: true }, {
+// myBot is placed in the "myDimension" dimension and is colored green
+let myBot = create({ myDimension: true }, {
     auxColor: "green"
 });
 ```
@@ -168,9 +168,9 @@ If multiple filters are specified, then only the bots that match all of the filt
 let bots = getBots(byTag("#test"));
 ```
 
-2. Find all bots with `#name` set to "bob" _and_ in the "people" context.
+2. Find all bots with `#name` set to "bob" _and_ in the "people" dimension.
 ```typescript
-let bots = getBots(byTag("#name", "bob"), inContext("people"));
+let bots = getBots(byTag("#name", "bob"), inDimension("people"));
 ```
 
 ### `getBots(tag, value?)`
@@ -221,9 +221,9 @@ If multiple filters are specified, then the first bot that matches all of the fi
 let foundBot = getBot(byTag("#test"));
 ```
 
-2. Find a bot with `#name` set to "bob" _and_ in the "people" context.
+2. Find a bot with `#name` set to "bob" _and_ in the "people" dimension.
 ```typescript
-let foundBot = getBot(byTag("#name", "bob"), inContext("people"));
+let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
 ```
 
 ### `getBot(tag, filter?)`
@@ -355,13 +355,13 @@ let bots = getBots(byTag("#height", height => height > 2));
 let bots = getBots(byTag("#test"));
 ```
 
-### `inContext(context)`
+### `inDimension(dimension)`
 
-<FunctionCode name='inContext' />
+<FunctionCode name='inDimension' />
 
-Creates a bot filter that includes bots that are in the given context. That is, they have the given tag set to `true`.
+Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to `true`.
 
-The **first parameter** is the name of the context.
+The **first parameter** is the name of the dimension.
 
 <Alert type='info'>
     This function behaves exactly like <ActionLink action='byTag(tag, value?)' /> with the `value` parameter set to `true`.
@@ -369,45 +369,45 @@ The **first parameter** is the name of the context.
 
 #### Examples
 
-1. Find all the bots in the "test" context.
+1. Find all the bots in the "test" dimension.
 ```typescript
-let bots = getBots(inContext("test"));
+let bots = getBots(inDimension("test"));
 ```
 
-### `atPosition(context, x, y)`
+### `atPosition(dimension, x, y)`
 
-Creates a bot filter that includes bots that are in the given context and at the given X and Y position.
+Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
 
-The **first parameter** is the name of the context.
+The **first parameter** is the name of the dimension.
 
-The **second parameter** is the X position. That is, the left-right position of the bots in the context.
+The **second parameter** is the X position. That is, the left-right position of the bots in the dimension.
 
-The **third parameter** is the Y position. That is, the forward-backward position of the bots in the context.
+The **third parameter** is the Y position. That is, the forward-backward position of the bots in the dimension.
 
 #### Examples
 
-1. Find all the bots at (1, 2) in the "test" context.
+1. Find all the bots at (1, 2) in the "test" dimension.
 ```typescript
 let bots = getBots(atPosition("test", 1, 2));
 ```
 
-### `inStack(bot, context)`
+### `inStack(bot, dimension)`
 
-Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
+Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
 
 The **first parameter** is the bot that other bots should be in the same stack with.
 
-The **second parameter** is the name of the context.
+The **second parameter** is the name of the dimension.
 
 #### Examples
 
-1. Find all bots in the same stack as `this` in the "test" context.
+1. Find all bots in the same stack as `this` in the "test" dimension.
 ```typescript
 let bots = getBots(inStack(this, "test"));
 ```
@@ -593,7 +593,7 @@ server.setupChannel("test", {
 });
 ```
 
-3. Create the "test" channel with a bot that creates the "abc" context and places a bot in it:
+3. Create the "test" channel with a bot that creates the "abc" dimension and places a bot in it:
 ```typescript
 server.setupChannel("test", {
     "onCreate": `@
@@ -604,7 +604,7 @@ server.setupChannel("test", {
 
         create({
             auxCreator: null,
-            auxLabel: "This is in the context!",
+            auxLabel: "This is in the dimension!",
             auxColor: "blue",
             abc: true
         });

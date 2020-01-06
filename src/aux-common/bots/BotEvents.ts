@@ -50,7 +50,7 @@ export type ExtraActions =
     | SendWebhookAction
     | LoadFileAction
     | SaveFileAction
-    | GoToContextAction
+    | GoToDimensionAction
     | GoToURLAction
     | PlaySoundAction
     | OpenURLAction
@@ -704,8 +704,8 @@ export interface SaveFileOptions {
 /**
  * Defines an event that is used to send the player to a context.
  */
-export interface GoToContextAction extends Action {
-    type: 'go_to_context';
+export interface GoToDimensionAction extends Action {
+    type: 'go_to_dimension';
 
     /**
      * The context that should be loaded.
@@ -1234,9 +1234,9 @@ export function superShout(eventName: string, arg?: any): SuperShoutAction {
  * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
  * @param context
  */
-export function goToContext(context: string): GoToContextAction {
+export function goToDimension(context: string): GoToDimensionAction {
     return {
-        type: 'go_to_context',
+        type: 'go_to_dimension',
         context: context,
     };
 }
