@@ -1,0 +1,617 @@
+---
+id: actions
+title: Actions
+sidebar_label: Actions
+description: Actions affect the data in bots and also do things to the outside world.
+---
+
+import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode, ActionLink } from './components.mdx';
+
+## Data Actions
+
+### `create(...mods)`
+
+<FunctionCode name='create' />
+
+Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
+By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `"shared"`.
+
+If <TagLink tag='auxCreator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='auxCreator'/> will be set to `null`.
+
+**Each parameter** is a mod that should be applied to the new bot(s).
+If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `"shared"`.
+If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
+
+#### Examples:
+
+1. Create an empty bot:
+```typescript
+let myNewBot = create();
+```
+
+2. Create a red bot:
+```typescript
+let myRedBot = create({
+    auxColor: "red"
+});
+```
+
+3. Create a parent and a child bot:
+```typescript
+let myParentBot = create({
+    auxCreator: null,
+    auxLabel: "Parent"
+});
+let myChildBot = create({
+    auxCreator: getID(myParentBot),
+    auxLabel: "Child"
+});
+```
+
+4. Create a empty bot in the `"tempLocal"` space:
+```typescript
+let myBot = create({ space: "tempLocal" });
+```
+
+5. Create a bot from multiple mods:
+```typescript
+// myBot is placed in the "myContext" context and is colored green
+let myBot = create({ myContext: true }, {
+    auxColor: "green"
+});
+```
+
+6. Create a red bot and a blue bot:
+```typescript
+let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
+    {
+        "auxColor": "red"
+    },
+    {
+        "auxColor": "blue"
+    }
+]);
+```
+
+### `destroy(bot)`
+
+<FunctionCode name='destroy' />
+
+Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='@onDestroy'/> for each of the destroyed bots.
+
+Note that only destroyable bots will be destroyed.
+Bots that have <TagLink tag='auxDestroyable'/> set to `false` will not be destroyed.
+
+Also note that all bots that have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
+This happens recursively until there are no more bots to destroy.
+
+#### Examples:
+
+1. Destroying a single bot:
+```typescript
+// Destroy a single bot that has #name set to "bob"
+destroy(getBot("#name", "bob"));
+```
+
+2. Destroying a list of bots:
+```typescript
+// Destroy all the bots that have #auxColor set to "red"
+destroy(getBots("#auxColor", "red"));
+```
+
+3. Destroying a bot by its id
+```typescript
+// Destroy the bot with the #id: "config"
+destroy("config");
+```
+
+### `applyMod(bot, ...mods)`
+
+<FunctionCode name='applyMod' />
+
+Applies the given mods to the given bot.
+
+The **first parameter** is the bot that the mods should be applied to.
+
+The **other parameters** are the mods that should be applied to the bot. If two mods have the same tag, then the mod that is last in the list will win.
+
+#### Examples
+
+1. Set the "test" tag and "name" tag on a bot.
+```typescript
+applyMod(bot, {
+    test: true,
+    name: "bob"
+});
+```
+
+### `changeState(bot, stateName, groupName?)`
+
+<FunctionCode name='changeState'/>
+
+Changes the state that the given bot occupies in the given group.
+If the state was changed, then the <TagLink tag='@[groupName][stateName]OnExit'/> and <TagLink tag='@[groupName][stateName]OnEnter'/> whispers are sent to the `bot`.
+
+The **first parameter** is the bot whose state should be changed.
+
+The **second parameter** is the value that should be set on the bot.
+
+The **third parameter** is the name of the tag that should be changed on the bot. If not specified, then the `#state` tag will be used.
+
+#### Examples:
+
+1. Change the `#state` of the bot to "Running".
+```typescript
+// Triggers @stateRunningOnEnter
+changeState(bot, "Running");
+```
+
+2. Change the `#playbackState` of the bot to "Playing".
+```typescript
+// Triggers @playbackStatePlayingOnEnter
+changeState(bot, "Playing", "playbackState");
+```
+
+### `getBots(..filters)`
+
+<FunctionCode name='getBots' />
+
+Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
+
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the channel are returned.
+If multiple filters are specified, then only the bots that match all of the filters are returned.
+
+#### Examples
+
+1. Find all bots with the "test" tag.
+```typescript
+let bots = getBots(byTag("#test"));
+```
+
+2. Find all bots with `#name` set to "bob" _and_ in the "people" context.
+```typescript
+let bots = getBots(byTag("#name", "bob"), inContext("people"));
+```
+
+### `getBots(tag, value?)`
+
+<FunctionCode name='getBots' overload={1} />
+
+Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
+
+The **first parameter** is the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+
+The **second parameter** is the value the tag should match. If not specified, then all bots with the tag will be included.
+If specified, then only bots that have the same tag and value will be included. If you specify a function as the value, then it will be used to match tag values.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='getBots(...filters)'/> with <ActionLink action='byTag(tag, value?)' />
+</Alert>
+
+#### Examples
+
+1. Find all the bots with `#name` set to "bob".
+```typescript
+let bots = getBots("#name", "bob");
+```
+
+2. Find all bots with a height larger than 2.
+```typescript
+let bots = getBots("#height", height => height > 2);
+```
+
+3. Find all bots with the "test" tag.
+```typescript
+let bots = getBots("#test");
+```
+
+### `getBot(...filters)`
+
+<FunctionCode name='getBot' />
+
+Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
+
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the channel is returned.
+If multiple filters are specified, then the first bot that matches all of the filters is returned.
+
+#### Examples
+
+1. Find a bot with the "test" tag.
+```typescript
+let foundBot = getBot(byTag("#test"));
+```
+
+2. Find a bot with `#name` set to "bob" _and_ in the "people" context.
+```typescript
+let foundBot = getBot(byTag("#name", "bob"), inContext("people"));
+```
+
+### `getBot(tag, filter?)`
+
+<FunctionCode name='getBot' overload={1} />
+
+Gets the first bot that matches the given tag and value. If multiple bots match the given tag and value, then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given tag and value, then `undefined` is returned.
+
+The **first parameter** is the name of the tag to search for.
+
+The **second parameter** is the value the tag should match. If not specified, then the first bot with the tag will be returned.
+If specified, then the first bot that has the same tag and value will be returned. If you specify a function as the value, then it will be used to match tag values.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='getBot(...filters)'/> with <ActionLink action='byTag(tag, value?)' />
+</Alert>
+
+#### Examples
+
+1. Find the first bot with `#name` set to "bob".
+```typescript
+let foundBot = getBot("#name", "bob");
+```
+
+2. Find the first bot with a height larger than 2.
+```typescript
+let foundBot = getBot("#height", height => height > 2);
+```
+
+3. Find the first bot with the "test" tag.
+```typescript
+let foundBot = getBot("#test");
+```
+
+### `getID(bot)`
+
+<FunctionCode name='getID'/>
+
+Gets the ID of the given bot.
+
+The **first parameter** is the bot whose ID should be retrieved.
+If given a bot ID, then it will be returned. If given `null` or something that is not a bot, then `null` will be returned.
+
+#### Examples
+
+1. Get the ID of the current bot.
+```typescript
+let id = getID(bot);
+```
+
+2. Get the ID of a bot with `#name` set to "bob".
+```typescript
+let id = getID(getBot("#name", "bob"));
+```
+
+### `getJSON(data)`
+
+<FunctionCode name='getJSON'/>
+
+Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.
+
+The **first parameter** is the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format.
+If given a bot, then the returned JSON will be able to be able to be converted back into a mod via <ActionLink action='getMod(bot)'/>.
+
+#### Examples
+
+1. Store a copy of a bot in a tag.
+```typescript
+let bob = getBot("#name", "bob");
+tags.savedBot = getJSON(bob);
+```
+
+### `getMod(bot)`
+
+<FunctionCode name='getMod'/>
+
+Gets a mod for the given bot and list of tags. The returned mod will only contain tags that are contained in the given list.
+
+The **first parameter** is the bot or JSON string that should be cloned into a mod.
+
+The **other parameters** are the tags that should be included in the returned mod.
+If no other parameters are specified, then all tags are included.
+If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)), then it will include all the tags that match the expression.
+
+#### Examples
+
+1. Get a mod with the current bot's tags.
+```typescript
+let mod = getMod(bot);
+```
+
+2. Get a mod with only the <TagLink tag='auxColor'/> and <TagLink tag='auxLabel'/> tags.
+```typescript
+let mod = getMod(bot, "auxColor", "auxLabel");
+```
+
+3. Get a mod with every tag that starts with "on".
+```typescript
+let mod = getMod(bot, /^on/g);
+```
+
+## Bot Filters
+
+### `byTag(tag, value?)`
+
+<FunctionCode name='byTag' />
+
+Creates a bot filter that includes bots that have the given tag that matches the given value.
+
+The **first parameter** is the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+
+The **second parameter** is the value that the tag should match. If not specified, then all bots with the tag will be included. 
+If specified, then only bots that have the same tag value will be included. If you specify a function as the value, then it will be used to match tag values.
+
+#### Examples
+
+1. Find all the bots with `#name` set to "bob".
+```typescript
+let bots = getBots(byTag("#name", "bob"));
+```
+
+2. Find all bots with a height larger than 2.
+```typescript
+let bots = getBots(byTag("#height", height => height > 2));
+```
+
+3. Find all bots with the "test" tag.
+```typescript
+let bots = getBots(byTag("#test"));
+```
+
+### `inContext(context)`
+
+<FunctionCode name='inContext' />
+
+Creates a bot filter that includes bots that are in the given context. That is, they have the given tag set to `true`.
+
+The **first parameter** is the name of the context.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='byTag(tag, value?)' /> with the `value` parameter set to `true`.
+</Alert>
+
+#### Examples
+
+1. Find all the bots in the "test" context.
+```typescript
+let bots = getBots(inContext("test"));
+```
+
+### `atPosition(context, x, y)`
+
+Creates a bot filter that includes bots that are in the given context and at the given X and Y position.
+
+When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
+This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+
+The **first parameter** is the name of the context.
+
+The **second parameter** is the X position. That is, the left-right position of the bots in the context.
+
+The **third parameter** is the Y position. That is, the forward-backward position of the bots in the context.
+
+#### Examples
+
+1. Find all the bots at (1, 2) in the "test" context.
+```typescript
+let bots = getBots(atPosition("test", 1, 2));
+```
+
+### `inStack(bot, context)`
+
+Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
+
+When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
+This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+
+The **first parameter** is the bot that other bots should be in the same stack with.
+
+The **second parameter** is the name of the context.
+
+#### Examples
+
+1. Find all bots in the same stack as `this` in the "test" context.
+```typescript
+let bots = getBots(inStack(this, "test"));
+```
+
+### `byCreator(bot)`
+
+<FunctionCode name='byCreator' />
+
+Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
+
+The **first parameter** is the bot that created the other bots.
+
+<Alert type='info'>
+    This function behaves exactly like <NormalCode>byTag("auxCreator", getID(bot))</NormalCode>.
+</Alert>
+
+#### Examples
+
+1. Find all the bots created by this bot.
+```typescript
+let bots = getBots(byCreator(this));
+```
+
+### `bySpace(space)`
+
+<FunctionCode name='bySpace'/>
+
+Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
+
+The **first parameter** is the space that the bots are in.
+
+<Alert type='info'>
+    This function behaves exactly like <NormalCode>byTag("space", space)</NormalCode>.
+</Alert>
+
+#### Examples
+
+1. Find all bots in the `"tempLocal"` space.
+```typescript
+let bots = getBots(bySpace("tempLocal"));
+```
+
+## Event Actions
+
+### `shout(name, arg?)`
+
+<FunctionCode name='shout' />
+
+Sends a shout to all bots that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
+Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
+
+The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all <TagLink tag='@onClick'/> listeners.
+
+The **second parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a `@reset` event to all bots:
+```typescript
+shout("reset");
+```
+
+2. Send a `@hello` event with your name:
+```typescript
+shout("hello", "Bob");
+```
+
+### `whisper(bot, name, arg?)`
+
+<FunctionCode name='whisper' />
+
+Sends a whisper to the specified bot(s) that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
+Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
+
+The **first parameter** is the bot, array of bots, bot <TagLink tag='id'/>, or array of bot <TagLink tag='id'/> that the whisper should be sent to.
+
+The **second parameter** is the name of the whisper. e.g. Using `"onClick"` for the name will trigger the <TagLink tag='@onClick'/> listener for the specified bots.
+
+The **third parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a `@reset` event to all bots named `"Bob"`:
+```typescript
+let bots = getBots("#name", "Bob");
+whisper(bots, "reset");
+```
+
+2. Send a `@setColor` event to ourself:
+```typescript
+whisper(this, "setColor", "red");
+```
+
+## Player Actions
+
+### `player.replaceDragBot(botOrMod)`
+
+<FunctionCode name='replaceDragBot'/>
+
+Replaces the bot that the user is dragging with the given bot or mod.
+Only works if called from inside a <TagLink tag='@onDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
+
+The **first parameter** is the bot or mod that should be dragged. 
+If given a bot, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
+
+#### Examples:
+
+1. Drag a clone of this bot.
+```typescript
+let clone = create(this);
+player.replaceDragBot(clone);
+```
+
+2. Drag a mod that makes other bots red.
+```typescript
+player.replaceDragBot({
+    "auxColor": "red"
+});
+```
+
+### `player.setClipboard(text)`
+
+<FunctionCode name='setClipboard'/>
+
+Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
+On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.
+
+The **first parameter** is the text that should be copied to the player's clipboard.
+
+#### Examples:
+
+1. Copy "hello" to the player's clipboard.
+```typescript
+player.setClipboard("hello");
+```
+
+## Server Actions
+
+### `server.setupChannel(channel, botOrMod?)`
+
+<FunctionCode name='setupChannel'/>
+
+Sends an action to the server that will create the given channel if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the channel if the channel did not exist.
+The action is only executed if <TagLink tag='@onChannelAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is the ID of the channel that should be setup.
+
+The **second parameter** is optional and is the bot or mod that should be cloned into the new channel. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+
+#### Examples:
+
+Before `server.setupChannel()` will work, you need to setup the <TagLink tag='@onChannelAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new channel.
+By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
+
+Ensure that <TagLink tag='@onChannelAction'/> is setup properly.
+The following script will execute `setup_channel` events that were sent from other devices:
+```typescript
+// Device actions are actions that were sent to this computer from another device
+if (that.action.type === 'device') {
+
+    // The setup_channel action is the action that is created
+    // from server.setupChannel()
+    if (that.action.event.type === 'setup_channel') {
+
+        // Execute the setup_channel action
+        action.perform(that.action.event);
+    }
+}
+```
+
+1. Create the "test" channel:
+```typescript
+server.setupChannel("test");
+```
+
+2. Create the "test" channel with a bot inside it:
+```typescript
+server.setupChannel("test", {
+    "name": "bob",
+    "auxColor": "red"
+});
+```
+
+3. Create the "test" channel with a bot that creates the "abc" context and places a bot in it:
+```typescript
+server.setupChannel("test", {
+    "onCreate": `@
+        create({
+            auxCreator: null,
+            auxContext: "abc",
+        });
+
+        create({
+            auxCreator: null,
+            auxLabel: "This is in the context!",
+            auxColor: "blue",
+            abc: true
+        });
+
+        destroy(this);
+    `
+});
+```
+
+[listen-tag]: docs/listen-tags

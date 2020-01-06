@@ -1,0 +1,575 @@
+---
+id: listen-tags
+title: Listen Tags
+sidebar_label: Listen Tags
+description: Listen tags are tags that can receive shouts and whispers from other bots and actoins that happen from the user.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  TagLink,
+  NormalCode,
+  UserBotBadge,
+  ActionLink,
+} from './components.mdx';
+
+Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
+To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
+
+## Whisper Tags
+
+Whispers are shouts that are sent to specific bots instead of all bots.
+
+### `@onCreate`
+
+A whisper that is sent to a bot when it is first created.
+
+### `@onDestroy`
+
+A whisper that is sent to a bot when it is being destroyed.
+
+### `@onModDrop`
+
+A whisper that is sent to a bot that a mod was dropped on.
+If a custom `@onModDrop` is not specified, then the mod will be applied automatically.
+If a custom `@onModDrop` is specified, then the mod needs to be applied manually via <ActionLink action='applyMod(bot, ...mods)'/>.
+
+#### Arguments:
+```typescript
+
+interface Mod {
+  [tag: string]: any;
+}
+
+let that: {
+  mod: Mod
+};
+```
+
+### `@onModDropEnter`
+
+A whisper that is sent to the bot that a mod started to be dragged onto.
+
+#### Arguments:
+```typescript
+let that: {
+  mod: Mod,
+  context: string
+};
+```
+
+### `@onModDropExit`
+
+A whisper that is sent to the bot that a mod was just dragged off of.
+
+#### Arguments:
+```typescript
+let that: {
+  mod: Mod,
+  context: string
+};
+```
+
+### `@onClick`
+
+A whisper that is sent to the bot that was clicked.
+
+#### Arguments:
+```typescript
+let that: {
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  context: string
+};
+```
+
+### `@onPointerEnter`
+
+A whisper that is sent to a bot when the mouse cursor starts to hover over it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  context: string
+};
+```
+
+### `@onPointerExit`
+
+A whisper that is sent to a bot when the mouse cursor stops hovering over it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  context: string
+};
+```
+
+### `@onPointerDown`
+
+A whipser that is sent to a bot when the user starts clicking it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  context: string
+};
+```
+
+### `@onPointerUp`
+
+A whisper that is sent to a bot when the user stops clicking it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  context: string
+};
+```
+
+### `@onDrag`
+
+A whisper that is sent whenever a bot is starting to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onDrop`
+
+A whisper that is sent whenever a bot has been dropped after being dragged.
+The whisper is sent to both the bot that was dropped and the bot that was dropped on.
+
+#### Arguments
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onDropEnter`
+
+A whisper that is sent to both bots when a bot is dragged onto another bot.
+
+#### Arguments
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onDropExit`
+
+A whisper that is sent to both bots when a bot is dragged off of another bot.
+
+#### Arguments
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onSaveInput`
+
+A whisper that is sent when the input box for a bot has been changed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
+### `@onCloseInput`
+
+A whisper that is sent when the input box for a bot has been closed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
+### `@onListen`
+
+A whisper that is sent whenever a whisper or shout is sent to this bot.
+
+#### Arguments:
+```typescript
+let that: {
+  name: string,
+  that: any,
+  targets: Bot[],
+  listeners: Bot[],
+  responses: any[]
+};
+```
+
+### `@[groupName][stateName]OnEnter`
+
+A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
+};
+```
+
+### `@[groupName][stateName]OnExit`
+
+A whisper that is sent whenever the `[groupName]` tag is changed from `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
+};
+```
+
+## Shout Tags
+
+Shouts are events which are sent to all bots.
+
+### `@onAnyBotClicked`
+
+A shout that is sent to all bots when a bot is clicked.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  context: string
+};
+```
+
+### `@onGridClick`
+
+A shout that is sent to all bots when the user clicks on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  context: string
+};
+```
+
+### `@onPlayerEnterContext`
+
+A shout that is sent to all bots when the player enters a context.
+
+#### Arguments:
+```typescript
+let that: {
+  context: string
+};
+```
+
+### `@onBarcodeScanned`
+
+A shout that is sent to all bots when the player scans a barcode.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onBarcodeScannerOpened`
+
+A shout that is sent to all bots when the barcode scanner is opened.
+
+### `@onBarcodeScannerClosed`
+
+A shout that is sent to all bots when the barcode scanner is closed.
+
+### `@onQRCodeScanned`
+
+A shout that is sent to all bots when a QR Code is scanned.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onQRCodeScannerOpened`
+
+A shout that is sent to all bots when the QR Code Scanner is opened.
+
+### `@onQRCodeScannerClosed`
+
+A shout that is sent to all bots when the QR Code Scanner is closed.
+
+### `@onTapCode`
+
+A shout that is sent to all bots whenever a 4-digit tap code is entered.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onKeyDown`
+
+A shout that is sent to all bots whenever the user starts pressing a key.
+
+#### Arguments:
+```typescript
+let that: {
+  keys: string[]
+};
+```
+
+### `@onKeyUp`
+
+A shout that is sent to all bots whenever the user stops pressing a key.
+
+#### Arguments:
+```typescript
+let that: {
+  keys: string[]
+};
+```
+
+### `@onChannelSubscribed`
+
+A shout that is sent when a channel is loaded.
+Sent to every channel that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  channel: string
+};
+```
+
+### `@onChannelUnsubscribed`
+
+A shout that is sent when a channel is unloaded.
+Sent to every channel that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  channel: string
+};
+```
+
+### `@onChannelStreaming`
+
+A shout that is sent when a channel is connected and fully synced.
+Sent to every channel that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  channel: string
+};
+```
+
+### `@onChannelStreamLost`
+
+A shout that is sent when a channel has been temporarily disconnected from the server.
+Sent to every channel that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  channel: string
+};
+```
+
+### `@onCheckout`
+
+A shout that is sent when the user submits their credit card info to purchase something.
+
+#### Arguments:
+```typescript
+let that: {
+  token: string, 
+  productId: string, 
+  user: { 
+    username: string, 
+    device: string, 
+    token: string
+  }
+};
+```
+
+### `@onPaymentSuccessful`
+
+A shout that is sent when payment has been approved for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  charge: any,
+  extra: any
+};
+```
+
+### `@onPaymentFailed`
+
+A shout that is sent when payment has been rejected for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  error: any,
+  extra: any
+};
+```
+
+### `@onAnyBotDrag`
+
+A shout that is sent whenever a bot starts to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onAnyBotDrop`
+
+A shout that is sent whenever a bot is dropped after being dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `@onAnyListen`
+
+A shout that is sent whenever a whisper or shout is issued.
+
+#### Arguments:
+```typescript
+let that: {
+  name: string,
+  that: any,
+  targets: Bot[],
+  listeners: Bot[],
+  responses: any[]
+};
+```
+
+### `@onWebhook`
+
+A shout that is sent whenever a webhook is received.
+
+#### Arguments:
+```typescript
+let that: {
+  method: string,
+  url: string,
+  data: any,
+  headers: any
+};
+```
+
+### `@onChannelAction`
+
+A whisper that is sent to the config bot whenever an action happens.
+
+#### Arguments:
+```typescript
+let that: {
+  action: any
+};
+```
