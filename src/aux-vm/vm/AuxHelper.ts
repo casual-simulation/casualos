@@ -298,7 +298,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 ['_auxUser']: user.username,
                 ['_auxUserInventoryDimension']: userInventoryContext,
                 ['_auxUserMenuDimension']: userMenuContext,
-                ['_auxUserChannelsContext']: userSimulationsContext,
+                ['_auxUserUniversesDimension']: userSimulationsContext,
             });
         } else {
             if (!userBot.tags['_auxUserMenuDimension']) {
@@ -315,10 +315,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     },
                 });
             }
-            if (!userBot.tags['_auxUserChannelsContext']) {
+            if (!userBot.tags['_auxUserUniversesDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserChannelsContext']: userSimulationsContext,
+                        ['_auxUserUniversesDimension']: userSimulationsContext,
                     },
                 });
             }

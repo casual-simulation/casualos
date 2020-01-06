@@ -159,7 +159,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         if (simBots.length === 0) {
             await this.createBot(botId, {
-                [this.userBot.tags['_auxUserChannelsContext']]: true,
+                [this.userBot.tags['_auxUserUniversesDimension']]: true,
                 ['auxChannel']: id,
             });
         }
@@ -314,7 +314,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         // TODO: Make these functions support precalculated bot contexts
         const simBots = botsInContext(
             calc,
-            this.userBot.tags['_auxUserChannelsContext']
+            this.userBot.tags['_auxUserUniversesDimension']
         ).filter(f => getBotChannel(calc, f) === id);
 
         return <AuxObject[]>simBots;

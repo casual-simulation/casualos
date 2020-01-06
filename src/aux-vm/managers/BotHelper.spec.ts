@@ -85,7 +85,7 @@ describe('BotHelper', () => {
         it('should create a new simulation bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
             };
 
@@ -111,7 +111,7 @@ describe('BotHelper', () => {
         it('should not create a new simulation when one already exists for the given channel ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
@@ -129,7 +129,7 @@ describe('BotHelper', () => {
         it('should destroy the simulations that load the given ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,

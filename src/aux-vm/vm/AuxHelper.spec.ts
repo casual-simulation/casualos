@@ -1211,7 +1211,8 @@ describe('AuxHelper', () => {
                     ['_auxUser']: 'username',
                     ['_auxUserInventoryDimension']: '_user_username_inventory',
                     ['_auxUserMenuDimension']: '_user_username_menu',
-                    ['_auxUserChannelsContext']: '_user_username_simulations',
+                    ['_auxUserUniversesDimension']:
+                        '_user_username_simulations',
                 },
             });
         });
@@ -1225,7 +1226,7 @@ describe('AuxHelper', () => {
             ],
             [
                 'simulations context',
-                '_auxUserChannelsContext',
+                '_auxUserUniversesDimension',
                 '_user_username_simulations',
             ],
         ];
