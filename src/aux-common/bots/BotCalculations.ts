@@ -100,7 +100,7 @@ export interface SimulationIdParseSuccess {
     success: true;
     channel?: string;
     host?: string;
-    context?: string;
+    dimension?: string;
 }
 
 /**
@@ -145,27 +145,31 @@ export function cleanBot(bot: Bot): Bot {
  * @param workspace The workspace.
  */
 export function isMinimized(calc: BotCalculationContext, workspace: Workspace) {
-    return getContextMinimized(calc, workspace);
+    return getDimensionMinimized(calc, workspace);
 }
 
 /**
- * Determines if the given bot contains data for a context.
+ * Determines if the given bot contains data for a dimension.
  */
-export function isContext(
+export function isDimension(
     calc: BotCalculationContext,
-    contextBot: Bot
+    dimensionBot: Bot
 ): boolean {
-    return getBotConfigContexts(calc, contextBot).length > 0;
+    return getBotConfigDimensions(calc, dimensionBot).length > 0;
 }
 
 /**
- * Determines if the given context bot is being visualized in the viewport.
+ * Determines if the given dimension bot is being visualized in the viewport.
  */
-export function isVisibleContext(
+export function isVisibleDimension(
     calc: BotCalculationContext,
-    contextBot: Bot
+    dimensionBot: Bot
 ): boolean {
-    const result = calculateBotValue(calc, contextBot, 'auxDimensionVisualize');
+    const result = calculateBotValue(
+        calc,
+        dimensionBot,
+        'auxDimensionVisualize'
+    );
 
     if (typeof result === 'string' && hasValue(result)) {
         return true;
@@ -516,7 +520,7 @@ export function isTagWellKnown(tag: string): boolean {
  *
  * Well-known hidden tags include:
  * - _auxSelection
- * - context._index
+ * - dimension._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
  * @param first The first bot.
@@ -700,45 +704,45 @@ export function getBotsInMenu(
     userBot: Bot
 ): Bot[] {
     const context = getUserMenuId(calc, userBot);
-    return botsInContext(calc, context);
+    return botsInDimension(calc, context);
 }
 
 /**
- * Gets the list of bots that are in the given context.
+ * Gets the list of bots that are in the given dimension.
  * @param calc The bot calculation context.
- * @param context The context to search for bots in.
+ * @param dimension The dimension to search for bots in.
  */
-export function botsInContext(
+export function botsInDimension(
     calc: BotCalculationContext,
-    context: string
+    dimension: string
 ): Bot[] {
-    const bots = calc.objects.filter(f => isBotInContext(calc, f, context));
-    return sortBy(bots, f => botContextSortOrder(calc, f, context));
+    const bots = calc.objects.filter(f => isBotInDimension(calc, f, dimension));
+    return sortBy(bots, f => botDimensionSortOrder(calc, f, dimension));
 }
 
 /**
- * Gets a diff that adds a bot to the given context.
- * If the bot is already in the context, then nothing happens.
+ * Gets a diff that adds a bot to the given dimension.
+ * If the bot is already in the dimension, then nothing happens.
  * If other bots are already at the given position, then the bot will be placed at the topmost index.
  * @param calc The bot calculation context.
- * @param context The context that the bot should be added to.
+ * @param dimension The dimension that the bot should be added to.
  * @param x The x position that the bot should be placed at.
- * @param y The x position in the context that the bot should be placed at.
+ * @param y The x position in the dimension that the bot should be placed at.
  * @param index The index that the bot should be placed at.
  */
-export function addToContextDiff(
+export function addToDimensionDiff(
     calc: BotCalculationContext,
-    context: string,
+    dimension: string,
     x: number = 0,
     y: number = 0,
     index?: number
 ): BotTags {
-    const bots = objectsAtContextGridPosition(calc, context, { x, y });
+    const bots = objectsAtDimensionGridPosition(calc, dimension, { x, y });
     return {
-        [context]: true,
+        [dimension]: true,
         ...setPositionDiff(
             calc,
-            context,
+            dimension,
             x,
             y,
             typeof index === 'undefined' ? bots.length : index
@@ -747,46 +751,46 @@ export function addToContextDiff(
 }
 
 /**
- * Gets a diff that removes a bot from the given context.
+ * Gets a diff that removes a bot from the given dimension.
  * @param calc The bot calculation context.
- * @param context The context that the bot should be removed from.
+ * @param dimension The dimension that the bot should be removed from.
  */
-export function removeFromContextDiff(
+export function removeFromDimensionDiff(
     calc: BotCalculationContext,
-    context: string
+    dimension: string
 ): BotTags {
     return {
-        [context]: null,
-        [`${context}X`]: null,
-        [`${context}Y`]: null,
-        [`${context}SortOrder`]: null,
+        [dimension]: null,
+        [`${dimension}X`]: null,
+        [`${dimension}Y`]: null,
+        [`${dimension}SortOrder`]: null,
     };
 }
 
 /**
- * Gets a diff that sets a bot's position in the given context.
+ * Gets a diff that sets a bot's position in the given dimension.
  * @param calc The bot calculation context.
- * @param context The context.
+ * @param dimension The context.
  * @param x The X position.
  * @param y The Y position.
  * @param index The index.
  */
 export function setPositionDiff(
     calc: BotCalculationContext,
-    context: string,
+    dimension: string,
     x?: number,
     y?: number,
     index?: number
 ): BotTags {
     let tags: BotTags = {};
     if (typeof x === 'number') {
-        tags[`${context}X`] = x;
+        tags[`${dimension}X`] = x;
     }
     if (typeof y === 'number') {
-        tags[`${context}Y`] = y;
+        tags[`${dimension}Y`] = y;
     }
     if (typeof index === 'number') {
-        tags[`${context}SortOrder`] = index;
+        tags[`${dimension}SortOrder`] = index;
     }
     return tags;
 }
@@ -804,14 +808,14 @@ export function addBotToMenu(
     id: string,
     index: number = Infinity
 ): PartialBot {
-    const context = getUserMenuId(calc, userBot);
+    const dimension = getUserMenuId(calc, userBot);
     const bots = getBotsInMenu(calc, userBot);
     const idx = isFinite(index) ? index : bots.length;
     return {
         tags: {
-            [`${context}Id`]: id,
-            [`${context}SortOrder`]: idx,
-            [context]: true,
+            [`${dimension}Id`]: id,
+            [`${dimension}SortOrder`]: idx,
+            [dimension]: true,
         },
     };
 }
@@ -825,12 +829,12 @@ export function removeBotFromMenu(
     calc: BotCalculationContext,
     userBot: Bot
 ): PartialBot {
-    const context = getUserMenuId(calc, userBot);
+    const dimension = getUserMenuId(calc, userBot);
     return {
         tags: {
-            [context]: null,
-            [`${context}Id`]: null,
-            [`${context}SortOrder`]: null,
+            [dimension]: null,
+            [`${dimension}Id`]: null,
+            [`${dimension}SortOrder`]: null,
         },
     };
 }
@@ -868,9 +872,9 @@ export function getBotTag(bot: Bot, tag: string) {
 }
 
 /**
- * Creates a new context ID.
+ * Creates a new codimensionntext ID.
  */
-export function createContextId() {
+export function createDimensionId() {
     return `${shortUuid()}`;
 }
 
@@ -911,17 +915,17 @@ export function createPrecalculatedBot(
 /**
  * Creates a new Workspace with default values.
  * @param id The ID of the new workspace.
- * @param builderContextId The tag that should be used for contexts stored on this workspace.
- * @param locked Whether the context is allowed to be accessed via AUX Player.
+ * @param builderDimensionId The tag that should be used for contexts stored on this workspace.
+ * @param locked Whether the dimension is allowed to be accessed via AUX Player.
  */
 export function createWorkspace(
     id = uuid(),
-    builderContextId: string = createContextId(),
+    builderDimensionId: string = createDimensionId(),
     locked: boolean = false
 ): Workspace {
     // checks if given context string is empty or just whitespace
-    if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
-        builderContextId = createContextId();
+    if (builderDimensionId.length === 0 || /^\s*$/.test(builderDimensionId)) {
+        builderDimensionId = createDimensionId();
     }
 
     if (locked) {
@@ -933,7 +937,7 @@ export function createWorkspace(
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
                 auxDimensionLocked: true,
-                auxDimension: builderContextId,
+                auxDimension: builderDimensionId,
             },
         };
     } else {
@@ -944,7 +948,7 @@ export function createWorkspace(
                 auxDimensionY: 0,
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
-                auxDimension: builderContextId,
+                auxDimension: builderDimensionId,
             },
         };
     }
@@ -1152,52 +1156,52 @@ export function getBotVersion(calc: BotCalculationContext, bot: Bot) {
 }
 
 /**
- * Gets the index that the given bot is at in the given context.
+ * Gets the index that the given bot is at in the given dimension.
  * @param calc The calculation context to use.
  * @param bot The bot.
- * @param workspaceId The context.
+ * @param dimension The dimension.
  */
 export function getBotIndex(
     calc: BotCalculationContext,
     bot: Bot,
-    context: string
+    dimension: string
 ): number {
-    return calculateNumericalTagValue(calc, bot, `${context}SortOrder`, 0);
+    return calculateNumericalTagValue(calc, bot, `${dimension}SortOrder`, 0);
 }
 
 /**
- * Gets the position that the given bot is at in the given context.
+ * Gets the position that the given bot is at in the given dimension.
  * @param calc The calculation context to use.
  * @param bot The bot.
- * @param context The context.
+ * @param dimension The dimension.
  */
 export function getBotPosition(
     calc: BotCalculationContext,
     bot: Bot,
-    context: string
+    dimension: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}X`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}Y`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}Z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${dimension}X`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${dimension}Y`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${dimension}Z`, 0),
     };
 }
 
 /**
- * Gets the rotation that the given bot is at in the given context.
+ * Gets the rotation that the given bot is at in the given dimension.
  * @param calc The calculation context to use.
  * @param bot The bot.
- * @param context The context.
+ * @param dimension The dimension.
  */
 export function getBotRotation(
     calc: BotCalculationContext,
     bot: Bot,
-    context: string
+    dimension: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}RotationX`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}RotationY`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}RotationZ`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${dimension}RotationX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${dimension}RotationY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${dimension}RotationZ`, 0),
     };
 }
 
@@ -1297,32 +1301,32 @@ export function getBotLabelAnchor(
 }
 
 /**
- * Determines if the given bot is a config bot for the given context.
+ * Determines if the given bot is a config bot for the given dimension.
  * @param calc The calculation context.
  * @param bot The bot to check.
- * @param context The context to check if the bot is the config of.
+ * @param dimension The dimension to check if the bot is the config of.
  */
 export function isConfigForContext(
     calc: BotCalculationContext,
     bot: Bot,
-    context: string
+    dimension: string
 ) {
-    const contexts = getBotConfigContexts(calc, bot);
-    return contexts.indexOf(context) >= 0;
+    const contexts = getBotConfigDimensions(calc, bot);
+    return contexts.indexOf(dimension) >= 0;
 }
 
 /**
- * Gets whether the context(s) that the given bot represents are locked.
+ * Gets whether the dimension(s) that the given bot represents are locked.
  * Uses at the auxDimensionLocked tag to determine whether it is locked.
- * Defaults to false if the bot is a context. Otherwise it defaults to true.
+ * Defaults to false if the bot is a dimension. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
  */
-export function isContextLocked(
+export function isDimensionLocked(
     calc: BotCalculationContext,
     bot: Bot
 ): boolean {
-    if (isContext(calc, bot)) {
+    if (isDimension(calc, bot)) {
         return calculateBooleanTagValue(calc, bot, 'auxDimensionLocked', false);
     }
     return true;
@@ -1331,21 +1335,21 @@ export function isContextLocked(
 /**
  * Gets the list of contexts that the given bot is a config bot for.
  * @param calc The calculation context.
- * @param bot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getBotConfigContexts(
+export function getBotConfigDimensions(
     calc: BotCalculationContext,
     bot: Bot
 ): string[] {
     const result = calculateBotValue(calc, bot, 'auxDimension');
-    return parseBotConfigContexts(result);
+    return parseBotConfigDimensions(result);
 }
 
 /**
  * Parses a list of context names from the given value.
  * @param value The value to parse.
  */
-export function parseBotConfigContexts(value: any): string[] {
+export function parseBotConfigDimensions(value: any): string[] {
     if (typeof value === 'string' && hasValue(value)) {
         return [value];
     } else if (typeof value === 'number' && hasValue(value)) {
@@ -1359,17 +1363,17 @@ export function parseBotConfigContexts(value: any): string[] {
 }
 
 /**
- * Gets a value from the given context bot.
+ * Gets a value from the given dimension bot.
  * @param calc The calculation context.
- * @param contextBot The bot that represents the context.
+ * @param dimensionBot The bot that represents the dimension.
  * @param name The name of the value to get.
  */
-export function getContextValue(
+export function getDimensionValue(
     calc: BotCalculationContext,
-    contextBot: Bot,
+    dimensionBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, contextBot, `auxDimension${name}`);
+    return calculateBotValue(calc, dimensionBot, `auxDimension${name}`);
 }
 
 /**
@@ -1449,11 +1453,11 @@ export function isBotListening(calc: BotCalculationContext, bot: Bot): boolean {
 }
 
 /**
- * Gets whether the given bot's context is movable.
+ * Gets whether the given bot's dimension is movable.
  * @param calc The calculation context.
  * @param bot The bot to check.
  */
-export function isContextMovable(
+export function isDimensionMovable(
     calc: BotCalculationContext,
     bot: Bot
 ): boolean {
@@ -1466,89 +1470,74 @@ export function isContextMovable(
 }
 
 /**
- * Gets the position that the context should be at using the given bot.
+ * Gets the position that the dimension should be at using the given bot.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextPosition(
+export function getDimensionPosition(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextBot, `auxDimensionX`, 0),
-        y: calculateNumericalTagValue(calc, contextBot, `auxDimensionY`, 0),
-        z: calculateNumericalTagValue(calc, contextBot, `auxDimensionZ`, 0),
+        x: calculateNumericalTagValue(calc, bot, `auxDimensionX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `auxDimensionY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `auxDimensionZ`, 0),
     };
 }
 
 /**
- * Gets the rotation that the context should be at using the given bot.
+ * Gets the rotation that the dimension should be at using the given bot.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextRotation(
+export function getDimensionRotation(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(
-            calc,
-            contextBot,
-            `auxDimensionRotationX`,
-            0
-        ),
-        y: calculateNumericalTagValue(
-            calc,
-            contextBot,
-            `auxDimensionRotationY`,
-            0
-        ),
-        z: calculateNumericalTagValue(
-            calc,
-            contextBot,
-            `auxDimensionRotationZ`,
-            0
-        ),
+        x: calculateNumericalTagValue(calc, bot, `auxDimensionRotationX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `auxDimensionRotationY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `auxDimensionRotationZ`, 0),
     };
 }
 
 /**
- * Gets whether the context is minimized.
+ * Gets whether the dimension is minimized.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextMinimized(
+export function getDimensionMinimized(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): boolean {
-    return getContextValue(calc, contextBot, 'SurfaceMinimized');
+    return getDimensionValue(calc, bot, 'SurfaceMinimized');
 }
 
 /**
- * Gets the color of the context.
+ * Gets the color of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextColor(
+export function getDimensionColor(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): string {
-    return getContextValue(calc, contextBot, 'Color');
+    return getDimensionValue(calc, bot, 'Color');
 }
 
 /**
- * Gets the size of the context.
+ * Gets the size of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextSize(
+export function getDimensionSize(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): number {
-    if (getContextVisualizeMode(calc, contextBot) === 'surface') {
+    if (getDimensionVisualizeMode(calc, bot) === 'surface') {
         return calculateNumericalTagValue(
             calc,
-            contextBot,
+            bot,
             `auxDimensionSurfaceSize`,
             DEFAULT_WORKSPACE_SIZE
         );
@@ -1561,7 +1550,7 @@ export function getContextSize(
  * @param calc The calculation context.
  * @param bot The bot.
  */
-export function getContextVisualizeMode(
+export function getDimensionVisualizeMode(
     calc: BotCalculationContext,
     bot: Bot
 ): ContextVisualizeMode {
@@ -1577,15 +1566,15 @@ export function getContextVisualizeMode(
 }
 
 /**
- * Gets the grid of the context.
+ * Gets the grid of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getBuilderContextGrid(
+export function getBuilderDimensionGrid(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): { [key: string]: number } {
-    const tags = tagsOnBot(contextBot);
+    const tags = tagsOnBot(bot);
     const gridTags = tags.filter(
         t => t.indexOf('auxDimension.surface.grid.') === 0 && t.indexOf(':') > 0
     );
@@ -1594,24 +1583,24 @@ export function getBuilderContextGrid(
     for (let tag of gridTags) {
         val[
             tag.substr('auxDimension.surface.grid.'.length)
-        ] = calculateNumericalTagValue(calc, contextBot, tag, undefined);
+        ] = calculateNumericalTagValue(calc, bot, tag, undefined);
     }
 
     return val;
 }
 
 /**
- * Gets the height of the specified grid on the context.
+ * Gets the height of the specified grid on the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
- * @param key The key for the grid position to lookup in the context grid.
+ * @param bot The bot that represents the dimension.
+ * @param key The key for the grid position to lookup in the dimension grid.
  */
-export function getContextGridHeight(
+export function getDimensionGridHeight(
     calc: BotCalculationContext,
-    contextBot: Bot,
+    bot: Bot,
     key: string
 ): number {
-    let contextGrid = getBuilderContextGrid(calc, contextBot);
+    let contextGrid = getBuilderDimensionGrid(calc, bot);
     if (contextGrid && contextGrid[key]) {
         if (contextGrid[key]) {
             return contextGrid[key];
@@ -1622,75 +1611,74 @@ export function getContextGridHeight(
 }
 
 /**
- * Gets the grid scale of the context.
+ * Gets the grid scale of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextGridScale(
+export function getDimensionGridScale(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'GridScale');
+    return getDimensionValue(calc, bot, 'GridScale');
 }
 
 /**
- * Gets the scale of the context.
+ * Gets the scale of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextScale(
+export function getDimensionScale(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): number {
     return (
-        getContextValue(calc, contextBot, 'SurfaceScale') ||
-        DEFAULT_WORKSPACE_SCALE
+        getDimensionValue(calc, bot, 'SurfaceScale') || DEFAULT_WORKSPACE_SCALE
     );
 }
 
 /**
- * Gets the default height of the context.
+ * Gets the default height of the dimension.
  * @param calc The calculation context to use.
- * @param contextBot The bot that represents the context.
+ * @param bot The bot that represents the dimension.
  */
-export function getContextDefaultHeight(
+export function getDimensionDefaultHeight(
     calc: BotCalculationContext,
-    contextBot: Bot
+    bot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'SurfaceDefaultHeight');
+    return getDimensionValue(calc, bot, 'SurfaceDefaultHeight');
 }
 
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
  * The returned list is in the order of their indexes.
  * @param calc The bot calculation context to use.
- * @param context The ID of the context that the objects need to be on.
+ * @param dimension The ID of the dimension that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
-export function objectsAtContextGridPosition(
+export function objectsAtDimensionGridPosition(
     calc: BotCalculationContext,
-    context: string,
+    dimension: string,
     position: { x: number; y: number }
 ): Bot[] {
     return cacheFunction(
         calc,
-        'objectsAtContextGridPosition',
+        'objectsAtDimensionGridPosition',
         () => {
             const botsAtPosition = calc.lookup.query(
                 calc,
-                [context, `${context}X`, `${context}Y`],
+                [dimension, `${dimension}X`, `${dimension}Y`],
                 [true, position.x, position.y],
                 [undefined, 0, 0]
             );
             return <Bot[]>(
                 sortBy(
                     botsAtPosition.filter(o => !isUserBot(o)),
-                    o => getBotIndex(calc, o, context),
+                    o => getBotIndex(calc, o, dimension),
                     o => o.id
                 )
             );
         },
-        context,
+        dimension,
         position.x,
         position.y
     );
@@ -1700,18 +1688,18 @@ export function objectsAtContextGridPosition(
  * Calculates whether the given bot should be stacked onto another bot or if
  * it should be combined with another bot.
  * @param calc The bot calculation context.
- * @param context The context.
+ * @param dimension The dimension.
  * @param gridPosition The grid position that the bot is being dragged to.
  * @param bot The bot that is being dragged.
  */
 export function calculateBotDragStackPosition(
     calc: BotCalculationContext,
-    context: string,
+    dimension: string,
     gridPosition: { x: number; y: number },
     ...bots: (Bot | BotTags)[]
 ) {
     const objs = differenceBy(
-        objectsAtContextGridPosition(calc, context, gridPosition),
+        objectsAtDimensionGridPosition(calc, dimension, gridPosition),
         bots,
         f => f.id
     );
@@ -1732,7 +1720,7 @@ export function calculateBotDragStackPosition(
         ((isBotTags(firstBot) || isBotStackable(calc, firstBot)) &&
             (objs.length === 0 || isBotStackable(calc, objs[0])));
 
-    const index = nextAvailableObjectIndex(calc, context, bots, objs);
+    const index = nextAvailableObjectIndex(calc, dimension, bots, objs);
 
     return {
         merge: canMerge,
@@ -1745,14 +1733,14 @@ export function calculateBotDragStackPosition(
 /**
  * Calculates the next available index that an object can be placed at on the given workspace at the
  * given grid position.
- * @param context The context.
+ * @param dimension The dimension.
  * @param gridPosition The grid position that the next available index should be found for.
  * @param bots The bots that we're trying to find the next index for.
  * @param objs The objects at the same grid position.
  */
 export function nextAvailableObjectIndex(
     calc: BotCalculationContext,
-    context: string,
+    dimension: string,
     bots: (Bot | BotTags)[],
     objs: Bot[]
 ): number {
@@ -1760,7 +1748,7 @@ export function nextAvailableObjectIndex(
 
     const indexes = except.map(o => ({
         object: o,
-        index: getBotIndex(calc, o, context),
+        index: getBotIndex(calc, o, dimension),
     }));
 
     // TODO: Improve to handle other scenarios like:
@@ -1810,7 +1798,7 @@ export function duplicateBot(
 ): Object {
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
-    const tagsToRemove = filterWellKnownAndContextTags(calc, tags);
+    const tagsToRemove = filterWellKnownAndDimensionTags(calc, tags);
     tagsToRemove.forEach(t => {
         delete copy.tags[t];
     });
@@ -1822,36 +1810,36 @@ export function duplicateBot(
 }
 
 /**
- * Filters the given list of tags by whether they are well known or used in a context.
+ * Filters the given list of tags by whether they are well known or used in a dimension.
  * @param calc The bot calculation context.
  * @param tags The list of tags to filter.
  */
-export function filterWellKnownAndContextTags(
+export function filterWellKnownAndDimensionTags(
     calc: BotCalculationContext,
     tags: string[]
 ) {
-    const contextsToRemove = getContexts(calc);
+    const contextsToRemove = getDimensions(calc);
     const tagsToRemove = tags.filter(t =>
-        isWellKnownOrContext(t, contextsToRemove)
+        isWellKnownOrDimension(t, contextsToRemove)
     );
     return tagsToRemove;
 }
 
 /**
- * Gets the list of contexts that the given calculation context contains.
+ * Gets the list of contexts that the given calculation dimension contains.
  * @param calc The bot calculation context.
  */
-export function getContexts(calc: BotCalculationContext) {
-    return union(...calc.objects.map(o => getBotConfigContexts(calc, o)));
+export function getDimensions(calc: BotCalculationContext) {
+    return union(...calc.objects.map(o => getBotConfigDimensions(calc, o)));
 }
 
 /**
- * Determines if the given tag is well known or in one of the given contexts.
+ * Determines if the given tag is well known or in one of the given dimensions.
  * @param tag The tag to check.
- * @param contexts The contexts to check the tag against.
+ * @param dimensions The dimensions to check the tag against.
  */
-export function isWellKnownOrContext(tag: string, contexts: string[]): any {
-    return isTagWellKnown(tag) || contexts.some(c => tag.indexOf(c) === 0);
+export function isWellKnownOrDimension(tag: string, dimensions: string[]): any {
+    return isTagWellKnown(tag) || dimensions.some(c => tag.indexOf(c) === 0);
 }
 
 /**
@@ -1902,7 +1890,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: uri.host,
-                    context: split[0],
+                    dimension: split[0],
                 };
             } else {
                 return {
@@ -1914,7 +1902,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             return {
                 success: true,
                 host: uri.host,
-                context: split[0],
+                dimension: split[0],
                 channel: split.slice(1).join('/'),
             };
         }
@@ -1933,13 +1921,13 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: split[0],
-                    context: split[1],
+                    dimension: split[1],
                     channel: split.slice(2).join('/'),
                 };
             } else {
                 return {
                     success: true,
-                    context: split[0],
+                    dimension: split[0],
                     channel: split.slice(1).join('/'),
                 };
             }
@@ -2148,7 +2136,7 @@ export function getBotChannel(
 export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
-            isBotInContext(calc, o, 'aux.channels') &&
+            isBotInDimension(calc, o, 'aux.channels') &&
             calculateBotValue(calc, o, 'auxChannel') === id
         );
     });
@@ -2191,35 +2179,35 @@ export function getConnectedDevices(
 }
 
 /**
- * Returns wether or not the given bot resides in the given context id.
+ * Returns wether or not the given bot resides in the given dimension id.
  * @param context The bot calculation context to run formulas with.
  * @param bot The bot.
- * @param contextId The id of the context that we are asking if the bot is in.
+ * @param dimensionId The id of the dimension that we are asking if the bot is in.
  */
-export function isBotInContext(
+export function isBotInDimension(
     context: BotCalculationContext,
     bot: Object,
-    contextId: string
+    dimensionId: string
 ): boolean {
-    if (!contextId) return false;
+    if (!dimensionId) return false;
 
     let result: boolean;
 
-    let contextValue = calculateBotValue(context, bot, contextId.valueOf());
+    let dimensionValue = calculateBotValue(context, bot, dimensionId.valueOf());
 
     if (
-        typeof contextValue === 'object' &&
-        typeof contextValue.valueOf === 'function'
+        typeof dimensionValue === 'object' &&
+        typeof dimensionValue.valueOf === 'function'
     ) {
-        contextValue = contextValue.valueOf();
+        dimensionValue = dimensionValue.valueOf();
     }
 
-    if (typeof contextValue === 'string') {
-        result = contextValue === 'true';
-    } else if (typeof contextValue === 'number') {
+    if (typeof dimensionValue === 'string') {
+        result = dimensionValue === 'true';
+    } else if (typeof dimensionValue === 'number') {
         result = true;
     } else {
-        result = contextValue === true;
+        result = dimensionValue === true;
     }
 
     if (!result && hasValue(bot.tags['_auxUser'])) {
@@ -2228,34 +2216,34 @@ export function isBotInContext(
             bot,
             '_auxUserDimension'
         );
-        result = userContextValue == contextId;
+        result = userContextValue == dimensionId;
     }
 
     return result;
 }
 
 /**
- * Gets the sort order that the given bot should appear in the given context.
+ * Gets the sort order that the given bot should appear in the given dimension.
  * @param context The bot calculation context.
  * @param bot The bot.
- * @param contextId The ID of the context that we're getting the sort order for.
+ * @param dimensionId The ID of the dimension that we're getting the sort order for.
  */
-export function botContextSortOrder(
+export function botDimensionSortOrder(
     context: BotCalculationContext,
     bot: Bot,
-    contextId: string
+    dimensionId: string
 ): number | string {
-    if (!contextId) return NaN;
+    if (!dimensionId) return NaN;
 
-    const contextValue = calculateBotValue(
+    const dimensionValue = calculateBotValue(
         context,
         bot,
-        `${contextId}SortOrder`
+        `${dimensionId}SortOrder`
     );
-    if (typeof contextValue === 'string') {
-        return contextValue;
-    } else if (typeof contextValue === 'number') {
-        return contextValue;
+    if (typeof dimensionValue === 'string') {
+        return dimensionValue;
+    } else if (typeof dimensionValue === 'number') {
+        return dimensionValue;
     } else {
         return 0;
     }

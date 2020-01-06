@@ -53,13 +53,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (keysDown.length > 0) {
                 sim.helper.action('onKeyDown', null, {
                     keys: keysDown,
-                    context: sim.parsedId.context,
+                    context: sim.parsedId.dimension,
                 });
             }
             if (keysUp.length > 0) {
                 sim.helper.action('onKeyUp', null, {
                     keys: keysUp,
-                    context: sim.parsedId.context,
+                    context: sim.parsedId.dimension,
                 });
             }
         }
@@ -159,28 +159,28 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     handlePointerEnter(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerEnter', [bot], {
-            dimension: simulation.parsedId.context,
+            dimension: simulation.parsedId.dimension,
             bot: bot,
         });
     }
 
     handlePointerExit(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [bot], {
-            dimension: simulation.parsedId.context,
+            dimension: simulation.parsedId.dimension,
             bot: bot,
         });
     }
 
     handlePointerDown(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [bot], {
-            dimension: simulation.parsedId.context,
+            dimension: simulation.parsedId.dimension,
             bot: bot,
         });
     }
 
     handlePointerUp(bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerUp', [bot], {
-            dimension: simulation.parsedId.context,
+            dimension: simulation.parsedId.dimension,
             bot: bot,
         });
     }

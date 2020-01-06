@@ -3,7 +3,7 @@ import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     calculateGridScale,
-    getBuilderContextGrid,
+    getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';

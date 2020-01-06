@@ -1,5 +1,5 @@
 import {
-    botsInContext,
+    botsInDimension,
     getBotChannel,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
@@ -9,7 +9,7 @@ import {
  * @param calc
  */
 export function getChannelIds(calc: BotCalculationContext): string[] {
-    const bots = botsInContext(calc, 'aux.channels');
+    const bots = botsInDimension(calc, 'aux.channels');
     const channels = bots
         .map(f => getBotChannel(calc, f))
         .filter(channel => channel);

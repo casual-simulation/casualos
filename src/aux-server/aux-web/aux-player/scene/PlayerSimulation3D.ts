@@ -3,7 +3,7 @@ import {
     BotCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    isContextLocked,
+    isDimensionLocked,
     calculateGridScale,
     PrecalculatedBot,
     toast,
@@ -410,7 +410,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
         const result = doesBotDefinePlayerContext(bot, this.dimension, calc);
-        const contextLocked = isContextLocked(calc, bot);
+        const contextLocked = isDimensionLocked(calc, bot);
         if (result.matchFound && !contextLocked) {
             // Create ContextGroup3D for this bot that we will use to render all bots in the context.
             this._contextGroup = new ContextGroup3D(

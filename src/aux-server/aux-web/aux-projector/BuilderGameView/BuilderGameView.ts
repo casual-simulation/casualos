@@ -4,8 +4,8 @@ import Component from 'vue-class-component';
 import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 
 import {
-    getBotConfigContexts,
-    createContextId,
+    getBotConfigDimensions,
+    createDimensionId,
     AuxCausalTree,
     AuxOp,
     createWorkspace,

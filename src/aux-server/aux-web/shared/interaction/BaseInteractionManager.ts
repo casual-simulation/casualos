@@ -10,7 +10,7 @@ import {
     Object,
     AuxBot,
     BotCalculationContext,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     Bot,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';

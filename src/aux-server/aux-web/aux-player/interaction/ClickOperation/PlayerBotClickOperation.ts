@@ -6,7 +6,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
     BotCalculationContext,
     getBotPosition,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     getBotIndex,
     duplicateBot,
     Bot,
@@ -62,7 +62,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         const context = bot3D.context;
         const position = getBotPosition(calc, bot3D.bot, context);
         if (position) {
-            const objects = objectsAtContextGridPosition(
+            const objects = objectsAtDimensionGridPosition(
                 calc,
                 context,
                 position

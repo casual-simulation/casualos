@@ -6,7 +6,7 @@ import {
     hasValue,
     calculateBotValue,
     AuxDomain,
-    getBotConfigContexts,
+    getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import { Object3D, Group } from 'three';

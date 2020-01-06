@@ -7,7 +7,7 @@ import {
     BotCalculationContext,
     botRemoved,
     calculateDestroyBotEvents,
-    removeFromContextDiff,
+    removeFromDimensionDiff,
     botUpdated,
     action,
     calculateActionEvents,
@@ -251,7 +251,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             );
             events.push(
                 botUpdated(bots[i].id, {
-                    tags: removeFromContextDiff(calc, this._context),
+                    tags: removeFromDimensionDiff(calc, this._context),
                 })
             );
         }

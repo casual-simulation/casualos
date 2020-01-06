@@ -7,7 +7,7 @@ import {
     PartialBot,
     BotAction,
     BotCalculationContext,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     isBotStackable,
     getBotIndex,
     botRemoved,

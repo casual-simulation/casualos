@@ -2,10 +2,10 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import {
     AuxObject,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     BotCalculationContext,
     Object,
-    isContext,
+    isDimension,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';

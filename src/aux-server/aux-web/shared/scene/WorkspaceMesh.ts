@@ -16,19 +16,19 @@ import {
     AuxDomain,
     BotCalculationContext,
     calculateBotValue,
-    getContextSize,
-    getContextDefaultHeight,
-    getContextScale,
-    getBuilderContextGrid,
-    getContextGridScale,
+    getDimensionSize,
+    getDimensionDefaultHeight,
+    getDimensionScale,
+    getBuilderDimensionGrid,
+    getDimensionGridScale,
     isMinimized,
-    isContext,
-    getContextColor,
+    isDimension,
+    getDimensionColor,
     DEFAULT_WORKSPACE_COLOR,
     hasValue,
-    getContextGridHeight,
+    getDimensionGridHeight,
     calculateGridScale,
-    getContextVisualizeMode,
+    getDimensionVisualizeMode,
     isUserBot,
     Bot,
 } from '@casual-simulation/aux-common';
@@ -172,8 +172,8 @@ export class WorkspaceMesh extends GameObject {
         this.workspace = workspace || prev;
 
         this.visible =
-            isContext(calc, this.workspace) &&
-            getContextVisualizeMode(calc, this.workspace) === 'surface';
+            isDimension(calc, this.workspace) &&
+            getDimensionVisualizeMode(calc, this.workspace) === 'surface';
         this.container.visible = !isMinimized(calc, this.workspace);
         this.miniHex.visible = !this.container.visible;
 
@@ -203,7 +203,7 @@ export class WorkspaceMesh extends GameObject {
         }
 
         // Hex color.
-        const colorValue = getContextColor(calc, this.workspace);
+        const colorValue = getDimensionColor(calc, this.workspace);
         const color: Color = hasValue(colorValue)
             ? new Color(colorValue)
             : new Color(DEFAULT_WORKSPACE_COLOR);
@@ -238,15 +238,15 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(this.hexGrid);
         }
 
-        const size = getContextSize(calc, this.workspace);
+        const size = getDimensionSize(calc, this.workspace);
 
-        let centerHeight: number = getContextGridHeight(
+        let centerHeight: number = getDimensionGridHeight(
             calc,
             this.workspace,
             '0:0'
         );
-        const defaultHeight = getContextDefaultHeight(calc, this.workspace);
-        const scale = getContextScale(calc, this.workspace);
+        const defaultHeight = getDimensionDefaultHeight(calc, this.workspace);
+        const scale = getDimensionScale(calc, this.workspace);
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
             size,
             centerHeight || DEFAULT_WORKSPACE_HEIGHT,
@@ -311,7 +311,7 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(...this.squareGrids);
         }
 
-        const gridScale = getContextGridScale(calc, this.workspace);
+        const gridScale = getDimensionGridScale(calc, this.workspace);
         checker.tileRatio = gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
@@ -331,13 +331,13 @@ export class WorkspaceMesh extends GameObject {
         if (!previous) {
             return true;
         } else {
-            const currentSize = getContextSize(calc, current);
-            const previousSize = getContextSize(calc, previous);
+            const currentSize = getDimensionSize(calc, current);
+            const previousSize = getDimensionSize(calc, previous);
             if (currentSize !== previousSize) {
                 return true;
             } else {
-                const currentGrid = getBuilderContextGrid(calc, current);
-                const previousGrid = getBuilderContextGrid(calc, previous);
+                const currentGrid = getBuilderDimensionGrid(calc, current);
+                const previousGrid = getBuilderDimensionGrid(calc, previous);
 
                 return !isEqual(currentGrid, previousGrid);
             }

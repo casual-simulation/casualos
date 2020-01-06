@@ -6,11 +6,11 @@ import {
     BotCalculationContext,
     getBotIndex,
     getBotPosition,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     isBotMovable,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     isMinimized,
-    isContextMovable,
+    isDimensionMovable,
     getBotDragMode,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
@@ -73,7 +73,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             );
             const position = getBotPosition(calc, bot3D.bot, context);
             if (botWorkspace && position) {
-                const objects = objectsAtContextGridPosition(
+                const objects = objectsAtDimensionGridPosition(
                     calc,
                     context,
                     position
@@ -140,9 +140,9 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
     protected _canDrag(calc: BotCalculationContext): boolean {
         if (this._bot3D instanceof ContextGroup3D) {
-            let tags = getBotConfigContexts(calc, this._bot);
+            let tags = getBotConfigDimensions(calc, this._bot);
             return (
-                isContextMovable(calc, this._bot) &&
+                isDimensionMovable(calc, this._bot) &&
                 isMinimized(calc, this._bot) &&
                 tags.length > 0
             );

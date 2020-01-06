@@ -2,8 +2,8 @@ import { BotHelper } from '@casual-simulation/aux-vm';
 import {
     Bot,
     doBotsAppearEqual,
-    getContexts,
-    isWellKnownOrContext,
+    getDimensions,
+    isWellKnownOrDimension,
     PrecalculatedBot,
     createPrecalculatedBot,
     BotTags,
@@ -52,7 +52,7 @@ export class RecentBotManager {
      */
     addBotDiff(bot: Bot | BotTags, updateTags: boolean = false) {
         const calc = this._helper.createContext();
-        const contexts = getContexts(calc);
+        const contexts = getDimensions(calc);
 
         let tags: BotTags;
         if (isBotTags(bot)) {
@@ -64,7 +64,7 @@ export class RecentBotManager {
         let finalTags: BotTags = {};
         let hasTag = false;
         for (let tag in tags) {
-            if (!isWellKnownOrContext(tag, contexts)) {
+            if (!isWellKnownOrDimension(tag, contexts)) {
                 finalTags[tag] = tags[tag];
                 hasTag = true;
             }

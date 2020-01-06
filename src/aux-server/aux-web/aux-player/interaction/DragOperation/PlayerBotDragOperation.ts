@@ -4,7 +4,7 @@ import {
     BotCalculationContext,
     getBotDragMode,
     BotDragMode,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     calculateBotDragStackPosition,
     BotTags,
 } from '@casual-simulation/aux-common';

@@ -38,7 +38,7 @@ export default class PlayerHome extends Vue {
     @Watch('context')
     async onContextChanged() {
         if (
-            appManager.simulationManager.primary.parsedId.context !==
+            appManager.simulationManager.primary.parsedId.dimension !==
             this.context
         ) {
             await appManager.simulationManager.primary.helper.transaction(

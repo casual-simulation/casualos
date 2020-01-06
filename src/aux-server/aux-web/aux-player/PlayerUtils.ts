@@ -2,7 +2,7 @@ import {
     Bot,
     BotCalculationContext,
     calculateBotValue,
-    getBotConfigContexts,
+    getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
@@ -22,7 +22,7 @@ export function doesBotDefinePlayerContext(
     context: string,
     calc: BotCalculationContext
 ): PlayerContextSearchResult {
-    const contexts = getBotConfigContexts(calc, bot);
+    const contexts = getBotConfigDimensions(calc, bot);
     return {
         playerContexts: contexts,
         matchFound: contexts.indexOf(context) >= 0,

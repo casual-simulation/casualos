@@ -6,7 +6,7 @@ import {
     BotAction,
     BotTags,
     calculateBotDragStackPosition,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
 } from '@casual-simulation/aux-common/bots';
 import {
     createBot,

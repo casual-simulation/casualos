@@ -3,10 +3,10 @@ import {
     calculateBotValue,
     BotCalculationContext,
     TagUpdatedEvent,
-    isBotInContext,
+    isBotInDimension,
     getBotPosition,
     getBotIndex,
-    botContextSortOrder,
+    botDimensionSortOrder,
     hasValue,
     isSimulation,
     getBotChannel,
@@ -79,7 +79,8 @@ export class SimulationContext {
     botAdded(bot: Bot, calc: BotCalculationContext) {
         const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
+            isBotInDimension(calc, bot, this.context) &&
+            isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
             this._addBot(bot, calc);
@@ -95,7 +96,8 @@ export class SimulationContext {
     botUpdated(bot: Bot, updates: Set<string>, calc: BotCalculationContext) {
         const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
+            isBotInDimension(calc, bot, this.context) &&
+            isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
             this._addBot(bot, calc);
@@ -150,7 +152,7 @@ export class SimulationContext {
 
     private _resortItems(calc: BotCalculationContext): void {
         this.items = sortBy(this.bots, f =>
-            botContextSortOrder(calc, f, this.context)
+            botDimensionSortOrder(calc, f, this.context)
         ).map(f => {
             return {
                 bot: f,

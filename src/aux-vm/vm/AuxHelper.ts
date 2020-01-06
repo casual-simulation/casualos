@@ -18,9 +18,9 @@ import {
     calculateActionEvents,
     BotSandboxContext,
     PasteStateAction,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     createWorkspace,
-    createContextId,
+    createDimensionId,
     duplicateBot,
     cleanBot,
     Sandbox,
@@ -29,10 +29,10 @@ import {
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
-    addToContextDiff,
+    addToDimensionDiff,
     botAdded,
     botUpdated,
-    filterWellKnownAndContextTags,
+    filterWellKnownAndDimensionTags,
     tagsOnBot,
     calculateActionResults,
     ON_ACTION_ACTION_NAME,
@@ -291,14 +291,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
-        const userSimulationsContext = `_user_${user.username}_simulations`;
+        const userUniversesContext = `_user_${user.username}_universes`;
         if (!userBot) {
             await this.createBot(user.id, {
                 [USERS_CONTEXT]: true,
                 ['_auxUser']: user.username,
                 ['_auxUserInventoryDimension']: userInventoryContext,
                 ['_auxUserMenuDimension']: userMenuContext,
-                ['_auxUserUniversesDimension']: userSimulationsContext,
+                ['_auxUserUniversesDimension']: userUniversesContext,
             });
         } else {
             if (!userBot.tags['_auxUserMenuDimension']) {
@@ -318,7 +318,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             if (!userBot.tags['_auxUserUniversesDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserUniversesDimension']: userSimulationsContext,
+                        ['_auxUserUniversesDimension']: userUniversesContext,
                     },
                 });
             }
@@ -328,7 +328,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async createOrUpdateUserContextBot() {
         const calc = this.createContext();
         const contextBot = this.objects.find(
-            b => getBotConfigContexts(calc, b).indexOf(USERS_CONTEXT) >= 0
+            b => getBotConfigDimensions(calc, b).indexOf(USERS_CONTEXT) >= 0
         );
         if (contextBot) {
             return;
@@ -622,12 +622,12 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         // Preserve positions from old context
         for (let oldBot of oldBots) {
             const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
             let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
-                    ...addToContextDiff(
+                    ...addToDimensionDiff(
                         newCalc,
                         event.options.context,
                         event.options.x,
@@ -649,16 +649,16 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         newCalc: BotSandboxContext
     ) {
         const oldContextBots = oldBots.filter(
-            f => getBotConfigContexts(oldCalc, f).length > 0
+            f => getBotConfigDimensions(oldCalc, f).length > 0
         );
         const oldContextBot =
             oldContextBots.length > 0 ? oldContextBots[0] : null;
         const oldContexts = oldContextBot
-            ? getBotConfigContexts(oldCalc, oldContextBot)
+            ? getBotConfigDimensions(oldCalc, oldContextBot)
             : [];
         let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
         let events: BotAction[] = [];
-        const context = createContextId();
+        const context = createDimensionId();
         let workspace: Bot;
         if (oldContextBot) {
             workspace = duplicateBot(oldCalc, oldContextBot, {
@@ -683,12 +683,12 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 continue;
             }
             const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
             let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
-                    ...addToContextDiff(
+                    ...addToDimensionDiff(
                         newCalc,
                         context,
                         oldBot.tags[`${oldContext}X`],

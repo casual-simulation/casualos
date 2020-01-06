@@ -12,7 +12,7 @@ import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-    botsInContext,
+    botsInDimension,
     isSimulation,
     getBotChannel,
     calculateDestroyBotEvents,
@@ -327,7 +327,7 @@ export default class PlayerApp extends Vue {
 
                 this.loggedIn = true;
                 this.session = botManager.parsedId.channel;
-                this.context = botManager.parsedId.context;
+                this.context = botManager.parsedId.dimension;
 
                 subs.push(
                     new Subscription(() => {
@@ -601,7 +601,7 @@ export default class PlayerApp extends Vue {
                     appManager.simulationManager.simulations.forEach(sim => {
                         sim.parsedId = {
                             ...sim.parsedId,
-                            context: e.context,
+                            dimension: e.context,
                         };
                     });
 
@@ -664,17 +664,17 @@ export default class PlayerApp extends Vue {
                     } else {
                         info.synced = true;
 
-                        if (simulation.parsedId.context) {
+                        if (simulation.parsedId.dimension) {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
                                     _auxUserDimension:
-                                        simulation.parsedId.context,
+                                        simulation.parsedId.dimension,
                                 },
                             });
                         }
 
-                        if (simulation.parsedId.context) {
+                        if (simulation.parsedId.dimension) {
                             let id = simulation.id;
                             if (id.includes('/')) {
                                 id = id.split('/')[1];
@@ -936,7 +936,7 @@ export default class PlayerApp extends Vue {
             appManager.simulationManager.primary.parsedId.channel ||
             previousChannel;
         const context =
-            appManager.simulationManager.primary.parsedId.context ||
+            appManager.simulationManager.primary.parsedId.dimension ||
             previousContext;
         if (channel && context) {
             let route = {

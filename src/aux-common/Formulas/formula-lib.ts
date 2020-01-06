@@ -58,7 +58,7 @@ import {
     isBot,
     // isFormulaObject,
     // unwrapProxy,
-    isBotInContext,
+    isBotInDimension,
     tagsOnBot,
     isDestroyable,
     isInUsernameList,
@@ -1195,7 +1195,11 @@ function hasBotInInventory(bots: Bot | Bot[]): boolean {
     }
 
     return every(bots, f =>
-        isBotInContext(getCalculationContext(), <any>f, getInventoryDimension())
+        isBotInDimension(
+            getCalculationContext(),
+            <any>f,
+            getInventoryDimension()
+        )
     );
 }
 

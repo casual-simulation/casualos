@@ -5,12 +5,12 @@ import {
     BotCalculationContext,
     Bot,
     calculateGridScale,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     getBotPosition,
     getBotRotation,
-    getContextScale,
+    getDimensionScale,
     isUserBot,
-    getContextGridHeight,
+    getDimensionGridHeight,
     cacheFunction,
     calculateBooleanTagValue,
     isBotStackable,
@@ -76,7 +76,7 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
                 this._positionUpdated(currentGridPos) ||
                 this._heightUpdated(currentHeight)
             ) {
-                const objectsAtPosition = objectsAtContextGridPosition(
+                const objectsAtPosition = objectsAtDimensionGridPosition(
                     calc,
                     this.bot3D.context,
                     this._lastPos || currentGridPos
@@ -108,7 +108,7 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
 
     botRemoved(calc: BotCalculationContext): void {
         if (this._lastPos) {
-            const objectsAtPosition = objectsAtContextGridPosition(
+            const objectsAtPosition = objectsAtDimensionGridPosition(
                 calc,
                 this.bot3D.context,
                 this._lastPos
@@ -193,7 +193,7 @@ export function calculateObjectPositionInGrid(
     if (!isBotStackable(context, bot.bot)) {
         totalScales = 0;
     } else {
-        const objectsAtPosition = objectsAtContextGridPosition(
+        const objectsAtPosition = objectsAtDimensionGridPosition(
             context,
             bot.context,
             position
@@ -223,13 +223,13 @@ export function calculateObjectPositionInGrid(
     if (bot.contextGroup instanceof BuilderGroup3D) {
         if (!isUserBot(bot.bot)) {
             // Offset local position with hex grid height.
-            let hexScale = getContextScale(context, bot.contextGroup.bot);
+            let hexScale = getDimensionScale(context, bot.contextGroup.bot);
             let axial = realPosToGridPos(
                 new Vector2(localPosition.x, localPosition.z),
                 hexScale
             );
             let key = posToKey(axial);
-            let height = getContextGridHeight(
+            let height = getDimensionGridHeight(
                 context,
                 bot.contextGroup.bot,
                 '0:0'

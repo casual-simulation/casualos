@@ -22,19 +22,19 @@ import {
     objectsAtWorkspace,
     isMinimized,
     BotCalculationContext,
-    getContextMinimized,
-    getBuilderContextGrid,
-    getContextSize,
-    getContextScale,
-    getContextDefaultHeight,
+    getDimensionMinimized,
+    getBuilderDimensionGrid,
+    getDimensionSize,
+    getDimensionScale,
+    getDimensionDefaultHeight,
     createBot,
-    isContext,
-    getBotConfigContexts,
-    botsInContext,
+    isDimension,
+    getBotConfigDimensions,
+    botsInDimension,
     AuxObject,
     toast,
     PartialBot,
-    isVisibleContext,
+    isVisibleDimension,
 } from '@casual-simulation/aux-common';
 import { BuilderBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderBotClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -286,7 +286,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (!bot) {
             return false;
         }
-        const size = getContextSize(calc, bot.bot);
+        const size = getDimensionSize(calc, bot.bot);
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
@@ -383,8 +383,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 const workspace = this.findWorkspaceForIntersection(hit);
                 if (
                     workspace &&
-                    isContext(calc, workspace.bot) &&
-                    !getContextMinimized(calc, workspace.bot)
+                    isDimension(calc, workspace.bot) &&
+                    !getDimensionMinimized(calc, workspace.bot)
                 ) {
                     const workspaceMesh = workspace.surface;
                     const closest = workspaceMesh.closestTileToPoint(point);
@@ -429,10 +429,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const builderContexts = flatMap(
                 builderSimulations,
                 s => s.contexts
-            ).filter(c => isContext(calc, c.bot));
+            ).filter(c => isDimension(calc, c.bot));
 
             const builderActiveContexts = builderContexts.filter(c =>
-                isVisibleContext(calc, c.bot)
+                isVisibleDimension(calc, c.bot)
             );
 
             const surfaceObjects = flatMap(
@@ -493,12 +493,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (gameObject) {
             if (
                 gameObject instanceof ContextGroup3D &&
-                isContext(calc, gameObject.bot)
+                isDimension(calc, gameObject.bot)
             ) {
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getBuilderContextGrid(calc, gameObject.bot);
+                const currentGrid = getBuilderDimensionGrid(
+                    calc,
+                    gameObject.bot
+                );
                 const currentTile = currentGrid ? currentGrid['0:0'] : null;
-                const defaultHeight = getContextDefaultHeight(
+                const defaultHeight = getDimensionDefaultHeight(
                     calc,
                     gameObject.bot
                 );
@@ -547,8 +550,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _shrinkWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
-        if (bot && isContext(calc, bot.bot)) {
-            const size = getContextSize(calc, bot.bot);
+        if (bot && isDimension(calc, bot.bot)) {
+            const size = getDimensionSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
                     [`auxDimensionSurfaceSize`]: (size || 0) - 1,
@@ -580,7 +583,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param bot
      */
     private _toggleWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
-        if (bot && isContext(calc, bot.bot)) {
+        if (bot && isDimension(calc, bot.bot)) {
             const minimized = !isMinimized(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
@@ -598,9 +601,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         calc: BotCalculationContext,
         bot: ContextGroup3D
     ) {
-        if (bot && isContext(calc, bot.bot)) {
-            const contexts = getBotConfigContexts(calc, bot.bot);
-            let bots = flatMap(contexts, c => botsInContext(calc, c));
+        if (bot && isDimension(calc, bot.bot)) {
+            const contexts = getBotConfigDimensions(calc, bot.bot);
+            let bots = flatMap(contexts, c => botsInDimension(calc, c));
 
             // add in the context bot to the workspace copy
             bots.unshift(bot.bot);
@@ -619,7 +622,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _expandWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
         if (bot) {
-            const size = getContextSize(calc, bot.bot);
+            const size = getDimensionSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
                     [`auxDimensionSurfaceSize`]: (size || 0) + 1,
@@ -640,7 +643,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _switchToPlayer(calc: BotCalculationContext, bot: ContextGroup3D) {
-        let contexts = getBotConfigContexts(calc, bot.bot);
+        let contexts = getBotConfigDimensions(calc, bot.bot);
         let context = contexts[0];
 
         // https://auxbuilder.com/
@@ -663,7 +666,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         pos: Vector3
     ) {
         const w = bot.bot;
-        const scale = getContextScale(calc, bot.bot);
+        const scale = getDimensionScale(calc, bot.bot);
         const localPos = new Vector3().copy(pos).sub(bot.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }

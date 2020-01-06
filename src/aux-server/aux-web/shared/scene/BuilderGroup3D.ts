@@ -4,13 +4,13 @@ import { GridChecker } from './grid/GridChecker';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import {
     Bot,
-    getContextPosition,
+    getDimensionPosition,
     TagUpdatedEvent,
     BotCalculationContext,
-    isContext,
-    getContextVisualizeMode,
+    isDimension,
+    getDimensionVisualizeMode,
     isMinimized,
-    getContextRotation,
+    getDimensionRotation,
 } from '@casual-simulation/aux-common';
 import { Object3D } from 'three';
 import { Simulation3D } from './Simulation3D';
@@ -81,23 +81,23 @@ export class BuilderGroup3D extends ContextGroup3D {
         tags: string[],
         calc: BotCalculationContext
     ) {
-        if (isContext(calc, bot)) {
+        if (isDimension(calc, bot)) {
             if (!this.surface) {
                 this.surface = new WorkspaceMesh(this.domain);
                 this.surface.gridGhecker = this._checker;
                 this.add(this.surface);
             }
 
-            const pos = getContextPosition(calc, this.bot);
+            const pos = getDimensionPosition(calc, this.bot);
             this.position.set(pos.x, pos.z, pos.y);
 
-            const rot = getContextRotation(calc, this.bot);
+            const rot = getDimensionRotation(calc, this.bot);
             this.rotation.set(rot.x, rot.y, rot.z);
 
             this.updateMatrixWorld(true);
 
             await this.surface.update(calc, bot, this.getBots());
-            const mode = getContextVisualizeMode(calc, this.bot);
+            const mode = getDimensionVisualizeMode(calc, this.bot);
             this.display.visible =
                 (mode === 'surface' || mode === true) &&
                 !isMinimized(calc, this.bot);

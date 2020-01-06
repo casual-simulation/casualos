@@ -3,9 +3,9 @@ import {
     Bot,
     BotIndex,
     calculateBotValue,
-    parseBotConfigContexts,
+    parseBotConfigDimensions,
     BotIndexEvent,
-    isBotInContext,
+    isBotInDimension,
     PrecalculatedBot,
     calculateStringTagValue,
     BotTagAddedEvent,
@@ -281,7 +281,7 @@ export function processIndexEvents(
     function isEventInContext(event: BotIndexEvent, context: string) {
         return event.type === 'bot_tag_removed'
             ? false
-            : isBotInContext(calc, event.bot, context);
+            : isBotInDimension(calc, event.bot, context);
     }
 
     function addToContext(bot: Bot, context: string) {
@@ -317,7 +317,7 @@ function addContext(
     let botsWithContextTag = index.findBotsWithTag(context);
     let userBots = index.findBotsWithTag('_auxUserDimension');
     let allBots = union(userBots, botsWithContextTag);
-    let botsInContext = allBots.filter(b => isBotInContext(calc, b, context));
+    let botsInContext = allBots.filter(b => isBotInDimension(calc, b, context));
     contextEvents.push({
         type: 'context_added',
         context: context,
@@ -359,7 +359,7 @@ function removeContext(
 
 function calculateContexts(calc: BotCalculationContext, bot: Bot, tag: string) {
     const val = calculateBotValue(calc, bot, tag);
-    const contexts = parseBotConfigContexts(val);
+    const contexts = parseBotConfigDimensions(val);
     return contexts;
 }
 

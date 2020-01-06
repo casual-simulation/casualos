@@ -12,7 +12,7 @@ import {
     Workspace,
     calculateFormattedBotValue,
     calculateBotValue,
-    botsInContext,
+    botsInDimension,
     getBotChannel,
     calculateDestroyBotEvents,
     merge,
@@ -312,7 +312,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         id: string
     ): AuxObject[] {
         // TODO: Make these functions support precalculated bot contexts
-        const simBots = botsInContext(
+        const simBots = botsInDimension(
             calc,
             this.userBot.tags['_auxUserUniversesDimension']
         ).filter(f => getBotChannel(calc, f) === id);

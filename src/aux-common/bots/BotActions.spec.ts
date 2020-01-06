@@ -1,5 +1,5 @@
 import {
-    goToContext,
+    goToDimension,
     ApplyStateAction,
     botAdded,
     botRemoved,
@@ -17,21 +17,21 @@ jest.mock('uuid/v4');
 describe('BotActions', () => {
     botActionsTests(uuidMock);
 
-    describe('goToContext()', () => {
+    describe('goToDimension()', () => {
         it('should use the first parameter as the context if only one argument is provided', () => {
-            const event = goToContext('context');
+            const event = goToDimension('context');
 
             expect(event).toEqual({
-                type: 'go_to_context',
+                type: 'go_to_dimension',
                 context: 'context',
             });
         });
 
         it('should ignore all other parameters', () => {
-            const event = (<any>goToContext)('context', 'abc');
+            const event = (<any>goToDimension)('context', 'abc');
 
             expect(event).toEqual({
-                type: 'go_to_context',
+                type: 'go_to_dimension',
                 context: 'context',
             });
         });
