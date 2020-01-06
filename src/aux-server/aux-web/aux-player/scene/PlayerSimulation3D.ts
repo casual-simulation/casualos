@@ -684,7 +684,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
         // need to cause an action when another user joins
         // Send an event to all bots indicating that the given context was loaded.
-        this.simulation.helper.action('onPlayerEnterContext', null, {
+        this.simulation.helper.action('onPlayerEnterDimension', null, {
             dimension: this.dimension,
             player: this.simulation.helper.userBot,
         });

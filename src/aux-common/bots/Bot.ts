@@ -754,7 +754,7 @@ export const KNOWN_TAGS: string[] = [
     'onChannelStreamLost',
     'onChannelSubscribed',
     'onChannelUnsubscribed',
-    'onPlayerEnterContext',
+    'onPlayerEnterDimension',
     'onKeyDown',
     'onKeyUp',
     'onGridClick',
