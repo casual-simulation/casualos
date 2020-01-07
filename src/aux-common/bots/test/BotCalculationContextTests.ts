@@ -83,18 +83,18 @@ export function botCalculationContextTests(
         it('should return bots at the given position', () => {
             const bot1 = createBot('test1', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot2 = createBot('test2', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot3 = createBot('test3', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
@@ -113,14 +113,14 @@ export function botCalculationContextTests(
         it('should ignore user bots', () => {
             const bot1 = createBot('test1', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
                 _auxUser: 'abc',
             });
             const bot2 = createBot('test2', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot1, bot2]);
@@ -139,18 +139,18 @@ export function botCalculationContextTests(
         it('should cache the query and results', () => {
             const bot1 = createBot('test1', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot2 = createBot('test2', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot3 = createBot('test3', {
                 dimension: true,
-                contextX: -1,
-                contextY: 1,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
@@ -3482,8 +3482,8 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('botContextSortOrder()', () => {
-        it('should return the contextSortOrder tag', () => {
+    describe('botDimensionSortOrder()', () => {
+        it('should return the dimensionSortOrder tag', () => {
             const bot = createBot('bot', {
                 dimensionSortOrder: 123,
             });
@@ -3512,15 +3512,15 @@ export function botCalculationContextTests(
             });
             const bot1 = createBot('bot1', {
                 dimension: true,
-                contextSortOrder: 0,
+                dimensionSortOrder: 0,
             });
             const bot2 = createBot('bot2', {
                 dimension: true,
-                contextSortOrder: 1,
+                dimensionSortOrder: 1,
             });
             const bot3 = createBot('bot3', {
                 dimension: true,
-                contextSortOrder: 2,
+                dimensionSortOrder: 2,
             });
 
             const calc = createCalculationContext([user, bot2, bot1, bot3]);
@@ -3591,8 +3591,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     dimension: true,
-                    contextSortOrder: 0,
-                    contextId: 'item',
+                    dimensionSortOrder: 0,
+                    dimensionId: 'item',
                 },
             });
         });
@@ -3609,8 +3609,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     dimension: true,
-                    contextSortOrder: 5,
-                    contextId: 'item',
+                    dimensionSortOrder: 5,
+                    dimensionId: 'item',
                 },
             });
         });
@@ -3630,8 +3630,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     dimension: true,
-                    contextSortOrder: 1,
-                    contextId: 'abc',
+                    dimensionSortOrder: 1,
+                    dimensionId: 'abc',
                 },
             });
         });
@@ -3650,8 +3650,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     dimension: null,
-                    contextSortOrder: null,
-                    contextId: null,
+                    dimensionSortOrder: null,
+                    dimensionId: null,
                 },
             });
         });

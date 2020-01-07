@@ -536,7 +536,7 @@ describe('AuxHelper', () => {
         describe('paste_state', () => {
             it('should add the given bots to a new dimension', async () => {
                 uuidMock
-                    .mockReturnValueOnce('dimension')
+                    .mockReturnValueOnce('gen')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2');
                 await helper.transaction({
@@ -555,16 +555,16 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'dimension',
+                        auxDimension: 'gen',
                         auxDimensionVisualize: 'surface',
                         auxDimensionX: 0,
                         auxDimensionY: 1,
                         auxDimensionZ: 2,
                     }),
                     bot2: createBot('bot2', {
-                        dimension: true,
-                        dimensionX: 0,
-                        dimensionY: 0,
+                        gen: true,
+                        genX: 0,
+                        genY: 0,
                         test: 'abc',
                     }),
                 });
@@ -572,7 +572,7 @@ describe('AuxHelper', () => {
 
             it('should preserve X and Y positions if a dimension bot is included', async () => {
                 uuidMock
-                    .mockReturnValueOnce('dimension')
+                    .mockReturnValueOnce('gen')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2')
                     .mockReturnValueOnce('bot3');
@@ -601,7 +601,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'dimension',
+                        auxDimension: 'gen',
                         auxDimensionVisualize: true,
                         auxDimensionX: -1,
                         auxDimensionY: 1,
@@ -609,10 +609,10 @@ describe('AuxHelper', () => {
                         other: 'def',
                     }),
                     bot2: createBot('bot2', {
-                        dimension: true,
-                        dimensionX: 3,
-                        dimensionY: 2,
-                        dimensionZ: 1,
+                        gen: true,
+                        genX: 3,
+                        genY: 2,
+                        genZ: 1,
                         test: 'abc',
                     }),
                 });
@@ -620,7 +620,7 @@ describe('AuxHelper', () => {
 
             it('should check the current state for dimensions if they are not included in the copied state', async () => {
                 uuidMock
-                    .mockReturnValueOnce('dimension')
+                    .mockReturnValueOnce('gen')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2')
                     .mockReturnValueOnce('bot3');
@@ -656,7 +656,7 @@ describe('AuxHelper', () => {
                     user: expect.any(Object),
                     bot1: expect.objectContaining(
                         createBot('bot1', {
-                            auxDimension: 'dimension',
+                            auxDimension: 'gen',
                             auxDimensionVisualize: 'surface',
                             auxDimensionX: -1,
                             auxDimensionY: 1,
@@ -665,10 +665,10 @@ describe('AuxHelper', () => {
                     ),
                     bot2: expect.objectContaining(
                         createBot('bot2', {
-                            dimension: true,
-                            dimensionX: 0,
-                            dimensionY: 0,
-                            dimensionSortOrder: 0,
+                            gen: true,
+                            genX: 0,
+                            genY: 0,
+                            genSortOrder: 0,
                             test: 'abc',
                         })
                     ),

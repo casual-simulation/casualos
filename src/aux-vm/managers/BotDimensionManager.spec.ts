@@ -56,7 +56,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_added',
                             dimensionTag: 'auxDimension',
@@ -99,7 +99,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_added',
                             dimensionTag: 'auxDimension',
@@ -136,7 +136,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_added',
                             dimensionTag: 'auxDimension',
@@ -203,7 +203,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_added',
                             dimensionTag: 'auxDimension',
@@ -252,7 +252,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_removed',
                             dimensionTag: 'auxDimension',
@@ -286,7 +286,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_removed',
                             dimensionTag: 'auxDimension',
@@ -368,7 +368,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'bot_added_to_dimension',
                             bot: inDimension,
@@ -419,7 +419,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'bot_added_to_dimension',
                             bot: inDimensionFinal,
@@ -480,7 +480,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'bot_added_to_dimension',
                             bot: userFinal,
@@ -532,7 +532,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'bot_removed_from_dimension',
                             bot: inDimension,
@@ -592,7 +592,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'bot_removed_from_dimension',
                             bot: userFinal,
@@ -631,7 +631,7 @@ describe('BotDimensionManager', () => {
             expect(events).toEqual([
                 {
                     calc: expect.anything(),
-                    dimensionEvents: [
+                    events: [
                         {
                             type: 'dimension_added',
                             dimensionTag: 'auxDimension',
