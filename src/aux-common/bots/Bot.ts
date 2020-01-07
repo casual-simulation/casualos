@@ -166,9 +166,9 @@ export interface BotTags {
     ['auxDimensionX']?: number;
     ['auxDimensionY']?: number;
     ['auxDimensionZ']?: number;
-    ['auxDimensionRotationX']?: number;
-    ['auxDimensionRotationY']?: number;
-    ['auxDimensionRotationZ']?: number;
+    ['auxDimensionOrientationX']?: number;
+    ['auxDimensionOrientationY']?: number;
+    ['auxDimensionOrientationZ']?: number;
     ['auxDimensionSurfaceScale']?: number;
     ['auxDimensionSurfaceSize']?: number;
     ['auxDimensionSurfaceMinimized']?: boolean | null;
@@ -686,9 +686,9 @@ export const KNOWN_TAGS: string[] = [
     'auxDimensionY',
     'auxDimensionZ',
     'auxDimensionSurfaceDefaultHeight',
-    'auxDimensionRotationX',
-    'auxDimensionRotationY',
-    'auxDimensionRotationZ',
+    'auxDimensionOrientationX',
+    'auxDimensionOrientationY',
+    'auxDimensionOrientationZ',
     'auxDimensionSurfaceScale',
     'auxDimensionSurfaceSize',
     'auxDimensionSurfaceMinimized',

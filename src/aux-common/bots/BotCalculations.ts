@@ -1498,9 +1498,9 @@ export function getDimensionRotation(
     bot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `auxDimensionRotationX`, 0),
-        y: calculateNumericalTagValue(calc, bot, `auxDimensionRotationY`, 0),
-        z: calculateNumericalTagValue(calc, bot, `auxDimensionRotationZ`, 0),
+        x: calculateNumericalTagValue(calc, bot, `auxDimensionOrientationX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `auxDimensionOrientationY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `auxDimensionOrientationZ`, 0),
     };
 }
 
