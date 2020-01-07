@@ -19,6 +19,7 @@
         -   The `setup_channel` action type has been renamed to `setup_universe`.
         -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
             -   Also the `channel` property in the `data` argument has been renamed to `universe`.
+    -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
 
 ## V0.11.19
 
