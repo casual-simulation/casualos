@@ -16,6 +16,7 @@
         -   All the `auxChannel*` tags have been renamed to `auxUniverse*`.
         -   The `_auxUserChannelsContext` tag has been renamed to `_auxUserUniversesDimension`.
         -   The `player.setupChannel()` function has been renamed to `player.setupUniverse()`.
+        -   The `player.loadChannel()` and `player.unloadChannel()` functions have been renamed to `player.loadUniverse()` and `player.unloadUniverse()`.
         -   The `setup_channel` action type has been renamed to `setup_universe`.
         -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
             -   Also the `channel` property in the `data` argument has been renamed to `universe`.
