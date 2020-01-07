@@ -13,6 +13,7 @@
         -   The `@onPlayerEnterContext` listener has been renamed to `@onPlayerEnterDimension`.
         -   The `_auxUserContext`, `_auxUserMenuContext`, `_auxUserInventoryContext`, and `_auxUserChannelsContext` have been renamed to use dimension instead of context.
     -   Renamed channel to universe.
+        -   All the `auxChannel*` tags have been renamed to `auxUniverse*`.
         -   The `_auxUserChannelsContext` tag has been renamed to `_auxUserUniversesDimension`.
         -   The `player.setupChannel()` function has been renamed to `player.setupUniverse()`.
         -   The `setup_channel` action type has been renamed to `setup_universe`.
