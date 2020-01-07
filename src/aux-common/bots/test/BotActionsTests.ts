@@ -8,8 +8,8 @@ import {
     tweenTo,
     openQRCodeScanner,
     showQRCode,
-    loadSimulation,
-    unloadSimulation,
+    loadSimulation as loadUniverse,
+    unloadSimulation as unloadUniverse,
     importAUX,
     showInputForTag,
     goToDimension,
@@ -4227,13 +4227,13 @@ export function botActionsTests(
             });
         });
 
-        describe('loadChannel()', () => {
-            it('should emit a LoadSimulationAction', () => {
+        describe('loadUniverse()', () => {
+            it('should emit a LoadUniverseAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.loadChannel("abc")',
+                            test: '@player.loadUniverse("abc")',
                         },
                     },
                 };
@@ -4249,17 +4249,17 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([loadSimulation('abc')]);
+                expect(result.events).toEqual([loadUniverse('abc')]);
             });
         });
 
-        describe('unloadChannel()', () => {
-            it('should emit a UnloadSimulationAction', () => {
+        describe('unloadUniverse()', () => {
+            it('should emit a UnloadUniverseAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.unloadChannel("abc")',
+                            test: '@player.unloadUniverse("abc")',
                         },
                     },
                 };
@@ -4275,7 +4275,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([unloadSimulation('abc')]);
+                expect(result.events).toEqual([unloadUniverse('abc')]);
             });
         });
 
@@ -5786,11 +5786,8 @@ export function botActionsTests(
                 ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
                 ['player.showBarcode("code")', showBarcode(true, 'code')],
                 ['player.hideBarcode()', showBarcode(false)],
-                ['player.loadChannel("channel")', loadSimulation('channel')],
-                [
-                    'player.unloadChannel("channel")',
-                    unloadSimulation('channel'),
-                ],
+                ['player.loadUniverse("channel")', loadUniverse('channel')],
+                ['player.unloadUniverse("channel")', unloadUniverse('channel')],
                 ['player.importAUX("aux")', importAUX('aux')],
                 ['player.showQRCode("code")', showQRCode(true, 'code')],
                 ['player.hideQRCode()', showQRCode(false)],

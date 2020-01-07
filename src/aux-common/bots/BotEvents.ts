@@ -44,8 +44,8 @@ export type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadSimulationAction
-    | UnloadSimulationAction
+    | LoadUniverseAction
+    | UnloadUniverseAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
@@ -545,8 +545,8 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-export interface LoadSimulationAction extends Action {
-    type: 'load_simulation';
+export interface LoadUniverseAction extends Action {
+    type: 'load_universe';
 
     /**
      * The ID of the simulation to load.
@@ -557,8 +557,8 @@ export interface LoadSimulationAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-export interface UnloadSimulationAction extends Action {
-    type: 'unload_simulation';
+export interface UnloadUniverseAction extends Action {
+    type: 'unload_universe';
 
     /**
      * The ID of the simulation to unload.
@@ -1258,9 +1258,9 @@ export function hideRun(): ShowRunBarAction {
  * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadSimulationAction {
+export function loadSimulation(id: string): LoadUniverseAction {
     return {
-        type: 'load_simulation',
+        type: 'load_universe',
         id: id,
     };
 }
@@ -1269,9 +1269,9 @@ export function loadSimulation(id: string): LoadSimulationAction {
  * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadSimulationAction {
+export function unloadSimulation(id: string): UnloadUniverseAction {
     return {
-        type: 'unload_simulation',
+        type: 'unload_universe',
         id: id,
     };
 }

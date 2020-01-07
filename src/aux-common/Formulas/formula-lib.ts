@@ -1970,7 +1970,7 @@ function run(script: string) {
  * Loads the universe with the given ID.
  * @param id The ID of the universe to load.
  */
-function loadChannel(id: string) {
+function loadUniverse(id: string) {
     const event = calcLoadSimulation(id);
     return addAction(event);
 }
@@ -1979,7 +1979,7 @@ function loadChannel(id: string) {
  * Unloads the universe with the given ID.
  * @param id The ID of the universe to unload.
  */
-function unloadChannel(id: string) {
+function unloadUniverse(id: string) {
     const event = calcUnloadSimulation(id);
     return addAction(event);
 }
@@ -2138,8 +2138,8 @@ const player = {
     closeBarcodeScanner,
     showBarcode,
     hideBarcode,
-    loadChannel,
-    unloadChannel,
+    loadUniverse,
+    unloadUniverse,
     importAUX,
     hasBotInInventory,
     showQRCode,
