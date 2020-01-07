@@ -22,6 +22,7 @@ import {
     ON_UNIVERSE_STREAMING_ACTION_NAME,
     onUniverseStreamLostArg,
     onUniverseStreamingArg,
+    onUniverseSubscribedArg,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';

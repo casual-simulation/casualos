@@ -13,7 +13,7 @@ import {
     getUserBotColor,
     isUserActive,
     calculateBooleanTagValue,
-    USERS_CONTEXT,
+    USERS_DIMENSION,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
@@ -92,7 +92,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
             return;
         }
 
-        const isInAuxPlayer = this.bot3D.dimension !== USERS_CONTEXT;
+        const isInAuxPlayer = this.bot3D.dimension !== USERS_DIMENSION;
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,

@@ -167,7 +167,7 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
                         tags: {
                             [`${this.bot3D.dimension}X`]: camPosition.x,
 
-                            // Mirror the Y coordinate so it works with ContextPositionDecorator
+                            // Mirror the Y coordinate so it works with DimensionPositionDecorator
                             [`${this.bot3D.dimension}Y`]: -camPosition.z,
 
                             [`${this.bot3D.dimension}Z`]: camPosition.y,

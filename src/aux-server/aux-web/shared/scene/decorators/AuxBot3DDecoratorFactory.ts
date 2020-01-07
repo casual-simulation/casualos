@@ -1,7 +1,7 @@
 import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
-import { DimensionPositionDecorator } from './ContextPositionDecorator';
+import { DimensionPositionDecorator } from './DimensionPositionDecorator';
 import { BotShapeDecorator } from './BotShapeDecorator';
 import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
