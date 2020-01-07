@@ -96,13 +96,13 @@ describe('BotHelper', () => {
                 botAdded(
                     createBot('botId', {
                         abc: true,
-                        auxChannel: 'test',
+                        auxUniverse: 'test',
                     })
                 ),
                 botAdded(
                     createBot('botId2', {
                         abc: true,
-                        auxChannel: 'test2',
+                        auxUniverse: 'test2',
                     })
                 ),
             ]);
@@ -115,7 +115,7 @@ describe('BotHelper', () => {
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
             };
 
@@ -133,11 +133,11 @@ describe('BotHelper', () => {
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
                 bot2: createPrecalculatedBot('bot2', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
             };
 

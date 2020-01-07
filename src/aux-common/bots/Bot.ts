@@ -79,9 +79,9 @@ export interface ScriptTags extends PrecalculatedTags {
 
 export interface BotTags {
     // Global bot tags
-    ['auxChannelColor']?: string;
-    ['auxChannelUserPlayerColor']?: unknown;
-    ['auxChannelUserBuilderColor']?: unknown;
+    ['auxUniverseColor']?: string;
+    ['auxUniverseUserPlayerColor']?: unknown;
+    ['auxUniverseUserBuilderColor']?: unknown;
     ['auxInventoryHeight']?: unknown;
     ['auxVersion']?: unknown;
 
@@ -121,7 +121,7 @@ export interface BotTags {
     ['auxIframeRotationZ']?: number;
     ['auxIframeElementWidth']?: number;
     ['auxIframeScale']?: number;
-    ['auxChannel']?: string;
+    ['auxUniverse']?: string;
     ['auxCreator']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
@@ -141,7 +141,7 @@ export interface BotTags {
     ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
-    ['auxChannelConnectedSessions']?: number;
+    ['auxUniverseConnectedSessions']?: number;
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
@@ -632,9 +632,9 @@ export const KNOWN_TAGS: string[] = [
     `auxDimensionZoomableMax`,
 
     'auxDimensionRotatable',
-    'auxChannelColor',
-    'auxChannelUserPlayerColor',
-    'auxChannelUserBuilderColor',
+    'auxUniverseColor',
+    'auxUniverseUserPlayerColor',
+    'auxUniverseUserBuilderColor',
 
     'auxColor',
     'auxCreator',
@@ -665,8 +665,8 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarAnchor',
-    'auxChannel',
-    'auxChannelConnectedSessions',
+    'auxUniverse',
+    'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',
     'auxIframeY',

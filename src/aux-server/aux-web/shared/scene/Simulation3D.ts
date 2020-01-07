@@ -200,7 +200,7 @@ export abstract class Simulation3D extends Object3D
                 .pipe(
                     tap(bot => {
                         // Scene background color.
-                        let sceneBackgroundColor = bot.tags['auxChannelColor'];
+                        let sceneBackgroundColor = bot.tags['auxUniverseColor'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)
                             ? new Color(sceneBackgroundColor)
                             : null;

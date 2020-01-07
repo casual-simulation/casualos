@@ -675,12 +675,15 @@ export function getUserBotColor(
 
     if (domain === 'builder') {
         return (
-            calculateBotValue(calc, globalsBot, 'auxChannelUserBuilderColor') ||
-            DEFAULT_BUILDER_USER_COLOR
+            calculateBotValue(
+                calc,
+                globalsBot,
+                'auxUniverseUserBuilderColor'
+            ) || DEFAULT_BUILDER_USER_COLOR
         );
     } else {
         return (
-            calculateBotValue(calc, globalsBot, 'auxChannelUserPlayerColor') ||
+            calculateBotValue(calc, globalsBot, 'auxUniverseUserPlayerColor') ||
             DEFAULT_PLAYER_USER_COLOR
         );
     }
@@ -2117,7 +2120,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the auxChannel tag from the given bot.
+ * Gets the auxUniverse tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2125,11 +2128,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'auxChannel');
+    return calculateBotValue(calc, bot, 'auxUniverse');
 }
 
 /**
- * Gets the first bot which is in the aux.channels dimension that has the auxChannel tag set to the given ID.
+ * Gets the first bot which is in the aux.channels dimension that has the auxUniverse tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2137,7 +2140,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'auxChannel') === id
+            calculateBotValue(calc, o, 'auxUniverse') === id
         );
     });
 
@@ -2161,7 +2164,7 @@ export function getChannelConnectedDevices(
     return calculateNumericalTagValue(
         calc,
         bot,
-        'auxChannelConnectedSessions',
+        'auxUniverseConnectedSessions',
         0
     );
 }

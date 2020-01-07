@@ -2978,10 +2978,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map auxChannel:%s to %s',
+            'should map auxUniverse:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    auxChannel: value,
+                    auxUniverse: value,
                 });
 
                 const calc = createCalculationContext([bot]);
@@ -3533,7 +3533,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                auxChannel: 'test',
+                auxUniverse: 'test',
                 'aux.channels': true,
             });
 
@@ -3545,7 +3545,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                auxChannel: 'test',
+                auxUniverse: 'test',
                 'aux.channels': true,
             });
 
@@ -3559,7 +3559,7 @@ export function botCalculationContextTests(
     describe('getChannelConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let bot = createBot('test', {
-                auxChannelConnectedSessions: value,
+                auxUniverseConnectedSessions: value,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4364,8 +4364,8 @@ export function botCalculationContextTests(
         );
 
         const globalsCases = [
-            ['auxChannelUserPlayerColor', 'player', '#40A287'],
-            ['auxChannelUserBuilderColor', 'builder', '#AAAAAA'],
+            ['auxUniverseUserPlayerColor', 'player', '#40A287'],
+            ['auxUniverseUserBuilderColor', 'builder', '#AAAAAA'],
         ];
 
         it.each(globalsCases)(

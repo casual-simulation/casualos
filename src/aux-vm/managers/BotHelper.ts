@@ -160,7 +160,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         if (simBots.length === 0) {
             await this.createBot(botId, {
                 [this.userBot.tags['_auxUserUniversesDimension']]: true,
-                ['auxChannel']: id,
+                ['auxUniverse']: id,
             });
         }
     }
