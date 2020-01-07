@@ -902,7 +902,7 @@ export interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 export interface SetupChannelAction {
-    type: 'setup_channel';
+    type: 'setup_universe';
 
     /**
      * The channel that should be created.
@@ -1503,12 +1503,12 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * @param channel The ID of the channel to setup.
  * @param botOrMod The bot that should be cloned into the new channel.
  */
-export function setupChannel(
+export function setupUniverse(
     channel: string,
     botOrMod?: Bot | BotTags
 ): SetupChannelAction {
     return {
-        type: 'setup_channel',
+        type: 'setup_universe',
         channel,
         botOrMod,
     };

@@ -31,7 +31,7 @@ import {
     loadFile,
     saveFile,
     replaceDragBot,
-    setupChannel,
+    setupUniverse,
     hideHtml,
     ReplaceDragBotAction,
     setClipboard,
@@ -5429,13 +5429,13 @@ export function botActionsTests(
             });
         });
 
-        describe('server.setupChannel()', () => {
+        describe('server.setupUniverse()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@server.setupChannel("channel", this)',
+                            test: '@server.setupUniverse("channel", this)',
                         },
                     },
                     userBot: {
@@ -5459,10 +5459,10 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([
                     remote(
-                        setupChannel(
+                        setupUniverse(
                             'channel',
                             createBot('thisBot', {
-                                test: '@server.setupChannel("channel", this)',
+                                test: '@server.setupUniverse("channel", this)',
                             })
                         )
                     ),

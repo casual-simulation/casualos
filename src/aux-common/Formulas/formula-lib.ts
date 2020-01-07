@@ -47,7 +47,7 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
-    setupChannel as calcSetupChannel,
+    setupUniverse as calcSetupChannel,
     setClipboard as calcSetClipboard,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
@@ -169,7 +169,7 @@ interface CheckoutOptions {
     description: string;
 
     /**
-     * The channel that the payment should be processed on.
+     * The universe that the payment should be processed on.
      */
     processingChannel: string;
 
@@ -832,7 +832,7 @@ function reject(action: any) {
 }
 
 /**
- * Asks every bot in the channel to run the given action.
+ * Asks every bot in the universe to run the given action.
  * In effect, this is like shouting to a bunch of people in a room.
  *
  * @param name The event name.
@@ -1169,18 +1169,18 @@ function getCurrentDimension(): string {
 }
 
 /**
- * Gets the channel that the player is currently in.
+ * Gets the universe that the player is currently in.
  */
 function getCurrentChannel(): string {
     const user = getUser();
     if (user) {
-        const channel = getTag(user, '_auxUserChannel') as string;
+        const universe = getTag(user, '_auxUserChannel') as string;
 
-        if (channel && channel.includes('/')) {
-            return channel.split('/')[1];
+        if (universe && universe.includes('/')) {
+            return universe.split('/')[1];
         }
 
-        return channel || undefined;
+        return universe || undefined;
     }
     return undefined;
 }
@@ -1337,7 +1337,7 @@ function getBots(tag: string, filter?: any | TagFilter): Bot[];
  * Gets a list of all the bots.
  *
  * @example
- * // Gets all the bots in the channel.
+ * // Gets all the bots in the universe.
  * let bots = getBots();
  */
 function getBots(): Bot[] {
@@ -1941,8 +1941,8 @@ function hideBarcode() {
 }
 
 /**
- * Loads the channel with the given ID.
- * @param id The ID of the channel to load.
+ * Loads the universe with the given ID.
+ * @param id The ID of the universe to load.
  */
 function loadChannel(id: string) {
     const event = calcLoadSimulation(id);
@@ -1950,8 +1950,8 @@ function loadChannel(id: string) {
 }
 
 /**
- * Unloads the channel with the given ID.
- * @param id The ID of the channel to unload.
+ * Unloads the universe with the given ID.
+ * @param id The ID of the universe to unload.
  */
 function unloadChannel(id: string) {
     const event = calcUnloadSimulation(id);
@@ -1994,12 +1994,12 @@ function unwrapBotOrMod(botOrMod: Mod) {
 }
 
 /**
- * Sends an event to the server to setup a new channel if it does not exist.
- * @param channel The channel.
- * @param botOrMod The bot or mod that should be cloned into the new channel.
+ * Sends an event to the server to setup a new universe if it does not exist.
+ * @param universe The universe.
+ * @param botOrMod The bot or mod that should be cloned into the new universe.
  */
-function setupChannel(channel: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(channel, unwrapBotOrMod(botOrMod)));
+function setupUniverse(universe: string, botOrMod?: Mod) {
+    return remote(calcSetupChannel(universe, unwrapBotOrMod(botOrMod)));
 }
 
 /**
@@ -2140,7 +2140,7 @@ const server = {
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
-    setupChannel,
+    setupUniverse,
 };
 
 /**
