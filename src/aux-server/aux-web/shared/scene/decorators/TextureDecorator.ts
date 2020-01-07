@@ -49,7 +49,11 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
         let imageValueChanged = false;
 
         // Get value of image tag.
-        const imageValue = calculateBotValue(calc, this.bot3D.bot, 'auxImage');
+        const imageValue = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormAddress'
+        );
 
         if (hasValue(imageValue)) {
             if (this.image !== imageValue) {

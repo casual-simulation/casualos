@@ -3326,7 +3326,7 @@ export function botCalculationContextTests(
         const cases = [['cube'], ['sphere'], ['sprite']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
-                auxShape: <any>shape,
+                auxForm: <any>shape,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3343,9 +3343,9 @@ export function botCalculationContextTests(
             expect(shape).toBe('cube');
         });
 
-        it('should return the shape from auxShape', () => {
+        it('should return the shape from auxForm', () => {
             let bot = createBot();
-            bot.tags['auxShape'] = 'sphere';
+            bot.tags['auxForm'] = 'sphere';
 
             const calc = createCalculationContext([bot]);
             const shape = getBotShape(calc, bot);

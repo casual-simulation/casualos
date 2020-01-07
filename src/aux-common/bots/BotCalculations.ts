@@ -1269,7 +1269,7 @@ export function getBotScale(
  * @param bot The bot.
  */
 export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
-    const shape: BotShape = calculateBotValue(calc, bot, 'auxShape');
+    const shape: BotShape = calculateBotValue(calc, bot, 'auxForm');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
     }
