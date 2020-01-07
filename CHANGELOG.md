@@ -14,6 +14,10 @@
         -   The `_auxUserContext`, `_auxUserMenuContext`, `_auxUserInventoryContext`, and `_auxUserChannelsContext` have been renamed to use dimension instead of context.
     -   Renamed channel to universe.
         -   The `_auxUserChannelsContext` tag has been renamed to `_auxUserUniversesDimension`.
+        -   The `player.setupChannel()` function has been renamed to `player.setupUniverse()`.
+        -   The `setup_channel` action type has been renamed to `setup_universe`.
+        -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
+            -   Also the `channel` property in the `data` argument has been renamed to `universe`.
 
 ## V0.11.19
 
