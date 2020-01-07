@@ -50,13 +50,13 @@ import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
-import MiniBot from '../MiniBot/MiniBot';
+import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
-import BotTable from '../BotTable/BotTable';
+import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import BotID from '../BotID/BotID';
+import BotID from '../../shared/vue-components/BotID/BotID';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
@@ -71,7 +71,7 @@ import {
     navigateToUrl,
 } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
-import BotTagMini from '../BotTagMini/BotTagMini';
+import BotTagMini from '../../shared/vue-components/BotTagMini/BotTagMini';
 import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
 import { BuilderModClickOperation } from './ClickOperation/BuilderModClickOperation';
 

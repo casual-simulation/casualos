@@ -1,21 +1,20 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
-import { EventBus } from '../../shared/EventBus';
 import {
     Bot,
     getShortId,
     formatValue,
     tagsOnBot,
+    hasValue,
+    runScript,
 } from '@casual-simulation/aux-common';
-import { appManager } from '../../shared/AppManager';
+import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
-import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
-import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import MiniBot from '../MiniBot/MiniBot';
-import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
-import Cube from '../public/icons/Cube.svg';
-import CubeSearch from '../public/icons/CubeSearch.svg';
+import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
+import Cube from '../../public/icons/Cube.svg';
+import CubeSearch from '../../public/icons/CubeSearch.svg';
 
 @Component({
     components: {
@@ -30,7 +29,7 @@ export default class BotSearch extends Vue {
     recentBot: Bot = null;
     search: string = '';
 
-    protected _gameView: BuilderGameView;
+    @Prop({ default: null }) prefill: string;
 
     @Provide() botRenderer: BotRenderer = getRenderer();
 
@@ -39,15 +38,24 @@ export default class BotSearch extends Vue {
     }
 
     async executeSearch() {
-        await appManager.simulationManager.primary.helper.formulaBatch([
-            this.search,
-        ]);
+        await appManager.simulationManager.primary.helper.transaction(
+            runScript(this.search)
+        );
     }
 
     @Watch('search')
     onSearchChanged() {
         appManager.simulationManager.primary.botPanel.search = this.search;
         appManager.simulationManager.primary.botPanel.isOpen = true;
+    }
+
+    setPrefill(prefill: string) {
+        if (!prefill) {
+            return;
+        }
+        if (!hasValue(this.search)) {
+            this.search = prefill;
+        }
     }
 
     get placeholder() {
@@ -112,6 +120,8 @@ export default class BotSearch extends Vue {
             );
             return subs;
         });
+
+        this.setPrefill(this.prefill);
     }
 
     isEmptyOrDiff(f: Bot): boolean {

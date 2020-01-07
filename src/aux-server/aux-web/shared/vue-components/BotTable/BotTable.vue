@@ -5,9 +5,9 @@
                 <div v-show="!isMakingNewTag && hasBots" class="bot-table-toggle-buttons">
                     <md-button class="md-icon-button" @click="openNewTag()">
                         <picture>
-                            <source srcset="../public/icons/tag-add.webp" type="image/webp" />
-                            <source srcset="../public/icons/tag-add.png" type="image/png" />
-                            <img alt="Add Tag" src="../public/icons/tag-add.png" />
+                            <source srcset="../../public/icons/tag-add.webp" type="image/webp" />
+                            <source srcset="../../public/icons/tag-add.png" type="image/png" />
+                            <img alt="Add Tag" src="../../public/icons/tag-add.png" />
                         </picture>
                         <md-tooltip>Add Tag</md-tooltip>
                     </md-button>

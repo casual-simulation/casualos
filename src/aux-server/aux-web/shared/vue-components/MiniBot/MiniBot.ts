@@ -7,10 +7,10 @@ import {
     tagsOnBot,
     botTags,
 } from '@casual-simulation/aux-common';
-import { BotRenderer } from '../../shared/scene/BotRenderer';
-import { appManager } from '../../shared/AppManager';
-import TagColor from '../../shared/vue-components/TagColor/TagColor';
-import { EventBus } from '../../shared/EventBus';
+import { BotRenderer } from '../../scene/BotRenderer';
+import { appManager } from '../../AppManager';
+import TagColor from '../TagColor/TagColor';
+import { EventBus } from '../../EventBus';
 import debounce from 'lodash/debounce';
 
 @Component({

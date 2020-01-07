@@ -70,7 +70,9 @@ export type ExtraActions =
     | PasteStateAction
     | ReplaceDragBotAction
     | SetupChannelAction
-    | SetClipboardAction;
+    | SetClipboardAction
+    | ShowRunBarAction
+    | RunScriptAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -928,6 +930,35 @@ export interface SetClipboardAction {
 }
 
 /**
+ * Defines an event that shows the run bar.
+ */
+export interface ShowRunBarAction {
+    type: 'show_run_bar';
+
+    /**
+     * Whether the run bar should be visible.
+     */
+    visible: boolean;
+
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+}
+
+/**
+ * Defines an event that executes a script.
+ */
+export interface RunScriptAction {
+    type: 'run_script';
+
+    /**
+     * The script that should be executed.
+     */
+    script: string;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -1191,6 +1222,35 @@ export function showBarcode(
         open: open,
         code: code,
         format: format,
+    };
+}
+
+/**
+ * Creates a new ShowRunBarAction that shows the run bar.
+ * @param prefill The text that should be prefilled into the run bar's input box.
+ */
+export function showRun(prefill?: string): ShowRunBarAction {
+    if (prefill) {
+        return {
+            type: 'show_run_bar',
+            visible: true,
+            prefill,
+        };
+    } else {
+        return {
+            type: 'show_run_bar',
+            visible: true,
+        };
+    }
+}
+
+/**
+ * Creates a new ShowRunBarAction that hides the run bar.
+ */
+export function hideRun(): ShowRunBarAction {
+    return {
+        type: 'show_run_bar',
+        visible: false,
     };
 }
 
@@ -1522,5 +1582,16 @@ export function setClipboard(text: string): SetClipboardAction {
     return {
         type: 'set_clipboard',
         text,
+    };
+}
+
+/**
+ * Creates a RunScriptAction.
+ * @param script The script that should be executed.
+ */
+export function runScript(script: string): RunScriptAction {
+    return {
+        type: 'run_script',
+        script,
     };
 }

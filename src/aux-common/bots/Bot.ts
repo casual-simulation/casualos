@@ -582,6 +582,11 @@ export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
     'onUniverseUnsubscribed';
 
 /**
+ * The name of the event that is triggered when a script is executed.
+ */
+export const ON_RUN_ACTION_NAME: string = 'onRun';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -767,6 +772,7 @@ export const KNOWN_TAGS: string[] = [
     'onAnyListen',
     'onListen',
     ON_ACTION_ACTION_NAME,
+    ON_RUN_ACTION_NAME,
 ];
 
 export function onModDropArg(mod: BotTags, dimension: string) {

@@ -49,6 +49,9 @@ import {
     replaceDragBot as calcReplaceDragBot,
     setupUniverse as calcSetupChannel,
     setClipboard as calcSetClipboard,
+    showRun as calcShowRun,
+    hideRun as calcHideRun,
+    runScript,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1941,6 +1944,29 @@ function hideBarcode() {
 }
 
 /**
+ * Shows the run bar.
+ * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
+ */
+function showRun(prefill?: string) {
+    return addAction(calcShowRun(prefill));
+}
+
+/**
+ * Hides the run bar.
+ */
+function hideRun() {
+    return addAction(calcHideRun());
+}
+
+/**
+ * Enqueues the given script to execute after this script is done running.
+ * @param script The script that should be executed.
+ */
+function run(script: string) {
+    return addAction(runScript(script));
+}
+
+/**
  * Loads the universe with the given ID.
  * @param id The ID of the universe to load.
  */
@@ -2126,6 +2152,9 @@ const player = {
     checkout,
     replaceDragBot,
     setClipboard,
+    showRun,
+    hideRun,
+    run,
 
     openDevConsole,
 };
