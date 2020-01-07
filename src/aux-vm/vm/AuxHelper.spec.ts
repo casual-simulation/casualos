@@ -751,10 +751,10 @@ describe('AuxHelper', () => {
             });
         });
 
-        describe('onChannelAction()', () => {
-            it('should emit an onChannelAction() call to the globals bot', async () => {
+        describe('onUniverseAction()', () => {
+            it('should emit an onUniverseAction() call to the globals bot', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: '@setTag(this, "hit", true)',
+                    onUniverseAction: '@setTag(this, "hit", true)',
                 });
 
                 await helper.transaction({
@@ -765,15 +765,15 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: {
-                        onChannelAction: '@setTag(this, "hit", true)',
+                        onUniverseAction: '@setTag(this, "hit", true)',
                         hit: true,
                     },
                 });
             });
 
-            it('should skip actions that onChannelAction() rejects', async () => {
+            it('should skip actions that onUniverseAction() rejects', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: '@action.reject(that.action)',
+                    onUniverseAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -796,7 +796,7 @@ describe('AuxHelper', () => {
 
             it('should allow rejecting rejections', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: '@action.reject(that.action)',
+                    onUniverseAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -826,10 +826,10 @@ describe('AuxHelper', () => {
             ];
 
             it.each(falsyTests)(
-                'should allow actions that onChannelAction() returns %s for',
+                'should allow actions that onUniverseAction() returns %s for',
                 async val => {
                     await helper.createBot(GLOBALS_BOT_ID, {
-                        onChannelAction: `@return ${val};`,
+                        onUniverseAction: `@return ${val};`,
                     });
 
                     await helper.createBot('test', {});
@@ -851,9 +851,9 @@ describe('AuxHelper', () => {
                 }
             );
 
-            it('should allow actions that onChannelAction() returns true for', async () => {
+            it('should allow actions that onUniverseAction() returns true for', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: '@return true',
+                    onUniverseAction: '@return true',
                 });
 
                 await helper.createBot('test', {});
@@ -874,9 +874,9 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow actions when onChannelAction() errors out', async () => {
+            it('should allow actions when onUniverseAction() errors out', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: '@throw new Error("Error")',
+                    onUniverseAction: '@throw new Error("Error")',
                 });
 
                 await helper.createBot('test', {});
@@ -899,7 +899,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter based on action type', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -927,7 +927,7 @@ describe('AuxHelper', () => {
 
             it('should filter actions from inside shouts', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -950,7 +950,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter out actions before they are run', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'action') {
                             action.reject(that.action);
                         }
@@ -971,13 +971,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow updates to the onChannelAction() handler by default', async () => {
+            it('should allow updates to the onUniverseAction() handler by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
                     botUpdated(GLOBALS_BOT_ID, {
                         tags: {
-                            onChannelAction: `@
+                            onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -990,7 +990,7 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: expect.objectContaining({
-                        onChannelAction: `@
+                        onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1000,13 +1000,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow the entire update and not just the onChannelAction() part', async () => {
+            it('should allow the entire update and not just the onUniverseAction() part', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
                     botUpdated(GLOBALS_BOT_ID, {
                         tags: {
-                            onChannelAction: `@
+                            onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1020,7 +1020,7 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: expect.objectContaining({
-                        onChannelAction: `@
+                        onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1045,7 +1045,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'action') {
                             create(null, {
                                 test: true
@@ -1068,7 +1068,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             create(null, {
                                 test: true

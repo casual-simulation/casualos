@@ -147,7 +147,7 @@ describe('AdminModule2', () => {
         });
 
         describe('device', () => {
-            it('should pipe device events through onChannelAction()', async () => {
+            it('should pipe device events through onUniverseAction()', async () => {
                 await simulation.helper.createBot('test', {
                     testShout: '@setTag(this, "abc", true)',
                 });
@@ -156,7 +156,7 @@ describe('AdminModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            onChannelAction: `@
+                            onUniverseAction: `@
                                 if (that.action.type === 'device') {
                                     action.perform(that.action.event);
                                 }

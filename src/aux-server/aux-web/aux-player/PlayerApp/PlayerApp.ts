@@ -30,12 +30,16 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
-    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-    ON_CHANNEL_STREAMING_ACTION_NAME,
-    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-    ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
     parseSimulationId,
     CameraType,
+    onUniverseStreamingArg,
+    onUniverseStreamLostArg,
+    onUniverseSubscribedArg,
+    onUniverseUnsubscribedArg,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -655,10 +659,10 @@ export default class PlayerApp extends Vue {
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
-                                ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-                                {
-                                    channel: simulation.parsedId.channel,
-                                }
+                                ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+                                onUniverseStreamLostArg(
+                                    simulation.parsedId.channel
+                                )
                             );
                         }
                     } else {
@@ -691,10 +695,10 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
-                                ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-                                {
-                                    channel: simulation.parsedId.channel,
-                                }
+                                ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+                                onUniverseSubscribedArg(
+                                    simulation.parsedId.channel
+                                )
                             );
 
                             for (let info of this.simulations) {
@@ -709,20 +713,16 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
-                                    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    {
-                                        channel: parsedId.channel,
-                                    }
+                                    onUniverseSubscribedArg(parsedId.channel)
                                 );
                             }
                         }
 
                         await this._superAction(
-                            ON_CHANNEL_STREAMING_ACTION_NAME,
-                            {
-                                channel: simulation.parsedId.channel,
-                            }
+                            ON_UNIVERSE_STREAMING_ACTION_NAME,
+                            onUniverseStreamingArg(simulation.parsedId.channel)
                         );
                     }
                 }
@@ -734,9 +734,10 @@ export default class PlayerApp extends Vue {
                 recordMessage(m);
             }),
             new Subscription(async () => {
-                await this._superAction(ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME, {
-                    channel: simulation.parsedId.channel,
-                });
+                await this._superAction(
+                    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+                    onUniverseUnsubscribedArg(simulation.parsedId.channel)
+                );
             })
         );
 

@@ -556,28 +556,30 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
+export const ON_ACTION_ACTION_NAME: string = 'onUniverseAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
+export const ON_UNIVERSE_STREAMING_ACTION_NAME: string = 'onUniverseStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
+export const ON_UNIVERSE_STREAM_LOST_ACTION_NAME: string =
+    'onUniverseStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
+export const ON_UNIVERSE_SUBSCRIBED_ACTION_NAME: string =
+    'onUniverseSubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
-    'onChannelUnsubscribed';
+export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
+    'onUniverseUnsubscribed';
 
 /**
  * The current bot format version for AUX Bots.
@@ -750,10 +752,10 @@ export const KNOWN_TAGS: string[] = [
     'onPointerExit',
     'onPointerDown',
     'onPointerUp',
-    'onChannelStreaming',
-    'onChannelStreamLost',
-    'onChannelSubscribed',
-    'onChannelUnsubscribed',
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
     'onPlayerEnterDimension',
     'onKeyDown',
     'onKeyUp',
@@ -764,7 +766,7 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook',
     'onAnyListen',
     'onListen',
-    'onChannelAction',
+    ON_ACTION_ACTION_NAME,
 ];
 
 export function onModDropArg(mod: BotTags, dimension: string) {
@@ -783,6 +785,30 @@ export function onDropArg(
         dragBot,
         to,
         from,
+    };
+}
+
+export function onUniverseStreamingArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseStreamLostArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseSubscribedArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseUnsubscribedArg(universe: string) {
+    return {
+        universe,
     };
 }
 

@@ -424,7 +424,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     /**
-     * Resolves the list of events through the onChannelAction() handler.
+     * Resolves the list of events through the onUniverseAction() handler.
      * @param events The events to resolve.
      */
     public resolveEvents(events: BotAction[]): BotAction[] {
@@ -466,7 +466,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return defaultActions;
         } catch (err) {
             console.error(
-                '[AuxHelper] The onChannelAction() handler errored:',
+                '[AuxHelper] The onUniverseAction() handler errored:',
                 err
             );
             return [];

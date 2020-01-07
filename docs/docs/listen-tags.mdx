@@ -400,51 +400,51 @@ let that: {
 };
 ```
 
-### `@onChannelSubscribed`
+### `@onUniverseSubscribed`
 
-A shout that is sent when a channel is loaded.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is loaded.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelUnsubscribed`
+### `@onUniverseUnsubscribed`
 
-A shout that is sent when a channel is unloaded.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is unloaded.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelStreaming`
+### `@onUniverseStreaming`
 
-A shout that is sent when a channel is connected and fully synced.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is connected and fully synced.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelStreamLost`
+### `@onUniverseStreamLost`
 
-A shout that is sent when a channel has been temporarily disconnected from the server.
-Sent to every channel that is loaded.
+A shout that is sent when a universe has been temporarily disconnected from the server.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
@@ -563,7 +563,7 @@ let that: {
 };
 ```
 
-### `@onChannelAction`
+### `@onUniverseAction`
 
 A whisper that is sent to the config bot whenever an action happens.
 

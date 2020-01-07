@@ -209,7 +209,7 @@ export function formulaActions(
     setEnergy(DEFAULT_ENERGY);
     setCurrentBot(scriptBot);
 
-    // BUG: This causes issues with onChannelAction() and action.reject() because the
+    // BUG: This causes issues with onUniverseAction() and action.reject() because the
     // input action is cloned and it causes resolveRejectedActions() to fail the SameValueZero check in Set.has().
     // arg = mapBotsToScriptBots(context, arg);
 

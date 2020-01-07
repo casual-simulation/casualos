@@ -273,12 +273,12 @@ describe('BaseAuxChannel', () => {
         });
     });
 
-    describe('onChannelAction()', () => {
-        it('should send new bot atoms through the onChannelAction() filter', async () => {
+    describe('onUniverseAction()', () => {
+        it('should send new bot atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'add_bot') {
                             action.reject(that.action);
                         }
@@ -295,11 +295,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete bot atoms through the onChannelAction() filter', async () => {
+        it('should send delete bot atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'remove_bot') {
                             action.reject(that.action);
                         }
@@ -318,11 +318,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send update tag atoms through the onChannelAction() filter', async () => {
+        it('should send update tag atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -345,11 +345,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete tag atoms through the onChannelAction() filter', async () => {
+        it('should send delete tag atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }

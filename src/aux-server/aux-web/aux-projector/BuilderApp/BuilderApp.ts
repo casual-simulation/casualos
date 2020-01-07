@@ -17,9 +17,11 @@ import {
     ShowInputType,
     ShowInputSubtype,
     BarcodeFormat,
-    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-    ON_CHANNEL_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    onUniverseStreamLostArg,
+    onUniverseStreamingArg,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -449,12 +451,11 @@ export default class BuilderApp extends Vue {
                                 if (this.subscribed) {
                                     this.lostConnection = true;
                                     await botManager.helper.action(
-                                        ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+                                        ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
                                         null,
-                                        {
-                                            channel:
-                                                botManager.parsedId.channel,
-                                        }
+                                        onUniverseStreamLostArg(
+                                            botManager.parsedId.channel
+                                        )
                                     );
                                 }
                             } else {
@@ -463,21 +464,20 @@ export default class BuilderApp extends Vue {
                                 if (!this.subscribed) {
                                     this.subscribed = true;
                                     await botManager.helper.action(
-                                        ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                        ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                         null,
-                                        {
-                                            channel:
-                                                botManager.parsedId.channel,
-                                        }
+                                        onUniverseSubscribedArg(
+                                            botManager.parsedId.channel
+                                        )
                                     );
                                 }
 
                                 await botManager.helper.action(
-                                    ON_CHANNEL_STREAMING_ACTION_NAME,
+                                    ON_UNIVERSE_STREAMING_ACTION_NAME,
                                     null,
-                                    {
-                                        channel: botManager.parsedId.channel,
-                                    }
+                                    onUniverseStreamingArg(
+                                        botManager.parsedId.channel
+                                    )
                                 );
                             }
                         }

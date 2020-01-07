@@ -550,9 +550,9 @@ player.setClipboard("hello");
 
 <FunctionCode name='setupChannel'/>
 
-Sends an action to the server that will create the given channel if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the channel if the channel did not exist.
-The action is only executed if <TagLink tag='@onChannelAction'/> has been configured to perform events in `device` actions.
+Sends an action to the server that will create the given universe if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the universe if the universe did not exist.
+The action is only executed if <TagLink tag='@onUniverseAction'/> has been configured to perform events in `device` actions.
 
 The **first parameter** is the ID of the channel that should be setup.
 
@@ -560,11 +560,11 @@ The **second parameter** is optional and is the bot or mod that should be cloned
 
 #### Examples:
 
-Before `server.setupChannel()` will work, you need to setup the <TagLink tag='@onChannelAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new channel.
+Before `server.setupChannel()` will work, you need to setup the <TagLink tag='@onUniverseAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new universe.
 By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
-Ensure that <TagLink tag='@onChannelAction'/> is setup properly.
+Ensure that <TagLink tag='@onUniverseAction'/> is setup properly.
 The following script will execute `setup_channel` events that were sent from other devices:
 ```typescript
 // Device actions are actions that were sent to this computer from another device
