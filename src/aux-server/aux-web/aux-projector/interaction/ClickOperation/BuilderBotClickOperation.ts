@@ -17,7 +17,7 @@ import {
 import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import dropWhile from 'lodash/dropWhile';
@@ -39,7 +39,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        bot: AuxBot3D | ContextGroup3D,
+        bot: AuxBot3D | DimensionGroup3D,
         hit: Intersection,
         vrController: VRController3D
     ) {
@@ -67,21 +67,21 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         const workspace = this._getWorkspace();
         if (!workspace) {
             const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
-            const context = bot3D.context;
+            const dimension = bot3D.dimension;
             const botWorkspace = this._interaction.findWorkspaceForMesh(
                 this._bot3D
             );
-            const position = getBotPosition(calc, bot3D.bot, context);
+            const position = getBotPosition(calc, bot3D.bot, dimension);
             if (botWorkspace && position) {
                 const objects = objectsAtDimensionGridPosition(
                     calc,
-                    context,
+                    dimension,
                     position
                 );
                 if (objects.length === 0) {
                     console.log('Found no objects at', position);
                     console.log(bot3D.bot);
-                    console.log(context);
+                    console.log(dimension);
                 }
                 const bot = this._bot;
                 const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
@@ -91,7 +91,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     this._hit,
                     draggedObjects,
                     <BuilderGroup3D>workspace,
-                    bot3D.context,
+                    bot3D.dimension,
                     this._vrController,
                     fromCoord
                 );
@@ -139,7 +139,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     }
 
     protected _canDrag(calc: BotCalculationContext): boolean {
-        if (this._bot3D instanceof ContextGroup3D) {
+        if (this._bot3D instanceof DimensionGroup3D) {
             let tags = getBotConfigDimensions(calc, this._bot);
             return (
                 isDimensionMovable(calc, this._bot) &&

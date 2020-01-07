@@ -62,7 +62,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         bots: Bot[],
-        context: string,
+        dimension: string,
         vrController: VRController3D | null,
         fromCoord: Vector2,
         skipOnDragEvents: boolean
@@ -71,7 +71,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             simulation3D,
             interaction,
             bots,
-            context,
+            dimension,
             vrController,
             fromCoord,
             skipOnDragEvents
@@ -131,11 +131,11 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
 
         this._showGrid(workspace);
 
-        this._previousContext = null;
-        if (!workspace.contexts.has(this._context)) {
-            const next = this._interaction.firstContextInWorkspace(workspace);
-            this._previousContext = this._context;
-            this._context = next;
+        this._previousDimension = null;
+        if (!workspace.dimensions.has(this._dimension)) {
+            const next = this._interaction.firstDimensionInWorkspace(workspace);
+            this._previousDimension = this._dimension;
+            this._dimension = next;
         }
 
         // calculate index for bot
@@ -176,7 +176,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
                 this._freeDragMeshes
             );
 
-            this._updateBotContexts(this._bots, false);
+            this._updateBotDimensions(this._bots, false);
 
             // Calculate the distance to perform free drag at.
             const botWorldPos = this._freeDragMeshes[0].getWorldPosition(
@@ -202,7 +202,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         let events: BotAction[] = [];
         let destroyedBots: string[] = [];
 
-        // Remove the bots from the context
+        // Remove the bots from the dimension
         for (let i = 0; i < bots.length; i++) {
             console.log(
                 '[BaseBuilderBotDragOperation] Destroy bot:',
@@ -241,17 +241,17 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this.simulation.helper.transaction(...events);
     }
 
-    private _removeFromContext(calc: BotCalculationContext, bots: Bot[]) {
+    private _removeFromDimension(calc: BotCalculationContext, bots: Bot[]) {
         let events: BotAction[] = [];
-        // Remove the bots from the context
+        // Remove the bots from the dimension
         for (let i = 0; i < bots.length; i++) {
             console.log(
-                '[BaseBuilderBotDragOperation] Remove bot from context:',
+                '[BaseBuilderBotDragOperation] Remove bot from dimension:',
                 bots[i].id
             );
             events.push(
                 botUpdated(bots[i].id, {
-                    tags: removeFromDimensionDiff(calc, this._context),
+                    tags: removeFromDimensionDiff(calc, this._dimension),
                 })
             );
         }
@@ -264,7 +264,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
     ) {
         return calculateBotDragStackPosition(
             calc,
-            this._context,
+            this._dimension,
             gridPosition,
             ...this._bots
         );

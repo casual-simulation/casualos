@@ -128,7 +128,7 @@ describe('AdminModule', () => {
                 );
             });
 
-            it('should run the given shell command and output the results to the auxFinishedTasks context', async () => {
+            it('should run the given shell command and output the results to the auxFinishedTasks dimension', async () => {
                 expect.assertions(1);
 
                 require('child_process').__setMockOutput(

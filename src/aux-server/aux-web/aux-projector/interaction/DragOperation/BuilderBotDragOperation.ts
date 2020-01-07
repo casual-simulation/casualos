@@ -31,7 +31,7 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
         hit: Intersection,
         bots: Bot[],
         workspace: BuilderGroup3D,
-        context: string,
+        dimension: string,
         vrController: VRController3D | null,
         fromCoord: Vector2,
         skipOnDragEvents: boolean = false
@@ -40,7 +40,7 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
             simulation3D,
             interaction,
             bots,
-            context,
+            dimension,
             vrController,
             fromCoord,
             skipOnDragEvents
@@ -74,7 +74,7 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
             null,
             [bot],
             null,
-            this._context,
+            this._dimension,
             this._vrController,
             this._fromCoord,
             true

@@ -14,7 +14,7 @@ import {
     updateBot,
     botRemoved,
     BotActions,
-    USERS_CONTEXT,
+    USERS_DIMENSION,
     BotsState,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
@@ -534,9 +534,9 @@ describe('AuxHelper', () => {
         });
 
         describe('paste_state', () => {
-            it('should add the given bots to a new context', async () => {
+            it('should add the given bots to a new dimension', async () => {
                 uuidMock
-                    .mockReturnValueOnce('context')
+                    .mockReturnValueOnce('dimension')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2');
                 await helper.transaction({
@@ -555,24 +555,24 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'context',
+                        auxDimension: 'dimension',
                         auxDimensionVisualize: 'surface',
                         auxDimensionX: 0,
                         auxDimensionY: 1,
                         auxDimensionZ: 2,
                     }),
                     bot2: createBot('bot2', {
-                        context: true,
-                        contextX: 0,
-                        contextY: 0,
+                        dimension: true,
+                        dimensionX: 0,
+                        dimensionY: 0,
                         test: 'abc',
                     }),
                 });
             });
 
-            it('should preserve X and Y positions if a context bot is included', async () => {
+            it('should preserve X and Y positions if a dimension bot is included', async () => {
                 uuidMock
-                    .mockReturnValueOnce('context')
+                    .mockReturnValueOnce('dimension')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2')
                     .mockReturnValueOnce('bot3');
@@ -586,7 +586,7 @@ describe('AuxHelper', () => {
                             oldY: 2,
                             oldZ: 1,
                         }),
-                        contextBot: createBot('contextBot', {
+                        dimensionBot: createBot('dimensionBot', {
                             auxDimension: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
@@ -601,7 +601,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'context',
+                        auxDimension: 'dimension',
                         auxDimensionVisualize: true,
                         auxDimensionX: -1,
                         auxDimensionY: 1,
@@ -609,25 +609,25 @@ describe('AuxHelper', () => {
                         other: 'def',
                     }),
                     bot2: createBot('bot2', {
-                        context: true,
-                        contextX: 3,
-                        contextY: 2,
-                        contextZ: 1,
+                        dimension: true,
+                        dimensionX: 3,
+                        dimensionY: 2,
+                        dimensionZ: 1,
                         test: 'abc',
                     }),
                 });
             });
 
-            it('should check the current state for contexts if they are not included in the copied state', async () => {
+            it('should check the current state for dimensions if they are not included in the copied state', async () => {
                 uuidMock
-                    .mockReturnValueOnce('context')
+                    .mockReturnValueOnce('dimension')
                     .mockReturnValueOnce('bot1')
                     .mockReturnValueOnce('bot2')
                     .mockReturnValueOnce('bot3');
 
                 await helper.transaction(
                     addState({
-                        contextBot: createBot('contextBot', {
+                        dimensionBot: createBot('dimensionBot', {
                             auxDimension: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
@@ -652,11 +652,11 @@ describe('AuxHelper', () => {
                 });
 
                 expect(helper.botsState).toEqual({
-                    contextBot: expect.any(Object),
+                    dimensionBot: expect.any(Object),
                     user: expect.any(Object),
                     bot1: expect.objectContaining(
                         createBot('bot1', {
-                            auxDimension: 'context',
+                            auxDimension: 'dimension',
                             auxDimensionVisualize: 'surface',
                             auxDimensionX: -1,
                             auxDimensionY: 1,
@@ -665,22 +665,22 @@ describe('AuxHelper', () => {
                     ),
                     bot2: expect.objectContaining(
                         createBot('bot2', {
-                            context: true,
-                            contextX: 0,
-                            contextY: 0,
-                            contextSortOrder: 0,
+                            dimension: true,
+                            dimensionX: 0,
+                            dimensionY: 0,
+                            dimensionSortOrder: 0,
                             test: 'abc',
                         })
                     ),
                 });
             });
 
-            it('should add the given bots to the given context at the given grid position', async () => {
+            it('should add the given bots to the given dimension at the given grid position', async () => {
                 uuidMock.mockReturnValueOnce('bot2');
 
                 await helper.transaction(
                     addState({
-                        contextBot: createBot('contextBot', {
+                        dimensionBot: createBot('dimensionBot', {
                             auxDimension: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
@@ -699,7 +699,7 @@ describe('AuxHelper', () => {
                         x: 0,
                         y: 1,
                         z: 2,
-                        context: 'fun',
+                        dimension: 'fun',
                     },
                 });
 
@@ -722,7 +722,7 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should add the given bots the given context at the given grid position', async () => {
+            it('should add the given bots the given dimension at the given grid position', async () => {
                 uuidMock.mockReturnValueOnce('bot2');
                 await helper.transaction({
                     type: 'paste_state',
@@ -735,7 +735,7 @@ describe('AuxHelper', () => {
                         x: 0,
                         y: 1,
                         z: 2,
-                        context: 'fun',
+                        dimension: 'fun',
                     },
                 });
 
@@ -1207,7 +1207,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
                 tags: {
-                    [USERS_CONTEXT]: true,
+                    [USERS_DIMENSION]: true,
                     ['_auxUser']: 'username',
                     ['_auxUserInventoryDimension']: '_user_username_inventory',
                     ['_auxUserMenuDimension']: '_user_username_menu',
@@ -1216,21 +1216,21 @@ describe('AuxHelper', () => {
             });
         });
 
-        const contextCases = [
-            ['menu context', '_auxUserMenuDimension', '_user_username_menu'],
+        const dimensionCases = [
+            ['menu dimension', '_auxUserMenuDimension', '_user_username_menu'],
             [
-                'inventory context',
+                'inventory dimension',
                 '_auxUserInventoryDimension',
                 '_user_username_inventory',
             ],
             [
-                'universes context',
+                'universes dimension',
                 '_auxUserUniversesDimension',
                 '_user_username_universes',
             ],
         ];
 
-        it.each(contextCases)(
+        it.each(dimensionCases)(
             'should add the %s to a user that doesnt have it',
             async (desc, tag, value) => {
                 await helper.createOrUpdateUserBot(
@@ -1254,8 +1254,8 @@ describe('AuxHelper', () => {
         );
     });
 
-    describe('createOrUpdateUserContextBot()', () => {
-        it('should create a context bot for all the users', async () => {
+    describe('createOrUpdateUserDimensionBot()', () => {
+        it('should create a dimension bot for all the users', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
                 shared: await createLocalCausalTreePartitionFactory(
@@ -1272,19 +1272,19 @@ describe('AuxHelper', () => {
 
             await tree.root();
 
-            uuidMock.mockReturnValueOnce('context');
-            await helper.createOrUpdateUserContextBot();
+            uuidMock.mockReturnValueOnce('dimension');
+            await helper.createOrUpdateUserDimensionBot();
 
-            expect(helper.botsState['context']).toMatchObject({
-                id: 'context',
+            expect(helper.botsState['dimension']).toMatchObject({
+                id: 'dimension',
                 tags: {
-                    ['auxDimension']: USERS_CONTEXT,
+                    ['auxDimension']: USERS_DIMENSION,
                     ['auxDimensionVisualize']: true,
                 },
             });
         });
 
-        it('should not create a context bot for all the users if one already exists', async () => {
+        it('should not create a dimension bot for all the users if one already exists', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
                 shared: await createLocalCausalTreePartitionFactory(
@@ -1300,14 +1300,14 @@ describe('AuxHelper', () => {
             helper.userId = userId;
 
             await tree.root();
-            await helper.createBot('userContext', {
-                auxDimension: USERS_CONTEXT,
+            await helper.createBot('userDimension', {
+                auxDimension: USERS_DIMENSION,
             });
 
-            uuidMock.mockReturnValueOnce('context');
-            await helper.createOrUpdateUserContextBot();
+            uuidMock.mockReturnValueOnce('dimension');
+            await helper.createOrUpdateUserDimensionBot();
 
-            expect(helper.botsState['context']).toBeUndefined();
+            expect(helper.botsState['dimension']).toBeUndefined();
         });
     });
 

@@ -85,10 +85,10 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
             // Handle camera position differently based on the type camera it is.
             let camPosition: Vector3 = mainCamera.position.clone();
 
-            // Scale camera's local position so that it maps to the context positioning.
+            // Scale camera's local position so that it maps to the dimension positioning.
             const gridScale = calculateGridScale(
                 calc,
-                this.bot3D.contextGroup.bot
+                this.bot3D.dimensionGroup.bot
             );
             const scale = calculateScale(calc, this.bot3D.bot, gridScale);
             camPosition.x /= scale.x;
@@ -145,8 +145,8 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
                 camPosition = newCamPos.clone();
             }
 
-            const botPosition = getBotPosition(calc, bot, this.bot3D.context);
-            const botRotation = getBotRotation(calc, bot, this.bot3D.context);
+            const botPosition = getBotPosition(calc, bot, this.bot3D.dimension);
+            const botRotation = getBotRotation(calc, bot, this.bot3D.dimension);
 
             const botRotationVector = new Vector3(0, 0, 1).applyEuler(
                 new Euler(botRotation.x, botRotation.z, botRotation.y)
@@ -161,19 +161,19 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
+                this.bot3D.dimensionGroup.simulation3D.simulation.helper.updateBot(
                     bot,
                     {
                         tags: {
-                            [`${this.bot3D.context}X`]: camPosition.x,
+                            [`${this.bot3D.dimension}X`]: camPosition.x,
 
                             // Mirror the Y coordinate so it works with ContextPositionDecorator
-                            [`${this.bot3D.context}Y`]: -camPosition.z,
+                            [`${this.bot3D.dimension}Y`]: -camPosition.z,
 
-                            [`${this.bot3D.context}Z`]: camPosition.y,
-                            [`${this.bot3D.context}RotationX`]: camRotation.x,
-                            [`${this.bot3D.context}RotationY`]: camRotation.z,
-                            [`${this.bot3D.context}RotationZ`]: camRotation.y,
+                            [`${this.bot3D.dimension}Z`]: camPosition.y,
+                            [`${this.bot3D.dimension}RotationX`]: camRotation.x,
+                            [`${this.bot3D.dimension}RotationY`]: camRotation.z,
+                            [`${this.bot3D.dimension}RotationZ`]: camRotation.y,
                         },
                     }
                 );
@@ -197,7 +197,7 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
+            this.bot3D.dimensionGroup.simulation3D.simulation.helper.updateBot(
                 <AuxObject>this.bot3D.bot,
                 {
                     tags: {

@@ -1,7 +1,7 @@
 import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
-import { ContextPositionDecorator } from './ContextPositionDecorator';
+import { DimensionPositionDecorator } from './ContextPositionDecorator';
 import { BotShapeDecorator } from './BotShapeDecorator';
 import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
@@ -60,7 +60,7 @@ export class AuxBot3DDecoratorFactory {
 
         decorators.push(
             new ScaleDecorator(bot3d),
-            new ContextPositionDecorator(bot3d, { lerp: isUser })
+            new DimensionPositionDecorator(bot3d, { lerp: isUser })
         );
 
         if (!!this.game) {

@@ -66,9 +66,9 @@ describe('RecentBotManager', () => {
             });
         });
 
-        it('should ignore context tags', () => {
+        it('should ignore dimension tags', () => {
             helper.botsState = {
-                context: createPrecalculatedBot('context', {
+                dimension: createPrecalculatedBot('dimension', {
                     auxDimension: 'abc',
                 }),
             };
@@ -97,7 +97,7 @@ describe('RecentBotManager', () => {
 
         it('should be an empty bot if no tags can be used as a diff', async () => {
             helper.botsState = {
-                context: createPrecalculatedBot('context', {
+                dimension: createPrecalculatedBot('dimension', {
                     auxDimension: 'abc',
                 }),
             };

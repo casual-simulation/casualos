@@ -1,4 +1,4 @@
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import {
     Bot,
     AuxDomain,
@@ -7,7 +7,7 @@ import {
 import { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/AuxBot3DDecoratorFactory';
 import { InventorySimulation3D } from './InventorySimulation3D';
 
-export class InventoryContextGroup3D extends ContextGroup3D {
+export class InventoryContextGroup3D extends DimensionGroup3D {
     simulation3D: InventorySimulation3D; // Override base class type.
 
     constructor(

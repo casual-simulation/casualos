@@ -28,7 +28,7 @@ export const GRIDLINES_Y_START = -5;
 export const GRIDLINES_Y_END = 5;
 
 /**
- * A grid for Aux Player to help position objects in a context.
+ * A grid for Aux Player to help position objects in a dimension.
  */
 export class PlayerGrid3D extends Object3D {
     tileScale: number;

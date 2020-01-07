@@ -113,13 +113,13 @@ const routes: RouteConfig[] = [
         }),
     },
     {
-        path: '/:context/:id?',
+        path: '/:dimension/:id?',
         name: 'aux-player',
         redirect: to => {
             if (appManager.config) {
                 console.log('[Router] Redirect to player');
                 const url = new URL(
-                    `/${to.params.context}/${to.params.id}`,
+                    `/${to.params.dimension}/${to.params.id}`,
                     window.location.href
                 );
                 window.location.href = url.href;

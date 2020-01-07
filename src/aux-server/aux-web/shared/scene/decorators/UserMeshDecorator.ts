@@ -79,7 +79,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
     private _isActive(calc: BotCalculationContext): boolean {
         let userVisible = calculateBooleanTagValue(
             calc,
-            this.bot3D.contextGroup.bot,
+            this.bot3D.dimensionGroup.bot,
             'auxDimensionDevicesVisible',
             true
         );
@@ -88,15 +88,15 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateColor(calc: BotCalculationContext) {
-        if (this.bot3D.contextGroup === null) {
+        if (this.bot3D.dimensionGroup === null) {
             return;
         }
 
-        const isInAuxPlayer = this.bot3D.context !== USERS_CONTEXT;
+        const isInAuxPlayer = this.bot3D.dimension !== USERS_CONTEXT;
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,
-            this.bot3D.contextGroup.simulation3D.simulation.helper.globalsBot,
+            this.bot3D.dimensionGroup.simulation3D.simulation.helper.globalsBot,
             isInAuxPlayer ? 'player' : 'builder'
         );
 

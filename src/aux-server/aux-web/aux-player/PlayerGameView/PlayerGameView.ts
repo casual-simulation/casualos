@@ -8,8 +8,8 @@ import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { PlayerGame } from '../scene/PlayerGame';
 import { Game } from '../../shared/scene/Game';
 import { map, tap, combineLatest } from 'rxjs/operators';
-import { ContextItem } from '../ContextItem';
-import { ItemContext } from '../ItemContext';
+import { DimensionItem } from '../DimensionItem';
+import { ItemDimension } from '../ItemDimension';
 
 @Component({
     components: {
@@ -25,12 +25,12 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     hasMainViewport: boolean = false;
     hasInventoryViewport: boolean = false;
-    menu: ContextItem[] = [];
+    menu: DimensionItem[] = [];
 
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
-    @Prop() context: string;
+    @Prop() dimension: string;
 
     lastMenuCount: number = null;
 
@@ -66,7 +66,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 .subscribe()
         );
 
-        let menuContext = new ItemContext(['_auxUserMenuDimension']);
+        let menuContext = new ItemDimension(['_auxUserMenuDimension']);
         this._subscriptions.push(menuContext);
         this._subscriptions.push(
             menuContext.itemsUpdated.subscribe(items => (this.menu = items))

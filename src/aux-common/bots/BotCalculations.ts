@@ -17,7 +17,7 @@ import {
     BotLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
     BotDragMode,
-    ContextVisualizeMode,
+    DimensionVisualizeMode,
     PrecalculatedBot,
     PrecalculatedTags,
     BotsState,
@@ -770,7 +770,7 @@ export function removeFromDimensionDiff(
 /**
  * Gets a diff that sets a bot's position in the given dimension.
  * @param calc The bot calculation context.
- * @param dimension The context.
+ * @param dimension The dimension.
  * @param x The X position.
  * @param y The Y position.
  * @param index The index.
@@ -923,7 +923,7 @@ export function createWorkspace(
     builderDimensionId: string = createDimensionId(),
     locked: boolean = false
 ): Workspace {
-    // checks if given context string is empty or just whitespace
+    // checks if given dimension string is empty or just whitespace
     if (builderDimensionId.length === 0 || /^\s*$/.test(builderDimensionId)) {
         builderDimensionId = createDimensionId();
     }
@@ -1346,7 +1346,7 @@ export function getBotConfigDimensions(
 }
 
 /**
- * Parses a list of context names from the given value.
+ * Parses a list of dimension names from the given value.
  * @param value The value to parse.
  */
 export function parseBotConfigDimensions(value: any): string[] {
@@ -1553,7 +1553,7 @@ export function getDimensionSize(
 export function getDimensionVisualizeMode(
     calc: BotCalculationContext,
     bot: Bot
-): ContextVisualizeMode {
+): DimensionVisualizeMode {
     const val = calculateBotValue(calc, bot, 'auxDimensionVisualize');
     if (typeof val === 'boolean') {
         return val;
@@ -2129,7 +2129,7 @@ export function getBotChannel(
 }
 
 /**
- * Gets the first bot which is in the aux.channels context that has the auxChannel tag set to the given ID.
+ * Gets the first bot which is in the aux.channels dimension that has the auxChannel tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */

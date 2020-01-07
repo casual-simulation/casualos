@@ -23,31 +23,31 @@ export default interface SimulationItem {
     bot: Bot;
     simulation: PlayerSimulation3D;
     simulationToLoad: string;
-    context: string;
+    dimension: string;
 }
 
 /**
- * SimulationContext is a helper class for managing the set of simulations that a user has loaded.
+ * SimulationDimension is a helper class for managing the set of simulations that a user has loaded.
  */
-export class SimulationContext {
+export class SimulationDimension {
     /**
-     * The simulation that the context is for.
+     * The simulation that the dimension is for.
      */
     simulation: PlayerSimulation3D;
 
     /**
-     * The context that this object represents.
+     * The dimension that this object represents.
      */
-    context: string = null;
+    dimension: string = null;
 
     /**
-     * All the bots that are in this context.
+     * All the bots that are in this dimension.
      */
     bots: Bot[] = [];
 
     /**
-     * The bots in this contexts mapped into simulation items.
-     * Bots are ordered in ascending order based on their index in the context.
+     * The bots in this dimensions mapped into simulation items.
+     * Bots are ordered in ascending order based on their index in the dimensions.
      */
     items: SimulationItem[] = [];
 
@@ -61,55 +61,55 @@ export class SimulationContext {
     private _itemsUpdated: Subject<void>;
     private _itemsDirty: boolean;
 
-    constructor(simulation: PlayerSimulation3D, context: string) {
-        if (context == null || context == undefined) {
-            throw new Error('Menu context cannot be null or undefined.');
+    constructor(simulation: PlayerSimulation3D, dimension: string) {
+        if (dimension == null || dimension == undefined) {
+            throw new Error('Menu dimension cannot be null or undefined.');
         }
         this.simulation = simulation;
-        this.context = context;
+        this.dimension = dimension;
         this.bots = [];
         this._itemsUpdated = new Subject<void>();
     }
 
     /**
-     * Notifies this context that the given bot was added to the state.
+     * Notifies this dimension that the given bot was added to the state.
      * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
     botAdded(bot: Bot, calc: BotCalculationContext) {
-        const isInContext = !!this.bots.find(f => f.id == bot.id);
-        const shouldBeInContext =
-            isBotInDimension(calc, bot, this.context) &&
+        const isInDimension = !!this.bots.find(f => f.id == bot.id);
+        const shouldBeInDimension =
+            isBotInDimension(calc, bot, this.dimension) &&
             isSimulation(calc, bot);
 
-        if (!isInContext && shouldBeInContext) {
+        if (!isInDimension && shouldBeInDimension) {
             this._addBot(bot, calc);
         }
     }
 
     /**
-     * Notifies this context that the given bot was updated.
+     * Notifies this dimension that the given bot was updated.
      * @param bot The bot.
      * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
     botUpdated(bot: Bot, updates: Set<string>, calc: BotCalculationContext) {
-        const isInContext = !!this.bots.find(f => f.id == bot.id);
-        const shouldBeInContext =
-            isBotInDimension(calc, bot, this.context) &&
+        const isInDimension = !!this.bots.find(f => f.id == bot.id);
+        const shouldBeInDimension =
+            isBotInDimension(calc, bot, this.dimension) &&
             isSimulation(calc, bot);
 
-        if (!isInContext && shouldBeInContext) {
+        if (!isInDimension && shouldBeInDimension) {
             this._addBot(bot, calc);
-        } else if (isInContext && !shouldBeInContext) {
+        } else if (isInDimension && !shouldBeInDimension) {
             this._removeBot(bot.id);
-        } else if (isInContext && shouldBeInContext) {
+        } else if (isInDimension && shouldBeInDimension) {
             this._updateBot(bot, updates, calc);
         }
     }
 
     /**
-     * Notifies this context that the given bot was removed from the state.
+     * Notifies this dimension that the given bot was removed from the state.
      * @param bot The ID of the bot that was removed.
      * @param calc The calculation context.
      */
@@ -152,13 +152,13 @@ export class SimulationContext {
 
     private _resortItems(calc: BotCalculationContext): void {
         this.items = sortBy(this.bots, f =>
-            botDimensionSortOrder(calc, f, this.context)
+            botDimensionSortOrder(calc, f, this.dimension)
         ).map(f => {
             return {
                 bot: f,
                 simulation: this.simulation,
                 simulationToLoad: getBotChannel(calc, f),
-                context: this.context,
+                dimension: this.dimension,
             };
         });
 

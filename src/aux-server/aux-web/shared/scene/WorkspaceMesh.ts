@@ -258,10 +258,10 @@ export class WorkspaceMesh extends GameObject {
                 return;
             }
             let localPosition = calculateGridTileLocalCenter(
-                calculateBotValue(calc, bot.bot, bot.context + 'X'),
-                calculateBotValue(calc, bot.bot, bot.context + 'Y'),
-                calculateBotValue(calc, bot.bot, bot.context + 'Z'),
-                calculateGridScale(calc, bot.contextGroup.bot)
+                calculateBotValue(calc, bot.bot, bot.dimension + 'X'),
+                calculateBotValue(calc, bot.bot, bot.dimension + 'Y'),
+                calculateBotValue(calc, bot.bot, bot.dimension + 'Z'),
+                calculateGridScale(calc, bot.dimensionGroup.bot)
             );
 
             let axial: Axial = realPosToGridPos(

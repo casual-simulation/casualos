@@ -111,18 +111,18 @@ const routes: RouteConfig[] = [
         },
     },
     {
-        path: '/:context/:id?',
+        path: '/:dimension/:id?',
         name: 'home',
         component: PlayerHome,
         beforeEnter: (to, from, next) => {
-            if (to.params.context === '*' || !to.params.context) {
+            if (to.params.dimension === '*' || !to.params.dimension) {
                 redirectToBuilder(to.params.id);
             } else {
                 next();
             }
         },
         props: route => ({
-            context: route.params.context,
+            dimension: route.params.dimension,
             primaryChannel: route.params.id,
             channels: route.query.channels,
         }),

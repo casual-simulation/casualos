@@ -34,7 +34,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { AuxBot3DDecoratorFactory } from '../../scene/decorators/AuxBot3DDecoratorFactory';
 import { setParent } from '../../scene/SceneUtils';
-import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 
 /**
  * Class that provides base functionality for dragging mods.
@@ -51,8 +51,8 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _merge: boolean;
     protected _other: Bot;
     protected _bot: Bot;
-    protected _context: string;
-    protected _previousContext: string;
+    protected _dimension: string;
+    protected _previousDimension: string;
     protected _vrController: VRController3D;
 
     /**
@@ -73,16 +73,16 @@ export abstract class BaseModDragOperation implements IOperation {
         return this._bot;
     }
 
-    protected get contextGroup() {
-        return this._modMesh.contextGroup;
+    protected get dimensionGroup() {
+        return this._modMesh.dimensionGroup;
     }
 
-    protected set contextGroup(group: ContextGroup3D) {
-        const prev = this.contextGroup;
+    protected set dimensionGroup(group: DimensionGroup3D) {
+        const prev = this.dimensionGroup;
         if (prev) {
             prev.display.remove(this._modMesh);
         }
-        this._modMesh.contextGroup = group;
+        this._modMesh.dimensionGroup = group;
         if (group) {
             group.display.add(this._modMesh);
         }
@@ -97,7 +97,6 @@ export abstract class BaseModDragOperation implements IOperation {
      * @param simulation3D The simulation.
      * @param interaction The interaction manager.
      * @param mod The mod to drag.
-     * @param context The context that the bots are currently in.
      */
     constructor(
         simulation3D: Simulation3D,
@@ -109,7 +108,7 @@ export abstract class BaseModDragOperation implements IOperation {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._mod = mod;
-        this._previousContext = null;
+        this._previousDimension = null;
         this._lastGridPos = null;
         this._lastIndex = null;
         this._vrController = vrController;
@@ -131,8 +130,8 @@ export abstract class BaseModDragOperation implements IOperation {
             this._bot = createBot(undefined, this._mod);
             this._modMesh = this._createDragMesh(calc, this._bot);
 
-            if (this.contextGroup) {
-                this.contextGroup.display.add(this._modMesh);
+            if (this.dimensionGroup) {
+                this.dimensionGroup.display.add(this._modMesh);
             }
         }
 
@@ -215,7 +214,7 @@ export abstract class BaseModDragOperation implements IOperation {
         gridPosition: Vector2,
         index: number
     ) {
-        if (!this._context) {
+        if (!this._dimension) {
             return;
         }
 
@@ -232,14 +231,14 @@ export abstract class BaseModDragOperation implements IOperation {
         this._lastIndex = index;
 
         let tags = {
-            [this._context]: true,
-            [`${this._context}X`]: gridPosition.x,
-            [`${this._context}Y`]: gridPosition.y,
-            [`${this._context}SortOrder`]: index,
+            [this._dimension]: true,
+            [`${this._dimension}X`]: gridPosition.x,
+            [`${this._dimension}Y`]: gridPosition.y,
+            [`${this._dimension}SortOrder`]: index,
         };
 
-        if (this._previousContext) {
-            tags[this._previousContext] = null;
+        if (this._previousDimension) {
+            tags[this._previousDimension] = null;
         }
 
         this._updateBot(calc, tags);
@@ -247,13 +246,13 @@ export abstract class BaseModDragOperation implements IOperation {
 
     protected _updateModContexts(
         calc: BotCalculationContext,
-        inContext: boolean
+        inDimension: boolean
     ) {
-        if (!this._context) {
+        if (!this._dimension) {
             return;
         }
         let tags = {
-            [this._context]: inContext,
+            [this._dimension]: inDimension,
         };
 
         this._updateBot(calc, tags);
@@ -265,7 +264,7 @@ export abstract class BaseModDragOperation implements IOperation {
             id: this._bot.id,
             tags: this._mod,
         };
-        this._modMesh.context = this._context;
+        this._modMesh.dimension = this._dimension;
 
         const modBot = merge(this._bot, {
             tags: {
@@ -280,9 +279,9 @@ export abstract class BaseModDragOperation implements IOperation {
      * Put the the bots pack in the workspace and remove the group.
      */
     private _releaseMeshes(): void {
-        if (this.contextGroup) {
+        if (this.dimensionGroup) {
             // Remove the mesh from the group.
-            this.contextGroup.display.remove(this._modMesh);
+            this.dimensionGroup.display.remove(this._modMesh);
         }
         this._modMesh.dispose();
     }
@@ -325,7 +324,7 @@ export abstract class BaseModDragOperation implements IOperation {
     }
 
     protected _createModDropArg() {
-        return onModDropArg(this._mod, this._context);
+        return onModDropArg(this._mod, this._dimension);
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {}

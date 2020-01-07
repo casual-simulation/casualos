@@ -293,7 +293,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             progress: 0.9,
         });
         await this._initGlobalsBot();
-        await this._initUserContextBot();
+        await this._initUserDimensionBot();
     }
 
     async setUser(user: AuxUser): Promise<void> {
@@ -595,12 +595,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    private async _initUserContextBot() {
+    private async _initUserDimensionBot() {
         try {
-            await this._helper.createOrUpdateUserContextBot();
+            await this._helper.createOrUpdateUserDimensionBot();
         } catch (err) {
             console.error(
-                '[BaseAuxChannel] Unable to init user context bot:',
+                '[BaseAuxChannel] Unable to init user dimension bot:',
                 err
             );
         }

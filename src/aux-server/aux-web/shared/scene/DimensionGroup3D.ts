@@ -13,21 +13,21 @@ import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';
-import { ContextGroup } from './ContextGroup';
+import { DimensionGroup } from './DimensionGroup';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { ContextGroupHelper } from './ContextGroupHelper';
+import { DimensionGroupHelper } from './DimensionGroupHelper';
 
 /**
- * Defines a class that represents a visualization of a context for the AUX Builder.
+ * Defines a class that represents a visualization of a dimension for the AUX Builder.
  *
- * Note that each aux bot gets its own builder context.
- * Whether or not anything is visualized in the context depends on the bot tags.
+ * Note that each aux bot gets its own builder dimension.
+ * Whether or not anything is visualized in the dimension depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject implements ContextGroup {
-    private _helper: ContextGroupHelper<AuxBot3D>;
+export class DimensionGroup3D extends GameObject implements DimensionGroup {
+    private _helper: DimensionGroupHelper<AuxBot3D>;
 
     /**
-     * The group that contains the contexts that this group is displaying.
+     * The group that contains the dimensions that this group is displaying.
      */
     display: Group;
 
@@ -46,8 +46,8 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
         return this._helper.bots;
     }
 
-    get contexts() {
-        return this._helper.contexts;
+    get dimensions() {
+        return this._helper.dimensions;
     }
 
     protected _childColliders: Object3D[];
@@ -55,14 +55,14 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     protected _colliders: Object3D[];
 
     /**
-     * Gets the colliders that should be used for this context group.
+     * Gets the colliders that should be used for this dimension group.
      */
     get groupColliders() {
         return this._colliders;
     }
 
     /**
-     * Sets the colliders that should be used for this context group.
+     * Sets the colliders that should be used for this dimension group.
      */
     set groupColliders(value: Object3D[]) {
         this._colliders = value;
@@ -81,7 +81,7 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     }
 
     /**
-     * Creates a new Builder Context 3D Object.
+     * Creates a new Builder dimension 3D Object.
      * @param The bot that this builder represents.
      */
     constructor(
@@ -92,7 +92,7 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     ) {
         super();
         this.simulation3D = simulation3D;
-        this._helper = new ContextGroupHelper<AuxBot3D>(bot);
+        this._helper = new DimensionGroupHelper<AuxBot3D>(bot);
         this.domain = domain;
         this.display = new Group();
         this._decoratorFactory = decoratorFactory;
@@ -100,36 +100,36 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
         this.add(this.display);
     }
 
-    addContext(context: string): void {
-        this._helper.addContext(context);
+    addDimension(dimension: string): void {
+        this._helper.addDimension(dimension);
     }
 
-    removeContext(context: string): AuxBotVisualizer[] {
-        const bots = this._helper.removeContext(context);
+    removeDimension(dimension: string): AuxBotVisualizer[] {
+        const bots = this._helper.removeDimension(dimension);
         for (let bot of bots) {
-            this.removeBotFromContext(context, bot);
+            this.removeBotFromDimension(dimension, bot);
         }
         return bots;
     }
 
-    hasBotInContext(context: string, id: string): boolean {
-        return this._helper.hasBotInContext(context, id);
+    hasBotInDimension(dimension: string, id: string): boolean {
+        return this._helper.hasBotInDimension(dimension, id);
     }
 
-    getBotInContext(context: string, id: string): AuxBotVisualizer {
-        return this._helper.getBotInContext(context, id);
+    getBotInDimension(dimension: string, id: string): AuxBotVisualizer {
+        return this._helper.getBotInDimension(dimension, id);
     }
 
-    addBotToContext(context: string, bot: Bot): AuxBotVisualizer {
+    addBotToDimension(dimension: string, bot: Bot): AuxBotVisualizer {
         const mesh = new AuxBot3D(
             bot,
             this,
-            context,
+            dimension,
             this.childColliders,
             this._decoratorFactory
         );
-        this._helper.addBotToContext(context, bot, mesh);
-        const bots = this.getBotsInContext(context);
+        this._helper.addBotToDimension(dimension, bot, mesh);
+        const bots = this.getBotsInDimension(dimension);
 
         this.display.add(mesh);
         bots.set(bot.id, mesh);
@@ -137,28 +137,28 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
         return mesh;
     }
 
-    removeBotFromContext(context: string, bot: AuxBotVisualizer): void {
+    removeBotFromDimension(dimension: string, bot: AuxBotVisualizer): void {
         if (!(bot instanceof AuxBot3D)) {
             return;
         }
-        const bots = this.getBotsInContext(context);
+        const bots = this.getBotsInDimension(dimension);
         bots.delete(bot.bot.id);
         this.display.remove(bot);
     }
 
-    getBotsInContext(context: string): Map<string, AuxBot3D> {
-        return this._helper.getBotsInContext(context);
+    getBotsInDimension(dimension: string): Map<string, AuxBot3D> {
+        return this._helper.getBotsInDimension(dimension);
     }
 
     /**
-     * Gets the bots that are contained by this builder context.
+     * Gets the bots that are contained by this builder dimension.
      */
     getBots() {
         return flatMap([...this.bots.values()].map(b => [...b.values()]));
     }
 
     /**
-     * Notifies the builder context that the given bot was added to the state.
+     * Notifies the builder dimension that the given bot was added to the state.
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
@@ -170,7 +170,7 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     }
 
     /**
-     * Notifies the builder context that the given bot was updated.
+     * Notifies the builder dimension that the given bot was updated.
      * @param bot The bot that was updated.
      * @param tags The tags that were updated on the bot.
      * @param calc The bot calculation context that should be used.
@@ -183,7 +183,7 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     }
 
     /**
-     * Notifies the builder context that the given bot was removed from the state.
+     * Notifies the builder dimension that the given bot was removed from the state.
      * @param id The ID of the bot that was removed.
      * @param calc The bot calculation context that should be used.
      */

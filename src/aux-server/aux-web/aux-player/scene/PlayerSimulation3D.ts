@@ -18,8 +18,8 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { doesBotDefinePlayerContext } from '../PlayerUtils';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
+import { doesBotDefinePlayerDimension } from '../PlayerUtils';
 import {
     Color,
     Texture,
@@ -35,17 +35,17 @@ import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * Keep bots in a back buffer so that we can add bots to contexts when they come in.
-     * We should not guarantee that contexts will come first so we must have some lazy bot adding.
+     * Keep bots in a back buffer so that we can add bots to dimensions when they come in.
+     * We should not guarantee that dimensions will come first so we must have some lazy bot adding.
      */
     private _botBackBuffer: Map<string, Bot>;
 
     /**
-     * The current context group 3d that the AUX Player is rendering.
+     * The current dimension group 3d that the AUX Player is rendering.
      */
-    private _contextGroup: ContextGroup3D;
+    private _dimensionGroup: DimensionGroup3D;
 
-    private _contextBackground: Color | Texture = null;
+    private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
@@ -86,8 +86,8 @@ export class PlayerSimulation3D extends Simulation3D {
      * Gets the background color that the simulation defines.
      */
     get backgroundColor() {
-        if (this._contextBackground) {
-            return this._contextBackground;
+        if (this._dimensionBackground) {
+            return this._dimensionBackground;
         } else {
             return super.backgroundColor;
         }
@@ -348,10 +348,10 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    constructor(context: string, game: Game, simulation: BrowserSimulation) {
+    constructor(dimension: string, game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 
-        this.dimension = context;
+        this.dimension = dimension;
         this._botBackBuffer = new Map();
 
         const calc = this.simulation.helper.createContext();
@@ -364,7 +364,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         let gridScale = calculateGridScale(
             calc,
-            this._contextGroup ? this._contextGroup.bot : null
+            this._dimensionGroup ? this._dimensionGroup.bot : null
         );
         this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
         this.grid3D.useAuxCoordinates = true;
@@ -378,11 +378,11 @@ export class PlayerSimulation3D extends Simulation3D {
         super.init();
     }
 
-    setContext(context: string) {
-        if (this.dimension === context) {
+    setDimension(dimension: string) {
+        if (this.dimension === dimension) {
             return;
         }
-        this.dimension = context;
+        this.dimension = dimension;
         this.unsubscribe();
         this.closed = false;
         this.init();
@@ -393,27 +393,27 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
-    protected _createContextGroup(
+    protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        const _3DContext = this._create3DContextGroup(calc, bot);
-        return _3DContext;
+        const _3dDimension = this._create3dDimensionGroup(calc, bot);
+        return _3dDimension;
     }
 
-    protected _create3DContextGroup(
+    protected _create3dDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        if (this._contextGroup) {
+        if (this._dimensionGroup) {
             return null;
         }
-        // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
-        const result = doesBotDefinePlayerContext(bot, this.dimension, calc);
-        const contextLocked = isDimensionLocked(calc, bot);
-        if (result.matchFound && !contextLocked) {
-            // Create ContextGroup3D for this bot that we will use to render all bots in the context.
-            this._contextGroup = new ContextGroup3D(
+        // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
+        const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
+        const dimensionLocked = isDimensionLocked(calc, bot);
+        if (result.matchFound && !dimensionLocked) {
+            // Create DimensionGroup3D for this bot that we will use to render all bots in the dimension.
+            this._dimensionGroup = new DimensionGroup3D(
                 this,
                 bot,
                 'player',
@@ -422,27 +422,27 @@ export class PlayerSimulation3D extends Simulation3D {
 
             this._setupGrid(calc);
 
-            // Subscribe to bot change updates for this context bot so that we can do things like change the background color to match the context color, etc.
+            // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
             this._subs.push(
                 this.simulation.watcher
                     .botChanged(bot.id)
                     .pipe(
                         tap(update => {
                             const bot = update;
-                            // Update the context background color.
-                            //let contextBackgroundColor =
+                            // Update the dimension background color.
+                            //let dimensionBackgroundColor =
                             //bot.tags['auxDimensionColor'];
 
-                            let contextBackgroundColor = calculateBotValue(
+                            let dimensionBackgroundColor = calculateBotValue(
                                 calc,
                                 bot,
                                 `auxDimensionColor`
                             );
 
-                            this._contextBackground = hasValue(
-                                contextBackgroundColor
+                            this._dimensionBackground = hasValue(
+                                dimensionBackgroundColor
                             )
-                                ? new Color(contextBackgroundColor)
+                                ? new Color(dimensionBackgroundColor)
                                 : undefined;
 
                             this._pannable = calculateBooleanTagValue(
@@ -613,10 +613,10 @@ export class PlayerSimulation3D extends Simulation3D {
                     .subscribe()
             );
 
-            return this._contextGroup;
-        } else if (result.matchFound && contextLocked) {
+            return this._dimensionGroup;
+        } else if (result.matchFound && dimensionLocked) {
             let message: string =
-                'The ' + this.dimension + ' context is locked.';
+                'The ' + this.dimension + ' dimension is locked.';
 
             this.simulation.helper.transaction(toast(message));
 
@@ -628,42 +628,15 @@ export class PlayerSimulation3D extends Simulation3D {
         return null;
     }
 
-    // protected _createSimulationContextGroup(
-    //     calc: BotCalculationContext,
-    //     bot: PrecalculatedBot
-    // ) {
-    //     if (bot.id === this.simulation.helper.userId) {
-    //         const userSimulationContextValue =
-    //             bot.values['_auxUserUniversesDimension'];
-    //         if (
-    //             !this.simulationContext ||
-    //             this.simulationContext.context !== userSimulationContextValue
-    //         ) {
-    //             this.simulationContext = new SimulationContext(
-    //                 this,
-    //                 userSimulationContextValue
-    //             );
-    //             console.log(
-    //                 '[PlayerSimulation3D] User changed simulation context to: ',
-    //                 userSimulationContextValue
-    //             );
-
-    //             return this.simulationContext;
-    //         }
-    //     }
-
-    //     return null;
-    // }
-
-    protected _isContextGroupEvent(event: BotIndexEvent) {
+    protected _isDimensionGroupEvent(event: BotIndexEvent) {
         return (
-            super._isContextGroupEvent(event) ||
+            super._isDimensionGroupEvent(event) ||
             (event.bot.id === this.simulation.helper.userId &&
-                this._isUserContextGroupEvent(event))
+                this._isUserDimensionGroupEvent(event))
         );
     }
 
-    private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
+    private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
         return (
             event.tag === '_auxUserMenuDimension' ||
             event.tag === '_auxUserUniversesDimension'
@@ -671,11 +644,11 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     // TODO:
-    // protected _removeContext(context: ContextGroup3D, removedIndex: number) {
-    //     super._removeContext(context, removedIndex);
+    // protected _removeDimension(dimension: DimensionGroup3D, removedIndex: number) {
+    //     super._removeDimension(dimension, removedIndex);
 
-    //     if (context === this._contextGroup) {
-    //         this._contextGroup = null;
+    //     if (dimension === this._dimensionGroup) {
+    //         this._dimensionGroup = null;
     //     }
     // }
 
@@ -683,7 +656,7 @@ export class PlayerSimulation3D extends Simulation3D {
         super._onLoaded();
 
         // need to cause an action when another user joins
-        // Send an event to all bots indicating that the given context was loaded.
+        // Send an event to all bots indicating that the given dimension was loaded.
         this.simulation.helper.action('onPlayerEnterDimension', null, {
             dimension: this.dimension,
             player: this.simulation.helper.userBot,
@@ -696,7 +669,7 @@ export class PlayerSimulation3D extends Simulation3D {
     ): void {
         super._onBotAdded(calc, bot);
 
-        // Change the user's context after first adding and updating it
+        // Change the user's dimension after first adding and updating it
         // because the callback for update_bot was happening before we
         // could call botUpdated from botAdded.
         if (bot.id === this.simulation.helper.userBot.id) {
@@ -705,14 +678,15 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     unsubscribe() {
-        this._contextGroup = null;
+        this._dimensionGroup = null;
         super.unsubscribe();
     }
 
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
         const userBot = this.simulation.helper.userBot;
         console.log(
-            "[PlayerSimulation3D] Setting user's context to: " + this.dimension
+            "[PlayerSimulation3D] Setting user's dimension to: " +
+                this.dimension
         );
         let userBackgroundColor = calculateBotValue(
             calc,

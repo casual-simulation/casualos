@@ -28,7 +28,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
         inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         bot: Bot,
-        context: string,
+        dimension: string,
         vrController: VRController3D | null
     ) {
         super(
@@ -36,7 +36,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
             inventorySimulation,
             interaction,
             [bot],
-            context,
+            dimension,
             vrController
         );
     }

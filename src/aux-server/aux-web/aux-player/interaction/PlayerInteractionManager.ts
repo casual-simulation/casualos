@@ -22,7 +22,7 @@ import {
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -53,13 +53,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (keysDown.length > 0) {
                 sim.helper.action('onKeyDown', null, {
                     keys: keysDown,
-                    context: sim.parsedId.dimension,
+                    dimension: sim.parsedId.dimension,
                 });
             }
             if (keysUp.length > 0) {
                 sim.helper.action('onKeyUp', null, {
                     keys: keysUp,
-                    context: sim.parsedId.dimension,
+                    dimension: sim.parsedId.dimension,
                 });
             }
         }
@@ -97,7 +97,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             let botClickOp = new PlayerBotClickOperation(
-                gameObject.contextGroup.simulation3D,
+                gameObject.dimensionGroup.simulation3D,
                 this,
                 gameObject,
                 faceValue,
@@ -113,7 +113,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (this._draggableGroupsDirty) {
             const contexts = flatMap(
                 this._game.getSimulations(),
-                s => s.contexts
+                s => s.dimensions
             );
             if (contexts && contexts.length > 0) {
                 // Sort between inventory colliders and other colliders.
@@ -121,13 +121,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 let otherColliders: Object3D[] = [];
 
                 for (let i = 0; i < contexts.length; i++) {
-                    const context = contexts[i];
+                    const dimension = contexts[i];
                     const colliders =
-                        context instanceof ContextGroup3D
-                            ? context.colliders.filter(c => isObjectVisible(c))
+                        dimension instanceof DimensionGroup3D
+                            ? dimension.colliders.filter(c =>
+                                  isObjectVisible(c)
+                              )
                             : [];
 
-                    if (context instanceof InventoryContextGroup3D) {
+                    if (dimension instanceof InventoryContextGroup3D) {
                         inventoryColliders.push(...colliders);
                     } else {
                         otherColliders.push(...colliders);

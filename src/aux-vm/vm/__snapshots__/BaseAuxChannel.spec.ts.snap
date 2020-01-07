@@ -10,7 +10,7 @@ Object {
 }
 `;
 
-exports[`BaseAuxChannel init() should create a user context bot 1`] = `
+exports[`BaseAuxChannel init() should create a user dimension bot 1`] = `
 Object {
   "auxDimension": "aux-users",
   "auxDimensionVisualize": true,

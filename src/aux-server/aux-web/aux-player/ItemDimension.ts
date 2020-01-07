@@ -2,8 +2,8 @@ import { appManager } from '../shared/AppManager';
 import { Subscription, Subject, SubscriptionLike } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import sortBy from 'lodash/sortBy';
-import { ContextItem } from './ContextItem';
-import { Simulation, BotContextsUpdate } from '@casual-simulation/aux-vm';
+import { DimensionItem } from './DimensionItem';
+import { Simulation, BotDimensionsUpdate } from '@casual-simulation/aux-vm';
 import {
     getBotIndex,
     Bot,
@@ -11,33 +11,33 @@ import {
 } from '@casual-simulation/aux-common';
 
 /**
- * Defines a context that watches a set of simulations for changes to items in a context.
+ * Defines a dimension that watches a set of simulations for changes to items in a dimension.
  */
-export class ItemContext implements SubscriptionLike {
-    items: ContextItem[] = [];
+export class ItemDimension implements SubscriptionLike {
+    items: DimensionItem[] = [];
 
-    private _contextTags: string[] = [];
-    private _itemsUpdated = new Subject<ContextItem[]>();
+    private _dimensionTags: string[] = [];
+    private _itemsUpdated = new Subject<DimensionItem[]>();
 
     private _sub: Subscription;
     private _simulations: Map<Simulation, Subscription> = new Map();
     /**
-     * A map of context IDs to a list of bot IDs that define the context.
+     * A map of dimension IDs to a list of bot IDs that define the dimension.
      */
-    private _contextMap: Map<string, Set<string>> = new Map();
+    private _dimensionMap: Map<string, Set<string>> = new Map();
 
     /**
-     * A map of context IDs to a set of bots IDs that define the context.
+     * A map of dimension IDs to a set of bots IDs that define the dimension.
      */
-    private _botContextMap: Map<string, Set<string>> = new Map();
+    private _botDimensionMap: Map<string, Set<string>> = new Map();
 
     /**
      * A map of bot IDs to menu item.
      */
-    private _botItemMap: Map<string, ContextItem> = new Map();
+    private _botItemMap: Map<string, DimensionItem> = new Map();
 
-    constructor(contextTags: string[]) {
-        this._contextTags = contextTags;
+    constructor(dimensionTags: string[]) {
+        this._dimensionTags = dimensionTags;
         this._sub = new Subscription();
 
         this._sub.add(
@@ -69,9 +69,9 @@ export class ItemContext implements SubscriptionLike {
         this._simulations.set(sim, sub);
 
         sub.add(
-            sim.contexts
-                .watchContexts(...this._contextTags)
-                .pipe(tap(update => this._updateMenuContexts(sim, update)))
+            sim.dimensions
+                .watchDimensions(...this._dimensionTags)
+                .pipe(tap(update => this._updateMenuDimensions(sim, update)))
                 .subscribe()
         );
     }
@@ -84,50 +84,50 @@ export class ItemContext implements SubscriptionLike {
         this._simulations.delete(sim);
     }
 
-    private _updateMenuContexts(
+    private _updateMenuDimensions(
         sim: Simulation,
-        updates: BotContextsUpdate
+        updates: BotDimensionsUpdate
     ): void {
         let hasUpdate = false;
-        for (let event of updates.contextEvents) {
-            if (event.type === 'context_added') {
-                if (event.contextBot.id !== sim.helper.userId) {
+        for (let event of updates.events) {
+            if (event.type === 'dimension_added') {
+                if (event.dimensionBot.id !== sim.helper.userId) {
                     continue;
                 }
 
-                let list = this._getBotIdsDefiningContext(event.context);
-                list.add(event.contextBot.id);
+                let list = this._getBotIdsDefiningDimension(event.dimension);
+                list.add(event.dimensionBot.id);
 
-                let bots = this._getBotsInContext(event.context);
+                let bots = this._getBotsInDimension(event.dimension);
                 for (let bot of event.existingBots) {
                     bots.add(bot.id);
-                    this._addMenuItem(bot, event.context, sim);
+                    this._addMenuItem(bot, event.dimension, sim);
                 }
-            } else if (event.type === 'context_removed') {
-                if (event.contextBot.id !== sim.helper.userId) {
+            } else if (event.type === 'dimension_removed') {
+                if (event.dimensionBot.id !== sim.helper.userId) {
                     continue;
                 }
 
-                let list = this._getBotIdsDefiningContext(event.context);
-                list.delete(event.contextBot.id);
+                let list = this._getBotIdsDefiningDimension(event.dimension);
+                list.delete(event.dimensionBot.id);
                 if (list.size === 0) {
-                    let bots = this._getBotsInContext(event.context);
+                    let bots = this._getBotsInDimension(event.dimension);
                     bots.clear();
                 }
-            } else if (event.type === 'bot_added_to_context') {
-                let list = this._getBotIdsDefiningContext(event.context);
+            } else if (event.type === 'bot_added_to_dimension') {
+                let list = this._getBotIdsDefiningDimension(event.dimension);
                 if (list.size <= 0) {
                     continue;
                 }
 
-                let bots = this._getBotsInContext(event.context);
+                let bots = this._getBotsInDimension(event.dimension);
                 bots.add(event.bot.id);
 
-                this._addMenuItem(event.bot, event.context, sim);
+                this._addMenuItem(event.bot, event.dimension, sim);
 
                 hasUpdate = true;
-            } else if (event.type === 'bot_removed_from_context') {
-                let bots = this._getBotsInContext(event.context);
+            } else if (event.type === 'bot_removed_from_dimension') {
+                let bots = this._getBotsInDimension(event.dimension);
                 bots.delete(event.bot.id);
 
                 let item = this._botItemMap.get(event.bot.id);
@@ -135,12 +135,12 @@ export class ItemContext implements SubscriptionLike {
                     item = {
                         bot: event.bot,
                         simulationId: sim.id,
-                        contexts: new Set([event.context]),
+                        dimensions: new Set([event.dimension]),
                     };
                 }
 
-                item.contexts.delete(event.context);
-                if (item.contexts.size <= 0) {
+                item.dimensions.delete(event.dimension);
+                if (item.dimensions.size <= 0) {
                     this._botItemMap.delete(event.bot.id);
                 }
                 hasUpdate = true;
@@ -165,16 +165,16 @@ export class ItemContext implements SubscriptionLike {
         }
     }
 
-    private _addMenuItem(bot: Bot, context: string, sim: Simulation) {
+    private _addMenuItem(bot: Bot, dimension: string, sim: Simulation) {
         let item = this._botItemMap.get(bot.id);
         if (!item) {
             item = {
                 bot: bot,
                 simulationId: sim.id,
-                contexts: new Set([context]),
+                dimensions: new Set([dimension]),
             };
         } else {
-            item.contexts.add(context);
+            item.dimensions.add(dimension);
         }
 
         this._botItemMap.set(bot.id, item);
@@ -183,11 +183,11 @@ export class ItemContext implements SubscriptionLike {
 
     private _menuItemIndex(
         calc: BotCalculationContext,
-        item: ContextItem
+        item: DimensionItem
     ): number {
         let order = 0;
-        for (let context of item.contexts) {
-            let sort = getBotIndex(calc, item.bot, context);
+        for (let dimension of item.dimensions) {
+            let sort = getBotIndex(calc, item.bot, dimension);
             if (sort > order) {
                 order = sort;
             }
@@ -195,20 +195,20 @@ export class ItemContext implements SubscriptionLike {
         return order;
     }
 
-    private _getBotIdsDefiningContext(context: string) {
-        let list = this._contextMap.get(context);
+    private _getBotIdsDefiningDimension(dimension: string) {
+        let list = this._dimensionMap.get(dimension);
         if (!list) {
             list = new Set();
-            this._contextMap.set(context, list);
+            this._dimensionMap.set(dimension, list);
         }
         return list;
     }
 
-    private _getBotsInContext(context: string) {
-        let map = this._botContextMap.get(context);
+    private _getBotsInDimension(dimension: string) {
+        let map = this._botDimensionMap.get(dimension);
         if (!map) {
             map = new Set();
-            this._botContextMap.set(context, map);
+            this._botDimensionMap.set(dimension, map);
         }
         return map;
     }

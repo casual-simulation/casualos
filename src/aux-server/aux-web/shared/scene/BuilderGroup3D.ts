@@ -1,4 +1,4 @@
-import { ContextGroup3D } from './ContextGroup3D';
+import { DimensionGroup3D } from './DimensionGroup3D';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { GridChecker } from './grid/GridChecker';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
@@ -17,11 +17,11 @@ import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that represents a builder group.
- * That is, a context group that is specific to the AUX Builder.
+ * That is, a dimension group that is specific to the AUX Builder.
  */
-export class BuilderGroup3D extends ContextGroup3D {
+export class BuilderGroup3D extends DimensionGroup3D {
     /**
-     * The workspace that this context contains.
+     * The workspace that this dimension contains.
      */
     surface: WorkspaceMesh;
 

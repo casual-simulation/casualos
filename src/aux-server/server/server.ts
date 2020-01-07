@@ -155,7 +155,7 @@ export class ClientServer {
         );
 
         this._app.get(
-            '/api/:context/:channel/config',
+            '/api/:dimension/:channel/config',
             asyncMiddleware(async (req, res) => {
                 await this._sendConfig(req, res, this._player.web);
             })
@@ -333,7 +333,7 @@ export class ClientServer {
 
         
         this._app.use(
-            '/:context/:channel?[.]aux',
+            '/:dimension/:channel?[.]aux',
             asyncMiddleware(async (req, res) => {
                 const channel = `aux-${req.params.channel || 'default'}`;
                 console.log('[Server] Getting .aux file for channel:', channel);
@@ -352,7 +352,7 @@ export class ClientServer {
             res.sendFile(path.join(this._config.dist, this._builder.index));
         });
 
-        this._app.get('/:context/:channel?', (req, res) => {
+        this._app.get('/:dimension/:channel?', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._player.index));
         });
 
@@ -595,14 +595,14 @@ export class Server {
         this._app.use(this._client.app);
 
         this._app.all(
-            '/:context/:channel',
+            '/:dimension/:channel',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
 
         this._app.all(
-            '/:context/:channel/*',
+            '/:dimension/:channel/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })

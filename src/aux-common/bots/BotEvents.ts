@@ -121,28 +121,28 @@ export interface ApplyStateAction extends Action {
  */
 export interface PasteStateOptions {
     /**
-     * The context that the state should be pasted into.
+     * The dimension that the state should be pasted into.
      */
-    context?: string;
+    dimension?: string;
 
     /**
      * The X position that the state should be pasted at.
-     * If a context is provided then this is the X position inside the context.
-     * If a context is not provided then this is the X position that the new context should be created at.
+     * If a dimension is provided then this is the X position inside the dimension.
+     * If a dimension is not provided then this is the X position that the new dimension should be created at.
      */
     x: number;
 
     /**
      * The Y position that the state should be pasted at.
-     * If a context is provided then this is the Y position inside the context.
-     * If a context is not provided then this is the Y position that the new context should be created at.
+     * If a dimension is provided then this is the Y position inside the dimension.
+     * If a dimension is not provided then this is the Y position that the new dimension should be created at.
      */
     y: number;
 
     /**
      * The Z position that the state should be pasted at.
-     * If a context is provided then this is the Z position inside the context.
-     * If a context is not provided then this is the Z position that the new context should be created at.
+     * If a dimension is provided then this is the Z position inside the dimension.
+     * If a dimension is not provided then this is the Z position that the new dimension should be created at.
      */
     z: number;
 }
@@ -702,15 +702,15 @@ export interface SaveFileOptions {
 }
 
 /**
- * Defines an event that is used to send the player to a context.
+ * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
     type: 'go_to_dimension';
 
     /**
-     * The context that should be loaded.
+     * The dimension that should be loaded.
      */
-    context: string;
+    dimension: string;
 }
 
 /**
@@ -1231,13 +1231,12 @@ export function superShout(eventName: string, arg?: any): SuperShoutAction {
 
 /**
  * Creates a new GoToContextAction.
- * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
- * @param context
+ * @param dimension The simulation ID or dimension to go to. If a simulation ID is being provided, then the dimension parameter must also be provided.
  */
-export function goToDimension(context: string): GoToDimensionAction {
+export function goToDimension(dimension: string): GoToDimensionAction {
     return {
         type: 'go_to_dimension',
-        context: context,
+        dimension,
     };
 }
 

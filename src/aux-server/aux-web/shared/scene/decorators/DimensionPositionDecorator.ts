@@ -22,9 +22,9 @@ import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale } from '../SceneUtils';
 
 /**
- * Defines an interface that contains possible options for ContextPositionDecorator objects.
+ * Defines an interface that contains possible options for DimensionPositionDecorator objects.
  */
-export interface ContextPositionDecoratorOptions {
+export interface DimensionPositionDecoratorOptions {
     /**
      * Whether to linear interpolate between positions.
      */
@@ -32,9 +32,9 @@ export interface ContextPositionDecoratorOptions {
 }
 
 /**
- * Defines a AuxBot3D decorator that moves the bot to its position inside a context.
+ * Defines a AuxBot3D decorator that moves the bot to its position inside a dimension.
  */
-export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
+export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;
@@ -45,25 +45,28 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
 
     constructor(
         bot3D: AuxBot3D,
-        options: ContextPositionDecoratorOptions = {}
+        options: DimensionPositionDecoratorOptions = {}
     ) {
         super(bot3D);
         this._lerp = !!options.lerp;
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const userContext = this.bot3D.context;
-        if (userContext) {
-            const scale = calculateGridScale(calc, this.bot3D.contextGroup.bot);
+        const userDimension = this.bot3D.dimension;
+        if (userDimension) {
+            const scale = calculateGridScale(
+                calc,
+                this.bot3D.dimensionGroup.bot
+            );
             const currentGridPos = getBotPosition(
                 calc,
                 this.bot3D.bot,
-                this.bot3D.context
+                this.bot3D.dimension
             );
             const currentHeight = calculateVerticalHeight(
                 calc,
                 this.bot3D.bot,
-                this.bot3D.context,
+                this.bot3D.dimension,
                 scale
             );
             this._nextPos = calculateObjectPositionInGrid(
@@ -78,10 +81,10 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
             ) {
                 const objectsAtPosition = objectsAtDimensionGridPosition(
                     calc,
-                    this.bot3D.context,
+                    this.bot3D.dimension,
                     this._lastPos || currentGridPos
                 );
-                this.bot3D.contextGroup.simulation3D.ensureUpdate(
+                this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
                     objectsAtPosition.map(f => f.id)
                 );
             }
@@ -90,7 +93,7 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
             this._nextRot = getBotRotation(
                 calc,
                 this.bot3D.bot,
-                this.bot3D.context
+                this.bot3D.dimension
             );
 
             this._atPosition = false;
@@ -110,10 +113,10 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
         if (this._lastPos) {
             const objectsAtPosition = objectsAtDimensionGridPosition(
                 calc,
-                this.bot3D.context,
+                this.bot3D.dimension,
                 this._lastPos
             );
-            this.bot3D.contextGroup.simulation3D.ensureUpdate(
+            this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
                 objectsAtPosition.map(f => f.id)
             );
         }
@@ -173,14 +176,13 @@ export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
  * @param context The bot calculation context to use to calculate forumula values.
  * @param bot The bot to calculate position for.
  * @param gridScale The scale of the grid.
- * @param contextId The id of the context we want to get positional data for the given bot.
  */
 export function calculateObjectPositionInGrid(
     context: BotCalculationContext,
     bot: AuxBot3D,
     gridScale: number
 ): Vector3 {
-    let position = getBotPosition(context, bot.bot, bot.context);
+    let position = getBotPosition(context, bot.bot, bot.dimension);
     let localPosition = calculateGridTileLocalCenter(
         position.x,
         position.y,
@@ -195,7 +197,7 @@ export function calculateObjectPositionInGrid(
     } else {
         const objectsAtPosition = objectsAtDimensionGridPosition(
             context,
-            bot.context,
+            bot.dimension,
             position
         );
 
@@ -209,7 +211,7 @@ export function calculateObjectPositionInGrid(
                 totalScales += calculateVerticalHeight(
                     context,
                     obj,
-                    bot.context,
+                    bot.dimension,
                     gridScale
                 );
             }
@@ -220,10 +222,10 @@ export function calculateObjectPositionInGrid(
 
     localPosition.add(indexOffset);
 
-    if (bot.contextGroup instanceof BuilderGroup3D) {
+    if (bot.dimensionGroup instanceof BuilderGroup3D) {
         if (!isUserBot(bot.bot)) {
             // Offset local position with hex grid height.
-            let hexScale = getDimensionScale(context, bot.contextGroup.bot);
+            let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
             let axial = realPosToGridPos(
                 new Vector2(localPosition.x, localPosition.z),
                 hexScale
@@ -231,7 +233,7 @@ export function calculateObjectPositionInGrid(
             let key = posToKey(axial);
             let height = getDimensionGridHeight(
                 context,
-                bot.contextGroup.bot,
+                bot.dimensionGroup.bot,
                 '0:0'
             );
             localPosition.add(new Vector3(0, height, 0));
@@ -245,13 +247,13 @@ export function calculateObjectPositionInGrid(
  * Calculates the total vertical height of the given bot.
  * @param calc The calculation context to use.
  * @param bot The bot to use.
- * @param context The context that the bot's height should be evalulated in.
+ * @param dimension The dimension that the bot's height should be evalulated in.
  * @param gridScale The scale of the grid.
  */
 export function calculateVerticalHeight(
     calc: BotCalculationContext,
     bot: Bot,
-    context: string,
+    dimension: string,
     gridScale: number
 ) {
     return cacheFunction(
@@ -262,14 +264,14 @@ export function calculateVerticalHeight(
             const offset = calculateNumericalTagValue(
                 calc,
                 bot,
-                `${context}.z`,
+                `${dimension}.z`,
                 0
             );
 
             return height + offset * gridScale;
         },
         bot.id,
-        context,
+        dimension,
         gridScale
     );
 }

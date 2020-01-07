@@ -162,7 +162,7 @@ export interface BotTags {
     ['auxDimensionColor']?: string;
     ['auxDimensionLocked']?: unknown;
     ['auxDimensionGridScale']?: number;
-    ['auxDimensionVisualize']?: ContextVisualizeMode;
+    ['auxDimensionVisualize']?: DimensionVisualizeMode;
     ['auxDimensionX']?: number;
     ['auxDimensionY']?: number;
     ['auxDimensionZ']?: number;
@@ -273,8 +273,8 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
  *
  * "all" means that the bot is able to be dragged freely inside and across contexts.
  * "none" means that the bot is not able to be dragged at all.
- * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a context.
- * "moveOnly" means that the bot should be able to be dragged within a context but not across contexts.
+ * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a dimension.
+ * "moveOnly" means that the bot should be able to be dragged within a dimension but not across contexts.
  */
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
@@ -303,13 +303,13 @@ export type BotLabelAnchor =
 export type BackupType = 'github' | 'download';
 
 /**
- * Defines the possible context visualize modes.
+ * Defines the possible dimension visualize modes.
  *
- * true means that the context is visible.
- * false means the context is not visible.
- * "surface" means the context is visible and renders a worksurface.
+ * true means that the dimension is visible.
+ * false means the dimension is not visible.
+ * "surface" means the dimension is visible and renders a worksurface.
  */
-export type ContextVisualizeMode = true | false | 'surface';
+export type DimensionVisualizeMode = true | false | 'surface';
 
 /**
  * The default selection mode.
@@ -424,9 +424,9 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
- * The context ID that all users should be placed in.
+ * The dimension ID that all users should be placed in.
  */
-export const USERS_CONTEXT = 'aux-users';
+export const USERS_DIMENSION = 'aux-users';
 
 /**
  * The name of the tag used to represent the space that the bot is
@@ -460,12 +460,12 @@ export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
 export const DROP_EXIT_ACTION_NAME: string = 'onDropExit';
 
 /**
- * The name of the event that represents a bot being dropped onto a context.
+ * The name of the event that represents a bot being dropped onto a dimension.
  */
 export const DROP_ACTION_NAME: string = 'onDrop';
 
 /**
- * The name of the event that represents any bot being dropped onto a context.
+ * The name of the event that represents any bot being dropped onto a dimension.
  */
 export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 

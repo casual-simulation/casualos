@@ -1,7 +1,7 @@
 import { Bot } from '@casual-simulation/aux-common';
 
-export interface ContextItem {
+export interface DimensionItem {
     bot: Bot;
     simulationId: string;
-    contexts: Set<string>;
+    dimensions: Set<string>;
 }

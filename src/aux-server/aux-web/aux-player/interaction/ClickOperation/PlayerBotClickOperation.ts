@@ -44,7 +44,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     protected _performClick(calc: BotCalculationContext): void {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
-        this._argument.dimension = bot3D.context;
+        this._argument.dimension = bot3D.dimension;
 
         this.simulation.helper.action('onClick', [this._bot], this._argument);
 
@@ -59,18 +59,18 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         fromCoord?: Vector2
     ): BaseBotDragOperation {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
-        const context = bot3D.context;
-        const position = getBotPosition(calc, bot3D.bot, context);
+        const dimension = bot3D.dimension;
+        const position = getBotPosition(calc, bot3D.bot, dimension);
         if (position) {
             const objects = objectsAtDimensionGridPosition(
                 calc,
-                context,
+                dimension,
                 position
             );
             if (objects.length === 0) {
                 console.log('Found no objects at', position);
                 console.log(bot3D.bot);
-                console.log(context);
+                console.log(dimension);
             }
             const bot = this._bot;
             const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
@@ -84,7 +84,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 inventorySimulation3D,
                 this._interaction,
                 draggedObjects,
-                bot3D.context,
+                bot3D.dimension,
                 this._vrController,
                 fromCoord
             );

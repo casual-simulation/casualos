@@ -72,7 +72,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                             ),
                             inventory.getMainCameraRig().mainCamera
                         );
-                        inputDimension = inventory.inventoryContext;
+                        inputDimension = inventory.inventoryDimension;
                     } else {
                         inputRay = Physics.screenPosToRay(
                             this._game.getInput().getMouseScreenPos(),

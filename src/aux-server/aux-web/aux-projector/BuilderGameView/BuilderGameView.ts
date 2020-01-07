@@ -268,7 +268,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                     this._game.getInput().getMousePagePos()
                 );
                 if (good) {
-                    options.context = interaction.firstContextInWorkspace(
+                    options.dimension = interaction.firstDimensionInWorkspace(
                         workspace
                     );
                     options.x = gridPosition.x;

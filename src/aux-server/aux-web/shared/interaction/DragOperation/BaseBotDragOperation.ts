@@ -52,9 +52,9 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _lastVRControllerPose: Pose;
     protected _merge: boolean;
     protected _other: Bot;
-    protected _context: string;
-    protected _previousContext: string;
-    protected _originalContext: string;
+    protected _dimension: string;
+    protected _previousDimension: string;
+    protected _originalDimension: string;
     protected _vrController: VRController3D;
     protected _childOperation: IOperation;
 
@@ -63,7 +63,7 @@ export abstract class BaseBotDragOperation implements IOperation {
      */
     protected _dropBot: Bot;
 
-    private _inContext: boolean;
+    private _inDimension: boolean;
     private _onDragPromise: Promise<void>;
 
     protected _toCoord: Vector2;
@@ -82,13 +82,13 @@ export abstract class BaseBotDragOperation implements IOperation {
      * @param simulation3D The simulation.
      * @param interaction The interaction manager.
      * @param bots The bots to drag.
-     * @param context The context that the bots are currently in.
+     * @param dimension The dimension that the bots are currently in.
      */
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         bots: Bot[],
-        context: string,
+        dimension: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2,
         skipOnDragEvents?: boolean
@@ -96,11 +96,11 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._setBots(bots);
-        this._originalContext = this._context = context;
-        this._previousContext = null;
+        this._originalDimension = this._dimension = dimension;
+        this._previousDimension = null;
         this._lastGridPos = null;
         this._lastIndex = null;
-        this._inContext = true;
+        this._inDimension = true;
         this._vrController = vrController;
         this._fromCoord = fromCoord;
 
@@ -139,7 +139,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             fromY = fromCoord.y;
         }
         let events: BotAction[] = [];
-        // Trigger drag into context
+        // Trigger drag into dimension
         let result = this.simulation.helper.actions([
             {
                 eventName: DRAG_ACTION_NAME,
@@ -148,7 +148,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                     from: {
                         x: fromX,
                         y: fromY,
-                        context: this._originalContext,
+                        dimension: this._originalDimension,
                     },
                 },
             },
@@ -160,7 +160,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                     from: {
                         x: fromX,
                         y: fromY,
-                        context: this._originalContext,
+                        dimension: this._originalDimension,
                     },
                 },
             },
@@ -250,10 +250,10 @@ export abstract class BaseBotDragOperation implements IOperation {
         index: number,
         calc: BotCalculationContext
     ) {
-        if (!this._context) {
+        if (!this._dimension) {
             return;
         }
-        this._inContext = true;
+        this._inDimension = true;
 
         if (
             this._lastGridPos &&
@@ -274,24 +274,24 @@ export abstract class BaseBotDragOperation implements IOperation {
             if (!isBotStackable(calc, bots[i])) {
                 tags = {
                     tags: {
-                        [this._context]: true,
-                        [`${this._context}X`]: gridPosition.x,
-                        [`${this._context}Y`]: gridPosition.y,
-                        [`${this._context}SortOrder`]: 0,
+                        [this._dimension]: true,
+                        [`${this._dimension}X`]: gridPosition.x,
+                        [`${this._dimension}Y`]: gridPosition.y,
+                        [`${this._dimension}SortOrder`]: 0,
                     },
                 };
             } else {
                 tags = {
                     tags: {
-                        [this._context]: true,
-                        [`${this._context}X`]: gridPosition.x,
-                        [`${this._context}Y`]: gridPosition.y,
-                        [`${this._context}SortOrder`]: index + i,
+                        [this._dimension]: true,
+                        [`${this._dimension}X`]: gridPosition.x,
+                        [`${this._dimension}Y`]: gridPosition.y,
+                        [`${this._dimension}SortOrder`]: index + i,
                     },
                 };
             }
-            if (this._previousContext) {
-                tags.tags[this._previousContext] = null;
+            if (this._previousDimension) {
+                tags.tags[this._previousDimension] = null;
             }
             events.push(this._updateBot(bots[i], tags));
         }
@@ -300,16 +300,16 @@ export abstract class BaseBotDragOperation implements IOperation {
         await this.simulation.helper.transaction(...events);
     }
 
-    protected _updateBotContexts(bots: Bot[], inContext: boolean) {
-        this._inContext = inContext;
-        if (!this._context) {
+    protected _updateBotDimensions(bots: Bot[], inDimension: boolean) {
+        this._inDimension = inDimension;
+        if (!this._dimension) {
             return;
         }
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags = {
                 tags: {
-                    [this._context]: inContext,
+                    [this._dimension]: inDimension,
                 },
             };
             events.push(this._updateBot(bots[i], tags));
@@ -343,7 +343,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             );
         }
 
-        // Trigger drag into context
+        // Trigger drag into dimension
         events.push(
             ...this.simulation.helper.actions([
                 {
@@ -391,8 +391,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
         const botTemp = createBot(this._bot.id, {
             ...this._bot.tags,
-            [`${this._context}X`]: toX,
-            [`${this._context}Y`]: toY,
+            [`${this._dimension}X`]: toX,
+            [`${this._dimension}Y`]: toY,
         });
         let fromX;
         let fromY;
@@ -407,12 +407,12 @@ export abstract class BaseBotDragOperation implements IOperation {
             bot: toBot,
             x: toX,
             y: toY,
-            dimension: this._context,
+            dimension: this._dimension,
         };
         const from: BotDropDestination = {
             x: fromX,
             y: fromY,
-            dimension: this._originalContext,
+            dimension: this._originalDimension,
         };
         const arg = onDropArg(botTemp, to, from);
         return arg;

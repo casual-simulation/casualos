@@ -24,7 +24,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
-import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 
 /**
  * Mod drag operation handles dragging mods
@@ -75,7 +75,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
             if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
-                nextContext = this._inventorySimulation3D.inventoryContext;
+                nextContext = this._inventorySimulation3D.inventoryDimension;
             }
         }
 
@@ -85,24 +85,26 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             return;
         }
 
-        if (nextContext !== this._context) {
-            this._previousContext = this._context;
-            this._context = nextContext;
+        if (nextContext !== this._dimension) {
+            this._previousDimension = this._dimension;
+            this._dimension = nextContext;
             this._inInventory =
-                nextContext === this._inventorySimulation3D.inventoryContext;
+                nextContext === this._inventorySimulation3D.inventoryDimension;
         }
 
         if (this._inInventory) {
-            const context = this._inventorySimulation3D.inventoryContext;
-            this.contextGroup = <ContextGroup3D>(
-                this._inventorySimulation3D.contexts.find(c =>
-                    c.contexts.has(context)
+            const dimension = this._inventorySimulation3D.inventoryDimension;
+            this.dimensionGroup = <DimensionGroup3D>(
+                this._inventorySimulation3D.dimensions.find(c =>
+                    c.dimensions.has(dimension)
                 )
             );
         } else {
-            const context = this._simulation3D.dimension;
-            this.contextGroup = <ContextGroup3D>(
-                this._simulation3D.contexts.find(c => c.contexts.has(context))
+            const dimension = this._simulation3D.dimension;
+            this.dimensionGroup = <DimensionGroup3D>(
+                this._simulation3D.dimensions.find(c =>
+                    c.dimensions.has(dimension)
+                )
             );
         }
 
@@ -111,7 +113,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         if (this._vrController) {
             inputRay = this._vrController.pointerRay.clone();
         } else {
-            // Get input ray from correct camera based on which context we are in.
+            // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
 
@@ -139,7 +141,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
             const result = calculateBotDragStackPosition(
                 calc,
-                this._context,
+                this._dimension,
                 gridTile.tileCoordinate,
                 this._mod
             );

@@ -11,7 +11,7 @@ export interface BotGameObject {
     frameUpdate(calc: BotCalculationContext): void;
 
     /**
-     * Notifies the builder context that the given bot was added to the state.
+     * Notifies the builder dimension that the given bot was added to the state.
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
@@ -30,7 +30,7 @@ export interface BotGameObject {
     ): void;
 
     /**
-     * Notifies the builder context that the given bot was removed from the state.
+     * Notifies the builder dimension that the given bot was removed from the state.
      * @param id The ID of the bot that was removed.
      * @param calc The bot calculation context that should be used.
      */

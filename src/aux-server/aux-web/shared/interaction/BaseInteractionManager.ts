@@ -40,7 +40,7 @@ import {
     VRController_ClickColor,
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
-import { ContextGroup3D } from '../scene/ContextGroup3D';
+import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 
 interface HoveredBot {
     /**
@@ -209,7 +209,8 @@ export abstract class BaseInteractionManager {
 
                             this.handlePointerDown(
                                 gameObject.bot,
-                                gameObject.contextGroup.simulation3D.simulation
+                                gameObject.dimensionGroup.simulation3D
+                                    .simulation
                             );
                         }
                     } else {
@@ -292,7 +293,8 @@ export abstract class BaseInteractionManager {
 
                             this.handlePointerDown(
                                 gameObject.bot,
-                                gameObject.contextGroup.simulation3D.simulation
+                                gameObject.dimensionGroup.simulation3D
+                                    .simulation
                             );
                         }
                     } else {
@@ -329,7 +331,7 @@ export abstract class BaseInteractionManager {
                     ) {
                         this.handlePointerUp(
                             gameObject.bot,
-                            gameObject.contextGroup.simulation3D.simulation
+                            gameObject.dimensionGroup.simulation3D.simulation
                         );
                     }
                     this._pressedBot = null;
@@ -394,7 +396,7 @@ export abstract class BaseInteractionManager {
         if (gameObject instanceof AuxBot3D) {
             const bot: Bot = gameObject.bot;
             const simulation: Simulation =
-                gameObject.contextGroup.simulation3D.simulation;
+                gameObject.dimensionGroup.simulation3D.simulation;
 
             let hoveredBot: HoveredBot = this._hoveredBots.find(hoveredBot => {
                 return (
@@ -455,13 +457,13 @@ export abstract class BaseInteractionManager {
      */
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty) {
-            const contexts = flatMap(
+            const dimensions = flatMap(
                 this._game.getSimulations(),
-                s => s.contexts
+                s => s.dimensions
             );
-            if (contexts && contexts.length > 0) {
-                let colliders = flatMap(contexts.filter(c => !!c), f =>
-                    f instanceof ContextGroup3D ? f.colliders : []
+            if (dimensions && dimensions.length > 0) {
+                let colliders = flatMap(dimensions.filter(c => !!c), f =>
+                    f instanceof DimensionGroup3D ? f.colliders : []
                 ).filter(c => isObjectVisible(c));
 
                 this._draggableGroups = [
@@ -636,13 +638,13 @@ export abstract class BaseInteractionManager {
     }
 
     async selectBot(bot: AuxBot3D) {
-        bot.contextGroup.simulation3D.simulation.botPanel.search = '';
+        bot.dimensionGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
 
-        await bot.contextGroup.simulation3D.simulation.selection.selectBot(
+        await bot.dimensionGroup.simulation3D.simulation.selection.selectBot(
             <AuxBot>bot.bot,
             shouldMultiSelect,
-            bot.contextGroup.simulation3D.simulation.botPanel
+            bot.dimensionGroup.simulation3D.simulation.botPanel
         );
     }
 

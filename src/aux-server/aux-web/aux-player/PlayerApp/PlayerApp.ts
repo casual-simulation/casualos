@@ -130,9 +130,9 @@ export default class PlayerApp extends Vue {
     session: string = '';
 
     /**
-     * The context.
+     * The dimension.
      */
-    context: string = '';
+    dimension: string = '';
 
     /**
      * The extra sidebar items shown in the app.
@@ -327,7 +327,7 @@ export default class PlayerApp extends Vue {
 
                 this.loggedIn = true;
                 this.session = botManager.parsedId.channel;
-                this.context = botManager.parsedId.dimension;
+                this.dimension = botManager.parsedId.dimension;
 
                 subs.push(
                     new Subscription(() => {
@@ -596,12 +596,12 @@ export default class PlayerApp extends Vue {
                     } else {
                         this._hideBarcode();
                     }
-                } else if (e.type === 'go_to_context') {
-                    this.updateTitleContext(e.context);
+                } else if (e.type === 'go_to_dimension') {
+                    this.updateTitleContext(e.dimension);
                     appManager.simulationManager.simulations.forEach(sim => {
                         sim.parsedId = {
                             ...sim.parsedId,
-                            dimension: e.context,
+                            dimension: e.dimension,
                         };
                     });
 
@@ -930,20 +930,20 @@ export default class PlayerApp extends Vue {
         }
 
         const previousChannel = this.$router.currentRoute.params.id;
-        const previousContext = this.$router.currentRoute.params.context;
+        const previousDimension = this.$router.currentRoute.params.dimension;
 
         const channel =
             appManager.simulationManager.primary.parsedId.channel ||
             previousChannel;
-        const context =
+        const dimension =
             appManager.simulationManager.primary.parsedId.dimension ||
-            previousContext;
-        if (channel && context) {
+            previousDimension;
+        if (channel && dimension) {
             let route = {
                 name: 'home',
                 params: {
                     id: channel === 'default' ? null : channel,
-                    context: context,
+                    dimension: dimension,
                 },
                 query: {
                     channels: this.simulations
@@ -956,8 +956,11 @@ export default class PlayerApp extends Vue {
                 },
             };
 
-            // Only add the history if switching contexts or the primary channel
-            if (channel !== previousChannel || context !== previousContext) {
+            // Only add the history if switching dimensions or the primary channel
+            if (
+                channel !== previousChannel ||
+                dimension !== previousDimension
+            ) {
                 window.history.pushState({}, window.document.title);
             }
 

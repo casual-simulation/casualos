@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import {

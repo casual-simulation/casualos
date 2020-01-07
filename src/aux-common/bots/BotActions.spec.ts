@@ -18,21 +18,21 @@ describe('BotActions', () => {
     botActionsTests(uuidMock);
 
     describe('goToDimension()', () => {
-        it('should use the first parameter as the context if only one argument is provided', () => {
-            const event = goToDimension('context');
+        it('should use the first parameter as the dimension if only one argument is provided', () => {
+            const event = goToDimension('dimension');
 
             expect(event).toEqual({
                 type: 'go_to_dimension',
-                context: 'context',
+                dimension: 'dimension',
             });
         });
 
         it('should ignore all other parameters', () => {
-            const event = (<any>goToDimension)('context', 'abc');
+            const event = (<any>goToDimension)('dimension', 'abc');
 
             expect(event).toEqual({
                 type: 'go_to_dimension',
-                context: 'context',
+                dimension: 'dimension',
             });
         });
     });
