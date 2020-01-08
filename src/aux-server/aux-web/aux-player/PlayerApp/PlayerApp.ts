@@ -628,7 +628,7 @@ export default class PlayerApp extends Vue {
                     this.chatBarPrefill = e.prefill;
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
-                        chatBar.setPrefill(e.prefill);
+                        await chatBar.setPrefill(e.prefill);
                     }
                 }
             }),

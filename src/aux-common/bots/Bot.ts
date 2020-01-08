@@ -587,6 +587,16 @@ export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
 export const ON_RUN_ACTION_NAME: string = 'onRun';
 
 /**
+ * The name of the event that is triggered when the text in the chat bar is updated.
+ */
+export const ON_CHAT_TYPING_ACTION_NAME: string = 'onChatTyping';
+
+/**
+ * The name of the event that is triggered when the text in the chat bar is submitted.
+ */
+export const ON_CHAT_ACTION_NAME: string = 'onChat';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -773,6 +783,8 @@ export const KNOWN_TAGS: string[] = [
     'onListen',
     ON_ACTION_ACTION_NAME,
     ON_RUN_ACTION_NAME,
+    ON_CHAT_TYPING_ACTION_NAME,
+    ON_CHAT_ACTION_NAME,
 ];
 
 export function onModDropArg(mod: BotTags, dimension: string) {
@@ -815,6 +827,18 @@ export function onUniverseSubscribedArg(universe: string) {
 export function onUniverseUnsubscribedArg(universe: string) {
     return {
         universe,
+    };
+}
+
+export function onChatTypingArg(message: string) {
+    return {
+        message,
+    };
+}
+
+export function onChatArg(message: string) {
+    return {
+        message,
     };
 }
 
