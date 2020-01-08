@@ -49,8 +49,8 @@ import {
     replaceDragBot as calcReplaceDragBot,
     setupUniverse as calcSetupChannel,
     setClipboard as calcSetClipboard,
-    showRun as calcShowRun,
-    hideRun as calcHideRun,
+    showChat as calcShowRun,
+    hideChat as calcHideRun,
     runScript,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
@@ -1947,14 +1947,14 @@ function hideBarcode() {
  * Shows the run bar.
  * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
  */
-function showRun(prefill?: string) {
+function showChat(prefill?: string) {
     return addAction(calcShowRun(prefill));
 }
 
 /**
  * Hides the run bar.
  */
-function hideRun() {
+function hideChat() {
     return addAction(calcHideRun());
 }
 
@@ -2152,8 +2152,8 @@ const player = {
     checkout,
     replaceDragBot,
     setClipboard,
-    showRun,
-    hideRun,
+    showChat,
+    hideChat,
     run,
 
     openDevConsole,

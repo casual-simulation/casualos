@@ -69,7 +69,7 @@ import ClipboardModal from '../../shared/vue-components/ClipboardModal/Clipboard
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
-import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
+import BotChat from '../../shared/vue-components/BotChat/BotChat';
 
 @Component({
     components: {
@@ -83,7 +83,7 @@ import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
         'clipboard-modal': ClipboardModal,
-        'bot-search': BotSearch,
+        'bot-chat': BotChat,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -189,8 +189,8 @@ export default class PlayerApp extends Vue {
 
     authorized: boolean = false;
 
-    showRunBar: boolean = false;
-    runBarPrefill: string = null;
+    showChatBar: boolean = false;
+    chatBarPrefill: string = null;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -623,12 +623,12 @@ export default class PlayerApp extends Vue {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
                     sendWebhook(simulation, e);
-                } else if (e.type === 'show_run_bar') {
-                    this.showRunBar = e.visible;
-                    this.runBarPrefill = e.prefill;
-                    const searchBar = this.$refs.searchBar as BotSearch;
-                    if (searchBar) {
-                        searchBar.setPrefill(e.prefill);
+                } else if (e.type === 'show_chat_bar') {
+                    this.showChatBar = e.visible;
+                    this.chatBarPrefill = e.prefill;
+                    const chatBar = this.$refs.chatBar as BotChat;
+                    if (chatBar) {
+                        chatBar.setPrefill(e.prefill);
                     }
                 }
             }),

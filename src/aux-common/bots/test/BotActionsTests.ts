@@ -35,8 +35,8 @@ import {
     hideHtml,
     ReplaceDragBotAction,
     setClipboard,
-    showRun,
-    hideRun,
+    showChat,
+    hideChat,
     runScript,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
@@ -3839,13 +3839,13 @@ export function botActionsTests(
             });
         });
 
-        describe('player.showRun()', () => {
-            it('should emit a ShowRunBarAction', () => {
+        describe('player.showChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.showRun()',
+                            test: '@player.showChat()',
                         },
                     },
                 };
@@ -3861,15 +3861,15 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showRun()]);
+                expect(result.events).toEqual([showChat()]);
             });
 
-            it('should emit a ShowRunBarAction with the given prefill', () => {
+            it('should emit a ShowChatBarAction with the given prefill', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.showRun("test")',
+                            test: '@player.showChat("test")',
                         },
                     },
                 };
@@ -3885,17 +3885,17 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showRun('test')]);
+                expect(result.events).toEqual([showChat('test')]);
             });
         });
 
-        describe('player.hideRun()', () => {
-            it('should emit a ShowRunBarAction', () => {
+        describe('player.hideChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.hideRun()',
+                            test: '@player.hideChat()',
                         },
                     },
                 };
@@ -3911,7 +3911,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([hideRun()]);
+                expect(result.events).toEqual([hideChat()]);
             });
         });
 

@@ -1,12 +1,12 @@
 <template>
     <div id="app">
         <load-app>
-            <md-toolbar v-if="showRunBar">
+            <md-toolbar v-if="showChatBar">
                 <div class="md-toolbar-section-start">
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <bot-search ref="searchBar" :prefill="runBarPrefill"></bot-search>
+                    <bot-chat ref="chatBar" :prefill="chatBarPrefill"></bot-chat>
                 </div>
             </md-toolbar>
             <md-button v-else class="show-navigation-button md-icon-button" @click="menuClicked()">

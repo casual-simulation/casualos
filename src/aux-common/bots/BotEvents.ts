@@ -71,7 +71,7 @@ export type ExtraActions =
     | ReplaceDragBotAction
     | SetupChannelAction
     | SetClipboardAction
-    | ShowRunBarAction
+    | ShowChatBarAction
     | RunScriptAction;
 
 /**
@@ -930,13 +930,13 @@ export interface SetClipboardAction {
 }
 
 /**
- * Defines an event that shows the run bar.
+ * Defines an event that shows the chat bar.
  */
-export interface ShowRunBarAction {
-    type: 'show_run_bar';
+export interface ShowChatBarAction {
+    type: 'show_chat_bar';
 
     /**
-     * Whether the run bar should be visible.
+     * Whether the chat bar should be visible.
      */
     visible: boolean;
 
@@ -1229,16 +1229,16 @@ export function showBarcode(
  * Creates a new ShowRunBarAction that shows the run bar.
  * @param prefill The text that should be prefilled into the run bar's input box.
  */
-export function showRun(prefill?: string): ShowRunBarAction {
+export function showChat(prefill?: string): ShowChatBarAction {
     if (prefill) {
         return {
-            type: 'show_run_bar',
+            type: 'show_chat_bar',
             visible: true,
             prefill,
         };
     } else {
         return {
-            type: 'show_run_bar',
+            type: 'show_chat_bar',
             visible: true,
         };
     }
@@ -1247,9 +1247,9 @@ export function showRun(prefill?: string): ShowRunBarAction {
 /**
  * Creates a new ShowRunBarAction that hides the run bar.
  */
-export function hideRun(): ShowRunBarAction {
+export function hideChat(): ShowChatBarAction {
     return {
-        type: 'show_run_bar',
+        type: 'show_chat_bar',
         visible: false,
     };
 }
