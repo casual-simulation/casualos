@@ -21,6 +21,22 @@
         -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
             -   Also the `channel` property in the `data` argument has been renamed to `universe`.
     -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
+-   Improvements
+    -   Added the `player.showChat()` and `player.hideChat()` functions.
+        -   These show/hide the chat bar in auxPlayer.
+        -   Typing in the chat bar will trigger a `@onChatUpdated` shout with the text in the chat bar.
+        -   Pressing Enter or clicking the send button on the chat bar will trigger a `@onChatEnter` shout with the text in the chat bar.
+    -   Added the `@onChat` shout listener.
+        -   Triggered when the user sends a message using the chat bar.
+        -   `that` is an object with the following properties:
+            -   `message` - The message that was sent.
+    -   Added the `@onChatTyping` shout listener.
+        -   Triggered when the user edits the text in the chat bar.
+        -   `that` is an object with the following properties:
+            -   `message` - The message that is in the chat bar after the user edited it.
+    -   Added the `player.run(script)` function.
+        -   `script` is the script text that should be executed.
+        -   Works by sending a `run_script` action. This allows `@onUniverseAction()` listener to intercept and prevent scripts.
 
 ## V0.11.19
 
