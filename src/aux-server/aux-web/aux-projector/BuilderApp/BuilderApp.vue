@@ -6,7 +6,6 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <bot-search v-if="authorized" ref="searchBar"></bot-search>
                 </div>
             </md-toolbar>
 
