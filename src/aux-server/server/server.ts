@@ -148,16 +148,13 @@ export class ClientServer {
 
     configure() {
         this._app.get(
-            '/api/[\\*]/:channel/config',
-            asyncMiddleware(async (req, res) => {
-                await this._sendConfig(req, res, this._builder.web);
-            })
-        );
-
-        this._app.get(
             '/api/:dimension/:channel/config',
             asyncMiddleware(async (req, res) => {
-                await this._sendConfig(req, res, this._player.web);
+                if (req.params.dimension.indexOf('*') === 0) {
+                    await this._sendConfig(req, res, this._builder.web);
+                } else {
+                    await this._sendConfig(req, res, this._player.web);
+                }
             })
         );
 
@@ -348,12 +345,12 @@ export class ClientServer {
         );
         */
 
-        this._app.get('/[\\*]/:channel', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._builder.index));
-        });
-
         this._app.get('/:dimension/:channel?', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._player.index));
+            if (req.params.dimension.indexOf('*') === 0) {
+                res.sendFile(path.join(this._config.dist, this._builder.index));
+            } else {
+                res.sendFile(path.join(this._config.dist, this._player.index));
+            }
         });
 
         this._app.get('*', (req, res) => {

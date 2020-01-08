@@ -1139,6 +1139,32 @@ describe('BotCalculations', () => {
                 channel: 'dimension',
             });
         });
+
+        it('should handle *s in front of the dimension value', () => {
+            let result = parseSimulationId('*abc/def');
+            expect(result).toEqual({
+                success: true,
+                dimension: 'abc',
+                dimensionVisualizer: '*',
+                channel: 'def',
+            });
+
+            result = parseSimulationId('**abc/def');
+            expect(result).toEqual({
+                success: true,
+                dimension: '*abc',
+                dimensionVisualizer: '*',
+                channel: 'def',
+            });
+
+            result = parseSimulationId('**abc/def/ghi');
+            expect(result).toEqual({
+                success: true,
+                dimension: '*abc',
+                dimensionVisualizer: '*',
+                channel: 'def/ghi',
+            });
+        });
     });
 
     describe('simulationIdToString()', () => {

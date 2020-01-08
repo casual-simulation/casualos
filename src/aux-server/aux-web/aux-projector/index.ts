@@ -105,7 +105,7 @@ const routes: RouteConfig[] = [
         component: AuxDebug,
     },
     {
-        path: '/\\*/:id?',
+        path: '/\\*:dimension?/:id?',
         name: 'home',
         component: BuilderHome,
         props: route => ({

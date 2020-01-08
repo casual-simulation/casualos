@@ -101,7 +101,10 @@ export interface SimulationIdParseSuccess {
     channel?: string;
     host?: string;
     dimension?: string;
+    dimensionVisualizer?: string;
 }
+
+export const POSSIBLE_DIMENSION_VISUALIZERS = ['*'] as const;
 
 /**
  * Defines an interface that represents the difference between
@@ -1893,7 +1896,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: uri.host,
-                    dimension: split[0],
+                    ...parseDimension(split[0]),
                 };
             } else {
                 return {
@@ -1905,7 +1908,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             return {
                 success: true,
                 host: uri.host,
-                dimension: split[0],
+                ...parseDimension(split[0]),
                 channel: split.slice(1).join('/'),
             };
         }
@@ -1924,18 +1927,35 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: split[0],
-                    dimension: split[1],
+                    ...parseDimension(split[1]),
                     channel: split.slice(2).join('/'),
                 };
             } else {
                 return {
                     success: true,
-                    dimension: split[0],
+                    ...parseDimension(split[0]),
                     channel: split.slice(1).join('/'),
                 };
             }
         }
     }
+}
+
+function parseDimension(dimension: string): Partial<SimulationIdParseSuccess> {
+    if (dimension) {
+        for (let prefix of POSSIBLE_DIMENSION_VISUALIZERS) {
+            if (dimension.startsWith(prefix)) {
+                let sub = dimension.substring(prefix.length);
+                return {
+                    dimension: sub,
+                    dimensionVisualizer: prefix,
+                };
+            }
+        }
+    }
+    return {
+        dimension,
+    };
 }
 
 /**
