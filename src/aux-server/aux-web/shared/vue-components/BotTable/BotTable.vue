@@ -2,8 +2,8 @@
     <div class="bot-table" ref="wrapper">
         <div class="bot-table-container">
             <div class="top-part">
-                <div v-show="!isMakingNewTag && hasBots" class="bot-table-toggle-buttons">
-                    <md-button class="md-icon-button" @click="openNewTag()">
+                <div v-show="!isMakingNewTag" class="bot-table-toggle-buttons">
+                    <md-button v-show="hasBots" class="md-icon-button" @click="openNewTag()">
                         <picture>
                             <source srcset="../../public/icons/tag-add.webp" type="image/webp" />
                             <source srcset="../../public/icons/tag-add.png" type="image/png" />
@@ -61,13 +61,7 @@
                     </div>
                 </div>
             </div>
-            <p v-if="isSearch && searchResult === null" class="no-search-results-message">
-                No bots found
-            </p>
-            <p v-else-if="!hasBots" class="no-bots-message">
-                Select a bot or search
-            </p>
-            <div v-else-if="hasBots" class="bot-table-wrapper">
+            <div class="bot-table-wrapper">
                 <div
                     class="bot-table-grid"
                     :class="[viewMode]"
@@ -241,12 +235,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div v-else-if="searchResult !== null" class="search-results-wrapper">
-                <tree-view
-                    :data="searchResult"
-                    :options="{ limitRenderDepth: true, maxDepth: 1 }"
-                ></tree-view>
             </div>
             <div
                 v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)"
