@@ -85,6 +85,9 @@ export default class BotTable extends Vue {
     @Prop({})
     updateTime: number;
 
+    @Prop({ default: true })
+    allowChangingSheetSize: boolean;
+
     tags: string[] = [];
     readOnlyTags: string[] = [];
     addedTags: string[] = [];
@@ -244,19 +247,6 @@ export default class BotTable extends Vue {
             this.addedTags.length > 0
         ) {
             this.addedTags = [];
-            appManager.simulationManager.primary.botPanel.isOpen = false;
-            this.getBotManager().selection.setMode('single');
-
-            appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.botPanel.keepSheetsOpen();
-        }
-
-        if (
-            this.lastSelectionCount === 2 &&
-            this.bots.length === 1 &&
-            this.selectionMode === 'multi'
-        ) {
-            this.getBotManager().selection.setMode('single');
         }
 
         this.lastSelectionCount = this.bots.length;
@@ -301,7 +291,6 @@ export default class BotTable extends Vue {
                         [this.focusedTag]: this.multilineValue,
                     },
                 });
-                this.getBotManager().recent.addBotDiff(updated, true);
             } else {
                 this.getBotManager().helper.updateBot(this.focusedBot, {
                     tags: {
@@ -320,33 +309,6 @@ export default class BotTable extends Vue {
         }
     }
 
-    async toggleBot(bot: Bot) {
-        if (this.isSearch) {
-            if (this.bots.length > 1) {
-                for (let i = this.bots.length - 1; i >= 0; i--) {
-                    if (this.bots[i] === bot) {
-                        this.bots.splice(i, 1);
-                        break;
-                    }
-                }
-                this.getBotManager().selection.setSelectedBots(this.bots);
-            }
-            this.getBotManager().botPanel.search = '';
-        } else {
-            if (this.bots.length === 1) {
-                appManager.simulationManager.primary.selection.clearSelection();
-                appManager.simulationManager.primary.botPanel.search = '';
-                appManager.simulationManager.primary.recent.clear();
-            } else {
-                this.getBotManager().selection.selectBot(
-                    bot,
-                    false,
-                    this.getBotManager().botPanel
-                );
-            }
-        }
-    }
-
     async undoDelete() {
         if (this.deletedBot) {
             this.showBotDestroyed = false;
@@ -360,12 +322,6 @@ export default class BotTable extends Vue {
     async deleteBot(bot: Bot) {
         const destroyed = await this.getBotManager().helper.destroyBot(bot);
         if (destroyed) {
-            if (this.selectionMode != 'multi') {
-                appManager.simulationManager.primary.botPanel.isOpen = false;
-                this.getBotManager().selection.setMode('single');
-            }
-            appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.botPanel.keepSheetsOpen();
             this.deletedBot = bot;
             this.deletedBotId = getShortId(bot);
             this.showBotDestroyed = true;
@@ -378,21 +334,14 @@ export default class BotTable extends Vue {
         }
     }
 
-    botCreated(bot: PrecalculatedBot) {
-        this.getBotManager().selection.selectBot(
-            bot,
-            true,
-            this.getBotManager().botPanel
-        );
-    }
-
     async createBot() {
-        const id = await this.getBotManager().helper.createBot();
-
-        this.getBotManager()
-            .watcher.botChanged(id)
-            .pipe(first(f => !!f))
-            .subscribe(f => this.botCreated(f));
+        const manager = this.getBotManager();
+        const calc = manager.helper.createContext();
+        const dimension = manager.parsedId.dimension;
+        const id = await manager.helper.createBot(
+            undefined,
+            addToDimensionDiff(calc, dimension)
+        );
     }
 
     selectNewTag() {
@@ -584,9 +533,7 @@ export default class BotTable extends Vue {
         this.isMakingNewTag = false;
     }
 
-    clearSearch() {
-        this.getBotManager().botPanel.search = '';
-    }
+    clearSearch() {}
 
     async clearSelection() {
         await this.selectMod(this.bots[0]);
@@ -594,16 +541,6 @@ export default class BotTable extends Vue {
 
     async selectMod(bot: Bot) {
         this.addedTags = [];
-
-        await this.getBotManager().selection.selectBot(
-            <AuxBot>bot,
-            false,
-            this.getBotManager().botPanel
-        );
-
-        this.getBotManager().recent.addBotDiff(bot, true);
-        await this.getBotManager().selection.clearSelection();
-        appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
     async downloadBots() {
@@ -700,7 +637,6 @@ export default class BotTable extends Vue {
         this.lastEditedTag = null;
         this.focusedTag = null;
         this.addedTags.length = 0;
-        this.getBotManager().recent.clear();
     }
 
     constructor() {
@@ -962,8 +898,9 @@ export default class BotTable extends Vue {
     }
 
     searchForTag(tag: string) {
-        if (this.tagHasValue(tag))
-            this.getBotManager().botPanel.search = 'getBots("' + tag + '")';
+        if (this.tagHasValue(tag)) {
+            // TODO:
+        }
     }
 }
 

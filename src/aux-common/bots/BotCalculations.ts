@@ -1944,7 +1944,11 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
 function parseDimension(dimension: string): Partial<SimulationIdParseSuccess> {
     if (dimension) {
         for (let prefix of POSSIBLE_DIMENSION_VISUALIZERS) {
-            if (dimension.startsWith(prefix)) {
+            if (dimension === prefix) {
+                return {
+                    dimensionVisualizer: prefix,
+                };
+            } else if (dimension.startsWith(prefix)) {
                 let sub = dimension.substring(prefix.length);
                 return {
                     dimension: sub,

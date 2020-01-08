@@ -637,22 +637,9 @@ export abstract class BaseInteractionManager {
         this._game.gameView.$emit('onContextMenuHide');
     }
 
-    async selectBot(bot: AuxBot3D) {
-        bot.dimensionGroup.simulation3D.simulation.botPanel.search = '';
-        const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
+    async selectBot(bot: AuxBot3D) {}
 
-        await bot.dimensionGroup.simulation3D.simulation.selection.selectBot(
-            <AuxBot>bot.bot,
-            shouldMultiSelect,
-            bot.dimensionGroup.simulation3D.simulation.botPanel
-        );
-    }
-
-    async clearSelection() {
-        await appManager.simulationManager.primary.selection.clearSelection();
-        appManager.simulationManager.primary.botPanel.search = '';
-        await appManager.simulationManager.primary.recent.clear();
-    }
+    async clearSelection() {}
 
     isEmptySpace(screenPos: Vector2): boolean {
         const { gameObject } = this.findHoveredGameObject(screenPos);

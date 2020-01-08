@@ -83,7 +83,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     protected _surfaceObjectsDirty: boolean;
 
     get selectionMode() {
-        return this._game.simulation3D.simulation.selection.mode;
+        return 'single';
     }
 
     constructor(game: BuilderGame) {
@@ -643,13 +643,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     private _selectDimensionBot(
         calc: BotCalculationContext,
         bot: DimensionGroup3D
-    ) {
-        this._game.simulation3D.simulation.selection.selectBot(
-            bot.bot,
-            false,
-            this._game.simulation3D.simulation.botPanel
-        );
-    }
+    ) {}
 
     private _switchToPlayer(
         calc: BotCalculationContext,

@@ -46,7 +46,7 @@
                     </div>
                     <div v-else-if="hasBots && !diffSelected">
                         <md-button
-                            v-if="!isMobile()"
+                            v-if="!isMobile() && allowChangingSheetSize"
                             class="md-icon-button create-surface"
                             @click="toggleSheet()"
                         >

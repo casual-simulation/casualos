@@ -33,9 +33,7 @@ export default class BotSearch extends Vue {
 
     @Provide() botRenderer: BotRenderer = getRenderer();
 
-    toggleOpen() {
-        appManager.simulationManager.primary.botPanel.toggleOpen();
-    }
+    toggleOpen() {}
 
     async executeSearch() {
         await appManager.simulationManager.primary.helper.transaction(
@@ -44,10 +42,7 @@ export default class BotSearch extends Vue {
     }
 
     @Watch('search')
-    onSearchChanged() {
-        appManager.simulationManager.primary.botPanel.search = this.search;
-        appManager.simulationManager.primary.botPanel.isOpen = true;
-    }
+    onSearchChanged() {}
 
     setPrefill(prefill: string) {
         if (!prefill) {
@@ -101,21 +96,10 @@ export default class BotSearch extends Vue {
 
     mounted() {
         appManager.whileLoggedIn((user, botManager) => {
-            this.recentBot = botManager.recent.bot;
-
             let subs: SubscriptionLike[] = [];
             subs.push(
                 botManager.botPanel.botsUpdated.subscribe(e => {
                     this.bots = e.bots;
-                }),
-                botManager.botPanel.isOpenChanged.subscribe(open => {
-                    this.isOpen = open;
-                }),
-                botManager.botPanel.searchUpdated.subscribe(search => {
-                    this.search = search;
-                }),
-                botManager.recent.onUpdated.subscribe(() => {
-                    this.recentBot = botManager.recent.bot;
                 })
             );
             return subs;

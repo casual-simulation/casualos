@@ -218,20 +218,19 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     }
 
     private async _copySelection() {
-        const sim = appManager.simulationManager.primary;
-        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userBot);
-        if (bots.length === 0) {
-            appManager.simulationManager.primary.helper.transaction(
-                toast('Nothing selected to copy!')
-            );
-            return;
-        }
-
-        await copyBotsFromSimulation(sim, bots);
-
-        appManager.simulationManager.primary.helper.transaction(
-            toast('Selection Copied!')
-        );
+        // TODO:
+        // const sim = appManager.simulationManager.primary;
+        // const bots = sim.botPanel.getSelectedBotsForUser(sim.helper.userBot);
+        // if (bots.length === 0) {
+        //     appManager.simulationManager.primary.helper.transaction(
+        //         toast('Nothing selected to copy!')
+        //     );
+        //     return;
+        // }
+        // await copyBotsFromSimulation(sim, bots);
+        // appManager.simulationManager.primary.helper.transaction(
+        //     toast('Selection Copied!')
+        // );
     }
 
     private async _pasteClipboard() {

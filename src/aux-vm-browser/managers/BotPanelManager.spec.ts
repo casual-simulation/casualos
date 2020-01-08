@@ -1,14 +1,13 @@
 import { BotPanelManager } from './BotPanelManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
-import SelectionManager from './SelectionManager';
 import {
     createBot,
     createPrecalculatedBot,
     botAdded,
     PrecalculatedBot,
     BotIndex,
+    botUpdated,
 } from '@casual-simulation/aux-common';
-import { RecentBotManager } from './RecentBotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
 describe('BotPanelManager', () => {
@@ -16,8 +15,6 @@ describe('BotPanelManager', () => {
     let watcher: BotWatcher;
     let helper: BotHelper;
     let index: BotIndex;
-    let selection: SelectionManager;
-    let recent: RecentBotManager;
     let vm: TestAuxVM;
     let userId = 'user';
 
@@ -26,42 +23,20 @@ describe('BotPanelManager', () => {
         vm.processEvents = true;
         helper = new BotHelper(vm);
         helper.userId = userId;
-        selection = new SelectionManager(helper);
-        recent = new RecentBotManager(helper);
         index = new BotIndex();
 
         watcher = new BotWatcher(helper, index, vm.stateUpdated);
 
         await vm.sendEvents([botAdded(createBot('user'))]);
 
-        manager = new BotPanelManager(watcher, helper, selection, recent);
-    });
-
-    describe('isOpen', () => {
-        it('should be closed by default', () => {
-            expect(manager.isOpen).toBe(false);
-        });
-
-        it('should send an event when the panel gets toggled open', () => {
-            let changes: boolean[] = [];
-            manager.isOpenChanged.subscribe(c => changes.push(c));
-
-            expect(changes).toEqual([false]);
-
-            manager.toggleOpen();
-            manager.toggleOpen();
-
-            expect(changes).toEqual([false, true, false]);
-        });
+        manager = new BotPanelManager(watcher, helper, 'hello');
     });
 
     describe('botsUpdated', () => {
-        it('should resolve whenever the selected bots update', async () => {
+        it('should resolve whenever a bot in the given dimension updates', async () => {
             let bots: PrecalculatedBot[];
-            let isDiff: boolean = true;
             manager.botsUpdated.subscribe(e => {
                 bots = e.bots;
-                isDiff = e.isDiff;
             });
 
             await vm.sendEvents([
@@ -77,27 +52,27 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectBot(helper.botsState['test']);
+            expect(bots).toEqual([helper.botsState['test']]);
 
-            await selection.selectBot(helper.botsState['test2'], true);
+            await vm.sendEvents([
+                botUpdated('test2', {
+                    tags: {
+                        hello: true,
+                    },
+                }),
+            ]);
 
             expect(bots).toEqual([
                 helper.botsState['test'],
                 helper.botsState['test2'],
             ]);
-            expect(isDiff).toBeFalsy();
         });
 
-        it('should update based on the search', async () => {
+        it('should include all bots when the dimension is set to a falsy value', async () => {
+            manager = new BotPanelManager(watcher, helper, null);
             let bots: PrecalculatedBot[];
-            let result: any;
-            let isDiff: boolean;
-            let isSearch: boolean;
             manager.botsUpdated.subscribe(e => {
                 bots = e.bots;
-                result = e.searchResult;
-                isDiff = e.isDiff;
-                isSearch = e.isSearch;
             });
 
             await vm.sendEvents([
@@ -111,311 +86,9 @@ describe('BotPanelManager', () => {
                         hello: false,
                     })
                 ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
             ]);
 
-            manager.search = 'getBots("hello", true)';
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([
-                createBot('test', {
-                    hello: true,
-                }),
-            ]);
-            expect(result).toEqual([
-                createBot('test', {
-                    hello: true,
-                }),
-            ]);
-            expect(isSearch).toBe(true);
-            expect(isDiff).toBeFalsy();
-        });
-
-        it('should handle searches that return non-bot values', async () => {
-            let bots: PrecalculatedBot[];
-            let result: any;
-            let isDiff: boolean;
-            let isSearch: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-                result = e.searchResult;
-                isDiff = e.isDiff;
-                isSearch = e.isSearch;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            manager.search = 'getBotTagValues("hello", true).first()';
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([]);
-            expect(result).toEqual(true);
-            expect(isSearch).toBe(true);
-            expect(isDiff).toBeFalsy();
-        });
-
-        it('should fall back to the selection if the search is cleared', async () => {
-            let bots: PrecalculatedBot[];
-            let result: any;
-            let isDiff: boolean;
-            let isSearch: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-                result = e.searchResult;
-                isDiff = e.isDiff;
-                isSearch = e.isSearch;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            await selection.selectBot(helper.botsState['test']);
-            // botUpdated.next([{ bot: helper.botsState['test'], tags: [] }]);
-
-            expect(bots).toEqual([helper.botsState['test']]);
-            expect(result).toEqual(null);
-
-            manager.search = 'getBotTagValues("hello", true)';
-            await Promise.resolve();
-            await Promise.resolve();
-
-            expect(bots).toEqual([]);
-            expect(result).toEqual([true]);
-            expect(isSearch).toEqual(true);
-
-            manager.search = '';
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([helper.botsState['test']]);
-            expect(result).toEqual(null);
-            expect(isSearch).toBeFalsy();
-        });
-
-        it('should handle normal arrays', async () => {
-            let bots: PrecalculatedBot[];
-            let result: any;
-            let isDiff: boolean;
-            let isSearch: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-                result = e.searchResult;
-                isDiff = e.isDiff;
-                isSearch = e.isSearch;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            manager.search = 'getBotTagValues("hello")';
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([]);
-            expect(result).toEqual([false, true, true]);
-            expect(isSearch).toEqual(true);
-        });
-
-        it('should automatically open the panel when selecting a bot in single select mode', async () => {
-            let bots: PrecalculatedBot[];
-            let isOpen: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-            });
-
-            manager.isOpenChanged.subscribe(open => {
-                isOpen = open;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            await selection.selectBot(helper.botsState['test'], false, manager);
-
-            // Need to re-trigger the selection changed event
-            // because the bot update doesn't trigger the refresh.
-            await selection.selectBot(helper.botsState['test'], false, manager);
-
-            expect(bots).toEqual([helper.botsState['test']]);
-            expect(isOpen).toBe(true);
-        });
-
-        it('should automatically close the panel if the user deselects a bot and there are none left', async () => {
-            let bots: PrecalculatedBot[];
-            let isOpen: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-            });
-
-            manager.isOpenChanged.subscribe(open => {
-                isOpen = open;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            manager.isOpen = true;
-
-            await selection.selectBot(helper.botsState['test']);
-            await selection.clearSelection();
-
-            expect(isOpen).toBe(false);
-        });
-
-        it('should not automatically close the panel if there are no bots and a bot update happens', async () => {
-            let bots: PrecalculatedBot[];
-            let isOpen: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-            });
-
-            manager.isOpenChanged.subscribe(open => {
-                isOpen = open;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            await selection.selectBot(helper.botsState['test'], true, manager);
-            await selection.selectBot(helper.botsState['test'], true, manager);
-
-            manager.isOpen = true;
-
-            // botUpdated.next([{ bot: helper.botsState['test'], tags: [] }]);
-
-            expect(bots).toEqual([createPrecalculatedBot('empty', {})]);
-            expect(isOpen).toBe(true);
-        });
-
-        it('should keep the panel open when searching and no bots', async () => {
-            let bots: PrecalculatedBot[];
-            let isOpen: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-            });
-
-            manager.isOpenChanged.subscribe(open => {
-                isOpen = open;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            manager.isOpen = true;
-
-            manager.search = ' ';
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([]);
-            expect(isOpen).toBe(true);
+            expect(bots).toEqual(helper.objects);
         });
     });
 });

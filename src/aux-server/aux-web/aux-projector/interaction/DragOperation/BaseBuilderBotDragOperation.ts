@@ -105,8 +105,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
     protected _onDragReleased(calc: BotCalculationContext): void {
         super._onDragReleased(calc);
 
-        this._simulation3D.simulation.botPanel.hideOnDrag(false);
-
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
@@ -115,7 +113,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
     }
 
     protected _updateBot(bot: Bot, data: Partial<Bot>) {
-        this.simulation.recent.addBotDiff(bot);
         return super._updateBot(bot, data);
     }
 
@@ -225,9 +222,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
                     .filter(e => e.type === 'remove_bot')
                     .map((e: RemoveBotAction) => e.id)
             );
-
-            this.simulation.botPanel.isOpen = false;
-            this.simulation.recent.clear();
         }
         if (destroyedBots.length > 0) {
             events.push(

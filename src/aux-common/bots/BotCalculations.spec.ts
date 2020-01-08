@@ -1165,6 +1165,15 @@ describe('BotCalculations', () => {
                 channel: 'def/ghi',
             });
         });
+
+        it('should set dimension to undefined when it is just a *', () => {
+            let result = parseSimulationId('*/def');
+            expect(result).toEqual({
+                success: true,
+                channel: 'def',
+                dimensionVisualizer: '*',
+            });
+        });
     });
 
     describe('simulationIdToString()', () => {

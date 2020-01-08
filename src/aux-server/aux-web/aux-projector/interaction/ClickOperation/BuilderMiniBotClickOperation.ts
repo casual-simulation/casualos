@@ -18,7 +18,5 @@ export class BuilderMiniBotClickOperation extends BuilderNewBotClickOperation {
         super(simulation3D, interaction, bot, vrController);
     }
 
-    protected _performClick(calc: BotCalculationContext): void {
-        this.simulation.botPanel.toggleOpen();
-    }
+    protected _performClick(calc: BotCalculationContext): void {}
 }

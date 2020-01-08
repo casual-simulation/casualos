@@ -296,7 +296,6 @@ export abstract class BaseBotDragOperation implements IOperation {
             events.push(this._updateBot(bots[i], tags));
         }
 
-        this.simulation.recent.clear();
         await this.simulation.helper.transaction(...events);
     }
 

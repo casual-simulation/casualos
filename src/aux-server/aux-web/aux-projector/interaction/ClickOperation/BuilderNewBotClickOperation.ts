@@ -41,8 +41,6 @@ export class BuilderNewBotClickOperation extends BaseBotClickOperation {
     ): BaseBotDragOperation {
         let duplicatedBot = duplicateBot(calc, <Object>this._bot);
 
-        this._simulation3D.simulation.botPanel.hideOnDrag(true);
-
         return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,

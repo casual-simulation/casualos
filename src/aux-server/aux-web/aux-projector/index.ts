@@ -110,6 +110,7 @@ const routes: RouteConfig[] = [
         component: BuilderHome,
         props: route => ({
             channelId: route.params.id,
+            dimension: route.params.dimension,
         }),
     },
     {
