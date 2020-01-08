@@ -21,6 +21,7 @@
         -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
             -   Also the `channel` property in the `data` argument has been renamed to `universe`.
     -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
+    -   You no longer need to define a dimension bot (context bot) in order to view a dimension in auxPlayer.
 -   Improvements
     -   Added the `player.showChat()` and `player.hideChat()` functions.
         -   These show/hide the chat bar in auxPlayer.
