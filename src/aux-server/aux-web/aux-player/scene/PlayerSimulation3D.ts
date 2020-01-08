@@ -31,19 +31,14 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 
 export class PlayerSimulation3D extends Simulation3D {
-    /**
-     * Keep bots in a back buffer so that we can add bots to dimensions when they come in.
-     * We should not guarantee that dimensions will come first so we must have some lazy bot adding.
-     */
-    private _botBackBuffer: Map<string, Bot>;
-
     /**
      * The current dimension group 3d that the AUX Player is rendering.
      */
     private _dimensionGroup: DimensionGroup3D;
+    private _dimensionLoaded: boolean = false;
 
     private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
@@ -352,7 +347,13 @@ export class PlayerSimulation3D extends Simulation3D {
         super(game, simulation);
 
         this.dimension = dimension;
-        this._botBackBuffer = new Map();
+
+        this._dimensionGroup = new DimensionGroup3D(
+            this,
+            this.simulation.helper.userBot,
+            'player',
+            this.decoratorFactory
+        );
 
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
@@ -393,12 +394,35 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
+    protected _getDimensionTags() {
+        return ['_auxUserDimension'];
+    }
+
+    protected _filterDimensionEvent(
+        calc: BotCalculationContext,
+        event: BotDimensionEvent
+    ): boolean {
+        // Only allow dimensions defined on the user's bot
+        if (
+            event.type === 'dimension_added' ||
+            event.type === 'dimension_removed'
+        ) {
+            return event.dimensionBot.id === this.simulation.helper.userId;
+        }
+        return super._filterDimensionEvent(calc, event);
+    }
+
     protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        const _3dDimension = this._create3dDimensionGroup(calc, bot);
-        return _3dDimension;
+        if (this._dimensionLoaded) {
+            return null;
+        }
+
+        // TODO: Update to support locking dimensions
+        this._dimensionLoaded = true;
+        return this._dimensionGroup;
     }
 
     protected _create3dDimensionGroup(
@@ -619,10 +643,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 'The ' + this.dimension + ' dimension is locked.';
 
             this.simulation.helper.transaction(toast(message));
-
-            this._botBackBuffer.set(bot.id, bot);
-        } else {
-            this._botBackBuffer.set(bot.id, bot);
         }
 
         return null;
