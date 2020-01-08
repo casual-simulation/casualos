@@ -579,9 +579,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.type === 'load_simulation') {
+                } else if (e.type === 'load_universe') {
                     this.finishAddSimulation(e.id);
-                } else if (e.type === 'unload_simulation') {
+                } else if (e.type === 'unload_universe') {
                     this.removeSimulationById(e.id);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
