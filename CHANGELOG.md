@@ -22,6 +22,7 @@
             -   Also the `channel` property in the `data` argument has been renamed to `universe`.
     -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
     -   You no longer need to define a dimension bot (context bot) in order to view a dimension in auxPlayer.
+        -   You can still configure a dimension using the `auxDimensionConfig` tag (renamed from `auxContext`).
 -   Improvements
     -   Added the `player.showChat()` and `player.hideChat()` functions.
         -   These show/hide the chat bar in auxPlayer.
@@ -38,6 +39,14 @@
     -   Added the `player.run(script)` function.
         -   `script` is the script text that should be executed.
         -   Works by sending a `run_script` action. This allows `@onUniverseAction()` listener to intercept and prevent scripts.
+    -   Added the ability to click a tag in the bot table to teleport to that dimension.
+    -   Added a play button to the right side of the code editor to run scripts for quick debugging.
+-   Other Changes
+    -   Changed the "AUX Player" and "Channel Designer" tab titles to "auxPlayer".
+    -   Removed the colored dots from tag labels in the bot table.
+-   Bug Fixes
+    -   `auxIframe` now supports URLs with `*` characters in them.
+    -   Fixed an issue with the menu dimension that would cause items to remain even though a different dimension should be visible.
 
 ## V0.11.19
 
