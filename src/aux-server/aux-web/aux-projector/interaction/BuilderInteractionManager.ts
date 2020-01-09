@@ -326,7 +326,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             tags: {},
         };
 
-        partial.tags[`auxDimension.surface.grid.0:0`] = height;
+        partial.tags[`auxDimensionConfig.surface.grid.0:0`] = height;
 
         this._game.simulation3D.simulation.helper.updateBot(bot.bot, partial);
     }

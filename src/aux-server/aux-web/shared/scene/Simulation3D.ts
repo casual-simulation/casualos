@@ -363,7 +363,7 @@ export abstract class Simulation3D extends Object3D
      * Gets the list of tags that should be watched for dimension values.
      */
     protected _getDimensionTags(): string[] {
-        return ['auxDimension'];
+        return ['auxDimensionConfig'];
     }
 
     /**
@@ -423,11 +423,11 @@ export abstract class Simulation3D extends Object3D
 
     /**
      * Determines if the given event is for a dimension group.
-     * By default, only events that affect the 'auxDimension' tag count.
+     * By default, only events that affect the 'auxDimensionConfig' tag count.
      * @param event The event.
      */
     protected _isDimensionGroupEvent(event: BotIndexEvent) {
-        return event.tag === 'auxDimension';
+        return event.tag === 'auxDimensionConfig';
     }
 
     protected _frameUpdateCore(calc: BotCalculationContext) {

@@ -33,7 +33,7 @@ describe('BotDimensionManager', () => {
                 botsInDimensions: new Map([['abc', new Set(['inDimension'])]]),
             };
             const [_, newState] = processIndexEvents(state, calc, [], index, [
-                'auxDimension',
+                'auxDimensionConfig',
             ]);
 
             expect(newState).toEqual(state);
@@ -42,7 +42,7 @@ describe('BotDimensionManager', () => {
         describe('dimension_added', () => {
             it('should emit a dimension_added event when a dimension is defined via a tag_added event', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const calc = createPrecalculatedContext([test]);
                 const indexEvents = index.addBots([test]);
@@ -51,7 +51,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -59,7 +59,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [],
@@ -68,7 +68,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -76,17 +76,17 @@ describe('BotDimensionManager', () => {
 
             it('should emit a dimension_added event when a dimension is defined via a tag_updated event', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const final = createPrecalculatedBot('test', {
-                    auxDimension: ['abc', 'def'],
+                    auxDimensionConfig: ['abc', 'def'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
                 const indexEvents = index.updateBots([
                     {
                         bot: final,
-                        tags: new Set(['auxDimension']),
+                        tags: new Set(['auxDimensionConfig']),
                     },
                 ]);
                 const [result] = processIndexEvents(
@@ -94,7 +94,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -102,7 +102,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: final,
                             dimension: 'def',
                             existingBots: [],
@@ -111,7 +111,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: final,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -122,7 +122,7 @@ describe('BotDimensionManager', () => {
                     abc: true,
                 });
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const calc = createPrecalculatedContext([inDimension, test]);
                 const indexEvents = index.addBots([inDimension, test]);
@@ -131,7 +131,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -139,7 +139,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [inDimension],
@@ -152,7 +152,7 @@ describe('BotDimensionManager', () => {
                         },
                         {
                             bot: test,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -163,7 +163,7 @@ describe('BotDimensionManager', () => {
                     abc: true,
                 });
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const calc = createPrecalculatedContext([inDimension, test]);
                 const indexEvents = index.addBots([inDimension, test]);
@@ -172,7 +172,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(state).toEqual({
@@ -189,7 +189,7 @@ describe('BotDimensionManager', () => {
                     _auxUserDimension: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const calc = createPrecalculatedContext([user, test]);
                 const indexEvents = index.addBots([user, test]);
@@ -198,7 +198,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -206,7 +206,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [user],
@@ -219,7 +219,7 @@ describe('BotDimensionManager', () => {
                         },
                         {
                             bot: test,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -229,17 +229,17 @@ describe('BotDimensionManager', () => {
         describe('dimension_removed', () => {
             it('should emit a dimension_removed event when a dimension is removed via a tag_updated event', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: ['abc', 'def'],
+                    auxDimensionConfig: ['abc', 'def'],
                 });
                 const final = createPrecalculatedBot('test', {
-                    auxDimension: ['abc'],
+                    auxDimensionConfig: ['abc'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
                 const indexEvents = index.updateBots([
                     {
                         bot: final,
-                        tags: new Set(['auxDimension']),
+                        tags: new Set(['auxDimensionConfig']),
                     },
                 ]);
                 const [result] = processIndexEvents(
@@ -247,7 +247,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -255,7 +255,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_removed',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: final,
                             dimension: 'def',
                         },
@@ -263,7 +263,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: final,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -271,7 +271,7 @@ describe('BotDimensionManager', () => {
 
             it('should emit a dimension_removed event when a dimension is removed via a tag_removed event', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: ['abc', 'def'],
+                    auxDimensionConfig: ['abc', 'def'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
@@ -281,7 +281,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -289,13 +289,13 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_removed',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
                         },
                         {
                             type: 'dimension_removed',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'def',
                         },
@@ -303,7 +303,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 });
@@ -311,7 +311,7 @@ describe('BotDimensionManager', () => {
 
             it('should remove the bot from the dimension state', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: ['abc', 'def'],
+                    auxDimensionConfig: ['abc', 'def'],
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test]);
@@ -320,7 +320,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([]);
                 indexEvents = index.removeBots(['test']);
@@ -329,7 +329,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(state2).toEqual({
@@ -342,7 +342,7 @@ describe('BotDimensionManager', () => {
         describe('bot_added_to_dimension', () => {
             it('should emit a bot_added_to_dimension event when a bot is added to a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const inDimension = createPrecalculatedBot('inDimension', {
                     abc: true,
@@ -354,7 +354,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([test, inDimension]);
                 indexEvents = index.addBots([inDimension]);
@@ -363,7 +363,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -386,7 +386,7 @@ describe('BotDimensionManager', () => {
 
             it('should emit a bot_added_to_dimension event when a bot is updated into a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const inDimension = createPrecalculatedBot('inDimension', {});
                 let calc = createPrecalculatedContext([test]);
@@ -396,7 +396,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([test, inDimension]);
 
@@ -414,7 +414,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -444,7 +444,7 @@ describe('BotDimensionManager', () => {
 
             it('should emit a bot_added_to_dimension event when a user bot is updated into a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
@@ -456,7 +456,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([test, user]);
 
@@ -475,7 +475,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -505,7 +505,7 @@ describe('BotDimensionManager', () => {
         describe('bot_removed_from_dimension', () => {
             it('should emit a bot_removed_from_dimension event when a bot is removed from a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const inDimension = createPrecalculatedBot('inDimension', {
                     abc: true,
@@ -517,7 +517,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([test, inDimension]);
 
@@ -527,7 +527,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -555,7 +555,7 @@ describe('BotDimensionManager', () => {
 
             it('should emit a bot_removed_from_dimension event when a user bot is removed from a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    auxDimension: 'abc',
+                    auxDimensionConfig: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
@@ -568,7 +568,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
                 calc = createPrecalculatedContext([test, user]);
 
@@ -587,7 +587,7 @@ describe('BotDimensionManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['auxDimension']
+                    ['auxDimensionConfig']
                 );
 
                 expect(result).toEqual({
@@ -620,11 +620,11 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions('auxDimension')
+                .watchDimensions('auxDimensionConfig')
                 .subscribe(e => events.push(e));
 
             const test = createPrecalculatedBot('test', {
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
             });
             index.addBots([test]);
 
@@ -634,7 +634,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: 'auxDimension',
+                            dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [],
@@ -643,7 +643,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['auxDimension']),
+                            tags: new Set(['auxDimensionConfig']),
                         },
                     ],
                 },

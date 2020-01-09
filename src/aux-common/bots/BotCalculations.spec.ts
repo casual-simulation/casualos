@@ -705,7 +705,7 @@ describe('BotCalculations', () => {
                 'auxDimensionY',
                 'auxDimensionZ',
                 'auxDimensionVisualize',
-                'auxDimension',
+                'auxDimensionConfig',
             ]);
         });
     });
@@ -756,28 +756,28 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['auxDimension']).toEqual('uuid');
+            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
         });
 
         it('should create new random dimension id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['auxDimension']).toEqual('uuid');
+            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
         });
 
         it('should create new random dimension id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['auxDimension']).toEqual('uuid');
+            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
         });
 
         it('should use input dimension id if given', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['auxDimension']).toEqual('userSetID');
+            expect(workspace.tags['auxDimensionConfig']).toEqual('userSetID');
         });
 
         // Test for the dimension type changes

@@ -335,7 +335,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return;
         }
         await this.createBot(undefined, {
-            auxDimension: USERS_DIMENSION,
+            auxDimensionConfig: USERS_DIMENSION,
             auxDimensionVisualize: true,
         });
     }
@@ -676,7 +676,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (oldDimensionBot) {
             workspace = duplicateBot(oldCalc, oldDimensionBot, {
                 tags: {
-                    auxDimension: dimension,
+                    auxDimensionConfig: dimension,
                 },
             });
         } else {

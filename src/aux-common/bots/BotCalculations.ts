@@ -943,7 +943,7 @@ export function createWorkspace(
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
                 auxDimensionLocked: true,
-                auxDimension: builderDimensionId,
+                auxDimensionConfig: builderDimensionId,
             },
         };
     } else {
@@ -954,7 +954,7 @@ export function createWorkspace(
                 auxDimensionY: 0,
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
-                auxDimension: builderDimensionId,
+                auxDimensionConfig: builderDimensionId,
             },
         };
     }
@@ -1347,7 +1347,7 @@ export function getBotConfigDimensions(
     calc: BotCalculationContext,
     bot: Bot
 ): string[] {
-    const result = calculateBotValue(calc, bot, 'auxDimension');
+    const result = calculateBotValue(calc, bot, 'auxDimensionConfig');
     return parseBotConfigDimensions(result);
 }
 
@@ -1379,7 +1379,7 @@ export function getDimensionValue(
     dimensionBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, dimensionBot, `auxDimension${name}`);
+    return calculateBotValue(calc, dimensionBot, `auxDimensionConfig${name}`);
 }
 
 /**
@@ -1582,13 +1582,15 @@ export function getBuilderDimensionGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(bot);
     const gridTags = tags.filter(
-        t => t.indexOf('auxDimension.surface.grid.') === 0 && t.indexOf(':') > 0
+        t =>
+            t.indexOf('auxDimensionConfig.surface.grid.') === 0 &&
+            t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('auxDimension.surface.grid.'.length)
+            tag.substr('auxDimensionConfig.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, bot, tag, undefined);
     }
 

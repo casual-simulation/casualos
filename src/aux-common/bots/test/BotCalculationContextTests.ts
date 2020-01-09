@@ -3136,7 +3136,7 @@ export function botCalculationContextTests(
                 def: true,
             });
             let dimension: Bot = createBot('dimension', {
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([dimension, first]);
@@ -3682,10 +3682,10 @@ export function botCalculationContextTests(
     describe('getContextGrid()', () => {
         it('should find all the tags that represent a grid position', () => {
             const bot = createBot('bot', {
-                'auxDimension.surface.grid.0:1': 1,
-                'auxDimension.surface.grid.1:1': 1,
-                'auxDimension.surface.grid.2:1': 2,
-                'auxDimension.surface.grid.2:2': '=3',
+                'auxDimensionConfig.surface.grid.0:1': 1,
+                'auxDimensionConfig.surface.grid.1:1': 1,
+                'auxDimensionConfig.surface.grid.2:1': 2,
+                'auxDimensionConfig.surface.grid.2:2': '=3',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3701,7 +3701,7 @@ export function botCalculationContextTests(
 
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
-                'auxDimension.surface.grid.0:1': 1,
+                'auxDimensionConfig.surface.grid.0:1': 1,
                 auxDimensionGridScale: 50,
             });
 
@@ -3954,7 +3954,7 @@ export function botCalculationContextTests(
         it('should return true if movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
                 auxDimensionSurfaceMovable: true,
             });
 
@@ -3966,7 +3966,7 @@ export function botCalculationContextTests(
         it('should return false if not movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
                 auxDimensionSurfaceMovable: false,
             });
 
@@ -3985,18 +3985,18 @@ export function botCalculationContextTests(
     });
 
     describe('isContext()', () => {
-        it('should return true when the given bot has auxDimension set to something', () => {
+        it('should return true when the given bot has auxDimensionConfig set to something', () => {
             const bot = createBot('test', {
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
             expect(isDimension(calc, bot)).toBe(true);
         });
 
-        it('should return false when the given bot does not have auxDimension set to something', () => {
+        it('should return false when the given bot does not have auxDimensionConfig set to something', () => {
             const bot = createBot('test', {
-                auxDimension: '',
+                auxDimensionConfig: '',
             });
 
             const calc = createCalculationContext([bot]);
@@ -4005,10 +4005,10 @@ export function botCalculationContextTests(
     });
 
     describe('getBotConfigContexts()', () => {
-        it('should return the list of values in auxDimension', () => {
+        it('should return the list of values in auxDimensionConfig', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
@@ -4019,7 +4019,7 @@ export function botCalculationContextTests(
 
         it('should evalulate formulas', () => {
             const bot = createBot('test', {
-                auxDimension: '="abc"',
+                auxDimensionConfig: '="abc"',
             });
 
             const calc = createCalculationContext([bot]);
@@ -4031,7 +4031,7 @@ export function botCalculationContextTests(
         it('should return the list of values when given a number', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxDimension: 123,
+                auxDimensionConfig: 123,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4043,7 +4043,7 @@ export function botCalculationContextTests(
         it('should return the list of values when given a boolean', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxDimension: false,
+                auxDimensionConfig: false,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4056,7 +4056,7 @@ export function botCalculationContextTests(
     describe('isContextLocked()', () => {
         it('should default to false when the bot is a dimension', () => {
             const bot = createBot('test', {
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
@@ -4076,7 +4076,7 @@ export function botCalculationContextTests(
 
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
-                auxDimension: 'abc',
+                auxDimensionConfig: 'abc',
                 auxDimensionLocked: '=true',
             });
 

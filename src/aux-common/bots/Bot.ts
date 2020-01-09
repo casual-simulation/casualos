@@ -158,7 +158,7 @@ export interface BotTags {
     ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['auxDimension']?: string | number | boolean;
+    ['auxDimensionConfig']?: string | number | boolean;
     ['auxDimensionColor']?: string;
     ['auxDimensionLocked']?: unknown;
     ['auxDimensionGridScale']?: number;
@@ -693,7 +693,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'auxDimension',
+    'auxDimensionConfig',
     'auxDimensionColor',
     'auxDimensionLocked',
     'auxDimensionGridScale',

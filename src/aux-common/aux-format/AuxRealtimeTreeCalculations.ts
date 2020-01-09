@@ -36,7 +36,7 @@ export function botChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 f => {
                     let tags = tagsOnBot(f);
                     return tags.length > 0 &&
-                        tags.some(t => t === 'auxDimension')
+                        tags.some(t => t === 'auxDimensionConfig')
                         ? 0
                         : 1;
                 },

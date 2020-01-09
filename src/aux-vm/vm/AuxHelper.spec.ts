@@ -577,7 +577,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'gen',
+                        auxDimensionConfig: 'gen',
                         auxDimensionVisualize: 'surface',
                         auxDimensionX: 0,
                         auxDimensionY: 1,
@@ -609,7 +609,7 @@ describe('AuxHelper', () => {
                             oldZ: 1,
                         }),
                         dimensionBot: createBot('dimensionBot', {
-                            auxDimension: 'old',
+                            auxDimensionConfig: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
                         }),
@@ -623,7 +623,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        auxDimension: 'gen',
+                        auxDimensionConfig: 'gen',
                         auxDimensionVisualize: true,
                         auxDimensionX: -1,
                         auxDimensionY: 1,
@@ -650,7 +650,7 @@ describe('AuxHelper', () => {
                 await helper.transaction(
                     addState({
                         dimensionBot: createBot('dimensionBot', {
-                            auxDimension: 'old',
+                            auxDimensionConfig: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
                         }),
@@ -678,7 +678,7 @@ describe('AuxHelper', () => {
                     user: expect.any(Object),
                     bot1: expect.objectContaining(
                         createBot('bot1', {
-                            auxDimension: 'gen',
+                            auxDimensionConfig: 'gen',
                             auxDimensionVisualize: 'surface',
                             auxDimensionX: -1,
                             auxDimensionY: 1,
@@ -703,7 +703,7 @@ describe('AuxHelper', () => {
                 await helper.transaction(
                     addState({
                         dimensionBot: createBot('dimensionBot', {
-                            auxDimension: 'old',
+                            auxDimensionConfig: 'old',
                             auxDimensionVisualize: true,
                             other: 'def',
                         }),
@@ -1300,7 +1300,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['dimension']).toMatchObject({
                 id: 'dimension',
                 tags: {
-                    ['auxDimension']: USERS_DIMENSION,
+                    ['auxDimensionConfig']: USERS_DIMENSION,
                     ['auxDimensionVisualize']: true,
                 },
             });
@@ -1323,7 +1323,7 @@ describe('AuxHelper', () => {
 
             await tree.root();
             await helper.createBot('userDimension', {
-                auxDimension: USERS_DIMENSION,
+                auxDimensionConfig: USERS_DIMENSION,
             });
 
             uuidMock.mockReturnValueOnce('dimension');
