@@ -23,6 +23,11 @@
     -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
     -   You no longer need to define a dimension bot (context bot) in order to view a dimension in auxPlayer.
         -   You can still configure a dimension using the `auxDimensionConfig` tag (renamed from `auxContext`).
+    -   Channel Designer is no more!
+        -   It has been replaced with the "sheet dimension" (bot table).
+        -   You can show _any_ dimension in the sheet by putting a `*` in front of the dimension name in the URL.
+            -   e.g. `https://auxplayer.com/*home/example` if you wanted to view the `home` dimension in the sheet from the `example` universe.
+            -   Going to just `*` will show all bots in the universe in the sheet. (which is very slow at the moment)
 -   Improvements
     -   Added the `player.showChat()` and `player.hideChat()` functions.
         -   These show/hide the chat bar in auxPlayer.
