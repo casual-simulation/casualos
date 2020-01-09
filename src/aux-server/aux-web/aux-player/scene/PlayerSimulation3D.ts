@@ -423,227 +423,173 @@ export class PlayerSimulation3D extends Simulation3D {
         return this._dimensionGroup;
     }
 
-    protected _create3dDimensionGroup(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
+    private _watchDimensionBot(
+        bot: PrecalculatedBot,
+        calc: BotCalculationContext
     ) {
-        if (this._dimensionGroup) {
-            return null;
-        }
-        // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
-        const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
-        const dimensionLocked = isDimensionLocked(calc, bot);
-        if (result.matchFound && !dimensionLocked) {
-            // Create DimensionGroup3D for this bot that we will use to render all bots in the dimension.
-            this._dimensionGroup = new DimensionGroup3D(
-                this,
-                bot,
-                'player',
-                this.decoratorFactory
-            );
-
-            this._setupGrid(calc);
-
-            // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
-            this._subs.push(
-                this.simulation.watcher
-                    .botChanged(bot.id)
-                    .pipe(
-                        tap(update => {
-                            const bot = update;
-                            // Update the dimension background color.
-                            //let dimensionBackgroundColor =
-                            //bot.tags['auxDimensionColor'];
-
-                            let dimensionBackgroundColor = calculateBotValue(
-                                calc,
-                                bot,
-                                `auxDimensionColor`
-                            );
-
-                            this._dimensionBackground = hasValue(
-                                dimensionBackgroundColor
-                            )
-                                ? new Color(dimensionBackgroundColor)
-                                : undefined;
-
-                            this._pannable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPannable`,
-                                true
-                            );
-
-                            this._panMinX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPannableMinX`,
-                                null
-                            );
-
-                            this._panMaxX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPannableMaxX`,
-                                null
-                            );
-
-                            this._panMinY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPannableMinY`,
-                                null
-                            );
-
-                            this._panMaxY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPannableMaxY`,
-                                null
-                            );
-
-                            this._zoomable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionZoomable`,
-                                true
-                            );
-
-                            this._zoomMin = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionZoomableMin`,
-                                null
-                            );
-
-                            this._zoomMax = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionZoomableMax`,
-                                null
-                            );
-
-                            this._rotatable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionRotatable`,
-                                true
-                            );
-
-                            this._inventoryVisible = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryVisible`,
-                                true
-                            );
-
-                            this._inventoryPannable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryPannable`,
-                                false
-                            );
-
-                            this._inventoryPanMinX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryPannableMinX`,
-                                null
-                            );
-
-                            this._inventoryPanMaxX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryPannableMaxX`,
-                                null
-                            );
-
-                            this._inventoryPanMinY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryPannableMinY`,
-                                null
-                            );
-
-                            this._inventoryPanMaxY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryPannableMaxY`,
-                                null
-                            );
-
-                            this._inventoryResizable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryResizable`,
-                                true
-                            );
-
-                            this._inventoryRotatable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryRotatable`,
-                                true
-                            );
-
-                            this._inventoryZoomable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryZoomable`,
-                                true
-                            );
-
-                            this._inventoryHeight = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryHeight`,
-                                0
-                            );
-
-                            this._playerZoom = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPlayerZoom`,
-                                null
-                            );
-
-                            this._playerRotationX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPlayerRotationX`,
-                                null
-                            );
-
-                            this._playerRotationY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxDimensionPlayerRotationY`,
-                                null
-                            );
-
-                            let invColor = calculateBotValue(
-                                calc,
-                                bot,
-                                `auxDimensionInventoryColor`
-                            );
-
-                            this._inventoryColor = hasValue(invColor)
-                                ? new Color(invColor)
-                                : undefined;
-                        })
-                    )
-                    .subscribe()
-            );
-
-            return this._dimensionGroup;
-        } else if (result.matchFound && dimensionLocked) {
-            let message: string =
-                'The ' + this.dimension + ' dimension is locked.';
-
-            this.simulation.helper.transaction(toast(message));
-        }
-
-        return null;
+        this._subs.push(
+            this.simulation.watcher
+                .botChanged(bot.id)
+                .pipe(
+                    tap(update => {
+                        const bot = update;
+                        // Update the dimension background color.
+                        //let dimensionBackgroundColor =
+                        //bot.tags['auxDimensionColor'];
+                        let dimensionBackgroundColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `auxDimensionColor`
+                        );
+                        this._dimensionBackground = hasValue(
+                            dimensionBackgroundColor
+                        )
+                            ? new Color(dimensionBackgroundColor)
+                            : undefined;
+                        this._pannable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannable`,
+                            true
+                        );
+                        this._panMinX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMinX`,
+                            null
+                        );
+                        this._panMaxX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMaxX`,
+                            null
+                        );
+                        this._panMinY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMinY`,
+                            null
+                        );
+                        this._panMaxY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMaxY`,
+                            null
+                        );
+                        this._zoomable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomable`,
+                            true
+                        );
+                        this._zoomMin = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomableMin`,
+                            null
+                        );
+                        this._zoomMax = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomableMax`,
+                            null
+                        );
+                        this._rotatable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionRotatable`,
+                            true
+                        );
+                        this._inventoryVisible = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryVisible`,
+                            true
+                        );
+                        this._inventoryPannable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannable`,
+                            false
+                        );
+                        this._inventoryPanMinX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMinX`,
+                            null
+                        );
+                        this._inventoryPanMaxX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMaxX`,
+                            null
+                        );
+                        this._inventoryPanMinY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMinY`,
+                            null
+                        );
+                        this._inventoryPanMaxY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMaxY`,
+                            null
+                        );
+                        this._inventoryResizable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryResizable`,
+                            true
+                        );
+                        this._inventoryRotatable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryRotatable`,
+                            true
+                        );
+                        this._inventoryZoomable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryZoomable`,
+                            true
+                        );
+                        this._inventoryHeight = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryHeight`,
+                            0
+                        );
+                        this._playerZoom = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerZoom`,
+                            null
+                        );
+                        this._playerRotationX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerRotationX`,
+                            null
+                        );
+                        this._playerRotationY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerRotationY`,
+                            null
+                        );
+                        let invColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryColor`
+                        );
+                        this._inventoryColor = hasValue(invColor)
+                            ? new Color(invColor)
+                            : undefined;
+                    })
+                )
+                .subscribe()
+        );
     }
 
     protected _isDimensionGroupEvent(event: BotIndexEvent) {
@@ -692,6 +638,22 @@ export class PlayerSimulation3D extends Simulation3D {
         // could call botUpdated from botAdded.
         if (bot.id === this.simulation.helper.userBot.id) {
             this._updateUserBot(calc, bot);
+        }
+
+        // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
+        const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
+        const dimensionLocked = isDimensionLocked(calc, bot);
+        if (result.matchFound && !dimensionLocked) {
+            this._setupGrid(calc);
+
+            // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
+            this._watchDimensionBot(bot, calc);
+        } else if (result.matchFound && dimensionLocked) {
+            let message: string =
+                'The ' + this.dimension + ' dimension is locked.';
+
+            this.simulation.helper.transaction(toast(message));
+            this.unsubscribe();
         }
     }
 
