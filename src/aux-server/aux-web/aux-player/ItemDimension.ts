@@ -103,6 +103,8 @@ export class ItemDimension implements SubscriptionLike {
                     bots.add(bot.id);
                     this._addMenuItem(bot, event.dimension, sim);
                 }
+
+                hasUpdate = true;
             } else if (event.type === 'dimension_removed') {
                 if (event.dimensionBot.id !== sim.helper.userId) {
                     continue;
@@ -112,8 +114,12 @@ export class ItemDimension implements SubscriptionLike {
                 list.delete(event.dimensionBot.id);
                 if (list.size === 0) {
                     let bots = this._getBotsInDimension(event.dimension);
+                    for (let id of bots) {
+                        this._botItemMap.delete(id);
+                    }
                     bots.clear();
                 }
+                hasUpdate = true;
             } else if (event.type === 'bot_added_to_dimension') {
                 let list = this._getBotIdsDefiningDimension(event.dimension);
                 if (list.size <= 0) {
