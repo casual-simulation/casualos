@@ -194,14 +194,14 @@ module.exports = {
             chunks: ['projector', 'vendors', 'monaco'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
-            title: 'Channel Designer',
+            title: 'auxPlayer',
             filename: 'projector.html',
         }),
         new HtmlWebpackPlugin({
             chunks: ['player', 'vendors'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
-            title: 'AUX Player',
+            title: 'auxPlayer',
             filename: 'player.html',
         }),
         new HtmlWebpackPlugin({
