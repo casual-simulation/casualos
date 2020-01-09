@@ -649,5 +649,73 @@ describe('BotDimensionManager', () => {
                 },
             ]);
         });
+
+        it('should emit a dimension_removed and dimension_added event when a dimension is changed', () => {
+            let events = [] as BotDimensionsUpdate[];
+
+            dimensions
+                .watchDimensions('_auxUserDimension')
+                .subscribe(e => events.push(e));
+
+            const test = createPrecalculatedBot('test', {
+                _auxUserDimension: 'abc',
+            });
+            index.addBots([test]);
+
+            const test2 = createPrecalculatedBot('test', {
+                _auxUserDimension: '123',
+            });
+            index.updateBots([
+                {
+                    bot: test2,
+                    tags: new Set(['_auxUserDimension']),
+                },
+            ]);
+
+            expect(events).toEqual([
+                {
+                    calc: expect.anything(),
+                    events: [
+                        {
+                            type: 'dimension_added',
+                            dimensionTag: '_auxUserDimension',
+                            dimensionBot: test,
+                            dimension: 'abc',
+                            existingBots: [],
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: test,
+                            tags: new Set(['_auxUserDimension']),
+                        },
+                    ],
+                },
+                {
+                    calc: expect.anything(),
+                    events: [
+                        {
+                            type: 'dimension_added',
+                            dimensionTag: '_auxUserDimension',
+                            dimensionBot: test2,
+                            dimension: '123',
+                            existingBots: [],
+                        },
+                        {
+                            type: 'dimension_removed',
+                            dimensionTag: '_auxUserDimension',
+                            dimensionBot: test2,
+                            dimension: 'abc',
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: test2,
+                            tags: new Set(['_auxUserDimension']),
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 });

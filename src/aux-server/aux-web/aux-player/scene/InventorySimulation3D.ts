@@ -25,28 +25,10 @@ export class InventorySimulation3D extends Simulation3D {
 
     grid3D: PlayerGrid3D;
 
-    /**
-     * Short cut access to the dimension group that this simulation uses to render its inventory bots.
-     */
-    private _dimensionGroup: InventoryDimensionGroup3D;
-
-    /**
-     * Has the dimension group been loaded by this simulation yet?
-     */
-    private _dimensionLoaded: boolean;
-
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
-
-        // Generate a dimension group that will render the user's inventory for this simulation.
-        this._dimensionGroup = new InventoryDimensionGroup3D(
-            this,
-            this.simulation.helper.userBot,
-            'player',
-            this.decoratorFactory
-        );
 
         const calc = this.simulation.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
@@ -108,11 +90,15 @@ export class InventorySimulation3D extends Simulation3D {
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        if (this._dimensionLoaded) {
-            return null;
+        if (bot.id === this.simulation.helper.userId) {
+            return new InventoryDimensionGroup3D(
+                this,
+                this.simulation.helper.userBot,
+                'player',
+                this.decoratorFactory
+            );
         }
 
-        this._dimensionLoaded = true;
-        return this._dimensionGroup;
+        return null;
     }
 }

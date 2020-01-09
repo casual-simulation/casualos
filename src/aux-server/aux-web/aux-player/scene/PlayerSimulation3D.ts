@@ -38,7 +38,6 @@ export class PlayerSimulation3D extends Simulation3D {
      * The current dimension group 3d that the AUX Player is rendering.
      */
     private _dimensionGroup: DimensionGroup3D;
-    private _dimensionLoaded: boolean = false;
 
     private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
@@ -348,13 +347,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
         this.dimension = dimension;
 
-        this._dimensionGroup = new DimensionGroup3D(
-            this,
-            this.simulation.helper.userBot,
-            'player',
-            this.decoratorFactory
-        );
-
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
     }
@@ -416,12 +408,18 @@ export class PlayerSimulation3D extends Simulation3D {
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        if (this._dimensionLoaded) {
+        if (this._dimensionGroup) {
             return null;
         }
 
+        this._dimensionGroup = new DimensionGroup3D(
+            this,
+            this.simulation.helper.userBot,
+            'player',
+            this.decoratorFactory
+        );
+
         // TODO: Update to support locking dimensions
-        this._dimensionLoaded = true;
         return this._dimensionGroup;
     }
 
