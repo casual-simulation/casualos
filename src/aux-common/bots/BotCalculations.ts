@@ -1379,7 +1379,7 @@ export function getDimensionValue(
     dimensionBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, dimensionBot, `auxDimensionConfig${name}`);
+    return calculateBotValue(calc, dimensionBot, `auxDimension${name}`);
 }
 
 /**
