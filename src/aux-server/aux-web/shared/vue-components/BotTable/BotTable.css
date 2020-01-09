@@ -231,7 +231,7 @@ th:last-child {
     width: 100%;
     max-height: 354px;
     overflow: auto;
-    padding-left: 10px;
+    padding-left: 0;
     flex: 1 0 auto;
 }
 

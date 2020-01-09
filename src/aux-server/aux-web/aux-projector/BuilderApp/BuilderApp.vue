@@ -1,14 +1,6 @@
 <template>
     <div id="app">
         <load-app>
-            <md-toolbar>
-                <div class="md-toolbar-section-start">
-                    <md-button class="md-icon-button" @click="menuClicked()">
-                        <md-icon>menu</md-icon>
-                    </md-button>
-                </div>
-            </md-toolbar>
-
             <md-drawer :md-active.sync="showNavigation">
                 <md-list>
                     <md-list-item

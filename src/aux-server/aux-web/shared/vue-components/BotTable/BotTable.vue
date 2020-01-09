@@ -1,66 +1,6 @@
 <template>
     <div class="bot-table" ref="wrapper">
         <div class="bot-table-container">
-            <div class="top-part">
-                <div v-show="!isMakingNewTag" class="bot-table-toggle-buttons">
-                    <md-button v-show="hasBots" class="md-icon-button" @click="openNewTag()">
-                        <picture>
-                            <source srcset="../../public/icons/tag-add.webp" type="image/webp" />
-                            <source srcset="../../public/icons/tag-add.png" type="image/png" />
-                            <img alt="Add Tag" src="../../public/icons/tag-add.png" />
-                        </picture>
-                        <md-tooltip>Add Tag</md-tooltip>
-                    </md-button>
-                    <md-button
-                        v-if="!isSearch"
-                        class="md-icon-button create-bot"
-                        @click="createBot()"
-                    >
-                        <cube-icon></cube-icon>
-                        <md-tooltip>Create Empty Bot</md-tooltip>
-                    </md-button>
-                </div>
-                <div class="bot-table-actions">
-                    <div v-if="isMakingNewTag">
-                        <form class="bot-table-form" @submit.prevent="addTag()">
-                            <tag-editor
-                                ref="tagEditor"
-                                :useMaterialInput="true"
-                                v-model="newTag"
-                                :tagExists="newTagExists"
-                                :isAction="false"
-                                @valid="newTagValidityUpdated"
-                            ></tag-editor>
-                            <div class="finish-tag-button-wrapper">
-                                <md-button class="md-icon-button finish-tag-button" type="submit">
-                                    <md-icon class="done">check</md-icon>
-                                </md-button>
-                                <md-button
-                                    class="md-icon-button finish-tag-button"
-                                    @click="cancelNewTag()"
-                                >
-                                    <md-icon class="cancel">cancel</md-icon>
-                                </md-button>
-                            </div>
-                        </form>
-                    </div>
-                    <div v-else-if="hasBots && !diffSelected">
-                        <md-button
-                            v-if="!isMobile() && allowChangingSheetSize"
-                            class="md-icon-button create-surface"
-                            @click="toggleSheet()"
-                        >
-                            <resize-icon></resize-icon>
-                            <md-tooltip>Toggle Size</md-tooltip>
-                        </md-button>
-
-                        <md-button class="md-icon-button" @click="downloadBots()">
-                            <md-icon>cloud_download</md-icon>
-                            <md-tooltip>Download Selection/Search</md-tooltip>
-                        </md-button>
-                    </div>
-                </div>
-            </div>
             <div class="bot-table-wrapper">
                 <div
                     class="bot-table-grid"
@@ -68,14 +8,37 @@
                     ref="table"
                     :style="botTableGridStyle"
                 >
-                    <!-- Remove all button -->
-                    <div class="bot-cell remove-item" v-if="!diffSelected">
-                        <div v-if="selectionMode === 'multi'">
+                    <!-- New Tag and New Bot buttons -->
+                    <div class="bot-cell header">
+                        <div v-show="!isMakingNewTag">
                             <!-- keep place here so it shows up as empty-->
+                            <md-button
+                                v-show="hasBots"
+                                class="md-icon-button"
+                                @click="openNewTag()"
+                            >
+                                <picture>
+                                    <source
+                                        srcset="../../public/icons/tag-add.webp"
+                                        type="image/webp"
+                                    />
+                                    <source
+                                        srcset="../../public/icons/tag-add.png"
+                                        type="image/png"
+                                    />
+                                    <img alt="Add Tag" src="../../public/icons/tag-add.png" />
+                                </picture>
+                                <md-tooltip>Add Tag</md-tooltip>
+                            </md-button>
+                            <md-button
+                                v-if="!isSearch"
+                                class="md-icon-button create-bot"
+                                @click="createBot()"
+                            >
+                                <cube-icon></cube-icon>
+                                <md-tooltip>Create Empty Bot</md-tooltip>
+                            </md-button>
                         </div>
-                    </div>
-                    <div v-else class="bot-cell header">
-                        <!-- keep place here so it shows up as empty-->
                     </div>
 
                     <!-- ID tag -->
@@ -253,6 +216,30 @@
             <span>Destroyed {{ deletedBotId }}</span>
             <md-button class="md-primary" @click="undoDelete()">Undo</md-button>
         </md-snackbar>
+
+        <md-dialog :md-active.sync="isMakingNewTag">
+            <md-dialog-title>Add New Tag</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="addTag()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="newTag"
+                        :tagExists="newTagExists"
+                        :isAction="false"
+                        @valid="newTagValidityUpdated"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button class="md-icon-button finish-tag-button" @click="cancelNewTag()">
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
     </div>
 </template>
 <script src="./BotTable.ts"></script>

@@ -27,7 +27,7 @@
             </md-field>
         </span>
 
-        <md-menu-content>
+        <md-menu-content class="tag-editor-menu">
             <md-menu-item v-if="errorMessage" class="tag-editor-error">
                 {{ errorMessage }}
             </md-menu-item>
