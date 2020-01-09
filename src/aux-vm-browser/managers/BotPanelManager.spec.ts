@@ -7,6 +7,7 @@ import {
     PrecalculatedBot,
     BotIndex,
     botUpdated,
+    botRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
@@ -27,9 +28,15 @@ describe('BotPanelManager', () => {
 
         watcher = new BotWatcher(helper, index, vm.stateUpdated);
 
-        await vm.sendEvents([botAdded(createBot('user'))]);
+        await vm.sendEvents([
+            botAdded(
+                createBot('user', {
+                    _auxUserDimension: 'hello',
+                })
+            ),
+        ]);
 
-        manager = new BotPanelManager(watcher, helper, 'hello');
+        manager = new BotPanelManager(watcher, helper);
     });
 
     describe('botsUpdated', () => {
@@ -68,14 +75,42 @@ describe('BotPanelManager', () => {
             ]);
         });
 
-        it('should include all bots when the dimension is set to a falsy value', async () => {
-            manager = new BotPanelManager(watcher, helper, null);
+        it('should resolve with no bots when there is no user', async () => {
             let bots: PrecalculatedBot[];
             manager.botsUpdated.subscribe(e => {
                 bots = e.bots;
             });
 
             await vm.sendEvents([
+                botRemoved('user'),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                    })
+                ),
+            ]);
+
+            expect(bots).toEqual([]);
+        });
+
+        it('should include all bots when the dimension is set to false', async () => {
+            manager = new BotPanelManager(watcher, helper);
+            let bots: PrecalculatedBot[];
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        _auxUserDimension: false,
+                    },
+                }),
                 botAdded(
                     createBot('test', {
                         hello: true,
@@ -89,6 +124,34 @@ describe('BotPanelManager', () => {
             ]);
 
             expect(bots).toEqual(helper.objects);
+        });
+
+        it('should update when the user bot changes the viewed dimension', async () => {
+            let bots: PrecalculatedBot[];
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        _auxUserDimension: 'wow',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                        wow: true,
+                    })
+                ),
+            ]);
+
+            expect(bots).toEqual([helper.botsState['test2']]);
         });
     });
 });

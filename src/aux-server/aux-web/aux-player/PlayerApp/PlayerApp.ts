@@ -70,6 +70,12 @@ import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
+import {
+    updateQuery,
+    SimulationInfo,
+    navigateToDimension,
+    createSimulationInfo,
+} from '../../shared/RouterUtils';
 
 @Component({
     components: {
@@ -497,14 +503,7 @@ export default class PlayerApp extends Vue {
         }
 
         let subs: SubscriptionLike[] = [];
-        let info: SimulationInfo = {
-            id: simulation.id,
-            displayName: simulationIdToString(simulation.parsedId),
-            online: false,
-            synced: false,
-            lostConnection: false,
-            subscribed: false,
-        };
+        let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
             simulation.login.loginStateChanged.subscribe(state => {
@@ -599,14 +598,7 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'go_to_dimension') {
                     this.updateTitleContext(e.dimension);
-                    appManager.simulationManager.simulations.forEach(sim => {
-                        sim.parsedId = {
-                            ...sim.parsedId,
-                            dimension: e.dimension,
-                        };
-                    });
-
-                    this._updateQuery();
+                    navigateToDimension(e, this.$router, this.simulations);
                     this.setTitleToID();
                 } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
@@ -930,47 +922,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateQuery() {
-        if (!appManager.simulationManager.primary) {
-            return;
-        }
-
-        const previousChannel = this.$router.currentRoute.params.id;
-        const previousDimension = this.$router.currentRoute.params.dimension;
-
-        const channel =
-            appManager.simulationManager.primary.parsedId.channel ||
-            previousChannel;
-        const dimension =
-            appManager.simulationManager.primary.parsedId.dimension ||
-            previousDimension;
-        if (channel && dimension) {
-            let route = {
-                name: 'home',
-                params: {
-                    id: channel === 'default' ? null : channel,
-                    dimension: dimension,
-                },
-                query: {
-                    channels: this.simulations
-                        .filter(
-                            sim =>
-                                sim.id !==
-                                appManager.simulationManager.primary.id
-                        )
-                        .map(sim => sim.id),
-                },
-            };
-
-            // Only add the history if switching dimensions or the primary channel
-            if (
-                channel !== previousChannel ||
-                dimension !== previousDimension
-            ) {
-                window.history.pushState({}, window.document.title);
-            }
-
-            this.$router.replace(route);
-        }
+        updateQuery(this.$router, this.simulations);
     }
 
     /**
@@ -1091,13 +1043,4 @@ export default class PlayerApp extends Vue {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
     }
-}
-
-export interface SimulationInfo {
-    id: string;
-    displayName: string;
-    online: boolean;
-    synced: boolean;
-    lostConnection: boolean;
-    subscribed: boolean;
 }

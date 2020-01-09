@@ -15,6 +15,7 @@ import {
     isExistingBot,
     createPrecalculatedBot,
     filterBotsBySelection,
+    botsInDimension,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -24,7 +25,6 @@ export class BotPanelManager implements SubscriptionLike {
     private _helper: BotHelper;
     private _watcher: BotWatcher;
 
-    private _dimensionId: string;
     private _botsUpdated: BehaviorSubject<BotsUpdatedEvent>;
 
     private _subs: SubscriptionLike[] = [];
@@ -44,10 +44,9 @@ export class BotPanelManager implements SubscriptionLike {
      * @param recent The recent bots manager to use.
      * @param dimensionId The ID of the dimension to show.
      */
-    constructor(watcher: BotWatcher, helper: BotHelper, dimensionId: string) {
+    constructor(watcher: BotWatcher, helper: BotHelper) {
         this._watcher = watcher;
         this._helper = helper;
-        this._dimensionId = dimensionId;
         this._botsUpdated = new BehaviorSubject<BotsUpdatedEvent>({
             bots: [],
             isDiff: false,
@@ -74,17 +73,26 @@ export class BotPanelManager implements SubscriptionLike {
         );
         return allBotsSelectedUpdatedAddedAndRemoved.pipe(
             flatMap(async () => {
-                if (this._dimensionId) {
-                    return {
-                        bots: filterBotsBySelection(
-                            this._helper.objects,
-                            this._dimensionId
-                        ),
-                        isDiff: false,
-                    };
+                if (this._helper.userBot) {
+                    if (!!this._helper.userBot.values._auxUserDimension) {
+                        return {
+                            bots: filterBotsBySelection(
+                                this._helper.objects,
+                                this._helper.userBot.values._auxUserDimension
+                            ),
+                            isDiff: false,
+                        };
+                    } else if (
+                        this._helper.userBot.values._auxUserDimension === false
+                    ) {
+                        return {
+                            bots: this._helper.objects,
+                            isDiff: false,
+                        };
+                    }
                 }
                 return {
-                    bots: this._helper.objects,
+                    bots: [],
                     isDiff: false,
                 };
             })

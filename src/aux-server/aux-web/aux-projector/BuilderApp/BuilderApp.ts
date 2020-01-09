@@ -66,6 +66,10 @@ import ClipboardModal from '../../shared/vue-components/ClipboardModal/Clipboard
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
+import {
+    navigateToDimension,
+    createSimulationInfo,
+} from '../../shared/RouterUtils';
 
 const BotPond = vueBotPond();
 
@@ -460,6 +464,15 @@ export default class BuilderApp extends Vue {
                             } else {
                                 this.synced = true;
 
+                                const userBot = botManager.helper.userBot;
+                                await botManager.helper.updateBot(userBot, {
+                                    tags: {
+                                        _auxUserDimension:
+                                            botManager.parsedId.dimension ||
+                                            false,
+                                    },
+                                });
+
                                 if (!this.subscribed) {
                                     this.subscribed = true;
                                     await botManager.helper.action(
@@ -524,6 +537,10 @@ export default class BuilderApp extends Vue {
                             download(e.data, e.botname, e.mimeType);
                         } else if (e.type === 'send_webhook') {
                             sendWebhook(botManager, e);
+                        } else if (e.type === 'go_to_dimension') {
+                            navigateToDimension(e, this.$router, [
+                                createSimulationInfo(botManager),
+                            ]);
                         }
                     }),
                     botManager.login.deviceChanged.subscribe(info => {

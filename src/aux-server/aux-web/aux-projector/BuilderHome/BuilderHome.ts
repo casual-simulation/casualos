@@ -145,6 +145,21 @@ export default class BuilderHome extends Vue {
             );
 
             subs.push(
+                this._simulation.localEvents.subscribe(e => {
+                    if (e.type === 'go_to_dimension') {
+                        this._simulation.helper.updateBot(
+                            this._simulation.helper.userBot,
+                            {
+                                tags: {
+                                    _auxUserDimension: e.dimension,
+                                },
+                            }
+                        );
+                    }
+                })
+            );
+
+            subs.push(
                 userBotChanged(this._simulation)
                     .pipe(
                         tap(bot => {

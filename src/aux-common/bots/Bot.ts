@@ -132,7 +132,7 @@ export interface BotTags {
     ['_auxSelection']?: string;
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
-    ['_auxUserDimension']?: string;
+    ['_auxUserDimension']?: string | boolean;
     ['_auxUserChannel']?: string;
     ['_auxUserInventoryDimension']?: string;
     ['_auxUserMenuDimension']?: string;

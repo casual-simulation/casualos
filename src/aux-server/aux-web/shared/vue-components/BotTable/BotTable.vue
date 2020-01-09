@@ -105,7 +105,7 @@
                             :tag="tag"
                             :isScript="isTagOnlyScripts(tag)"
                             :isFormula="isTagOnlyFormulas(tag)"
-                            :allowCloning="bots.length === 1"
+                            :allowCloning="true"
                         ></bot-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->

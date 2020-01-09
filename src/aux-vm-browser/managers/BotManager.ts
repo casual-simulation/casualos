@@ -137,10 +137,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     protected _initManagers() {
         super._initManagers();
-        this._botPanel = new BotPanelManager(
-            this._watcher,
-            this._helper,
-            this.parsedId.dimension
-        );
+        this._botPanel = new BotPanelManager(this._watcher, this._helper);
     }
 }

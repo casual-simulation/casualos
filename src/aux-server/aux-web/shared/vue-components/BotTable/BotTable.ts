@@ -27,6 +27,7 @@ import {
     BOT_SPACE_TAG,
     getBotSpace,
     getBotTag,
+    goToDimension,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -899,7 +900,9 @@ export default class BotTable extends Vue {
 
     searchForTag(tag: string) {
         if (this.tagHasValue(tag)) {
-            // TODO:
+            appManager.simulationManager.primary.helper.transaction(
+                goToDimension(tag)
+            );
         }
     }
 }
