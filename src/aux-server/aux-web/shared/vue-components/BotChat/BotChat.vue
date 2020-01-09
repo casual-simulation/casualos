@@ -1,10 +1,5 @@
 <template>
-    <div
-        class="bot-search"
-        :class="{ open: isOpen }"
-        v-shortkey.once="['ctrl', 'f']"
-        @shortkey="startChat()"
-    >
+    <div class="bot-search" v-shortkey.once="['ctrl', 'f']" @shortkey="startChat()">
         <md-field md-inline>
             <label>{{ placeholder }}</label>
             <md-input
