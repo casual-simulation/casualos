@@ -255,9 +255,9 @@ export interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The channel that the payment processing should occur in.
+     * The universe that the payment processing should occur in.
      */
-    processingChannel: string;
+    processingUniverse: string;
 
     /**
      * Whether to request the payer's billing address.

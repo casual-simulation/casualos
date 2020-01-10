@@ -133,7 +133,7 @@ export interface BotTags {
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
     ['_auxUserDimension']?: string | boolean;
-    ['_auxUserChannel']?: string;
+    ['_auxUserUniverse']?: string;
     ['_auxUserInventoryDimension']?: string;
     ['_auxUserMenuDimension']?: string;
     ['_auxUserUniversesDimension']?: string;
@@ -612,7 +612,7 @@ export const KNOWN_TAGS: string[] = [
     '_auxUser',
     'auxUserActive',
     '_auxUserDimension',
-    '_auxUserChannel',
+    '_auxUserUniverse',
     '_auxUserInventoryDimension',
     '_auxUserMenuDimension',
     '_auxUserUniversesDimension',

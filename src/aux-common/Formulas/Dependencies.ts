@@ -587,14 +587,14 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getCurrentChannel': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentUniverse': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserChannel',
+                    name: '_auxUserUniverse',
                     dependencies: [],
                 },
             ];

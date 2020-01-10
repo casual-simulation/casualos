@@ -680,7 +680,7 @@ export class PlayerSimulation3D extends Simulation3D {
             tags: { _auxUserDimension: this.dimension },
         });
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserChannel: this.simulation.id },
+            tags: { _auxUserUniverse: this.simulation.id },
         });
         this._subs.push(
             this.simulation.watcher

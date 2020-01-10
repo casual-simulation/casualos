@@ -4079,7 +4079,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserChannel: 'channel',
+                            _auxUserUniverse: 'channel',
                         },
                     },
                 };
@@ -4756,20 +4756,20 @@ export function botActionsTests(
             });
         });
 
-        describe('player.getCurrentChannel()', () => {
-            it('should return _auxUserChannel', () => {
+        describe('player.getCurrentUniverse()', () => {
+            it('should return _auxUserUniverse', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#dimension", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentUniverse())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserChannel: 'dimension',
+                            _auxUserUniverse: 'dimension',
                         },
                     },
                 };
@@ -4794,13 +4794,13 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserChannel is not set', () => {
+            it('should return undefined when _auxUserUniverse is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#dimension", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentUniverse())',
                         },
                     },
                     userBot: {
@@ -5836,7 +5836,7 @@ export function botActionsTests(
                                 productId: 'ID1',
                                 title: 'Product 1',
                                 description: '$50.43',
-                                processingChannel: 'channel2'
+                                processingUniverse: 'channel2'
                             })`,
                         },
                     },
@@ -5858,7 +5858,7 @@ export function botActionsTests(
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
-                        processingChannel: 'channel2',
+                        processingUniverse: 'channel2',
                     }),
                 ]);
             });
@@ -5964,13 +5964,13 @@ export function botActionsTests(
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingChannel: 'channel2'
+                    processingUniverse: 'channel2'
                 })`,
                     checkout({
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
-                        processingChannel: 'channel2',
+                        processingUniverse: 'channel2',
                     }),
                 ],
                 ['player.openDevConsole()', openConsole()],

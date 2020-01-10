@@ -177,7 +177,7 @@ interface CheckoutOptions {
     /**
      * The universe that the payment should be processed on.
      */
-    processingChannel: string;
+    processingUniverse: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -1094,7 +1094,7 @@ function showInputForTag(
  *   productId: '10_cookies',
  *   title: '10 Cookies',
  *   description: '$5.00',
- *   processingChannel: 'cookies_checkout'
+ *   processingUniverse: 'cookies_checkout'
  * });
  *
  */
@@ -1177,10 +1177,10 @@ function getCurrentDimension(): string {
 /**
  * Gets the universe that the player is currently in.
  */
-function getCurrentChannel(): string {
+function getCurrentUniverse(): string {
     const user = getUser();
     if (user) {
-        const universe = getTag(user, '_auxUserChannel') as string;
+        const universe = getTag(user, '_auxUserUniverse') as string;
 
         if (universe && universe.includes('/')) {
             return universe.split('/')[1];
@@ -2001,7 +2001,7 @@ function downloadUniverse() {
     return addAction(
         download(
             JSON.stringify(state),
-            `${getCurrentChannel()}.aux`,
+            `${getCurrentUniverse()}.aux`,
             'application/json'
         )
     );
@@ -2086,7 +2086,7 @@ function shell(script: string) {
 }
 
 /**
- * Backs up all the AUX channels to a Github Gist.
+ * Backs up all the AUX universes to a Github Gist.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
 function backupToGithub(auth: string) {
@@ -2095,7 +2095,7 @@ function backupToGithub(auth: string) {
 }
 
 /**
- * Backs up all the AUX channels to a zip bot.
+ * Backs up all the AUX universes to a zip bot.
  */
 function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
@@ -2105,7 +2105,7 @@ function backupAsDownload(target: SessionSelector) {
 }
 
 /**
- * Instructs AUXPlayer/Channel Designer to open the built-in developer console.
+ * Instructs auxPlayer to open the built-in developer console.
  * The dev console provides easy access to error messages and debug logs for formulas and actions.
  */
 function openDevConsole() {
@@ -2194,7 +2194,7 @@ const player = {
     hideQRCode,
     isConnected,
     getCurrentDimension,
-    getCurrentChannel,
+    getCurrentUniverse,
     isDesigner,
     showInputForTag,
     checkout,

@@ -52,7 +52,7 @@ export class BuilderSimulation3D extends Simulation3D {
         }
 
         this.simulation.helper.updateBot(this.simulation.helper.userBot, {
-            tags: { _auxUserChannel: this.simulation.id },
+            tags: { _auxUserUniverse: this.simulation.id },
         });
     }
 }
