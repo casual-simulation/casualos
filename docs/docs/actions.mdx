@@ -503,6 +503,30 @@ whisper(this, "setColor", "red");
 
 ## Player Actions
 
+### `player.downloadBots(bots, filename)`
+
+<FunctionCode name='downloadBots'/>
+
+Downloads the given array of bots as a `.aux` file with the given filename.
+Useful for quickly backing up a set of bots.
+
+The **first parameter** is the array of bots that should be downloaded.
+
+The **second parameter** is the name of the file that the bots should be stored in.
+`.aux` will automatically be added to the end of the filename.
+
+### Examples:
+
+1. Download all the bots in the "abc" dimension as "abcBots.aux".
+```typescript
+player.downloadBots(getBots(inDimension("abc")), "abcBots");
+```
+
+2. Download the current bot as "currentBot.aux".
+```typescript
+player.downloadBots([bot], "currentBot");
+```
+
 ### `player.replaceDragBot(botOrMod)`
 
 <FunctionCode name='replaceDragBot'/>
