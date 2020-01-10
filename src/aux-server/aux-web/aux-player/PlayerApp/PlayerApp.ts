@@ -66,6 +66,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
+import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
@@ -88,6 +89,7 @@ import {
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
+        'upload-universe-modal': UploadUniverseModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         console: Console,

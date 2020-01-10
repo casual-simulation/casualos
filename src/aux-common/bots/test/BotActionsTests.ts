@@ -39,6 +39,7 @@ import {
     hideChat,
     runScript,
     download,
+    showUploadUniverse,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4040,6 +4041,36 @@ export function botActionsTests(
             });
         });
 
+        describe('player.showUploadUniverse()', () => {
+            it('should emit a ShowUploadUniverseAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.showUploadUniverse()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showUploadUniverse()]);
+            });
+        });
+                expect(result.events).toEqual([
+                    showUploadUniverse(),
+                ]);
+            });
+        });
         describe('openQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
                 const state: BotsState = {

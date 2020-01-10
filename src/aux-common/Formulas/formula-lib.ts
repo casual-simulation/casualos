@@ -54,6 +54,7 @@ import {
     hideChat as calcHideRun,
     runScript,
     download,
+    showUploadUniverse as calcShowUploadUniverse,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1996,6 +1997,13 @@ function formatAuxFilename(filename: string): string {
 }
 
 /**
+ * Shows the "Upload Universe" dialog.
+ */
+function showUploadUniverse() {
+    return addAction(calcShowUploadUniverse());
+}
+
+/**
  * Loads the universe with the given ID.
  * @param id The ID of the universe to load.
  */
@@ -2185,6 +2193,7 @@ const player = {
     hideChat,
     run,
     downloadBots,
+    showUploadUniverse,
 
     openDevConsole,
 };

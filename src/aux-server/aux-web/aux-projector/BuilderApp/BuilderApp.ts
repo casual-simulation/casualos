@@ -32,9 +32,6 @@ import QRAuxBuilder from '../../shared/public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../../shared/public/icons/repo-forked.svg';
 import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
-
-import vueBotPond from 'vue-filepond';
-import 'filepond/dist/filepond.min.css';
 import {
     Simulation,
     AuxUser,
@@ -62,6 +59,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
+import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
@@ -71,8 +69,6 @@ import {
     createSimulationInfo,
 } from '../../shared/RouterUtils';
 
-const BotPond = vueBotPond();
-
 @Component({
     components: {
         'load-app': LoadApp,
@@ -80,7 +76,7 @@ const BotPond = vueBotPond();
         'qr-code': QRCode,
         barcode: VueBarcode,
         'qrcode-stream': QrcodeStream,
-        'bot-pond': BotPond,
+
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
         'bot-search': BotSearch,
@@ -89,6 +85,7 @@ const BotPond = vueBotPond();
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
         'clipboard-modal': ClipboardModal,
+        'upload-universe-modal': UploadUniverseModal,
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
@@ -157,11 +154,6 @@ export default class BuilderApp extends Vue {
      * The name of the fork to create.
      */
     forkName: string = '';
-
-    /**
-     * The bots that have been uploaded by the user.
-     */
-    uploadedFiles: File[] = [];
 
     /**
      * The extra sidebar items shown in the app.
@@ -640,29 +632,6 @@ export default class BuilderApp extends Vue {
     cancelFork() {
         this.showFork = false;
         this.forkName = '';
-    }
-
-    cancelFileUpload() {
-        this.showFileUpload = false;
-        this.uploadedFiles = [];
-    }
-
-    async uploadFiles() {
-        await Promise.all(
-            this.uploadedFiles.map(f => appManager.uploadState(f))
-        );
-        this.showFileUpload = false;
-    }
-
-    fileAdded(err: any, data: FilePondFile) {
-        this.uploadedFiles.push(data.file);
-    }
-
-    fileRemoved(data: FilePondFile) {
-        const index = this.uploadedFiles.indexOf(data.file);
-        if (index >= 0) {
-            this.uploadedFiles.splice(index, 1);
-        }
     }
 
     snackbarClick(action: SnackbarOptions['action']) {

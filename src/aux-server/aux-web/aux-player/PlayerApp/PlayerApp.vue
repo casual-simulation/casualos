@@ -242,6 +242,7 @@
 
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
+            <upload-universe-modal></upload-universe-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>
