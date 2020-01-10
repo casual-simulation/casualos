@@ -36,7 +36,7 @@ describe('BotPanelManager', () => {
             ),
         ]);
 
-        manager = new BotPanelManager(watcher, helper);
+        manager = new BotPanelManager(watcher, helper, false);
     });
 
     describe('botsUpdated', () => {
@@ -99,7 +99,7 @@ describe('BotPanelManager', () => {
         });
 
         it('should include all bots when the dimension is set to false', async () => {
-            manager = new BotPanelManager(watcher, helper);
+            manager = new BotPanelManager(watcher, helper, false);
             let bots: PrecalculatedBot[];
             manager.botsUpdated.subscribe(e => {
                 bots = e.bots;

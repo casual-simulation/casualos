@@ -6,7 +6,7 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { flatMap, tap, withLatestFrom } from 'rxjs/operators';
+import { flatMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     isBot,
@@ -24,6 +24,7 @@ import {
 export class BotPanelManager implements SubscriptionLike {
     private _helper: BotHelper;
     private _watcher: BotWatcher;
+    private _buffer: boolean;
 
     private _botsUpdated: BehaviorSubject<BotsUpdatedEvent>;
 
@@ -41,12 +42,16 @@ export class BotPanelManager implements SubscriptionLike {
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
      * @param helper The bot helper to use.
-     * @param recent The recent bots manager to use.
-     * @param dimensionId The ID of the dimension to show.
+     * @param bufferEvents Whether to buffer the update events.
      */
-    constructor(watcher: BotWatcher, helper: BotHelper) {
+    constructor(
+        watcher: BotWatcher,
+        helper: BotHelper,
+        bufferEvents: boolean = true
+    ) {
         this._watcher = watcher;
         this._helper = helper;
+        this._buffer = bufferEvents;
         this._botsUpdated = new BehaviorSubject<BotsUpdatedEvent>({
             bots: [],
             isDiff: false,
@@ -71,7 +76,10 @@ export class BotPanelManager implements SubscriptionLike {
             this._watcher.botsUpdated,
             this._watcher.botsRemoved
         );
-        return allBotsSelectedUpdatedAddedAndRemoved.pipe(
+        const bufferedEvents: Observable<any> = this._buffer
+            ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
+            : allBotsSelectedUpdatedAddedAndRemoved;
+        return bufferedEvents.pipe(
             flatMap(async () => {
                 if (this._helper.userBot) {
                     if (!!this._helper.userBot.values._auxUserDimension) {
