@@ -660,6 +660,24 @@ Shows the "Upload Universe" dialog which lets the user select a `.aux` file to u
 ```typescript
 player.showUploadUniverse();
 ```
+
+### `player.downloadUniverse()`
+
+<FunctionCode name='downloadUniverse'/>
+
+Downloads the entire universe into a `.aux` file on the player's computer.
+The file will have the same name as the universe.
+
+Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
+The only difference is that all bots are included and the file is named for you automatically.
+
+#### Examples:
+
+1. Download the entire universe.
+```typescript
+player.downloadUniverse();
+```
+
 ## Server Actions
 
 ### `server.setupUniverse(universe, botOrMod?)`

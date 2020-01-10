@@ -4066,11 +4066,45 @@ export function botActionsTests(
                 expect(result.events).toEqual([showUploadUniverse()]);
             });
         });
+
+        describe('player.downloadUniverse()', () => {
+            it('should emit a DownloadAction with the current state and universe name', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.downloadUniverse()',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            _auxUserChannel: 'channel',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
                 expect(result.events).toEqual([
-                    showUploadUniverse(),
+                    download(
+                        JSON.stringify(state),
+                        'channel.aux',
+                        'application/json'
+                    ),
                 ]);
             });
         });
+
         describe('openQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
                 const state: BotsState = {

@@ -1996,6 +1996,17 @@ function formatAuxFilename(filename: string): string {
     return filename + '.aux';
 }
 
+function downloadUniverse() {
+    const state = getBotState();
+    return addAction(
+        download(
+            JSON.stringify(state),
+            `${getCurrentChannel()}.aux`,
+            'application/json'
+        )
+    );
+}
+
 /**
  * Shows the "Upload Universe" dialog.
  */
@@ -2194,6 +2205,7 @@ const player = {
     run,
     downloadBots,
     showUploadUniverse,
+    downloadUniverse,
 
     openDevConsole,
 };
