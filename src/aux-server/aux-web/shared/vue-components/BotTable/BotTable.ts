@@ -28,6 +28,7 @@ import {
     getBotSpace,
     getBotTag,
     goToDimension,
+    simulationIdToString,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -49,6 +50,7 @@ import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
+import { navigateToUrl } from '../../SharedUtils';
 
 @Component({
     components: {
@@ -88,6 +90,9 @@ export default class BotTable extends Vue {
 
     @Prop({ default: true })
     allowChangingSheetSize: boolean;
+
+    @Prop({ default: null })
+    dimension: string;
 
     tags: string[] = [];
     readOnlyTags: string[] = [];
@@ -524,6 +529,18 @@ export default class BotTable extends Vue {
         this.newTag = '';
         this.newTagPlacement = 'bottom';
         this.cancelNewTag();
+    }
+
+    openInPlayer() {
+        const id = appManager.simulationManager.primary.parsedId;
+
+        const url = new URL(
+            `/${this.dimension}/${id.channel || 'default'}`,
+            window.location.href
+        );
+
+        // open in new tab
+        navigateToUrl(url.toString(), '_blank', 'noreferrer');
     }
 
     closeWindow() {

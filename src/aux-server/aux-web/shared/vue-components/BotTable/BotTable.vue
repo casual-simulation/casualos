@@ -165,6 +165,12 @@
                 </div>
                 <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
                     <div class="bot-section-holder-inner">
+                        <div class="bot-section" v-if="dimension">
+                            <md-button class="bot-section active" @click="openInPlayer()">
+                                <md-icon>exit_to_app</md-icon>
+                                <md-tooltip>Open {{ dimension }} in auxPlayer</md-tooltip>
+                            </md-button>
+                        </div>
                         <div
                             v-for="(tagWhitelist, index) in getTagWhitelist()"
                             :key="index"

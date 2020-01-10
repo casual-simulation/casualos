@@ -19,6 +19,7 @@
                     :selectionMode="selectionMode"
                     :diffSelected="isDiff"
                     :showAddTagButton="false"
+                    :dimension="dimension"
                 ></bot-table>
             </md-card-content>
         </md-card>
