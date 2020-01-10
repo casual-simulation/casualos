@@ -38,6 +38,7 @@ import {
     showChat,
     hideChat,
     runScript,
+    download,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -3938,6 +3939,104 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([runScript('abc')]);
+            });
+        });
+
+        describe('player.downloadBots()', () => {
+            it('should emit a DownloadAction with the given bots formatted as JSON', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@player.downloadBots(getBots(inDimension("abc")), "test")',
+                        },
+                    },
+                    funBot: {
+                        id: 'funBot',
+                        tags: {
+                            abc: true,
+                            def: 'ghi',
+                        },
+                    },
+                    funBot2: {
+                        id: 'funBot2',
+                        tags: {
+                            abc: true,
+                            def: 123,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify({
+                            funBot: state.funBot,
+                            funBot2: state.funBot2,
+                        }),
+                        'test.aux',
+                        'application/json'
+                    ),
+                ]);
+            });
+
+            it('should support specifying the .aux extension manually', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@player.downloadBots(getBots(inDimension("abc")), "test.aux")',
+                        },
+                    },
+                    funBot: {
+                        id: 'funBot',
+                        tags: {
+                            abc: true,
+                            def: 'ghi',
+                        },
+                    },
+                    funBot2: {
+                        id: 'funBot2',
+                        tags: {
+                            abc: true,
+                            def: 123,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify({
+                            funBot: state.funBot,
+                            funBot2: state.funBot2,
+                        }),
+                        'test.aux',
+                        'application/json'
+                    ),
+                ]);
             });
         });
 

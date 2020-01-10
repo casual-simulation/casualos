@@ -7,6 +7,7 @@ import {
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
+    BotsState,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -52,6 +53,7 @@ import {
     showChat as calcShowRun,
     hideChat as calcHideRun,
     runScript,
+    download,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1967,6 +1969,32 @@ function run(script: string) {
 }
 
 /**
+ * Downloads the given list of bots.
+ * @param bots The bots that should be downloaded.
+ * @param filename The name of the file that the bots should be downloaded as.
+ */
+function downloadBots(bots: Bot[], filename: string) {
+    let state: BotsState = {};
+    for (let bot of bots) {
+        state[bot.id] = bot;
+    }
+    return addAction(
+        download(
+            JSON.stringify(state),
+            formatAuxFilename(filename),
+            'application/json'
+        )
+    );
+}
+
+function formatAuxFilename(filename: string): string {
+    if (filename.endsWith('.aux')) {
+        return filename;
+    }
+    return filename + '.aux';
+}
+
+/**
  * Loads the universe with the given ID.
  * @param id The ID of the universe to load.
  */
@@ -2155,6 +2183,7 @@ const player = {
     showChat,
     hideChat,
     run,
+    downloadBots,
 
     openDevConsole,
 };
