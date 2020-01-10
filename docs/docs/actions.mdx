@@ -515,7 +515,7 @@ The **first parameter** is the array of bots that should be downloaded.
 The **second parameter** is the name of the file that the bots should be stored in.
 `.aux` will automatically be added to the end of the filename.
 
-### Examples:
+#### Examples:
 
 1. Download all the bots in the "abc" dimension as "abcBots.aux".
 ```typescript
@@ -525,6 +525,28 @@ player.downloadBots(getBots(inDimension("abc")), "abcBots");
 2. Download the current bot as "currentBot.aux".
 ```typescript
 player.downloadBots([bot], "currentBot");
+```
+
+### `player.run(script)`
+
+<FunctionCode name='run'/>
+
+Runs the given script.
+The script will be executed in a separate environment with no `bot`, `tags`, `this`, `data`, and `that` variables.
+This means that you need to use the <ActionLink action='getBot(...filters)'/> or <ActionLink action='getBots(...filters)'/> functions to read bot data.
+
+The **first parameter** is the script that should be executed.
+
+#### Examples:
+
+1. Run a script that says "hello".
+```typescript
+player.run("player.toast('hello');");
+```
+
+2. Run a script from the `#script` tag on the current bot.
+```typescript
+player.run(tags.script);
 ```
 
 ### `player.replaceDragBot(botOrMod)`
