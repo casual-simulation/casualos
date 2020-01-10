@@ -326,7 +326,7 @@ export interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingChannel: string;
+    processingUniverse: string;
 }
 
 /**
@@ -1487,13 +1487,13 @@ export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
 export function checkoutSubmitted(
     productId: string,
     token: string,
-    processingChannel: string
+    processingUniverse: string
 ): CheckoutSubmittedAction {
     return {
         type: 'checkout_submitted',
         productId: productId,
         token: token,
-        processingChannel: processingChannel,
+        processingUniverse: processingUniverse,
     };
 }
 

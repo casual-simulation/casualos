@@ -4,7 +4,7 @@
             <checkout-form
                 :channelId="simulationId"
                 :productId="productId"
-                :processingChannel="processingChannel"
+                :processingUniverse="processingUniverse"
                 :title="title"
                 :description="description"
                 :requestBillingAddress="requestBillingAddress"
