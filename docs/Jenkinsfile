@@ -37,6 +37,9 @@ def InstallNPMPackages() {
 
     echo "Installing NPM Packages..."
     yarn install --frozen-lockfile
+
+    echo "Upgrading Casual Simulation NPM Packages.."
+    yarn upgrade --scope @casual-simulation
     """
 }
 
