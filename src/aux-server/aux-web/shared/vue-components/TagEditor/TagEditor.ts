@@ -114,17 +114,13 @@ export default class TagEditor extends Vue {
     }
 
     focus() {
-        let element: any = this.$refs.inputBox;
-        let html: HTMLInputElement;
-        if (element.focus) {
-            html = element;
-        } else {
-            html = <HTMLInputElement>(<Vue>element).$el;
-        }
-        html.focus();
+        const html = this._getElement();
         setTimeout(() => {
-            html.setSelectionRange(0, 9999);
-        }, 0);
+            html.focus();
+            setTimeout(() => {
+                html.setSelectionRange(0, 9999);
+            }, 0);
+        }, 101);
     }
 
     onFocus() {
@@ -149,5 +145,16 @@ export default class TagEditor extends Vue {
 
     private _convertToFinalValue(value: string) {
         return value;
+    }
+
+    private _getElement() {
+        let element: any = this.$refs.inputBox;
+        let html: HTMLInputElement;
+        if (element.focus) {
+            html = element;
+        } else {
+            html = <HTMLInputElement>(<Vue>element).$el;
+        }
+        return html;
     }
 }

@@ -208,17 +208,17 @@ th:last-child {
     flex: 2 0 auto;
 }
 
-.bot-table-actions .tag-editor .md-field {
+.bot-table-form .tag-editor .md-field {
     margin: 0;
     padding-top: 0;
     min-height: 32px;
 }
 
-.bot-table-actions .md-button .md-icon.done {
+.bot-table-form .md-button .md-icon.done {
     color: #13bd13b4;
 }
 
-.bot-table-actions .bot-table-form {
+.bot-table-form .bot-table-form {
     height: 100%;
     display: flex;
     flex: 1;

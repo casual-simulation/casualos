@@ -236,10 +236,13 @@
                         @valid="newTagValidityUpdated"
                     ></tag-editor>
                     <div class="finish-tag-button-wrapper">
-                        <md-button class="md-icon-button finish-tag-button" type="submit">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
                             <md-icon class="done">check</md-icon>
                         </md-button>
-                        <md-button class="md-icon-button finish-tag-button" @click="cancelNewTag()">
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelNewTag()"
+                        >
                             <md-icon class="cancel">cancel</md-icon>
                         </md-button>
                     </div>
