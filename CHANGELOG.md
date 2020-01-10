@@ -31,6 +31,7 @@
             -   e.g. `https://auxplayer.com/*home/example` if you wanted to view the `home` dimension in the sheet from the `example` universe.
             -   Going to just `*` will show all bots in the universe in the sheet. (which is very slow at the moment)
         -   You can also jump directly into auxPlayer by using the "Open dimension in auxPlayer" button that is next to the tag filters.
+    -   Removed the `player.isDesigner()` function.
 -   Improvements
     -   Added the `player.showChat()` and `player.hideChat()` functions.
         -   These show/hide the chat bar in auxPlayer.
