@@ -1131,27 +1131,6 @@ function finishCheckout(options: FinishCheckoutOptions) {
 }
 
 /**
- * Determines whether the current player is allowed to load AUX Builder.
- */
-function isDesigner(): boolean {
-    const globals = getGlobals();
-    const user = getUser();
-    if (globals && user) {
-        const calc = getCalculationContext();
-        const list = getBotUsernameList(calc, globals, 'aux.designers');
-        if (list) {
-            return isInUsernameList(
-                calc,
-                globals,
-                'aux.designers',
-                getTag(user, '_auxUser')
-            );
-        }
-    }
-    return true;
-}
-
-/**
  * Derermines whether the player is in the given dimension.
  * @param dimension The dimension.
  */
@@ -2195,7 +2174,6 @@ const player = {
     isConnected,
     getCurrentDimension,
     getCurrentUniverse,
-    isDesigner,
     showInputForTag,
     checkout,
     replaceDragBot,
