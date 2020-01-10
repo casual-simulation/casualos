@@ -674,15 +674,10 @@ server.setupUniverse("test", {
 });
 ```
 
-3. Create the "test" universe with a bot that creates the "abc" dimension and places a bot in it:
+3. Create the "test" universe with a bot that places a bot in the "abc" dimension:
 ```typescript
 server.setupUniverse("test", {
     "onCreate": `@
-        create({
-            auxCreator: null,
-            auxDimensionConfig: "abc",
-        });
-
         create({
             auxCreator: null,
             auxLabel: "This is in the dimension!",
