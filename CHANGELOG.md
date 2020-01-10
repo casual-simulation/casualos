@@ -47,6 +47,9 @@
         -   Works by sending a `run_script` action. This allows `@onUniverseAction()` listener to intercept and prevent scripts.
     -   Added the ability to click a tag in the bot table to teleport to that dimension.
     -   Added a play button to the right side of the code editor to run scripts for quick debugging.
+    -   Added the `player.downloadBots(bots, filename)` function.
+        -   The first parameter is an array of bots that should be downloaded.
+        -   The second parameter is the name of the file that is downloaded.
 -   Other Changes
     -   Changed the "AUX Player" and "Channel Designer" tab titles to "auxPlayer".
     -   Removed the colored dots from tag labels in the bot table.
