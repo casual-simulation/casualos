@@ -1810,6 +1810,7 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
 /**
  * Shows a toast message to the user.
  * @param message The message to show.
+ * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
  */
 function toast(message: string, duration: number = 2) {
     const event = toastMessage(message, duration);

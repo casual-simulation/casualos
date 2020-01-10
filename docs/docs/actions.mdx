@@ -609,6 +609,29 @@ Hides the "chat bar" at the top of the screen in auxPlayer.
 player.hideChat();
 ```
 
+### `player.toast(message, duration?)`
+
+<FunctionCode name='toast'/>
+
+Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
+Optionally accepts a duration parameter which is the number of seconds that the message should be on the screen.
+
+The **first parameter** is the text that the toast message should show.
+
+The **second parameter** is optional and is the number of seconds that the message should be on the screen. (Default is 2)
+
+#### Examples:
+
+1. Show a "Hello!" toast message.
+```typescript
+player.toast("Hello!");
+```
+
+2. Show the player a code for 5 seconds.
+```typescript
+player.toast("this is the code", 5);
+```
+
 ### `player.setClipboard(text)`
 
 <FunctionCode name='setClipboard'/>
