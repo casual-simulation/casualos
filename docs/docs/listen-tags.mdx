@@ -309,6 +309,30 @@ let that: {
 };
 ```
 
+### `@onChat`
+
+A shout that is sent to all bots when the player sends a chat message.
+Chat messages can be sent when the player presses the Enter key while writing a message or by clicking/tapping the "Send Message" button to the right of the chat bar.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
+};
+```
+
+### `@onChatTyping`
+
+A shout that is sent to all bots when the player changes the text in the chat bar.
+Only triggered when the chat bar is visible.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
+};
+```
+
 ### `@onGridClick`
 
 A shout that is sent to all bots when the user clicks on empty space.
