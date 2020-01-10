@@ -532,9 +532,9 @@ export default class BuilderApp extends Vue {
                             this.showConsole = e.open;
                         } else if (e.type === 'download') {
                             console.log(
-                                `[BuilderApp] Downloading ${e.botname}...`
+                                `[BuilderApp] Downloading ${e.filename}...`
                             );
-                            download(e.data, e.botname, e.mimeType);
+                            download(e.data, e.filename, e.mimeType);
                         } else if (e.type === 'send_webhook') {
                             sendWebhook(botManager, e);
                         } else if (e.type === 'go_to_dimension') {

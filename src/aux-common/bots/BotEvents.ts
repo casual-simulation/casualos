@@ -788,23 +788,23 @@ export interface PlaySoundAction extends Action {
 }
 
 /**
- * Defines an event that is used to download a bot onto the device.
+ * Defines an event that is used to download a file onto the device.
  */
 export interface DownloadAction extends Action {
     type: 'download';
 
     /**
-     * The data that should be included in the downloaded bot.
+     * The data that should be included in the downloaded file.
      */
     data: any;
 
     /**
-     * The name of the downloaded bot. (includes the extension)
+     * The name of the downloaded file. (includes the extension)
      */
-    botname: string;
+    filename: string;
 
     /**
-     * The MIME type of the downloaded bot.
+     * The MIME type of the downloaded file.
      */
     mimeType: string;
 }
@@ -1446,18 +1446,18 @@ export function backupAsDownload(
 /**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
- * @param botname The name of the bot.
+ * @param filename The name of the file.
  * @param mimeType The MIME type of the data.
  */
 export function download(
     data: any,
-    botname: string,
+    filename: string,
     mimeType: string
 ): DownloadAction {
     return {
         type: 'download',
         data,
-        botname,
+        filename,
         mimeType,
     };
 }

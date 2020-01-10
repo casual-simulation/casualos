@@ -609,8 +609,8 @@ export default class PlayerApp extends Vue {
                         this._showInputDialog(simulation, e);
                     });
                 } else if (e.type === 'download') {
-                    console.log(`[BuilderApp] Downloading ${e.botname}...`);
-                    download(e.data, e.botname, e.mimeType);
+                    console.log(`[BuilderApp] Downloading ${e.filename}...`);
+                    download(e.data, e.filename, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
