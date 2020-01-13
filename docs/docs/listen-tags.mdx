@@ -296,6 +296,17 @@ let that: {
 
 Shouts are events which are sent to all bots.
 
+### `@onAnyCreate`
+
+A shout that is sent to all bots when a bot is created. Sent immediately after <TagLink tag='@onCreate'/> is sent.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot
+};
+```
+
 ### `@onAnyBotClicked`
 
 A shout that is sent to all bots when a bot is clicked.
