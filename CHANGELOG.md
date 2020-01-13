@@ -32,6 +32,8 @@
             -   Going to just `*` will show all bots in the universe in the sheet. (which is very slow at the moment)
         -   You can also jump directly into auxPlayer by using the "Open dimension in auxPlayer" button that is next to the tag filters.
     -   Removed the `player.isDesigner()` function.
+    -   Renamed `auxShape` to `auxForm`.
+    -   Renamed `auxImage` to `auxFormAddress`.
 -   Improvements
     -   Added the `player.showChat()` and `player.hideChat()` functions.
         -   These show/hide the chat bar in auxPlayer.
@@ -53,6 +55,8 @@
     -   Added the `player.downloadBots(bots, filename)` function.
         -   The first parameter is an array of bots that should be downloaded.
         -   The second parameter is the name of the file that is downloaded.
+    -   Added the `player.showUploadUniverse()` function.
+        -   Shows a dialog that lets the user upload `.aux` files.
 -   Other Changes
     -   Changed the "AUX Player" and "Channel Designer" tab titles to "auxPlayer".
     -   Removed the colored dots from tag labels in the bot table.
