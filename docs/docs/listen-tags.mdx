@@ -63,7 +63,7 @@ A whisper that is sent to the bot that a mod started to be dragged onto.
 ```typescript
 let that: {
   mod: Mod,
-  context: string
+  dimension: string
 };
 ```
 
@@ -75,7 +75,7 @@ A whisper that is sent to the bot that a mod was just dragged off of.
 ```typescript
 let that: {
   mod: Mod,
-  context: string
+  dimension: string
 };
 ```
 
@@ -87,7 +87,7 @@ A whisper that is sent to the bot that was clicked.
 ```typescript
 let that: {
   face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  context: string
+  dimension: string
 };
 ```
 
@@ -99,7 +99,7 @@ A whisper that is sent to a bot when the mouse cursor starts to hover over it.
 ```typescript
 let that: {
   bot: Bot,
-  context: string
+  dimension: string
 };
 ```
 
@@ -111,7 +111,7 @@ A whisper that is sent to a bot when the mouse cursor stops hovering over it.
 ```typescript
 let that: {
   bot: Bot,
-  context: string
+  dimension: string
 };
 ```
 
@@ -123,7 +123,7 @@ A whipser that is sent to a bot when the user starts clicking it.
 ```typescript
 let that: {
   bot: Bot,
-  context: string
+  dimension: string
 };
 ```
 
@@ -135,7 +135,7 @@ A whisper that is sent to a bot when the user stops clicking it.
 ```typescript
 let that: {
   bot: Bot,
-  context: string
+  dimension: string
 };
 ```
 
@@ -149,7 +149,7 @@ let that: {
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -167,12 +167,12 @@ let that: {
     bot: Bot,
     x: number,
     y: number,
-    context: string
+    dimension: string
   },
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -189,12 +189,12 @@ let that: {
     bot: Bot,
     x: number,
     y: number,
-    context: string
+    dimension: string
   },
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -211,12 +211,12 @@ let that: {
     bot: Bot,
     x: number,
     y: number,
-    context: string
+    dimension: string
   },
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -305,7 +305,31 @@ A shout that is sent to all bots when a bot is clicked.
 let that: {
   bot: Bot,
   face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  context: string
+  dimension: string
+};
+```
+
+### `@onChat`
+
+A shout that is sent to all bots when the player sends a chat message.
+Chat messages can be sent when the player presses the Enter key while writing a message or by clicking/tapping the "Send Message" button to the right of the chat bar.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
+};
+```
+
+### `@onChatTyping`
+
+A shout that is sent to all bots when the player changes the text in the chat bar.
+Only triggered when the chat bar is visible.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
 };
 ```
 
@@ -320,18 +344,18 @@ let that: {
     x: number,
     y: number
   },
-  context: string
+  dimension: string
 };
 ```
 
-### `@onPlayerEnterContext`
+### `@onPlayerEnterDimension`
 
-A shout that is sent to all bots when the player enters a context.
+A shout that is sent to all bots when the player enters a dimension.
 
 #### Arguments:
 ```typescript
 let that: {
-  context: string
+  dimension: string
 };
 ```
 
@@ -400,51 +424,51 @@ let that: {
 };
 ```
 
-### `@onChannelSubscribed`
+### `@onUniverseSubscribed`
 
-A shout that is sent when a channel is loaded.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is loaded.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelUnsubscribed`
+### `@onUniverseUnsubscribed`
 
-A shout that is sent when a channel is unloaded.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is unloaded.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelStreaming`
+### `@onUniverseStreaming`
 
-A shout that is sent when a channel is connected and fully synced.
-Sent to every channel that is loaded.
+A shout that is sent when a universe is connected and fully synced.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
-### `@onChannelStreamLost`
+### `@onUniverseStreamLost`
 
-A shout that is sent when a channel has been temporarily disconnected from the server.
-Sent to every channel that is loaded.
+A shout that is sent when a universe has been temporarily disconnected from the server.
+Sent to every universe that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  channel: string
+  universe: string
 };
 ```
 
@@ -508,7 +532,7 @@ let that: {
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -524,12 +548,12 @@ let that: {
   to: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   },
   from: {
     x: number,
     y: number,
-    context: string
+    dimension: string
   }
 };
 ```
@@ -563,7 +587,7 @@ let that: {
 };
 ```
 
-### `@onChannelAction`
+### `@onUniverseAction`
 
 A whisper that is sent to the config bot whenever an action happens.
 

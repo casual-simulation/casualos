@@ -52,7 +52,7 @@ export class SetupChannelModule implements AuxModule {
                 .pipe(
                     flatMap(e => e),
                     flatMap(async event => {
-                        if (event.type === 'setup_channel') {
+                        if (event.type === 'setup_universe') {
                             await this._setupChannel(info, event);
                         }
                     })

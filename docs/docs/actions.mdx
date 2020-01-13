@@ -55,8 +55,8 @@ let myBot = create({ space: "tempLocal" });
 
 5. Create a bot from multiple mods:
 ```typescript
-// myBot is placed in the "myContext" context and is colored green
-let myBot = create({ myContext: true }, {
+// myBot is placed in the "myDimension" dimension and is colored green
+let myBot = create({ myDimension: true }, {
     auxColor: "green"
 });
 ```
@@ -158,7 +158,7 @@ changeState(bot, "Playing", "playbackState");
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the channel are returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the universe are returned.
 If multiple filters are specified, then only the bots that match all of the filters are returned.
 
 #### Examples
@@ -168,9 +168,9 @@ If multiple filters are specified, then only the bots that match all of the filt
 let bots = getBots(byTag("#test"));
 ```
 
-2. Find all bots with `#name` set to "bob" _and_ in the "people" context.
+2. Find all bots with `#name` set to "bob" _and_ in the "people" dimension.
 ```typescript
-let bots = getBots(byTag("#name", "bob"), inContext("people"));
+let bots = getBots(byTag("#name", "bob"), inDimension("people"));
 ```
 
 ### `getBots(tag, value?)`
@@ -211,7 +211,7 @@ let bots = getBots("#test");
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the channel is returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the universe is returned.
 If multiple filters are specified, then the first bot that matches all of the filters is returned.
 
 #### Examples
@@ -221,9 +221,9 @@ If multiple filters are specified, then the first bot that matches all of the fi
 let foundBot = getBot(byTag("#test"));
 ```
 
-2. Find a bot with `#name` set to "bob" _and_ in the "people" context.
+2. Find a bot with `#name` set to "bob" _and_ in the "people" dimension.
 ```typescript
-let foundBot = getBot(byTag("#name", "bob"), inContext("people"));
+let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
 ```
 
 ### `getBot(tag, filter?)`
@@ -355,13 +355,13 @@ let bots = getBots(byTag("#height", height => height > 2));
 let bots = getBots(byTag("#test"));
 ```
 
-### `inContext(context)`
+### `inDimension(dimension)`
 
-<FunctionCode name='inContext' />
+<FunctionCode name='inDimension' />
 
-Creates a bot filter that includes bots that are in the given context. That is, they have the given tag set to `true`.
+Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to `true`.
 
-The **first parameter** is the name of the context.
+The **first parameter** is the name of the dimension.
 
 <Alert type='info'>
     This function behaves exactly like <ActionLink action='byTag(tag, value?)' /> with the `value` parameter set to `true`.
@@ -369,45 +369,45 @@ The **first parameter** is the name of the context.
 
 #### Examples
 
-1. Find all the bots in the "test" context.
+1. Find all the bots in the "test" dimension.
 ```typescript
-let bots = getBots(inContext("test"));
+let bots = getBots(inDimension("test"));
 ```
 
-### `atPosition(context, x, y)`
+### `atPosition(dimension, x, y)`
 
-Creates a bot filter that includes bots that are in the given context and at the given X and Y position.
+Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
 
-The **first parameter** is the name of the context.
+The **first parameter** is the name of the dimension.
 
-The **second parameter** is the X position. That is, the left-right position of the bots in the context.
+The **second parameter** is the X position. That is, the left-right position of the bots in the dimension.
 
-The **third parameter** is the Y position. That is, the forward-backward position of the bots in the context.
+The **third parameter** is the Y position. That is, the forward-backward position of the bots in the dimension.
 
 #### Examples
 
-1. Find all the bots at (1, 2) in the "test" context.
+1. Find all the bots at (1, 2) in the "test" dimension.
 ```typescript
 let bots = getBots(atPosition("test", 1, 2));
 ```
 
-### `inStack(bot, context)`
+### `inStack(bot, dimension)`
 
-Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
+Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.
 
 When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
 This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
 
 The **first parameter** is the bot that other bots should be in the same stack with.
 
-The **second parameter** is the name of the context.
+The **second parameter** is the name of the dimension.
 
 #### Examples
 
-1. Find all bots in the same stack as `this` in the "test" context.
+1. Find all bots in the same stack as `this` in the "test" dimension.
 ```typescript
 let bots = getBots(inStack(this, "test"));
 ```
@@ -503,6 +503,52 @@ whisper(this, "setColor", "red");
 
 ## Player Actions
 
+### `player.downloadBots(bots, filename)`
+
+<FunctionCode name='downloadBots'/>
+
+Downloads the given array of bots as a `.aux` file with the given filename.
+Useful for quickly backing up a set of bots.
+
+The **first parameter** is the array of bots that should be downloaded.
+
+The **second parameter** is the name of the file that the bots should be stored in.
+`.aux` will automatically be added to the end of the filename.
+
+#### Examples:
+
+1. Download all the bots in the "abc" dimension as "abcBots.aux".
+```typescript
+player.downloadBots(getBots(inDimension("abc")), "abcBots");
+```
+
+2. Download the current bot as "currentBot.aux".
+```typescript
+player.downloadBots([bot], "currentBot");
+```
+
+### `player.run(script)`
+
+<FunctionCode name='run'/>
+
+Runs the given script.
+The script will be executed in a separate environment with no `bot`, `tags`, `this`, `data`, and `that` variables.
+This means that you need to use the <ActionLink action='getBot(...filters)'/> or <ActionLink action='getBots(...filters)'/> functions to read bot data.
+
+The **first parameter** is the script that should be executed.
+
+#### Examples:
+
+1. Run a script that says "hello".
+```typescript
+player.run("player.toast('hello');");
+```
+
+2. Run a script from the `#script` tag on the current bot.
+```typescript
+player.run(tags.script);
+```
+
 ### `player.replaceDragBot(botOrMod)`
 
 <FunctionCode name='replaceDragBot'/>
@@ -528,6 +574,64 @@ player.replaceDragBot({
 });
 ```
 
+### `player.showChat(prefill?)`
+
+<FunctionCode name='showChat'/>
+
+Shows the "chat bar" at the top of the screen in auxPlayer, optionally prefilling it with the given text.
+Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
+
+The **first parameter** is the text that the chat bar should be filled with by default.
+If the chat bar is already visible but there is nothing in it, then it will be filled with this text.
+
+#### Examples:
+
+1. Show the chat bar.
+```typescript
+player.showChat();
+```
+
+2. Show the chat bar with some prefilled text.
+```typescript
+player.showChat("hello");
+```
+
+### `player.hideChat()`
+
+<FunctionCode name='hideChat'/>
+
+Hides the "chat bar" at the top of the screen in auxPlayer.
+
+#### Examples:
+
+1. Hide the chat bar.
+```typescript
+player.hideChat();
+```
+
+### `player.toast(message, duration?)`
+
+<FunctionCode name='toast'/>
+
+Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
+Optionally accepts a duration parameter which is the number of seconds that the message should be on the screen.
+
+The **first parameter** is the text that the toast message should show.
+
+The **second parameter** is optional and is the number of seconds that the message should be on the screen. (Default is 2)
+
+#### Examples:
+
+1. Show a "Hello!" toast message.
+```typescript
+player.toast("Hello!");
+```
+
+2. Show the player a code for 5 seconds.
+```typescript
+player.toast("this is the code", 5);
+```
+
 ### `player.setClipboard(text)`
 
 <FunctionCode name='setClipboard'/>
@@ -544,67 +648,92 @@ The **first parameter** is the text that should be copied to the player's clipbo
 player.setClipboard("hello");
 ```
 
-## Server Actions
+### `player.showUploadUniverse()`
 
-### `server.setupChannel(channel, botOrMod?)`
+<FunctionCode name='showUploadUniverse'/>
 
-<FunctionCode name='setupChannel'/>
-
-Sends an action to the server that will create the given channel if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the channel if the channel did not exist.
-The action is only executed if <TagLink tag='@onChannelAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is the ID of the channel that should be setup.
-
-The **second parameter** is optional and is the bot or mod that should be cloned into the new channel. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+Shows the "Upload Universe" dialog which lets the user select a `.aux` file to upload to the universe.
 
 #### Examples:
 
-Before `server.setupChannel()` will work, you need to setup the <TagLink tag='@onChannelAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new channel.
+1. Show the "Upload Universe" dialog.
+```typescript
+player.showUploadUniverse();
+```
+
+### `player.downloadUniverse()`
+
+<FunctionCode name='downloadUniverse'/>
+
+Downloads the entire universe into a `.aux` file on the player's computer.
+The file will have the same name as the universe.
+
+Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
+The only difference is that all bots are included and the file is named for you automatically.
+
+#### Examples:
+
+1. Download the entire universe.
+```typescript
+player.downloadUniverse();
+```
+
+## Server Actions
+
+### `server.setupUniverse(universe, botOrMod?)`
+
+<FunctionCode name='setupUniverse'/>
+
+Sends an action to the server that will create the given universe if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the universe if the universe did not exist.
+The action is only executed if <TagLink tag='@onUniverseAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is the ID of the universe that should be setup.
+
+The **second parameter** is optional and is the bot or mod that should be cloned into the new universe. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+
+#### Examples:
+
+Before `server.setupUniverse()` will work, you need to setup the <TagLink tag='@onUniverseAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupUniverse()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new universe.
 By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
-Ensure that <TagLink tag='@onChannelAction'/> is setup properly.
-The following script will execute `setup_channel` events that were sent from other devices:
+Ensure that <TagLink tag='@onUniverseAction'/> is setup properly.
+The following script will execute `setup_universe` events that were sent from other devices:
 ```typescript
 // Device actions are actions that were sent to this computer from another device
 if (that.action.type === 'device') {
 
-    // The setup_channel action is the action that is created
-    // from server.setupChannel()
-    if (that.action.event.type === 'setup_channel') {
+    // The setup_universe action is the action that is created
+    // from server.setupUniverse()
+    if (that.action.event.type === 'setup_universe') {
 
-        // Execute the setup_channel action
+        // Execute the setup_universe action
         action.perform(that.action.event);
     }
 }
 ```
 
-1. Create the "test" channel:
+1. Create the "test" universe:
 ```typescript
-server.setupChannel("test");
+server.setupUniverse("test");
 ```
 
-2. Create the "test" channel with a bot inside it:
+2. Create the "test" universe with a bot inside it:
 ```typescript
-server.setupChannel("test", {
+server.setupUniverse("test", {
     "name": "bob",
     "auxColor": "red"
 });
 ```
 
-3. Create the "test" channel with a bot that creates the "abc" context and places a bot in it:
+3. Create the "test" universe with a bot that places a bot in the "abc" dimension:
 ```typescript
-server.setupChannel("test", {
+server.setupUniverse("test", {
     "onCreate": `@
         create({
             auxCreator: null,
-            auxContext: "abc",
-        });
-
-        create({
-            auxCreator: null,
-            auxLabel: "This is in the context!",
+            auxLabel: "This is in the dimension!",
             auxColor: "blue",
             abc: true
         });

@@ -194,14 +194,14 @@ module.exports = {
             chunks: ['projector', 'vendors', 'monaco'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
-            title: 'Channel Designer',
+            title: 'auxPlayer',
             filename: 'projector.html',
         }),
         new HtmlWebpackPlugin({
             chunks: ['player', 'vendors'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
-            title: 'AUX Player',
+            title: 'auxPlayer',
             filename: 'player.html',
         }),
         new HtmlWebpackPlugin({
@@ -247,7 +247,7 @@ module.exports = {
                     match: function(requestUrl) {
                         let url = new URL(requestUrl);
                         const parts = url.pathname.slice(1).split('/');
-                        if (parts.length > 1 && parts[0] === '*') {
+                        if (parts.length > 1 && parts[0].startsWith('*')) {
                             return new URL('/projector.html', location);
                         }
                         return new URL('/player.html', location);

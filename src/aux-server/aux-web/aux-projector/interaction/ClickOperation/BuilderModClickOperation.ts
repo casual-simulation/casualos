@@ -39,11 +39,6 @@ export class BuilderModClickOperation extends BaseModClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        // if (this._allowSelection) {
-        //     this._simulation3D.simulation.recent.addBotDiff(this._mod, true);
-        //     this._simulation3D.simulation.selection.clearSelection();
-        //     this._simulation3D.simulation.botPanel.isOpen = true;
-        // }
         // Do nothing by default
     }
 
@@ -51,8 +46,6 @@ export class BuilderModClickOperation extends BaseModClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): IOperation {
-        this._simulation3D.simulation.botPanel.hideOnDrag(true);
-
         return new BuilderModDragOperation(
             this._simulation3D,
             this._interaction,

@@ -17,22 +17,21 @@ import {
     ShowInputType,
     ShowInputSubtype,
     BarcodeFormat,
-    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-    ON_CHANNEL_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    onUniverseStreamLostArg,
+    onUniverseStreamingArg,
+    onUniverseSubscribedArg,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap, mergeMap, filter, switchMap, first } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
+import QRAuxBuilder from '../../shared/public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
-import ForkIcon from '../public/icons/repo-forked.svg';
-import BotTableToggle from '../BotTableToggle/BotTableToggle';
-import BotSearch from '../BotSearch/BotSearch';
-
-import vueBotPond from 'vue-filepond';
-import 'filepond/dist/filepond.min.css';
+import ForkIcon from '../../shared/public/icons/repo-forked.svg';
+import BotSearch from '../../shared/vue-components/BotSearch/BotSearch';
 import {
     Simulation,
     AuxUser,
@@ -60,12 +59,15 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
+import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
-
-const BotPond = vueBotPond();
+import {
+    navigateToDimension,
+    createSimulationInfo,
+} from '../../shared/RouterUtils';
 
 @Component({
     components: {
@@ -74,16 +76,16 @@ const BotPond = vueBotPond();
         'qr-code': QRCode,
         barcode: VueBarcode,
         'qrcode-stream': QrcodeStream,
-        'bot-pond': BotPond,
+
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
         'bot-search': BotSearch,
-        'bot-table-toggle': BotTableToggle,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
         'clipboard-modal': ClipboardModal,
+        'upload-universe-modal': UploadUniverseModal,
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
@@ -152,11 +154,6 @@ export default class BuilderApp extends Vue {
      * The name of the fork to create.
      */
     forkName: string = '';
-
-    /**
-     * The bots that have been uploaded by the user.
-     */
-    uploadedFiles: File[] = [];
 
     /**
      * The extra sidebar items shown in the app.
@@ -449,35 +446,42 @@ export default class BuilderApp extends Vue {
                                 if (this.subscribed) {
                                     this.lostConnection = true;
                                     await botManager.helper.action(
-                                        ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+                                        ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
                                         null,
-                                        {
-                                            channel:
-                                                botManager.parsedId.channel,
-                                        }
+                                        onUniverseStreamLostArg(
+                                            botManager.parsedId.channel
+                                        )
                                     );
                                 }
                             } else {
                                 this.synced = true;
 
+                                const userBot = botManager.helper.userBot;
+                                await botManager.helper.updateBot(userBot, {
+                                    tags: {
+                                        _auxUserDimension:
+                                            botManager.parsedId.dimension ||
+                                            false,
+                                    },
+                                });
+
                                 if (!this.subscribed) {
                                     this.subscribed = true;
                                     await botManager.helper.action(
-                                        ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                        ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                         null,
-                                        {
-                                            channel:
-                                                botManager.parsedId.channel,
-                                        }
+                                        onUniverseSubscribedArg(
+                                            botManager.parsedId.channel
+                                        )
                                     );
                                 }
 
                                 await botManager.helper.action(
-                                    ON_CHANNEL_STREAMING_ACTION_NAME,
+                                    ON_UNIVERSE_STREAMING_ACTION_NAME,
                                     null,
-                                    {
-                                        channel: botManager.parsedId.channel,
-                                    }
+                                    onUniverseStreamingArg(
+                                        botManager.parsedId.channel
+                                    )
                                 );
                             }
                         }
@@ -520,11 +524,15 @@ export default class BuilderApp extends Vue {
                             this.showConsole = e.open;
                         } else if (e.type === 'download') {
                             console.log(
-                                `[BuilderApp] Downloading ${e.botname}...`
+                                `[BuilderApp] Downloading ${e.filename}...`
                             );
-                            download(e.data, e.botname, e.mimeType);
+                            download(e.data, e.filename, e.mimeType);
                         } else if (e.type === 'send_webhook') {
                             sendWebhook(botManager, e);
+                        } else if (e.type === 'go_to_dimension') {
+                            navigateToDimension(e, this.$router, [
+                                createSimulationInfo(botManager),
+                            ]);
                         }
                     }),
                     botManager.login.deviceChanged.subscribe(info => {
@@ -624,29 +632,6 @@ export default class BuilderApp extends Vue {
     cancelFork() {
         this.showFork = false;
         this.forkName = '';
-    }
-
-    cancelFileUpload() {
-        this.showFileUpload = false;
-        this.uploadedFiles = [];
-    }
-
-    async uploadFiles() {
-        await Promise.all(
-            this.uploadedFiles.map(f => appManager.uploadState(f))
-        );
-        this.showFileUpload = false;
-    }
-
-    fileAdded(err: any, data: FilePondFile) {
-        this.uploadedFiles.push(data.file);
-    }
-
-    fileRemoved(data: FilePondFile) {
-        const index = this.uploadedFiles.indexOf(data.file);
-        if (index >= 0) {
-            this.uploadedFiles.splice(index, 1);
-        }
     }
 
     snackbarClick(action: SnackbarOptions['action']) {

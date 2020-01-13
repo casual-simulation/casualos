@@ -6,7 +6,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
     BotCalculationContext,
     getBotPosition,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     getBotIndex,
     duplicateBot,
     Bot,
@@ -27,7 +27,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
 
-    protected faceClicked: { face: string; context: string };
+    protected _argument: { face: string; dimension: string };
 
     constructor(
         simulation3D: Simulation3D,
@@ -38,20 +38,19 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     ) {
         super(simulation3D, interaction, bot.bot, bot, vrController);
 
-        this.faceClicked = { face: faceValue, context: null };
+        this._argument = { face: faceValue, dimension: null };
     }
 
     protected _performClick(calc: BotCalculationContext): void {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
-        this.faceClicked.context = bot3D.context;
+        this._argument.dimension = bot3D.dimension;
 
-        this.simulation.helper.action('onClick', [this._bot], this.faceClicked);
+        this.simulation.helper.action('onClick', [this._bot], this._argument);
 
         this.simulation.helper.action('onAnyBotClicked', null, {
-            face: this.faceClicked.face,
+            ...this._argument,
             bot: this._bot,
-            context: bot3D.context,
         });
     }
 
@@ -60,18 +59,18 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         fromCoord?: Vector2
     ): BaseBotDragOperation {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
-        const context = bot3D.context;
-        const position = getBotPosition(calc, bot3D.bot, context);
+        const dimension = bot3D.dimension;
+        const position = getBotPosition(calc, bot3D.bot, dimension);
         if (position) {
-            const objects = objectsAtContextGridPosition(
+            const objects = objectsAtDimensionGridPosition(
                 calc,
-                context,
+                dimension,
                 position
             );
             if (objects.length === 0) {
                 console.log('Found no objects at', position);
                 console.log(bot3D.bot);
-                console.log(context);
+                console.log(dimension);
             }
             const bot = this._bot;
             const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
@@ -85,7 +84,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 inventorySimulation3D,
                 this._interaction,
                 draggedObjects,
-                bot3D.context,
+                bot3D.dimension,
                 this._vrController,
                 fromCoord
             );

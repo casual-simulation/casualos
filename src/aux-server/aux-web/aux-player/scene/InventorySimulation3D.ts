@@ -10,43 +10,25 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { InventoryContextGroup3D } from './InventoryContextGroup3D';
+import { InventoryContextGroup3D as InventoryDimensionGroup3D } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
-import { BotContextEvent } from '@casual-simulation/aux-vm';
+import { BotDimensionEvent } from '@casual-simulation/aux-vm';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
-     * The inventory context that this simulation is for.
+     * The inventory dimension that this simulation is for.
      */
-    inventoryContext: string;
+    inventoryDimension: string;
 
     grid3D: PlayerGrid3D;
-
-    /**
-     * Short cut access to the context group that this simulation uses to render its inventory bots.
-     */
-    private _contextGroup: InventoryContextGroup3D;
-
-    /**
-     * Has the context group been loaded by this simulation yet?
-     */
-    private _contextLoaded: boolean;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
-
-        // Generate a context group that will render the user's inventory for this simulation.
-        this._contextGroup = new InventoryContextGroup3D(
-            this,
-            this.simulation.helper.userBot,
-            'player',
-            this.decoratorFactory
-        );
 
         const calc = this.simulation.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
@@ -64,17 +46,18 @@ export class InventorySimulation3D extends Simulation3D {
             userBotChanged(this.simulation)
                 .pipe(
                     tap(bot => {
-                        const userInventoryContextValue =
-                            bot.values['_auxUserInventoryContext'];
+                        const userInventoryDimensionValue =
+                            bot.values['_auxUserInventoryDimension'];
                         if (
-                            !this.inventoryContext ||
-                            this.inventoryContext !== userInventoryContextValue
+                            !this.inventoryDimension ||
+                            this.inventoryDimension !==
+                                userInventoryDimensionValue
                         ) {
-                            this.inventoryContext = userInventoryContextValue;
+                            this.inventoryDimension = userInventoryDimensionValue;
 
                             console.log(
-                                '[InventorySimulation3D] User changed inventory context to: ',
-                                userInventoryContextValue
+                                '[InventorySimulation3D] User changed inventory dimension to: ',
+                                userInventoryDimensionValue
                             );
                         }
                     })
@@ -85,33 +68,37 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _getContextTags() {
-        return ['_auxUserInventoryContext'];
+    protected _getDimensionTags() {
+        return ['_auxUserInventoryDimension'];
     }
 
-    protected _filterContextEvent(
+    protected _filterDimensionEvent(
         calc: BotCalculationContext,
-        event: BotContextEvent
+        event: BotDimensionEvent
     ): boolean {
-        // Only allow contexts defined on the user's bot
+        // Only allow dimensions defined on the user's bot
         if (
-            event.type === 'context_added' ||
-            event.type === 'context_removed'
+            event.type === 'dimension_added' ||
+            event.type === 'dimension_removed'
         ) {
-            return event.contextBot.id === this.simulation.helper.userId;
+            return event.dimensionBot.id === this.simulation.helper.userId;
         }
-        return super._filterContextEvent(calc, event);
+        return super._filterDimensionEvent(calc, event);
     }
 
-    protected _createContextGroup(
+    protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        if (this._contextLoaded) {
-            return null;
+        if (bot.id === this.simulation.helper.userId) {
+            return new InventoryDimensionGroup3D(
+                this,
+                this.simulation.helper.userBot,
+                'player',
+                this.decoratorFactory
+            );
         }
 
-        this._contextLoaded = true;
-        return this._contextGroup;
+        return null;
     }
 }

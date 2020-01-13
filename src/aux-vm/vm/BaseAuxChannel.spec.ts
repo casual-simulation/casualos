@@ -108,13 +108,13 @@ describe('BaseAuxChannel', () => {
             expect(userBot.tags).toMatchSnapshot();
         });
 
-        it('should create a user context bot', async () => {
-            uuidMock.mockReturnValue('contextBot');
+        it('should create a user dimension bot', async () => {
+            uuidMock.mockReturnValue('dimensionBot');
             await channel.initAndWait();
 
-            const contextBot = channel.helper.botsState['contextBot'];
-            expect(contextBot).toBeTruthy();
-            expect(contextBot.tags).toMatchSnapshot();
+            const dimensionBot = channel.helper.botsState['dimensionBot'];
+            expect(dimensionBot).toBeTruthy();
+            expect(dimensionBot.tags).toMatchSnapshot();
         });
 
         it('should create the globals bot', async () => {
@@ -254,11 +254,11 @@ describe('BaseAuxChannel', () => {
             expect(userBot).toBeTruthy();
         });
 
-        it('should keep contexts in users that define a context', async () => {
+        it('should keep dimensions in users that define a dimension', async () => {
             await tree.addBot(
                 createBot('user1', {
                     _auxUser: 'user',
-                    auxContext: `_user_user_1`,
+                    auxDimensionConfig: `_user_user_1`,
                 })
             );
 
@@ -268,17 +268,17 @@ describe('BaseAuxChannel', () => {
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
                 _auxUser: 'user',
-                auxContext: '_user_user_1',
+                auxDimensionConfig: '_user_user_1',
             });
         });
     });
 
-    describe('onChannelAction()', () => {
-        it('should send new bot atoms through the onChannelAction() filter', async () => {
+    describe('onUniverseAction()', () => {
+        it('should send new bot atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'add_bot') {
                             action.reject(that.action);
                         }
@@ -295,11 +295,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete bot atoms through the onChannelAction() filter', async () => {
+        it('should send delete bot atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'remove_bot') {
                             action.reject(that.action);
                         }
@@ -318,11 +318,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send update tag atoms through the onChannelAction() filter', async () => {
+        it('should send update tag atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -345,11 +345,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete tag atoms through the onChannelAction() filter', async () => {
+        it('should send delete tag atoms through the onUniverseAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    onChannelAction: `@
+                    onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -500,7 +500,7 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should only export public bots', async () => {
-            uuidMock.mockReturnValue('contextBot');
+            uuidMock.mockReturnValue('dimensionBot');
             await channel.initAndWait();
 
             await channel.sendEvents([botAdded(createBot('test'))]);
@@ -511,7 +511,7 @@ describe('BaseAuxChannel', () => {
                 version: 1,
                 state: {
                     config: expect.any(Object),
-                    contextBot: expect.any(Object),
+                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),
@@ -520,7 +520,7 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should inlcude the ID, tags, and space properties', async () => {
-            uuidMock.mockReturnValue('contextBot');
+            uuidMock.mockReturnValue('dimensionBot');
             await channel.initAndWait();
 
             await channel.sendEvents([botAdded(createBot('test'))]);
@@ -531,7 +531,7 @@ describe('BaseAuxChannel', () => {
                 version: 1,
                 state: {
                     config: expect.any(Object),
-                    contextBot: expect.any(Object),
+                    dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
                     def: createBot('def', {}, 'tempLocal'),

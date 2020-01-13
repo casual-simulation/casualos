@@ -63,7 +63,7 @@ export class BuilderModDragOperation extends BaseModDragOperation {
             this._dragBotsOnWorkspace(calc, workspace, gridPosition);
         } else {
             // drag free
-            this.contextGroup = null;
+            this.dimensionGroup = null;
         }
     }
 
@@ -79,18 +79,18 @@ export class BuilderModDragOperation extends BaseModDragOperation {
 
         this._showGrid(workspace);
 
-        this.contextGroup = workspace;
-        this._previousContext = null;
-        if (!workspace.contexts.has(this._context)) {
-            const next = this._interaction.firstContextInWorkspace(workspace);
-            this._previousContext = this._context;
-            this._context = next;
+        this.dimensionGroup = workspace;
+        this._previousDimension = null;
+        if (!workspace.dimensions.has(this._dimension)) {
+            const next = this._interaction.firstDimensionInWorkspace(workspace);
+            this._previousDimension = this._dimension;
+            this._dimension = next;
         }
 
         // calculate index for bot
         const result = calculateBotDragStackPosition(
             calc,
-            this._context,
+            this._dimension,
             gridPosition,
             this._mod
         );

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Watch, Prop } from 'vue-property-decorator';
-import { goToContext } from '@casual-simulation/aux-common';
+import { goToDimension } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
@@ -12,7 +12,7 @@ import { first } from 'rxjs/operators';
     },
 })
 export default class PlayerHome extends Vue {
-    @Prop() context: string;
+    @Prop() dimension: string;
     @Prop() channels: string | string[];
     @Prop() primaryChannel: string;
 
@@ -35,14 +35,14 @@ export default class PlayerHome extends Vue {
         await this._updateChannels(newChannels);
     }
 
-    @Watch('context')
-    async onContextChanged() {
+    @Watch('dimension')
+    async onDimensionChanged() {
         if (
-            appManager.simulationManager.primary.parsedId.context !==
-            this.context
+            appManager.simulationManager.primary.parsedId.dimension !==
+            this.dimension
         ) {
             await appManager.simulationManager.primary.helper.transaction(
-                goToContext(this.context)
+                goToDimension(this.dimension)
             );
         }
     }
@@ -54,7 +54,7 @@ export default class PlayerHome extends Vue {
     async created() {
         this.isLoading = true;
         const sim = await appManager.setPrimarySimulation(
-            `${this.context}/${this.primaryChannel}`
+            `${this.dimension}/${this.primaryChannel}`
         );
 
         sim.connection.syncStateChanged

@@ -11,7 +11,7 @@ export class UpdateMaxtrixDecorator extends AuxBot3DDecoratorBase {
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const userContext = this.bot3D.context;
+        const userContext = this.bot3D.dimension;
         if (userContext) {
             this.bot3D.updateMatrixWorld(true);
         }

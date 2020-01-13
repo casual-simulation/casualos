@@ -3,7 +3,7 @@ import {
     BotCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    isContextLocked,
+    isDimensionLocked,
     calculateGridScale,
     PrecalculatedBot,
     toast,
@@ -18,8 +18,8 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { doesBotDefinePlayerContext } from '../PlayerUtils';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
+import { doesBotDefinePlayerDimension } from '../PlayerUtils';
 import {
     Color,
     Texture,
@@ -31,21 +31,15 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * Keep bots in a back buffer so that we can add bots to contexts when they come in.
-     * We should not guarantee that contexts will come first so we must have some lazy bot adding.
+     * The current dimension group 3d that the AUX Player is rendering.
      */
-    private _botBackBuffer: Map<string, Bot>;
+    private _dimensionGroup: DimensionGroup3D;
 
-    /**
-     * The current context group 3d that the AUX Player is rendering.
-     */
-    private _contextGroup: ContextGroup3D;
-
-    private _contextBackground: Color | Texture = null;
+    private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
@@ -79,15 +73,15 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    context: string;
+    dimension: string;
     grid3D: PlayerGrid3D;
 
     /**
      * Gets the background color that the simulation defines.
      */
     get backgroundColor() {
-        if (this._contextBackground) {
-            return this._contextBackground;
+        if (this._dimensionBackground) {
+            return this._dimensionBackground;
         } else {
             return super.backgroundColor;
         }
@@ -348,11 +342,10 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    constructor(context: string, game: Game, simulation: BrowserSimulation) {
+    constructor(dimension: string, game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 
-        this.context = context;
-        this._botBackBuffer = new Map();
+        this.dimension = dimension;
 
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
@@ -364,7 +357,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         let gridScale = calculateGridScale(
             calc,
-            this._contextGroup ? this._contextGroup.bot : null
+            this._dimensionGroup ? this._dimensionGroup.bot : null
         );
         this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
         this.grid3D.useAuxCoordinates = true;
@@ -378,11 +371,11 @@ export class PlayerSimulation3D extends Simulation3D {
         super.init();
     }
 
-    setContext(context: string) {
-        if (this.context === context) {
+    setDimension(dimension: string) {
+        if (this.dimension === dimension) {
             return;
         }
-        this.context = context;
+        this.dimension = dimension;
         this.unsubscribe();
         this.closed = false;
         this.init();
@@ -393,288 +386,233 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
-    protected _createContextGroup(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        const _3DContext = this._create3DContextGroup(calc, bot);
-        return _3DContext;
+    protected _getDimensionTags() {
+        return ['_auxUserDimension'];
     }
 
-    protected _create3DContextGroup(
+    protected _filterDimensionEvent(
+        calc: BotCalculationContext,
+        event: BotDimensionEvent
+    ): boolean {
+        // Only allow dimensions defined on the user's bot
+        if (
+            event.type === 'dimension_added' ||
+            event.type === 'dimension_removed'
+        ) {
+            return event.dimensionBot.id === this.simulation.helper.userId;
+        }
+        return super._filterDimensionEvent(calc, event);
+    }
+
+    protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        if (this._contextGroup) {
+        if (this._dimensionGroup) {
             return null;
         }
-        // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
-        const result = doesBotDefinePlayerContext(bot, this.context, calc);
-        const contextLocked = isContextLocked(calc, bot);
-        if (result.matchFound && !contextLocked) {
-            // Create ContextGroup3D for this bot that we will use to render all bots in the context.
-            this._contextGroup = new ContextGroup3D(
-                this,
-                bot,
-                'player',
-                this.decoratorFactory
-            );
 
-            this._setupGrid(calc);
+        this._dimensionGroup = new DimensionGroup3D(
+            this,
+            this.simulation.helper.userBot,
+            'player',
+            this.decoratorFactory
+        );
 
-            // Subscribe to bot change updates for this context bot so that we can do things like change the background color to match the context color, etc.
-            this._subs.push(
-                this.simulation.watcher
-                    .botChanged(bot.id)
-                    .pipe(
-                        tap(update => {
-                            const bot = update;
-                            // Update the context background color.
-                            //let contextBackgroundColor =
-                            //bot.tags['auxContextColor'];
-
-                            let contextBackgroundColor = calculateBotValue(
-                                calc,
-                                bot,
-                                `auxContextColor`
-                            );
-
-                            this._contextBackground = hasValue(
-                                contextBackgroundColor
-                            )
-                                ? new Color(contextBackgroundColor)
-                                : undefined;
-
-                            this._pannable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextPannable`,
-                                true
-                            );
-
-                            this._panMinX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPannableMinX`,
-                                null
-                            );
-
-                            this._panMaxX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPannableMaxX`,
-                                null
-                            );
-
-                            this._panMinY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPannableMinY`,
-                                null
-                            );
-
-                            this._panMaxY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPannableMaxY`,
-                                null
-                            );
-
-                            this._zoomable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextZoomable`,
-                                true
-                            );
-
-                            this._zoomMin = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextZoomableMin`,
-                                null
-                            );
-
-                            this._zoomMax = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextZoomableMax`,
-                                null
-                            );
-
-                            this._rotatable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextRotatable`,
-                                true
-                            );
-
-                            this._inventoryVisible = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryVisible`,
-                                true
-                            );
-
-                            this._inventoryPannable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryPannable`,
-                                false
-                            );
-
-                            this._inventoryPanMinX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryPannableMinX`,
-                                null
-                            );
-
-                            this._inventoryPanMaxX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryPannableMaxX`,
-                                null
-                            );
-
-                            this._inventoryPanMinY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryPannableMinY`,
-                                null
-                            );
-
-                            this._inventoryPanMaxY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryPannableMaxY`,
-                                null
-                            );
-
-                            this._inventoryResizable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryResizable`,
-                                true
-                            );
-
-                            this._inventoryRotatable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryRotatable`,
-                                true
-                            );
-
-                            this._inventoryZoomable = calculateBooleanTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryZoomable`,
-                                true
-                            );
-
-                            this._inventoryHeight = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryHeight`,
-                                0
-                            );
-
-                            this._playerZoom = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPlayerZoom`,
-                                null
-                            );
-
-                            this._playerRotationX = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPlayerRotationX`,
-                                null
-                            );
-
-                            this._playerRotationY = calculateNumericalTagValue(
-                                calc,
-                                bot,
-                                `auxContextPlayerRotationY`,
-                                null
-                            );
-
-                            let invColor = calculateBotValue(
-                                calc,
-                                bot,
-                                `auxContextInventoryColor`
-                            );
-
-                            this._inventoryColor = hasValue(invColor)
-                                ? new Color(invColor)
-                                : undefined;
-                        })
-                    )
-                    .subscribe()
-            );
-
-            return this._contextGroup;
-        } else if (result.matchFound && contextLocked) {
-            let message: string = 'The ' + this.context + ' context is locked.';
-
-            this.simulation.helper.transaction(toast(message));
-
-            this._botBackBuffer.set(bot.id, bot);
-        } else {
-            this._botBackBuffer.set(bot.id, bot);
-        }
-
-        return null;
+        // TODO: Update to support locking dimensions
+        return this._dimensionGroup;
     }
 
-    // protected _createSimulationContextGroup(
-    //     calc: BotCalculationContext,
-    //     bot: PrecalculatedBot
-    // ) {
-    //     if (bot.id === this.simulation.helper.userId) {
-    //         const userSimulationContextValue =
-    //             bot.values['_auxUserChannelsContext'];
-    //         if (
-    //             !this.simulationContext ||
-    //             this.simulationContext.context !== userSimulationContextValue
-    //         ) {
-    //             this.simulationContext = new SimulationContext(
-    //                 this,
-    //                 userSimulationContextValue
-    //             );
-    //             console.log(
-    //                 '[PlayerSimulation3D] User changed simulation context to: ',
-    //                 userSimulationContextValue
-    //             );
-
-    //             return this.simulationContext;
-    //         }
-    //     }
-
-    //     return null;
-    // }
-
-    protected _isContextGroupEvent(event: BotIndexEvent) {
-        return (
-            super._isContextGroupEvent(event) ||
-            (event.bot.id === this.simulation.helper.userId &&
-                this._isUserContextGroupEvent(event))
+    private _watchDimensionBot(
+        bot: PrecalculatedBot,
+        calc: BotCalculationContext
+    ) {
+        this._subs.push(
+            this.simulation.watcher
+                .botChanged(bot.id)
+                .pipe(
+                    tap(update => {
+                        const bot = update;
+                        // Update the dimension background color.
+                        //let dimensionBackgroundColor =
+                        //bot.tags['auxDimensionColor'];
+                        let dimensionBackgroundColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `auxDimensionColor`
+                        );
+                        this._dimensionBackground = hasValue(
+                            dimensionBackgroundColor
+                        )
+                            ? new Color(dimensionBackgroundColor)
+                            : undefined;
+                        this._pannable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannable`,
+                            true
+                        );
+                        this._panMinX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMinX`,
+                            null
+                        );
+                        this._panMaxX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMaxX`,
+                            null
+                        );
+                        this._panMinY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMinY`,
+                            null
+                        );
+                        this._panMaxY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPannableMaxY`,
+                            null
+                        );
+                        this._zoomable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomable`,
+                            true
+                        );
+                        this._zoomMin = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomableMin`,
+                            null
+                        );
+                        this._zoomMax = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionZoomableMax`,
+                            null
+                        );
+                        this._rotatable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionRotatable`,
+                            true
+                        );
+                        this._inventoryVisible = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryVisible`,
+                            true
+                        );
+                        this._inventoryPannable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannable`,
+                            false
+                        );
+                        this._inventoryPanMinX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMinX`,
+                            null
+                        );
+                        this._inventoryPanMaxX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMaxX`,
+                            null
+                        );
+                        this._inventoryPanMinY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMinY`,
+                            null
+                        );
+                        this._inventoryPanMaxY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryPannableMaxY`,
+                            null
+                        );
+                        this._inventoryResizable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryResizable`,
+                            true
+                        );
+                        this._inventoryRotatable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryRotatable`,
+                            true
+                        );
+                        this._inventoryZoomable = calculateBooleanTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryZoomable`,
+                            true
+                        );
+                        this._inventoryHeight = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryHeight`,
+                            0
+                        );
+                        this._playerZoom = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerZoom`,
+                            null
+                        );
+                        this._playerRotationX = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerRotationX`,
+                            null
+                        );
+                        this._playerRotationY = calculateNumericalTagValue(
+                            calc,
+                            bot,
+                            `auxDimensionPlayerRotationY`,
+                            null
+                        );
+                        let invColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `auxDimensionInventoryColor`
+                        );
+                        this._inventoryColor = hasValue(invColor)
+                            ? new Color(invColor)
+                            : undefined;
+                    })
+                )
+                .subscribe()
         );
     }
 
-    private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
+    protected _isDimensionGroupEvent(event: BotIndexEvent) {
         return (
-            event.tag === '_auxUserMenuContext' ||
-            event.tag === '_auxUserChannelsContext'
+            super._isDimensionGroupEvent(event) ||
+            (event.bot.id === this.simulation.helper.userId &&
+                this._isUserDimensionGroupEvent(event))
+        );
+    }
+
+    private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
+        return (
+            event.tag === '_auxUserMenuDimension' ||
+            event.tag === '_auxUserUniversesDimension'
         );
     }
 
     // TODO:
-    // protected _removeContext(context: ContextGroup3D, removedIndex: number) {
-    //     super._removeContext(context, removedIndex);
+    // protected _removeDimension(dimension: DimensionGroup3D, removedIndex: number) {
+    //     super._removeDimension(dimension, removedIndex);
 
-    //     if (context === this._contextGroup) {
-    //         this._contextGroup = null;
+    //     if (dimension === this._dimensionGroup) {
+    //         this._dimensionGroup = null;
     //     }
     // }
 
@@ -682,9 +620,9 @@ export class PlayerSimulation3D extends Simulation3D {
         super._onLoaded();
 
         // need to cause an action when another user joins
-        // Send an event to all bots indicating that the given context was loaded.
-        this.simulation.helper.action('onPlayerEnterContext', null, {
-            context: this.context,
+        // Send an event to all bots indicating that the given dimension was loaded.
+        this.simulation.helper.action('onPlayerEnterDimension', null, {
+            dimension: this.dimension,
             player: this.simulation.helper.userBot,
         });
     }
@@ -695,37 +633,54 @@ export class PlayerSimulation3D extends Simulation3D {
     ): void {
         super._onBotAdded(calc, bot);
 
-        // Change the user's context after first adding and updating it
+        // Change the user's dimension after first adding and updating it
         // because the callback for update_bot was happening before we
         // could call botUpdated from botAdded.
         if (bot.id === this.simulation.helper.userBot.id) {
             this._updateUserBot(calc, bot);
         }
+
+        // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
+        const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
+        const dimensionLocked = isDimensionLocked(calc, bot);
+        if (result.matchFound && !dimensionLocked) {
+            this._setupGrid(calc);
+
+            // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
+            this._watchDimensionBot(bot, calc);
+        } else if (result.matchFound && dimensionLocked) {
+            let message: string =
+                'The ' + this.dimension + ' dimension is locked.';
+
+            this.simulation.helper.transaction(toast(message));
+            this.unsubscribe();
+        }
     }
 
     unsubscribe() {
-        this._contextGroup = null;
+        this._dimensionGroup = null;
         super.unsubscribe();
     }
 
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
         const userBot = this.simulation.helper.userBot;
         console.log(
-            "[PlayerSimulation3D] Setting user's context to: " + this.context
+            "[PlayerSimulation3D] Setting user's dimension to: " +
+                this.dimension
         );
         let userBackgroundColor = calculateBotValue(
             calc,
             bot,
-            `auxContextColor`
+            `auxDimensionColor`
         );
         this._userInventoryColor = hasValue(userBackgroundColor)
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserContext: this.context },
+            tags: { _auxUserDimension: this.dimension },
         });
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserChannel: this.simulation.id },
+            tags: { _auxUserUniverse: this.simulation.id },
         });
         this._subs.push(
             this.simulation.watcher
@@ -736,7 +691,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         let userBackgroundColor = calculateBotValue(
                             calc,
                             bot,
-                            `auxContextColor`
+                            `auxDimensionColor`
                         );
                         this._userInventoryColor = hasValue(userBackgroundColor)
                             ? new Color(userBackgroundColor)

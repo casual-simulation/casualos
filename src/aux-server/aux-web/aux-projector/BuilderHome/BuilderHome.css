@@ -37,7 +37,7 @@
 .info-card .md-card-content {
     max-height: 560px;
     overflow-y: visible;
-    padding: 8px 0;
+    padding: 0;
 }
 
 .info-card.maximized .md-card-content {

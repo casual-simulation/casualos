@@ -5,7 +5,7 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import { BuilderBotDragOperation } from '../DragOperation/BuilderBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import BotTable from '../../BotTable/BotTable';
+import BotTable from '../../../shared/vue-components/BotTable/BotTable';
 import { Vector2 } from 'three';
 
 export class BuilderBotIDClickOperation extends BaseBotClickOperation {
@@ -22,18 +22,12 @@ export class BuilderBotIDClickOperation extends BaseBotClickOperation {
         this.botTable = table;
     }
 
-    protected _performClick(calc: BotCalculationContext): void {
-        if (this.botTable != null) {
-            this.botTable.toggleBot(this._bot);
-        }
-    }
+    protected _performClick(calc: BotCalculationContext): void {}
 
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        this._simulation3D.simulation.botPanel.hideOnDrag(true);
-
         return new BuilderBotDragOperation(
             this._simulation3D,
             <BuilderInteractionManager>this._interaction,

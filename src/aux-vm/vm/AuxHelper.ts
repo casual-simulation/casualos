@@ -18,9 +18,9 @@ import {
     calculateActionEvents,
     BotSandboxContext,
     PasteStateAction,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     createWorkspace,
-    createContextId,
+    createDimensionId,
     duplicateBot,
     cleanBot,
     Sandbox,
@@ -29,10 +29,10 @@ import {
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
-    addToContextDiff,
+    addToDimensionDiff,
     botAdded,
     botUpdated,
-    filterWellKnownAndContextTags,
+    filterWellKnownAndDimensionTags,
     tagsOnBot,
     calculateActionResults,
     ON_ACTION_ACTION_NAME,
@@ -40,10 +40,11 @@ import {
     GLOBALS_BOT_ID,
     resolveRejectedActions,
     reject,
-    USERS_CONTEXT,
+    USERS_DIMENSION,
     BotSpace,
     getBotSpace,
     breakIntoIndividualEvents,
+    ON_RUN_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -289,53 +290,53 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const userInventoryContext = `_user_${user.username}_inventory`;
-        const userMenuContext = `_user_${user.username}_menu`;
-        const userSimulationsContext = `_user_${user.username}_simulations`;
+        const userInventoryDimension = `_user_${user.username}_inventory`;
+        const userMenuDimension = `_user_${user.username}_menu`;
+        const userUniversesDimension = `_user_${user.username}_universes`;
         if (!userBot) {
             await this.createBot(user.id, {
-                [USERS_CONTEXT]: true,
+                [USERS_DIMENSION]: true,
                 ['_auxUser']: user.username,
-                ['_auxUserInventoryContext']: userInventoryContext,
-                ['_auxUserMenuContext']: userMenuContext,
-                ['_auxUserChannelsContext']: userSimulationsContext,
+                ['_auxUserInventoryDimension']: userInventoryDimension,
+                ['_auxUserMenuDimension']: userMenuDimension,
+                ['_auxUserUniversesDimension']: userUniversesDimension,
             });
         } else {
-            if (!userBot.tags['_auxUserMenuContext']) {
+            if (!userBot.tags['_auxUserMenuDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserMenuContext']: userMenuContext,
+                        ['_auxUserMenuDimension']: userMenuDimension,
                     },
                 });
             }
-            if (!userBot.tags['_auxUserInventoryContext']) {
+            if (!userBot.tags['_auxUserInventoryDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserInventoryContext']: userInventoryContext,
+                        ['_auxUserInventoryDimension']: userInventoryDimension,
                     },
                 });
             }
-            if (!userBot.tags['_auxUserChannelsContext']) {
+            if (!userBot.tags['_auxUserUniversesDimension']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserChannelsContext']: userSimulationsContext,
+                        ['_auxUserUniversesDimension']: userUniversesDimension,
                     },
                 });
             }
         }
     }
 
-    async createOrUpdateUserContextBot() {
+    async createOrUpdateUserDimensionBot() {
         const calc = this.createContext();
-        const contextBot = this.objects.find(
-            b => getBotConfigContexts(calc, b).indexOf(USERS_CONTEXT) >= 0
+        const dimensionBot = this.objects.find(
+            b => getBotConfigDimensions(calc, b).indexOf(USERS_DIMENSION) >= 0
         );
-        if (contextBot) {
+        if (dimensionBot) {
             return;
         }
         await this.createBot(undefined, {
-            auxContext: USERS_CONTEXT,
-            auxContextVisualize: true,
+            auxDimensionConfig: USERS_DIMENSION,
+            auxDimensionVisualize: true,
         });
     }
 
@@ -394,6 +395,18 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     this._lib
                 );
                 resultEvents.push(...this._flattenEvents(result.events));
+            } else if (event.type === 'run_script') {
+                const events = [
+                    ...calculateFormulaEvents(
+                        this.botsState,
+                        event.script,
+                        this.userId,
+                        undefined,
+                        this._sandboxFactory,
+                        this._lib
+                    ),
+                ];
+                resultEvents.push(...this._flattenEvents(events));
             } else if (event.type === 'update_bot') {
                 const bot = this.botsState[event.id];
                 updateBot(bot, this.userBot.id, event.update, () =>
@@ -424,7 +437,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     /**
-     * Resolves the list of events through the onChannelAction() handler.
+     * Resolves the list of events through the onUniverseAction() handler.
      * @param events The events to resolve.
      */
     public resolveEvents(events: BotAction[]): BotAction[] {
@@ -466,7 +479,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return defaultActions;
         } catch (err) {
             console.error(
-                '[AuxHelper] The onChannelAction() handler errored:',
+                '[AuxHelper] The onUniverseAction() handler errored:',
                 err
             );
             return [];
@@ -599,7 +612,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         );
         const newCalc = this.createContext();
 
-        if (event.options.context) {
+        if (event.options.dimension) {
             return this._pasteExistingWorksurface(
                 oldBots,
                 oldCalc,
@@ -619,21 +632,21 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     ) {
         let events: BotAction[] = [];
 
-        // Preserve positions from old context
+        // Preserve positions from old dimension
         for (let oldBot of oldBots) {
             const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
             let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
-                    ...addToContextDiff(
+                    ...addToDimensionDiff(
                         newCalc,
-                        event.options.context,
+                        event.options.dimension,
                         event.options.x,
                         event.options.y
                     ),
-                    [`${event.options.context}Z`]: event.options.z,
+                    [`${event.options.dimension}Z`]: event.options.z,
                 },
             });
             events.push(botAdded(cleanBot(newBot)));
@@ -648,54 +661,54 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         event: PasteStateAction,
         newCalc: BotSandboxContext
     ) {
-        const oldContextBots = oldBots.filter(
-            f => getBotConfigContexts(oldCalc, f).length > 0
+        const oldDimensionBots = oldBots.filter(
+            f => getBotConfigDimensions(oldCalc, f).length > 0
         );
-        const oldContextBot =
-            oldContextBots.length > 0 ? oldContextBots[0] : null;
-        const oldContexts = oldContextBot
-            ? getBotConfigContexts(oldCalc, oldContextBot)
+        const oldDimensionBot =
+            oldDimensionBots.length > 0 ? oldDimensionBots[0] : null;
+        const oldDimensions = oldDimensionBot
+            ? getBotConfigDimensions(oldCalc, oldDimensionBot)
             : [];
-        let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
+        let oldDimension = oldDimensions.length > 0 ? oldDimensions[0] : null;
         let events: BotAction[] = [];
-        const context = createContextId();
+        const dimension = createDimensionId();
         let workspace: Bot;
-        if (oldContextBot) {
-            workspace = duplicateBot(oldCalc, oldContextBot, {
+        if (oldDimensionBot) {
+            workspace = duplicateBot(oldCalc, oldDimensionBot, {
                 tags: {
-                    auxContext: context,
+                    auxDimensionConfig: dimension,
                 },
             });
         } else {
-            workspace = createWorkspace(undefined, context);
+            workspace = createWorkspace(undefined, dimension);
         }
-        workspace.tags['auxContextX'] = event.options.x;
-        workspace.tags['auxContextY'] = event.options.y;
-        workspace.tags['auxContextZ'] = event.options.z;
+        workspace.tags['auxDimensionX'] = event.options.x;
+        workspace.tags['auxDimensionY'] = event.options.y;
+        workspace.tags['auxDimensionZ'] = event.options.z;
         events.push(botAdded(workspace));
-        if (!oldContext) {
-            oldContext = context;
+        if (!oldDimension) {
+            oldDimension = dimension;
         }
 
-        // Preserve positions from old context
+        // Preserve positions from old dimension
         for (let oldBot of oldBots) {
-            if (oldContextBot && oldBot.id === oldContextBot.id) {
+            if (oldDimensionBot && oldBot.id === oldDimensionBot.id) {
                 continue;
             }
             const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
             let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
-                    ...addToContextDiff(
+                    ...addToDimensionDiff(
                         newCalc,
-                        context,
-                        oldBot.tags[`${oldContext}X`],
-                        oldBot.tags[`${oldContext}Y`],
-                        oldBot.tags[`${oldContext}SortOrder`]
+                        dimension,
+                        oldBot.tags[`${oldDimension}X`],
+                        oldBot.tags[`${oldDimension}Y`],
+                        oldBot.tags[`${oldDimension}SortOrder`]
                     ),
-                    [`${context}Z`]: oldBot.tags[`${oldContext}Z`],
+                    [`${dimension}Z`]: oldBot.tags[`${oldDimension}Z`],
                 },
             });
             events.push(botAdded(cleanBot(newBot)));

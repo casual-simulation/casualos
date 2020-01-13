@@ -13,7 +13,7 @@ import {
     getUserBotColor,
     isUserActive,
     calculateBooleanTagValue,
-    USERS_CONTEXT,
+    USERS_DIMENSION,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
@@ -79,8 +79,8 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
     private _isActive(calc: BotCalculationContext): boolean {
         let userVisible = calculateBooleanTagValue(
             calc,
-            this.bot3D.contextGroup.bot,
-            'auxContextDevicesVisible',
+            this.bot3D.dimensionGroup.bot,
+            'auxDimensionDevicesVisible',
             true
         );
 
@@ -88,15 +88,15 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateColor(calc: BotCalculationContext) {
-        if (this.bot3D.contextGroup === null) {
+        if (this.bot3D.dimensionGroup === null) {
             return;
         }
 
-        const isInAuxPlayer = this.bot3D.context !== USERS_CONTEXT;
+        const isInAuxPlayer = this.bot3D.dimension !== USERS_DIMENSION;
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,
-            this.bot3D.contextGroup.simulation3D.simulation.helper.globalsBot,
+            this.bot3D.dimensionGroup.simulation3D.simulation.helper.globalsBot,
             isInAuxPlayer ? 'player' : 'builder'
         );
 

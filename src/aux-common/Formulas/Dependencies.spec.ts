@@ -1855,17 +1855,17 @@ describe('Dependencies', () => {
         const playerContextCases = [
             [
                 'player.getMenuContext',
-                '_auxUserMenuContext',
+                '_auxUserMenuDimension',
                 ['player', 'getMenuContext'],
             ],
             [
                 'player.getInventoryContext',
-                '_auxUserInventoryContext',
+                '_auxUserInventoryDimension',
                 ['player', 'getInventoryContext'],
             ],
             [
                 'player.getCurrentContext',
-                '_auxUserContext',
+                '_auxUserDimension',
                 ['player', 'getCurrentContext'],
             ],
         ];

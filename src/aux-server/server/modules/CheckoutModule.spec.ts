@@ -50,7 +50,7 @@ jest.mock('uuid/v4');
 describe('CheckoutModule', () => {
     let tree: AuxCausalTree;
     let channel: NodeAuxChannel;
-    let processingChannel: NodeAuxChannel;
+    let processingUniverse: NodeAuxChannel;
     let user: AuxUser;
     let device: DeviceInfo;
     let api: any;
@@ -148,7 +148,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should emit a onCheckout() action to the processing channel', async () => {
-                const processingChannel = await createChannel(
+                const processingUniverse = await createChannel(
                     {
                         id: 'aux-channel2',
                         type: 'aux',
@@ -157,14 +157,14 @@ describe('CheckoutModule', () => {
                     device,
                     config
                 );
-                manager.addChannel(processingChannel.info, processingChannel);
+                manager.addChannel(processingUniverse.info, processingUniverse);
 
                 const actions: LocalActions[] = [];
-                processingChannel.simulation.localEvents.subscribe(e =>
+                processingUniverse.simulation.localEvents.subscribe(e =>
                     actions.push(e)
                 );
 
-                await processingChannel.simulation.helper.createBot(
+                await processingUniverse.simulation.helper.createBot(
                     'checkoutBot',
                     {
                         onCheckout:

@@ -53,7 +53,7 @@ export class BuilderGame extends Game {
         return this.simulation3D.bots.filter(f => f.bot.id === id);
     }
     setGridsVisible(visible: boolean): void {
-        this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {
+        this.simulation3D.dimensions.forEach((c: BuilderGroup3D) => {
             if (c.surface) {
                 c.surface.gridsVisible = visible;
             }

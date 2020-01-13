@@ -85,7 +85,7 @@ describe('BotHelper', () => {
         it('should create a new simulation bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
             };
 
@@ -96,13 +96,13 @@ describe('BotHelper', () => {
                 botAdded(
                     createBot('botId', {
                         abc: true,
-                        auxChannel: 'test',
+                        auxUniverse: 'test',
                     })
                 ),
                 botAdded(
                     createBot('botId2', {
                         abc: true,
-                        auxChannel: 'test2',
+                        auxUniverse: 'test2',
                     })
                 ),
             ]);
@@ -111,11 +111,11 @@ describe('BotHelper', () => {
         it('should not create a new simulation when one already exists for the given channel ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
             };
 
@@ -129,15 +129,15 @@ describe('BotHelper', () => {
         it('should destroy the simulations that load the given ID', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    _auxUserChannelsContext: 'abc',
+                    _auxUserUniversesDimension: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
                 bot2: createPrecalculatedBot('bot2', {
                     abc: true,
-                    auxChannel: 'test',
+                    auxUniverse: 'test',
                 }),
             };
 

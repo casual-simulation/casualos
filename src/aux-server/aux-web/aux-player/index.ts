@@ -51,6 +51,7 @@ import {
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
 import VueClipboard from 'vue-clipboard2';
+import VueShortkey from 'vue-shortkey';
 
 import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
 import '../shared/public/fonts/Roboto/Roboto.css';
@@ -90,6 +91,9 @@ Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
+Vue.use(VueShortkey, {
+    prevent: ['input', 'textarea'],
+});
 Vue.use(VueClipboard);
 
 function redirectToBuilder(id: string) {
@@ -111,18 +115,18 @@ const routes: RouteConfig[] = [
         },
     },
     {
-        path: '/:context/:id?',
+        path: '/:dimension/:id?',
         name: 'home',
         component: PlayerHome,
         beforeEnter: (to, from, next) => {
-            if (to.params.context === '*' || !to.params.context) {
+            if (to.params.dimension === '*' || !to.params.dimension) {
                 redirectToBuilder(to.params.id);
             } else {
                 next();
             }
         },
         props: route => ({
-            context: route.params.context,
+            dimension: route.params.dimension,
             primaryChannel: route.params.id,
             channels: route.query.channels,
         }),

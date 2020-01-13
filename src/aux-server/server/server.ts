@@ -148,16 +148,13 @@ export class ClientServer {
 
     configure() {
         this._app.get(
-            '/api/[\\*]/:channel/config',
+            '/api/:dimension/:channel/config',
             asyncMiddleware(async (req, res) => {
-                await this._sendConfig(req, res, this._builder.web);
-            })
-        );
-
-        this._app.get(
-            '/api/:context/:channel/config',
-            asyncMiddleware(async (req, res) => {
-                await this._sendConfig(req, res, this._player.web);
+                if (req.params.dimension.indexOf('*') === 0) {
+                    await this._sendConfig(req, res, this._builder.web);
+                } else {
+                    await this._sendConfig(req, res, this._player.web);
+                }
             })
         );
 
@@ -333,7 +330,7 @@ export class ClientServer {
 
         
         this._app.use(
-            '/:context/:channel?[.]aux',
+            '/:dimension/:channel?[.]aux',
             asyncMiddleware(async (req, res) => {
                 const channel = `aux-${req.params.channel || 'default'}`;
                 console.log('[Server] Getting .aux file for channel:', channel);
@@ -348,12 +345,12 @@ export class ClientServer {
         );
         */
 
-        this._app.get('/[\\*]/:channel', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._builder.index));
-        });
-
-        this._app.get('/:context/:channel?', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._player.index));
+        this._app.get('/:dimension/:channel?', (req, res) => {
+            if (req.params.dimension.indexOf('*') === 0) {
+                res.sendFile(path.join(this._config.dist, this._builder.index));
+            } else {
+                res.sendFile(path.join(this._config.dist, this._player.index));
+            }
         });
 
         this._app.get('*', (req, res) => {
@@ -595,14 +592,14 @@ export class Server {
         this._app.use(this._client.app);
 
         this._app.all(
-            '/:context/:channel',
+            '/:dimension/:channel',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
 
         this._app.all(
-            '/:context/:channel/*',
+            '/:dimension/:channel/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })

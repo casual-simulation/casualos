@@ -26,7 +26,7 @@ import {
     PartitionConfig,
     AuxPartitionConfig,
 } from '../partitions/AuxPartitionConfig';
-import { BotContextManager } from './BotContextManager';
+import { BotDimensionManager } from './BotDimensionManager';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -36,7 +36,7 @@ export class BaseSimulation implements Simulation {
     protected _helper: BotHelper;
     protected _index: BotIndex;
     protected _watcher: BotWatcher;
-    protected _contexts: BotContextManager;
+    protected _contexts: BotDimensionManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
 
@@ -96,7 +96,7 @@ export class BaseSimulation implements Simulation {
         return this._index;
     }
 
-    get contexts() {
+    get dimensions() {
         return this._contexts;
     }
 
@@ -154,7 +154,7 @@ export class BaseSimulation implements Simulation {
 
         this._helper = new BotHelper(this._vm);
         this._index = new BotIndex();
-        this._contexts = new BotContextManager(this._helper, this._index);
+        this._contexts = new BotDimensionManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
     }

@@ -8,11 +8,11 @@ import {
     tweenTo,
     openQRCodeScanner,
     showQRCode,
-    loadSimulation,
-    unloadSimulation,
+    loadSimulation as loadUniverse,
+    unloadSimulation as unloadUniverse,
     importAUX,
     showInputForTag,
-    goToContext,
+    goToDimension,
     goToURL,
     openURL,
     sayHello,
@@ -31,10 +31,15 @@ import {
     loadFile,
     saveFile,
     replaceDragBot,
-    setupChannel,
+    setupUniverse,
     hideHtml,
     ReplaceDragBotAction,
     setClipboard,
+    showChat,
+    hideChat,
+    runScript,
+    download,
+    showUploadUniverse,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -3578,20 +3583,20 @@ export function botActionsTests(
             });
         });
 
-        describe('getUserMenuContext()', () => {
-            it('should return the _auxUserMenuContext tag from the user bot', () => {
+        describe('getUserMenuDimension()', () => {
+            it('should return the _auxUserMenuDimension tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getMenuContext())',
+                                '@setTag(this, "#dimension", player.getMenuDimension())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserMenuContext: 'abc',
+                            _auxUserMenuDimension: 'abc',
                         },
                     },
                 };
@@ -3614,7 +3619,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'abc',
+                            dimension: 'abc',
                         },
                     }),
                 ]);
@@ -3832,6 +3837,270 @@ export function botActionsTests(
                         rotationValue: null,
                         duration: 0,
                     },
+                ]);
+            });
+        });
+
+        describe('player.showChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.showChat()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showChat()]);
+            });
+
+            it('should emit a ShowChatBarAction with the given prefill', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.showChat("test")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showChat('test')]);
+            });
+        });
+
+        describe('player.hideChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.hideChat()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([hideChat()]);
+            });
+        });
+
+        describe('player.run()', () => {
+            it('should emit a RunScriptAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.run("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([runScript('abc')]);
+            });
+        });
+
+        describe('player.downloadBots()', () => {
+            it('should emit a DownloadAction with the given bots formatted as JSON', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@player.downloadBots(getBots(inDimension("abc")), "test")',
+                        },
+                    },
+                    funBot: {
+                        id: 'funBot',
+                        tags: {
+                            abc: true,
+                            def: 'ghi',
+                        },
+                    },
+                    funBot2: {
+                        id: 'funBot2',
+                        tags: {
+                            abc: true,
+                            def: 123,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify({
+                            funBot: state.funBot,
+                            funBot2: state.funBot2,
+                        }),
+                        'test.aux',
+                        'application/json'
+                    ),
+                ]);
+            });
+
+            it('should support specifying the .aux extension manually', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@player.downloadBots(getBots(inDimension("abc")), "test.aux")',
+                        },
+                    },
+                    funBot: {
+                        id: 'funBot',
+                        tags: {
+                            abc: true,
+                            def: 'ghi',
+                        },
+                    },
+                    funBot2: {
+                        id: 'funBot2',
+                        tags: {
+                            abc: true,
+                            def: 123,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify({
+                            funBot: state.funBot,
+                            funBot2: state.funBot2,
+                        }),
+                        'test.aux',
+                        'application/json'
+                    ),
+                ]);
+            });
+        });
+
+        describe('player.showUploadUniverse()', () => {
+            it('should emit a ShowUploadUniverseAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.showUploadUniverse()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showUploadUniverse()]);
+            });
+        });
+
+        describe('player.downloadUniverse()', () => {
+            it('should emit a DownloadAction with the current state and universe name', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.downloadUniverse()',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            _auxUserUniverse: 'channel',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify(state),
+                        'channel.aux',
+                        'application/json'
+                    ),
                 ]);
             });
         });
@@ -4122,13 +4391,13 @@ export function botActionsTests(
             });
         });
 
-        describe('loadChannel()', () => {
-            it('should emit a LoadSimulationAction', () => {
+        describe('loadUniverse()', () => {
+            it('should emit a LoadUniverseAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.loadChannel("abc")',
+                            test: '@player.loadUniverse("abc")',
                         },
                     },
                 };
@@ -4144,17 +4413,17 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([loadSimulation('abc')]);
+                expect(result.events).toEqual([loadUniverse('abc')]);
             });
         });
 
-        describe('unloadChannel()', () => {
-            it('should emit a UnloadSimulationAction', () => {
+        describe('unloadUniverse()', () => {
+            it('should emit a UnloadUniverseAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.unloadChannel("abc")',
+                            test: '@player.unloadUniverse("abc")',
                         },
                     },
                 };
@@ -4170,7 +4439,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([unloadSimulation('abc')]);
+                expect(result.events).toEqual([unloadUniverse('abc')]);
             });
         });
 
@@ -4302,20 +4571,20 @@ export function botActionsTests(
             });
         });
 
-        describe('player.isInContext()', () => {
-            it('should return true when _auxUserContext equals the given value', () => {
+        describe('player.isInDimension()', () => {
+            it('should return true when _auxUserDimension equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("context"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("dimension"))',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4334,25 +4603,25 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: true,
+                            inDimension: true,
                         },
                     }),
                 ]);
             });
 
-            it('should return false when _auxUserContext does not equal the given value', () => {
+            it('should return false when _auxUserDimension does not equal the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("abc"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("abc"))',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4371,19 +4640,19 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: false,
+                            inDimension: false,
                         },
                     }),
                 ]);
             });
 
-            it('should return false when _auxUserContext is not set', () => {
+            it('should return false when _auxUserDimension is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#inContext", player.isInContext("abc"))',
+                                '@setTag(this, "#inDimension", player.isInDimension("abc"))',
                         },
                     },
                     userBot: {
@@ -4406,27 +4675,27 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            inContext: false,
+                            inDimension: false,
                         },
                     }),
                 ]);
             });
         });
 
-        describe('player.getCurrentContext()', () => {
-            it('should return _auxUserContext', () => {
+        describe('player.getCurrentDimension()', () => {
+            it('should return _auxUserDimension', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentContext())',
+                                '@setTag(this, "#dimension", player.getCurrentDimension())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserContext: 'context',
+                            _auxUserDimension: 'dimension',
                         },
                     },
                 };
@@ -4445,19 +4714,19 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'context',
+                            dimension: 'dimension',
                         },
                     }),
                 ]);
             });
 
-            it('should return undefined when _auxUserContext is not set', () => {
+            it('should return undefined when _auxUserDimension is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentContext())',
+                                '@setTag(this, "#dimension", player.getCurrentDimension())',
                         },
                     },
                     userBot: {
@@ -4480,27 +4749,27 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: undefined,
+                            dimension: undefined,
                         },
                     }),
                 ]);
             });
         });
 
-        describe('player.getCurrentChannel()', () => {
-            it('should return _auxUserChannel', () => {
+        describe('player.getCurrentUniverse()', () => {
+            it('should return _auxUserUniverse', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentUniverse())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserChannel: 'context',
+                            _auxUserUniverse: 'dimension',
                         },
                     },
                 };
@@ -4519,19 +4788,19 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: 'context',
+                            dimension: 'dimension',
                         },
                     }),
                 ]);
             });
 
-            it('should return undefined when _auxUserChannel is not set', () => {
+            it('should return undefined when _auxUserUniverse is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#context", player.getCurrentChannel())',
+                                '@setTag(this, "#dimension", player.getCurrentUniverse())',
                         },
                     },
                     userBot: {
@@ -4554,136 +4823,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            context: undefined,
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('player.isDesigner()', () => {
-            it('should return true when the player is apart of the global bot builder list', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test:
-                                '@setTag(this, "#isBuilder", player.isDesigner())',
-                        },
-                    },
-                    config: {
-                        id: 'config',
-                        tags: {
-                            'aux.designers': 'bob',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            _auxUser: 'bob',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            isBuilder: true,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should return false when the player is not apart of the global bot builder list', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test:
-                                '@setTag(this, "#isBuilder", player.isDesigner())',
-                        },
-                    },
-                    config: {
-                        id: 'config',
-                        tags: {
-                            'aux.designers': 'otherUser',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            _auxUser: 'bob',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            isBuilder: false,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should return true when there are no designers', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test:
-                                '@setTag(this, "#isBuilder", player.isDesigner())',
-                        },
-                    },
-                    config: {
-                        id: 'config',
-                        tags: {},
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            _auxUser: 'bob',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            isBuilder: true,
+                            dimension: undefined,
                         },
                     }),
                 ]);
@@ -4800,13 +4940,13 @@ export function botActionsTests(
             });
         });
 
-        describe('goToContext()', () => {
-            it('should issue a GoToContext event', () => {
+        describe('goToDimension()', () => {
+            it('should issue a GoToDimension event', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.goToContext("abc")',
+                            test: '@player.goToDimension("abc")',
                         },
                     },
                 };
@@ -4822,7 +4962,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([goToContext('abc')]);
+                expect(result.events).toEqual([goToDimension('abc')]);
             });
 
             it('should ignore extra parameters', () => {
@@ -4830,7 +4970,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.goToContext("sim", "abc")',
+                            test: '@player.goToDimension("sim", "abc")',
                         },
                     },
                 };
@@ -4846,7 +4986,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([goToContext('sim')]);
+                expect(result.events).toEqual([goToDimension('sim')]);
             });
         });
 
@@ -5429,13 +5569,13 @@ export function botActionsTests(
             });
         });
 
-        describe('server.setupChannel()', () => {
+        describe('server.setupUniverse()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@server.setupChannel("channel", this)',
+                            test: '@server.setupUniverse("channel", this)',
                         },
                     },
                     userBot: {
@@ -5459,10 +5599,10 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([
                     remote(
-                        setupChannel(
+                        setupUniverse(
                             'channel',
                             createBot('thisBot', {
-                                test: '@server.setupChannel("channel", this)',
+                                test: '@server.setupUniverse("channel", this)',
                             })
                         )
                     ),
@@ -5567,7 +5707,7 @@ export function botActionsTests(
                                 productId: 'ID1',
                                 title: 'Product 1',
                                 description: '$50.43',
-                                processingChannel: 'channel2'
+                                processingUniverse: 'channel2'
                             })`,
                         },
                     },
@@ -5589,7 +5729,7 @@ export function botActionsTests(
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
-                        processingChannel: 'channel2',
+                        processingUniverse: 'channel2',
                     }),
                 ]);
             });
@@ -5667,7 +5807,10 @@ export function botActionsTests(
         describe('remote()', () => {
             const cases = [
                 ['player.toast("My Message!")', toast('My Message!')],
-                ['player.goToContext("context")', goToContext('context')],
+                [
+                    'player.goToDimension("dimension")',
+                    goToDimension('dimension'),
+                ],
                 ['player.openURL("url")', openURL('url')],
                 ['player.goToURL("url")', goToURL('url')],
                 ['player.tweenTo("id")', tweenTo('id')],
@@ -5678,11 +5821,8 @@ export function botActionsTests(
                 ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
                 ['player.showBarcode("code")', showBarcode(true, 'code')],
                 ['player.hideBarcode()', showBarcode(false)],
-                ['player.loadChannel("channel")', loadSimulation('channel')],
-                [
-                    'player.unloadChannel("channel")',
-                    unloadSimulation('channel'),
-                ],
+                ['player.loadUniverse("channel")', loadUniverse('channel')],
+                ['player.unloadUniverse("channel")', unloadUniverse('channel')],
                 ['player.importAUX("aux")', importAUX('aux')],
                 ['player.showQRCode("code")', showQRCode(true, 'code')],
                 ['player.hideQRCode()', showQRCode(false)],
@@ -5695,13 +5835,13 @@ export function botActionsTests(
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingChannel: 'channel2'
+                    processingUniverse: 'channel2'
                 })`,
                     checkout({
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
-                        processingChannel: 'channel2',
+                        processingUniverse: 'channel2',
                     }),
                 ],
                 ['player.openDevConsole()', openConsole()],

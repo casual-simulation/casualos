@@ -10,6 +10,6 @@ export * from './DependencyManager';
 export * from './PrecalculationManager';
 export * from './LoginManager';
 export * from './ProgressManager';
-export * from './BotContextManager';
+export * from './BotDimensionManager';
 
 export * from './BaseSimulation';

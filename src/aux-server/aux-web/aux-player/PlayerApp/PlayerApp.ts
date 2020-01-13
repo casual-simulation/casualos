@@ -12,7 +12,7 @@ import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-    botsInContext,
+    botsInDimension,
     isSimulation,
     getBotChannel,
     calculateDestroyBotEvents,
@@ -30,12 +30,16 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
-    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-    ON_CHANNEL_STREAMING_ACTION_NAME,
-    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-    ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
     parseSimulationId,
     CameraType,
+    onUniverseStreamingArg,
+    onUniverseStreamLostArg,
+    onUniverseSubscribedArg,
+    onUniverseUnsubscribedArg,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -43,8 +47,8 @@ import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import findIndex from 'lodash/findIndex';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import CubeIcon from '../public/icons/Cube.svg';
-import HexIcon from '../public/icons/Hexagon.svg';
+import CubeIcon from '../../shared/public/icons/Cube.svg';
+import HexIcon from '../../shared/public/icons/Hexagon.svg';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -62,17 +66,17 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
+import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
-
-export interface SidebarItem {
-    id: string;
-    group: string;
-    text: string;
-    icon: string;
-    click: () => void;
-}
+import BotChat from '../../shared/vue-components/BotChat/BotChat';
+import {
+    updateQuery,
+    SimulationInfo,
+    navigateToDimension,
+    createSimulationInfo,
+} from '../../shared/RouterUtils';
 
 @Component({
     components: {
@@ -85,7 +89,9 @@ export interface SidebarItem {
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
         'html-modal': HtmlModal,
+        'upload-universe-modal': UploadUniverseModal,
         'clipboard-modal': ClipboardModal,
+        'bot-chat': BotChat,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -130,9 +136,9 @@ export default class PlayerApp extends Vue {
     session: string = '';
 
     /**
-     * The context.
+     * The dimension.
      */
-    context: string = '';
+    dimension: string = '';
 
     /**
      * The extra sidebar items shown in the app.
@@ -190,6 +196,9 @@ export default class PlayerApp extends Vue {
     showAuthorize: boolean = false;
 
     authorized: boolean = false;
+
+    showChatBar: boolean = false;
+    chatBarPrefill: string = null;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -327,7 +336,7 @@ export default class PlayerApp extends Vue {
 
                 this.loggedIn = true;
                 this.session = botManager.parsedId.channel;
-                this.context = botManager.parsedId.context;
+                this.dimension = botManager.parsedId.dimension;
 
                 subs.push(
                     new Subscription(() => {
@@ -496,14 +505,7 @@ export default class PlayerApp extends Vue {
         }
 
         let subs: SubscriptionLike[] = [];
-        let info: SimulationInfo = {
-            id: simulation.id,
-            displayName: simulationIdToString(simulation.parsedId),
-            online: false,
-            synced: false,
-            lostConnection: false,
-            subscribed: false,
-        };
+        let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
             simulation.login.loginStateChanged.subscribe(state => {
@@ -578,9 +580,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.type === 'load_simulation') {
+                } else if (e.type === 'load_universe') {
                     this.finishAddSimulation(e.id);
-                } else if (e.type === 'unload_simulation') {
+                } else if (e.type === 'unload_universe') {
                     this.removeSimulationById(e.id);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
@@ -596,16 +598,9 @@ export default class PlayerApp extends Vue {
                     } else {
                         this._hideBarcode();
                     }
-                } else if (e.type === 'go_to_context') {
-                    this.updateTitleContext(e.context);
-                    appManager.simulationManager.simulations.forEach(sim => {
-                        sim.parsedId = {
-                            ...sim.parsedId,
-                            context: e.context,
-                        };
-                    });
-
-                    this._updateQuery();
+                } else if (e.type === 'go_to_dimension') {
+                    this.updateTitleContext(e.dimension);
+                    navigateToDimension(e, this.$router, this.simulations);
                     this.setTitleToID();
                 } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
@@ -616,12 +611,19 @@ export default class PlayerApp extends Vue {
                         this._showInputDialog(simulation, e);
                     });
                 } else if (e.type === 'download') {
-                    console.log(`[BuilderApp] Downloading ${e.botname}...`);
-                    download(e.data, e.botname, e.mimeType);
+                    console.log(`[BuilderApp] Downloading ${e.filename}...`);
+                    download(e.data, e.filename, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
                     sendWebhook(simulation, e);
+                } else if (e.type === 'show_chat_bar') {
+                    this.showChatBar = e.visible;
+                    this.chatBarPrefill = e.prefill;
+                    const chatBar = this.$refs.chatBar as BotChat;
+                    if (chatBar) {
+                        await chatBar.setPrefill(e.prefill);
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -655,26 +657,26 @@ export default class PlayerApp extends Vue {
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
-                                ON_CHANNEL_STREAM_LOST_ACTION_NAME,
-                                {
-                                    channel: simulation.parsedId.channel,
-                                }
+                                ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+                                onUniverseStreamLostArg(
+                                    simulation.parsedId.channel
+                                )
                             );
                         }
                     } else {
                         info.synced = true;
 
-                        if (simulation.parsedId.context) {
+                        if (simulation.parsedId.dimension) {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
-                                    _auxUserContext:
-                                        simulation.parsedId.context,
+                                    _auxUserDimension:
+                                        simulation.parsedId.dimension,
                                 },
                             });
                         }
 
-                        if (simulation.parsedId.context) {
+                        if (simulation.parsedId.dimension) {
                             let id = simulation.id;
                             if (id.includes('/')) {
                                 id = id.split('/')[1];
@@ -683,7 +685,7 @@ export default class PlayerApp extends Vue {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
-                                    _auxUserChannel: id,
+                                    _auxUserUniverse: id,
                                 },
                             });
                         }
@@ -691,10 +693,10 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
-                                ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
-                                {
-                                    channel: simulation.parsedId.channel,
-                                }
+                                ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+                                onUniverseSubscribedArg(
+                                    simulation.parsedId.channel
+                                )
                             );
 
                             for (let info of this.simulations) {
@@ -709,20 +711,16 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
-                                    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    {
-                                        channel: parsedId.channel,
-                                    }
+                                    onUniverseSubscribedArg(parsedId.channel)
                                 );
                             }
                         }
 
                         await this._superAction(
-                            ON_CHANNEL_STREAMING_ACTION_NAME,
-                            {
-                                channel: simulation.parsedId.channel,
-                            }
+                            ON_UNIVERSE_STREAMING_ACTION_NAME,
+                            onUniverseStreamingArg(simulation.parsedId.channel)
                         );
                     }
                 }
@@ -734,9 +732,10 @@ export default class PlayerApp extends Vue {
                 recordMessage(m);
             }),
             new Subscription(async () => {
-                await this._superAction(ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME, {
-                    channel: simulation.parsedId.channel,
-                });
+                await this._superAction(
+                    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+                    onUniverseUnsubscribedArg(simulation.parsedId.channel)
+                );
             })
         );
 
@@ -925,44 +924,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateQuery() {
-        if (!appManager.simulationManager.primary) {
-            return;
-        }
-
-        const previousChannel = this.$router.currentRoute.params.id;
-        const previousContext = this.$router.currentRoute.params.context;
-
-        const channel =
-            appManager.simulationManager.primary.parsedId.channel ||
-            previousChannel;
-        const context =
-            appManager.simulationManager.primary.parsedId.context ||
-            previousContext;
-        if (channel && context) {
-            let route = {
-                name: 'home',
-                params: {
-                    id: channel === 'default' ? null : channel,
-                    context: context,
-                },
-                query: {
-                    channels: this.simulations
-                        .filter(
-                            sim =>
-                                sim.id !==
-                                appManager.simulationManager.primary.id
-                        )
-                        .map(sim => sim.id),
-                },
-            };
-
-            // Only add the history if switching contexts or the primary channel
-            if (channel !== previousChannel || context !== previousContext) {
-                window.history.pushState({}, window.document.title);
-            }
-
-            this.$router.replace(route);
-        }
+        updateQuery(this.$router, this.simulations);
     }
 
     /**
@@ -1083,13 +1045,4 @@ export default class PlayerApp extends Vue {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
     }
-}
-
-export interface SimulationInfo {
-    id: string;
-    displayName: string;
-    online: boolean;
-    synced: boolean;
-    lostConnection: boolean;
-    subscribed: boolean;
 }

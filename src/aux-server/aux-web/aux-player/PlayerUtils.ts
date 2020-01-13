@@ -2,29 +2,29 @@ import {
     Bot,
     BotCalculationContext,
     calculateBotValue,
-    getBotConfigContexts,
+    getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
     /**
-     * Is there a matching player context?
+     * Is there a matching player dimension?
      */
     matchFound: boolean;
 
     /**
-     * All player contexts found during the search.
+     * All player dimensions found during the search.
      */
-    playerContexts: string[];
+    playerDimensions: string[];
 }
 
-export function doesBotDefinePlayerContext(
+export function doesBotDefinePlayerDimension(
     bot: Bot,
-    context: string,
+    dimension: string,
     calc: BotCalculationContext
 ): PlayerContextSearchResult {
-    const contexts = getBotConfigContexts(calc, bot);
+    const dimensions = getBotConfigDimensions(calc, bot);
     return {
-        playerContexts: contexts,
-        matchFound: contexts.indexOf(context) >= 0,
+        playerDimensions: dimensions,
+        matchFound: dimensions.indexOf(dimension) >= 0,
     };
 }

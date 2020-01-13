@@ -4,8 +4,8 @@ import Component from 'vue-class-component';
 import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 
 import {
-    getBotConfigContexts,
-    createContextId,
+    getBotConfigDimensions,
+    createDimensionId,
     AuxCausalTree,
     AuxOp,
     createWorkspace,
@@ -19,7 +19,7 @@ import {
 
 import { appManager } from '../../shared/AppManager';
 import BuilderApp from '../BuilderApp/BuilderApp';
-import MiniBot from '../MiniBot/MiniBot';
+import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import { isMac, copyBotsFromSimulation } from '../../shared/SharedUtils';
@@ -218,20 +218,19 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     }
 
     private async _copySelection() {
-        const sim = appManager.simulationManager.primary;
-        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userBot);
-        if (bots.length === 0) {
-            appManager.simulationManager.primary.helper.transaction(
-                toast('Nothing selected to copy!')
-            );
-            return;
-        }
-
-        await copyBotsFromSimulation(sim, bots);
-
-        appManager.simulationManager.primary.helper.transaction(
-            toast('Selection Copied!')
-        );
+        // TODO:
+        // const sim = appManager.simulationManager.primary;
+        // const bots = sim.botPanel.getSelectedBotsForUser(sim.helper.userBot);
+        // if (bots.length === 0) {
+        //     appManager.simulationManager.primary.helper.transaction(
+        //         toast('Nothing selected to copy!')
+        //     );
+        //     return;
+        // }
+        // await copyBotsFromSimulation(sim, bots);
+        // appManager.simulationManager.primary.helper.transaction(
+        //     toast('Selection Copied!')
+        // );
     }
 
     private async _pasteClipboard() {
@@ -268,7 +267,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                     this._game.getInput().getMousePagePos()
                 );
                 if (good) {
-                    options.context = interaction.firstContextInWorkspace(
+                    options.dimension = interaction.firstDimensionInWorkspace(
                         workspace
                     );
                     options.x = gridPosition.x;

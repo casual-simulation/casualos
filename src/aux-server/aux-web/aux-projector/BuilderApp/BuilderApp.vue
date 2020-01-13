@@ -1,15 +1,6 @@
 <template>
     <div id="app">
         <load-app>
-            <md-toolbar>
-                <div class="md-toolbar-section-start">
-                    <md-button class="md-icon-button" @click="menuClicked()">
-                        <md-icon>menu</md-icon>
-                    </md-button>
-                    <bot-search v-if="authorized" ref="searchBar"></bot-search>
-                </div>
-            </md-toolbar>
-
             <md-drawer :md-active.sync="showNavigation">
                 <md-list>
                     <md-list-item
@@ -154,26 +145,6 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <md-dialog :md-active.sync="showFileUpload" class="bot-upload-dialog">
-                <md-dialog-title>Upload Files</md-dialog-title>
-                <div class="bot-upload-container">
-                    <bot-pond
-                        allow-multiple="false"
-                        @addfile="fileAdded"
-                        @removefile="fileRemoved"
-                    />
-                </div>
-                <md-dialog-actions>
-                    <md-button @click="cancelFileUpload">Close</md-button>
-                    <md-button
-                        class="md-primary"
-                        @click="uploadFiles"
-                        :disabled="uploadedFiles.length <= 0"
-                        >Upload</md-button
-                    >
-                </md-dialog-actions>
-            </md-dialog>
-
             <md-dialog :md-active.sync="showFork" class="fork-dialog">
                 <md-dialog-title>Fork Channel</md-dialog-title>
                 <md-dialog-content>
@@ -286,6 +257,7 @@
 
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
+            <upload-universe-modal></upload-universe-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>

@@ -21,7 +21,7 @@ import {
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxBot3D } from './AuxBot3D';
-import { ContextGroup3D } from './ContextGroup3D';
+import { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, baseAuxMeshMaterial } from './SceneUtils';
 
@@ -481,7 +481,7 @@ export class Wall3D extends Object3D {
         this._targetBot3d = null;
     }
 
-    private _getWorkspace(bot3d: AuxBot3D): ContextGroup3D {
-        return bot3d.contextGroup;
+    private _getWorkspace(bot3d: AuxBot3D): DimensionGroup3D {
+        return bot3d.dimensionGroup;
     }
 }
