@@ -16,7 +16,7 @@ import {
     calculateBotValue,
     getActiveObjects,
     hasValue,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     calculateValue,
 } from './BotCalculations';
 import { botUpdated, UpdateBotAction } from './BotEvents';

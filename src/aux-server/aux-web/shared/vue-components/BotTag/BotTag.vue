@@ -1,6 +1,5 @@
 <template>
     <span class="tag bot-tag" :class="{ clonable: allowCloning }">
-        <tag-color :tag="tag"></tag-color>
         <span v-if="!isScript">
             <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span
             ><span v-if="isFormula" class="equals-sign">=</span>

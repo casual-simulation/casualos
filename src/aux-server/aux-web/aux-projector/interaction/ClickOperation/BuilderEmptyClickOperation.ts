@@ -21,20 +21,8 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        appManager.simulationManager.primary.botPanel.isOpen = false;
-        appManager.simulationManager.primary.botPanel.restrictVisible(false);
-
         this.removeSelected();
     }
 
-    async removeSelected() {
-        appManager.simulationManager.primary.recent.clear();
-
-        appManager.simulationManager.primary.botPanel.search = '';
-
-        await appManager.simulationManager.primary.selection.clearSelection();
-        await appManager.simulationManager.primary.recent.clear();
-
-        appManager.simulationManager.primary.botPanel.restrictVisible(true);
-    }
+    async removeSelected() {}
 }

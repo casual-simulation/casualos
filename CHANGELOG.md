@@ -1,5 +1,65 @@
 # AUX Changelog
 
+## V0.11.20
+
+### Date: 1/13/2020
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Renamed context to dimension.
+        -   All the `auxContext*` tags have been renamed to `auxDimension*`.
+        -   Listeners like `@onDrop`, `@onModDrop`, `@onClick`, etc. now have a `dimension` property in the `data` argument instead of `context`.
+        -   The `@onPlayerEnterContext` listener has been renamed to `@onPlayerEnterDimension`.
+        -   The `_auxUserContext`, `_auxUserMenuContext`, `_auxUserInventoryContext`, and `_auxUserChannelsContext` have been renamed to use dimension instead of context.
+    -   Renamed channel to universe.
+        -   All the `auxChannel*` tags have been renamed to `auxUniverse*`.
+        -   The `_auxUserChannelsContext` tag has been renamed to `_auxUserUniversesDimension`.
+        -   The `_auxUserChannel` tag has been renamed to `_auxUserUniverse`.
+        -   The `player.setupChannel()` function has been renamed to `player.setupUniverse()`.
+        -   The `player.loadChannel()` and `player.unloadChannel()` functions have been renamed to `player.loadUniverse()` and `player.unloadUniverse()`.
+        -   The `player.getCurrentChannel()` function has been renamed to `player.getCurrentUniverse()`.
+        -   The `setup_channel` action type has been renamed to `setup_universe`.
+        -   The `@onChannel*` listen tags have been renamed to `@onUniverse*`.
+            -   Also the `channel` property in the `data` argument has been renamed to `universe`.
+    -   Renamed the `auxDimensionRotation` (`auxContextRotation`) tags to `auxDimensionOrientation`.
+    -   You no longer need to define a dimension bot (context bot) in order to view a dimension in auxPlayer.
+        -   You can still configure a dimension using the `auxDimensionConfig` tag (renamed from `auxContext`).
+    -   Channel Designer is no more!
+        -   It has been replaced with the "sheet dimension" (bot table).
+        -   You can show _any_ dimension in the sheet by putting a `*` in front of the dimension name in the URL.
+            -   e.g. `https://auxplayer.com/*home/example` if you wanted to view the `home` dimension in the sheet from the `example` universe.
+            -   Going to just `*` will show all bots in the universe in the sheet. (which is very slow at the moment)
+        -   You can also jump directly into auxPlayer by using the "Open dimension in auxPlayer" button that is next to the tag filters.
+    -   Removed the `player.isDesigner()` function.
+-   Improvements
+    -   Added the `player.showChat()` and `player.hideChat()` functions.
+        -   These show/hide the chat bar in auxPlayer.
+        -   Typing in the chat bar will trigger a `@onChatUpdated` shout with the text in the chat bar.
+        -   Pressing Enter or clicking the send button on the chat bar will trigger a `@onChatEnter` shout with the text in the chat bar.
+    -   Added the `@onChat` shout listener.
+        -   Triggered when the user sends a message using the chat bar.
+        -   `that` is an object with the following properties:
+            -   `message` - The message that was sent.
+    -   Added the `@onChatTyping` shout listener.
+        -   Triggered when the user edits the text in the chat bar.
+        -   `that` is an object with the following properties:
+            -   `message` - The message that is in the chat bar after the user edited it.
+    -   Added the `player.run(script)` function.
+        -   `script` is the script text that should be executed.
+        -   Works by sending a `run_script` action. This allows `@onUniverseAction()` listener to intercept and prevent scripts.
+    -   Added the ability to click a tag in the bot table to teleport to that dimension.
+    -   Added a play button to the right side of the code editor to run scripts for quick debugging.
+    -   Added the `player.downloadBots(bots, filename)` function.
+        -   The first parameter is an array of bots that should be downloaded.
+        -   The second parameter is the name of the file that is downloaded.
+-   Other Changes
+    -   Changed the "AUX Player" and "Channel Designer" tab titles to "auxPlayer".
+    -   Removed the colored dots from tag labels in the bot table.
+-   Bug Fixes
+    -   `auxIframe` now supports URLs with `*` characters in them.
+    -   Fixed an issue with the menu dimension that would cause items to remain even though a different dimension should be visible.
+
 ## V0.11.19
 
 ### Date: 12/31/2019

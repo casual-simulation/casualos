@@ -12,7 +12,7 @@ import {
     Workspace,
     calculateFormattedBotValue,
     calculateBotValue,
-    botsInContext,
+    botsInDimension,
     getBotChannel,
     calculateDestroyBotEvents,
     merge,
@@ -106,12 +106,12 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     /**
      * Creates a new workspace bot.
      * @param botId The ID of the bot to create. If not specified a new ID will be generated.
-     * @param builderContextId The ID of the context to create for the bot. If not specified a new context ID will be generated.
-     * @param locked Whether the context should be accessible in AUX Player.
+     * @param builderDimensionId The ID of the dimension to create for the bot. If not specified a new dimension ID will be generated.
+     * @param locked Whether the dimension should be accessible in AUX Player.
      */
     async createWorkspace(
         botId?: string,
-        builderContextId?: string,
+        builderDimensionId?: string,
         locked?: boolean,
         visible?: boolean,
         x?: number,
@@ -123,7 +123,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         const workspace: Workspace = createWorkspace(
             botId,
-            builderContextId,
+            builderDimensionId,
             locked
         );
 
@@ -137,9 +137,9 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         const updated = merge(workspace, {
             tags: {
-                auxContextX: x || 0,
-                auxContextY: y || 0,
-                auxContextVisualize: visType || false,
+                auxDimensionX: x || 0,
+                auxDimensionY: y || 0,
+                auxDimensionVisualize: visType || false,
             },
         });
 
@@ -159,8 +159,8 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         if (simBots.length === 0) {
             await this.createBot(botId, {
-                [this.userBot.tags['_auxUserChannelsContext']]: true,
-                ['auxChannel']: id,
+                [this.userBot.tags['_auxUserUniversesDimension']]: true,
+                ['auxUniverse']: id,
             });
         }
     }
@@ -176,7 +176,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Deletes all the bots in the current user's simulation context that load the given simulation ID.
+     * Deletes all the bots in the current user's simulation dimension that load the given simulation ID.
      * @param id The ID of the simulation to load.
      */
     async destroySimulations(id: string) {
@@ -304,17 +304,17 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Gets the list of simulation bots that are in the current user's simulation context.
+     * Gets the list of simulation bots that are in the current user's simulation dimension.
      * @param id The ID of the simulation to search for.
      */
     private _getSimulationBots(
         calc: BotCalculationContext,
         id: string
     ): AuxObject[] {
-        // TODO: Make these functions support precalculated bot contexts
-        const simBots = botsInContext(
+        // TODO: Make these functions support precalculated bot dimensions
+        const simBots = botsInDimension(
             calc,
-            this.userBot.tags['_auxUserChannelsContext']
+            this.userBot.tags['_auxUserUniversesDimension']
         ).filter(f => getBotChannel(calc, f) === id);
 
         return <AuxObject[]>simBots;

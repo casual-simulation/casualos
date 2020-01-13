@@ -2,13 +2,13 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import {
     AuxObject,
-    getBotConfigContexts,
+    getBotConfigDimensions,
     BotCalculationContext,
     Object,
-    isContext,
+    isDimension,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
@@ -32,13 +32,13 @@ export class BuilderSimulation3D extends Simulation3D {
         return this.game.getMainCameraRig();
     }
 
-    protected _createContextGroup(
+    protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): ContextGroup3D {
-        const context = new BuilderGroup3D(this, bot, this.decoratorFactory);
-        context.setGridChecker(this._game.getGridChecker());
-        return context;
+    ): DimensionGroup3D {
+        const dimension = new BuilderGroup3D(this, bot, this.decoratorFactory);
+        dimension.setGridChecker(this._game.getGridChecker());
+        return dimension;
     }
 
     protected _onBotAdded(
@@ -52,7 +52,7 @@ export class BuilderSimulation3D extends Simulation3D {
         }
 
         this.simulation.helper.updateBot(this.simulation.helper.userBot, {
-            tags: { _auxUserChannel: this.simulation.id },
+            tags: { _auxUserUniverse: this.simulation.id },
         });
     }
 }

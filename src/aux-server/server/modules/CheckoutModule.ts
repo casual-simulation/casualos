@@ -106,7 +106,7 @@ export class CheckoutModule implements AuxModule {
         device: DeviceInfo
     ) {
         const processingInfo: RealtimeChannelInfo = {
-            id: `aux-${event.processingChannel}`,
+            id: `aux-${event.processingUniverse}`,
             type: 'aux',
         };
         const hasChannel = await this._channelManager.hasChannel(

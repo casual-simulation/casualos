@@ -7,6 +7,7 @@ import {
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
+    BotsState,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -23,7 +24,7 @@ import {
     unloadSimulation as calcUnloadSimulation,
     superShout as calcSuperShout,
     showQRCode as calcShowQRCode,
-    goToContext as calcGoToContext,
+    goToDimension as calcGoToContext,
     goToURL as calcGoToURL,
     playSound as calcPlaySound,
     openURL as calcOpenURL,
@@ -47,8 +48,13 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
-    setupChannel as calcSetupChannel,
+    setupUniverse as calcSetupChannel,
     setClipboard as calcSetClipboard,
+    showChat as calcShowRun,
+    hideChat as calcHideRun,
+    runScript,
+    download,
+    showUploadUniverse as calcShowUploadUniverse,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -58,7 +64,7 @@ import {
     isBot,
     // isFormulaObject,
     // unwrapProxy,
-    isBotInContext,
+    isBotInDimension,
     tagsOnBot,
     isDestroyable,
     isInUsernameList,
@@ -169,9 +175,9 @@ interface CheckoutOptions {
     description: string;
 
     /**
-     * The channel that the payment should be processed on.
+     * The universe that the payment should be processed on.
      */
-    processingChannel: string;
+    processingUniverse: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -367,10 +373,10 @@ type TagFilter =
  *
  * Common bot filters are:
  * - `byTag(tag, value)`
- * - `inContext(context)`
- * - `atPosition(context, x, y)`
- * - `inStack(bot, context)`
- * - `neighboring(bot, context, direction)`
+ * - `inDimension(dimension)`
+ * - `atPosition(dimension, x, y)`
+ * - `inStack(bot, dimension)`
+ * - `neighboring(bot, dimension, direction)`
  * - `either(filter1, filter2)`
  * - `not(filter)`
  */
@@ -832,7 +838,7 @@ function reject(action: any) {
 }
 
 /**
- * Asks every bot in the channel to run the given action.
+ * Asks every bot in the universe to run the given action.
  * In effect, this is like shouting to a bunch of people in a room.
  *
  * @param name The event name.
@@ -1007,15 +1013,15 @@ function setClipboard(text: string) {
 }
 
 /**
- * Redirects the user to the given context.
- * @param context The context to go to.
+ * Redirects the user to the given dimension.
+ * @param dimension The dimension to go to.
  *
  * @example
- * // Send the player to the "welcome" context.
- * player.goToContext("welcome");
+ * // Send the player to the "welcome" dimension.
+ * player.goToDimension("welcome");
  */
-function goToContext(context: string) {
-    const event = calcGoToContext(context);
+function goToDimension(dimension: string) {
+    const event = calcGoToContext(dimension);
     return addAction(event);
 }
 
@@ -1088,7 +1094,7 @@ function showInputForTag(
  *   productId: '10_cookies',
  *   title: '10 Cookies',
  *   description: '$5.00',
- *   processingChannel: 'cookies_checkout'
+ *   processingUniverse: 'cookies_checkout'
  * });
  *
  */
@@ -1125,61 +1131,41 @@ function finishCheckout(options: FinishCheckoutOptions) {
 }
 
 /**
- * Determines whether the current player is allowed to load AUX Builder.
+ * Derermines whether the player is in the given dimension.
+ * @param dimension The dimension.
  */
-function isDesigner(): boolean {
-    const globals = getGlobals();
-    const user = getUser();
-    if (globals && user) {
-        const calc = getCalculationContext();
-        const list = getBotUsernameList(calc, globals, 'aux.designers');
-        if (list) {
-            return isInUsernameList(
-                calc,
-                globals,
-                'aux.designers',
-                getTag(user, '_auxUser')
-            );
-        }
-    }
-    return true;
-}
-
-/**
- * Derermines whether the player is in the given context.
- * @param context The context.
- */
-function isInContext(givenContext: string) {
+function isInDimension(givenDimension: string) {
     return (
-        getCurrentContext() === givenContext && getCurrentContext() != undefined
+        getCurrentDimension() === givenDimension &&
+        getCurrentDimension() != undefined
     );
 }
 
 /**
- * Gets the context that the player is currently in.
+ * Gets the dimension that the player is currently in.
  */
-function getCurrentContext(): string {
+function getCurrentDimension(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, '_auxUserContext');
-        return context || undefined;
+        const dimension = getTag(user, '_auxUserDimension');
+        return dimension || undefined;
     }
     return undefined;
 }
 
 /**
- * Gets the channel that the player is currently in.
+ * Gets the universe that the player is currently in.
  */
-function getCurrentChannel(): string {
+function getCurrentUniverse(): string {
     const user = getUser();
     if (user) {
-        const channel = getTag(user, '_auxUserChannel') as string;
+        const universe = getTag(user, '_auxUserUniverse') as string;
 
-        if (channel && channel.includes('/')) {
-            return channel.split('/')[1];
+        if (universe && universe.includes('/')) {
+            return universe.split('/')[1];
         }
 
-        return channel || undefined;
+        return universe || undefined;
     }
     return undefined;
 }
@@ -1194,7 +1180,11 @@ function hasBotInInventory(bots: Bot | Bot[]): boolean {
     }
 
     return every(bots, f =>
-        isBotInContext(getCalculationContext(), <any>f, getInventoryContext())
+        isBotInDimension(
+            getCalculationContext(),
+            <any>f,
+            getInventoryDimension()
+        )
     );
 }
 
@@ -1237,24 +1227,24 @@ function getGlobals(): Bot {
 }
 
 /**
- * Gets the name of the context that is used for the current user's menu.
+ * Gets the name of the dimension that is used for the current user's menu.
  */
-function getMenuContext(): string {
+function getMenuDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserMenuContext');
+        return getTag(user, '_auxUserMenuDimension');
     } else {
         return null;
     }
 }
 
 /**
- * Gets the name of the context that is used for the current user's inventory.
+ * Gets the name of the dimension that is used for the current user's inventory.
  */
-function getInventoryContext(): string {
+function getInventoryDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserInventoryContext');
+        return getTag(user, '_auxUserInventoryDimension');
     } else {
         return null;
     }
@@ -1332,7 +1322,7 @@ function getBots(tag: string, filter?: any | TagFilter): Bot[];
  * Gets a list of all the bots.
  *
  * @example
- * // Gets all the bots in the channel.
+ * // Gets all the bots in the universe.
  * let bots = getBots();
  */
 function getBots(): Bot[] {
@@ -1420,35 +1410,39 @@ function byMod(mod: Mod): BotFilterFunction {
 }
 
 /**
- * Creates a filter function that checks whether bots are in the given context.
- * @param context The context to check.
- * @returns A function that returns true if the given bot is in the context and false if it is not.
+ * Creates a filter function that checks whether bots are in the given dimension.
+ * @param dimension The dimension to check.
+ * @returns A function that returns true if the given bot is in the dimension and false if it is not.
  *
  * @example
- * // Find all the bots in the "test" context.
- * let bots = getBots(inContext("test"));
+ * // Find all the bots in the "test" dimension.
+ * let bots = getBots(inDimension("test"));
  */
-function inContext(context: string): BotFilterFunction {
-    return byTag(context, true);
+function inDimension(dimension: string): BotFilterFunction {
+    return byTag(dimension, true);
 }
 
 /**
- * Creates a filter function that checks whether bots are at the given position in the given context.
- * @param context The context that the bots should be in.
- * @param x The X position in the context that the bots should be at.
- * @param y The Y position in the context that the bots should be at.
+ * Creates a filter function that checks whether bots are at the given position in the given dimension.
+ * @param dimension The dimension that the bots should be in.
+ * @param x The X position in the dimension that the bots should be at.
+ * @param y The Y position in the dimension that the bots should be at.
  * @returns A function that returns true if the given bot is at the given position and false if it is not.
  *
  * @example
- * // Find all the bots at (1, 2) in the "test" context.
+ * // Find all the bots at (1, 2) in the "test" dimension.
  * let bots = getBots(atPosition("test", 1, 2));
  */
-function atPosition(context: string, x: number, y: number): BotFilterFunction {
-    const inCtx = inContext(context);
-    const atX = byTag(`${context}X`, x);
-    const atY = byTag(`${context}Y`, y);
+function atPosition(
+    dimension: string,
+    x: number,
+    y: number
+): BotFilterFunction {
+    const inCtx = inDimension(dimension);
+    const atX = byTag(`${dimension}X`, x);
+    const atY = byTag(`${dimension}Y`, y);
     const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-    filter.sort = b => getTag(b, `${context}SortOrder`) || 0;
+    filter.sort = b => getTag(b, `${dimension}SortOrder`) || 0;
     return filter;
 }
 
@@ -1468,19 +1462,19 @@ function byCreator(bot: Bot | string) {
 /**
  * Creates a filter function that checks whether bots are in the same stack as the given bot.
  * @param bot The bot that other bots should be checked against.
- * @param context The context that other bots should be checked in.
+ * @param dimension The dimension that other bots should be checked in.
  * @returns A function that returns true if the given bot is in the same stack as the original bot.
  *
  * @example
- * // Find all bots in the same stack as `this` in the "test" context.
+ * // Find all bots in the same stack as `this` in the "test" dimension.
  * let bots = getBots(inStack(this, "test"));
  *
  */
-function inStack(bot: Bot, context: string): BotFilterFunction {
+function inStack(bot: Bot, dimension: string): BotFilterFunction {
     return atPosition(
-        context,
-        getTag(bot, `${context}X`),
-        getTag(bot, `${context}Y`)
+        dimension,
+        getTag(bot, `${dimension}X`),
+        getTag(bot, `${dimension}Y`)
     );
 }
 
@@ -1495,26 +1489,26 @@ function bySpace(space: string): BotFilterFunction {
 /**
  * Creates a function that filters bots by whether they are neighboring the given bot.
  * @param bot The bot that other bots should be checked against.
- * @param context The context that other bots should be checked in.
+ * @param dimension The dimension that other bots should be checked in.
  * @param direction The neighboring direction to check.
  * @returns A function that returns true if the given bot is next to the original bot.
  *
  * @example
- * // Find all bots in front of `this` bot in the "test" context.
+ * // Find all bots in front of `this` bot in the "test" dimension.
  * let bots = getBots(neighboring(this, "test", "front"));
  */
 function neighboring(
     bot: Bot,
-    context: string,
+    dimension: string,
     direction: 'front' | 'left' | 'right' | 'back'
 ): BotFilterFunction {
     const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
     const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
 
-    const x = getTag(bot, `${context}X`);
-    const y = getTag(bot, `${context}Y`);
+    const x = getTag(bot, `${dimension}X`);
+    const y = getTag(bot, `${dimension}Y`);
 
-    return atPosition(context, x + offsetX, y + offsetY);
+    return atPosition(dimension, x + offsetX, y + offsetY);
 }
 
 /**
@@ -1539,8 +1533,8 @@ function either(...filters: BotFilterFunction[]): BotFilterFunction {
  * @param filter The function whose results should be negated.
  *
  * @example
- * // Find all bots that are not in the "test" context.
- * let bots = getBots(not(inContext("test")));
+ * // Find all bots that are not in the "test" dimension.
+ * let bots = getBots(not(inDimension("test")));
  */
 function not(filter: BotFilterFunction): BotFilterFunction {
     return bot => !filter(bot);
@@ -1796,6 +1790,7 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
 /**
  * Shows a toast message to the user.
  * @param message The message to show.
+ * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
  */
 function toast(message: string, duration: number = 2) {
     const event = toastMessage(message, duration);
@@ -1805,7 +1800,7 @@ function toast(message: string, duration: number = 2) {
 /**
  *   Play given url's audio
  * @example
- * // Send the player to the "welcome" context.
+ * // Send the player to the "welcome" dimension.
  * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
  */
 function playSound(url: string) {
@@ -1932,19 +1927,86 @@ function hideBarcode() {
 }
 
 /**
- * Loads the channel with the given ID.
- * @param id The ID of the channel to load.
+ * Shows the run bar.
+ * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
  */
-function loadChannel(id: string) {
+function showChat(prefill?: string) {
+    return addAction(calcShowRun(prefill));
+}
+
+/**
+ * Hides the run bar.
+ */
+function hideChat() {
+    return addAction(calcHideRun());
+}
+
+/**
+ * Enqueues the given script to execute after this script is done running.
+ * @param script The script that should be executed.
+ */
+function run(script: string) {
+    return addAction(runScript(script));
+}
+
+/**
+ * Downloads the given list of bots.
+ * @param bots The bots that should be downloaded.
+ * @param filename The name of the file that the bots should be downloaded as.
+ */
+function downloadBots(bots: Bot[], filename: string) {
+    let state: BotsState = {};
+    for (let bot of bots) {
+        state[bot.id] = bot;
+    }
+    return addAction(
+        download(
+            JSON.stringify(state),
+            formatAuxFilename(filename),
+            'application/json'
+        )
+    );
+}
+
+function formatAuxFilename(filename: string): string {
+    if (filename.endsWith('.aux')) {
+        return filename;
+    }
+    return filename + '.aux';
+}
+
+function downloadUniverse() {
+    const state = getBotState();
+    return addAction(
+        download(
+            JSON.stringify(state),
+            `${getCurrentUniverse()}.aux`,
+            'application/json'
+        )
+    );
+}
+
+/**
+ * Shows the "Upload Universe" dialog.
+ */
+function showUploadUniverse() {
+    return addAction(calcShowUploadUniverse());
+}
+
+/**
+ * Loads the universe with the given ID.
+ * @param id The ID of the universe to load.
+ */
+function loadUniverse(id: string) {
     const event = calcLoadSimulation(id);
     return addAction(event);
 }
 
 /**
- * Unloads the channel with the given ID.
- * @param id The ID of the channel to unload.
+ * Unloads the universe with the given ID.
+ * @param id The ID of the universe to unload.
  */
-function unloadChannel(id: string) {
+function unloadUniverse(id: string) {
     const event = calcUnloadSimulation(id);
     return addAction(event);
 }
@@ -1985,12 +2047,12 @@ function unwrapBotOrMod(botOrMod: Mod) {
 }
 
 /**
- * Sends an event to the server to setup a new channel if it does not exist.
- * @param channel The channel.
- * @param botOrMod The bot or mod that should be cloned into the new channel.
+ * Sends an event to the server to setup a new universe if it does not exist.
+ * @param universe The universe.
+ * @param botOrMod The bot or mod that should be cloned into the new universe.
  */
-function setupChannel(channel: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(channel, unwrapBotOrMod(botOrMod)));
+function setupUniverse(universe: string, botOrMod?: Mod) {
+    return remote(calcSetupChannel(universe, unwrapBotOrMod(botOrMod)));
 }
 
 /**
@@ -2003,7 +2065,7 @@ function shell(script: string) {
 }
 
 /**
- * Backs up all the AUX channels to a Github Gist.
+ * Backs up all the AUX universes to a Github Gist.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
 function backupToGithub(auth: string) {
@@ -2012,7 +2074,7 @@ function backupToGithub(auth: string) {
 }
 
 /**
- * Backs up all the AUX channels to a zip bot.
+ * Backs up all the AUX universes to a zip bot.
  */
 function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
@@ -2022,7 +2084,7 @@ function backupAsDownload(target: SessionSelector) {
 }
 
 /**
- * Instructs AUXPlayer/Channel Designer to open the built-in developer console.
+ * Instructs auxPlayer to open the built-in developer console.
  * The dev console provides easy access to error messages and debug logs for formulas and actions.
  */
 function openDevConsole() {
@@ -2084,13 +2146,13 @@ export const typeDefinitionMap = new Map([['player.getBot', 'getUser']]);
  * Defines a set of functions that relate to common player operations.
  */
 const player = {
-    isInContext,
-    goToContext,
+    isInDimension,
+    goToDimension,
     goToURL,
     openURL,
     getBot: getUser,
-    getMenuContext,
-    getInventoryContext,
+    getMenuDimension,
+    getInventoryDimension,
     playSound,
     toast,
     showHtml,
@@ -2103,20 +2165,25 @@ const player = {
     closeBarcodeScanner,
     showBarcode,
     hideBarcode,
-    loadChannel,
-    unloadChannel,
+    loadUniverse,
+    unloadUniverse,
     importAUX,
     hasBotInInventory,
     showQRCode,
     hideQRCode,
     isConnected,
-    getCurrentContext,
-    getCurrentChannel,
-    isDesigner,
+    getCurrentDimension,
+    getCurrentUniverse,
     showInputForTag,
     checkout,
     replaceDragBot,
     setClipboard,
+    showChat,
+    hideChat,
+    run,
+    downloadBots,
+    showUploadUniverse,
+    downloadUniverse,
 
     openDevConsole,
 };
@@ -2131,7 +2198,7 @@ const server = {
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
-    setupChannel,
+    setupUniverse,
 };
 
 /**
@@ -2186,7 +2253,7 @@ export default {
     getBotTagValues,
     byTag,
     byMod,
-    inContext,
+    inDimension,
     inStack,
     bySpace,
     atPosition,

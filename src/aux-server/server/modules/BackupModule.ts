@@ -24,7 +24,7 @@ import { NodeAuxChannel, isAdminChannel } from '@casual-simulation/aux-vm-node';
 import Octokit from '@octokit/rest';
 import {
     getBotChannel,
-    botsInContext,
+    botsInDimension,
     BackupAsDownloadAction,
     download,
     BackupOptions,

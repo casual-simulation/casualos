@@ -34,7 +34,7 @@ import {
 import Octokit from '@octokit/rest';
 import {
     getBotChannel,
-    botsInContext,
+    botsInDimension,
     BackupAsDownloadAction,
     download,
     BackupOptions,

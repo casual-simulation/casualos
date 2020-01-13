@@ -22,8 +22,6 @@ import {
     getTreeName,
     Simulation,
 } from '@casual-simulation/aux-vm';
-import SelectionManager from './SelectionManager';
-import { RecentBotManager } from './RecentBotManager';
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
@@ -41,32 +39,9 @@ import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
  * to reactively edit bots.
  */
 export class BotManager extends BaseSimulation implements BrowserSimulation {
-    private _selection: SelectionManager;
-    private _recent: RecentBotManager;
     private _botPanel: BotPanelManager;
     private _login: LoginManager;
     private _progress: ProgressManager;
-
-    /**
-     * Gets all the selected bots that represent an object.
-     */
-    get selectedObjects(): Bot[] {
-        return this.selection.getSelectedBotsForUser(this.helper.userBot);
-    }
-
-    /**
-     * Gets the selection manager.
-     */
-    get selection() {
-        return this._selection;
-    }
-
-    /**
-     * Gets the recent bots manager.
-     */
-    get recent() {
-        return this._recent;
-    }
 
     /**
      * Gets the bots panel manager.
@@ -109,8 +84,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
         this.helper.userId = user ? user.id : null;
 
-        this._selection = new SelectionManager(this._helper);
-        this._recent = new RecentBotManager(this._helper);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
 
@@ -159,26 +132,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     [tag]: value,
                 },
             });
-        } else {
-            const updated = merge(bot, {
-                tags: {
-                    [tag]: value,
-                },
-                values: {
-                    [tag]: value,
-                },
-            });
-            await this.recent.addBotDiff(updated, true);
         }
     }
 
     protected _initManagers() {
         super._initManagers();
-        this._botPanel = new BotPanelManager(
-            this._watcher,
-            this._helper,
-            this._selection,
-            this._recent
-        );
+        this._botPanel = new BotPanelManager(this._watcher, this._helper);
     }
 }

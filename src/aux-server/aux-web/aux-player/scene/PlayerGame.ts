@@ -40,8 +40,8 @@ import {
 } from '../../shared/scene/CameraRigFactory';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
-import { ItemContext } from '../ItemContext';
-import { ContextItem } from '../ContextItem';
+import { ItemDimension } from '../ItemDimension';
+import { DimensionItem } from '../DimensionItem';
 import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 
 export class PlayerGame extends Game {
@@ -479,7 +479,7 @@ export class PlayerGame extends Game {
 
     private simulationAdded(sim: BrowserSimulation) {
         const playerSim3D = new PlayerSimulation3D(
-            this.gameView.context,
+            this.gameView.dimension,
             this,
             sim
         );
@@ -497,7 +497,7 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemContext(['_auxUserChannelsContext']);
+        let simulations = new ItemDimension(['_auxUserUniversesDimension']);
         this.subs.push(simulations);
         this.subs.push(
             simulations.itemsUpdated.subscribe(items =>
@@ -507,10 +507,10 @@ export class PlayerGame extends Game {
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
-                if (e.type === 'go_to_context') {
+                if (e.type === 'go_to_dimension') {
                     this.resetCameras();
                     this.playerSimulations.forEach(s => {
-                        s.setContext(e.context);
+                        s.setDimension(e.dimension);
                     });
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
@@ -600,7 +600,7 @@ export class PlayerGame extends Game {
         }
     }
 
-    private onSimsUpdated(items: ContextItem[]) {
+    private onSimsUpdated(items: DimensionItem[]) {
         let simulations = uniq(
             items.map(i => {
                 const sim = appManager.simulationManager.simulations.get(

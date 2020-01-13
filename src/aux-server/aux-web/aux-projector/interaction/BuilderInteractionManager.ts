@@ -22,19 +22,19 @@ import {
     objectsAtWorkspace,
     isMinimized,
     BotCalculationContext,
-    getContextMinimized,
-    getBuilderContextGrid,
-    getContextSize,
-    getContextScale,
-    getContextDefaultHeight,
+    getDimensionMinimized,
+    getBuilderDimensionGrid,
+    getDimensionSize,
+    getDimensionScale,
+    getDimensionDefaultHeight,
     createBot,
-    isContext,
-    getBotConfigContexts,
-    botsInContext,
+    isDimension,
+    getBotConfigDimensions,
+    botsInDimension,
     AuxObject,
     toast,
     PartialBot,
-    isVisibleContext,
+    isVisibleDimension,
 } from '@casual-simulation/aux-common';
 import { BuilderBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderBotClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -46,17 +46,17 @@ import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
 import { BuilderNewBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewBotClickOperation';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
-import MiniBot from '../MiniBot/MiniBot';
+import MiniBot from '../../shared/vue-components/MiniBot/MiniBot';
 import BotTag from '../../shared/vue-components/BotTag/BotTag';
-import BotTable from '../BotTable/BotTable';
+import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import BotID from '../BotID/BotID';
+import BotID from '../../shared/vue-components/BotID/BotID';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
@@ -71,7 +71,7 @@ import {
     navigateToUrl,
 } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
-import BotTagMini from '../BotTagMini/BotTagMini';
+import BotTagMini from '../../shared/vue-components/BotTagMini/BotTagMini';
 import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
 import { BuilderModClickOperation } from './ClickOperation/BuilderModClickOperation';
 
@@ -83,7 +83,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     protected _surfaceObjectsDirty: boolean;
 
     get selectionMode() {
-        return this._game.simulation3D.simulation.selection.mode;
+        return 'single';
     }
 
     constructor(game: BuilderGame) {
@@ -98,7 +98,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ): IOperation {
         if (
             gameObject instanceof AuxBot3D ||
-            gameObject instanceof ContextGroup3D
+            gameObject instanceof DimensionGroup3D
         ) {
             let botClickOp = new BuilderBotClickOperation(
                 this._game.simulation3D,
@@ -276,22 +276,22 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (mesh instanceof BuilderGroup3D) {
             return mesh;
         } else if (mesh instanceof AuxBot3D) {
-            return <BuilderGroup3D>mesh.contextGroup;
+            return <BuilderGroup3D>mesh.dimensionGroup;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
         }
     }
 
-    canShrinkWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+    canShrinkWorkspace(calc: BotCalculationContext, bot: DimensionGroup3D) {
         if (!bot) {
             return false;
         }
-        const size = getContextSize(calc, bot.bot);
+        const size = getDimensionSize(calc, bot.bot);
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
                 const allObjects = flatMap(this._game.getSimulations(), s => {
-                    return s.contexts.map(c => c.bot);
+                    return s.dimensions.map(c => c.bot);
                 });
                 const workspaceObjects = objectsAtWorkspace(
                     allObjects,
@@ -311,7 +311,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Determines if we're in the correct mode to manipulate the given bot.
      * @param bot The bot.
      */
-    isInCorrectMode(bot: AuxBot3D | ContextGroup3D) {
+    isInCorrectMode(bot: AuxBot3D | DimensionGroup3D) {
         return true;
     }
 
@@ -321,12 +321,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param position The tile position.
      * @param height The new height.
      */
-    updateTileHeightAtGridPosition(bot: ContextGroup3D, height: number) {
+    updateTileHeightAtGridPosition(bot: DimensionGroup3D, height: number) {
         let partial: PartialBot = {
             tags: {},
         };
 
-        partial.tags[`auxContext.surface.grid.0:0`] = height;
+        partial.tags[`auxDimensionConfig.surface.grid.0:0`] = height;
 
         this._game.simulation3D.simulation.helper.updateBot(bot.bot, partial);
     }
@@ -383,8 +383,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 const workspace = this.findWorkspaceForIntersection(hit);
                 if (
                     workspace &&
-                    isContext(calc, workspace.bot) &&
-                    !getContextMinimized(calc, workspace.bot)
+                    isDimension(calc, workspace.bot) &&
+                    !getDimensionMinimized(calc, workspace.bot)
                 ) {
                     const workspaceMesh = workspace.surface;
                     const closest = workspaceMesh.closestTileToPoint(point);
@@ -410,12 +410,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     /**
-     * Gets the first context that the given workspace has.
+     * Gets the first dimension that the given workspace has.
      */
-    firstContextInWorkspace(workspace: ContextGroup3D): string {
-        const contexts = [...workspace.contexts.keys()];
-        if (contexts.length > 0) {
-            return contexts[0];
+    firstDimensionInWorkspace(workspace: DimensionGroup3D): string {
+        const dimensions = [...workspace.dimensions.keys()];
+        if (dimensions.length > 0) {
+            return dimensions[0];
         }
         return null;
     }
@@ -426,17 +426,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 .getSimulations()
                 .filter(s => s instanceof BuilderSimulation3D);
 
-            const builderContexts = flatMap(
+            const builderDimensions = flatMap(
                 builderSimulations,
-                s => s.contexts
-            ).filter(c => isContext(calc, c.bot));
+                s => s.dimensions
+            ).filter(c => isDimension(calc, c.bot));
 
-            const builderActiveContexts = builderContexts.filter(c =>
-                isVisibleContext(calc, c.bot)
+            const builderActiveDimensions = builderDimensions.filter(c =>
+                isVisibleDimension(calc, c.bot)
             );
 
             const surfaceObjects = flatMap(
-                builderActiveContexts,
+                builderActiveDimensions,
                 c => (<BuilderGroup3D>c).surface.colliders
             );
 
@@ -492,13 +492,16 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         if (gameObject) {
             if (
-                gameObject instanceof ContextGroup3D &&
-                isContext(calc, gameObject.bot)
+                gameObject instanceof DimensionGroup3D &&
+                isDimension(calc, gameObject.bot)
             ) {
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getBuilderContextGrid(calc, gameObject.bot);
+                const currentGrid = getBuilderDimensionGrid(
+                    calc,
+                    gameObject.bot
+                );
                 const currentTile = currentGrid ? currentGrid['0:0'] : null;
-                const defaultHeight = getContextDefaultHeight(
+                const defaultHeight = getDimensionDefaultHeight(
                     calc,
                     gameObject.bot
                 );
@@ -516,13 +519,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 });
 
                 actions.push({
-                    label: 'Go to Context',
+                    label: 'Go to Dimension',
                     onClick: () => this._switchToPlayer(calc, gameObject),
                 });
 
                 actions.push({
                     label: 'Edit Bot',
-                    onClick: () => this._selectContextBot(calc, gameObject),
+                    onClick: () => this._selectDimensionBot(calc, gameObject),
                 });
 
                 actions.push({
@@ -546,12 +549,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return actions;
     }
 
-    private _shrinkWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
-        if (bot && isContext(calc, bot.bot)) {
-            const size = getContextSize(calc, bot.bot);
+    private _shrinkWorkspace(
+        calc: BotCalculationContext,
+        bot: DimensionGroup3D
+    ) {
+        if (bot && isDimension(calc, bot.bot)) {
+            const size = getDimensionSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceSize`]: (size || 0) - 1,
+                    [`auxDimensionSurfaceSize`]: (size || 0) - 1,
                 },
             });
         }
@@ -563,7 +569,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     private _setAllHexHeight(
         calc: BotCalculationContext,
-        gameObject: ContextGroup3D,
+        gameObject: DimensionGroup3D,
         height: number
     ) {
         if (gameObject instanceof BuilderGroup3D) {
@@ -579,12 +585,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Minimizes or maximizes the given workspace.
      * @param bot
      */
-    private _toggleWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
-        if (bot && isContext(calc, bot.bot)) {
+    private _toggleWorkspace(
+        calc: BotCalculationContext,
+        bot: DimensionGroup3D
+    ) {
+        if (bot && isDimension(calc, bot.bot)) {
             const minimized = !isMinimized(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceMinimized`]: minimized,
+                    [`auxDimensionSurfaceMinimized`]: minimized,
                 },
             });
         }
@@ -596,13 +605,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     private async _copyWorkspace(
         calc: BotCalculationContext,
-        bot: ContextGroup3D
+        bot: DimensionGroup3D
     ) {
-        if (bot && isContext(calc, bot.bot)) {
-            const contexts = getBotConfigContexts(calc, bot.bot);
-            let bots = flatMap(contexts, c => botsInContext(calc, c));
+        if (bot && isDimension(calc, bot.bot)) {
+            const dimensions = getBotConfigDimensions(calc, bot.bot);
+            let bots = flatMap(dimensions, c => botsInDimension(calc, c));
 
-            // add in the context bot to the workspace copy
+            // add in the dimension bot to the workspace copy
             bots.unshift(bot.bot);
 
             const deduped = uniqBy(bots, f => f.id);
@@ -617,31 +626,31 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    private _expandWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+    private _expandWorkspace(
+        calc: BotCalculationContext,
+        bot: DimensionGroup3D
+    ) {
         if (bot) {
-            const size = getContextSize(calc, bot.bot);
+            const size = getDimensionSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`auxContextSurfaceSize`]: (size || 0) + 1,
+                    [`auxDimensionSurfaceSize`]: (size || 0) + 1,
                 },
             });
         }
     }
 
-    private _selectContextBot(
+    private _selectDimensionBot(
         calc: BotCalculationContext,
-        bot: ContextGroup3D
-    ) {
-        this._game.simulation3D.simulation.selection.selectBot(
-            bot.bot,
-            false,
-            this._game.simulation3D.simulation.botPanel
-        );
-    }
+        bot: DimensionGroup3D
+    ) {}
 
-    private _switchToPlayer(calc: BotCalculationContext, bot: ContextGroup3D) {
-        let contexts = getBotConfigContexts(calc, bot.bot);
-        let context = contexts[0];
+    private _switchToPlayer(
+        calc: BotCalculationContext,
+        bot: DimensionGroup3D
+    ) {
+        let dimensions = getBotConfigDimensions(calc, bot.bot);
+        let dimension = dimensions[0];
 
         // https://auxbuilder.com/
         //   ^     |     host    |     path           |
@@ -649,7 +658,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const simulationId = window.location.pathname.split('/')[2];
 
         const url = new URL(
-            `/${context}/${simulationId || 'default'}`,
+            `/${dimension}/${simulationId || 'default'}`,
             window.location.href
         );
 
@@ -659,11 +668,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _worldPosToGridPos(
         calc: BotCalculationContext,
-        bot: ContextGroup3D,
+        bot: DimensionGroup3D,
         pos: Vector3
     ) {
         const w = bot.bot;
-        const scale = getContextScale(calc, bot.bot);
+        const scale = getDimensionScale(calc, bot.bot);
         const localPos = new Vector3().copy(pos).sub(bot.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }

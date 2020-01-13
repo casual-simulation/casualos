@@ -8,7 +8,7 @@ import {
     createBot,
     AuxCausalTree,
     webhook,
-    setupChannel,
+    setupUniverse,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
@@ -124,11 +124,13 @@ describe('SetupChannelModule2', () => {
     });
 
     describe('events', () => {
-        describe('setup_channel', () => {
+        describe('setup_universe', () => {
             it('should create non-existant channels', async () => {
                 expect.assertions(1);
 
-                await simulation.helper.transaction(setupChannel('newChannel'));
+                await simulation.helper.transaction(
+                    setupUniverse('newChannel')
+                );
 
                 await waitAsync();
 
@@ -142,7 +144,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupChannel(
+                    setupUniverse(
                         'newChannel',
                         createBot('test', {
                             abc: 'def',
@@ -178,7 +180,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         abc: 'def',
                     })
                 );
@@ -211,7 +213,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         onCreate: '@setTag(this, "created", true)',
                     })
                 );
@@ -253,7 +255,7 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 await simulation.helper.transaction(
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         test: 'abc',
                     })
                 );

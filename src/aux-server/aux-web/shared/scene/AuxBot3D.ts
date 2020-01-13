@@ -6,11 +6,11 @@ import {
     TagUpdatedEvent,
     BotCalculationContext,
     AuxDomain,
-    isBotInContext,
+    isBotInDimension,
     GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
-import { ContextGroup3D } from './ContextGroup3D';
+import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
@@ -20,14 +20,14 @@ import { AuxBotVisualizer } from './AuxBotVisualizer';
  */
 export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     /**
-     * The context this bot visualization was created for.
+     * The dimension this bot visualization was created for.
      */
-    context: string;
+    dimension: string;
 
     /**
-     * The context group that this visualization belongs to.
+     * The dimension group that this visualization belongs to.
      */
-    contextGroup: ContextGroup3D;
+    dimensionGroup: DimensionGroup3D;
 
     /**
      * The bot for the mesh.
@@ -72,16 +72,16 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
 
     constructor(
         bot: Bot,
-        contextGroup: ContextGroup3D,
-        context: string,
+        dimensionGroup: DimensionGroup3D,
+        dimension: string,
         colliders: Object3D[],
         decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.bot = bot;
-        this.contextGroup = contextGroup;
+        this.dimensionGroup = dimensionGroup;
         this.colliders = colliders;
-        this.context = context;
+        this.dimension = dimension;
         this.display = new Group();
         this.add(this.display);
 

@@ -79,9 +79,9 @@ export interface ScriptTags extends PrecalculatedTags {
 
 export interface BotTags {
     // Global bot tags
-    ['auxChannelColor']?: string;
-    ['auxChannelUserPlayerColor']?: unknown;
-    ['auxChannelUserBuilderColor']?: unknown;
+    ['auxUniverseColor']?: string;
+    ['auxUniverseUserPlayerColor']?: unknown;
+    ['auxUniverseUserBuilderColor']?: unknown;
     ['auxInventoryHeight']?: unknown;
     ['auxVersion']?: unknown;
 
@@ -108,8 +108,8 @@ export interface BotTags {
     ['auxLabelSizeMode']?: 'auto' | null;
     ['auxLabelAnchor']?: BotLabelAnchor | null | string;
     ['auxListening']?: unknown;
-    ['auxShape']?: BotShape;
-    ['auxImage']?: string;
+    ['auxForm']?: BotShape;
+    ['auxFormAddress']?: string;
     ['auxIframe']?: string;
     ['auxIframeX']?: number;
     ['auxIframeY']?: number;
@@ -121,7 +121,7 @@ export interface BotTags {
     ['auxIframeRotationZ']?: number;
     ['auxIframeElementWidth']?: number;
     ['auxIframeScale']?: number;
-    ['auxChannel']?: string;
+    ['auxUniverse']?: string;
     ['auxCreator']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
@@ -132,16 +132,16 @@ export interface BotTags {
     ['_auxSelection']?: string;
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
-    ['_auxUserContext']?: string;
-    ['_auxUserChannel']?: string;
-    ['_auxUserInventoryContext']?: string;
-    ['_auxUserMenuContext']?: string;
-    ['_auxUserChannelsContext']?: string;
+    ['_auxUserDimension']?: string | boolean;
+    ['_auxUserUniverse']?: string;
+    ['_auxUserInventoryDimension']?: string;
+    ['_auxUserMenuDimension']?: string;
+    ['_auxUserUniversesDimension']?: string;
     ['_auxEditingBot']?: string;
     ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
-    ['auxChannelConnectedSessions']?: number;
+    ['auxUniverseConnectedSessions']?: number;
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
@@ -158,46 +158,46 @@ export interface BotTags {
     ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['auxContext']?: string | number | boolean;
-    ['auxContextColor']?: string;
-    ['auxContextLocked']?: unknown;
-    ['auxContextGridScale']?: number;
-    ['auxContextVisualize']?: ContextVisualizeMode;
-    ['auxContextX']?: number;
-    ['auxContextY']?: number;
-    ['auxContextZ']?: number;
-    ['auxContextRotationX']?: number;
-    ['auxContextRotationY']?: number;
-    ['auxContextRotationZ']?: number;
-    ['auxContextSurfaceScale']?: number;
-    ['auxContextSurfaceSize']?: number;
-    ['auxContextSurfaceMinimized']?: boolean | null;
-    ['auxContextSurfaceDefaultHeight']?: number;
-    ['auxContextSurfaceMovable']?: unknown;
-    ['auxContextPlayerRotationX']?: number;
-    ['auxContextPlayerRotationY']?: number;
-    ['auxContextPlayerZoom']?: number;
-    ['auxContextDevicesVisible']?: boolean | null;
-    ['auxContextInventoryColor']?: string;
-    ['auxContextInventoryHeight']?: unknown;
-    ['auxContextInventoryPannable']?: boolean;
-    [`auxContextInventoryPannableMinX`]?: number | null;
-    [`auxContextInventoryPannableMaxX`]?: number | null;
-    [`auxContextInventoryPannableMinY`]?: number | null;
-    [`auxContextInventoryPannableMaxY`]?: number | null;
-    ['auxContextInventoryResizable']?: boolean;
-    ['auxContextInventoryRotatable']?: boolean;
-    ['auxContextInventoryZoomable']?: boolean;
-    ['auxContextInventoryVisible']?: unknown;
-    ['auxContextPannable']?: number | null;
-    [`auxContextPannableMinX`]?: number | null;
-    [`auxContextPannableMaxX`]?: number | null;
-    [`auxContextPannableMinY`]?: number | null;
-    [`auxContextPannableMaxY`]?: number | null;
-    ['auxContextZoomable']?: number | null;
-    [`auxContextZoomableMin`]?: number | null;
-    [`auxContextZoomableMax`]?: number | null;
-    ['auxContextRotatable']?: number | null;
+    ['auxDimensionConfig']?: string | number | boolean;
+    ['auxDimensionColor']?: string;
+    ['auxDimensionLocked']?: unknown;
+    ['auxDimensionGridScale']?: number;
+    ['auxDimensionVisualize']?: DimensionVisualizeMode;
+    ['auxDimensionX']?: number;
+    ['auxDimensionY']?: number;
+    ['auxDimensionZ']?: number;
+    ['auxDimensionOrientationX']?: number;
+    ['auxDimensionOrientationY']?: number;
+    ['auxDimensionOrientationZ']?: number;
+    ['auxDimensionSurfaceScale']?: number;
+    ['auxDimensionSurfaceSize']?: number;
+    ['auxDimensionSurfaceMinimized']?: boolean | null;
+    ['auxDimensionSurfaceDefaultHeight']?: number;
+    ['auxDimensionSurfaceMovable']?: unknown;
+    ['auxDimensionPlayerRotationX']?: number;
+    ['auxDimensionPlayerRotationY']?: number;
+    ['auxDimensionPlayerZoom']?: number;
+    ['auxDimensionDevicesVisible']?: boolean | null;
+    ['auxDimensionInventoryColor']?: string;
+    ['auxDimensionInventoryHeight']?: unknown;
+    ['auxDimensionInventoryPannable']?: boolean;
+    [`auxDimensionInventoryPannableMinX`]?: number | null;
+    [`auxDimensionInventoryPannableMaxX`]?: number | null;
+    [`auxDimensionInventoryPannableMinY`]?: number | null;
+    [`auxDimensionInventoryPannableMaxY`]?: number | null;
+    ['auxDimensionInventoryResizable']?: boolean;
+    ['auxDimensionInventoryRotatable']?: boolean;
+    ['auxDimensionInventoryZoomable']?: boolean;
+    ['auxDimensionInventoryVisible']?: unknown;
+    ['auxDimensionPannable']?: number | null;
+    [`auxDimensionPannableMinX`]?: number | null;
+    [`auxDimensionPannableMaxX`]?: number | null;
+    [`auxDimensionPannableMinY`]?: number | null;
+    [`auxDimensionPannableMaxY`]?: number | null;
+    ['auxDimensionZoomable']?: number | null;
+    [`auxDimensionZoomableMin`]?: number | null;
+    [`auxDimensionZoomableMax`]?: number | null;
+    ['auxDimensionRotatable']?: number | null;
 
     // Stripe tags
     ['stripePublishableKey']?: string;
@@ -273,8 +273,8 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
  *
  * "all" means that the bot is able to be dragged freely inside and across contexts.
  * "none" means that the bot is not able to be dragged at all.
- * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a context.
- * "moveOnly" means that the bot should be able to be dragged within a context but not across contexts.
+ * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a dimension.
+ * "moveOnly" means that the bot should be able to be dragged within a dimension but not across contexts.
  */
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
@@ -303,13 +303,13 @@ export type BotLabelAnchor =
 export type BackupType = 'github' | 'download';
 
 /**
- * Defines the possible context visualize modes.
+ * Defines the possible dimension visualize modes.
  *
- * true means that the context is visible.
- * false means the context is not visible.
- * "surface" means the context is visible and renders a worksurface.
+ * true means that the dimension is visible.
+ * false means the dimension is not visible.
+ * "surface" means the dimension is visible and renders a worksurface.
  */
-export type ContextVisualizeMode = true | false | 'surface';
+export type DimensionVisualizeMode = true | false | 'surface';
 
 /**
  * The default selection mode.
@@ -424,9 +424,9 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
- * The context ID that all users should be placed in.
+ * The dimension ID that all users should be placed in.
  */
-export const USERS_CONTEXT = 'aux-users';
+export const USERS_DIMENSION = 'aux-users';
 
 /**
  * The name of the tag used to represent the space that the bot is
@@ -460,12 +460,12 @@ export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
 export const DROP_EXIT_ACTION_NAME: string = 'onDropExit';
 
 /**
- * The name of the event that represents a bot being dropped onto a context.
+ * The name of the event that represents a bot being dropped onto a dimension.
  */
 export const DROP_ACTION_NAME: string = 'onDrop';
 
 /**
- * The name of the event that represents any bot being dropped onto a context.
+ * The name of the event that represents any bot being dropped onto a dimension.
  */
 export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 
@@ -556,28 +556,45 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
+export const ON_ACTION_ACTION_NAME: string = 'onUniverseAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
+export const ON_UNIVERSE_STREAMING_ACTION_NAME: string = 'onUniverseStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
+export const ON_UNIVERSE_STREAM_LOST_ACTION_NAME: string =
+    'onUniverseStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
+export const ON_UNIVERSE_SUBSCRIBED_ACTION_NAME: string =
+    'onUniverseSubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
-    'onChannelUnsubscribed';
+export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
+    'onUniverseUnsubscribed';
+
+/**
+ * The name of the event that is triggered when a script is executed.
+ */
+export const ON_RUN_ACTION_NAME: string = 'onRun';
+
+/**
+ * The name of the event that is triggered when the text in the chat bar is updated.
+ */
+export const ON_CHAT_TYPING_ACTION_NAME: string = 'onChatTyping';
+
+/**
+ * The name of the event that is triggered when the text in the chat bar is submitted.
+ */
+export const ON_CHAT_ACTION_NAME: string = 'onChat';
 
 /**
  * The current bot format version for AUX Bots.
@@ -594,45 +611,45 @@ export const KNOWN_TAGS: string[] = [
     '_auxSelection',
     '_auxUser',
     'auxUserActive',
-    '_auxUserContext',
-    '_auxUserChannel',
-    '_auxUserInventoryContext',
-    '_auxUserMenuContext',
-    '_auxUserChannelsContext',
+    '_auxUserDimension',
+    '_auxUserUniverse',
+    '_auxUserInventoryDimension',
+    '_auxUserMenuDimension',
+    '_auxUserUniversesDimension',
     '_auxEditingBot',
     '_auxSelectionMode',
     'auxConnectedSessions',
     'auxInventoryHeight',
-    'auxContextInventoryColor',
-    'auxContextInventoryHeight',
-    'auxContextInventoryVisible',
-    'auxContextInventoryPannable',
-    `auxContextInventoryPannableMinX`,
-    `auxContextInventoryPannableMaxX`,
-    `auxContextInventoryPannableMinY`,
-    `auxContextInventoryPannableMaxY`,
+    'auxDimensionInventoryColor',
+    'auxDimensionInventoryHeight',
+    'auxDimensionInventoryVisible',
+    'auxDimensionInventoryPannable',
+    `auxDimensionInventoryPannableMinX`,
+    `auxDimensionInventoryPannableMaxX`,
+    `auxDimensionInventoryPannableMinY`,
+    `auxDimensionInventoryPannableMaxY`,
 
-    'auxContextInventoryResizable',
-    'auxContextInventoryRotatable',
-    'auxContextInventoryZoomable',
+    'auxDimensionInventoryResizable',
+    'auxDimensionInventoryRotatable',
+    'auxDimensionInventoryZoomable',
 
-    'auxContextPannable',
+    'auxDimensionPannable',
 
-    `auxContextPannableMinX`,
-    `auxContextPannableMaxX`,
+    `auxDimensionPannableMinX`,
+    `auxDimensionPannableMaxX`,
 
-    `auxContextPannableMinY`,
-    `auxContextPannableMaxY`,
+    `auxDimensionPannableMinY`,
+    `auxDimensionPannableMaxY`,
 
-    'auxContextZoomable',
+    'auxDimensionZoomable',
 
-    `auxContextZoomableMin`,
-    `auxContextZoomableMax`,
+    `auxDimensionZoomableMin`,
+    `auxDimensionZoomableMax`,
 
-    'auxContextRotatable',
-    'auxChannelColor',
-    'auxChannelUserPlayerColor',
-    'auxChannelUserBuilderColor',
+    'auxDimensionRotatable',
+    'auxUniverseColor',
+    'auxUniverseUserPlayerColor',
+    'auxUniverseUserBuilderColor',
 
     'auxColor',
     'auxCreator',
@@ -657,14 +674,14 @@ export const KNOWN_TAGS: string[] = [
     'auxScaleX',
     'auxScaleY',
     'auxScaleZ',
-    'auxImage',
-    'auxShape',
+    'auxFormAddress',
+    'auxForm',
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarAnchor',
-    'auxChannel',
-    'auxChannelConnectedSessions',
+    'auxUniverse',
+    'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',
     'auxIframeY',
@@ -676,26 +693,26 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'auxContext',
-    'auxContextColor',
-    'auxContextLocked',
-    'auxContextGridScale',
-    'auxContextX',
-    'auxContextY',
-    'auxContextZ',
-    'auxContextSurfaceDefaultHeight',
-    'auxContextRotationX',
-    'auxContextRotationY',
-    'auxContextRotationZ',
-    'auxContextSurfaceScale',
-    'auxContextSurfaceSize',
-    'auxContextSurfaceMinimized',
-    'auxContextSurfaceMovable',
-    'auxContextVisualize',
-    'auxContextDevicesVisible',
-    `auxContextPlayerZoom`,
-    `auxContextPlayerRotationX`,
-    `auxContextPlayerRotationY`,
+    'auxDimensionConfig',
+    'auxDimensionColor',
+    'auxDimensionLocked',
+    'auxDimensionGridScale',
+    'auxDimensionX',
+    'auxDimensionY',
+    'auxDimensionZ',
+    'auxDimensionSurfaceDefaultHeight',
+    'auxDimensionOrientationX',
+    'auxDimensionOrientationY',
+    'auxDimensionOrientationZ',
+    'auxDimensionSurfaceScale',
+    'auxDimensionSurfaceSize',
+    'auxDimensionSurfaceMinimized',
+    'auxDimensionSurfaceMovable',
+    'auxDimensionVisualize',
+    'auxDimensionDevicesVisible',
+    `auxDimensionPlayerZoom`,
+    `auxDimensionPlayerRotationX`,
+    `auxDimensionPlayerRotationY`,
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',
@@ -750,11 +767,11 @@ export const KNOWN_TAGS: string[] = [
     'onPointerExit',
     'onPointerDown',
     'onPointerUp',
-    'onChannelStreaming',
-    'onChannelStreamLost',
-    'onChannelSubscribed',
-    'onChannelUnsubscribed',
-    'onPlayerEnterContext',
+    ON_UNIVERSE_STREAMING_ACTION_NAME,
+    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
+    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+    'onPlayerEnterDimension',
     'onKeyDown',
     'onKeyUp',
     'onGridClick',
@@ -764,28 +781,18 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook',
     'onAnyListen',
     'onListen',
-    'onChannelAction',
+    ON_ACTION_ACTION_NAME,
+    ON_RUN_ACTION_NAME,
+    ON_CHAT_TYPING_ACTION_NAME,
+    ON_CHAT_ACTION_NAME,
 ];
 
-// export function onDropEnterArg(
-//     draggedBot: Bot,
-//     otherBot: Bot,
-//     context: string
-// ) {
-//     return {
-//         draggedBot,
-//         otherBot,
-//         context,
-//     };
-// }
-
-// export function onDropExitArg(draggedBot: Bot, otherBot: Bot, context: string) {
-//     return {
-//         draggedBot,
-//         otherBot,
-//         context,
-//     };
-// }
+export function onModDropArg(mod: BotTags, dimension: string) {
+    return {
+        mod,
+        dimension,
+    };
+}
 
 export function onDropArg(
     dragBot: Bot,
@@ -799,10 +806,46 @@ export function onDropArg(
     };
 }
 
+export function onUniverseStreamingArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseStreamLostArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseSubscribedArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onUniverseUnsubscribedArg(universe: string) {
+    return {
+        universe,
+    };
+}
+
+export function onChatTypingArg(message: string) {
+    return {
+        message,
+    };
+}
+
+export function onChatArg(message: string) {
+    return {
+        message,
+    };
+}
+
 export interface BotDropDestination {
     x: number;
     y: number;
-    context: string;
+    dimension: string;
 }
 
 export interface BotDropToDestination extends BotDropDestination {

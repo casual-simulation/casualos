@@ -9,13 +9,13 @@ import {
     isFormula,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
-import { ContextItem } from '../ContextItem';
+import { DimensionItem } from '../DimensionItem';
 
 @Component({
     components: {},
 })
 export default class MenuBot extends Vue {
-    @Prop() item: ContextItem;
+    @Prop() item: DimensionItem;
     @Prop() index: number;
     @Prop({ default: false })
     selected: boolean;
@@ -25,7 +25,7 @@ export default class MenuBot extends Vue {
     backgroundColor: string = '#FFF';
 
     @Watch('item')
-    private async _botChanged(item: ContextItem) {
+    private async _botChanged(item: DimensionItem) {
         if (item) {
             const simulation = _simulation(item);
             const calc = simulation.helper.createContext();

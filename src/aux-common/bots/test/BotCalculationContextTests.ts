@@ -1,7 +1,7 @@
 import { BotSandboxContext } from '../BotCalculationContext';
 import {
     createBot,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     getBotShape,
     calculateFormulaValue,
     calculateBotValue,
@@ -20,18 +20,18 @@ import {
     getBotsInMenu,
     addBotToMenu,
     removeBotFromMenu,
-    getContextVisualizeMode,
-    getBuilderContextGrid,
-    getContextSize,
-    addToContextDiff,
-    removeFromContextDiff,
-    isContextMovable,
-    isContext,
-    getBotConfigContexts,
-    isContextLocked,
+    getDimensionVisualizeMode,
+    getBuilderDimensionGrid,
+    getDimensionSize,
+    addToDimensionDiff,
+    removeFromDimensionDiff,
+    isDimensionMovable,
+    isDimension,
+    getBotConfigDimensions,
+    isDimensionLocked,
     getBotLabelAnchor,
     getBotVersion,
-    isBotInContext,
+    isBotInDimension,
     getBotUsernameList,
     isInUsernameList,
     getUserBotColor,
@@ -46,13 +46,13 @@ import {
     isUserActive,
     calculateStringTagValue,
     isMinimized,
-    getContextColor,
-    getContextGridScale,
-    getContextScale,
-    getContextDefaultHeight,
+    getDimensionColor,
+    getDimensionGridScale,
+    getDimensionScale,
+    getDimensionDefaultHeight,
     getBotPosition,
     getBotRotation,
-    botContextSortOrder,
+    botDimensionSortOrder,
     getBotPositioningMode,
     convertToCopiableValue,
 } from '../BotCalculations';
@@ -82,83 +82,103 @@ export function botCalculationContextTests(
     describe('objectsAtContextGridPosition()', () => {
         it('should return bots at the given position', () => {
             const bot1 = createBot('test1', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot2 = createBot('test2', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot3 = createBot('test3', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
-            const result = objectsAtContextGridPosition(context, 'context', {
-                x: -1,
-                y: 1,
-            });
+            const result = objectsAtDimensionGridPosition(
+                context,
+                'dimension',
+                {
+                    x: -1,
+                    y: 1,
+                }
+            );
 
             expect(result).toEqual([bot1, bot2, bot3]);
         });
 
         it('should ignore user bots', () => {
             const bot1 = createBot('test1', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
                 _auxUser: 'abc',
             });
             const bot2 = createBot('test2', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot1, bot2]);
-            const result = objectsAtContextGridPosition(context, 'context', {
-                x: -1,
-                y: 1,
-            });
+            const result = objectsAtDimensionGridPosition(
+                context,
+                'dimension',
+                {
+                    x: -1,
+                    y: 1,
+                }
+            );
 
             expect(result).toEqual([bot2]);
         });
 
         it('should cache the query and results', () => {
             const bot1 = createBot('test1', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot2 = createBot('test2', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
             const bot3 = createBot('test3', {
-                context: true,
-                contextX: -1,
-                contextY: 1,
+                dimension: true,
+                dimensionX: -1,
+                dimensionY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
             const context2 = createCalculationContext([bot2, bot1, bot3]);
-            const result1 = objectsAtContextGridPosition(context, 'context', {
-                x: -1,
-                y: 1,
-            });
-            const result2 = objectsAtContextGridPosition(context, 'context', {
-                x: -1,
-                y: 1,
-            });
-            const result3 = objectsAtContextGridPosition(context2, 'context', {
-                x: -1,
-                y: 1,
-            });
+            const result1 = objectsAtDimensionGridPosition(
+                context,
+                'dimension',
+                {
+                    x: -1,
+                    y: 1,
+                }
+            );
+            const result2 = objectsAtDimensionGridPosition(
+                context,
+                'dimension',
+                {
+                    x: -1,
+                    y: 1,
+                }
+            );
+            const result3 = objectsAtDimensionGridPosition(
+                context2,
+                'dimension',
+                {
+                    x: -1,
+                    y: 1,
+                }
+            );
 
             expect(result1).toBe(result2);
             expect(result1).not.toBe(result3);
@@ -166,14 +186,18 @@ export function botCalculationContextTests(
 
         it('should default to 0,0 for bots without a position', () => {
             const bot1 = createBot('test1', {
-                context: true,
+                dimension: true,
             });
 
             const context = createCalculationContext([bot1]);
-            const result = objectsAtContextGridPosition(context, 'context', {
-                x: 0,
-                y: 0,
-            });
+            const result = objectsAtDimensionGridPosition(
+                context,
+                'dimension',
+                {
+                    x: 0,
+                    y: 0,
+                }
+            );
 
             expect(result).toEqual([bot1]);
         });
@@ -765,7 +789,7 @@ export function botCalculationContextTests(
                         context.sandbox.interface.unwrapBot
                     );
 
-                    // Order is dependent on the position in the context.
+                    // Order is dependent on the position in the dimension.
                     expect(unwrapped).toEqual([bot1, bot2, bot3]);
                 });
 
@@ -815,7 +839,7 @@ export function botCalculationContextTests(
                         context.sandbox.interface.unwrapBot
                     );
 
-                    // Order is dependent on the position in the context.
+                    // Order is dependent on the position in the dimension.
                     expect(unwrapped).toEqual([bot2, bot3]);
                 });
 
@@ -842,7 +866,7 @@ export function botCalculationContextTests(
                         context.sandbox.interface.unwrapBot
                     );
 
-                    // Order is dependent on the position in the context.
+                    // Order is dependent on the position in the dimension.
                     expect(unwrapped).toEqual([bot2, bot3]);
                 });
 
@@ -1959,10 +1983,10 @@ export function botCalculationContextTests(
                 });
             });
 
-            describe('inContext()', () => {
-                it('should return a function that returns true if the bot is in the given context', () => {
+            describe('inDimension()', () => {
+                it('should return a function that returns true if the bot is in the given dimension', () => {
                     const bot = createBot('test', {
-                        formula: '=inContext("red")',
+                        formula: '=inDimension("red")',
                     });
 
                     const context = createCalculationContext([bot]);
@@ -1974,9 +1998,9 @@ export function botCalculationContextTests(
                     expect(value(bot2)).toBe(true);
                 });
 
-                it('should return a function that returns false if the bot is not in the given context', () => {
+                it('should return a function that returns false if the bot is not in the given dimension', () => {
                     const bot = createBot('test', {
-                        formula: '=inContext("red")',
+                        formula: '=inDimension("red")',
                     });
 
                     const context = createCalculationContext([bot]);
@@ -2034,7 +2058,7 @@ export function botCalculationContextTests(
                     expect(value(bot3)).toBe(false);
                 });
 
-                it('should return a function that returns false if the bot is not in the same context as another bot', () => {
+                it('should return a function that returns false if the bot is not in the same dimension as another bot', () => {
                     const bot = createBot('test', {
                         formula: '=inStack(getBot("id", "test2"), "red")',
                     });
@@ -2112,7 +2136,7 @@ export function botCalculationContextTests(
                     expect(value(bot3)).toBe(false);
                 });
 
-                it('should return a function that returns false if the bot is not in the given context', () => {
+                it('should return a function that returns false if the bot is not in the given dimension', () => {
                     const bot = createBot('test', {
                         formula: '=atPosition("red", 1, 2)',
                     });
@@ -2954,10 +2978,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map auxChannel:%s to %s',
+            'should map auxUniverse:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    auxChannel: value,
+                    auxUniverse: value,
                 });
 
                 const calc = createCalculationContext([bot]);
@@ -2989,17 +3013,17 @@ export function botCalculationContextTests(
     });
 
     describe('isMinimized()', () => {
-        it('should return true when auxContextSurfaceMinimized is true', () => {
+        it('should return true when auxDimensionSurfaceMinimized is true', () => {
             let bot = createBot('test', {
-                auxContextSurfaceMinimized: true,
+                auxDimensionSurfaceMinimized: true,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(true);
         });
 
-        it('should return false when auxContextSurfaceMinimized is not true', () => {
+        it('should return false when auxDimensionSurfaceMinimized is not true', () => {
             let bot = createBot('test', {
-                auxContextSurfaceMinimized: false,
+                auxDimensionSurfaceMinimized: false,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(false);
@@ -3111,11 +3135,11 @@ export function botCalculationContextTests(
                 abcY: 2,
                 def: true,
             });
-            let context: Bot = createBot('context', {
-                auxContext: 'abc',
+            let dimension: Bot = createBot('dimension', {
+                auxDimensionConfig: 'abc',
             });
 
-            const calc = createCalculationContext([context, first]);
+            const calc = createCalculationContext([dimension, first]);
             const second = duplicateBot(calc, first);
 
             expect(second.tags).toEqual({
@@ -3302,7 +3326,7 @@ export function botCalculationContextTests(
         const cases = [['cube'], ['sphere'], ['sprite']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
-                auxShape: <any>shape,
+                auxForm: <any>shape,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3319,9 +3343,9 @@ export function botCalculationContextTests(
             expect(shape).toBe('cube');
         });
 
-        it('should return the shape from auxShape', () => {
+        it('should return the shape from auxForm', () => {
             let bot = createBot();
-            bot.tags['auxShape'] = 'sphere';
+            bot.tags['auxForm'] = 'sphere';
 
             const calc = createCalculationContext([bot]);
             const shape = getBotShape(calc, bot);
@@ -3333,14 +3357,14 @@ export function botCalculationContextTests(
     describe('getBotPosition()', () => {
         it('should return the contextX, contextY, and contextZ values', () => {
             const bot = createBot('test', {
-                contextX: 10,
-                contextY: 11,
-                contextZ: 12,
+                dimensionX: 10,
+                dimensionY: 11,
+                dimensionZ: 12,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(getBotPosition(calc, bot, 'context')).toEqual({
+            expect(getBotPosition(calc, bot, 'dimension')).toEqual({
                 x: 10,
                 y: 11,
                 z: 12,
@@ -3351,14 +3375,14 @@ export function botCalculationContextTests(
     describe('getBotRotation()', () => {
         it('should return the contextRotationX, contextRotationY, and contextRotationZ values', () => {
             const bot = createBot('test', {
-                contextRotationX: 10,
-                contextRotationY: 11,
-                contextRotationZ: 12,
+                dimensionRotationX: 10,
+                dimensionRotationY: 11,
+                dimensionRotationZ: 12,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(getBotRotation(calc, bot, 'context')).toEqual({
+            expect(getBotRotation(calc, bot, 'dimension')).toEqual({
                 x: 10,
                 y: 11,
                 z: 12,
@@ -3458,45 +3482,45 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('botContextSortOrder()', () => {
-        it('should return the contextSortOrder tag', () => {
+    describe('botDimensionSortOrder()', () => {
+        it('should return the dimensionSortOrder tag', () => {
             const bot = createBot('bot', {
-                contextSortOrder: 123,
+                dimensionSortOrder: 123,
             });
             const calc = createCalculationContext([bot]);
 
-            expect(botContextSortOrder(calc, bot, 'context')).toEqual(123);
+            expect(botDimensionSortOrder(calc, bot, 'dimension')).toEqual(123);
         });
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from _auxUserMenuContext', () => {
+        it('should return the value from _auxUserMenuDimension', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
 
             const calc = createCalculationContext([user]);
             const id = getUserMenuId(calc, user);
-            expect(id).toBe('context');
+            expect(id).toBe('dimension');
         });
     });
 
     describe('getBotsInMenu()', () => {
         it('should return the list of bots in the users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
             const bot1 = createBot('bot1', {
-                context: true,
-                contextSortOrder: 0,
+                dimension: true,
+                dimensionSortOrder: 0,
             });
             const bot2 = createBot('bot2', {
-                context: true,
-                contextSortOrder: 1,
+                dimension: true,
+                dimensionSortOrder: 1,
             });
             const bot3 = createBot('bot3', {
-                context: true,
-                contextSortOrder: 2,
+                dimension: true,
+                dimensionSortOrder: 2,
             });
 
             const calc = createCalculationContext([user, bot2, bot1, bot3]);
@@ -3509,7 +3533,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                auxChannel: 'test',
+                auxUniverse: 'test',
                 'aux.channels': true,
             });
 
@@ -3521,7 +3545,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                auxChannel: 'test',
+                auxUniverse: 'test',
                 'aux.channels': true,
             });
 
@@ -3535,7 +3559,7 @@ export function botCalculationContextTests(
     describe('getChannelConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let bot = createBot('test', {
-                auxChannelConnectedSessions: value,
+                auxUniverseConnectedSessions: value,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3557,7 +3581,7 @@ export function botCalculationContextTests(
     describe('addBotToMenu()', () => {
         it('should return the update needed to add the given bot ID to the given users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3566,16 +3590,16 @@ export function botCalculationContextTests(
 
             expect(update).toEqual({
                 tags: {
-                    context: true,
-                    contextSortOrder: 0,
-                    contextId: 'item',
+                    dimension: true,
+                    dimensionSortOrder: 0,
+                    dimensionId: 'item',
                 },
             });
         });
 
         it('should return the given sortOrder', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3584,20 +3608,20 @@ export function botCalculationContextTests(
 
             expect(update).toEqual({
                 tags: {
-                    context: true,
-                    contextSortOrder: 5,
-                    contextId: 'item',
+                    dimension: true,
+                    dimensionSortOrder: 5,
+                    dimensionId: 'item',
                 },
             });
         });
 
         it('should return sortOrder needed to place the bot at the end of the list', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
             const bot = createBot('bot');
             const bot2 = createBot('bot2', {
-                context: 0,
+                dimension: 0,
             });
 
             const calc = createCalculationContext([user, bot, bot2]);
@@ -3605,9 +3629,9 @@ export function botCalculationContextTests(
 
             expect(update).toEqual({
                 tags: {
-                    context: true,
-                    contextSortOrder: 1,
-                    contextId: 'abc',
+                    dimension: true,
+                    dimensionSortOrder: 1,
+                    dimensionId: 'abc',
                 },
             });
         });
@@ -3616,7 +3640,7 @@ export function botCalculationContextTests(
     describe('removeBotFromMenu()', () => {
         it('should return the update needed to remove the given bot from the users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuContext: 'context',
+                _auxUserMenuDimension: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3625,9 +3649,9 @@ export function botCalculationContextTests(
 
             expect(update).toEqual({
                 tags: {
-                    context: null,
-                    contextSortOrder: null,
-                    contextId: null,
+                    dimension: null,
+                    dimensionSortOrder: null,
+                    dimensionId: null,
                 },
             });
         });
@@ -3645,11 +3669,11 @@ export function botCalculationContextTests(
 
         it.each(cases)('should map %s to %s', (given: any, expected: any) => {
             const bot = createBot('bot', {
-                auxContextVisualize: given,
+                auxDimensionVisualize: given,
             });
 
             const calc = createCalculationContext([bot]);
-            const visible = getContextVisualizeMode(calc, bot);
+            const visible = getDimensionVisualizeMode(calc, bot);
 
             expect(visible).toBe(expected);
         });
@@ -3658,14 +3682,14 @@ export function botCalculationContextTests(
     describe('getContextGrid()', () => {
         it('should find all the tags that represent a grid position', () => {
             const bot = createBot('bot', {
-                'auxContext.surface.grid.0:1': 1,
-                'auxContext.surface.grid.1:1': 1,
-                'auxContext.surface.grid.2:1': 2,
-                'auxContext.surface.grid.2:2': '=3',
+                'auxDimensionConfig.surface.grid.0:1': 1,
+                'auxDimensionConfig.surface.grid.1:1': 1,
+                'auxDimensionConfig.surface.grid.2:1': 2,
+                'auxDimensionConfig.surface.grid.2:2': '=3',
             });
 
             const calc = createCalculationContext([bot]);
-            const grid = getBuilderContextGrid(calc, bot);
+            const grid = getBuilderDimensionGrid(calc, bot);
 
             expect(grid).toEqual({
                 '0:1': 1,
@@ -3677,12 +3701,12 @@ export function botCalculationContextTests(
 
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
-                'auxContext.surface.grid.0:1': 1,
-                auxContextGridScale: 50,
+                'auxDimensionConfig.surface.grid.0:1': 1,
+                auxDimensionGridScale: 50,
             });
 
             const calc = createCalculationContext([bot]);
-            const grid = getBuilderContextGrid(calc, bot);
+            const grid = getBuilderDimensionGrid(calc, bot);
 
             expect(grid).toEqual({
                 '0:1': 1,
@@ -3693,11 +3717,11 @@ export function botCalculationContextTests(
     describe('getContextSize()', () => {
         it('should return the default size if none exists', () => {
             const bot = createBot('bot', {
-                auxContextVisualize: 'surface',
+                auxDimensionVisualize: 'surface',
             });
 
             const calc = createCalculationContext([bot]);
-            const size = getContextSize(calc, bot);
+            const size = getDimensionSize(calc, bot);
 
             expect(size).toBe(1);
         });
@@ -3705,96 +3729,96 @@ export function botCalculationContextTests(
         it('should return the default if the bot is a user bot', () => {
             const bot = createBot('bot', {
                 _auxUser: 'user',
-                auxContextVisualize: 'surface',
+                auxDimensionVisualize: 'surface',
             });
 
             const calc = createCalculationContext([bot]);
-            const size = getContextSize(calc, bot);
+            const size = getDimensionSize(calc, bot);
 
             expect(size).toBe(1);
         });
 
-        it('should still return the user bots context size', () => {
+        it('should still return the user bots dimension size', () => {
             const bot = createBot('bot', {
                 _auxUser: 'user',
-                auxContextVisualize: 'surface',
-                auxContextSurfaceSize: 10,
+                auxDimensionVisualize: 'surface',
+                auxDimensionSurfaceSize: 10,
             });
 
             const calc = createCalculationContext([bot]);
-            const size = getContextSize(calc, bot);
+            const size = getDimensionSize(calc, bot);
 
             expect(size).toBe(10);
         });
 
         it('should return 0 if the bot is not a surface', () => {
             const bot = createBot('bot', {
-                auxContextVisualize: true,
-                auxContextSurfaceSize: 10,
+                auxDimensionVisualize: true,
+                auxDimensionSurfaceSize: 10,
             });
 
             const calc = createCalculationContext([bot]);
-            const size = getContextSize(calc, bot);
+            const size = getDimensionSize(calc, bot);
 
             expect(size).toBe(0);
         });
     });
 
     describe('getContextColor()', () => {
-        it('should return the auxContextColor of the bot', () => {
+        it('should return the auxDimensionColor of the bot', () => {
             const bot = createBot('bot', {
-                auxContextColor: 'red',
+                auxDimensionColor: 'red',
             });
 
             const calc = createCalculationContext([bot]);
-            expect(getContextColor(calc, bot)).toBe('red');
+            expect(getDimensionColor(calc, bot)).toBe('red');
         });
     });
 
     describe('getContextGridScale()', () => {
-        it('should return the auxContextGridScale of the bot', () => {
+        it('should return the auxDimensionGridScale of the bot', () => {
             const bot = createBot('bot', {
-                auxContextGridScale: 10,
+                auxDimensionGridScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
-            expect(getContextGridScale(calc, bot)).toBe(10);
+            expect(getDimensionGridScale(calc, bot)).toBe(10);
         });
     });
 
     describe('getContextScale()', () => {
-        it('should return the auxContextSurfaceScale of the bot', () => {
+        it('should return the auxDimensionSurfaceScale of the bot', () => {
             const bot = createBot('bot', {
-                auxContextSurfaceScale: 10,
+                auxDimensionSurfaceScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
-            expect(getContextScale(calc, bot)).toBe(10);
+            expect(getDimensionScale(calc, bot)).toBe(10);
         });
 
         it('should return the default surface scale if the tag is not set', () => {
             const bot = createBot('bot', {});
 
             const calc = createCalculationContext([bot]);
-            expect(getContextScale(calc, bot)).toBe(DEFAULT_WORKSPACE_SCALE);
+            expect(getDimensionScale(calc, bot)).toBe(DEFAULT_WORKSPACE_SCALE);
         });
     });
 
     describe('getContextDefaultHeight()', () => {
-        it('should return the auxContextSurfaceDefaultHeight of the bot', () => {
+        it('should return the auxDimensionSurfaceDefaultHeight of the bot', () => {
             const bot = createBot('bot', {
-                auxContextSurfaceDefaultHeight: 10.123,
+                auxDimensionSurfaceDefaultHeight: 10.123,
             });
 
             const calc = createCalculationContext([bot]);
-            expect(getContextDefaultHeight(calc, bot)).toBe(10.123);
+            expect(getDimensionDefaultHeight(calc, bot)).toBe(10.123);
         });
 
         it('should return undefined if the tag is not set', () => {
             const bot = createBot('bot', {});
 
             const calc = createCalculationContext([bot]);
-            expect(getContextDefaultHeight(calc, bot)).toBeUndefined();
+            expect(getDimensionDefaultHeight(calc, bot)).toBeUndefined();
         });
     });
 
@@ -3859,11 +3883,11 @@ export function botCalculationContextTests(
     });
 
     describe('addToContextDiff()', () => {
-        it('should return the tags needed to add a bot to a context', () => {
+        it('should return the tags needed to add a bot to a dimension', () => {
             const bot = createBot('bot', {});
 
             const calc = createCalculationContext([bot]);
-            const tags = addToContextDiff(calc, 'test');
+            const tags = addToDimensionDiff(calc, 'test');
 
             expect(tags).toEqual({
                 test: true,
@@ -3881,7 +3905,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createCalculationContext([bot, bot2]);
-            const tags = addToContextDiff(calc, 'test');
+            const tags = addToDimensionDiff(calc, 'test');
 
             expect(tags).toEqual({
                 test: true,
@@ -3901,7 +3925,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createCalculationContext([bot, bot2]);
-            const tags = addToContextDiff(calc, 'test', 1, 2);
+            const tags = addToDimensionDiff(calc, 'test', 1, 2);
 
             expect(tags).toEqual({
                 test: true,
@@ -3913,9 +3937,9 @@ export function botCalculationContextTests(
     });
 
     describe('removeFromContextDiff()', () => {
-        it('should return the tags needed to remove a bot from a context', () => {
+        it('should return the tags needed to remove a bot from a dimension', () => {
             const calc = createCalculationContext([]);
-            const tags = removeFromContextDiff(calc, 'test');
+            const tags = removeFromDimensionDiff(calc, 'test');
 
             expect(tags).toEqual({
                 test: null,
@@ -3930,25 +3954,25 @@ export function botCalculationContextTests(
         it('should return true if movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxContext: 'abc',
-                auxContextSurfaceMovable: true,
+                auxDimensionConfig: 'abc',
+                auxDimensionSurfaceMovable: true,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(isContextMovable(calc, bot)).toBe(true);
+            expect(isDimensionMovable(calc, bot)).toBe(true);
         });
 
         it('should return false if not movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxContext: 'abc',
-                auxContextSurfaceMovable: false,
+                auxDimensionConfig: 'abc',
+                auxDimensionSurfaceMovable: false,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(isContextMovable(calc, bot)).toBe(false);
+            expect(isDimensionMovable(calc, bot)).toBe(false);
         });
 
         it('should be movable by default', () => {
@@ -3956,50 +3980,50 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
 
-            expect(isContextMovable(calc, bot)).toBe(true);
+            expect(isDimensionMovable(calc, bot)).toBe(true);
         });
     });
 
     describe('isContext()', () => {
-        it('should return true when the given bot has auxContext set to something', () => {
+        it('should return true when the given bot has auxDimensionConfig set to something', () => {
             const bot = createBot('test', {
-                auxContext: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
-            expect(isContext(calc, bot)).toBe(true);
+            expect(isDimension(calc, bot)).toBe(true);
         });
 
-        it('should return false when the given bot does not have auxContext set to something', () => {
+        it('should return false when the given bot does not have auxDimensionConfig set to something', () => {
             const bot = createBot('test', {
-                auxContext: '',
+                auxDimensionConfig: '',
             });
 
             const calc = createCalculationContext([bot]);
-            expect(isContext(calc, bot)).toBe(false);
+            expect(isDimension(calc, bot)).toBe(false);
         });
     });
 
     describe('getBotConfigContexts()', () => {
-        it('should return the list of values in auxContext', () => {
+        it('should return the list of values in auxDimensionConfig', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxContext: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
-            const tags = getBotConfigContexts(calc, bot);
+            const tags = getBotConfigDimensions(calc, bot);
 
             expect(tags).toEqual(['abc']);
         });
 
         it('should evalulate formulas', () => {
             const bot = createBot('test', {
-                auxContext: '="abc"',
+                auxDimensionConfig: '="abc"',
             });
 
             const calc = createCalculationContext([bot]);
-            const tags = getBotConfigContexts(calc, bot);
+            const tags = getBotConfigDimensions(calc, bot);
 
             expect(tags).toEqual(['abc']);
         });
@@ -4007,11 +4031,11 @@ export function botCalculationContextTests(
         it('should return the list of values when given a number', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxContext: 123,
+                auxDimensionConfig: 123,
             });
 
             const calc = createCalculationContext([bot]);
-            const tags = getBotConfigContexts(calc, bot);
+            const tags = getBotConfigDimensions(calc, bot);
 
             expect(tags).toEqual(['123']);
         });
@@ -4019,45 +4043,45 @@ export function botCalculationContextTests(
         it('should return the list of values when given a boolean', () => {
             const bot = createBot('test', {
                 abc: true,
-                auxContext: false,
+                auxDimensionConfig: false,
             });
 
             const calc = createCalculationContext([bot]);
-            const tags = getBotConfigContexts(calc, bot);
+            const tags = getBotConfigDimensions(calc, bot);
 
             expect(tags).toEqual(['false']);
         });
     });
 
     describe('isContextLocked()', () => {
-        it('should default to false when the bot is a context', () => {
+        it('should default to false when the bot is a dimension', () => {
             const bot = createBot('test', {
-                auxContext: 'abc',
+                auxDimensionConfig: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
-            const locked = isContextLocked(calc, bot);
+            const locked = isDimensionLocked(calc, bot);
 
             expect(locked).toEqual(false);
         });
 
-        it('should default to true when the bot is not a context', () => {
+        it('should default to true when the bot is not a dimension', () => {
             const bot = createBot('test', {});
 
             const calc = createCalculationContext([bot]);
-            const locked = isContextLocked(calc, bot);
+            const locked = isDimensionLocked(calc, bot);
 
             expect(locked).toEqual(true);
         });
 
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
-                auxContext: 'abc',
-                auxContextLocked: '=true',
+                auxDimensionConfig: 'abc',
+                auxDimensionLocked: '=true',
             });
 
             const calc = createCalculationContext([bot]);
-            const locked = isContextLocked(calc, bot);
+            const locked = isDimensionLocked(calc, bot);
 
             expect(locked).toEqual(true);
         });
@@ -4128,7 +4152,7 @@ export function botCalculationContextTests(
     });
 
     describe('hasBotInInventory()', () => {
-        it('should return true if the given bot is in the users inventory context', () => {
+        it('should return true if the given bot is in the users inventory dimension', () => {
             const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
@@ -4138,7 +4162,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                _auxUserInventoryContext: 'test',
+                _auxUserInventoryDimension: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4150,7 +4174,7 @@ export function botCalculationContextTests(
             expect(result).toBe(true);
         });
 
-        it('should return true if all the given bots are in the users inventory context', () => {
+        it('should return true if all the given bots are in the users inventory dimension', () => {
             const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
@@ -4164,7 +4188,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                _auxUserInventoryContext: 'test',
+                _auxUserInventoryDimension: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4176,7 +4200,7 @@ export function botCalculationContextTests(
             expect(result).toBe(true);
         });
 
-        it('should return false if one of the given bots are not in the users inventory context', () => {
+        it('should return false if one of the given bots are not in the users inventory dimension', () => {
             const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
@@ -4190,7 +4214,7 @@ export function botCalculationContextTests(
                 test: false,
             });
             const user = createBot('userId', {
-                _auxUserInventoryContext: 'test',
+                _auxUserInventoryDimension: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4206,34 +4230,34 @@ export function botCalculationContextTests(
     describe('isBotInContext()', () => {
         it('should handle boolean objects', () => {
             const thisBot = createBot('thisBot', {
-                context: new Boolean(true),
+                dimension: new Boolean(true),
             });
 
             const calc = createCalculationContext([thisBot]);
-            const result = isBotInContext(calc, thisBot, 'context');
+            const result = isBotInDimension(calc, thisBot, 'dimension');
 
             expect(result).toBe(true);
         });
 
         it('should handle string objects', () => {
             const thisBot = createBot('thisBot', {
-                context: new String('true'),
+                dimension: new String('true'),
             });
 
             const calc = createCalculationContext([thisBot]);
-            const result = isBotInContext(calc, thisBot, 'context');
+            const result = isBotInDimension(calc, thisBot, 'dimension');
 
             expect(result).toBe(true);
         });
 
-        it('should handle a string object as the context', () => {
+        it('should handle a string object as the dimension', () => {
             const thisBot = createBot('thisBot', {
-                context: true,
+                dimension: true,
             });
 
             const calc = createCalculationContext([thisBot]);
-            const result = isBotInContext(calc, thisBot, <any>(
-                new String('context')
+            const result = isBotInDimension(calc, thisBot, <any>(
+                new String('dimension')
             ));
 
             expect(result).toBe(true);
@@ -4340,8 +4364,8 @@ export function botCalculationContextTests(
         );
 
         const globalsCases = [
-            ['auxChannelUserPlayerColor', 'player', '#40A287'],
-            ['auxChannelUserBuilderColor', 'builder', '#AAAAAA'],
+            ['auxUniverseUserPlayerColor', 'player', '#40A287'],
+            ['auxUniverseUserBuilderColor', 'builder', '#AAAAAA'],
         ];
 
         it.each(globalsCases)(

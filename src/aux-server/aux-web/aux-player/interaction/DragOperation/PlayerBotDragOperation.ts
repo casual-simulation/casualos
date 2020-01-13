@@ -4,7 +4,7 @@ import {
     BotCalculationContext,
     getBotDragMode,
     BotDragMode,
-    objectsAtContextGridPosition,
+    objectsAtDimensionGridPosition,
     calculateBotDragStackPosition,
     BotTags,
 } from '@casual-simulation/aux-common';
@@ -36,7 +36,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     // Determines if the bot was in the inventory at the beginning of the drag operation
     protected _originallyInInventory: boolean;
 
-    protected _originalContext: string;
+    protected _originalDimension: string;
 
     protected _initialCombine: boolean;
 
@@ -59,7 +59,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
-        context: string,
+        dimension: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false
@@ -68,7 +68,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             playerSimulation3D,
             interaction,
             take(bots, 1),
-            context,
+            dimension,
             vrController,
             fromCoord,
             skipOnDragEvents
@@ -76,9 +76,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         this._botsInStack = drop(bots, 1);
         this._inventorySimulation3D = inventorySimulation3D;
-        this._originalContext = context;
+        this._originalDimension = dimension;
         this._originallyInInventory = this._inInventory =
-            context && this._inventorySimulation3D.inventoryContext === context;
+            dimension &&
+            this._inventorySimulation3D.inventoryDimension === dimension;
     }
 
     protected _createBotDragOperation(bot: Bot): IOperation {
@@ -87,7 +88,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inventorySimulation3D,
             this._interaction,
             [bot],
-            this._context,
+            this._dimension,
             this._vrController,
             this._fromCoord,
             true
@@ -107,18 +108,18 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected _onDrag(calc: BotCalculationContext): void {
         const mode = getBotDragMode(calc, this._bots[0]);
 
-        let nextContext = this._simulation3D.context;
+        let nextContext = this._simulation3D.dimension;
 
         if (!this._vrController) {
             // Test to see if we are hovering over the inventory simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
             if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
-                nextContext = this._inventorySimulation3D.inventoryContext;
+                nextContext = this._inventorySimulation3D.inventoryDimension;
             }
         }
 
-        const changingContexts = this._originalContext !== nextContext;
+        const changingContexts = this._originalDimension !== nextContext;
         let canDrag = false;
 
         if (!changingContexts && this._canDragWithinContext(mode)) {
@@ -131,11 +132,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             return;
         }
 
-        if (nextContext !== this._context) {
-            this._previousContext = this._context;
-            this._context = nextContext;
+        if (nextContext !== this._dimension) {
+            this._previousDimension = this._dimension;
+            this._dimension = nextContext;
             this._inInventory =
-                nextContext === this._inventorySimulation3D.inventoryContext;
+                nextContext === this._inventorySimulation3D.inventoryDimension;
         }
 
         // Get input ray for grid ray cast.
@@ -143,7 +144,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (this._vrController) {
             inputRay = this._vrController.pointerRay.clone();
         } else {
-            // Get input ray from correct camera based on which context we are in.
+            // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
 
@@ -171,7 +172,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             const result = calculateBotDragStackPosition(
                 calc,
-                this._context,
+                this._dimension,
                 gridTile.tileCoordinate,
                 ...this._bots
             );

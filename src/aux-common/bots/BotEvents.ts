@@ -44,13 +44,13 @@ export type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadSimulationAction
-    | UnloadSimulationAction
+    | LoadUniverseAction
+    | UnloadUniverseAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
     | SaveFileAction
-    | GoToContextAction
+    | GoToDimensionAction
     | GoToURLAction
     | PlaySoundAction
     | OpenURLAction
@@ -70,7 +70,10 @@ export type ExtraActions =
     | PasteStateAction
     | ReplaceDragBotAction
     | SetupChannelAction
-    | SetClipboardAction;
+    | SetClipboardAction
+    | ShowChatBarAction
+    | RunScriptAction
+    | ShowUploadUniverseAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -121,28 +124,28 @@ export interface ApplyStateAction extends Action {
  */
 export interface PasteStateOptions {
     /**
-     * The context that the state should be pasted into.
+     * The dimension that the state should be pasted into.
      */
-    context?: string;
+    dimension?: string;
 
     /**
      * The X position that the state should be pasted at.
-     * If a context is provided then this is the X position inside the context.
-     * If a context is not provided then this is the X position that the new context should be created at.
+     * If a dimension is provided then this is the X position inside the dimension.
+     * If a dimension is not provided then this is the X position that the new dimension should be created at.
      */
     x: number;
 
     /**
      * The Y position that the state should be pasted at.
-     * If a context is provided then this is the Y position inside the context.
-     * If a context is not provided then this is the Y position that the new context should be created at.
+     * If a dimension is provided then this is the Y position inside the dimension.
+     * If a dimension is not provided then this is the Y position that the new dimension should be created at.
      */
     y: number;
 
     /**
      * The Z position that the state should be pasted at.
-     * If a context is provided then this is the Z position inside the context.
-     * If a context is not provided then this is the Z position that the new context should be created at.
+     * If a dimension is provided then this is the Z position inside the dimension.
+     * If a dimension is not provided then this is the Z position that the new dimension should be created at.
      */
     z: number;
 }
@@ -252,9 +255,9 @@ export interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The channel that the payment processing should occur in.
+     * The universe that the payment processing should occur in.
      */
-    processingChannel: string;
+    processingUniverse: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -323,7 +326,7 @@ export interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingChannel: string;
+    processingUniverse: string;
 }
 
 /**
@@ -543,8 +546,8 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-export interface LoadSimulationAction extends Action {
-    type: 'load_simulation';
+export interface LoadUniverseAction extends Action {
+    type: 'load_universe';
 
     /**
      * The ID of the simulation to load.
@@ -555,8 +558,8 @@ export interface LoadSimulationAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-export interface UnloadSimulationAction extends Action {
-    type: 'unload_simulation';
+export interface UnloadUniverseAction extends Action {
+    type: 'unload_universe';
 
     /**
      * The ID of the simulation to unload.
@@ -702,15 +705,15 @@ export interface SaveFileOptions {
 }
 
 /**
- * Defines an event that is used to send the player to a context.
+ * Defines an event that is used to send the player to a dimension.
  */
-export interface GoToContextAction extends Action {
-    type: 'go_to_context';
+export interface GoToDimensionAction extends Action {
+    type: 'go_to_dimension';
 
     /**
-     * The context that should be loaded.
+     * The dimension that should be loaded.
      */
-    context: string;
+    dimension: string;
 }
 
 /**
@@ -786,23 +789,23 @@ export interface PlaySoundAction extends Action {
 }
 
 /**
- * Defines an event that is used to download a bot onto the device.
+ * Defines an event that is used to download a file onto the device.
  */
 export interface DownloadAction extends Action {
     type: 'download';
 
     /**
-     * The data that should be included in the downloaded bot.
+     * The data that should be included in the downloaded file.
      */
     data: any;
 
     /**
-     * The name of the downloaded bot. (includes the extension)
+     * The name of the downloaded file. (includes the extension)
      */
-    botname: string;
+    filename: string;
 
     /**
-     * The MIME type of the downloaded bot.
+     * The MIME type of the downloaded file.
      */
     mimeType: string;
 }
@@ -902,7 +905,7 @@ export interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 export interface SetupChannelAction {
-    type: 'setup_channel';
+    type: 'setup_universe';
 
     /**
      * The channel that should be created.
@@ -925,6 +928,42 @@ export interface SetClipboardAction {
      * The text that the clipboard should be set to.
      */
     text: string;
+}
+
+/**
+ * Defines an event that shows the chat bar.
+ */
+export interface ShowChatBarAction {
+    type: 'show_chat_bar';
+
+    /**
+     * Whether the chat bar should be visible.
+     */
+    visible: boolean;
+
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+}
+
+/**
+ * Defines an event that executes a script.
+ */
+export interface RunScriptAction {
+    type: 'run_script';
+
+    /**
+     * The script that should be executed.
+     */
+    script: string;
+}
+
+/**
+ * Defines an event that shows the "upload universe" dialog.
+ */
+export interface ShowUploadUniverseAction {
+    type: 'show_upload_universe';
 }
 
 /**
@@ -1195,12 +1234,41 @@ export function showBarcode(
 }
 
 /**
+ * Creates a new ShowRunBarAction that shows the run bar.
+ * @param prefill The text that should be prefilled into the run bar's input box.
+ */
+export function showChat(prefill?: string): ShowChatBarAction {
+    if (prefill) {
+        return {
+            type: 'show_chat_bar',
+            visible: true,
+            prefill,
+        };
+    } else {
+        return {
+            type: 'show_chat_bar',
+            visible: true,
+        };
+    }
+}
+
+/**
+ * Creates a new ShowRunBarAction that hides the run bar.
+ */
+export function hideChat(): ShowChatBarAction {
+    return {
+        type: 'show_chat_bar',
+        visible: false,
+    };
+}
+
+/**
  * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadSimulationAction {
+export function loadSimulation(id: string): LoadUniverseAction {
     return {
-        type: 'load_simulation',
+        type: 'load_universe',
         id: id,
     };
 }
@@ -1209,9 +1277,9 @@ export function loadSimulation(id: string): LoadSimulationAction {
  * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadSimulationAction {
+export function unloadSimulation(id: string): UnloadUniverseAction {
     return {
-        type: 'unload_simulation',
+        type: 'unload_universe',
         id: id,
     };
 }
@@ -1231,13 +1299,12 @@ export function superShout(eventName: string, arg?: any): SuperShoutAction {
 
 /**
  * Creates a new GoToContextAction.
- * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
- * @param context
+ * @param dimension The simulation ID or dimension to go to. If a simulation ID is being provided, then the dimension parameter must also be provided.
  */
-export function goToContext(context: string): GoToContextAction {
+export function goToDimension(dimension: string): GoToDimensionAction {
     return {
-        type: 'go_to_context',
-        context: context,
+        type: 'go_to_dimension',
+        dimension,
     };
 }
 
@@ -1387,18 +1454,18 @@ export function backupAsDownload(
 /**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
- * @param botname The name of the bot.
+ * @param filename The name of the file.
  * @param mimeType The MIME type of the data.
  */
 export function download(
     data: any,
-    botname: string,
+    filename: string,
     mimeType: string
 ): DownloadAction {
     return {
         type: 'download',
         data,
-        botname,
+        filename,
         mimeType,
     };
 }
@@ -1420,13 +1487,13 @@ export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
 export function checkoutSubmitted(
     productId: string,
     token: string,
-    processingChannel: string
+    processingUniverse: string
 ): CheckoutSubmittedAction {
     return {
         type: 'checkout_submitted',
         productId: productId,
         token: token,
-        processingChannel: processingChannel,
+        processingUniverse: processingUniverse,
     };
 }
 
@@ -1504,12 +1571,12 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * @param channel The ID of the channel to setup.
  * @param botOrMod The bot that should be cloned into the new channel.
  */
-export function setupChannel(
+export function setupUniverse(
     channel: string,
     botOrMod?: Bot | BotTags
 ): SetupChannelAction {
     return {
-        type: 'setup_channel',
+        type: 'setup_universe',
         channel,
         botOrMod,
     };
@@ -1523,5 +1590,25 @@ export function setClipboard(text: string): SetClipboardAction {
     return {
         type: 'set_clipboard',
         text,
+    };
+}
+
+/**
+ * Creates a RunScriptAction.
+ * @param script The script that should be executed.
+ */
+export function runScript(script: string): RunScriptAction {
+    return {
+        type: 'run_script',
+        script,
+    };
+}
+
+/**
+ * Creates a ShowUploadUniverseAction.
+ */
+export function showUploadUniverse(): ShowUploadUniverseAction {
+    return {
+        type: 'show_upload_universe',
     };
 }

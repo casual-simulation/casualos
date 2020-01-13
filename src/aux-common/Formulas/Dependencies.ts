@@ -582,19 +582,19 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserContext',
+                    name: '_auxUserDimension',
                     dependencies: [],
                 },
             ];
         },
-        'player.getCurrentChannel': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentUniverse': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserChannel',
+                    name: '_auxUserUniverse',
                     dependencies: [],
                 },
             ];
@@ -606,7 +606,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserMenuContext',
+                    name: '_auxUserMenuDimension',
                     dependencies: [],
                 },
             ];
@@ -618,7 +618,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserInventoryContext',
+                    name: '_auxUserInventoryDimension',
                     dependencies: [],
                 },
             ];

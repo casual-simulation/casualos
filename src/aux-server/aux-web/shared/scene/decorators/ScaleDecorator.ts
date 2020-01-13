@@ -3,7 +3,7 @@ import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     calculateGridScale,
-    getBuilderContextGrid,
+    getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
@@ -17,7 +17,7 @@ export class ScaleDecorator extends AuxBot3DDecoratorBase {
     botUpdated(calc: BotCalculationContext): void {
         const gridScale = calculateGridScale(
             calc,
-            this.bot3D.contextGroup ? this.bot3D.contextGroup.bot : null
+            this.bot3D.dimensionGroup ? this.bot3D.dimensionGroup.bot : null
         );
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
         this.bot3D.display.scale.set(scale.x, scale.y, scale.z);

@@ -9,28 +9,25 @@ import {
     getSelectionMode,
     isBot,
 } from '@casual-simulation/aux-common';
-import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import BotTable from '../BotTable/BotTable';
+import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
-import TagEditor from '../TagEditor/TagEditor';
+import TagEditor from '../../shared/vue-components/TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap, switchMap } from 'rxjs/operators';
-import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { EventBus } from '../../shared/EventBus';
 import {
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
+import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 
 @Component({
     components: {
-        'game-view': BuilderGameView,
         'bot-table': BotTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'bot-table-toggle': BotTableToggle,
     },
 })
 export default class BuilderHome extends Vue {
@@ -44,23 +41,23 @@ export default class BuilderHome extends Vue {
     };
 
     @Prop() channelId: string;
+    @Prop() dimension: string;
+
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
     bots: Bot[] = [];
-    searchResult: any = null;
-    isSearch: boolean = false;
-    setLargeSheet: boolean = false;
+    setLargeSheet: boolean = true;
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
     selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
-    isOpen: boolean = false;
-    isVis: boolean = false;
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
     private _simulation: BrowserSimulation;
+
+    @Provide() botRenderer: BotRenderer = getRenderer();
 
     getUIHtmlElements(): HTMLElement[] {
         const table = <BotTable>this.$refs.table;
@@ -120,18 +117,20 @@ export default class BuilderHome extends Vue {
 
     @Watch('channelId')
     async channelIdChanged() {
-        await appManager.setPrimarySimulation(this.channelId);
+        await appManager.setPrimarySimulation(
+            `${this.dimension || '*'}/${this.channelId}`
+        );
     }
 
     async created() {
         this.isLoading = true;
-        await appManager.setPrimarySimulation(this.channelId);
+        await appManager.setPrimarySimulation(
+            `${this.dimension || '*'}/${this.channelId}`
+        );
 
         appManager.whileLoggedIn((user, botManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
-            this.isOpen = false;
-            this.isVis = true;
             this.bots = [];
             this.tags = [];
             this.updateTime = -1;
@@ -140,16 +139,23 @@ export default class BuilderHome extends Vue {
                 this._simulation.botPanel.botsUpdated.subscribe(e => {
                     this.bots = e.bots;
                     this.isDiff = e.isDiff;
-                    this.searchResult = e.searchResult;
-                    this.isSearch = e.isSearch;
                     const now = Date.now();
                     this.updateTime = now;
-                }),
-                this._simulation.botPanel.isOpenChanged.subscribe(open => {
-                    this.isOpen = open;
-                }),
-                this._simulation.botPanel.isVisChanged.subscribe(vis => {
-                    this.isVis = vis;
+                })
+            );
+
+            subs.push(
+                this._simulation.localEvents.subscribe(e => {
+                    if (e.type === 'go_to_dimension') {
+                        this._simulation.helper.updateBot(
+                            this._simulation.helper.userBot,
+                            {
+                                tags: {
+                                    _auxUserDimension: e.dimension,
+                                },
+                            }
+                        );
+                    }
                 })
             );
 

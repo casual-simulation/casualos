@@ -1,5 +1,3 @@
-import { RecentBotManager } from './RecentBotManager';
-import SelectionManager from './SelectionManager';
 import { BotPanelManager } from './BotPanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
@@ -11,16 +9,6 @@ import { Observable } from 'rxjs';
  * Defines an interface for objects that represent bot simulations.
  */
 export interface BrowserSimulation extends RemoteSimulation {
-    /**
-     * Gets the selection manager.
-     */
-    selection: SelectionManager;
-
-    /**
-     * Gets the recent bots manager.
-     */
-    recent: RecentBotManager;
-
     /**
      * Gets the bots panel manager.
      */

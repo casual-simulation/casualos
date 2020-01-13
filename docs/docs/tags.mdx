@@ -1,0 +1,1160 @@
+---
+id: tags
+title: Tags
+sidebar_label: Tags
+description: AUX has many tags.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  TagLink,
+  NormalCode,
+  UserBotBadge,
+} from './components.mdx';
+
+AUX has many tags.
+
+## Info Tags
+
+### `id`
+
+<Badges>
+  <ReadOnlyBadge/>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
+
+The ID of the bot.
+
+Every bot has an automatically generated unique ID that cannot be changed.
+
+### `space`
+
+<Badges>
+  <ReadOnlyBadge/>
+</Badges>
+
+The space the bot lives in.
+
+Every bot is stored in a space that specifies how long the bot lives and if it is shared with other people.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='shared'>
+    The bot is saved on the AUXPlayer and is shared with everyone else. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='local'>
+    The bot is saved on the device it was created from and is not shared with other devices.
+  </PossibleValueCode>
+  <PossibleValueCode value='tempLocal'>
+    The bot is not saved and is not shared with other sessions.
+    When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxCreator`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
+
+The ID of the bot that created this bot.
+
+## Behavior Tags
+
+### `auxDraggable`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
+</Badges>
+
+Whether the bot is able to be dragged.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot is able to be dragged. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be dragged.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDraggableMode`
+
+The mode that controls how a bot can be dragged.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='all'>
+    The bot can be dragged anywhere. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='none'>
+    The bot cannot be dragged.
+  </PossibleValueCode>
+  <PossibleValueCode value='moveOnly'>
+    The bot can be moved anywhere within the dimension it is currently in but not moved to another dimension. (only applies to AUXPlayer)
+  </PossibleValueCode>
+  <PossibleValueCode value='pickupOnly'>
+    The bot can be moved to another dimension but not within the dimension it is currently in. (only applies to AUXPlayer)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxPositioningMode`
+
+The positioning mode that the bot uses.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='stack'>
+    The bot can be stacked upon other bots and other bots can be stacked upon it. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='absolute'>
+    The bot will ignore all other bots for positioning.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDestroyable`
+
+Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will allow destruction events to occur outside Channel Designer. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not allow destruction events to occur to it outside of Channel Designer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxEditable`
+
+Whether the bot is able to be edited in the sheet in Channel Designer.
+
+<Alert type='warning'>
+  <strong>Use with caution.</strong> Once you set <TagLink tag='auxEditable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
+</Alert>
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot can be edited via the sheet. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be edited via the sheet. (including being able to set auxEditable back to true)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxListening`
+
+Determines whether this bot responds to whispers or shouts. If this tag is set to `true` it will respond to them. If set to `false`, it will not.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will respond to whispers and shouts. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not respond to whispers or shouts.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+## Visualization Tags
+
+### `auxColor`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tV4xJJjxDkE' />
+</Badges>
+
+The color of the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxStrokeColor`
+
+The color of the bot's outline.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxStrokeWidth`
+
+The width of the bot's outline. Only works in Chrome.
+
+### `auxLineTo`
+
+The Bot IDs that this bot should draw lines to.
+
+### `auxLineStyle`
+
+The style of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='arrow'>
+    Displays the line with an arrow at the tip pointing to the target bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='line'>
+    Displays the line without additional decoration.
+  </PossibleValueCode>
+  <PossibleValueCode value='wall'>
+    Displays the line as a vertical wall.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxLineColor`
+
+The color of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxLabel`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/rWyJ1A42BFA' />
+</Badges>
+
+The text that the bot should show in a label.
+
+### `auxLabelColor`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tNlH0gx7OBQ' />
+</Badges>
+
+The color of the text in the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='black'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxLabelSize`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
+</Badges>
+
+The size of the label font. Default is 1.
+
+### `auxLabelSizeMode`
+
+The sizing mode for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='normal'>
+    Don't automatically scale the label size. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='auto'>
+    Automatically scale the label to keep the same size on the screen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxLabelAnchor`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/0P87qsLexW0' />
+</Badges>
+
+The anchor position for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+### `auxScale`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The uniform scale of the bot.
+
+Defaults to 1.
+
+### `auxScaleX`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The X scale (width) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final width of the bot.
+
+Defaults to 1.
+
+### `auxScaleY`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The Y scale (length) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final length of the bot.
+
+Defaults to 1.
+
+### `auxScaleZ`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The Z scale (height) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final height of the bot.
+
+Defaults to 1.
+
+### `auxForm`
+
+The shape that the bot should be displayed as.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='cube'>
+    Cube mesh (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='sphere'>
+    Sphere mesh
+  </PossibleValueCode>
+  <PossibleValueCode value='sprite'>
+    Camera facing (billboarded) sprite/quad images.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxFormAddress`
+
+The address that the bot should represent data from.
+
+When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+
+### `auxProgressBar`
+
+Causes a progress bar to be shown for the bot. Range is between 0 and 1.
+Needs both auxProgressBarBackgroundColor and auxProgressBarColor to visualize the progress
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    <ul>
+      <li>
+        0 means that you will only see <TagLink tag='auxProgressBarBackgroundColor'/>.
+      </li>
+      <li>
+        0.5 means that you will see half of <TagLink tag='auxProgressBarBackgroundColor'/> and half of <TagLink tag='auxProgressBarColor'/>.
+      </li>
+      <li>
+        1 means that you will only see <TagLink tag='auxProgressBarColor'/>.
+      </li>
+    </ul>
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxProgressBarColor`
+
+The foreground color of the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='black'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxProgressBarBackgroundColor`
+
+The background color of the progress bar.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxProgressBarAnchor`
+
+The anchor position for the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+## Dimension Tags
+
+### `[dimension]`
+
+Add a bot to a dimension. 
+
+> **Example:**  Set `#room1` to `true` for the bot to appear in a dimension named `room1`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Removes the bot from the dimension. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Puts the bot into the dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `[dimension]SortOrder`
+
+The order that the bot should be in a stack of bots.
+
+When bots are stacked, they are placed from the bottom to the top based on the sort order. So a bot with a sort order of 1 is going to be placed on top of a bot with a sort order of 2.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the sort order of a bot in a stack of bots. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]X`
+
+The X (east-west) position of a bot on the grid in the specified dimension.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Y`
+
+The Y (north-south) position of a bot on the grid in the specified dimension.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Z`
+
+The Z (up-down) offset that the bot is offset above/below the grid.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationX`
+
+The X (pitch) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationY`
+
+The Y (roll) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationZ`
+
+The Z (yaw) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+## Dimension Config Tags
+
+These tags are used to configure dimensions.
+
+### `auxDimensionConfig`
+
+Set with a name to create a dimension. The bot with the tag becomes the "dimension bot".
+
+<Alert type='info'>
+  Remember to set the <TagLink tag='auxDimensionVisualize'/> tag to <NormalCode>surface</NormalCode> to see the dimension in Channel Designer.
+</Alert>
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The name of the dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionColor`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
+</Badges>
+
+The color of the background while in the dimension in AUXPlayer. Also the color of the surface in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#263238'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxDimensionLocked`
+
+Determines if the dimension can be loaded in AUXPlayer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The dimension can be loaded in AUXPlayer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The dimension cannot be loaded in AUXPlayer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionVisualize`
+
+How the dimension should be visualized in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The dimension is not visualized in Channel Designer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The dimension is visualized in Channel Designer without a surface.
+  </PossibleValueCode>
+  <PossibleValueCode value='surface'>
+    The dimension is visualized in Channel Designer with a surface.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionX`
+
+The X (east-west) position of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X position of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionY`
+
+The Y (north-south) position of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionZ`
+
+The Z (east-west) position of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z position of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionOrientationX`
+
+The X (pitch) rotation in radians of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionOrientationY`
+
+The Y (roll) rotation in radians of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionOrientationZ`
+
+The Z (roll) rotation in radians of the dimension in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation of the dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryColor`
+
+The color of the background for the inventory viewport.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryHeight`
+
+Sets the initial height of the inventory viewport for the dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1 and <= 10'>
+    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryVisible`
+
+Whether the inventory is visible in this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is visible in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not visible in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryPannable`
+
+Whether the player will be able to pan the camera inside the inventory in this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is pannable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not pannable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryPannableMinX`
+
+The minimum X value that the inventory can be panned to while in this dimension.
+
+### `auxDimensionInventoryPannableMaxX`
+
+The maximum X value that the inventory can be panned to while in this dimension.
+
+### `auxDimensionInventoryPannableMinY`
+
+The minimum Y value that the inventory can be panned to while in this dimension.
+
+### `auxDimensionInventoryPannableMaxY`
+
+The maximum Y value that the inventory can be panned to while in this dimension.
+
+### `auxDimensionInventoryResizable`
+
+Whether the player will be able to resize the viewport for the inventory in this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is resizable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not resizable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryRotatable`
+
+Whether the player will be able to rotate the camera inside the inventory in this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is rotatable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not rotatable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionInventoryZoomable`
+
+Whether the player will be able to zoom the camera inside the inventory in this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is zoomable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not zoomable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionGridScale`
+
+The size of bots in the dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The size of bots in the dimension. (Default is 0.2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionSurfaceSize`
+
+The radius of hexes around the center of the dimension surface.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Whole Number > 1'>
+    The number of hexes that should be placed from the center. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionSurfaceScale`
+
+The scale of the dimension surface in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The scale of surface for the dimension. (Default is 2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxDimensionSurfaceMinimized`
+
+Whether the dimension's surface is minimized. i.e. Collapsed so no bots are shown.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The surface is not minimized. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The surface is minimized.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionSurfaceMovable`
+
+Whether the dimension's surface can be moved in Channel Designer when minimized.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The surface is movable when minimized. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The surface is not movable when minimized.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionDevicesVisible`
+
+Whether other user bots will be visible in AUXPlayer when viewing this dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    Other user bots are visible in AUXPlayer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Other user bots are not visible in AUXPlayer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionPannable`
+
+Whether the player will be able to pan the camera inside the dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is pannable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not pannable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionRotatable`
+
+Whether the player will be able to rotate the camera inside the dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is rotatable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not rotatable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxDimensionZoomable`
+
+Whether the player will be able to zoom the camera inside the dimension.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is zoomable in this dimension. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not zoomable in this dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+## Channel Config Tags
+
+These tags are set on the config bot and affect the entire universe.
+
+### `auxSceneColor`
+
+The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
+The value can be overridden on a per-dimension basis in AUXPlayer by using the <TagLink tag='auxDimensionColor'/> tag.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#263238'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxSceneUserPlayerColor`
+
+The color of other users that are in AUXPlayer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#DDDD00'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxSceneUserBuilderColor`
+
+The color of other users that are in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#00D000'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `auxInventoryHeight`
+
+Sets the initial height of the inventory viewport for all dimension.
+
+This value is overridden by <TagLink tag='auxDimensionInventoryHeight'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1 and <= 10'>
+    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+## Experimental Tags
+
+### `auxIframe`
+
+The URL of the page to embed in a 3D iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value={
+    <>Any <a href='https://en.wikipedia.org/wiki/URL' target='_blank'>HTTP URL</a></>
+  }>
+    Specifies the webpage that should be loaded into the iframe.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeX`
+
+The X position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeY`
+
+The Y position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeZ`
+
+The Z position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z offset of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeRotationX`
+
+The X (pitch) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeRotationY`
+
+The Y (roll) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeRotationZ`
+
+The Z (yaw) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeSizeX`
+
+The width of the iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the width of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeSizeY`
+
+The height of the iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the height of the iframe. (Default is 0.75)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeElementWidth`
+
+The pixel width of the iframe DOM element.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Whole Number > 0'>
+    Specifies the width of the iframe. (Default is 768)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxIframeScale`
+
+The uniform scale of the iframe.
+Combines with <TagLink tag='auxIframeSizeX'/> and <TagLink tag='auxIframeSizeY'/> to produce the final size.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the scale of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+## Hidden Tags
+
+Hidden tags are tags that are hidden in the sheet by default.
+
+<Alert type='info'>
+  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
+</Alert>
+
+### `_auxSelection`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+Stores the dimension that the user is currently using as their selection for the sheet.
+Only works on a player bot.
+
+### `_auxUser`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The username of the player bot.
+
+### `_auxUserDimension`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension that the user is currently viewing in AUXPlayer.
+Only available on the player bot.
+
+### `_auxUserInventoryDimension`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension of the user's inventory in AUXPlayer.
+Only available on the player bot.
+
+### `_auxUserMenuDimension`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension of the user's menu in AUXPlayer.
+Only available on the player bot.
+
+### `_auxUserUniversesDimension`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension that contains extra channels that should be loaded into AUXPlayer for the user.
+Only available on the player bot.
+
+### `_auxEditingBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that the user is currently editing.
+Only available on the player bot.
+
+### `_auxSelectionMode`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection mode that the user is in.
+Only available on the player bot.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='single'>
+    Indicates that the user is in single select mode. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='multi'>
+    Indicates that the user is in multiple select mode.
+  </PossibleValueCode>
+</PossibleValuesTable>

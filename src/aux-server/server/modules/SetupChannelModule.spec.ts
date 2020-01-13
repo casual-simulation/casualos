@@ -7,7 +7,7 @@ import {
     createBot,
     AuxCausalTree,
     webhook,
-    setupChannel,
+    setupUniverse,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
@@ -112,11 +112,11 @@ describe('SetupChannelModule', () => {
     });
 
     describe('events', () => {
-        describe('setup_channel', () => {
+        describe('setup_universe', () => {
             it('should create non-existant channels', async () => {
                 expect.assertions(1);
 
-                await channel.sendEvents([setupChannel('newChannel')]);
+                await channel.sendEvents([setupUniverse('newChannel')]);
 
                 await waitAsync();
 
@@ -134,7 +134,7 @@ describe('SetupChannelModule', () => {
                 uuidMock.mockReturnValueOnce('newBot');
 
                 await channel.sendEvents([
-                    setupChannel(
+                    setupUniverse(
                         'newChannel',
                         createBot('test', {
                             abc: 'def',
@@ -170,7 +170,7 @@ describe('SetupChannelModule', () => {
                 uuidMock.mockReturnValueOnce('newBot');
 
                 await channel.sendEvents([
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         abc: 'def',
                     }),
                 ]);
@@ -203,7 +203,7 @@ describe('SetupChannelModule', () => {
                 uuidMock.mockReturnValueOnce('newBot');
 
                 await channel.sendEvents([
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         onCreate: '@setTag(this, "created", true)',
                     }),
                 ]);
@@ -242,7 +242,7 @@ describe('SetupChannelModule', () => {
 
                 uuidMock.mockReturnValueOnce('newBot');
                 await channel.sendEvents([
-                    setupChannel('newChannel', {
+                    setupUniverse('newChannel', {
                         test: 'abc',
                     }),
                 ]);

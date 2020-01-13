@@ -77,7 +77,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 botAdded(createBot('abc', {})),
                 botAdded(
                     createBot('def', {
-                        auxContext: 'context',
+                        auxDimensionConfig: 'dimension',
                     })
                 ),
                 botAdded(createBot('111', {})),

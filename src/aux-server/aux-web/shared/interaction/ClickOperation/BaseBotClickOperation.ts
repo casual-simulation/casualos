@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import {
@@ -24,13 +24,13 @@ import { BaseClickOperation } from './BaseClickOperation';
  */
 export abstract class BaseBotClickOperation extends BaseClickOperation {
     protected _bot: Bot;
-    protected _bot3D: AuxBot3D | ContextGroup3D | null;
+    protected _bot3D: AuxBot3D | DimensionGroup3D | null;
 
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         bot: Bot,
-        bot3D: AuxBot3D | ContextGroup3D | null,
+        bot3D: AuxBot3D | DimensionGroup3D | null,
         vrController: VRController3D | null
     ) {
         super(simulation3D, interaction, vrController);
@@ -48,7 +48,7 @@ export abstract class BaseBotClickOperation extends BaseClickOperation {
             let tempPos = getBotPosition(
                 calc,
                 this._bot3D.bot,
-                (this._bot3D as AuxBot3D).context
+                (this._bot3D as AuxBot3D).dimension
             );
             startBotPos = new Vector2(
                 Math.round(tempPos.x),

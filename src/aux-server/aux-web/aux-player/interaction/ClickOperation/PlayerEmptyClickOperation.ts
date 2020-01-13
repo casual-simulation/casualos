@@ -46,13 +46,13 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
 
         for (const sim3D of simulation3Ds) {
             if (sim3D instanceof PlayerSimulation3D) {
-                let inputContext: string;
+                let inputDimension: string;
                 let inputRay: Ray;
 
                 // Calculate input ray.
                 if (this._vrController) {
                     inputRay = this._vrController.pointerRay;
-                    inputContext = sim3D.context;
+                    inputDimension = sim3D.dimension;
                 } else {
                     const pagePos = this._game.getInput().getMousePagePos();
                     const inventoryViewport = this._game.getInventoryViewport();
@@ -72,13 +72,13 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                             ),
                             inventory.getMainCameraRig().mainCamera
                         );
-                        inputContext = inventory.inventoryContext;
+                        inputDimension = inventory.inventoryDimension;
                     } else {
                         inputRay = Physics.screenPosToRay(
                             this._game.getInput().getMouseScreenPos(),
                             sim3D.getMainCameraRig().mainCamera
                         );
-                        inputContext = sim3D.context;
+                        inputDimension = sim3D.dimension;
                     }
                 }
 
@@ -87,7 +87,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
 
                 if (gridTile) {
                     sim3D.simulation.helper.action('onGridClick', null, {
-                        context: inputContext,
+                        dimension: inputDimension,
                         position: {
                             x: gridTile.tileCoordinate.x,
                             y: gridTile.tileCoordinate.y,

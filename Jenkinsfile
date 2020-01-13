@@ -57,6 +57,11 @@ pipeline {
                 PublishNPM()
             }
         }
+        stage('Publish Docs') {
+            steps {
+                PublishDocs()
+            }
+        }
         stage('Build/Publish Docker x64') {
             steps {
                 BuildDocker()
@@ -167,6 +172,13 @@ def PublishNPM() {
     for i in {1..5}; do 
         npm install --package-lock-only && break || sleep 5;
     done
+    """
+}
+
+def PublishDocs() {
+    sh """#!/bin/bash
+    set -e
+    git subtree push -P docs git@github.com:casual-simulation/casual-simulation.github.io.git master:develop
     """
 }
 
