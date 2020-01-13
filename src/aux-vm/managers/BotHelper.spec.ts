@@ -6,6 +6,9 @@ import {
     PrecalculatedBotsState,
     createPrecalculatedBot,
     botRemoved,
+    action,
+    CREATE_ACTION_NAME,
+    CREATE_ANY_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
@@ -99,12 +102,26 @@ describe('BotHelper', () => {
                         auxUniverse: 'test',
                     })
                 ),
+                action(CREATE_ACTION_NAME, ['botId'], 'user'),
+                action(CREATE_ANY_ACTION_NAME, null, 'user', {
+                    bot: createBot('botId', {
+                        abc: true,
+                        auxUniverse: 'test',
+                    }),
+                }),
                 botAdded(
                     createBot('botId2', {
                         abc: true,
                         auxUniverse: 'test2',
                     })
                 ),
+                action(CREATE_ACTION_NAME, ['botId2'], 'user'),
+                action(CREATE_ANY_ACTION_NAME, null, 'user', {
+                    bot: createBot('botId2', {
+                        abc: true,
+                        auxUniverse: 'test2',
+                    }),
+                }),
             ]);
         });
 
@@ -122,6 +139,28 @@ describe('BotHelper', () => {
             await helper.createSimulation('test', 'bot2');
 
             expect(vm.events).toEqual([]);
+        });
+    });
+
+    describe('createBot()', () => {
+        it('should send onCreate() and onAnyCreate() shouts', async () => {
+            await helper.createBot('abc', {
+                def: 'ghi',
+            });
+
+            expect(vm.events).toEqual([
+                botAdded(
+                    createBot('abc', {
+                        def: 'ghi',
+                    })
+                ),
+                action(CREATE_ACTION_NAME, ['abc'], 'user'),
+                action(CREATE_ANY_ACTION_NAME, null, 'user', {
+                    bot: createBot('abc', {
+                        def: 'ghi',
+                    }),
+                }),
+            ]);
         });
     });
 

@@ -8,6 +8,7 @@ import {
     DESTROY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
     BotsState,
+    CREATE_ANY_ACTION_NAME,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -728,6 +729,11 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     }
 
     event(CREATE_ACTION_NAME, ret);
+    for (let bot of ret) {
+        event(CREATE_ANY_ACTION_NAME, null, {
+            bot: bot,
+        });
+    }
 
     if (ret.length === 1) {
         return ret[0];

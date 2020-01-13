@@ -24,6 +24,8 @@ import {
     isPrecalculated,
     formatValue,
     createPrecalculatedContext,
+    CREATE_ACTION_NAME,
+    CREATE_ANY_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import { BaseHelper } from './BaseHelper';
@@ -90,15 +92,30 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Creates a new bot with the given ID and tags. Returns the ID of the new bot.
      * @param id (Optional) The ID that the bot should have.
      * @param tags (Optional) The tags that the bot should have.
+     * @param sendShouts Whether to send the onCreate() and onAnyCreate() shouts.
      */
-    async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
+    async createBot(
+        id?: string,
+        tags?: Bot['tags'],
+        sendShouts: boolean = true
+    ): Promise<string> {
         if (BotHelper._debug) {
             console.log('[BotManager] Create Bot');
         }
 
         const bot = createBot(id, tags);
 
-        await this._vm.sendEvents([botAdded(bot)]);
+        let events: BotAction[] = [botAdded(bot)];
+
+        if (sendShouts) {
+            events.push(
+                action(CREATE_ACTION_NAME, [bot.id], this.userId),
+                action(CREATE_ANY_ACTION_NAME, null, this.userId, {
+                    bot: bot,
+                })
+            );
+        }
+        await this._vm.sendEvents(events);
 
         return bot.id;
     }

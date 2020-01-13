@@ -445,6 +445,11 @@ export const MOD_DROP_ACTION_NAME: string = 'onModDrop';
 export const CREATE_ACTION_NAME: string = 'onCreate';
 
 /**
+ * The name of the event that represents any bot being created.
+ */
+export const CREATE_ANY_ACTION_NAME: string = 'onAnyCreate';
+
+/**
  * The name of the event that represents a bot being destroyed.
  */
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
@@ -749,6 +754,7 @@ export const KNOWN_TAGS: string[] = [
     'onSaveInput',
     'onCloseInput',
     CREATE_ACTION_NAME,
+    CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
     DROP_EXIT_ACTION_NAME,
