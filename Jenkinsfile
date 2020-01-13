@@ -178,7 +178,16 @@ def PublishNPM() {
 def PublishDocs() {
     sh """#!/bin/bash
     set -e
-    git subtree push -P docs git@github.com:casual-simulation/casual-simulation.github.io.git develop
+    cd docs
+    
+    echo "Installing NPM Packages..."
+    yarn install --frozen-lockfile
+
+    echo "Upgrading Casual Simulation NPM Packages.."
+    yarn upgrade --scope @casual-simulation
+
+    echo "Building and deploying..."
+    GIT_USER="YETi-DevOps" USE_SSH=true yarn deploy
     """
 }
 
