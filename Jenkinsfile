@@ -178,7 +178,7 @@ def PublishNPM() {
 def PublishDocs() {
     sh """#!/bin/bash
     set -e
-    git subtree push -P docs git@github.com:casual-simulation/casual-simulation.github.io.git master:develop
+    git subtree push -P docs git@github.com:casual-simulation/casual-simulation.github.io.git develop
     """
 }
 
