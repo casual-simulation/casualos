@@ -54,7 +54,7 @@ import {
     hideChat as calcHideRun,
     runScript,
     download,
-    showUploadUniverse as calcShowUploadUniverse,
+    showUploadAuxFile as calcShowUploadAuxFile,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1989,8 +1989,8 @@ function downloadUniverse() {
 /**
  * Shows the "Upload Universe" dialog.
  */
-function showUploadUniverse() {
-    return addAction(calcShowUploadUniverse());
+function showUploadAuxFile() {
+    return addAction(calcShowUploadAuxFile());
 }
 
 /**
@@ -2182,7 +2182,7 @@ const player = {
     hideChat,
     run,
     downloadBots,
-    showUploadUniverse,
+    showUploadAuxFile,
     downloadUniverse,
 
     openDevConsole,

@@ -73,7 +73,7 @@ export type ExtraActions =
     | SetClipboardAction
     | ShowChatBarAction
     | RunScriptAction
-    | ShowUploadUniverseAction;
+    | ShowUploadAuxFileAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -962,11 +962,11 @@ export interface RunScriptAction {
 /**
  * Defines an event that shows the "upload universe" dialog.
  */
-export interface ShowUploadUniverseAction {
-    type: 'show_upload_universe';
+export interface ShowUploadAuxFileAction {
+    type: 'show_upload_aux_file';
 }
 
-/**
+/**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -1605,10 +1605,10 @@ export function runScript(script: string): RunScriptAction {
 }
 
 /**
- * Creates a ShowUploadUniverseAction.
+ * Creates a showUploadAuxFileAction.
  */
-export function showUploadUniverse(): ShowUploadUniverseAction {
+export function showUploadAuxFile(): ShowUploadAuxFileAction {
     return {
-        type: 'show_upload_universe',
+        type: 'show_upload_aux_file',
     };
 }

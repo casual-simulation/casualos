@@ -51,7 +51,7 @@ export default class UploadUniverseModal extends Vue {
 
         sub.add(
             sim.localEvents.subscribe(e => {
-                if (e.type === 'show_upload_universe') {
+                if (e.type === 'show_upload_aux_file') {
                     this.isOpen = true;
                 }
             })

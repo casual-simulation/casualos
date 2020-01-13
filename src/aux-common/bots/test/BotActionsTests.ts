@@ -39,7 +39,7 @@ import {
     hideChat,
     runScript,
     download,
-    showUploadUniverse,
+    showUploadAuxFile,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4041,13 +4041,13 @@ export function botActionsTests(
             });
         });
 
-        describe('player.showUploadUniverse()', () => {
-            it('should emit a ShowUploadUniverseAction', () => {
+        describe('player.showUploadAuxFile()', () => {
+            it('should emit a showUploadAuxFileAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.showUploadUniverse()',
+                            test: '@player.showUploadAuxFile()',
                         },
                     },
                 };
@@ -4063,7 +4063,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showUploadUniverse()]);
+                expect(result.events).toEqual([showUploadAuxFile()]);
             });
         });
 
