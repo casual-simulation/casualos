@@ -5,6 +5,7 @@ import {
     DisconnectedFromBranchEvent,
     BranchInfoEvent,
     SendRemoteActionEvent,
+    CommitEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -85,6 +86,18 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that request a list of available branches.
      */
     event(name: 'repo/branches'): Observable<void>;
+    /**
+     * Gets an observable for events which make a commit for a branch.
+     */
+    event(name: 'repo/commit'): Observable<CommitEvent>;
+    /**
+     * Gets an observable for events that start watching commits on a branch.
+     */
+    event(name: 'repo/watch_commits'): Observable<string>;
+    /**
+     * Gets an observable for events that stop watching commits on a branch.
+     */
+    event(name: 'repo/unwatch_commits'): Observable<string>;
 
     /**
      * Sends the given event to the session.

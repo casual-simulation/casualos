@@ -19,6 +19,7 @@ import {
     updateBranch,
     listBranches,
     atomMap,
+    listCommits,
 } from './CausalRepo';
 import {
     createIndex,
@@ -266,6 +267,27 @@ describe('CausalRepo', () => {
             applyDiff(weave, diff);
 
             expect(weave.getAtoms()).toEqual([a1, a4]);
+        });
+    });
+
+    describe('listCommits()', () => {
+        it('should return a list of commit data from the given commit hash', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a2, a3, a4);
+
+            const c1 = commit('message1', new Date(2001, 1, 1), idx1, null);
+            const c2 = commit('message2', new Date(2001, 1, 2), idx2, c1);
+
+            await storeData(store, [a1, a2, a3, a4, idx1, idx2, c1, c2]);
+
+            const commits = await listCommits(store, c2.hash);
+
+            expect(commits).toEqual([c2, c1]);
         });
     });
 

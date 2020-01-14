@@ -40,7 +40,6 @@ export interface IndexData {
 
     /**
      * The atoms that were loaded.
-     * Maps
      */
     atoms: Map<string, Atom<any>>;
 }
@@ -240,6 +239,30 @@ export async function listBranches(
 }
 
 /**
+ * Lists the set of commits for the given commit hash.
+ * @param store The store that the commit info should be loaded from.
+ * @param hash
+ */
+export async function listCommits(
+    store: CausalRepoStore,
+    hash: string
+): Promise<CausalRepoCommit[]> {
+    let commit: CausalRepoObject;
+    let commits: CausalRepoCommit[] = [];
+    while (hash) {
+        [commit] = await store.getObjects([hash]);
+        if (commit && commit.type === 'commit') {
+            hash = commit.previousCommit;
+            commits.push(commit);
+        } else {
+            hash = null;
+        }
+    }
+
+    return commits;
+}
+
+/**
  * Defines an interface that represents a causal repo.
  * That is, a repository of atoms stored in a weave.
  */
@@ -345,9 +368,12 @@ export class CausalRepo {
      * Creates a commit containing all of the current changes.
      * @param message The message to include for the commit.
      */
-    async commit(message: string, time: Date = new Date()): Promise<void> {
+    async commit(
+        message: string,
+        time: Date = new Date()
+    ): Promise<CausalRepoCommit> {
         if (!this.hasChanges()) {
-            return;
+            return null;
         }
         const addedAtoms = this.stage.additions;
         const idx = index(...this.getAtoms());
@@ -360,6 +386,8 @@ export class CausalRepo {
         await storeData(this._store, [...addedAtoms, idx, c]);
         await this._updateHead(c);
         await this._checkoutHead();
+
+        return c;
     }
 
     /**

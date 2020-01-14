@@ -1,6 +1,7 @@
 import { Atom } from './Atom2';
 import { DeviceInfo } from '../core/DeviceInfo';
 import { RemoteAction, DeviceAction } from '../core/Event';
+import { CausalRepoCommit } from './CausalRepoObject';
 
 /**
  * The name of the event which starts watching for when branches are loaded/unloaded.
@@ -27,6 +28,26 @@ export const UNWATCH_BRANCH = 'repo/unwatch_branch';
  * The name of the event which notifies that some atoms were added to a branch.
  */
 export const ADD_ATOMS = 'repo/add_atoms';
+
+/**
+ * The name of the event which commits the current uncommitted state.
+ */
+export const COMMIT = 'repo/commit';
+
+/**
+ * The name of the event which starts watching commits made to a branch.
+ */
+export const WATCH_COMMITS = 'repo/watch_commits';
+
+/**
+ * The name of the event which stops watching commits made to a branch.
+ */
+export const UNWATCH_COMMITS = 'repo/unwatch_commits';
+
+/**
+ * The name of the event which notifies that a commit was added.
+ */
+export const ADD_COMMITS = 'repo/add_commits';
 
 /**
  * The name of the event which tries to send an event to a device.
@@ -102,6 +123,36 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+}
+
+/**
+ * Defines an event which indicates that changes to a branch should be committed.
+ */
+export interface CommitEvent {
+    /**
+     * The branch to commit.
+     */
+    branch: string;
+
+    /**
+     * The commit message.
+     */
+    message: string;
+}
+
+/**
+ * Defines an event which indicates that a set of commits was added to a branch.
+ */
+export interface AddCommitsEvent {
+    /**
+     * The branch.
+     */
+    branch: string;
+
+    /**
+     * The commits that were added.
+     */
+    commits: CausalRepoCommit[];
 }
 
 /**

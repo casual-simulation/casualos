@@ -33,10 +33,15 @@ import {
     SEND_EVENT,
     RECEIVE_EVENT,
     BRANCHES,
+    COMMIT,
+    WATCH_COMMITS,
+    loadCommit,
+    listCommits,
+    AddCommitsEvent,
+    ADD_COMMITS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
-import union from 'lodash/union';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -138,6 +143,66 @@ export class CausalRepoServer {
                         branch: event.branch,
                         hashes: [...addedAtomHashes, ...removedAtomHashes],
                     });
+                });
+
+                conn.event(COMMIT).subscribe(async event => {
+                    const repo = await this._getOrLoadRepo(event.branch, false);
+                    if (!repo) {
+                        return;
+                    }
+
+                    if (repo.hasChanges()) {
+                        console.log(
+                            `[CausalRepoServer] Committing '${
+                                event.branch
+                            }' with message '${event.message}'...`
+                        );
+                        const commit = await repo.commit(event.message);
+                        if (commit) {
+                            await this._stage.clearStage(event.branch);
+                            console.log(`[CausalRepoServer] Committed.`);
+
+                            const info = infoForBranchCommits(event.branch);
+                            const devices = this._deviceManager.getConnectedDevices(
+                                info
+                            );
+                            let e: AddCommitsEvent = {
+                                branch: event.branch,
+                                commits: [commit],
+                            };
+
+                            sendToDevices(devices, ADD_COMMITS, e);
+                        } else {
+                            console.log(
+                                `[CausalRepoServer] No Commit Created.`
+                            );
+                        }
+                    }
+                });
+
+                conn.event(WATCH_COMMITS).subscribe(async branch => {
+                    const info = infoForBranchCommits(branch);
+                    await this._deviceManager.joinChannel(device, info);
+
+                    const repo = await this._getOrLoadRepo(branch, false);
+                    if (!repo) {
+                        return;
+                    }
+
+                    if (!repo.currentCommit) {
+                        return;
+                    }
+
+                    const commits = await listCommits(
+                        this._store,
+                        repo.currentCommit.commit.hash
+                    );
+                    let e: AddCommitsEvent = {
+                        branch: branch,
+                        commits: commits,
+                    };
+
+                    conn.send(ADD_COMMITS, e);
                 });
 
                 conn.event(SEND_EVENT).subscribe(async event => {
@@ -283,7 +348,7 @@ export class CausalRepoServer {
 
     private async _unloadBranch(branch: string) {
         const repo = this._repos.get(branch);
-        if (repo && repo.hasChanges) {
+        if (repo && repo.hasChanges()) {
             console.log(
                 `[CausalRepoServer] Committing '${branch}' before unloading...`
             );
@@ -362,6 +427,13 @@ function infoForBranch(branch: any): RealtimeChannelInfo {
     return {
         id: branch,
         type: 'aux-branch',
+    };
+}
+
+function infoForBranchCommits(branch: any): RealtimeChannelInfo {
+    return {
+        id: `${branch}-commits`,
+        type: 'aux-branch-commits',
     };
 }
 
