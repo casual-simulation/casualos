@@ -17,7 +17,11 @@ import {
     tagsOnBot,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import {
+    DeviceAction,
+    StatusUpdate,
+    Action,
+} from '@casual-simulation/causal-trees';
 import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
@@ -34,7 +38,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
 
     protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<DeviceAction[]>();
+    protected _onEvents = new Subject<Action[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _state: BotsState = {};
@@ -56,7 +60,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         return this._onError;
     }
 
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
 

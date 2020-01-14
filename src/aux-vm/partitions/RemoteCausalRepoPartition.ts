@@ -8,6 +8,7 @@ import {
     SESSION_ID_CLAIM,
     USER_ROLE,
     RemoteAction,
+    Action,
 } from '@casual-simulation/causal-trees';
 import {
     Weave,
@@ -81,7 +82,7 @@ export class RemoteCausalRepoPartitionImpl
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
 
     protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<DeviceAction[]>();
+    protected _onEvents = new Subject<Action[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
@@ -113,7 +114,7 @@ export class RemoteCausalRepoPartitionImpl
         return this._onError;
     }
 
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
 

@@ -19,6 +19,7 @@ import {
     DeviceAction,
     device,
     deviceInfo,
+    Action,
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
@@ -136,7 +137,7 @@ describe('RemoteCausalRepoPartition', () => {
             });
 
             it('should listen for device events from the connection', async () => {
-                let events = [] as DeviceAction[];
+                let events = [] as Action[];
                 partition.onEvents.subscribe(e => events.push(...e));
 
                 const action = device(

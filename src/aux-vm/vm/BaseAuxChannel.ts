@@ -46,6 +46,7 @@ import {
     SERVER_ROLE,
     RealtimeCausalTreeOptions,
     Atom,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
@@ -520,8 +521,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * other components can decide what to do.
      * @param events The events.
      */
-    protected async _handleServerEvents(events: DeviceAction[]) {
-        await this.sendEvents(events);
+    protected async _handleServerEvents(events: Action[]) {
+        await this.sendEvents(<BotAction[]>events);
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
