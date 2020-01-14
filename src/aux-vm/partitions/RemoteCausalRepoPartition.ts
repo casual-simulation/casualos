@@ -50,12 +50,15 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
+    MarkHistoryAction,
+    loadSpace,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import {
     PartitionConfig,
     RemoteCausalRepoPartitionConfig,
     CausalRepoClientPartitionConfig,
+    CausalRepoHistoryClientPartitionConfig,
 } from './AuxPartitionConfig';
 import { RemoteCausalRepoPartition } from './AuxPartition';
 
@@ -165,8 +168,19 @@ export class RemoteCausalRepoPartitionImpl
         }
         for (let event of events) {
             if (event.event.type === 'mark_history') {
-                const markHistory = <any>event.event;
+                const markHistory = <MarkHistoryAction>event.event;
                 this._client.commit(this._branch, markHistory.message);
+            } else if (event.event.type === 'browse_history') {
+                const markHistory = <MarkHistoryAction>event.event;
+                this._onEvents.next([
+                    loadSpace('history', <
+                        CausalRepoHistoryClientPartitionConfig
+                    >{
+                        type: 'causal_repo_history_client',
+                        branch: this._branch,
+                        client: this._client,
+                    }),
+                ]);
             } else {
                 this._client.sendEvent(this._branch, event);
             }

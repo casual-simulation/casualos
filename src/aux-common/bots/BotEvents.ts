@@ -1,4 +1,4 @@
-import { PartialBot, BotsState, Bot, BotTags } from './Bot';
+import { PartialBot, BotsState, Bot, BotTags, BotSpace } from './Bot';
 import {
     Action,
     DeviceAction,
@@ -74,7 +74,9 @@ export type ExtraActions =
     | ShowChatBarAction
     | RunScriptAction
     | ShowUploadAuxFileAction
-    | MarkHistoryAction;
+    | MarkHistoryAction
+    | BrowseHistoryAction
+    | LoadSpaceAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -979,6 +981,30 @@ export interface MarkHistoryAction {
     message: string;
 }
 
+/**
+ * Defines an event that loads the history into the universe.
+ */
+export interface BrowseHistoryAction {
+    type: 'browse_history';
+}
+
+/**
+ * Defines an event that loads a space into the universe.
+ */
+export interface LoadSpaceAction {
+    type: 'load_space';
+
+    /**
+     * The space that should be loaded.
+     */
+    space: BotSpace;
+
+    /**
+     * The config that should be used to load the space.
+     */
+    config: any;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1639,4 +1665,26 @@ export function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
 
 export interface MarkHistoryOptions {
     message: string;
+}
+
+/**
+ * Creates a BrowseHistoryAction.
+ */
+export function browseHistory(): BrowseHistoryAction {
+    return {
+        type: 'browse_history',
+    };
+}
+
+/**
+ * Loads a space into the universe.
+ * @param space The space to load.
+ * @param config The config which specifies how the space should be loaded.
+ */
+export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
+    return {
+        type: 'load_space',
+        space,
+        config,
+    };
 }

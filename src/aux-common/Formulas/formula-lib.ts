@@ -57,6 +57,7 @@ import {
     download,
     showUploadAuxFile as calcShowUploadAuxFile,
     markHistory as calcMarkHistory,
+    browseHistory as calcBrowseHistory,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -365,9 +366,9 @@ interface Bot {
 }
 
 /**
- * The possible bot types.
+ * The possible bot spaces.
  */
-type BotType = 'shared' | 'local' | 'tempLocal';
+type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -1159,6 +1160,13 @@ function finishCheckout(options: FinishCheckoutOptions) {
  */
 function markHistory(options: MarkHistoryOptions) {
     return remote(calcMarkHistory(options));
+}
+
+/**
+ * Loads the "history" space into the universe.
+ */
+function browseHistory() {
+    return remote(calcBrowseHistory());
 }
 
 /**
@@ -2227,6 +2235,7 @@ const server = {
     backupAsDownload,
     finishCheckout,
     markHistory,
+    browseHistory,
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,

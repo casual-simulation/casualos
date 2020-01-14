@@ -21,6 +21,7 @@ export type PartitionConfig =
     | CausalTreePartitionConfig
     | CausalRepoPartitionConfig
     | RemoteCausalRepoPartitionConfig
+    | CausalRepoHistoryClientPartitionConfig
     | CausalRepoClientPartitionConfig
     | MemoryPartitionConfig
     | ProxyPartitionConfig
@@ -158,6 +159,24 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be loaded in read-only mode.
      */
     readOnly?: boolean;
+}
+
+/**
+ * Defines a causal repo partition that loads history for a branch.
+ */
+export interface CausalRepoHistoryClientPartitionConfig
+    extends PartitionConfigBase {
+    type: 'causal_repo_history_client';
+
+    /**
+     * The branch to load history from.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used to load the history.
+     */
+    client: CausalRepoClient;
 }
 
 /**

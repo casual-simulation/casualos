@@ -41,6 +41,7 @@ import {
     download,
     showUploadAuxFile,
     markHistory,
+    browseHistory,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -5836,6 +5837,32 @@ export function botActionsTests(
                         })
                     ),
                 ]);
+            });
+        });
+
+        describe('server.browseHistory()', () => {
+            it('should emit a browse_history event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.browseHistory()`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([remote(browseHistory())]);
             });
         });
 

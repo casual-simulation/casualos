@@ -13,6 +13,7 @@ import {
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
     COMMIT,
+    WATCH_COMMITS,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -201,6 +202,37 @@ describe('RemoteCausalRepoPartition', () => {
                             data: {
                                 branch: 'testBranch',
                                 message: 'newCommit',
+                            },
+                        },
+                    ]);
+                });
+            });
+
+            describe('browse_history', () => {
+                it(`should send a load_space action`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(<any>{
+                            type: 'browse_history',
+                        }),
+                    ]);
+
+                    expect(events).toEqual([
+                        {
+                            type: 'load_space',
+                            space: 'history',
+                            config: {
+                                type: 'causal_repo_history_client',
+                                branch: 'testBranch',
+                                client: expect.anything(),
                             },
                         },
                     ]);
