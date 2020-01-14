@@ -8,6 +8,7 @@ import {
     DESTROY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
     BotsState,
+    CREATE_ANY_ACTION_NAME,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -54,7 +55,7 @@ import {
     hideChat as calcHideRun,
     runScript,
     download,
-    showUploadUniverse as calcShowUploadUniverse,
+    showUploadAuxFile as calcShowUploadAuxFile,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -728,6 +729,11 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     }
 
     event(CREATE_ACTION_NAME, ret);
+    for (let bot of ret) {
+        event(CREATE_ANY_ACTION_NAME, null, {
+            bot: bot,
+        });
+    }
 
     if (ret.length === 1) {
         return ret[0];
@@ -1989,8 +1995,8 @@ function downloadUniverse() {
 /**
  * Shows the "Upload Universe" dialog.
  */
-function showUploadUniverse() {
-    return addAction(calcShowUploadUniverse());
+function showUploadAuxFile() {
+    return addAction(calcShowUploadAuxFile());
 }
 
 /**
@@ -2182,7 +2188,7 @@ const player = {
     hideChat,
     run,
     downloadBots,
-    showUploadUniverse,
+    showUploadAuxFile,
     downloadUniverse,
 
     openDevConsole,

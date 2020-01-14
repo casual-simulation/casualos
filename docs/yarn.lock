@@ -722,13 +722,13 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@casual-simulation/aux-common@0.11.17":
-  version "0.11.17"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.17.tgz#c97357b4aa70a1f22d5d6bba904f8fe6bb187d7c"
-  integrity sha512-yrEtI50XpN3Ojj9x51MpLzJ6fpx3zCUh0w0WebntrfPMhoZ8rf1+uj6kv2sy1qcQHABIbT+hc4zLJJI/phNanw==
+"@casual-simulation/aux-common@0.11.20":
+  version "0.11.20"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.20.tgz#6ba335720daf5a9e82739a0d0e43c5923bc96208"
+  integrity sha512-gRSfcBdWbOEBf5PAWa0Y+rqugbvEW5QgO2NX/X8yGFGiTiiDdAslCGu4ZdLvP2PY4RAz9IVp4BEbibd4FgweNw==
   dependencies:
-    "@casual-simulation/causal-trees" "^0.11.8"
-    "@casual-simulation/crypto" "^0.11.8"
+    "@casual-simulation/causal-trees" "^0.11.20"
+    "@casual-simulation/crypto" "^0.11.20"
     "@types/acorn" "^4.0.5"
     "@types/astring" "^1.3.0"
     "@types/estraverse" "^0.0.6"
@@ -740,22 +740,22 @@
     rxjs "^6.5.2"
     uuid "^3.3.2"
 
-"@casual-simulation/causal-trees@^0.11.8":
-  version "0.11.8"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/causal-trees/-/causal-trees-0.11.8.tgz#30e440e05e2bb7f18a0f3e6d254cc94b4362700c"
-  integrity sha512-wyqMVpeSgWJ6ldHF31IRYD54C+r6xi3l4FI/4yCtfRueJDsx69tuaw6ej/uG0DswpQtr3p7W873Ff1jfjWinDw==
+"@casual-simulation/causal-trees@^0.11.20":
+  version "0.11.20"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/causal-trees/-/causal-trees-0.11.20.tgz#4a0e8e55c6861e625a4ea7b0ea46e40271bea1bd"
+  integrity sha512-k+uPo1WzgiAOPvEuKNzkZAhxl1SvsOX96oynfGR6QfKzZFvja0pn6L+BpYFKI9KaaPJLVxN1q0RPfryfNgtDqg==
   dependencies:
-    "@casual-simulation/crypto" "^0.11.8"
+    "@casual-simulation/crypto" "^0.11.20"
     "@types/base64-js" "^1.2.5"
     "@types/lodash" "^4.14.123"
     base64-js "^1.3.0"
     lodash "^4.17.14"
     rxjs "^6.5.2"
 
-"@casual-simulation/crypto@^0.11.8":
-  version "0.11.8"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/crypto/-/crypto-0.11.8.tgz#5cf0c6b00f8d40ebd42d9f1cd5d23a7acc8df1cf"
-  integrity sha512-wtI8p7T74t4u4MLnTCKzv+vD34+iQGANP3VkFnvB4rk1ppM8FLC7sR/J6fw6XGcMX6HFFazCHuDSQ9fACu78jw==
+"@casual-simulation/crypto@^0.11.20":
+  version "0.11.20"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/crypto/-/crypto-0.11.20.tgz#259cceada5315a649e39749b11c536ba5ba85608"
+  integrity sha512-DxvV34y0dEIgu8Ax8BiJGuoUUB5FekI51/ZnzNbhFCXcGh6Jnc+yDWPpfsk81lBg0lFjJP6W7HgBc9+qyVM5tg==
   dependencies:
     "@types/fast-json-stable-stringify" "^2.0.0"
     base64-js "^1.3.0"
