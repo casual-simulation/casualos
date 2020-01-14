@@ -39,7 +39,7 @@ import {
     hideChat,
     runScript,
     download,
-    showUploadUniverse,
+    showUploadAuxFile,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4041,13 +4041,13 @@ export function botActionsTests(
             });
         });
 
-        describe('player.showUploadUniverse()', () => {
-            it('should emit a ShowUploadUniverseAction', () => {
+        describe('player.showUploadAuxFile()', () => {
+            it('should emit a showUploadAuxFileAction', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@player.showUploadUniverse()',
+                            test: '@player.showUploadAuxFile()',
                         },
                     },
                 };
@@ -4063,7 +4063,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showUploadUniverse()]);
+                expect(result.events).toEqual([showUploadAuxFile()]);
             });
         });
 
@@ -6611,6 +6611,47 @@ export function botActionsTests(
                         },
                     }),
                     botUpdated(expectedId, {
+                        tags: {
+                            num: 100,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should trigger onAnyCreate() with the created bot as a parameter', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            num: 1,
+                            test: `@${name}({ abc: getTag(this, "#num") });`,
+                        },
+                    },
+                    shoutBot: {
+                        id: 'shoutBot',
+                        tags: {
+                            onAnyCreate: '@setTag(this, "#num", 100)',
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        tags: {
+                            auxCreator: 'thisBot',
+                            abc: 1,
+                        },
+                    }),
+                    botUpdated('shoutBot', {
                         tags: {
                             num: 100,
                         },

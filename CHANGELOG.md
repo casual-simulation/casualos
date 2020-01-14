@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.11.21
+
+### Date: 1/14/2020
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Renamed the `player.showUploadUniverse()` function to `player.showUploadAuxFile()`.
+-   Improvements
+    -   Added the `@onAnyCreate` shout listener.
+        -   `that` is an object with the following properties:
+            -   `bot` - The bot that was created.
+
 ## V0.11.20
 
 ### Date: 1/13/2020
