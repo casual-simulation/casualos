@@ -73,7 +73,8 @@ export type ExtraActions =
     | SetClipboardAction
     | ShowChatBarAction
     | RunScriptAction
-    | ShowUploadAuxFileAction;
+    | ShowUploadAuxFileAction
+    | MarkHistoryAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -966,6 +967,18 @@ export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
 }
 
+/**
+ * Defines an event that marks a specific point in history.
+ */
+export interface MarkHistoryAction {
+    type: 'mark_history';
+
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1611,4 +1624,19 @@ export function showUploadAuxFile(): ShowUploadAuxFileAction {
     return {
         type: 'show_upload_aux_file',
     };
+}
+
+/**
+ * Creates a MarkHistoryAction.
+ * @param options The options to use.
+ */
+export function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
+    return {
+        type: 'mark_history',
+        ...options,
+    };
+}
+
+export interface MarkHistoryOptions {
+    message: string;
 }

@@ -56,6 +56,7 @@ import {
     runScript,
     download,
     showUploadAuxFile as calcShowUploadAuxFile,
+    markHistory as calcMarkHistory,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -249,6 +250,16 @@ interface FinishCheckoutOptions {
      * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
      */
     extra: any;
+}
+
+/**
+ * Defines an interface for options that mark a specific time in history.
+ */
+interface MarkHistoryOptions {
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
 }
 
 /**
@@ -1134,6 +1145,20 @@ function finishCheckout(options: FinishCheckoutOptions) {
         options.extra
     );
     return addAction(event);
+}
+
+/**
+ * Saves the current state as a history mark.
+ * @param options The options that describe what information the mark should contain.
+ *
+ * @example
+ * // Bookmark the current state with a message
+ * server.markHistory({
+ *   message: "Save recent changes"
+ * });
+ */
+function markHistory(options: MarkHistoryOptions) {
+    return remote(calcMarkHistory(options));
 }
 
 /**
@@ -2201,6 +2226,7 @@ const server = {
     backupToGithub,
     backupAsDownload,
     finishCheckout,
+    markHistory,
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,

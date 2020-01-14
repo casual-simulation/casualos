@@ -40,6 +40,7 @@ import {
     runScript,
     download,
     showUploadAuxFile,
+    markHistory,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -5800,6 +5801,40 @@ export function botActionsTests(
                     finishCheckout('token1', 100, 'usd', 'Test', {
                         abc: 'def',
                     }),
+                ]);
+            });
+        });
+
+        describe('server.markHistory()', () => {
+            it('should emit a mark_history event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.markHistory({
+                                message: 'testMark'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        markHistory({
+                            message: 'testMark',
+                        })
+                    ),
                 ]);
             });
         });
