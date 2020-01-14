@@ -163,7 +163,12 @@ export class RemoteCausalRepoPartitionImpl
             return;
         }
         for (let event of events) {
-            this._client.sendEvent(this._branch, event);
+            if (event.event.type === 'mark_history') {
+                const markHistory = <any>event.event;
+                this._client.commit(this._branch, markHistory.message);
+            } else {
+                this._client.sendEvent(this._branch, event);
+            }
         }
     }
 

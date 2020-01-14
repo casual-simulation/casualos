@@ -8,7 +8,7 @@ import {
     finalize,
     first,
 } from 'rxjs/operators';
-import { merge, Observable } from 'rxjs';
+import { merge, Observable, never } from 'rxjs';
 import {
     WATCH_BRANCH,
     AddAtomsEvent,
@@ -35,6 +35,12 @@ import {
     BranchInfoEvent,
     BRANCHES,
     BranchesEvent,
+    COMMIT,
+    CommitEvent,
+    AddCommitsEvent,
+    WATCH_COMMITS,
+    UNWATCH_COMMITS,
+    ADD_COMMITS,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -280,6 +286,35 @@ export class CausalRepoClient {
             branch: branch,
             action: action,
         });
+    }
+
+    /**
+     * Sends a commit event to the given branch.
+     * @param branch The branch.
+     * @param message The commit message.
+     */
+    commit(branch: string, message: string) {
+        const event: CommitEvent = {
+            branch: branch,
+            message: message,
+        };
+        this._client.send(COMMIT, event);
+    }
+
+    watchCommits(branch: string): Observable<AddCommitsEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(WATCH_COMMITS, branch);
+            }),
+            switchMap(connected =>
+                this._client
+                    .event<AddCommitsEvent>(ADD_COMMITS)
+                    .pipe(filter(event => event.branch === branch))
+            ),
+            finalize(() => {
+                this._client.send(UNWATCH_COMMITS, branch);
+            })
+        );
     }
 
     private _whenConnected() {

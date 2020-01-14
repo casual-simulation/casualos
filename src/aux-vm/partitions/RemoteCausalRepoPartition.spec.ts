@@ -12,6 +12,7 @@ import {
     SEND_EVENT,
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
+    COMMIT,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -176,6 +177,33 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
 
                 expect(connection.sentMessages).toEqual([]);
+            });
+
+            describe('mark_history', () => {
+                it(`should send a ${COMMIT} event to the server`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(<any>{
+                            type: 'mark_history',
+                            message: 'newCommit',
+                        }),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: COMMIT,
+                            data: {
+                                branch: 'testBranch',
+                                message: 'newCommit',
+                            },
+                        },
+                    ]);
+                });
             });
         });
 
