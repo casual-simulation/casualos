@@ -59,8 +59,8 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
 
     // TODO: Move this logic to an AuxModule
     // Overridden to automatically execute events from the server.
-    protected async _handleServerEvents(events: DeviceAction[]) {
-        await super._handleServerEvents(events);
+    protected async _handlePartitionEvents(events: DeviceAction[]) {
+        await super._handlePartitionEvents(events);
         let filtered = events.filter(
             e => e.device.roles.indexOf(SERVER_ROLE) >= 0
         );

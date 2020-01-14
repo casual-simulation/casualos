@@ -522,14 +522,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     /**
-     * Decides what to do with device events from the server.
+     * Decides what to do with device events from partitions.
      * By default the events are processed as-is.
-     * This means that the onDeviceEvents observable will be triggered so that
-     * other components can decide what to do.
+     * This means that the events are sent directly to the AuxHelper via this.sendEvents().
      * @param events The events.
      */
-    protected async _handleServerEvents(events: Action[]) {
-        await this.sendEvents(<BotAction[]>events);
+    protected async _handlePartitionEvents(events: Action[]) {
+        const actions = <BotAction[]>events;
+        await this.sendEvents(actions);
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
