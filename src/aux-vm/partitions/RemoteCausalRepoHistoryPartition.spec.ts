@@ -161,6 +161,60 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         },
                     ]);
                 });
+
+                it('should send a checkout event to the server with the universe if specified', async () => {
+                    const addCommits = new Subject<AddCommitsEvent>();
+                    connection.events.set(ADD_COMMITS, addCommits);
+
+                    partition.connect();
+
+                    await waitAsync();
+
+                    const a1 = atom(atomId('a', 1), null, {});
+                    const a2 = atom(atomId('a', 2), a1, {});
+                    const idx1 = index(a1);
+                    const idx2 = index(a1, a2);
+                    const c1 = commit(
+                        'commit1',
+                        new Date(1900, 1, 1),
+                        idx1,
+                        null
+                    );
+                    const c2 = commit(
+                        'commit2',
+                        new Date(1900, 1, 1),
+                        idx2,
+                        c1
+                    );
+
+                    addCommits.next({
+                        branch: 'testBranch',
+                        commits: [c2, c1],
+                    });
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            restoreHistoryMark(
+                                uuid(c1.hash, COMMIT_ID_NAMESPACE),
+                                'universe'
+                            )
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: CHECKOUT,
+                            data: {
+                                branch: 'universe',
+                                commit: c1.hash,
+                            },
+                        },
+                    ]);
+                });
             });
         });
 

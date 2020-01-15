@@ -999,6 +999,12 @@ export interface RestoreHistoryMarkAction {
      * The ID of the mark that should be restored.
      */
     mark: string;
+
+    /**
+     * The universe that the mark should be restored to.
+     * If not specified, then the current universe will be used.
+     */
+    universe?: string;
 }
 
 /**
@@ -1692,12 +1698,24 @@ export function browseHistory(): BrowseHistoryAction {
 /**
  * Creates a RestoreHistoryMarkAction.
  * @param mark The ID of the mark that history should be restored to.
+ * @param universe The universe that the mark should be restored to. If not specified, then the current universe will be used.
  */
-export function restoreHistoryMark(mark: string): RestoreHistoryMarkAction {
-    return {
-        type: 'restore_history_mark',
-        mark,
-    };
+export function restoreHistoryMark(
+    mark: string,
+    universe?: string
+): RestoreHistoryMarkAction {
+    if (!universe) {
+        return {
+            type: 'restore_history_mark',
+            mark,
+        };
+    } else {
+        return {
+            type: 'restore_history_mark',
+            mark,
+            universe,
+        };
+    }
 }
 
 /**

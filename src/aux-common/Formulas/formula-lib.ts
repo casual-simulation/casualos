@@ -1180,6 +1180,16 @@ function restoreHistoryMark(mark: Bot | string) {
 }
 
 /**
+ * Restores the current state to the given mark.
+ * @param mark The bot or bot ID that represents the mark that should be restored.
+ * @param universe The universe that the mark should be restored to.
+ */
+function restoreHistoryMarkToUniverse(mark: Bot | string, universe: string) {
+    const id = getID(mark);
+    return remote(calcRestoreHistoryMark(id, universe));
+}
+
+/**
  * Derermines whether the player is in the given dimension.
  * @param dimension The dimension.
  */
@@ -2247,6 +2257,7 @@ const server = {
     markHistory,
     browseHistory,
     restoreHistoryMark,
+    restoreHistoryMarkToUniverse,
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,

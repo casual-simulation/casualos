@@ -211,6 +211,11 @@ export class CausalRepoServer {
                 conn.event(CHECKOUT).subscribe(async event => {
                     const repo = await this._getOrLoadRepo(event.branch, true);
 
+                    console.log(
+                        `[CausalRepoServer] Checking out ${event.commit} on ${
+                            event.branch
+                        }`
+                    );
                     const current = repo.currentCommit;
                     await repo.reset(event.commit);
                     await this._stage.clearStage(event.branch);

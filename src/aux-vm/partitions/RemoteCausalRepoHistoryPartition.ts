@@ -180,7 +180,10 @@ export class RemoteCausalRepoHistoryPartitionImpl
                     continue;
                 }
                 const hash = bot.tags.auxMarkHash;
-                this._client.checkout(this._branch, hash);
+                this._client.checkout(
+                    restoreMark.universe || this._branch,
+                    hash
+                );
             }
         }
     }
