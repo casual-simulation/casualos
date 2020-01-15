@@ -5,6 +5,7 @@ import {
     AtomIndexDiff,
     AtomIndexFullDiff,
     AtomHashList,
+    calculateDiff,
 } from './AtomIndex';
 import { Atom, isAtom, atomIdToString } from './Atom2';
 import {
@@ -263,6 +264,52 @@ export async function listCommits(
 }
 
 /**
+ * Calculates the difference between the two commits.
+ * @param first The first commit.
+ * @param second The second commit.
+ */
+export function calculateCommitDiff(
+    first: CommitData,
+    second: CommitData
+): CommitDiff {
+    if (!first && second) {
+        return {
+            additions: second.atoms,
+            deletions: atomMap([]),
+        };
+    } else if (first && !second) {
+        return {
+            additions: atomMap([]),
+            deletions: first.atoms,
+        };
+    } else {
+        const diff = calculateDiff(first.index.data, second.index.data);
+        const added = Object.keys(diff.additions);
+        const deleted = Object.keys(diff.deletions);
+
+        return {
+            additions: atomMap(added.map(hash => second.atoms.get(hash))),
+            deletions: atomMap(deleted.map(hash => first.atoms.get(hash))),
+        };
+    }
+}
+
+/**
+ * Defines an interface for objects that represent a diff between two commits.
+ */
+export interface CommitDiff {
+    /**
+     * The map of atoms that were added.
+     */
+    additions: Map<string, Atom<any>>;
+
+    /**
+     * The map of atoms that were deleted.
+     */
+    deletions: Map<string, Atom<any>>;
+}
+
+/**
  * Defines an interface that represents a causal repo.
  * That is, a repository of atoms stored in a weave.
  */
@@ -412,6 +459,20 @@ export class CausalRepo {
         const b = branches[0];
 
         await this._saveHead(b);
+        await this._checkoutHead();
+    }
+
+    /**
+     * Resets the current branch to the given hash.
+     * @param hash The hash.
+     */
+    async reset(hash: CausalRepoCommit | string): Promise<void> {
+        if (!this._head) {
+            throw new Error('There is no head to reset!');
+        }
+
+        const newBranch = branch(this._head.name, hash);
+        await this._saveHead(newBranch);
         await this._checkoutHead();
     }
 

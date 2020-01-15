@@ -6,6 +6,7 @@ import {
     BranchInfoEvent,
     SendRemoteActionEvent,
     CommitEvent,
+    CheckoutEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -98,6 +99,10 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that stop watching commits on a branch.
      */
     event(name: 'repo/unwatch_commits'): Observable<string>;
+    /**
+     * Gets an observable for events that request a branch checkout a commit.
+     */
+    event(name: 'repo/checkout'): Observable<CheckoutEvent>;
 
     /**
      * Sends the given event to the session.

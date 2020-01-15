@@ -37,6 +37,8 @@ import {
     CommitEvent,
     WATCH_COMMITS,
     ADD_COMMITS,
+    CHECKOUT,
+    CheckoutEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -1360,6 +1362,99 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         commits: [c2, c1],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(CHECKOUT, () => {
+        it('should reset the given branch to the given commit', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            device.events.set(CHECKOUT, checkout);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a2, a3);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const [branchCommit] = await store.getObjects([testBranch.hash]);
+
+            expect(branchCommit).toEqual(c1);
+        });
+
+        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            const watchBranch = new Subject<string>();
+            device.events.set(CHECKOUT, checkout);
+            device.events.set(WATCH_BRANCH, watchBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch.next('testBranch');
+
+            await waitAsync();
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a4, a5],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a3],
+                        removedAtoms: [a4.hash, a5.hash],
                     },
                 },
             ]);

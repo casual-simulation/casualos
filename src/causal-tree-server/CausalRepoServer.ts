@@ -39,6 +39,9 @@ import {
     listCommits,
     AddCommitsEvent,
     ADD_COMMITS,
+    CHECKOUT,
+    calculateDiff,
+    calculateCommitDiff,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -203,6 +206,30 @@ export class CausalRepoServer {
                     };
 
                     conn.send(ADD_COMMITS, e);
+                });
+
+                conn.event(CHECKOUT).subscribe(async event => {
+                    const repo = await this._getOrLoadRepo(event.branch, true);
+
+                    const current = repo.currentCommit;
+                    await repo.reset(event.commit);
+                    await this._stage.clearStage(event.branch);
+                    const after = repo.currentCommit;
+
+                    const delta = calculateCommitDiff(current, after);
+
+                    const info = infoForBranch(event.branch);
+                    const devices = this._deviceManager.getConnectedDevices(
+                        info
+                    );
+
+                    let ret: AddAtomsEvent = {
+                        branch: event.branch,
+                        atoms: [...delta.additions.values()],
+                        removedAtoms: [...delta.deletions.keys()],
+                    };
+
+                    sendToDevices(devices, ADD_ATOMS, ret);
                 });
 
                 conn.event(SEND_EVENT).subscribe(async event => {

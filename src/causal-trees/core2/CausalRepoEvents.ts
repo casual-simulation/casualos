@@ -45,6 +45,11 @@ export const WATCH_COMMITS = 'repo/watch_commits';
 export const UNWATCH_COMMITS = 'repo/unwatch_commits';
 
 /**
+ * The name of the event which checks out a commit with a branch.
+ */
+export const CHECKOUT = 'repo/checkout';
+
+/**
  * The name of the event which notifies that a commit was added.
  */
 export const ADD_COMMITS = 'repo/add_commits';
@@ -153,6 +158,26 @@ export interface AddCommitsEvent {
      * The commits that were added.
      */
     commits: CausalRepoCommit[];
+}
+
+/**
+ * Defines an event which indicates that a commit should be checked out by a branch.
+ */
+export interface CheckoutEvent {
+    /**
+     * The branch to checkout.
+     */
+    branch: string;
+
+    /**
+     * The hash of the commit to checkout.
+     */
+    commit: string;
+
+    /**
+     * The name of the branch that should be left at the commit the branch was previously at.
+     */
+    remnantBranch?: string;
 }
 
 /**

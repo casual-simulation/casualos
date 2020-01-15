@@ -20,6 +20,9 @@ import {
     listBranches,
     atomMap,
     listCommits,
+    calculateCommitDiff,
+    CommitData,
+    loadCommit,
 } from './CausalRepo';
 import {
     createIndex,
@@ -288,6 +291,79 @@ describe('CausalRepo', () => {
             const commits = await listCommits(store, c2.hash);
 
             expect(commits).toEqual([c2, c1]);
+        });
+    });
+
+    describe('calculateCommitDiff()', () => {
+        it('should return all the atoms as additions from the second if the first is null', async () => {
+            const store = new MemoryCausalRepoStore();
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            const a4 = atom(atomId('a', 4), null, {});
+
+            const idx2 = index(a1, a2, a3, a4);
+
+            const c2 = commit('commit', new Date(1900, 1, 1), idx2, null);
+
+            await storeData(store, [a1, a2, a3, a4, idx2, c2]);
+
+            const commit1: CommitData = null;
+            const commit2 = await loadCommit(store, c2);
+            const diff = calculateCommitDiff(commit1, commit2);
+
+            expect(diff).toEqual({
+                additions: atomMap([a1, a2, a3, a4]),
+                deletions: atomMap([]),
+            });
+        });
+
+        it('should return all the atoms as deletions from the first is the second is null', async () => {
+            const store = new MemoryCausalRepoStore();
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            const a4 = atom(atomId('a', 4), null, {});
+
+            const idx2 = index(a1, a2, a3, a4);
+
+            const c2 = commit('commit', new Date(1900, 1, 1), idx2, null);
+
+            await storeData(store, [a1, a2, a3, a4, idx2, c2]);
+
+            const commit1 = await loadCommit(store, c2);
+            const commit2: CommitData = null;
+            const diff = calculateCommitDiff(commit1, commit2);
+
+            expect(diff).toEqual({
+                additions: atomMap([]),
+                deletions: atomMap([a1, a2, a3, a4]),
+            });
+        });
+
+        it('should calculate which atoms were deleted', async () => {
+            const store = new MemoryCausalRepoStore();
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            const a4 = atom(atomId('a', 4), null, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a3, a4);
+
+            const c1 = commit('commit1', new Date(1900, 1, 1), idx1, null);
+            const c2 = commit('commit2', new Date(1900, 1, 1), idx2, null);
+
+            await storeData(store, [a1, a2, a3, a4, idx1, c1, idx2, c2]);
+
+            const commit1 = await loadCommit(store, c1);
+            const commit2 = await loadCommit(store, c2);
+            const diff = calculateCommitDiff(commit1, commit2);
+
+            expect(diff).toEqual({
+                additions: atomMap([a3, a4]),
+                deletions: atomMap([a2]),
+            });
         });
     });
 
@@ -659,6 +735,35 @@ describe('CausalRepo', () => {
                 ]);
 
                 expect(newCommit).toEqual(prevCommit);
+            });
+        });
+
+        describe('reset()', () => {
+            it('should throw if there is no current head', async () => {
+                const c1 = commit('commit', new Date(1900, 1, 1), idx, null);
+                await storeData(store, [c1]);
+
+                const promise = repo.reset(c1.hash);
+                await expect(promise).rejects.toThrow();
+            });
+
+            it('should move the current branch to point to the given commit hash', async () => {
+                const c1 = commit('commit', new Date(1900, 1, 1), idx, null);
+                await storeData(store, [c1]);
+
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                await repo.reset(c1.hash);
+
+                expect(repo.getHead()).toEqual(branch('master', c1));
+                expect(repo.currentCommit).toEqual({
+                    commit: c1,
+                    index: idx,
+                    atoms: atomMap([a1, a2]),
+                });
             });
         });
     });
