@@ -36,6 +36,7 @@ import {
     WATCH_COMMITS,
     AddCommitsEvent,
     ADD_COMMITS,
+    CHECKOUT,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -412,6 +413,22 @@ describe('CausalRepoClient', () => {
                     data: {
                         branch: 'abc',
                         message: 'newCommit',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('checkout()', () => {
+        it('should send a checkout event', async () => {
+            client.checkout('abc', 'commit');
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: CHECKOUT,
+                    data: {
+                        branch: 'abc',
+                        commit: 'commit',
                     },
                 },
             ]);

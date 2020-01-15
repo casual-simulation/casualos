@@ -21,6 +21,7 @@ import {
     ADD_COMMITS,
     index,
     commit,
+    CHECKOUT,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -37,6 +38,7 @@ import {
     botUpdated,
     Bot,
     UpdatedBot,
+    restoreHistoryMark,
 } from '@casual-simulation/aux-common';
 import {
     AuxOpType,
@@ -105,6 +107,61 @@ describe('RemoteCausalRepoHistoryPartition', () => {
 
                 expect(connection.sentMessages).toEqual([]);
             });
+
+            describe('restore_history_mark', () => {
+                it('should send a checkout event to the server', async () => {
+                    const addCommits = new Subject<AddCommitsEvent>();
+                    connection.events.set(ADD_COMMITS, addCommits);
+
+                    partition.connect();
+
+                    await waitAsync();
+
+                    const a1 = atom(atomId('a', 1), null, {});
+                    const a2 = atom(atomId('a', 2), a1, {});
+                    const idx1 = index(a1);
+                    const idx2 = index(a1, a2);
+                    const c1 = commit(
+                        'commit1',
+                        new Date(1900, 1, 1),
+                        idx1,
+                        null
+                    );
+                    const c2 = commit(
+                        'commit2',
+                        new Date(1900, 1, 1),
+                        idx2,
+                        c1
+                    );
+
+                    addCommits.next({
+                        branch: 'testBranch',
+                        commits: [c2, c1],
+                    });
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            restoreHistoryMark(
+                                uuid(c1.hash, COMMIT_ID_NAMESPACE)
+                            )
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: CHECKOUT,
+                            data: {
+                                branch: 'testBranch',
+                                commit: c1.hash,
+                            },
+                        },
+                    ]);
+                });
+            });
         });
 
         it('should request commits', async () => {
@@ -145,6 +202,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     uuid(c1.hash, COMMIT_ID_NAMESPACE),
                     {
                         auxHistory: true,
+                        auxHistoryX: 0,
                         auxLabel: 'commit1',
                         auxMarkHash: c1.hash,
                         auxPreviousMarkHash: null,
@@ -155,6 +213,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     uuid(c2.hash, COMMIT_ID_NAMESPACE),
                     {
                         auxHistory: true,
+                        auxHistoryX: 1,
                         auxLabel: 'commit2',
                         auxMarkHash: c2.hash,
                         auxPreviousMarkHash: c1.hash,

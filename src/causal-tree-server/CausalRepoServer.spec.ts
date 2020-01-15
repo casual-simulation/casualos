@@ -1461,6 +1461,12 @@ describe('CausalRepoServer', () => {
         });
     });
 
+    // TODO: Implement a variant of CHECKOUT which creates a new commit
+    // instead of reseting the branch pointer.
+    // describe(RESTORE, () => {
+
+    // });
+
     describe(SEND_EVENT, () => {
         it('should notify the device that the event was sent to', async () => {
             server.init();

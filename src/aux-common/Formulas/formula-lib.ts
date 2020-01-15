@@ -58,6 +58,7 @@ import {
     showUploadAuxFile as calcShowUploadAuxFile,
     markHistory as calcMarkHistory,
     browseHistory as calcBrowseHistory,
+    restoreHistoryMark as calcRestoreHistoryMark,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1170,6 +1171,15 @@ function browseHistory() {
 }
 
 /**
+ * Restores the current state to the given mark.
+ * @param mark The bot or bot ID that represents the mark that should be restored.
+ */
+function restoreHistoryMark(mark: Bot | string) {
+    const id = getID(mark);
+    return remote(calcRestoreHistoryMark(id));
+}
+
+/**
  * Derermines whether the player is in the given dimension.
  * @param dimension The dimension.
  */
@@ -2236,6 +2246,7 @@ const server = {
     finishCheckout,
     markHistory,
     browseHistory,
+    restoreHistoryMark,
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,

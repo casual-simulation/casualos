@@ -55,6 +55,7 @@ import {
     loadSpace,
     BrowseHistoryAction,
     createBot,
+    RestoreHistoryMarkAction,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import {
@@ -169,6 +170,18 @@ export class RemoteCausalRepoHistoryPartitionImpl
     async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
         if (this._readOnly) {
             return;
+        }
+
+        for (let event of events) {
+            if (event.event.type === 'restore_history_mark') {
+                const restoreMark = <RestoreHistoryMarkAction>event.event;
+                const bot = this.state[restoreMark.mark];
+                if (!bot) {
+                    continue;
+                }
+                const hash = bot.tags.auxMarkHash;
+                this._client.checkout(this._branch, hash);
+            }
         }
     }
 

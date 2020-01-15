@@ -41,6 +41,8 @@ import {
     WATCH_COMMITS,
     UNWATCH_COMMITS,
     ADD_COMMITS,
+    CheckoutEvent,
+    CHECKOUT,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -299,6 +301,19 @@ export class CausalRepoClient {
             message: message,
         };
         this._client.send(COMMIT, event);
+    }
+
+    /**
+     * Checks out the given hash for the given branch.
+     * @param branch The branch to move.
+     * @param hash The hash that the branch should checkout.
+     */
+    checkout(branch: string, hash: string) {
+        const event: CheckoutEvent = {
+            branch: branch,
+            commit: hash,
+        };
+        this._client.send(CHECKOUT, event);
     }
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {

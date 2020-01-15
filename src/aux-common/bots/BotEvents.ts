@@ -76,6 +76,7 @@ export type ExtraActions =
     | ShowUploadAuxFileAction
     | MarkHistoryAction
     | BrowseHistoryAction
+    | RestoreHistoryMarkAction
     | LoadSpaceAction;
 
 /**
@@ -989,6 +990,18 @@ export interface BrowseHistoryAction {
 }
 
 /**
+ * Defines an event that restores the current state to a specific bookmark.
+ */
+export interface RestoreHistoryMarkAction {
+    type: 'restore_history_mark';
+
+    /**
+     * The ID of the mark that should be restored.
+     */
+    mark: string;
+}
+
+/**
  * Defines an event that loads a space into the universe.
  */
 export interface LoadSpaceAction {
@@ -1673,6 +1686,17 @@ export interface MarkHistoryOptions {
 export function browseHistory(): BrowseHistoryAction {
     return {
         type: 'browse_history',
+    };
+}
+
+/**
+ * Creates a RestoreHistoryMarkAction.
+ * @param mark The ID of the mark that history should be restored to.
+ */
+export function restoreHistoryMark(mark: string): RestoreHistoryMarkAction {
+    return {
+        type: 'restore_history_mark',
+        mark,
     };
 }
 
