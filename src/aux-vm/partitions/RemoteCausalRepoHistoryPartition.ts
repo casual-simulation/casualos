@@ -27,6 +27,7 @@ import {
     addedAtoms,
     removedAtoms,
     CausalRepoClient,
+    CausalRepoCommit,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -53,6 +54,7 @@ import {
     MarkHistoryAction,
     loadSpace,
     BrowseHistoryAction,
+    createBot,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import {
@@ -62,13 +64,17 @@ import {
     CausalRepoHistoryClientPartitionConfig,
 } from './AuxPartitionConfig';
 import { RemoteCausalRepoPartition } from './AuxPartition';
+import uuid from 'uuid/v5';
+import reverse from 'lodash/reverse';
 
-export async function createCausalRepoClientPartition(
+export const COMMIT_ID_NAMESPACE = 'b1a81255-568b-4f09-ab0b-4eeb607b82ed';
+
+export async function createCausalRepoHistoryClientPartition(
     config: PartitionConfig,
     user: User
 ): Promise<RemoteCausalRepoPartition> {
-    if (config.type === 'causal_repo_client') {
-        const partition = new RemoteCausalRepoPartitionImpl(
+    if (config.type === 'causal_repo_history_client') {
+        const partition = new RemoteCausalRepoHistoryPartitionImpl(
             user,
             config.client,
             config
@@ -79,7 +85,7 @@ export async function createCausalRepoClientPartition(
     return undefined;
 }
 
-export class RemoteCausalRepoPartitionImpl
+export class RemoteCausalRepoHistoryPartitionImpl
     implements RemoteCausalRepoPartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
@@ -94,16 +100,15 @@ export class RemoteCausalRepoPartitionImpl
     private _branch: string;
     private _readOnly: boolean;
 
-    private _tree: AuxCausalTree = auxTree();
+    private _commits: CausalRepoCommit[] = [];
+    private _state: BotsState = {};
     private _client: CausalRepoClient;
     private _synced: boolean;
 
     private: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded.pipe(
-            startWith(getActiveObjects(this._tree.state))
-        );
+        return this._onBotsAdded.pipe(startWith(getActiveObjects(this._state)));
     }
 
     get onBotsRemoved(): Observable<string[]> {
@@ -135,7 +140,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     get state() {
-        return this._tree.state;
+        return this._state;
     }
 
     type = 'causal_repo' as const;
@@ -151,15 +156,13 @@ export class RemoteCausalRepoPartitionImpl
     constructor(
         user: User,
         client: CausalRepoClient,
-        config:
-            | RemoteCausalRepoPartitionConfig
-            | CausalRepoClientPartitionConfig
+        config: CausalRepoHistoryClientPartitionConfig
     ) {
         this._user = user;
         this._branch = config.branch;
         this._client = client;
         this.private = config.private;
-        this._readOnly = config.readOnly || false;
+        this._readOnly = false;
         this._synced = false;
     }
 
@@ -167,44 +170,9 @@ export class RemoteCausalRepoPartitionImpl
         if (this._readOnly) {
             return;
         }
-        for (let event of events) {
-            if (event.event.type === 'mark_history') {
-                const markHistory = <MarkHistoryAction>event.event;
-                this._client.commit(this._branch, markHistory.message);
-            } else if (event.event.type === 'browse_history') {
-                const browseHistory = <BrowseHistoryAction>event.event;
-                this._onEvents.next([
-                    loadSpace('history', <
-                        CausalRepoHistoryClientPartitionConfig
-                    >{
-                        type: 'causal_repo_history_client',
-                        branch: this._branch,
-                        client: this._client,
-                    }),
-                ]);
-            } else {
-                this._client.sendEvent(this._branch, event);
-            }
-        }
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, e => {
-            if (e.type === 'apply_state') {
-                return breakIntoIndividualEvents(this.state, e);
-            } else if (
-                e.type === 'add_bot' ||
-                e.type === 'remove_bot' ||
-                e.type === 'update_bot'
-            ) {
-                return [e] as const;
-            } else {
-                return [];
-            }
-        });
-
-        this._applyEvents(finalEvents);
-
         return [];
     }
 
@@ -238,15 +206,12 @@ export class RemoteCausalRepoPartitionImpl
         );
 
         this._sub.add(
-            this._client.watchBranch(this._branch).subscribe(event => {
+            this._client.watchCommits(this._branch).subscribe(event => {
                 if (!this._synced) {
                     this._updateSynced(true);
                 }
-                if (event.type === 'atoms') {
-                    this._applyAtoms(event.atoms, event.removedAtoms);
-                } else if (event.type === 'event') {
-                    this._onEvents.next([event.action]);
-                }
+
+                this._addCommits(event.commits);
             })
         );
     }
@@ -259,50 +224,29 @@ export class RemoteCausalRepoPartitionImpl
         });
     }
 
-    private _applyAtoms(atoms: Atom<any>[], removedAtoms: string[]) {
-        if (this._tree.weave.roots.length === 0) {
-            console.log(
-                `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
+    private _addCommits(commits: CausalRepoCommit[]) {
+        const newBots = commits.map(c => this._makeBot(c));
+
+        this._commits.push(...reverse(commits));
+        for (let bot of newBots) {
+            bot.tags.auxHistoryX = this._commits.findIndex(
+                c => c.hash === bot.tags.auxMarkHash
             );
-        }
-        let { tree, updates } = applyAtoms(this._tree, atoms, removedAtoms);
-        this._tree = tree;
-        this._sendUpdates(updates);
-    }
-
-    private _applyEvents(
-        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
-    ) {
-        let { tree, updates, result } = applyEvents(this._tree, events);
-        this._tree = tree;
-
-        this._sendUpdates(updates);
-
-        if (this._readOnly) {
-            return;
+            this._state[bot.id] = bot;
         }
 
-        const atoms = addedAtoms(result.results);
-        const removed = removedAtoms(result.results);
-        if (atoms.length > 0 || removed.length > 0) {
-            this._client.addAtoms(this._branch, atoms, removed);
+        if (newBots.length > 0) {
+            this._onBotsAdded.next(newBots);
         }
     }
 
-    private _sendUpdates(updates: BotStateUpdates) {
-        if (updates.addedBots.length > 0) {
-            this._onBotsAdded.next(updates.addedBots);
-        }
-        if (updates.removedBots.length > 0) {
-            this._onBotsRemoved.next(updates.removedBots);
-        }
-        if (updates.updatedBots.length > 0) {
-            this._onBotsUpdated.next(
-                updates.updatedBots.map(u => ({
-                    bot: <any>u.bot,
-                    tags: [...u.tags.values()],
-                }))
-            );
-        }
+    private _makeBot(commit: CausalRepoCommit): Bot {
+        return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
+            auxHistory: true,
+            auxLabel: commit.message,
+            auxMarkHash: commit.hash,
+            auxPreviousMarkHash: commit.previousCommit,
+            auxMarkTime: commit.time,
+        });
     }
 }
