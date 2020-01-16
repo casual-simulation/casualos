@@ -16,9 +16,11 @@ import {
   LabelAnchorValues,
   AnyColorValues,
   Alert,
+  ActionLink,
   TagLink,
   NormalCode,
   UserBotBadge,
+  HistoryBotBadge,
 } from './components.mdx';
 
 AUX has many tags.
@@ -58,6 +60,12 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
   <PossibleValueCode value='tempLocal'>
     The bot is not saved and is not shared with other sessions.
     When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
+  </PossibleValueCode>
+  <PossibleValueCode value='history'>
+    The bot represents a mark (save point).
+    The history space is not available by default.
+    You need to use the <ActionLink action='server.browseHistory()'/> function to load it.
+    Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -1069,6 +1077,43 @@ Combines with <TagLink tag='auxIframeSizeX'/> and <TagLink tag='auxIframeSizeY'/
     Specifies the scale of the iframe. (Default is 1)
   </PossibleValue>
 </PossibleValuesTable>
+
+## History Tags
+
+History tags are tags that are automatically applied to bots in the `history` space.
+
+### `auxHistory`
+
+<Badges>
+  <HistoryBotBadge/>
+</Badges>
+
+Whether the bot is in the `auxHistory` dimension.
+
+### `auxMarkHash`
+
+<Badges>
+  <HistoryBotBadge/>
+</Badges>
+
+The [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash that the mark represents.
+
+### `auxPreviousMarkHash`
+
+<Badges>
+  <HistoryBotBadge/>
+</Badges>
+
+The <TagLink tag='auxMarkHash'/> of the mark that was created before this mark.
+You can use this tag as a way to find previous marks from a mark.
+
+### `auxMarkTime`
+
+<Badges>
+  <HistoryBotBadge/>
+</Badges>
+
+The time that the mark was created.
 
 ## Hidden Tags
 

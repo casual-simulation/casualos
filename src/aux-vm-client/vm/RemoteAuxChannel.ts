@@ -25,6 +25,7 @@ import {
     iteratePartitions,
     filterAtomFactory,
     createCausalRepoClientPartition,
+    createCausalRepoHistoryClientPartition,
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
@@ -85,7 +86,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             createMemoryPartition,
             config => createCausalRepoPartition(config, this.user),
             config => createRemoteCausalRepoPartition(config, this.user),
-            config => createCausalRepoClientPartition(config, this.user)
+            config => createCausalRepoClientPartition(config, this.user),
+            config => createCausalRepoHistoryClientPartition(config, this.user)
         );
     }
 

@@ -7,6 +7,7 @@ import {
     StatusUpdate,
     DeviceAction,
     LocalRealtimeCausalTree,
+    Action,
 } from '@casual-simulation/causal-trees';
 import {
     auxCausalTreeFactory,
@@ -36,7 +37,7 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
         botsUpdated: Observable<UpdatedBot[]>;
     }>(null);
     protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<DeviceAction[]>();
+    protected _onEvents = new Subject<Action[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
@@ -77,7 +78,7 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
         return this._onError;
     }
 
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
 

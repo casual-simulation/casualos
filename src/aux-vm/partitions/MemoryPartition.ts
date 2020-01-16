@@ -23,6 +23,7 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     USER_ROLE,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
@@ -46,7 +47,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onError = new Subject<any>();
-    private _onEvents = new Subject<DeviceAction[]>();
+    private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
 
     type = 'memory' as const;
@@ -69,7 +70,7 @@ class MemoryPartitionImpl implements MemoryPartition {
         return this._onError;
     }
 
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
 

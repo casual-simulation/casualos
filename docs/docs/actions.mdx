@@ -743,4 +743,81 @@ server.setupUniverse("test", {
 });
 ```
 
+### `server.browseHistory()`
+
+<FunctionCode name='browseHistory'/>
+
+Loads the `history` space into the current universe.
+The `history` space is read-only and contains all the marks that have been created for the universe.
+Each mark is a bot that is placed in the `#auxHistory` dimension.
+
+#### Examples:
+
+1. Load the `history` space.
+```typescript
+server.browseHistory();
+```
+
+### `server.markHistory(options)`
+
+<FunctionCode name='markHistory'/>
+
+Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
+Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
+
+The **first parameter** are the options that should be used to mark the history point.
+It should be an object with the following properties:
+- `message` - The message that the new mark should have. Use this as a way to communicate what was special about this save point.
+
+#### Examples:
+
+1. Save the current state of the `shared` space.
+```typescript
+server.markHistory({
+    message: 'First Version of my AUX'
+});
+```
+
+### `server.restoreHistoryMark(mark)`
+
+<FunctionCode name='restoreHistoryMark'/>
+
+Restores the current state to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
+
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+
+#### Examples:
+
+1. Restore the state to a given mark.
+```typescript
+// Find a random mark that was loaded by server.browseHistory()
+let mark = getBot(byTag("#auxHistory", true));
+
+// Restore the current state to the given mark.
+server.restoreHistoryMark(mark);
+```
+
+### `server.restoreHistoryMarkToUniverse(mark, universe)`
+
+<FunctionCode name='restoreHistoryMarkToUniverse'/>
+
+Restores the state in the given universe to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the universe and another mark with the state that was saved by the given mark.
+
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+
+The **second parameter** is the universe that the state should be restored to. If `null` or an empty string, then the current universe will be restored.
+
+#### Examples:
+
+1. Restore the state of the `test` universe to a given mark.
+```typescript
+// Find a random mark that was loaded by server.browseHistory()
+let mark = getBot(byTag("#auxHistory", true));
+
+// Restore the current state to the given mark.
+server.restoreHistoryMarkToUniverse(mark, "test");
+```
+
 [listen-tag]: docs/listen-tags

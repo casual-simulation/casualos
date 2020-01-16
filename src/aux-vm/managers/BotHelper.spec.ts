@@ -97,30 +97,46 @@ describe('BotHelper', () => {
 
             expect(vm.events).toEqual([
                 botAdded(
-                    createBot('botId', {
-                        abc: true,
-                        auxUniverse: 'test',
-                    })
+                    createBot(
+                        'botId',
+                        {
+                            abc: true,
+                            auxUniverse: 'test',
+                        },
+                        'tempLocal'
+                    )
                 ),
                 action(CREATE_ACTION_NAME, ['botId'], 'user'),
                 action(CREATE_ANY_ACTION_NAME, null, 'user', {
-                    bot: createBot('botId', {
-                        abc: true,
-                        auxUniverse: 'test',
-                    }),
+                    bot: createBot(
+                        'botId',
+                        {
+                            abc: true,
+                            auxUniverse: 'test',
+                        },
+                        'tempLocal'
+                    ),
                 }),
                 botAdded(
-                    createBot('botId2', {
-                        abc: true,
-                        auxUniverse: 'test2',
-                    })
+                    createBot(
+                        'botId2',
+                        {
+                            abc: true,
+                            auxUniverse: 'test2',
+                        },
+                        'tempLocal'
+                    )
                 ),
                 action(CREATE_ACTION_NAME, ['botId2'], 'user'),
                 action(CREATE_ANY_ACTION_NAME, null, 'user', {
-                    bot: createBot('botId2', {
-                        abc: true,
-                        auxUniverse: 'test2',
-                    }),
+                    bot: createBot(
+                        'botId2',
+                        {
+                            abc: true,
+                            auxUniverse: 'test2',
+                        },
+                        'tempLocal'
+                    ),
                 }),
             ]);
         });

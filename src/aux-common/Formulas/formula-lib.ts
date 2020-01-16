@@ -56,6 +56,9 @@ import {
     runScript,
     download,
     showUploadAuxFile as calcShowUploadAuxFile,
+    markHistory as calcMarkHistory,
+    browseHistory as calcBrowseHistory,
+    restoreHistoryMark as calcRestoreHistoryMark,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -252,6 +255,16 @@ interface FinishCheckoutOptions {
 }
 
 /**
+ * Defines an interface for options that mark a specific time in history.
+ */
+interface MarkHistoryOptions {
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
+/**
  * Defines a set of options for a webhook.
  */
 export interface WebhookOptions {
@@ -354,9 +367,9 @@ interface Bot {
 }
 
 /**
- * The possible bot types.
+ * The possible bot spaces.
  */
-type BotType = 'shared' | 'local' | 'tempLocal';
+type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -1134,6 +1147,46 @@ function finishCheckout(options: FinishCheckoutOptions) {
         options.extra
     );
     return addAction(event);
+}
+
+/**
+ * Saves the current state as a history mark.
+ * @param options The options that describe what information the mark should contain.
+ *
+ * @example
+ * // Bookmark the current state with a message
+ * server.markHistory({
+ *   message: "Save recent changes"
+ * });
+ */
+function markHistory(options: MarkHistoryOptions) {
+    return remote(calcMarkHistory(options));
+}
+
+/**
+ * Loads the "history" space into the universe.
+ */
+function browseHistory() {
+    return remote(calcBrowseHistory());
+}
+
+/**
+ * Restores the current state to the given mark.
+ * @param mark The bot or bot ID that represents the mark that should be restored.
+ */
+function restoreHistoryMark(mark: Bot | string) {
+    const id = getID(mark);
+    return remote(calcRestoreHistoryMark(id));
+}
+
+/**
+ * Restores the current state to the given mark.
+ * @param mark The bot or bot ID that represents the mark that should be restored.
+ * @param universe The universe that the mark should be restored to.
+ */
+function restoreHistoryMarkToUniverse(mark: Bot | string, universe: string) {
+    const id = getID(mark);
+    return remote(calcRestoreHistoryMark(id, universe));
 }
 
 /**
@@ -2201,6 +2254,10 @@ const server = {
     backupToGithub,
     backupAsDownload,
     finishCheckout,
+    markHistory,
+    browseHistory,
+    restoreHistoryMark,
+    restoreHistoryMarkToUniverse,
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,

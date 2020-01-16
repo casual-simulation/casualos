@@ -7,6 +7,7 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     USER_ROLE,
+    Action,
 } from '@casual-simulation/causal-trees';
 import {
     Weave,
@@ -70,7 +71,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
 
     protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<DeviceAction[]>();
+    protected _onEvents = new Subject<Action[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
@@ -99,7 +100,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
         return this._onError;
     }
 
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
 

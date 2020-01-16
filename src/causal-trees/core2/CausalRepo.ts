@@ -5,6 +5,7 @@ import {
     AtomIndexDiff,
     AtomIndexFullDiff,
     AtomHashList,
+    calculateDiff,
 } from './AtomIndex';
 import { Atom, isAtom, atomIdToString } from './Atom2';
 import {
@@ -40,7 +41,6 @@ export interface IndexData {
 
     /**
      * The atoms that were loaded.
-     * Maps
      */
     atoms: Map<string, Atom<any>>;
 }
@@ -240,6 +240,76 @@ export async function listBranches(
 }
 
 /**
+ * Lists the set of commits for the given commit hash.
+ * @param store The store that the commit info should be loaded from.
+ * @param hash
+ */
+export async function listCommits(
+    store: CausalRepoStore,
+    hash: string
+): Promise<CausalRepoCommit[]> {
+    let commit: CausalRepoObject;
+    let commits: CausalRepoCommit[] = [];
+    while (hash) {
+        [commit] = await store.getObjects([hash]);
+        if (commit && commit.type === 'commit') {
+            hash = commit.previousCommit;
+            commits.push(commit);
+        } else {
+            hash = null;
+        }
+    }
+
+    return commits;
+}
+
+/**
+ * Calculates the difference between the two commits.
+ * @param first The first commit.
+ * @param second The second commit.
+ */
+export function calculateCommitDiff(
+    first: CommitData,
+    second: CommitData
+): CommitDiff {
+    if (!first && second) {
+        return {
+            additions: second.atoms,
+            deletions: atomMap([]),
+        };
+    } else if (first && !second) {
+        return {
+            additions: atomMap([]),
+            deletions: first.atoms,
+        };
+    } else {
+        const diff = calculateDiff(first.index.data, second.index.data);
+        const added = Object.keys(diff.additions);
+        const deleted = Object.keys(diff.deletions);
+
+        return {
+            additions: atomMap(added.map(hash => second.atoms.get(hash))),
+            deletions: atomMap(deleted.map(hash => first.atoms.get(hash))),
+        };
+    }
+}
+
+/**
+ * Defines an interface for objects that represent a diff between two commits.
+ */
+export interface CommitDiff {
+    /**
+     * The map of atoms that were added.
+     */
+    additions: Map<string, Atom<any>>;
+
+    /**
+     * The map of atoms that were deleted.
+     */
+    deletions: Map<string, Atom<any>>;
+}
+
+/**
  * Defines an interface that represents a causal repo.
  * That is, a repository of atoms stored in a weave.
  */
@@ -345,9 +415,12 @@ export class CausalRepo {
      * Creates a commit containing all of the current changes.
      * @param message The message to include for the commit.
      */
-    async commit(message: string, time: Date = new Date()): Promise<void> {
+    async commit(
+        message: string,
+        time: Date = new Date()
+    ): Promise<CausalRepoCommit> {
         if (!this.hasChanges()) {
-            return;
+            return null;
         }
         const addedAtoms = this.stage.additions;
         const idx = index(...this.getAtoms());
@@ -360,6 +433,8 @@ export class CausalRepo {
         await storeData(this._store, [...addedAtoms, idx, c]);
         await this._updateHead(c);
         await this._checkoutHead();
+
+        return c;
     }
 
     /**
@@ -384,6 +459,20 @@ export class CausalRepo {
         const b = branches[0];
 
         await this._saveHead(b);
+        await this._checkoutHead();
+    }
+
+    /**
+     * Resets the current branch to the given hash.
+     * @param hash The hash.
+     */
+    async reset(hash: CausalRepoCommit | string): Promise<void> {
+        if (!this._head) {
+            throw new Error('There is no head to reset!');
+        }
+
+        const newBranch = branch(this._head.name, hash);
+        await this._saveHead(newBranch);
         await this._checkoutHead();
     }
 
