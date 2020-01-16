@@ -53,8 +53,9 @@ export interface Bot {
  * - "shared" means that the bot is a normal bot.
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
+ * - "history" means that the bot represents a version of another space.
  */
-export type BotSpace = 'shared' | 'local' | 'tempLocal';
+export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
 
 /**
  * Defines an interface for a bot in a script/formula.

@@ -34,7 +34,10 @@ import {
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import { AuxPartition } from '../partitions/AuxPartition';
-import { PartitionConfig } from '../partitions/AuxPartitionConfig';
+import {
+    PartitionConfig,
+    MemoryPartitionConfig,
+} from '../partitions/AuxPartitionConfig';
 import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
 import uuid from 'uuid/v4';
 import { createMemoryPartition } from '../partitions';
@@ -441,6 +444,48 @@ describe('BaseAuxChannel', () => {
                     event: botAdded(createBot('abc')),
                 },
             ]);
+        });
+
+        describe('load_space', () => {
+            it('should handle load_space events', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'tempLocal',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                    },
+                ]);
+
+                const { abc } = channel.helper.botsState;
+                expect(abc).toEqual(createBot('abc', {}, 'tempLocal'));
+            });
+
+            it('should not overwrite existing spaces', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'shared',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                    },
+                ]);
+
+                const { abc } = channel.helper.botsState;
+                expect(abc).toBeUndefined();
+            });
         });
     });
 

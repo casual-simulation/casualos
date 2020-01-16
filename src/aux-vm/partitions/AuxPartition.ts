@@ -8,13 +8,12 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     RealtimeCausalTree,
-    DeviceAction,
     StatusUpdate,
     RemoteAction,
     User,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
-import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.
@@ -106,7 +105,7 @@ export interface AuxPartitionBase extends SubscriptionLike {
     /**
      * Gets the observable list of remote events from the partition.
      */
-    onEvents: Observable<DeviceAction[]>;
+    onEvents: Observable<Action[]>;
 
     /**
      * Gets the observable list of status updates from the partition.
@@ -123,7 +122,7 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onBotsRemoved?: (bot: string[]) => void,
         onBotsUpdated?: (bots: UpdatedBot[]) => void,
         onError?: (error: any) => void,
-        onEvents?: (actions: DeviceAction[]) => void,
+        onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void
     ): Promise<void>;
 }

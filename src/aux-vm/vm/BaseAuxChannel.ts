@@ -46,6 +46,7 @@ import {
     SERVER_ROLE,
     RealtimeCausalTreeOptions,
     Atom,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
@@ -63,6 +64,7 @@ import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
+import flatMap from 'lodash/flatMap';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -238,14 +240,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            ...partitions,
-            ...partitions.map(p =>
-                p.onError.subscribe(err => this._handleError(err))
-            ),
-            ...partitions.map(p =>
-                p.onEvents
-                    .pipe(tap(events => this._handleServerEvents(events)))
-                    .subscribe(null, (e: any) => console.error(e))
+            ...flatMap(partitions, p =>
+                this._getCleanupSubscriptionsForPartition(p)
             )
         );
 
@@ -258,6 +254,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             partition.connect();
         }
         return null;
+    }
+
+    protected _getCleanupSubscriptionsForPartition(
+        partition: AuxPartition
+    ): SubscriptionLike[] {
+        return [
+            partition,
+            partition.onError.subscribe(err => this._handleError(err)),
+            partition.onEvents
+                .pipe(tap(events => this._handlePartitionEvents(events)))
+                .subscribe(null, (e: any) => console.error(e)),
+        ];
     }
 
     /**
@@ -428,11 +436,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             })
         );
         for (let [key, partition] of iteratePartitions(this._partitions)) {
-            this._registerSubscriptionsForPartition(partition);
+            this._registerStateSubscriptionsForPartition(partition);
         }
     }
 
-    protected _registerSubscriptionsForPartition(partition: AuxPartition) {
+    protected _registerStateSubscriptionsForPartition(partition: AuxPartition) {
         this._subs.push(
             partition.onBotsAdded
                 .pipe(
@@ -514,14 +522,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     /**
-     * Decides what to do with device events from the server.
+     * Decides what to do with device events from partitions.
      * By default the events are processed as-is.
-     * This means that the onDeviceEvents observable will be triggered so that
-     * other components can decide what to do.
+     * This means that the events are sent directly to the AuxHelper via this.sendEvents().
      * @param events The events.
      */
-    protected async _handleServerEvents(events: DeviceAction[]) {
-        await this.sendEvents(events);
+    protected async _handlePartitionEvents(events: Action[]) {
+        const actions = <BotAction[]>events;
+        await this.sendEvents(actions);
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
@@ -540,11 +548,41 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _handleLocalEvents(e: LocalActions[]) {
+        for (let event of e) {
+            if (event.type === 'load_space') {
+                this._loadPartition(event.space, event.config);
+            }
+        }
         this._onLocalEvents.next(e);
     }
 
     protected _handleDeviceEvents(e: DeviceAction[]) {
         this._onDeviceEvents.next(e);
+    }
+
+    protected async _loadPartition(space: string, config: PartitionConfig) {
+        if (space in this._partitions) {
+            console.log(
+                `[BaseAuxChannel] Cannot load partition for "${space}" since the space is already occupied`
+            );
+            return;
+        }
+
+        let partition = await this._createPartition(config);
+        if (!partition) {
+            return;
+        }
+
+        this._partitions[space] = partition;
+        this._subs.push(
+            ...this._getCleanupSubscriptionsForPartition(partition)
+        );
+
+        partition.connect();
+
+        if (this._hasRegisteredSubs) {
+            this._registerStateSubscriptionsForPartition(partition);
+        }
     }
 
     private async _initUserBot() {

@@ -33,6 +33,15 @@ import {
     RECEIVE_EVENT,
     BRANCHES,
     atomIdToString,
+    COMMIT,
+    CommitEvent,
+    WATCH_COMMITS,
+    ADD_COMMITS,
+    CHECKOUT,
+    CheckoutEvent,
+    RESTORE,
+    RestoreEvent,
+    CausalRepoCommit,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -1199,6 +1208,451 @@ describe('CausalRepoServer', () => {
                     [a3.hash]: atomIdToString(a3.id),
                 },
             });
+        });
+    });
+
+    describe(COMMIT, () => {
+        it('should commit the current changes to the branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const makeCommit = new Subject<CommitEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(COMMIT, makeCommit);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            makeCommit.next({
+                branch: 'testBranch',
+                message: 'newCommit',
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const data = await loadBranch(store, testBranch);
+
+            expect(data.commit.message).toBe('newCommit');
+            expect(data.commit.previousCommit).toBe(c.hash);
+            expect(data.atoms).toEqual(
+                new Map([[a1.hash, a1], [a2.hash, a2], [a3.hash, a3]])
+            );
+        });
+
+        it('should send the new commit to all devices watching for commits', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const makeCommit = new Subject<CommitEvent>();
+            const watchCommits = new Subject<string>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(COMMIT, makeCommit);
+            device.events.set(WATCH_COMMITS, watchCommits);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            watchCommits.next('testBranch');
+
+            await waitAsync();
+
+            makeCommit.next({
+                branch: 'testBranch',
+                message: 'newCommit',
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const [newCommit] = await store.getObjects([testBranch.hash]);
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: ADD_COMMITS,
+                    data: {
+                        branch: 'testBranch',
+                        commits: [c],
+                    },
+                },
+                {
+                    name: ADD_COMMITS,
+                    data: {
+                        branch: 'testBranch',
+                        commits: [newCommit],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(WATCH_COMMITS, () => {
+        it('should send the commits for the branch when first connected', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchCommits = new Subject<string>();
+            device.events.set(WATCH_COMMITS, watchCommits);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a2, a3);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchCommits.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send all the existing commits
+                {
+                    name: ADD_COMMITS,
+                    data: {
+                        branch: 'testBranch',
+                        commits: [c2, c1],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(CHECKOUT, () => {
+        it('should reset the given branch to the given commit', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            device.events.set(CHECKOUT, checkout);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a2, a3);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const [branchCommit] = await store.getObjects([testBranch.hash]);
+
+            expect(branchCommit).toEqual(c1);
+        });
+
+        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            const watchBranch = new Subject<string>();
+            device.events.set(CHECKOUT, checkout);
+            device.events.set(WATCH_BRANCH, watchBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch.next('testBranch');
+
+            await waitAsync();
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a4, a5],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a3],
+                        removedAtoms: [a4.hash, a5.hash],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(RESTORE, () => {
+        it('should create a commit referencing the restored commits index', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const restore = new Subject<RestoreEvent>();
+            const watchBranch = new Subject<string>();
+            device.events.set(RESTORE, restore);
+            device.events.set(WATCH_BRANCH, watchBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch.next('testBranch');
+
+            await waitAsync();
+
+            restore.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const [branchCommit] = await store.getObjects([testBranch.hash]);
+
+            expect(branchCommit).toEqual({
+                type: 'commit',
+                message: `Restore to ${c1.hash}`,
+                time: expect.any(Date),
+                hash: expect.any(String),
+                index: c1.index,
+                previousCommit: c2.hash,
+            });
+        });
+
+        it('should commit uncommitted changes', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const restore = new Subject<RestoreEvent>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const watchBranch = new Subject<string>();
+            device.events.set(RESTORE, restore);
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(WATCH_BRANCH, watchBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+            const a6 = atom(atomId('a', 6), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch.next('testBranch');
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a6],
+            });
+
+            await waitAsync();
+
+            restore.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const [branchCommit] = (await store.getObjects([
+                testBranch.hash,
+            ])) as CausalRepoCommit[];
+            const [changesCommit] = (await store.getObjects([
+                branchCommit.previousCommit,
+            ])) as CausalRepoCommit[];
+            const data = await loadCommit(store, changesCommit);
+
+            expect(branchCommit).toEqual({
+                type: 'commit',
+                message: `Restore to ${c1.hash}`,
+                time: expect.any(Date),
+                hash: expect.any(String),
+                index: c1.index,
+                previousCommit: changesCommit.hash,
+            });
+
+            expect(changesCommit).toEqual({
+                type: 'commit',
+                message: `Save before restore`,
+                time: expect.any(Date),
+                hash: expect.any(String),
+                index: expect.any(String),
+                previousCommit: c2.hash,
+            });
+            expect(data.atoms).toEqual(
+                new Map([
+                    [a1.hash, a1],
+                    [a2.hash, a2],
+                    [a4.hash, a4],
+                    [a5.hash, a5],
+                    [a6.hash, a6],
+                ])
+            );
+        });
+
+        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const restore = new Subject<RestoreEvent>();
+            const watchBranch = new Subject<string>();
+            device.events.set(RESTORE, restore);
+            device.events.set(WATCH_BRANCH, watchBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch.next('testBranch');
+
+            await waitAsync();
+
+            restore.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a4, a5],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a3],
+                        removedAtoms: [a4.hash, a5.hash],
+                    },
+                },
+            ]);
         });
     });
 

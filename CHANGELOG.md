@@ -1,5 +1,28 @@
 # AUX Changelog
 
+## V0.11.22
+
+### Date: TBD
+
+### Changes:
+
+-   **Breaking Changes**
+    -   Changed player bots to use the `tempLocal` space.
+        -   This means that refreshing the page won't pollute the universe with a ton of extra bots.
+    -   `player.loadUniverse()` will now create bots in the `tempLocal` space.
+        -   Previously they were created in the `shared` space.
+-   Improvements
+    -   Added the ability to create, load, and restore version marks.
+        -   The `player.markHistory(options)` function creates a history mark for the current version.
+            -   `options` is an object with the following properties:
+                -   `message` - The message that the new mark should have.
+        -   The `player.browseHistory()` function loads the `history` space with all the marks that the universe has.
+        -   The `player.restoreHistoryMark(mark)` function restores the state in the given mark to the universe.
+            -   `mark` - The bot or bot ID of the mark that should be restored.
+        -   The `player.restoreHistoryMarkToUniverse(mark, universe)` function restores the state in the given mark to the given universe.
+            -   `mark` - The bot or bot ID of the mark that should be restored.
+            -   `universe` - The universe that the mark should be restored to.
+
 ## V0.11.21
 
 ### Date: 1/14/2020

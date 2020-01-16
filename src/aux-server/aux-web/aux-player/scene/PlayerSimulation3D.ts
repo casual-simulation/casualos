@@ -17,7 +17,7 @@ import {
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { tap } from 'rxjs/operators';
+import { tap, filter } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { doesBotDefinePlayerDimension } from '../PlayerUtils';
 import {
@@ -686,6 +686,7 @@ export class PlayerSimulation3D extends Simulation3D {
             this.simulation.watcher
                 .botChanged(bot.id)
                 .pipe(
+                    filter(bot => !!bot),
                     tap(update => {
                         const bot = update;
                         let userBackgroundColor = calculateBotValue(

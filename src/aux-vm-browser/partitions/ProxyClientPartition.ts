@@ -4,7 +4,11 @@ import {
     UpdatedBot,
     merge,
 } from '@casual-simulation/aux-common';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import {
+    DeviceAction,
+    StatusUpdate,
+    Action,
+} from '@casual-simulation/causal-trees';
 import { Observable, Subject, Subscription } from 'rxjs';
 import {
     ProxyBridgePartition,
@@ -37,7 +41,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _onBotsRemoved: Subject<string[]>;
     private _onBotsUpdated: Subject<UpdatedBot[]>;
     private _onError: Subject<any>;
-    private _onEvents: Subject<DeviceAction[]>;
+    private _onEvents: Subject<Action[]>;
     private _onStatusUpdated: Subject<StatusUpdate>;
     private _proxies: readonly any[];
     private _sub: Subscription;
@@ -58,7 +62,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     get onError(): Observable<any> {
         return this._onError;
     }
-    get onEvents(): Observable<DeviceAction[]> {
+    get onEvents(): Observable<Action[]> {
         return this._onEvents;
     }
     get onStatusUpdated(): Observable<StatusUpdate> {
@@ -77,7 +81,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this._onBotsRemoved = new Subject<string[]>();
         this._onBotsUpdated = new Subject<UpdatedBot[]>();
         this._onError = new Subject<any>();
-        this._onEvents = new Subject<DeviceAction[]>();
+        this._onEvents = new Subject<Action[]>();
         this._onStatusUpdated = new Subject<StatusUpdate>();
     }
 
@@ -87,7 +91,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
             proxy((bots: string[]) => this._handleOnBotsRemoved(bots)),
             proxy((bots: UpdatedBot[]) => this._handleOnBotsUpdated(bots)),
             proxy((error: any) => this._onError.next(error)),
-            proxy((events: DeviceAction[]) => this._onEvents.next(events)),
+            proxy((events: Action[]) => this._onEvents.next(events)),
             proxy((status: StatusUpdate) => this._onStatusUpdated.next(status)),
         ] as const;
 

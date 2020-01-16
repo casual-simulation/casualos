@@ -294,13 +294,17 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         const userMenuDimension = `_user_${user.username}_menu`;
         const userUniversesDimension = `_user_${user.username}_universes`;
         if (!userBot) {
-            await this.createBot(user.id, {
-                [USERS_DIMENSION]: true,
-                ['_auxUser']: user.username,
-                ['_auxUserInventoryDimension']: userInventoryDimension,
-                ['_auxUserMenuDimension']: userMenuDimension,
-                ['_auxUserUniversesDimension']: userUniversesDimension,
-            });
+            await this.createBot(
+                user.id,
+                {
+                    [USERS_DIMENSION]: true,
+                    ['_auxUser']: user.username,
+                    ['_auxUserInventoryDimension']: userInventoryDimension,
+                    ['_auxUserMenuDimension']: userMenuDimension,
+                    ['_auxUserUniversesDimension']: userUniversesDimension,
+                },
+                'tempLocal' in this._partitions ? 'tempLocal' : undefined
+            );
         } else {
             if (!userBot.tags['_auxUserMenuDimension']) {
                 await this.updateBot(userBot, {

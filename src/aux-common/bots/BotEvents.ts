@@ -1,4 +1,4 @@
-import { PartialBot, BotsState, Bot, BotTags } from './Bot';
+import { PartialBot, BotsState, Bot, BotTags, BotSpace } from './Bot';
 import {
     Action,
     DeviceAction,
@@ -73,7 +73,11 @@ export type ExtraActions =
     | SetClipboardAction
     | ShowChatBarAction
     | RunScriptAction
-    | ShowUploadAuxFileAction;
+    | ShowUploadAuxFileAction
+    | MarkHistoryAction
+    | BrowseHistoryAction
+    | RestoreHistoryMarkAction
+    | LoadSpaceAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -966,6 +970,60 @@ export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
 }
 
+/**
+ * Defines an event that marks a specific point in history.
+ */
+export interface MarkHistoryAction {
+    type: 'mark_history';
+
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
+/**
+ * Defines an event that loads the history into the universe.
+ */
+export interface BrowseHistoryAction {
+    type: 'browse_history';
+}
+
+/**
+ * Defines an event that restores the current state to a specific bookmark.
+ */
+export interface RestoreHistoryMarkAction {
+    type: 'restore_history_mark';
+
+    /**
+     * The ID of the mark that should be restored.
+     */
+    mark: string;
+
+    /**
+     * The universe that the mark should be restored to.
+     * If not specified, then the current universe will be used.
+     */
+    universe?: string;
+}
+
+/**
+ * Defines an event that loads a space into the universe.
+ */
+export interface LoadSpaceAction {
+    type: 'load_space';
+
+    /**
+     * The space that should be loaded.
+     */
+    space: BotSpace;
+
+    /**
+     * The config that should be used to load the space.
+     */
+    config: any;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1610,5 +1668,65 @@ export function runScript(script: string): RunScriptAction {
 export function showUploadAuxFile(): ShowUploadAuxFileAction {
     return {
         type: 'show_upload_aux_file',
+    };
+}
+
+/**
+ * Creates a MarkHistoryAction.
+ * @param options The options to use.
+ */
+export function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
+    return {
+        type: 'mark_history',
+        ...options,
+    };
+}
+
+export interface MarkHistoryOptions {
+    message: string;
+}
+
+/**
+ * Creates a BrowseHistoryAction.
+ */
+export function browseHistory(): BrowseHistoryAction {
+    return {
+        type: 'browse_history',
+    };
+}
+
+/**
+ * Creates a RestoreHistoryMarkAction.
+ * @param mark The ID of the mark that history should be restored to.
+ * @param universe The universe that the mark should be restored to. If not specified, then the current universe will be used.
+ */
+export function restoreHistoryMark(
+    mark: string,
+    universe?: string
+): RestoreHistoryMarkAction {
+    if (!universe) {
+        return {
+            type: 'restore_history_mark',
+            mark,
+        };
+    } else {
+        return {
+            type: 'restore_history_mark',
+            mark,
+            universe,
+        };
+    }
+}
+
+/**
+ * Loads a space into the universe.
+ * @param space The space to load.
+ * @param config The config which specifies how the space should be loaded.
+ */
+export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
+    return {
+        type: 'load_space',
+        space,
+        config,
     };
 }

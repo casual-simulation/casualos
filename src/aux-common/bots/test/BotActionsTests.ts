@@ -40,6 +40,10 @@ import {
     runScript,
     download,
     showUploadAuxFile,
+    markHistory,
+    browseHistory,
+    restoreHistoryMark,
+    RestoreHistoryMarkAction,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -5799,6 +5803,126 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     finishCheckout('token1', 100, 'usd', 'Test', {
                         abc: 'def',
+                    }),
+                ]);
+            });
+        });
+
+        describe('server.markHistory()', () => {
+            it('should emit a mark_history event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.markHistory({
+                                message: 'testMark'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        markHistory({
+                            message: 'testMark',
+                        })
+                    ),
+                ]);
+            });
+        });
+
+        describe('server.browseHistory()', () => {
+            it('should emit a browse_history event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.browseHistory()`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([remote(browseHistory())]);
+            });
+        });
+
+        describe('server.restoreHistoryMark()', () => {
+            it('should emit a restore_history_mark event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.restoreHistoryMark("mark")`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(restoreHistoryMark('mark')),
+                ]);
+            });
+        });
+
+        describe('server.restoreHistoryMarkToUniverse()', () => {
+            it('should emit a restore_history_mark event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@server.restoreHistoryMarkToUniverse("mark", "universe")`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(<RestoreHistoryMarkAction>{
+                        type: 'restore_history_mark',
+                        mark: 'mark',
+                        universe: 'universe',
                     }),
                 ]);
             });

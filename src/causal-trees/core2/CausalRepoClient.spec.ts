@@ -32,12 +32,19 @@ import {
     BranchInfoEvent,
     BRANCHES,
     BranchesEvent,
+    COMMIT,
+    WATCH_COMMITS,
+    AddCommitsEvent,
+    ADD_COMMITS,
+    CHECKOUT,
+    RESTORE,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
 import { filter, map } from 'rxjs/operators';
 import { DeviceAction, device, remote } from '../core/Event';
 import { DeviceInfo } from '../core/DeviceInfo';
+import { CausalRepoCommit, index, commit } from '.';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -394,6 +401,116 @@ describe('CausalRepoClient', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('commit()', () => {
+        it('should send a commit event', async () => {
+            client.commit('abc', 'newCommit');
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: COMMIT,
+                    data: {
+                        branch: 'abc',
+                        message: 'newCommit',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('checkout()', () => {
+        it('should send a checkout event', async () => {
+            client.checkout('abc', 'commit');
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: CHECKOUT,
+                    data: {
+                        branch: 'abc',
+                        commit: 'commit',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('restore()', () => {
+        it('should send a restore event', async () => {
+            client.restore('abc', 'commit');
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: RESTORE,
+                    data: {
+                        branch: 'abc',
+                        commit: 'commit',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('watchCommits()', () => {
+        it('should send a watch commits event after connecting', async () => {
+            client.watchCommits('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_COMMITS,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should return an observable of commits for the branch', async () => {
+            const addCommits = new Subject<AddCommitsEvent>();
+            connection.events.set(ADD_COMMITS, addCommits);
+
+            let commits = [] as CausalRepoCommit[];
+            connection.connect();
+            client
+                .watchCommits('abc')
+                .pipe(map(e => e.commits))
+                .subscribe(c => commits.unshift(...c));
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const b1 = atom(atomId('b', 1), null, {});
+            const b2 = atom(atomId('b', 2), a1, {});
+            const b3 = atom(atomId('b', 3), b2, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(a1, a2, a3);
+            const idx3 = index(b1, b2);
+            const idx4 = index(b1, b2, b3);
+            const c1 = commit('commit1', new Date(1900, 1, 1), idx1, null);
+            const c2 = commit('commit2', new Date(1900, 1, 1), idx2, c1);
+            const c3 = commit('commit3', new Date(1900, 1, 1), idx3, c2);
+            const c4 = commit('commit4', new Date(1900, 1, 1), idx4, c3);
+
+            addCommits.next({
+                branch: 'abc',
+                commits: [c2, c1],
+            });
+
+            addCommits.next({
+                branch: 'other',
+                commits: [c3, c4],
+            });
+
+            await waitAsync();
+
+            expect(commits).toEqual([c2, c1]);
         });
     });
 

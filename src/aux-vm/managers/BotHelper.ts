@@ -26,6 +26,7 @@ import {
     createPrecalculatedContext,
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
+    BotSpace,
 } from '@casual-simulation/aux-common';
 import flatMap from 'lodash/flatMap';
 import { BaseHelper } from './BaseHelper';
@@ -93,17 +94,19 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param id (Optional) The ID that the bot should have.
      * @param tags (Optional) The tags that the bot should have.
      * @param sendShouts Whether to send the onCreate() and onAnyCreate() shouts.
+     * @param space The space the bot should be stored in.
      */
     async createBot(
         id?: string,
         tags?: Bot['tags'],
-        sendShouts: boolean = true
+        sendShouts: boolean = true,
+        space?: BotSpace
     ): Promise<string> {
         if (BotHelper._debug) {
             console.log('[BotManager] Create Bot');
         }
 
-        const bot = createBot(id, tags);
+        const bot = createBot(id, tags, space);
 
         let events: BotAction[] = [botAdded(bot)];
 
@@ -175,10 +178,15 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         const simBots = this.getSimulationBots(id);
 
         if (simBots.length === 0) {
-            await this.createBot(botId, {
-                [this.userBot.tags['_auxUserUniversesDimension']]: true,
-                ['auxUniverse']: id,
-            });
+            await this.createBot(
+                botId,
+                {
+                    [this.userBot.tags['_auxUserUniversesDimension']]: true,
+                    ['auxUniverse']: id,
+                },
+                true,
+                'tempLocal'
+            );
         }
     }
 
