@@ -9,7 +9,7 @@ import {
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { tap } from 'rxjs/operators';
+import { tap, filter } from 'rxjs/operators';
 import { InventoryContextGroup3D as InventoryDimensionGroup3D } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
@@ -45,6 +45,7 @@ export class InventorySimulation3D extends Simulation3D {
         this._subs.push(
             userBotChanged(this.simulation)
                 .pipe(
+                    filter(bot => !!bot),
                     tap(bot => {
                         const userInventoryDimensionValue =
                             bot.values['_auxUserInventoryDimension'];
