@@ -743,4 +743,19 @@ server.setupUniverse("test", {
 });
 ```
 
+### `server.browseHistory()`
+
+<FunctionCode name='browseHistory'/>
+
+Loads the `history` space into the current universe.
+The `history` space is read-only and contains all the marks that have been created for the universe.
+Each mark is a bot that is placed in the `#auxHistory` dimension.
+
+#### Examples:
+
+1. Load the `history` space.
+```typescript
+server.browseHistory();
+```
+
 [listen-tag]: docs/listen-tags
