@@ -758,4 +758,24 @@ Each mark is a bot that is placed in the `#auxHistory` dimension.
 server.browseHistory();
 ```
 
+### `server.markHistory(options)`
+
+<FunctionCode name='markHistory'/>
+
+Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
+Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
+
+The **first parameter** are the options that should be used to mark the history point.
+It should be an object with the following properties:
+- `message` - The message that the new mark should have. Use this as a way to communicate what was special about this save point.
+
+#### Examples:
+
+1. Save the current state of the `shared` space.
+```typescript
+server.markHistory({
+    message: 'First Version of my AUX'
+});
+```
+
 [listen-tag]: docs/listen-tags
