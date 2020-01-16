@@ -50,6 +50,11 @@ export const UNWATCH_COMMITS = 'repo/unwatch_commits';
 export const CHECKOUT = 'repo/checkout';
 
 /**
+ * The name of the event which restores a commit's data to a branch.
+ */
+export const RESTORE = 'repo/restore';
+
+/**
  * The name of the event which notifies that a commit was added.
  */
 export const ADD_COMMITS = 'repo/add_commits';
@@ -173,11 +178,21 @@ export interface CheckoutEvent {
      * The hash of the commit to checkout.
      */
     commit: string;
+}
+
+/**
+ * Defines an event which indicates that a commit should be restored to a branch.
+ */
+export interface RestoreEvent {
+    /**
+     * The branch to restore.
+     */
+    branch: string;
 
     /**
-     * The name of the branch that should be left at the commit the branch was previously at.
+     * The hash of the commit to restore.
      */
-    remnantBranch?: string;
+    commit: string;
 }
 
 /**

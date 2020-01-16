@@ -7,6 +7,7 @@ import {
     SendRemoteActionEvent,
     CommitEvent,
     CheckoutEvent,
+    RestoreEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -103,6 +104,10 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that request a branch checkout a commit.
      */
     event(name: 'repo/checkout'): Observable<CheckoutEvent>;
+    /**
+     * Gets an observable for events that request a branch be restored to a commit.
+     */
+    event(name: 'repo/restore'): Observable<RestoreEvent>;
 
     /**
      * Sends the given event to the session.

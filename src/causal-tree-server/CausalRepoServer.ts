@@ -42,6 +42,12 @@ import {
     CHECKOUT,
     calculateDiff,
     calculateCommitDiff,
+    RESTORE,
+    commit,
+    CommitEvent,
+    CausalRepoCommit,
+    CommitData,
+    CheckoutEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -155,31 +161,7 @@ export class CausalRepoServer {
                     }
 
                     if (repo.hasChanges()) {
-                        console.log(
-                            `[CausalRepoServer] Committing '${
-                                event.branch
-                            }' with message '${event.message}'...`
-                        );
-                        const commit = await repo.commit(event.message);
-                        if (commit) {
-                            await this._stage.clearStage(event.branch);
-                            console.log(`[CausalRepoServer] Committed.`);
-
-                            const info = infoForBranchCommits(event.branch);
-                            const devices = this._deviceManager.getConnectedDevices(
-                                info
-                            );
-                            let e: AddCommitsEvent = {
-                                branch: event.branch,
-                                commits: [commit],
-                            };
-
-                            sendToDevices(devices, ADD_COMMITS, e);
-                        } else {
-                            console.log(
-                                `[CausalRepoServer] No Commit Created.`
-                            );
-                        }
+                        await this._commitToRepo(event, repo);
                     }
                 });
 
@@ -221,20 +203,52 @@ export class CausalRepoServer {
                     await this._stage.clearStage(event.branch);
                     const after = repo.currentCommit;
 
-                    const delta = calculateCommitDiff(current, after);
+                    this._sendDiff(current, after, event.branch);
+                });
 
-                    const info = infoForBranch(event.branch);
-                    const devices = this._deviceManager.getConnectedDevices(
-                        info
+                conn.event(RESTORE).subscribe(async event => {
+                    const repo = await this._getOrLoadRepo(event.branch, true);
+
+                    console.log(
+                        `[CausalRepoServer] Restoring ${event.commit} on ${
+                            event.branch
+                        }`
                     );
 
-                    let ret: AddAtomsEvent = {
-                        branch: event.branch,
-                        atoms: [...delta.additions.values()],
-                        removedAtoms: [...delta.deletions.keys()],
-                    };
+                    if (repo.hasChanges()) {
+                        await this._commitToRepo(
+                            {
+                                branch: event.branch,
+                                message: 'Save before restore',
+                            },
+                            repo
+                        );
+                    }
 
-                    sendToDevices(devices, ADD_ATOMS, ret);
+                    const current = repo.currentCommit;
+                    const [oldCommit] = await this._store.getObjects([
+                        event.commit,
+                    ]);
+                    if (!oldCommit || oldCommit.type !== 'commit') {
+                        console.log(
+                            `[CausalRepoServer] Could not restore to ${
+                                event.commit
+                            } because it does not exist!`
+                        );
+                        return;
+                    }
+                    const newCommit = commit(
+                        `Restore to ${event.commit}`,
+                        new Date(),
+                        oldCommit.index,
+                        current ? current.commit : null
+                    );
+                    await storeData(this._store, [newCommit]);
+                    await repo.reset(newCommit);
+                    const after = repo.currentCommit;
+
+                    this._sendCommits(event.branch, [newCommit]);
+                    this._sendDiff(current, after, event.branch);
                 });
 
                 conn.event(SEND_EVENT).subscribe(async event => {
@@ -345,6 +359,44 @@ export class CausalRepoServer {
                 });
             }
         );
+    }
+
+    private _sendDiff(current: CommitData, after: CommitData, branch: string) {
+        const delta = calculateCommitDiff(current, after);
+        const info = infoForBranch(branch);
+        const devices = this._deviceManager.getConnectedDevices(info);
+        let ret: AddAtomsEvent = {
+            branch: branch,
+            atoms: [...delta.additions.values()],
+            removedAtoms: [...delta.deletions.keys()],
+        };
+        sendToDevices(devices, ADD_ATOMS, ret);
+    }
+
+    private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {
+        console.log(
+            `[CausalRepoServer] Committing '${event.branch}' with message '${
+                event.message
+            }'...`
+        );
+        const commit = await repo.commit(event.message);
+        if (commit) {
+            await this._stage.clearStage(event.branch);
+            console.log(`[CausalRepoServer] Committed.`);
+            this._sendCommits(event.branch, [commit]);
+        } else {
+            console.log(`[CausalRepoServer] No Commit Created.`);
+        }
+    }
+
+    private _sendCommits(branch: string, commits: CausalRepoCommit[]) {
+        const info = infoForBranchCommits(branch);
+        const devices = this._deviceManager.getConnectedDevices(info);
+        let e: AddCommitsEvent = {
+            branch: branch,
+            commits: commits,
+        };
+        sendToDevices(devices, ADD_COMMITS, e);
     }
 
     private _sendConnectedToBranch(

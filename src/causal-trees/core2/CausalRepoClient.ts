@@ -43,6 +43,8 @@ import {
     ADD_COMMITS,
     CheckoutEvent,
     CHECKOUT,
+    RestoreEvent,
+    RESTORE,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -314,6 +316,14 @@ export class CausalRepoClient {
             commit: hash,
         };
         this._client.send(CHECKOUT, event);
+    }
+
+    restore(branch: string, hash: string) {
+        const event: RestoreEvent = {
+            branch: branch,
+            commit: hash,
+        };
+        this._client.send(RESTORE, event);
     }
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {

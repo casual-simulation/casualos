@@ -22,6 +22,7 @@ import {
     index,
     commit,
     CHECKOUT,
+    RESTORE,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -109,7 +110,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             });
 
             describe('restore_history_mark', () => {
-                it('should send a checkout event to the server', async () => {
+                it('should send a restore event to the server', async () => {
                     const addCommits = new Subject<AddCommitsEvent>();
                     connection.events.set(ADD_COMMITS, addCommits);
 
@@ -153,7 +154,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
 
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
-                            name: CHECKOUT,
+                            name: RESTORE,
                             data: {
                                 branch: 'testBranch',
                                 commit: c1.hash,
@@ -162,7 +163,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     ]);
                 });
 
-                it('should send a checkout event to the server with the universe if specified', async () => {
+                it('should send a restore event to the server with the universe if specified', async () => {
                     const addCommits = new Subject<AddCommitsEvent>();
                     connection.events.set(ADD_COMMITS, addCommits);
 
@@ -207,7 +208,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
 
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
-                            name: CHECKOUT,
+                            name: RESTORE,
                             data: {
                                 branch: 'universe',
                                 commit: c1.hash,

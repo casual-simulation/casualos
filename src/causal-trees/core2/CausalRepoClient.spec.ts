@@ -37,6 +37,7 @@ import {
     AddCommitsEvent,
     ADD_COMMITS,
     CHECKOUT,
+    RESTORE,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -426,6 +427,22 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: CHECKOUT,
+                    data: {
+                        branch: 'abc',
+                        commit: 'commit',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('restore()', () => {
+        it('should send a restore event', async () => {
+            client.restore('abc', 'commit');
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: RESTORE,
                     data: {
                         branch: 'abc',
                         commit: 'commit',
