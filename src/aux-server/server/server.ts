@@ -5,6 +5,7 @@ import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
 import * as url from 'url';
+import cors from 'cors';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
@@ -484,6 +485,8 @@ export class Server {
         // TODO: Enable CSP when we know where it works and does not work
         // this._applyCSP();
 
+        this._app.use(cors());
+
         this._mongoClient = await connect(this._config.mongodb.url);
         this._store = new MongoDBTreeStore(
             this._mongoClient,
@@ -507,7 +510,6 @@ export class Server {
         this._app.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
-            res.setHeader('Access-Control-Allow-Origin', 'null');
             next();
         });
 
