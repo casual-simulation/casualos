@@ -778,4 +778,24 @@ server.markHistory({
 });
 ```
 
+### `server.restoreHistoryMark(mark)`
+
+<FunctionCode name='restoreHistoryMark'/>
+
+Restores the current state to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
+
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+
+#### Examples:
+
+1. Restore the state to a given mark.
+```typescript
+// Find a random mark that was loaded by server.browseHistory()
+let mark = getBot(byTag("#auxHistory", true));
+
+// Restore the current state to the given mark.
+server.restoreHistoryMark(mark);
+```
+
 [listen-tag]: docs/listen-tags
