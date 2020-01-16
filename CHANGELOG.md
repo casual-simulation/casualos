@@ -22,6 +22,7 @@
         -   The `player.restoreHistoryMarkToUniverse(mark, universe)` function restores the state in the given mark to the given universe.
             -   `mark` - The bot or bot ID of the mark that should be restored.
             -   `universe` - The universe that the mark should be restored to.
+    -   Changed the CORS settings to allow access from any origin.
 
 ## V0.11.21
 
