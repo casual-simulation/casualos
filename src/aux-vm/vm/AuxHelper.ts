@@ -303,7 +303,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     ['_auxUserMenuDimension']: userMenuDimension,
                     ['_auxUserUniversesDimension']: userUniversesDimension,
                 },
-                'tempLocal'
+                'tempLocal' in this._partitions ? 'tempLocal' : undefined
             );
         } else {
             if (!userBot.tags['_auxUserMenuDimension']) {

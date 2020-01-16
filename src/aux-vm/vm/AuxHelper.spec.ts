@@ -1238,6 +1238,45 @@ describe('AuxHelper', () => {
             });
         });
 
+        it('should put the bot in the tempLocal partition if it is available', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            helper = new AuxHelper({
+                shared: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+                tempLocal: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+            });
+            helper.userId = userId;
+
+            await tree.root();
+            await helper.createOrUpdateUserBot(
+                {
+                    id: 'testUser',
+                    username: 'username',
+                    name: 'test',
+                    isGuest: false,
+                    token: 'abc',
+                },
+                null
+            );
+
+            expect(helper.botsState['testUser']).toEqual({
+                id: 'testUser',
+                space: 'tempLocal',
+                tags: {
+                    [USERS_DIMENSION]: true,
+                    ['_auxUser']: 'username',
+                    ['_auxUserInventoryDimension']: '_user_username_inventory',
+                    ['_auxUserMenuDimension']: '_user_username_menu',
+                    ['_auxUserUniversesDimension']: '_user_username_universes',
+                },
+            });
+        });
+
         const dimensionCases = [
             ['menu dimension', '_auxUserMenuDimension', '_user_username_menu'],
             [
