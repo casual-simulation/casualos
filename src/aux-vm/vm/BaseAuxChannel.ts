@@ -506,6 +506,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._registerSubscriptions();
         }
 
+        console.log('[BaseAuxChannel] Sending init event');
         this._onConnectionStateChanged.next({
             type: 'init',
         });
@@ -594,6 +595,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         try {
             const userBot = this._helper.userBot;
+            console.log('[BaseAuxChannel] Init User bot', userBot);
             await this._helper.createOrUpdateUserBot(this.user, userBot);
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);

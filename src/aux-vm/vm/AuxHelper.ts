@@ -45,6 +45,7 @@ import {
     getBotSpace,
     breakIntoIndividualEvents,
     ON_RUN_ACTION_NAME,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -294,6 +295,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         const userMenuDimension = `_user_${user.username}_menu`;
         const userUniversesDimension = `_user_${user.username}_universes`;
         if (!userBot) {
+            console.log('[AuxHelper] Create user bot');
             await this.createBot(
                 user.id,
                 {
@@ -303,8 +305,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     ['_auxUserMenuDimension']: userMenuDimension,
                     ['_auxUserUniversesDimension']: userUniversesDimension,
                 },
-                'tempLocal' in this._partitions ? 'tempLocal' : undefined
+                TEMPORARY_BOT_PARTITION_ID in this._partitions
+                    ? TEMPORARY_BOT_PARTITION_ID
+                    : undefined
             );
+            console.log('[AuxHelper] User bot created');
         } else {
             if (!userBot.tags['_auxUserMenuDimension']) {
                 await this.updateBot(userBot, {
@@ -495,6 +500,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         for (let event of events) {
             const partition = this._partitionForEvent(event);
             if (typeof partition === 'undefined') {
+                console.warn('[AuxHelper] No partition for event', event);
                 continue;
             }
             let batch = map.get(partition);
@@ -556,6 +562,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         const idPartition = this._partitions[partitionId];
         if (idPartition) {
             return idPartition;
+        } else {
+            console.warn('[AuxHelper] No partition for space', type);
         }
         return null;
     }
