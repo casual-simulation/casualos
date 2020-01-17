@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.11.23
+
+### Date: TBD
+
+### Changes:
+
+#### :boom: **Breaking Changes**
+
+-   Renamed the `player.inDesigner()` function to `player.inSheet()`.
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where hidden tags would not get a button to toggle their visiblity in the sheet.
+-   Fixed an issue where the `space` tag in the sheet would sometimes show an incorrect value.
+
 ## V0.11.22
 
 ### Date: 1/16/2020
