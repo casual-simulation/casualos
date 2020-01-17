@@ -678,6 +678,21 @@ The only difference is that all bots are included and the file is named for you 
 player.downloadUniverse();
 ```
 
+### `player.inSheet()`
+
+<FunctionCode name='inSheet'/>
+
+Gets whether the player is in the sheet dimension.
+
+#### Examples:
+
+1. Show a toast if the player is viewing the sheet.
+```typescript
+if (player.inSheet()) {
+    player.toast("You are in the sheet!");
+}
+```
+
 ## Server Actions
 
 ### `server.setupUniverse(universe, botOrMod?)`
