@@ -692,7 +692,6 @@ export default class BotTable extends Vue {
             this.bots,
             this.tags,
             allExtraTags,
-            true,
             this.tagWhitelist
         ).sort();
 

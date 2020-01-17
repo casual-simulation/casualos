@@ -215,19 +215,15 @@ export function filterBotsBySelection<TBot extends Bot>(
  * in this list.
  * @param extraTags The list of tags that should not be removed from the
  * output list.
- * @param includeHidden Whether the hidden tags should be included in the output.
  */
 export function botTags(
     bots: Bot[],
     currentTags: string[],
     extraTags: string[],
-    includeHidden: boolean = false,
     tagWhitelist: (string | boolean)[][] = []
 ) {
     const botTags = flatMap(bots, f => keys(f.tags));
-    // Only keep tags that don't start with an underscore (_)
-    const nonHiddenTags = botTags.filter(t => includeHidden || !isHiddenTag(t));
-    const tagsToKeep = union(nonHiddenTags, extraTags);
+    const tagsToKeep = union(botTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
