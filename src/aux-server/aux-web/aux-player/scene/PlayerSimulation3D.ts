@@ -11,6 +11,7 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     BotIndexEvent,
+    DEFAULT_INVENTORY_VISIBLE,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -42,7 +43,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
-    private _inventoryVisible: boolean = true;
+    private _inventoryVisible: boolean = DEFAULT_INVENTORY_VISIBLE;
 
     private _inventoryPannable: boolean = false;
     private _inventoryPanMinX: number = null;
@@ -94,7 +95,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
         } else {
-            return true;
+            return DEFAULT_INVENTORY_VISIBLE;
         }
     }
 
@@ -504,7 +505,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             calc,
                             bot,
                             `auxDimensionInventoryVisible`,
-                            true
+                            DEFAULT_INVENTORY_VISIBLE
                         );
                         this._inventoryPannable = calculateBooleanTagValue(
                             calc,

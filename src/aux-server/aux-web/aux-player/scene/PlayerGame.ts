@@ -29,6 +29,7 @@ import {
     calculateNumericalTagValue,
     clamp,
     getBotChannel,
+    DEFAULT_INVENTORY_VISIBLE,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -67,7 +68,7 @@ export class PlayerGame extends Game {
 
     setupDelay: boolean = false;
 
-    invVisibleCurrent: boolean = true;
+    invVisibleCurrent: boolean = DEFAULT_INVENTORY_VISIBLE;
     defaultHeightCurrent: number = 0;
 
     defaultZoom: number = null;
@@ -217,7 +218,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        return null;
+        return DEFAULT_INVENTORY_VISIBLE;
     }
 
     getInventoryHeight(): number {
@@ -784,37 +785,11 @@ export class PlayerGame extends Game {
 
         this.invVisibleCurrent = this.getInventoryVisible();
 
-        if (this.invVisibleCurrent === false) {
-            this.inventoryViewport.setScale(null, 0);
-            if (this.sliderLeft === undefined)
-                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-
-            if (this.sliderRight === undefined)
-                this.sliderRight = document.querySelector(
-                    '.slider-hiddenRight'
-                );
-
-            if (this.menuElement === undefined)
-                this.menuElement = document.querySelector('.toolbar.menu');
-
-            (<HTMLElement>this.sliderLeft).style.display = 'none';
-            (<HTMLElement>this.sliderRight).style.display = 'none';
-
-            return;
+        if (this.invVisibleCurrent === true) {
+            this._showInventory();
         } else {
-            if (this.sliderLeft === undefined)
-                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-
-            if (this.sliderRight === undefined)
-                this.sliderRight = document.querySelector(
-                    '.slider-hiddenRight'
-                );
-
-            if (this.menuElement === undefined)
-                this.menuElement = document.querySelector('.toolbar.menu');
-
-            (<HTMLElement>this.sliderLeft).style.display = 'block';
-            (<HTMLElement>this.sliderRight).style.display = 'block';
+            this._hideInventory();
+            return;
         }
 
         let w = window.innerWidth;
@@ -947,6 +922,29 @@ export class PlayerGame extends Game {
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
             resizeCameraRig(this.inventoryCameraRig);
         }
+    }
+
+    private _hideInventory() {
+        this.inventoryViewport.setScale(null, 0);
+        if (this.sliderLeft === undefined)
+            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+        if (this.sliderRight === undefined)
+            this.sliderRight = document.querySelector('.slider-hiddenRight');
+        if (this.menuElement === undefined)
+            this.menuElement = document.querySelector('.toolbar.menu');
+        (<HTMLElement>this.sliderLeft).style.display = 'none';
+        (<HTMLElement>this.sliderRight).style.display = 'none';
+    }
+
+    private _showInventory() {
+        if (this.sliderLeft === undefined)
+            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+        if (this.sliderRight === undefined)
+            this.sliderRight = document.querySelector('.slider-hiddenRight');
+        if (this.menuElement === undefined)
+            this.menuElement = document.querySelector('.toolbar.menu');
+        (<HTMLElement>this.sliderLeft).style.display = 'block';
+        (<HTMLElement>this.sliderRight).style.display = 'block';
     }
 
     async mouseDownSlider() {
