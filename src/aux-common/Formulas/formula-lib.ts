@@ -770,6 +770,11 @@ function getID(bot: Bot | string): string {
 }
 
 /**
+ * Gets whether the player is in the sheet dimension.
+ */
+declare function inSheet(): boolean;
+
+/**
  * Gets JSON for the given data.
  * @param data The data.
  */
