@@ -51,7 +51,7 @@ export function createFormulaLibrary(
 
     return merge(formulaLib, {
         player: {
-            inDesigner: () => finalOptions.config.isBuilder,
+            inSheet: () => finalOptions.config.isBuilder,
         },
     });
 }

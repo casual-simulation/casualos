@@ -346,7 +346,7 @@ describe('AuxHelper', () => {
     });
 
     describe('createContext()', () => {
-        describe('player.inDesigner()', () => {
+        describe('player.inSheet()', () => {
             it('should return true when in builder', async () => {
                 helper = new AuxHelper(
                     {
@@ -369,7 +369,7 @@ describe('AuxHelper', () => {
 
                 const context = helper.createContext();
 
-                expect(context.sandbox.library.player.inDesigner()).toBe(true);
+                expect(context.sandbox.library.player.inSheet()).toBe(true);
             });
 
             it('should return false when not in builder', async () => {
@@ -394,7 +394,7 @@ describe('AuxHelper', () => {
 
                 const context = helper.createContext();
 
-                expect(context.sandbox.library.player.inDesigner()).toBe(false);
+                expect(context.sandbox.library.player.inSheet()).toBe(false);
             });
 
             it('should default to not in aux builder or player', async () => {
@@ -413,7 +413,7 @@ describe('AuxHelper', () => {
 
                 const context = helper.createContext();
 
-                expect(context.sandbox.library.player.inDesigner()).toBe(false);
+                expect(context.sandbox.library.player.inSheet()).toBe(false);
             });
         });
     });
@@ -458,7 +458,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['test'].tags.script).toBeUndefined();
         });
 
-        it('should support player.inDesigner() in actions', async () => {
+        it('should support player.inSheet() in actions', async () => {
             helper = new AuxHelper(
                 {
                     shared: await createLocalCausalTreePartitionFactory(
@@ -479,7 +479,7 @@ describe('AuxHelper', () => {
             helper.userId = userId;
 
             await helper.createBot('test', {
-                action: '@setTag(this, "#value", player.inDesigner())',
+                action: '@setTag(this, "#value", player.inSheet())',
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
@@ -1116,7 +1116,7 @@ describe('AuxHelper', () => {
     });
 
     describe('search()', () => {
-        it('should support player.inDesigner()', async () => {
+        it('should support player.inSheet()', async () => {
             helper = new AuxHelper(
                 {
                     shared: await createLocalCausalTreePartitionFactory(
@@ -1137,10 +1137,10 @@ describe('AuxHelper', () => {
             helper.userId = userId;
 
             await helper.createBot('test', {
-                'action()': 'setTag(this, "#value", player.inDesigner())',
+                'action()': 'setTag(this, "#value", player.inSheet())',
             });
 
-            const result = await helper.search('player.inDesigner()');
+            const result = await helper.search('player.inSheet()');
 
             expect(result.result).toBe(true);
         });
@@ -1166,7 +1166,7 @@ describe('AuxHelper', () => {
     });
 
     describe('formulaBatch()', () => {
-        it('should support player.inDesigner()', async () => {
+        it('should support player.inSheet()', async () => {
             helper = new AuxHelper(
                 {
                     shared: await createLocalCausalTreePartitionFactory(
@@ -1187,11 +1187,11 @@ describe('AuxHelper', () => {
             helper.userId = userId;
 
             await helper.createBot('test', {
-                'action()': 'setTag(this, "#value", player.inDesigner())',
+                'action()': 'setTag(this, "#value", player.inSheet())',
             });
 
             await helper.formulaBatch([
-                'setTag(getBot("id", "test"), "value", player.inDesigner())',
+                'setTag(getBot("id", "test"), "value", player.inSheet())',
             ]);
 
             expect(helper.botsState['test'].tags.value).toBe(true);
