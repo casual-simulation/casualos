@@ -637,7 +637,7 @@ export class PlayerSimulation3D extends Simulation3D {
         // Change the user's dimension after first adding and updating it
         // because the callback for update_bot was happening before we
         // could call botUpdated from botAdded.
-        if (bot.id === this.simulation.helper.userBot.id) {
+        if (bot.id === this.simulation.helper.userId) {
             this._updateUserBot(calc, bot);
         }
 
@@ -664,7 +664,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
-        const userBot = this.simulation.helper.userBot;
+        const userBot = bot;
         console.log(
             "[PlayerSimulation3D] Setting user's dimension to: " +
                 this.dimension
@@ -678,10 +678,10 @@ export class PlayerSimulation3D extends Simulation3D {
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserDimension: this.dimension },
-        });
-        await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserUniverse: this.simulation.id },
+            tags: {
+                _auxUserDimension: this.dimension,
+                _auxUserUniverse: this.simulation.id,
+            },
         });
         this._subs.push(
             this.simulation.watcher

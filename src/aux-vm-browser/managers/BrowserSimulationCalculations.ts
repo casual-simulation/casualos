@@ -1,7 +1,7 @@
 import { PrecalculatedBot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
 import { never, Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, first } from 'rxjs/operators';
 
 /**
  * Gets an observable that resolves whenever the user bot for the given simulation changes.
@@ -19,4 +19,14 @@ export function userBotChanged(
             }
         })
     );
+}
+
+/**
+ * Gets the user bot for the given simulation asynchronously.
+ * @param simulation The simulation.
+ */
+export function getUserBotAsync(
+    simulation: BrowserSimulation
+): Observable<PrecalculatedBot> {
+    return userBotChanged(simulation).pipe(first(bot => !!bot));
 }

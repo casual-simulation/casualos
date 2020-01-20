@@ -51,7 +51,11 @@ import CubeIcon from '../../shared/public/icons/Cube.svg';
 import HexIcon from '../../shared/public/icons/Hexagon.svg';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userBotChanged,
+    getUserBotAsync,
+} from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
@@ -667,27 +671,29 @@ export default class PlayerApp extends Vue {
                         info.synced = true;
 
                         if (simulation.parsedId.dimension) {
-                            const userBot = simulation.helper.userBot;
-                            await simulation.helper.updateBot(userBot, {
-                                tags: {
-                                    _auxUserDimension:
-                                        simulation.parsedId.dimension,
-                                },
-                            });
-                        }
-
-                        if (simulation.parsedId.dimension) {
                             let id = simulation.id;
                             if (id.includes('/')) {
                                 id = id.split('/')[1];
                             }
 
-                            const userBot = simulation.helper.userBot;
-                            await simulation.helper.updateBot(userBot, {
-                                tags: {
-                                    _auxUserUniverse: id,
-                                },
-                            });
+                            const dimension = simulation.parsedId.dimension;
+
+                            getUserBotAsync(simulation).subscribe(
+                                async userBot => {
+                                    if (!userBot) {
+                                        console.log(
+                                            '[PlayerApp] User bot',
+                                            userBot
+                                        );
+                                    }
+                                    await simulation.helper.updateBot(userBot, {
+                                        tags: {
+                                            _auxUserDimension: dimension,
+                                            _auxUserUniverse: id,
+                                        },
+                                    });
+                                }
+                            );
                         }
 
                         if (!info.subscribed) {

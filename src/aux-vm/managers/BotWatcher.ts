@@ -124,14 +124,6 @@ export class BotWatcher implements SubscriptionLike {
                                 }
                             }
 
-                            if (this._helper.userId in update.state) {
-                                console.log(
-                                    '[BotWatcher] Got user',
-                                    update.state[this._helper.userId]
-                                );
-                                // debugger;
-                            }
-
                             this._helper.botsState = updatedState;
                         } else {
                             this._helper.botsState = update.state;
