@@ -151,7 +151,7 @@ export default class BuilderHome extends Vue {
                             this._simulation.helper.userBot,
                             {
                                 tags: {
-                                    _auxUserDimension: e.dimension,
+                                    _auxUserDimension: e.dimension || false,
                                 },
                             }
                         );

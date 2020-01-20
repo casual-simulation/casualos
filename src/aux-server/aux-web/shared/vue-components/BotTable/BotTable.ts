@@ -915,7 +915,7 @@ export default class BotTable extends Vue {
     }
 
     searchForTag(tag: string) {
-        if (this.tagHasValue(tag)) {
+        if (tag === null || this.tagHasValue(tag)) {
             appManager.simulationManager.primary.helper.transaction(
                 goToDimension(tag)
             );
