@@ -2,7 +2,7 @@ import { PrecalculatedBot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
 import { never, Observable } from 'rxjs';
 import { switchMap, first } from 'rxjs/operators';
-import { LoginManager, BotWatcher } from '@casual-simulation/aux-vm/managers';
+import { LoginManager, BotWatcher } from '@casual-simulation/aux-vm';
 
 /**
  * Gets an observable that resolves whenever the user bot for the given simulation changes.

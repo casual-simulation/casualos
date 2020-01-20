@@ -8,7 +8,6 @@ import {
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { userBotChangedCore } from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
-import { User } from '@casual-simulation/causal-trees';
 import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 
 console.log = jest.fn();
