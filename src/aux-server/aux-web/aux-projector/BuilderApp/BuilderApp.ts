@@ -49,7 +49,10 @@ import {
     ProgressMessage,
     remote,
 } from '@casual-simulation/causal-trees';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
+import {
+    userBotChanged,
+    getUserBotAsync,
+} from '@casual-simulation/aux-vm-browser';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
@@ -456,14 +459,24 @@ export default class BuilderApp extends Vue {
                             } else {
                                 this.synced = true;
 
-                                const userBot = botManager.helper.userBot;
-                                await botManager.helper.updateBot(userBot, {
-                                    tags: {
-                                        _auxUserDimension:
-                                            botManager.parsedId.dimension ||
-                                            false,
+                                getUserBotAsync(botManager).subscribe(
+                                    async userBot => {
+                                        console.log(
+                                            '[BuilderApp] Update user dimension'
+                                        );
+                                        await botManager.helper.updateBot(
+                                            userBot,
+                                            {
+                                                tags: {
+                                                    _auxUserDimension:
+                                                        botManager.parsedId
+                                                            .dimension || false,
+                                                },
+                                            }
+                                        );
                                     },
-                                });
+                                    err => console.error(err)
+                                );
 
                                 if (!this.subscribed) {
                                     this.subscribed = true;

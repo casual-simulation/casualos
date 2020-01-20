@@ -477,6 +477,33 @@ describe('BotWatcher', () => {
 
             expect(bots).toEqual([state['test'], null]);
         });
+
+        it('should resolve with the bot when it is added', async () => {
+            let bots: PrecalculatedBot[] = [];
+            watcher.botChanged('test').subscribe(f => bots.push(f));
+
+            let state = {
+                test: createPrecalculatedBot('test'),
+            };
+            vm.sendState({
+                state: state,
+                addedBots: ['test'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let secondState = {
+                test: createPrecalculatedBot('test', { abc: 'def' }),
+            };
+            vm.sendState({
+                state: secondState,
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
+            });
+
+            expect(bots).toEqual([state['test'], secondState['test']]);
+        });
     });
 
     describe('botTagsChanged()', () => {

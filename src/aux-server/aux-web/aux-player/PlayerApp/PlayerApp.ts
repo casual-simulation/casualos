@@ -692,7 +692,8 @@ export default class PlayerApp extends Vue {
                                             _auxUserUniverse: id,
                                         },
                                     });
-                                }
+                                },
+                                err => console.error(err)
                             );
                         }
 
