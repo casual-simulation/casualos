@@ -203,6 +203,7 @@ export default class PlayerApp extends Vue {
 
     showChatBar: boolean = false;
     chatBarPrefill: string = null;
+    chatBarPlaceholder: string = null;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -624,6 +625,7 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'show_chat_bar') {
                     this.showChatBar = e.visible;
                     this.chatBarPrefill = e.prefill;
+                    this.chatBarPlaceholder = e.placeholder;
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);

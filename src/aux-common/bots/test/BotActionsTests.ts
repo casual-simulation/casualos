@@ -3891,7 +3891,43 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showChat('test')]);
+                expect(result.events).toEqual([
+                    showChat({
+                        placeholder: 'test',
+                    }),
+                ]);
+            });
+
+            it('should emit a ShowChatBarAction with the given options', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@player.showChat({
+                                placeholder: "abc",
+                                prefill: "def"
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showChat({
+                        placeholder: 'abc',
+                        prefill: 'def',
+                    }),
+                ]);
             });
         });
 

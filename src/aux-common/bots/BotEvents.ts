@@ -949,6 +949,26 @@ export interface ShowChatBarAction {
      * The text that the bar should be filled with by default.
      */
     prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Defines the possible options for showing the chat bar.
+ */
+export interface ShowChatOptions {
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
 }
 
 /**
@@ -1293,21 +1313,14 @@ export function showBarcode(
 
 /**
  * Creates a new ShowRunBarAction that shows the run bar.
- * @param prefill The text that should be prefilled into the run bar's input box.
+ * @param options The options that should be used.
  */
-export function showChat(prefill?: string): ShowChatBarAction {
-    if (prefill) {
-        return {
-            type: 'show_chat_bar',
-            visible: true,
-            prefill,
-        };
-    } else {
-        return {
-            type: 'show_chat_bar',
-            visible: true,
-        };
-    }
+export function showChat(options: ShowChatOptions = {}): ShowChatBarAction {
+    return {
+        type: 'show_chat_bar',
+        visible: true,
+        ...options,
+    };
 }
 
 /**

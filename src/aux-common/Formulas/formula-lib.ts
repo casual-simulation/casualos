@@ -1991,11 +1991,50 @@ function hideBarcode() {
 }
 
 /**
- * Shows the run bar.
- * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
+ * Defines the possible options for showing the chat bar.
  */
-function showChat(prefill?: string) {
-    return addAction(calcShowRun(prefill));
+interface ShowChatOptions {
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Shows the chat bar.
+ */
+function showChat(): any;
+
+/**
+ * Shows the chat bar with the given placeholder.
+ * @param placeholder The placeholder text that should be in the chat bar.
+ */
+function showChat(placeholder: string): any;
+
+/**
+ * Shows the chat bar with the given options.
+ * @param options The options that should be used to show the chat bar.
+ */
+function showChat(options: ShowChatOptions): any;
+
+/**
+ * Shows the run bar.
+ * @param placeholderOrOptions The placeholder text or options. (optional)
+ */
+function showChat(placeholderOrOptions?: string | ShowChatOptions) {
+    if (typeof placeholderOrOptions === 'string') {
+        return addAction(
+            calcShowRun({
+                placeholder: placeholderOrOptions,
+            })
+        );
+    }
+    return addAction(calcShowRun(placeholderOrOptions));
 }
 
 /**

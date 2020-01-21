@@ -1,7 +1,7 @@
 <template>
     <div class="bot-search" v-shortkey.once="['ctrl', 'f']" @shortkey="startChat()">
         <md-field md-inline>
-            <label>{{ placeholder }}</label>
+            <label>{{ finalPlaceholder }}</label>
             <md-input
                 class="search-input"
                 ref="searchInput"

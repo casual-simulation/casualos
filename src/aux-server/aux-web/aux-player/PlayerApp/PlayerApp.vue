@@ -6,7 +6,11 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <bot-chat ref="chatBar" :prefill="chatBarPrefill"></bot-chat>
+                    <bot-chat
+                        ref="chatBar"
+                        :prefill="chatBarPrefill"
+                        :placeholder="chatBarPlaceholder"
+                    ></bot-chat>
                 </div>
             </md-toolbar>
             <md-button v-else class="show-navigation-button md-icon-button" @click="menuClicked()">
