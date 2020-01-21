@@ -11,6 +11,7 @@
 -   Renamed the `player.inDesigner()` function to `player.inSheet()`.
 -   Changed the `player.showChat(placeholder)` function to set the placeholder of the chat bar instead of the prefill.
 -   Removed the ability to trigger a listener by clicking the play button in the code editor.
+-   Removed the side menu from auxPlayer.
 
 #### :rocket: Features
 
