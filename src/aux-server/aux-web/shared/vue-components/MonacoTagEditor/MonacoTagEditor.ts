@@ -83,10 +83,6 @@ export default class MonacoTagEditor extends Vue {
         setActiveModel(null);
     }
 
-    runScript() {
-        this._simulation.helper.action(this.tag, [this.bot]);
-    }
-
     private _updateModel() {
         const bot = this.bot;
         const tag = this.tag;
