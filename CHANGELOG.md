@@ -9,11 +9,21 @@
 #### :boom: **Breaking Changes**
 
 -   Renamed the `player.inDesigner()` function to `player.inSheet()`.
+-   Changed the `player.showChat(placeholder)` function to set the placeholder of the chat bar instead of the prefill.
+
+#### :rocket: Features
+
+-   Added the ability to specify an options object when calling `player.showChat(options)`.
+    -   `options` is an object with the following properties:
+        -   `placeholder` - The placeholder. Will override the existing placeholder. (optional)
+        -   `prefill` - The prefill. Will only be set if there is no text already in the chat bar. (optional)
+-   Added the ability to click the `id` tag in the sheet to load all the bots.
 
 #### :bug: Bug Fixes
 
 -   Fixed an issue where hidden tags would not get a button to toggle their visiblity in the sheet.
 -   Fixed an issue where the `space` tag in the sheet would sometimes show an incorrect value.
+-   Fixed an issue where sometimes AUX would crash when multiple tabs were open due to a race condition.
 
 ## V0.11.22
 
