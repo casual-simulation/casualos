@@ -48,3 +48,9 @@
 .loading-error p {
     color: rgb(189, 76, 76);
 }
+
+.version {
+    width: 100%;
+    color: #999;
+    text-align: center;
+}
