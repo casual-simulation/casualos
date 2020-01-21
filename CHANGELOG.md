@@ -20,6 +20,14 @@
         -   `prefill` - The prefill. Will only be set if there is no text already in the chat bar. (optional)
 -   Added the ability to click the `id` tag in the sheet to load all the bots.
 -   Added the ability to use the browser back button in the sheet.
+-   Added the version number to the loading popup.
+-   Added the `player.version()` function which gets information about the current version number.
+    -   Returns an object with the following properties:
+        -   `hash` - The Git hash that the build was made from.
+        -   `version` - The Git tag that the build was made from.
+        -   `major` - The major number of the build.
+        -   `minor` - The minor number of the build.
+        -   `patch` - The patch number of the build.
 
 #### :bug: Bug Fixes
 
