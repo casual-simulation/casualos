@@ -3,9 +3,6 @@
         <load-app>
             <md-toolbar v-if="showChatBar">
                 <div class="md-toolbar-section-start">
-                    <md-button class="md-icon-button" @click="menuClicked()">
-                        <md-icon>menu</md-icon>
-                    </md-button>
                     <bot-chat
                         ref="chatBar"
                         :prefill="chatBarPrefill"
@@ -13,9 +10,6 @@
                     ></bot-chat>
                 </div>
             </md-toolbar>
-            <md-button v-else class="show-navigation-button md-icon-button" @click="menuClicked()">
-                <md-icon>menu</md-icon>
-            </md-button>
 
             <checkout></checkout>
 
