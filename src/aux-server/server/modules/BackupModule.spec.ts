@@ -63,6 +63,8 @@ describe('BackupModule', () => {
             config: {
                 isBuilder: false,
                 isPlayer: false,
+                version: 'v1.0.0',
+                versionHash: 'hash',
             },
             partitions: {
                 shared: {

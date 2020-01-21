@@ -21,6 +21,7 @@ import {
     LoginManager,
     getTreeName,
     Simulation,
+    AuxConfig,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
@@ -74,7 +75,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     constructor(
         user: AuxUser,
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean; version: number }
+        config: AuxConfig['config'],
+        treeVersion: number
     ) {
         super(
             id,
@@ -90,7 +92,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
             const primaryPartiton =
-                config.version === 1
+                treeVersion === 1
                     ? ({
                           type: 'remote_causal_tree',
                           id: id,

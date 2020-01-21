@@ -92,7 +92,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      */
     constructor(
         partitions: AuxPartitions,
-        config?: FormulaLibraryOptions['config'],
+        config?: FormulaLibraryOptions,
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super();
@@ -104,7 +104,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         this._partitions = partitions;
         this._partitionStates = new Map();
         this._stateCache = new Map();
-        this._lib = createFormulaLibrary({ config });
+        this._lib = createFormulaLibrary(config);
     }
 
     /**

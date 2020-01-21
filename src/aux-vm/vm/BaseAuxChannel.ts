@@ -32,7 +32,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig } from './AuxConfig';
+import { AuxConfig, buildFormulaLibraryOptions } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import {
     StoredCausalTree,
@@ -414,7 +414,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         const partitions: any = this._partitions;
         let helper = new AuxHelper(
             partitions,
-            this._config.config,
+            buildFormulaLibraryOptions(this._config.config),
             this._options.sandboxFactory
         );
         helper.userId = this.user ? this.user.id : null;

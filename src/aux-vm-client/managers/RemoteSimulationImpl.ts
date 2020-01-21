@@ -21,7 +21,7 @@ export class RemoteSimulationImpl extends BaseSimulation
 
     constructor(
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean },
+        config: AuxConfig['config'],
         partitions: AuxPartitionConfig,
         createVm: (config: AuxConfig) => AuxVM
     ) {

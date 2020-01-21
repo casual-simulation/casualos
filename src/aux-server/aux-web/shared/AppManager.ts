@@ -94,7 +94,17 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new BotManager(this._user, id, this._config);
+            return new BotManager(
+                this._user,
+                id,
+                {
+                    isBuilder: this._config.isBuilder,
+                    isPlayer: this._config.isPlayer,
+                    version: this.version.latestTaggedVersion,
+                    versionHash: this.version.gitCommit,
+                },
+                this._config.version
+            );
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();

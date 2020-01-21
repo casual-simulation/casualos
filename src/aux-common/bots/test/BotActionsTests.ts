@@ -55,7 +55,10 @@ import {
     resolveRejectedActions,
 } from '../BotActions';
 import { BotsState, DEVICE_BOT_ID, Bot } from '../Bot';
-import { createCalculationContext } from '../BotCalculationContextFactories';
+import {
+    createCalculationContext,
+    createFormulaLibrary,
+} from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
 import { types } from 'util';
@@ -3980,6 +3983,53 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([runScript('abc')]);
+            });
+        });
+
+        describe('player.version()', () => {
+            it('should return an object with version information', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.version = player.version()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({
+                        version: {
+                            hash: 'abc',
+                            version: 'v1.0.2',
+                            major: 1,
+                            minor: 0,
+                            patch: 2,
+                        },
+                    })
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            version: {
+                                hash: 'abc',
+                                version: 'v1.0.2',
+                                major: 1,
+                                minor: 0,
+                                patch: 2,
+                            },
+                        },
+                    }),
+                ]);
             });
         });
 

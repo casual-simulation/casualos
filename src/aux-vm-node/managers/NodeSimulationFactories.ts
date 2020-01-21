@@ -33,7 +33,7 @@ export function nodeSimulationFromTree(
     user: AuxUser,
     device: DeviceInfo,
     id: string,
-    config: FormulaLibraryOptions['config']
+    config: AuxConfig['config']
 ): NodeSimulation {
     return new NodeSimulation(
         id,
@@ -60,7 +60,7 @@ export function nodeSimulationForRemote(
     host: string,
     user: AuxUser,
     id: string,
-    config: FormulaLibraryOptions['config']
+    config: AuxConfig['config']
 ): RemoteSimulation {
     const parsedId = parseSimulationId(id);
     return new RemoteSimulationImpl(

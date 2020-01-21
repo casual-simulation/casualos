@@ -35,6 +35,7 @@ import {
     createMemoryPartition,
 } from '..';
 import { waitAsync } from '../test/TestHelpers';
+import { buildFormulaLibraryOptions } from './AuxConfig';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -361,10 +362,12 @@ describe('AuxHelper', () => {
                             id: 'testAux',
                         }),
                     },
-                    {
+                    buildFormulaLibraryOptions({
                         isBuilder: true,
                         isPlayer: false,
-                    }
+                        versionHash: 'abc',
+                        version: 'v1.0.0',
+                    })
                 );
                 helper.userId = userId;
 
@@ -386,10 +389,12 @@ describe('AuxHelper', () => {
                             id: 'testAux',
                         }),
                     },
-                    {
+                    buildFormulaLibraryOptions({
                         isBuilder: false,
                         isPlayer: true,
-                    }
+                        versionHash: 'abc',
+                        version: 'v1.0.0',
+                    })
                 );
                 helper.userId = userId;
 
@@ -472,10 +477,12 @@ describe('AuxHelper', () => {
                         id: 'testAux',
                     }),
                 },
-                {
+                buildFormulaLibraryOptions({
                     isBuilder: true,
                     isPlayer: true,
-                }
+                    versionHash: 'abc',
+                    version: 'v1.0.0',
+                })
             );
             helper.userId = userId;
 
@@ -1130,10 +1137,12 @@ describe('AuxHelper', () => {
                         id: 'testAux',
                     }),
                 },
-                {
+                buildFormulaLibraryOptions({
                     isBuilder: true,
                     isPlayer: true,
-                }
+                    versionHash: 'abc',
+                    version: 'v1.0.0',
+                })
             );
             helper.userId = userId;
 
@@ -1180,10 +1189,12 @@ describe('AuxHelper', () => {
                         id: 'testAux',
                     }),
                 },
-                {
+                buildFormulaLibraryOptions({
                     isBuilder: true,
                     isPlayer: true,
-                }
+                    versionHash: 'abc',
+                    version: 'v1.0.0',
+                })
             );
             helper.userId = userId;
 

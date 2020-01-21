@@ -36,6 +36,13 @@ import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 export interface FormulaLibraryOptions {
     config?: { isBuilder: boolean; isPlayer: boolean };
+    version?: {
+        hash: string;
+        version: string;
+        major: number;
+        minor: number;
+        patch: number;
+    };
 }
 
 /**
@@ -46,12 +53,14 @@ export function createFormulaLibrary(
 ): SandboxLibrary {
     const defaultOptions: FormulaLibraryOptions = {
         config: { isBuilder: false, isPlayer: false },
+        version: null,
     };
     const finalOptions = merge(defaultOptions, options || {});
 
     return merge(formulaLib, {
         player: {
             inSheet: () => finalOptions.config.isBuilder,
+            version: () => finalOptions.version,
         },
     });
 }
