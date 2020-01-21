@@ -10,6 +10,7 @@
 
 -   Renamed the `player.inDesigner()` function to `player.inSheet()`.
 -   Changed the `player.showChat(placeholder)` function to set the placeholder of the chat bar instead of the prefill.
+-   Removed the ability to trigger a listener by clicking the play button in the code editor.
 
 #### :rocket: Features
 
@@ -18,6 +19,7 @@
         -   `placeholder` - The placeholder. Will override the existing placeholder. (optional)
         -   `prefill` - The prefill. Will only be set if there is no text already in the chat bar. (optional)
 -   Added the ability to click the `id` tag in the sheet to load all the bots.
+-   Added the ability to use the browser back button in the sheet.
 
 #### :bug: Bug Fixes
 
