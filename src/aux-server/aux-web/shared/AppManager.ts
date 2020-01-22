@@ -24,6 +24,7 @@ import {
     AuxUser,
     StoredAux,
     getBotsStateFromStoredAux,
+    AuxConfig,
 } from '@casual-simulation/aux-vm';
 import {
     BotManager,
@@ -91,6 +92,7 @@ export class AppManager {
     private _simulationManager: SimulationManager<BotManager>;
     private _user: AuxUser;
     private _config: WebConfig;
+    private _deviceConfig: AuxConfig['config']['device'];
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -104,10 +106,7 @@ export class AppManager {
                     isPlayer: this._config.isPlayer,
                     version: this.version.latestTaggedVersion,
                     versionHash: this.version.gitCommit,
-                    device: {
-                        supportsVR: WebVRDisplays.supportsVR(),
-                        supportsAR: 'xr' in navigator,
-                    },
+                    device: this._deviceConfig,
                 },
                 this._config.version
             );
@@ -218,7 +217,30 @@ export class AppManager {
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
         this._initSentry();
+        await this._initDeviceConfig();
         this._sendProgress('Initialized.', 1, true);
+    }
+
+    private async _initDeviceConfig() {
+        const nav: any = navigator;
+        let arSupported = false;
+        if (nav.xr) {
+            arSupported = await nav.xr
+                .isSessionSupported('immersive-ar')
+                .catch(() => false);
+            // const vrSupportedInXR = await nav.xr.isSessionSupported('immersive-vr');
+        }
+
+        let vrSupportedOld = false;
+        if (WebVRDisplays.supportsVR()) {
+            const displays = await navigator.getVRDisplays().catch(() => []);
+            vrSupportedOld = displays.length > 0;
+        }
+
+        this._deviceConfig = {
+            supportsAR: arSupported,
+            supportsVR: vrSupportedOld,
+        };
     }
 
     private _sendProgress(message: string, progress: number, done?: boolean) {
