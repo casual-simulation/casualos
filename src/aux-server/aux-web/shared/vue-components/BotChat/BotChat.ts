@@ -26,7 +26,13 @@ export default class BotChat extends Vue {
 
     private _updatingText: boolean = false;
 
-    async sendMessage() {
+    async sendMessage(dropFocus: boolean) {
+        if (dropFocus) {
+            const input = <Vue>this.$refs.searchInput;
+            if (input) {
+                input.$el.blur();
+            }
+        }
         await this._ignoreTextUpdates(async text => {
             this.text = '';
             await appManager.simulationManager.primary.helper.action(
