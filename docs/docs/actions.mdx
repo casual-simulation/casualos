@@ -754,6 +754,29 @@ const info = player.version();
 player.toast(info.version);
 ```
 
+### `player.device()`
+
+<FunctionCode name='device'/>
+
+Gets information about the device that the player is using.
+
+The returned value is an object with the following properties:
+
+```typescript
+const returned: {
+    supportsAR: boolean;
+    supportsVR: boolean;
+};
+```
+
+#### Examples:
+
+1. Get the device info and popup a message with it.
+```typescript
+const info = player.device();
+player.toast(info);
+```
+
 ## Server Actions
 
 ### `server.setupUniverse(universe, botOrMod?)`
