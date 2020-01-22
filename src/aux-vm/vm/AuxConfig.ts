@@ -18,6 +18,7 @@ export interface AuxConfigParameters {
     isPlayer: boolean;
     version: string;
     versionHash: string;
+    device?: FormulaLibraryOptions['device'];
 }
 
 /**
@@ -30,7 +31,7 @@ export function buildFormulaLibraryOptions(
     if (!config) {
         return null;
     }
-    return {
+    let options: FormulaLibraryOptions = {
         config: {
             isBuilder: config.isBuilder,
             isPlayer: config.isPlayer,
@@ -40,6 +41,12 @@ export function buildFormulaLibraryOptions(
             ...parseVersionNumber(config.version),
         },
     };
+
+    if (config.device) {
+        options.device = config.device;
+    }
+
+    return options;
 }
 
 /**

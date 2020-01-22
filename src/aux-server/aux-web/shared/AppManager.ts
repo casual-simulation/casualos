@@ -30,6 +30,8 @@ import {
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
+import { WebVRDisplays } from './WebVRDisplays';
+import { supportsXR } from './SharedUtils';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -102,6 +104,10 @@ export class AppManager {
                     isPlayer: this._config.isPlayer,
                     version: this.version.latestTaggedVersion,
                     versionHash: this.version.gitCommit,
+                    device: {
+                        supportsVR: WebVRDisplays.supportsVR(),
+                        supportsAR: 'xr' in navigator,
+                    },
                 },
                 this._config.version
             );

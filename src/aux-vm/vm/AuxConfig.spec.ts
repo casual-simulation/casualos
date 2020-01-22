@@ -25,6 +25,37 @@ describe('AuxConfig', () => {
             });
         });
 
+        it('should include device info if specified', () => {
+            const config = buildFormulaLibraryOptions({
+                isBuilder: true,
+                isPlayer: true,
+                version: 'v1.0.0',
+                versionHash: 'abc',
+                device: {
+                    supportsVR: true,
+                    supportsAR: false,
+                },
+            });
+
+            expect(config).toEqual({
+                config: {
+                    isBuilder: true,
+                    isPlayer: true,
+                },
+                version: {
+                    version: 'v1.0.0',
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    hash: 'abc',
+                },
+                device: {
+                    supportsVR: true,
+                    supportsAR: false,
+                },
+            });
+        });
+
         it('should return null if given null', () => {
             const config = buildFormulaLibraryOptions(null);
 

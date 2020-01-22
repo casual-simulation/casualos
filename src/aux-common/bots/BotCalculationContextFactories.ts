@@ -43,6 +43,10 @@ export interface FormulaLibraryOptions {
         minor: number;
         patch: number;
     };
+    device?: {
+        supportsAR: boolean;
+        supportsVR: boolean;
+    };
 }
 
 /**
@@ -53,7 +57,14 @@ export function createFormulaLibrary(
 ): SandboxLibrary {
     const defaultOptions: FormulaLibraryOptions = {
         config: { isBuilder: false, isPlayer: false },
-        version: null,
+        version: {
+            hash: null,
+            version: null,
+            major: null,
+            minor: null,
+            patch: null,
+        },
+        device: { supportsAR: null, supportsVR: null },
     };
     const finalOptions = merge(defaultOptions, options || {});
 
@@ -61,6 +72,7 @@ export function createFormulaLibrary(
         player: {
             inSheet: () => finalOptions.config.isBuilder,
             version: () => finalOptions.version,
+            device: () => finalOptions.device,
         },
     });
 }

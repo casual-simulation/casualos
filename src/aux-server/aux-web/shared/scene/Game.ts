@@ -57,6 +57,7 @@ import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
+import { supportsXR } from '../SharedUtils';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -527,7 +528,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         const matchingDisplay = find(displays, d =>
             d.supportsSession(this.xrSessionInitParameters)
         );
-        if (matchingDisplay && this.isRealAR(matchingDisplay)) {
+        if (matchingDisplay && supportsXR(matchingDisplay)) {
             this.xrDisplay = matchingDisplay;
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
                 this.toggleXR();
@@ -829,18 +830,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     protected handleXRLayerBlur() {
         console.log('[Game] handleXRLayerBlur');
-    }
-
-    protected isRealAR(xrDisplay: any): boolean {
-        // The worst hack of all time.
-        // Basically does the check that the webxr polyfill does
-        // to see it the device really supports Web XR.
-        const arSupported =
-            typeof (<any>window).webkit !== 'undefined' ||
-            xrDisplay._reality._vrDisplay;
-        const bowser = Bowser.parse(navigator.userAgent);
-        // Also we're gonna limit this to Safari only for now. (The mozilla webxr viewer reports itself as Safari).
-        return bowser.browser.name == 'Safari' && arSupported;
     }
 
     protected updateVRToggle(): void {

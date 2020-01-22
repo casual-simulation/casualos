@@ -2241,6 +2241,16 @@ function version() {
 }
 
 /**
+ * Gets information about the device that the player is using.
+ */
+function device() {
+    return {
+        supportsAR: null as boolean,
+        supportsVR: null as boolean,
+    };
+}
+
+/**
  * Gets whether the player is in the sheet dimension.
  */
 function inSheet(): boolean {
@@ -2304,6 +2314,7 @@ const player = {
     downloadUniverse,
     version,
     inSheet,
+    device,
 
     openDevConsole,
 };

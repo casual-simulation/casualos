@@ -4033,6 +4033,81 @@ export function botActionsTests(
             });
         });
 
+        describe('player.device()', () => {
+            it('should return an object with device information', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.device = player.device()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({
+                        device: {
+                            supportsAR: true,
+                            supportsVR: false,
+                        },
+                    })
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            device: {
+                                supportsAR: true,
+                                supportsVR: false,
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return info with null values if not specified', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.device = player.device()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            device: {
+                                supportsAR: null,
+                                supportsVR: null,
+                            },
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('player.downloadBots()', () => {
             it('should emit a DownloadAction with the given bots formatted as JSON', () => {
                 const state: BotsState = {
