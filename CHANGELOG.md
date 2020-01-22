@@ -39,6 +39,7 @@
 -   Fixed an issue where hidden tags would not get a button to toggle their visiblity in the sheet.
 -   Fixed an issue where the `space` tag in the sheet would sometimes show an incorrect value.
 -   Fixed an issue where sometimes AUX would crash when multiple tabs were open due to a race condition.
+-   Fixed an issue where bots from the history space would not be findable in scripts.
 
 ## V0.11.22
 
