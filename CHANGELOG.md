@@ -29,6 +29,8 @@
         -   `major` - The major number of the build.
         -   `minor` - The minor number of the build.
         -   `patch` - The patch number of the build.
+-   Improved the chat bar to remove focus from the input box when the "Send Message" button is clicked/tapped.
+    -   This should cause the on-screen keyboard to automatically close.
 
 #### :bug: Bug Fixes
 
