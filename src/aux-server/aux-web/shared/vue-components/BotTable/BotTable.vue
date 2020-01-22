@@ -205,17 +205,14 @@
                     </div>
                 </div>
             </div>
-            <div
-                v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)"
-                class="tag-value-editor-wrapper"
-            >
+            <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
                 <tag-value-editor
                     ref="multilineEditor"
                     :bot="focusedBot"
                     :tag="focusedTag"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
-            </div>
+            </tag-value-editor-wrapper>
         </div>
 
         <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showBotDestroyed">

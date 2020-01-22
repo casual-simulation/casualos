@@ -51,6 +51,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
 import { navigateToUrl } from '../../SharedUtils';
+import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 
 @Component({
     components: {
@@ -65,6 +66,7 @@ import { navigateToUrl } from '../../SharedUtils';
         'multi-icon': MultiIcon,
         'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
+        'tag-value-editor-wrapper': TagValueEditorWrapper,
     },
 })
 export default class BotTable extends Vue {
@@ -682,6 +684,12 @@ export default class BotTable extends Vue {
         EventBus.$off('AutoFill');
 
         EventBus.$once('AutoFill', this.finishAddTag);
+    }
+
+    mounted() {
+        const tagValueEditorWrapper = this.$refs.tagValueEditorWrapper;
+        if (tagValueEditorWrapper) {
+        }
     }
 
     private _updateTags() {

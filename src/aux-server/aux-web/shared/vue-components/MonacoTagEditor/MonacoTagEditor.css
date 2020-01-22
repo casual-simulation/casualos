@@ -18,4 +18,6 @@
     line-height: 22px;
     background-color: var(--disabled-cell-color);
     border-bottom: solid 1px var(--bot-cell-border-color);
+    user-select: none;
+    cursor: row-resize;
 }
