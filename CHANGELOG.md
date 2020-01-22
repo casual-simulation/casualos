@@ -32,6 +32,7 @@
 -   Improved the chat bar to remove focus from the input box when the "Send Message" button is clicked/tapped.
     -   This should cause the on-screen keyboard to automatically close.
 -   Improved the menu positioning so that it will appear at the bottom of the screen when the inventory is hidden.
+-   Added the ability to resize the code editor window.
 
 #### :bug: Bug Fixes
 
