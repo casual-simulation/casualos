@@ -33,6 +33,10 @@
     -   This should cause the on-screen keyboard to automatically close.
 -   Improved the menu positioning so that it will appear at the bottom of the screen when the inventory is hidden.
 -   Added the ability to resize the code editor window.
+-   Added the `player.device()` function which gets information about the current device.
+    -   Returns an object with the following properties:
+        -   `supportsAR` - Whether AR is supported.
+        -   `supportsVR` - Whether VR is supported.
 
 #### :bug: Bug Fixes
 
