@@ -869,6 +869,9 @@ export class PlayerGame extends Game {
 
             (<HTMLElement>this.menuElement).style.left =
                 this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.width =
+                this.inventoryViewport.width.toString() + 'px';
         } else {
             let invOffsetHeight = 40;
 
@@ -934,6 +937,8 @@ export class PlayerGame extends Game {
             this.menuElement = document.querySelector('.toolbar.menu');
         (<HTMLElement>this.sliderLeft).style.display = 'none';
         (<HTMLElement>this.sliderRight).style.display = 'none';
+        (<HTMLElement>this.menuElement).style.bottom =
+            this.menuOffset.toString() + 'px';
     }
 
     private _showInventory() {
