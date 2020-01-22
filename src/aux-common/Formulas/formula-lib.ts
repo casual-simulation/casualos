@@ -770,11 +770,6 @@ function getID(bot: Bot | string): string {
 }
 
 /**
- * Gets whether the player is in the sheet dimension.
- */
-declare function inSheet(): boolean;
-
-/**
  * Gets JSON for the given data.
  * @param data The data.
  */
@@ -2232,6 +2227,26 @@ function changeState(bot: Bot, stateName: string, groupName: string = 'state') {
     whisper(bot, `${groupName}${stateName}OnEnter`, arg);
 }
 
+/**
+ * Gets information about the version of AUX that is running.
+ */
+function version() {
+    return {
+        hash: null as string,
+        version: null as string,
+        major: null as number,
+        minor: null as number,
+        patch: null as number,
+    };
+}
+
+/**
+ * Gets whether the player is in the sheet dimension.
+ */
+function inSheet(): boolean {
+    return false;
+}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -2287,6 +2302,8 @@ const player = {
     downloadBots,
     showUploadAuxFile,
     downloadUniverse,
+    version,
+    inSheet,
 
     openDevConsole,
 };
