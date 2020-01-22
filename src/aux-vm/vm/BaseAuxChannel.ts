@@ -575,6 +575,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         this._partitions[space] = partition;
+        this.helper.addPartition(space, partition);
         this._subs.push(
             ...this._getCleanupSubscriptionsForPartition(partition)
         );

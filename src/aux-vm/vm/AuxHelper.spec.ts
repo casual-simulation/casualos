@@ -275,6 +275,60 @@ describe('AuxHelper', () => {
                 normal: createBot('normal'),
             });
         });
+
+        describe('addPartition()', () => {
+            it('should add the bots from the partition to the helper', () => {
+                helper = new AuxHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {
+                            abc: createBot('abc', {
+                                num: 123,
+                            }),
+                        },
+                    }),
+                });
+
+                expect(helper.botsState).toEqual({
+                    abc: createBot(
+                        'abc',
+                        {
+                            num: 123,
+                        },
+                        'shared'
+                    ),
+                });
+
+                helper.addPartition(
+                    'test',
+                    createMemoryPartition({
+                        type: 'memory',
+                        initialState: {
+                            def: createBot('def', {
+                                other: 'thing',
+                            }),
+                        },
+                    })
+                );
+
+                expect(helper.botsState).toEqual({
+                    abc: createBot(
+                        'abc',
+                        {
+                            num: 123,
+                        },
+                        'shared'
+                    ),
+                    def: createBot(
+                        'def',
+                        {
+                            other: 'thing',
+                        },
+                        <any>'test'
+                    ),
+                });
+            });
+        });
     });
 
     describe('publicBotsState', () => {

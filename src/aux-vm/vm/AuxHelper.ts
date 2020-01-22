@@ -133,6 +133,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return this._deviceEvents;
     }
 
+    addPartition(space: string, partition: AuxPartition) {
+        this._partitions[space] = partition;
+    }
+
     private _getPartitionsState(
         cacheName: string,
         filter: (partition: AuxPartition) => boolean
