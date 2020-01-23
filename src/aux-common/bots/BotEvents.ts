@@ -77,7 +77,8 @@ export type ExtraActions =
     | MarkHistoryAction
     | BrowseHistoryAction
     | RestoreHistoryMarkAction
-    | LoadSpaceAction;
+    | LoadSpaceAction
+    | EnableARAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1044,6 +1045,13 @@ export interface LoadSpaceAction {
     config: any;
 }
 
+/**
+ * Defines an event that enables AR on the device.
+ */
+export interface EnableARAction {
+    type: 'enable_ar';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1741,5 +1749,14 @@ export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
         type: 'load_space',
         space,
         config,
+    };
+}
+
+/**
+ * Creates a EnableARAction.
+ */
+export function enableAR(): EnableARAction {
+    return {
+        type: 'enable_ar',
     };
 }

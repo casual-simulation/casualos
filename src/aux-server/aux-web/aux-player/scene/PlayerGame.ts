@@ -517,6 +517,8 @@ export class PlayerGame extends Game {
                     this.importAUX(sim, e.url);
                 } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
+                } else if (e.type === 'enable_ar') {
+                    this.toggleXR();
                 }
             })
         );

@@ -44,6 +44,7 @@ import {
     browseHistory,
     restoreHistoryMark,
     RestoreHistoryMarkAction,
+    enableAR,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4105,6 +4106,33 @@ export function botActionsTests(
                         },
                     }),
                 ]);
+            });
+        });
+
+        describe('player.enableAR()', () => {
+            it('should issue an EnableARAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.enableAR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([enableAR()]);
             });
         });
 

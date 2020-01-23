@@ -59,6 +59,7 @@ import {
     markHistory as calcMarkHistory,
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
+    enableAR as calcEnableAR,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -2228,6 +2229,13 @@ function changeState(bot: Bot, stateName: string, groupName: string = 'state') {
 }
 
 /**
+ * Enables Augmented Reality features.
+ */
+function enableAR() {
+    return addAction(calcEnableAR());
+}
+
+/**
  * Gets information about the version of AUX that is running.
  */
 function version() {
@@ -2315,6 +2323,7 @@ const player = {
     version,
     inSheet,
     device,
+    enableAR,
 
     openDevConsole,
 };
