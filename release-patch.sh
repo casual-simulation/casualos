@@ -26,5 +26,5 @@ VERSION=$(./script/next_version.sh)
 # 6/ Run `lerna version` specify patch
 lerna version "$VERSION" --yes --no-push
 
-# 6. Push to origin with tags
+# 7. Push to origin with tags
 git push origin --follow-tags
