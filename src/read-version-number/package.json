@@ -1,0 +1,40 @@
+{
+    "name": "@casual-simulation/read-version-number",
+    "version": "0.11.17",
+    "description": "A CLI to read the latest version number from a CHANGELOG",
+    "keywords": [
+        "cli",
+        "github",
+        "releases"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "start": "node bin/read-version-number.js"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "commander": "4.0.1"
+    }
+}
