@@ -51,6 +51,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
 import { navigateToUrl } from '../../SharedUtils';
+import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 
 @Component({
     components: {
@@ -65,6 +66,7 @@ import { navigateToUrl } from '../../SharedUtils';
         'multi-icon': MultiIcon,
         'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
+        'tag-value-editor-wrapper': TagValueEditorWrapper,
     },
 })
 export default class BotTable extends Vue {
@@ -684,6 +686,12 @@ export default class BotTable extends Vue {
         EventBus.$once('AutoFill', this.finishAddTag);
     }
 
+    mounted() {
+        const tagValueEditorWrapper = this.$refs.tagValueEditorWrapper;
+        if (tagValueEditorWrapper) {
+        }
+    }
+
     private _updateTags() {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
@@ -692,7 +700,6 @@ export default class BotTable extends Vue {
             this.bots,
             this.tags,
             allExtraTags,
-            true,
             this.tagWhitelist
         ).sort();
 
@@ -916,7 +923,7 @@ export default class BotTable extends Vue {
     }
 
     searchForTag(tag: string) {
-        if (this.tagHasValue(tag)) {
+        if (tag === null || this.tagHasValue(tag)) {
             appManager.simulationManager.primary.helper.transaction(
                 goToDimension(tag)
             );

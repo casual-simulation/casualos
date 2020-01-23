@@ -1351,7 +1351,7 @@ describe('BotCalculations', () => {
     });
 
     describe('botTags()', () => {
-        it('should return the list of tags that the bots have minus ones that start with underscores', () => {
+        it('should return the list of tags that the bots have', () => {
             const bots: Bot[] = [
                 {
                     id: 'test',
@@ -1388,7 +1388,7 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, [], []);
 
-            expect(tags).toEqual(['tag', 'other']);
+            expect(tags).toEqual(['_position', '_workspace', 'tag', 'other']);
         });
 
         it('should preserve the order of the current tags', () => {
@@ -1428,7 +1428,7 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, ['other', 'tag'], []);
 
-            expect(tags).toEqual(['other', 'tag']);
+            expect(tags).toEqual(['other', 'tag', '_position', '_workspace']);
         });
 
         it('should include the given extra tags', () => {
@@ -1468,7 +1468,13 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, [], ['abc', '_position']);
 
-            expect(tags).toEqual(['tag', 'other', 'abc', '_position']);
+            expect(tags).toEqual([
+                '_position',
+                '_workspace',
+                'tag',
+                'other',
+                'abc',
+            ]);
         });
 
         it('should not include extra tags that are given in the currrentTags array', () => {
@@ -1508,7 +1514,7 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, ['notIncluded'], []);
 
-            expect(tags).toEqual(['tag', 'other']);
+            expect(tags).toEqual(['_position', '_workspace', 'tag', 'other']);
         });
 
         it('should include hidden tags if specified', () => {
@@ -1542,7 +1548,7 @@ describe('BotCalculations', () => {
                 },
             ];
 
-            const tags = botTags(bots, ['notIncluded'], [], true);
+            const tags = botTags(bots, ['notIncluded'], []);
 
             expect(tags).toEqual([
                 '_hiddenTag1',

@@ -31,6 +31,13 @@ export namespace WebVRDisplays {
     }
 
     /**
+     * Gets whether VR is supported.
+     */
+    export function supportsVR(): boolean {
+        return 'getVRDisplays' in navigator;
+    }
+
+    /**
      * This is fired when a compatible VR display is connected to the computer.
      */
     export var onVRDisplayConnect: ArgEvent<VRDisplay> = new ArgEvent<
@@ -83,7 +90,7 @@ export namespace WebVRDisplays {
     >();
 
     export async function init(): Promise<void> {
-        if ('getVRDisplays' in navigator) {
+        if (WebVRDisplays.supportsVR()) {
             console.log('[WebVRDisplays] Device is capable of VR.');
             vrCapable = true;
 

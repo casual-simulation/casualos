@@ -65,7 +65,6 @@
         "@types/mongodb": "^3.1.25",
         "@types/pify": "^3.0.2",
         "@types/redis": "2.8.12",
-        "@types/sharp": "0.22.1",
         "@types/sinon": "^7.0.13",
         "@types/socket.io": "^2.1.2",
         "@types/socket.io-client": "^1.4.32",

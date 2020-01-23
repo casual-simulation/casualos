@@ -563,19 +563,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        'player.isDesigner': (node: AuxScriptSimpleDependency) => {
-            if (node.type !== 'function') {
-                return [node];
-            }
-            return [
-                {
-                    type: 'tag',
-                    name: 'aux.designers',
-                    dependencies: [],
-                },
-            ];
-        },
-        'player.getCurrentContext': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentDimension': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
@@ -599,7 +587,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getMenuContext': (node: AuxScriptSimpleDependency) => {
+        'player.getMenuDimension': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
@@ -611,7 +599,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getInventoryContext': (node: AuxScriptSimpleDependency) => {
+        'player.getInventoryDimension': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }

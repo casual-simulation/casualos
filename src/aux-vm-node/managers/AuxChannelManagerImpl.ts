@@ -10,7 +10,7 @@ import {
     RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { AuxUser, AuxModule } from '@casual-simulation/aux-vm';
+import { AuxUser, AuxModule, AuxConfig } from '@casual-simulation/aux-vm';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { AuxCausalTree, BotAction } from '@casual-simulation/aux-common';
 import { Subscription, Subject } from 'rxjs';
@@ -39,7 +39,12 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         this._modules = modules;
 
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info, events) => {
-            const config = { isPlayer: false, isBuilder: false };
+            const config: AuxConfig['config'] = {
+                isPlayer: false,
+                isBuilder: false,
+                version: null,
+                versionHash: null,
+            };
             const sim = nodeSimulationFromTree(
                 tree,
                 this._user,

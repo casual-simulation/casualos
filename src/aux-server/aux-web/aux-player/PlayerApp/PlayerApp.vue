@@ -3,81 +3,13 @@
         <load-app>
             <md-toolbar v-if="showChatBar">
                 <div class="md-toolbar-section-start">
-                    <md-button class="md-icon-button" @click="menuClicked()">
-                        <md-icon>menu</md-icon>
-                    </md-button>
-                    <bot-chat ref="chatBar" :prefill="chatBarPrefill"></bot-chat>
+                    <bot-chat
+                        ref="chatBar"
+                        :prefill="chatBarPrefill"
+                        :placeholder="chatBarPlaceholder"
+                    ></bot-chat>
                 </div>
             </md-toolbar>
-            <md-button v-else class="show-navigation-button md-icon-button" @click="menuClicked()">
-                <md-icon>menu</md-icon>
-            </md-button>
-
-            <md-drawer :md-active.sync="showNavigation">
-                <md-list>
-                    <md-list-item
-                        @click="showQRCode = true"
-                        v-if="getUser() != null"
-                        class="qr-code-item"
-                    >
-                        <qr-code :value="url()" :options="{ width: 256 }" />
-                    </md-list-item>
-                    <md-list-item @click="logout" v-if="getUser() != null && !getUser().isGuest">
-                        <md-icon>exit_to_app</md-icon>
-                        <span class="md-list-item-text">
-                            Logout from {{ getUser().username }}
-                        </span>
-                    </md-list-item>
-                    <router-link
-                        v-if="getUser() != null && $route.name !== 'home'"
-                        tag="md-list-item"
-                        :to="{ name: 'home', params: { id: session } }"
-                    >
-                        <md-icon>home</md-icon>
-                        <span class="md-list-item-text">Home</span>
-                    </router-link>
-                    <md-list-item
-                        v-for="simulation in simulations"
-                        :key="simulation.id"
-                        @click="removeSimulation(simulation)"
-                        @click.right="toggleOnlineOffline(simulation)"
-                    >
-                        <md-icon class="forced-offline-error" v-if="forcedOffline(simulation)"
-                            >error</md-icon
-                        >
-                        <md-icon class="synced-checkmark" v-else-if="simulation.synced"
-                            >cloud_done</md-icon
-                        >
-                        <md-icon class="not-synced-warning" v-else>cloud_off</md-icon>
-                        <span class="md-list-item-text">{{ simulation.displayName }}</span>
-                    </md-list-item>
-                    <md-list-item v-if="updateAvailable" @click="refreshPage()">
-                        <md-icon>update</md-icon>
-                        <span class="md-list-item-text">A new version is available!</span>
-                    </md-list-item>
-                    <md-list-item
-                        v-show="authorized"
-                        v-for="item in extraItems"
-                        :key="item.id"
-                        @click="item.click()"
-                    >
-                        <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
-                        <span class="md-list-item-text">{{ item.text }}</span>
-                    </md-list-item>
-                    <md-list-item>
-                        <span
-                            class="md-list-item-text"
-                            @click.left="copy(version)"
-                            @click.right="copy(versionTooltip)"
-                        >
-                            Version: {{ version }}
-                            <md-tooltip md-direction="bottom">{{ versionTooltip }}</md-tooltip>
-                        </span>
-                    </md-list-item>
-
-                    <tagline></tagline>
-                </md-list>
-            </md-drawer>
 
             <checkout></checkout>
 

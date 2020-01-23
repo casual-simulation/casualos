@@ -1,5 +1,6 @@
 import { AuxObject, Bot, AuxCausalTree } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
+import Bowser from 'bowser';
 
 /**
  * Pads the given string with zeros up to the given length.
@@ -96,4 +97,20 @@ export function navigateToUrl(url: string, target?: string, rel?: string) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+}
+
+/**
+ * Gets whether WebXR is supported.
+ * Currently just checks for the Mozilla WebXR polyfill and if the browser is safari.
+ */
+export function supportsXR(xrDisplay: any): boolean {
+    // The worst hack of all time.
+    // Basically does the check that the webxr polyfill does
+    // to see it the device really supports Web XR.
+    const arSupported =
+        typeof (<any>window).webkit !== 'undefined' ||
+        xrDisplay._reality._vrDisplay;
+    const bowser = Bowser.parse(navigator.userAgent);
+    // Also we're gonna limit this to Safari only for now. (The mozilla webxr viewer reports itself as Safari).
+    return bowser.browser.name == 'Safari' && arSupported;
 }

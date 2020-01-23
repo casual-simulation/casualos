@@ -574,15 +574,14 @@ player.replaceDragBot({
 });
 ```
 
-### `player.showChat(prefill?)`
+### `player.showChat(placeholder?)`
 
 <FunctionCode name='showChat'/>
 
-Shows the "chat bar" at the top of the screen in auxPlayer, optionally prefilling it with the given text.
+Shows the "chat bar" at the top of the screen in auxPlayer, optionally using the given text as the placeholder.
 Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
 
-The **first parameter** is the text that the chat bar should be filled with by default.
-If the chat bar is already visible but there is nothing in it, then it will be filled with this text.
+The **first parameter** is the text that the chat bar should show as the placeholder.
 
 #### Examples:
 
@@ -591,9 +590,45 @@ If the chat bar is already visible but there is nothing in it, then it will be f
 player.showChat();
 ```
 
-2. Show the chat bar with some prefilled text.
+2. Show the chat bar with some placeholder text.
 ```typescript
 player.showChat("hello");
+```
+
+### `player.showChat(options)`
+
+<FunctionCode name='showChat' overload={2} />
+
+Shows the "chat bar" at the top of the screen in auxPlayer, using the given options.
+Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
+
+The **first parameter** is an object with the options that the chat bar should use.
+It should be an object with the following properties:
+- `placeholder` - The text that should be shown as a placeholder. (optional)
+- `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
+
+#### Examples:
+
+1. Show the chat bar with a placeholder.
+```typescript
+player.showChat({
+    placeholder: "hello"
+});
+```
+
+2. Show the chat bar with some prefilled text.
+```typescript
+player.showChat({
+    prefill: "this is prefilled"
+});
+```
+
+3. Show the chat bar with some prefilled text and a placeholder.
+```typescript
+player.showChat({
+    prefill: "this is prefilled",
+    placeholder: "hello"
+});
 ```
 
 ### `player.hideChat()`
@@ -676,6 +711,122 @@ The only difference is that all bots are included and the file is named for you 
 1. Download the entire universe.
 ```typescript
 player.downloadUniverse();
+```
+
+### `player.enableAR()`
+
+<FunctionCode name='enableAR'/>
+
+Enables augmented reality on the device.
+
+#### Examples:
+
+1. Enable AR.
+```typescript
+player.enableAR();
+```
+
+### `player.disableAR()`
+
+<FunctionCode name='disableAR'/>
+
+Disables augmented reality on the device.
+
+#### Examples:
+
+1. Disable AR.
+```typescript
+player.disableAR();
+```
+
+### `player.enableVR()`
+
+<FunctionCode name='enableVR'/>
+
+Enables virtual reality on the device.
+
+#### Examples:
+
+1. Enable VR.
+```typescript
+player.enableVR();
+```
+
+### `player.disableVR()`
+
+<FunctionCode name='disableVR'/>
+
+Disables virtual reality on the device.
+
+#### Examples:
+
+1. Disable VR.
+```typescript
+player.disableVR();
+```
+
+### `player.inSheet()`
+
+<FunctionCode name='inSheet'/>
+
+Gets whether the player is in the sheet dimension.
+
+#### Examples:
+
+1. Show a toast if the player is viewing the sheet.
+```typescript
+if (player.inSheet()) {
+    player.toast("You are in the sheet!");
+}
+```
+
+### `player.version()`
+
+<FunctionCode name='version'/>
+
+Gets information about the version of auxPlayer.
+
+The returned value is an object with the following properties:
+
+```typescript
+const returned: {
+    hash: string;
+    version: string;
+    major: number;
+    minor: number;
+    patch: number;
+};
+```
+
+#### Examples:
+
+1. Get the current version and popup a message with it.
+```typescript
+const info = player.version();
+player.toast(info.version);
+```
+
+### `player.device()`
+
+<FunctionCode name='device'/>
+
+Gets information about the device that the player is using.
+
+The returned value is an object with the following properties:
+
+```typescript
+const returned: {
+    supportsAR: boolean;
+    supportsVR: boolean;
+};
+```
+
+#### Examples:
+
+1. Get the device info and popup a message with it.
+```typescript
+const info = player.device();
+player.toast(info);
 ```
 
 ## Server Actions

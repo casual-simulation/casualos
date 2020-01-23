@@ -243,13 +243,19 @@ export class RemoteCausalRepoHistoryPartitionImpl
     private _addCommits(commits: CausalRepoCommit[]) {
         const newBots = commits.map(c => this._makeBot(c));
 
+        let nextState = {
+            ...this._state,
+        };
+
         this._commits.push(...reverse(commits));
         for (let bot of newBots) {
             bot.tags.auxHistoryX = this._commits.findIndex(
                 c => c.hash === bot.tags.auxMarkHash
             );
-            this._state[bot.id] = bot;
+            nextState[bot.id] = bot;
         }
+
+        this._state = nextState;
 
         if (newBots.length > 0) {
             this._onBotsAdded.next(newBots);

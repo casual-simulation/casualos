@@ -43,7 +43,10 @@ export default class LoadApp extends Vue {
             () => {
                 this.loading = false;
             },
-            err => (this.loading = false)
+            err => {
+                console.error('[LoadApp] Loading errored:', err);
+                this.loading = false;
+            }
         );
     }
 

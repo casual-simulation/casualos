@@ -3,38 +3,46 @@ import {
     createBot,
     createCalculationContext,
     createPrecalculatedBot,
+    botAdded,
+    botRemoved,
+    botUpdated,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from './PrecalculationManager';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import values from 'lodash/values';
+import { MemoryPartition, createMemoryPartition } from '../partitions';
 
 const errorMock = (console.error = jest.fn());
 
 describe('PrecalculationManager', () => {
-    let tree: AuxCausalTree;
+    let memory: MemoryPartition;
     let precalc: PrecalculationManager;
 
     beforeEach(async () => {
-        tree = new AuxCausalTree(storedTree(site(1)));
+        memory = createMemoryPartition({
+            type: 'memory',
+            initialState: {},
+        });
         precalc = new PrecalculationManager(
-            () => tree.value,
-            () => createCalculationContext(values(tree.value), 'user')
+            () => memory.state,
+            () => createCalculationContext(values(memory.state), 'user')
         );
 
-        await tree.root();
-        await tree.addBot(createBot('user'));
+        await memory.applyEvents([botAdded(createBot('user'))]);
     });
 
     describe('botAdded()', () => {
         it('should calculate all the tags for the new bot', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    abc: 'def',
-                    formula: '=getTag(this, "#abc")',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                        formula: '=getTag(this, "#abc")',
+                    })
+                ),
+            ]);
 
-            const update = precalc.botsAdded([tree.value['test']]);
+            const update = precalc.botsAdded([memory.state['test']]);
 
             expect(update).toEqual({
                 state: {
@@ -57,22 +65,61 @@ describe('PrecalculationManager', () => {
             });
         });
 
+        it('should preserve the bot space', async () => {
+            await memory.applyEvents([
+                botAdded(
+                    createBot(
+                        'test',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'abc'
+                    )
+                ),
+            ]);
+
+            const update = precalc.botsAdded([memory.state['test']]);
+
+            expect(update).toEqual({
+                state: {
+                    test: {
+                        id: 'test',
+                        precalculated: true,
+                        space: 'abc',
+                        tags: {
+                            abc: 'def',
+                        },
+                        values: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
         it('should update tags affected by the new bot', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            const update = precalc.botsAdded([tree.value['test2']]);
+            const update = precalc.botsAdded([memory.state['test2']]);
 
             expect(update).toEqual({
                 state: {
@@ -99,13 +146,15 @@ describe('PrecalculationManager', () => {
         });
 
         it('should replace non-copiable values with copiable ones', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots',
+                    })
+                ),
+            ]);
 
-            const state = precalc.botsAdded([tree.value['test']]);
+            const state = precalc.botsAdded([memory.state['test']]);
 
             expect(state).toEqual({
                 state: {
@@ -128,13 +177,15 @@ describe('PrecalculationManager', () => {
         it('should handle formulas which throw errors', async () => {
             precalc.logFormulaErrors = true;
 
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=throw new Error("Test Error")',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=throw new Error("Test Error")',
+                    })
+                ),
+            ]);
 
-            const state = precalc.botsAdded([tree.value['test']]);
+            const state = precalc.botsAdded([memory.state['test']]);
 
             expect(state).toEqual({
                 state: {
@@ -155,21 +206,25 @@ describe('PrecalculationManager', () => {
         });
 
         it('should return only the state that was updated', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            const update = precalc.botsAdded([tree.value['test2']]);
+            const update = precalc.botsAdded([memory.state['test2']]);
 
             expect(update).toEqual({
                 state: {
@@ -196,21 +251,25 @@ describe('PrecalculationManager', () => {
         });
 
         it('should be able to get the full state', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
             expect(precalc.botsState).toEqual({
                 test: {
@@ -239,16 +298,18 @@ describe('PrecalculationManager', () => {
 
     describe('botRemoved()', () => {
         it('should remove the given bot from the list', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    abc: 'def',
-                    formula: '=getTag(this, "#abc")',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                        formula: '=getTag(this, "#abc")',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.removeBot(tree.value['test']);
+            await memory.applyEvents([botRemoved('test')]);
 
             const update = precalc.botsRemoved(['test']);
 
@@ -263,23 +324,27 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update tags affected by the removed bot', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
-            await tree.removeBot(tree.value['test2']);
+            await memory.applyEvents([botRemoved('test2')]);
 
             const update = precalc.botsRemoved(['test2']);
 
@@ -299,23 +364,27 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update the bots state', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
-            await tree.removeBot(tree.value['test2']);
+            await memory.applyEvents([botRemoved('test2')]);
 
             precalc.botsRemoved(['test2']);
 
@@ -335,29 +404,32 @@ describe('PrecalculationManager', () => {
 
         it('should handle removing two bots that are dependent on each other', async () => {
             // degrades to a "all" dependency
-            await tree.addBot(
-                createBot('test', {
-                    abc: 'def',
-                    def: true,
-                    formula: '=getBots(getTag(this, "abc"))',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                        def: true,
+                        formula: '=getBots(getTag(this, "abc"))',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
             // degrades to a "all" dependency
-            await tree.addBot(
-                createBot('test2', {
-                    abc: 'def',
-                    def: true,
-                    formula: '=getBots(getTag(this, "abc"))',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        abc: 'def',
+                        def: true,
+                        formula: '=getBots(getTag(this, "abc"))',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
-            await tree.removeBot(tree.value['test']);
-            await tree.removeBot(tree.value['test2']);
+            await memory.applyEvents([botRemoved('test'), botRemoved('test2')]);
 
             let update = precalc.botsRemoved(['test', 'test2']);
 
@@ -377,24 +449,28 @@ describe('PrecalculationManager', () => {
 
     describe('botUpdated()', () => {
         it('should update the affected tags on the given bot', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    abc: 'def',
-                    formula: '=getTag(this, "#abc")',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                        formula: '=getTag(this, "#abc")',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.updateBot(tree.value['test'], {
-                tags: {
-                    abc: 'ghi',
-                },
-            });
+            await memory.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        abc: 'ghi',
+                    },
+                }),
+            ]);
 
             const update = precalc.botsUpdated([
                 {
-                    bot: tree.value['test'],
+                    bot: memory.state['test'],
                     tags: ['abc'],
                 },
             ]);
@@ -418,31 +494,42 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update tags affected by the updated bot', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
-            await tree.updateBot(tree.value['test2'], {
-                tags: {
-                    name: 'alice',
-                },
-            });
+            await memory.applyEvents([
+                botUpdated('test2', {
+                    tags: {
+                        name: 'alice',
+                    },
+                }),
+            ]);
+            // await tree.updateBot(memory.state['test2'], {
+            //     tags: {
+            //         name: 'alice',
+            //     },
+            // });
 
             const update = precalc.botsUpdated([
                 {
-                    bot: tree.value['test2'],
+                    bot: memory.state['test2'],
                     tags: ['name'],
                 },
             ]);
@@ -470,31 +557,37 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update the bots state', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '=getBots("#name", "bob").length',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '=getBots("#name", "bob").length',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.addBot(
-                createBot('test2', {
-                    name: 'bob',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test2', {
+                        name: 'bob',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test2']]);
+            precalc.botsAdded([memory.state['test2']]);
 
-            await tree.updateBot(tree.value['test2'], {
-                tags: {
-                    name: 'alice',
-                },
-            });
+            await memory.applyEvents([
+                botUpdated('test2', {
+                    tags: {
+                        name: 'alice',
+                    },
+                }),
+            ]);
 
             precalc.botsUpdated([
                 {
-                    bot: tree.value['test2'],
+                    bot: memory.state['test2'],
                     tags: ['name'],
                 },
             ]);
@@ -524,23 +617,27 @@ describe('PrecalculationManager', () => {
         });
 
         it('should replace non-copiable values with copiable ones', async () => {
-            await tree.addBot(
-                createBot('test', {
-                    formula: '="test"',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '="test"',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.updateBot(tree.value['test'], {
-                tags: {
-                    formula: '=getBots',
-                },
-            });
+            await memory.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        formula: '=getBots',
+                    },
+                }),
+            ]);
 
             const state = precalc.botsUpdated([
                 {
-                    bot: tree.value['test'],
+                    bot: memory.state['test'],
                     tags: ['formula'],
                 },
             ]);
@@ -565,23 +662,27 @@ describe('PrecalculationManager', () => {
         it('should log errors from formulas if set to do so', async () => {
             precalc.logFormulaErrors = true;
 
-            await tree.addBot(
-                createBot('test', {
-                    formula: '="test"',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        formula: '="test"',
+                    })
+                ),
+            ]);
 
-            precalc.botsAdded([tree.value['test']]);
+            precalc.botsAdded([memory.state['test']]);
 
-            await tree.updateBot(tree.value['test'], {
-                tags: {
-                    formula: '=getBots(',
-                },
-            });
+            await memory.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        formula: '=getBots(',
+                    },
+                }),
+            ]);
 
             const state = precalc.botsUpdated([
                 {
-                    bot: tree.value['test'],
+                    bot: memory.state['test'],
                     tags: ['formula'],
                 },
             ]);
@@ -597,23 +698,27 @@ describe('PrecalculationManager', () => {
         it.each(nullTagCases)(
             'should mark tags set to %s as null',
             async val => {
-                await tree.addBot(
-                    createBot('test', {
-                        formula: '="test"',
-                    })
-                );
+                await memory.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            formula: '="test"',
+                        })
+                    ),
+                ]);
 
-                precalc.botsAdded([tree.value['test']]);
+                precalc.botsAdded([memory.state['test']]);
 
-                await tree.updateBot(tree.value['test'], {
-                    tags: {
-                        formula: val,
-                    },
-                });
+                await memory.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            formula: val,
+                        },
+                    }),
+                ]);
 
                 const state = precalc.botsUpdated([
                     {
-                        bot: tree.value['test'],
+                        bot: memory.state['test'],
                         tags: ['formula'],
                     },
                 ]);

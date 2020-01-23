@@ -278,6 +278,46 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             });
         });
 
+        it('should make a new state object when a bot is added', async () => {
+            const addCommits = new Subject<AddCommitsEvent>();
+            connection.events.set(ADD_COMMITS, addCommits);
+
+            partition.connect();
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const idx1 = index(a1);
+            const idx2 = index(a1, a2);
+            const c1 = commit('commit1', new Date(1900, 1, 1), idx1, null);
+            const c2 = commit('commit2', new Date(1900, 1, 1), idx2, c1);
+
+            const state1 = partition.state;
+
+            addCommits.next({
+                branch: 'testBranch',
+                commits: [c1],
+            });
+
+            await waitAsync();
+
+            const state2 = partition.state;
+
+            addCommits.next({
+                branch: 'testBranch',
+                commits: [c2],
+            });
+
+            await waitAsync();
+
+            const state3 = partition.state;
+
+            expect(state1).not.toBe(state2);
+            expect(state2).not.toBe(state3);
+            expect(state1).not.toBe(state3);
+        });
+
         function setupPartition(
             config: CausalRepoHistoryClientPartitionConfig
         ) {

@@ -77,7 +77,9 @@ export type ExtraActions =
     | MarkHistoryAction
     | BrowseHistoryAction
     | RestoreHistoryMarkAction
-    | LoadSpaceAction;
+    | LoadSpaceAction
+    | EnableARAction
+    | EnableVRAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -949,6 +951,26 @@ export interface ShowChatBarAction {
      * The text that the bar should be filled with by default.
      */
     prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Defines the possible options for showing the chat bar.
+ */
+export interface ShowChatOptions {
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
 }
 
 /**
@@ -1022,6 +1044,30 @@ export interface LoadSpaceAction {
      * The config that should be used to load the space.
      */
     config: any;
+}
+
+/**
+ * Defines an event that enables AR on the device.
+ */
+export interface EnableARAction {
+    type: 'enable_ar';
+
+    /**
+     * Whether AR features should be enabled.
+     */
+    enabled: boolean;
+}
+
+/**
+ * Defines an event that enables VR on the device.
+ */
+export interface EnableVRAction {
+    type: 'enable_vr';
+
+    /**
+     * Whether VR features should be enabled.
+     */
+    enabled: boolean;
 }
 
 /**z
@@ -1293,21 +1339,14 @@ export function showBarcode(
 
 /**
  * Creates a new ShowRunBarAction that shows the run bar.
- * @param prefill The text that should be prefilled into the run bar's input box.
+ * @param options The options that should be used.
  */
-export function showChat(prefill?: string): ShowChatBarAction {
-    if (prefill) {
-        return {
-            type: 'show_chat_bar',
-            visible: true,
-            prefill,
-        };
-    } else {
-        return {
-            type: 'show_chat_bar',
-            visible: true,
-        };
-    }
+export function showChat(options: ShowChatOptions = {}): ShowChatBarAction {
+    return {
+        type: 'show_chat_bar',
+        visible: true,
+        ...options,
+    };
 }
 
 /**
@@ -1728,5 +1767,45 @@ export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
         type: 'load_space',
         space,
         config,
+    };
+}
+
+/**
+ * Creates a EnableARAction.
+ */
+export function enableAR(): EnableARAction {
+    return {
+        type: 'enable_ar',
+        enabled: true,
+    };
+}
+
+/**
+ * Creates a EnableVRAction.
+ */
+export function enableVR(): EnableVRAction {
+    return {
+        type: 'enable_vr',
+        enabled: true,
+    };
+}
+
+/**
+ * Creates a EnableARAction that disables AR.
+ */
+export function disableAR(): EnableARAction {
+    return {
+        type: 'enable_ar',
+        enabled: false,
+    };
+}
+
+/**
+ * Creates a EnableVRAction that disables VR.
+ */
+export function disableVR(): EnableVRAction {
+    return {
+        type: 'enable_vr',
+        enabled: false,
     };
 }

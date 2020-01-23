@@ -18,15 +18,6 @@
     line-height: 22px;
     background-color: var(--disabled-cell-color);
     border-bottom: solid 1px var(--bot-cell-border-color);
-}
-
-.editor-play-button {
-    float: right;
-    height: 22px;
-    width: 22px;
-    min-width: 22px;
-}
-
-.editor-play-button-icon.md-icon.md-theme-default {
-    color: #fe6a2f;
+    user-select: none;
+    cursor: row-resize;
 }

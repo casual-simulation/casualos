@@ -45,7 +45,6 @@ export class BaseSimulation implements Simulation {
     private _id: string;
     private _originalId: string;
     private _parsedId: SimulationIdParseSuccess;
-    private _config: { isBuilder: boolean; isPlayer: boolean };
 
     private _errored: boolean;
 
@@ -137,14 +136,13 @@ export class BaseSimulation implements Simulation {
      */
     constructor(
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean },
+        config: AuxConfig['config'],
         partitions: AuxPartitionConfig,
         createVm: (config: AuxConfig) => AuxVM
     ) {
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
-        this._config = config;
         this._subscriptions = [];
 
         this._vm = createVm({

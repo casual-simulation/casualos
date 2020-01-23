@@ -1,16 +1,16 @@
 <template>
     <div class="bot-search" v-shortkey.once="['ctrl', 'f']" @shortkey="startChat()">
         <md-field md-inline>
-            <label>{{ placeholder }}</label>
+            <label>{{ finalPlaceholder }}</label>
             <md-input
                 class="search-input"
                 ref="searchInput"
                 v-model="text"
                 @input="onTextUpdated()"
-                v-on:keyup.enter="sendMessage()"
+                v-on:keyup.enter="sendMessage(false)"
             ></md-input>
         </md-field>
-        <md-button v-show="text" class="md-icon-button" @click="sendMessage()">
+        <md-button v-show="text" class="md-icon-button" @click="sendMessage(true)">
             <md-icon>send</md-icon>
             <md-tooltip md-direction="bottom">Send Message</md-tooltip>
         </md-button>

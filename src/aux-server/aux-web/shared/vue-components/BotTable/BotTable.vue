@@ -42,8 +42,8 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div v-if="showID" class="bot-cell header" @click="searchForTag('id')">
-                        <bot-tag tag="id" :allowCloning="false"></bot-tag>
+                    <div v-if="showID" class="bot-cell header" @click="searchForTag(null)">
+                        <bot-tag tag="id" :allowCloning="true"></bot-tag>
                     </div>
 
                     <!-- Read only tags -->
@@ -53,7 +53,7 @@
                         class="bot-cell header"
                         @click="searchForTag(tag)"
                     >
-                        <bot-tag :tag="tag" :allowCloning="false"></bot-tag>
+                        <bot-tag :tag="tag" :allowCloning="true"></bot-tag>
                     </div>
 
                     <!-- Other tags -->
@@ -205,17 +205,14 @@
                     </div>
                 </div>
             </div>
-            <div
-                v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)"
-                class="tag-value-editor-wrapper"
-            >
+            <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
                 <tag-value-editor
                     ref="multilineEditor"
                     :bot="focusedBot"
                     :tag="focusedTag"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
-            </div>
+            </tag-value-editor-wrapper>
         </div>
 
         <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showBotDestroyed">

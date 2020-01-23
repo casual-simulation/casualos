@@ -8,6 +8,7 @@ import {
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
     isBot,
+    goToDimension,
 } from '@casual-simulation/aux-common';
 import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
@@ -122,6 +123,15 @@ export default class BuilderHome extends Vue {
         );
     }
 
+    @Watch('dimension')
+    async onDimensionChanged() {
+        if (this._simulation.parsedId.dimension !== this.dimension) {
+            await this._simulation.helper.transaction(
+                goToDimension(this.dimension)
+            );
+        }
+    }
+
     async created() {
         this.isLoading = true;
         await appManager.setPrimarySimulation(
@@ -151,7 +161,7 @@ export default class BuilderHome extends Vue {
                             this._simulation.helper.userBot,
                             {
                                 tags: {
-                                    _auxUserDimension: e.dimension,
+                                    _auxUserDimension: e.dimension || false,
                                 },
                             }
                         );

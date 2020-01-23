@@ -83,7 +83,8 @@ export class LoginManager implements SubscriptionLike {
         );
         this._userChanged = this._loginStateChanged.pipe(
             map(state => state.user || null),
-            distinctUntilChanged()
+            distinctUntilChanged(),
+            shareReplay(1)
         );
 
         this._deviceChanged = this._loginStateChanged.pipe(

@@ -25,6 +25,10 @@ export default class Loading extends Vue {
         return appManager.appType === AppType.Player;
     }
 
+    get version() {
+        return appManager.version.latestTaggedVersion;
+    }
+
     onErrorDismiss() {
         this.$emit('dismiss');
     }

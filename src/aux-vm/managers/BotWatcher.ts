@@ -5,7 +5,7 @@ import {
     BotIndex,
     BotIndexEvent,
 } from '@casual-simulation/aux-common';
-import { Subject, Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
     flatMap,
     filter,
@@ -14,6 +14,7 @@ import {
     takeUntil,
     first,
     endWith,
+    merge as rxMerge,
 } from 'rxjs/operators';
 import values from 'lodash/values';
 import omitBy from 'lodash/omitBy';
@@ -124,6 +125,15 @@ export class BotWatcher implements SubscriptionLike {
                                 }
                             }
 
+                            if (this._helper.userId in update.state) {
+                                if (!this._helper.userBot) {
+                                    console.log(
+                                        '[BotWatcher] Got user',
+                                        update.state[this._helper.userId]
+                                    );
+                                }
+                            }
+
                             this._helper.botsState = updatedState;
                         } else {
                             this._helper.botsState = update.state;
@@ -178,8 +188,12 @@ export class BotWatcher implements SubscriptionLike {
      */
     botChanged(id: string): Observable<PrecalculatedBot> {
         const bot = this._helper.botsState ? this._helper.botsState[id] : null;
-        return this.botsUpdated.pipe(
-            flatMap(bots => bots),
+        const added = this._botsDiscoveredObservable.pipe(
+            flatMap(bots => bots)
+        );
+        const updated = this.botsUpdated.pipe(flatMap(bots => bots));
+        return updated.pipe(
+            rxMerge(added),
             takeUntil(
                 this.botsRemoved.pipe(
                     flatMap(botIds => botIds),

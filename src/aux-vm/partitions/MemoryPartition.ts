@@ -138,6 +138,7 @@ class MemoryPartitionImpl implements MemoryPartition {
         let updated = new Map<string, UpdatedBot>();
         for (let event of events) {
             if (event.type === 'add_bot') {
+                // console.log('[MemoryPartition] Add bot', event.bot);
                 this.state = Object.assign({}, this.state, {
                     [event.bot.id]: event.bot,
                 });
