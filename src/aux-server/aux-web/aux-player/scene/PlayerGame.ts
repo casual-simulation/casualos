@@ -519,6 +519,8 @@ export class PlayerGame extends Game {
                     this.playAudio(e.url);
                 } else if (e.type === 'enable_ar') {
                     this.toggleXR();
+                } else if (e.type === 'enable_vr') {
+                        this.startVR();
                 }
             })
         );

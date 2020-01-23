@@ -60,6 +60,7 @@ import {
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
     enableAR as calcEnableAR,
+    enableVR as calcEnableVR,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -2236,6 +2237,13 @@ function enableAR() {
 }
 
 /**
+ * Enables Virtual Reality features.
+ */
+function enableVR() {
+    return addAction(calcEnableVR());
+}
+
+/**
  * Gets information about the version of AUX that is running.
  */
 function version() {
@@ -2324,6 +2332,7 @@ const player = {
     inSheet,
     device,
     enableAR,
+    enableVR,
 
     openDevConsole,
 };

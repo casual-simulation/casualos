@@ -736,7 +736,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
     //     }
     // }
 
-    protected async toggleXR() {
+    private async toggleXR() {
         console.log('[Game] Toggle XR');
         if (this.xrDisplay) {
             if (this.xrSession) {
@@ -745,53 +745,67 @@ export abstract class Game implements AuxBotVisualizerFinder {
                     this.toggleXR();
                 });
 
-                await this.xrSession.end();
-                this.xrSession = null;
-
-                // Restart the regular animation update loop.
-                this.renderer.setAnimationLoop(this.frameUpdate);
-                // Go back to the orthographic camera type when exiting XR.
-                this.setCameraType('orthographic');
+                await this.stopXR();
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
                     this.toggleXR();
                 });
 
-                // XR requires that we be using a perspective camera.
-                this.setCameraType('perspective');
-                // Remove the camera toggle from the menu while in XR.
-                this.removeSidebarItem('toggle_camera_type');
-
-                document.documentElement.classList.add('ar-app');
-                this.xrSession = await this.xrDisplay.requestSession(
-                    this.xrSessionInitParameters
-                );
-                this.xrSession.near = 0.1;
-                this.xrSession.far = 1000;
-
-                this.xrSession.addEventListener('focus', (ev: any) =>
-                    this.handleXRSessionFocus()
-                );
-                this.xrSession.addEventListener('blur', (ev: any) =>
-                    this.handleXRSessionBlur()
-                );
-                this.xrSession.addEventListener('end', (ev: any) =>
-                    this.handleXRSessionEnded()
-                );
-
-                this.startXR();
-
-                // Stop regular animation update loop and use the one from the xr session.
-                this.renderer.setAnimationLoop(null);
-                this.xrSession.requestFrame((nextXRFrame: any) =>
-                    this.frameUpdate(nextXRFrame)
-                );
+                await this.startXR();
             }
         }
     }
 
-    protected startXR() {
+    protected async stopXR() {
+        if (!this.xrDisplay) {
+            return;
+        }
+        if (this.xrSession) {
+            console.log('[Game] XR already stopped!');
+            return;
+        }
+        console.log('[Game] Stop XR');
+        await this.xrSession.end();
+        this.xrSession = null;
+
+        // Restart the regular animation update loop.
+        this.renderer.setAnimationLoop(this.frameUpdate);
+        // Go back to the orthographic camera type when exiting XR.
+        this.setCameraType('orthographic');
+    }
+
+    protected async startXR() {
+        if (!this.xrDisplay) {
+            return;
+        }
+        if (this.xrSession) {
+            console.log('[Game] XR already started!');
+            return;
+        }
+        console.log('[Game] Start XR');
+        // XR requires that we be using a perspective camera.
+        this.setCameraType('perspective');
+        // Remove the camera toggle from the menu while in XR.
+        this.removeSidebarItem('toggle_camera_type');
+
+        document.documentElement.classList.add('ar-app');
+        this.xrSession = await this.xrDisplay.requestSession(
+            this.xrSessionInitParameters
+        );
+        this.xrSession.near = 0.1;
+        this.xrSession.far = 1000;
+
+        this.xrSession.addEventListener('focus', (ev: any) =>
+            this.handleXRSessionFocus()
+        );
+        this.xrSession.addEventListener('blur', (ev: any) =>
+            this.handleXRSessionBlur()
+        );
+        this.xrSession.addEventListener('end', (ev: any) =>
+            this.handleXRSessionEnded()
+        );
+
         const win = <any>window;
         if (this.xrSession === null) {
             throw new Error('Cannot start presenting without a xrSession');
@@ -810,6 +824,12 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
             this.handleXRLayerBlur();
         });
+
+        // Stop regular animation update loop and use the one from the xr session.
+        this.renderer.setAnimationLoop(null);
+        this.xrSession.requestFrame((nextXRFrame: any) =>
+            this.frameUpdate(nextXRFrame)
+        );
     }
 
     protected handleXRSessionFocus() {
@@ -843,22 +863,48 @@ export abstract class Game implements AuxBotVisualizerFinder {
             const buttonIcon: string = undefined;
 
             const onClick = () => {
-                if (WebVRDisplays.mainVRDisplay().isPresenting) {
-                    this.renderer.vr.enabled = false;
-                    this.renderer.vr.setDevice(null);
-                    WebVRDisplays.mainVRDisplay().exitPresent();
-                } else {
-                    this.setCameraType('perspective'); // Setting camera to perspective allows the VR user to be properly displayed in scene.
-                    this.renderer.vr.enabled = true;
-                    this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
-                    WebVRDisplays.mainVRDisplay().requestPresent([
-                        { source: this.renderer.domElement },
-                    ]);
-                }
+                this.toggleVR();
             };
 
             this.addSidebarItem('toggle_vr', buttonText, onClick, buttonIcon);
         }
+    }
+
+    private toggleVR() {
+        if (WebVRDisplays.mainVRDisplay().isPresenting) {
+            this.stopVR();
+        } else {
+            this.startVR();
+        }
+    }
+
+    protected isVRRunning() {
+        return WebVRDisplays.mainVRDisplay().isPresenting;
+    }
+
+    protected stopVR() {
+        if (!this.isVRRunning()) {
+            console.log('[Game] VR already disabled');
+            return;
+        }
+        console.log('[Game] Stop VR');
+        this.renderer.vr.enabled = false;
+        this.renderer.vr.setDevice(null);
+        WebVRDisplays.mainVRDisplay().exitPresent();
+    }
+
+    protected startVR() {
+        if (this.isVRRunning()) {
+            console.log('[Game] VR already enabled');
+            return;
+        }
+        console.log('[Game] Start VR');
+        this.setCameraType('perspective'); // Setting camera to perspective allows the VR user to be properly displayed in scene.
+        this.renderer.vr.enabled = true;
+        this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
+        WebVRDisplays.mainVRDisplay().requestPresent([
+            { source: this.renderer.domElement },
+        ]);
     }
 
     protected handleVRDisplayConnect(display: VRDisplay): void {

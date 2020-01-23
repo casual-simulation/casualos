@@ -45,6 +45,7 @@ import {
     restoreHistoryMark,
     RestoreHistoryMarkAction,
     enableAR,
+    enableVR,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4136,6 +4137,32 @@ export function botActionsTests(
             });
         });
 
+        describe('player.enableVR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.enableVR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([enableVR()]);
+            });
+        });
         describe('player.downloadBots()', () => {
             it('should emit a DownloadAction with the given bots formatted as JSON', () => {
                 const state: BotsState = {

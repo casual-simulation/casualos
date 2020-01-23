@@ -78,7 +78,8 @@ export type ExtraActions =
     | BrowseHistoryAction
     | RestoreHistoryMarkAction
     | LoadSpaceAction
-    | EnableARAction;
+    | EnableARAction
+    | EnableVRAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1052,6 +1053,13 @@ export interface EnableARAction {
     type: 'enable_ar';
 }
 
+/**
+ * Defines an event that enables VR on the device.
+ */
+export interface EnableVRAction {
+    type: 'enable_vr';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1758,5 +1766,11 @@ export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
 export function enableAR(): EnableARAction {
     return {
         type: 'enable_ar',
+/**
+ * Creates a EnableVRAction.
+ */
+export function enableVR(): EnableVRAction {
+    return {
+        type: 'enable_vr',
     };
 }
