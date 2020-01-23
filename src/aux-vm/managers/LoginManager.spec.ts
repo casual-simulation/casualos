@@ -7,7 +7,9 @@ import {
     DeviceInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    User,
 } from '@casual-simulation/causal-trees';
+import { Bot } from '@casual-simulation/aux-common';
 
 describe('LoginManager', () => {
     let subject: LoginManager;
@@ -129,9 +131,18 @@ describe('LoginManager', () => {
                 },
             });
 
-            const user = await subject.userChanged.pipe(first()).toPromise();
+            let user1: User;
+            let user2: User;
+            let sub1 = subject.userChanged.subscribe(user => (user1 = user));
+            let sub2 = subject.userChanged.subscribe(user => (user2 = user));
 
-            expect(user).toEqual({
+            expect(user1).toEqual({
+                id: 'id',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            });
+            expect(user2).toEqual({
                 id: 'id',
                 name: 'name',
                 token: 'token',

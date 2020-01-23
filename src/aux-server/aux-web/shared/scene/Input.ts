@@ -32,6 +32,16 @@ export class Input {
     // This gives better support to the getMouse* functions while using touch.
     private _lastPrimaryTouchData: TouchData;
 
+    private _htmlElements: () => HTMLElement[];
+
+    get time() {
+        return this._game.getTime();
+    }
+
+    get htmlElements() {
+        return this._htmlElements();
+    }
+
     /**
      * @returns 'mouse' or 'touch'
      */
@@ -168,6 +178,10 @@ export class Input {
     constructor(game: Game) {
         Input.instance = this;
         this._game = game;
+        this._htmlElements = () => [
+            game.gameView.gameView,
+            ...game.getUIHtmlElements(),
+        ];
 
         this._mouseData = {
             leftButtonState: new InputState(),
@@ -376,14 +390,12 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isDownOnFrame(
-                    this._game.getTime().frameCount
-                );
+                return buttonState.isDownOnFrame(this.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
                 return this._lastPrimaryTouchData.state.isDownOnFrame(
-                    this._game.getTime().frameCount
+                    this.time.frameCount
                 );
             } else {
                 // TODO: Support right button with touch?
@@ -396,9 +408,7 @@ export class Input {
     public getTouchDown(fingerIndex: number): boolean {
         let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isDownOnFrame(
-                this._game.getTime().frameCount
-            );
+            return touchData.state.isDownOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -411,7 +421,7 @@ export class Input {
     public getKeyDown(key: string): boolean {
         let keyData = this.getKeyData(key);
         if (keyData) {
-            return keyData.state.isDownOnFrame(this._game.getTime().frameCount);
+            return keyData.state.isDownOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -425,12 +435,12 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isUpOnFrame(this._game.getTime().frameCount);
+                return buttonState.isUpOnFrame(this.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
                 return this._lastPrimaryTouchData.state.isUpOnFrame(
-                    this._game.getTime().frameCount
+                    this.time.frameCount
                 );
             } else {
                 // TODO: Support right button with touch?
@@ -443,7 +453,7 @@ export class Input {
     public getTouchUp(fingerIndex: number): boolean {
         let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isUpOnFrame(this._game.getTime().frameCount);
+            return touchData.state.isUpOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -456,7 +466,7 @@ export class Input {
     public getKeyUp(key: string): boolean {
         let keyData = this.getKeyData(key);
         if (keyData) {
-            return keyData.state.isUpOnFrame(this._game.getTime().frameCount);
+            return keyData.state.isUpOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -470,14 +480,12 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isHeldOnFrame(
-                    this._game.getTime().frameCount
-                );
+                return buttonState.isHeldOnFrame(this.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
                 return this._lastPrimaryTouchData.state.isHeldOnFrame(
-                    this._game.getTime().frameCount
+                    this.time.frameCount
                 );
             } else {
                 // TODO: Support right button with touch?
@@ -490,9 +498,7 @@ export class Input {
     public getTouchHeld(fingerIndex: number): boolean {
         let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isHeldOnFrame(
-                this._game.getTime().frameCount
-            );
+            return touchData.state.isHeldOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -505,7 +511,7 @@ export class Input {
     public getKeyHeld(key: string): boolean {
         let keyData = this.getKeyData(key);
         if (keyData) {
-            return keyData.state.isHeldOnFrame(this._game.getTime().frameCount);
+            return keyData.state.isHeldOnFrame(this.time.frameCount);
         }
         return false;
     }
@@ -514,9 +520,7 @@ export class Input {
      * Return true the frame that wheel movement was detected.
      */
     public getWheelMoved(): boolean {
-        return (
-            this._wheelData.getFrame(this._game.getTime().frameCount) != null
-        );
+        return this._wheelData.getFrame(this.time.frameCount) != null;
     }
 
     /**
@@ -524,9 +528,7 @@ export class Input {
      */
     public getWheelData(): WheelFrame {
         // Deep clone the internal wheel data.
-        let wheelFrame = this._wheelData.getFrame(
-            this._game.getTime().frameCount
-        );
+        let wheelFrame = this._wheelData.getFrame(this.time.frameCount);
         if (wheelFrame) return JSON.parse(JSON.stringify(wheelFrame));
         else return null;
     }
@@ -666,7 +668,7 @@ export class Input {
      * Force all current input states to release (set the up frame to the current frame).
      */
     public forceReleaseInputs(): void {
-        const currentFrame = this._game.getTime().frameCount;
+        const currentFrame = this.time.frameCount;
 
         // Release currently held mouse buttons.
         if (this._mouseData.leftButtonState.isHeldOnFrame(currentFrame)) {
@@ -690,7 +692,7 @@ export class Input {
 
     public update() {
         this._cullTouchData();
-        this._wheelData.removeOldFrames(this._game.getTime().frameCount);
+        this._wheelData.removeOldFrames(this.time.frameCount);
     }
 
     /**
@@ -707,13 +709,13 @@ export class Input {
             // Up frame must have been set.
             if (upFrame !== -1) {
                 // Current frame must be higher than the touch's up frame.
-                if (this._game.getTime().frameCount > upFrame) {
+                if (this.time.frameCount > upFrame) {
                     if (this.debugLevel >= 1) {
                         console.log(
                             'removing touch finger: ' +
                                 t.fingerIndex +
                                 '. frame: ' +
-                                this._game.getTime().frameCount
+                                this.time.frameCount
                         );
                     }
 
@@ -781,25 +783,20 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
-            buttonState.setDownFrame(this._game.getTime().frameCount);
+            buttonState.setDownFrame(this.time.frameCount);
 
             if (this.debugLevel >= 1) {
                 console.log(
                     'mouse button ' +
                         event.button +
                         ' down. fireInputOnFrame: ' +
-                        this._game.getTime().frameCount
+                        this.time.frameCount
                 );
             }
 
@@ -821,25 +818,20 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
-            buttonState.setUpFrame(this._game.getTime().frameCount);
+            buttonState.setUpFrame(this.time.frameCount);
 
             if (this.debugLevel >= 1) {
                 console.log(
                     'mouse button ' +
                         event.button +
                         ' up. fireInputOnFrame: ' +
-                        this._game.getTime().frameCount
+                        this.time.frameCount
                 );
             }
 
@@ -858,12 +850,7 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -896,7 +883,7 @@ export class Input {
     private _handleKeyUp(event: KeyboardEvent) {
         let keyState = this._getKeyState(event.key);
         if (keyState) {
-            keyState.state.setUpFrame(this._game.getTime().frameCount);
+            keyState.state.setUpFrame(this.time.frameCount);
         }
 
         if (this.debugLevel >= 1) {
@@ -904,7 +891,7 @@ export class Input {
                 'key ' +
                     event.key +
                     ' up. fireInputOnFrame: ' +
-                    this._game.getTime().frameCount
+                    this.time.frameCount
             );
         }
     }
@@ -920,7 +907,7 @@ export class Input {
         }
 
         if (!event.repeat) {
-            keyData.state.setDownFrame(this._game.getTime().frameCount);
+            keyData.state.setDownFrame(this.time.frameCount);
         }
 
         if (this.debugLevel >= 1) {
@@ -928,7 +915,7 @@ export class Input {
                 'key ' +
                     event.key +
                     ' down. fireInputOnFrame: ' +
-                    this._game.getTime().frameCount +
+                    this.time.frameCount +
                     '. repeating: ' +
                     event.repeat
             );
@@ -941,7 +928,7 @@ export class Input {
         }
 
         let wheelFrame: WheelFrame = {
-            moveFrame: this._game.getTime().frameCount,
+            moveFrame: this.time.frameCount,
             delta: new Vector3(event.deltaX, event.deltaY, event.deltaZ),
             ctrl: event.ctrlKey,
         };
@@ -998,12 +985,7 @@ export class Input {
             }
         }
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1024,7 +1006,7 @@ export class Input {
             };
 
             // Set the down frame on the new touch data.
-            data.state.setDownFrame(this._game.getTime().frameCount);
+            data.state.setDownFrame(this.time.frameCount);
 
             if (data.fingerIndex === 0) {
                 this._copyToPrimaryTouchData(data);
@@ -1037,7 +1019,7 @@ export class Input {
                         ' ' +
                         data.fingerIndex +
                         ' start. fireInputOnFrame: ' +
-                        this._game.getTime().frameCount
+                        this.time.frameCount
                 );
             }
 
@@ -1053,12 +1035,7 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1134,12 +1111,7 @@ export class Input {
             }
         }
 
-        if (
-            this.isEventForAnyElement(event, [
-                this._game.gameView.gameView,
-                ...this._game.getUIHtmlElements(),
-            ])
-        ) {
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
 
@@ -1157,7 +1129,7 @@ export class Input {
             let existingTouch = find(this._touchData, d => {
                 return d.identifier === touch.identifier;
             });
-            existingTouch.state.setUpFrame(this._game.getTime().frameCount);
+            existingTouch.state.setUpFrame(this.time.frameCount);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(
@@ -1176,7 +1148,7 @@ export class Input {
                         ' ' +
                         existingTouch.fingerIndex +
                         ' end. fireInputOnFrame: ' +
-                        this._game.getTime().frameCount
+                        this.time.frameCount
                 );
             }
         }
@@ -1222,7 +1194,7 @@ export class Input {
             let existingTouch = find(this._touchData, d => {
                 return d.identifier === touch.identifier;
             });
-            existingTouch.state.setUpFrame(this._game.getTime().frameCount);
+            existingTouch.state.setUpFrame(this.time.frameCount);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(
@@ -1239,7 +1211,7 @@ export class Input {
                     'touch finger ' +
                         existingTouch.fingerIndex +
                         ' canceled. fireInputOnFrame: ' +
-                        this._game.getTime().frameCount
+                        this.time.frameCount
                 );
             }
         }

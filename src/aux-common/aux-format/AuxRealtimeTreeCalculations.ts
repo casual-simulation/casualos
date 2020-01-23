@@ -1,7 +1,7 @@
 import { AuxCausalTree } from './AuxCausalTree';
 import { map, startWith, flatMap, share } from 'rxjs/operators';
 import sortBy from 'lodash/sortBy';
-import { tagsOnBot } from '../bots';
+import { tagsOnBot, Bot } from '../bots';
 import { Atom, RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { AuxBot } from './AuxState';
 import { AuxOp, AuxOpType } from './AuxOpTypes';
@@ -14,7 +14,7 @@ export interface AuxStateDiff {
 }
 
 export interface UpdatedBot {
-    bot: AuxBot;
+    bot: Bot;
     tags: string[];
 }
 

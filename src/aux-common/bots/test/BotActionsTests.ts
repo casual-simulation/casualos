@@ -44,6 +44,10 @@ import {
     browseHistory,
     restoreHistoryMark,
     RestoreHistoryMarkAction,
+    enableAR,
+    enableVR,
+    disableVR,
+    disableAR,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -55,7 +59,10 @@ import {
     resolveRejectedActions,
 } from '../BotActions';
 import { BotsState, DEVICE_BOT_ID, Bot } from '../Bot';
-import { createCalculationContext } from '../BotCalculationContextFactories';
+import {
+    createCalculationContext,
+    createFormulaLibrary,
+} from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
 import { types } from 'util';
@@ -3891,7 +3898,43 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([showChat('test')]);
+                expect(result.events).toEqual([
+                    showChat({
+                        placeholder: 'test',
+                    }),
+                ]);
+            });
+
+            it('should emit a ShowChatBarAction with the given options', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@player.showChat({
+                                placeholder: "abc",
+                                prefill: "def"
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showChat({
+                        placeholder: 'abc',
+                        prefill: 'def',
+                    }),
+                ]);
             });
         });
 
@@ -3944,6 +3987,236 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([runScript('abc')]);
+            });
+        });
+
+        describe('player.version()', () => {
+            it('should return an object with version information', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.version = player.version()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({
+                        version: {
+                            hash: 'abc',
+                            version: 'v1.0.2',
+                            major: 1,
+                            minor: 0,
+                            patch: 2,
+                        },
+                    })
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            version: {
+                                hash: 'abc',
+                                version: 'v1.0.2',
+                                major: 1,
+                                minor: 0,
+                                patch: 2,
+                            },
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.device()', () => {
+            it('should return an object with device information', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.device = player.device()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({
+                        device: {
+                            supportsAR: true,
+                            supportsVR: false,
+                        },
+                    })
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            device: {
+                                supportsAR: true,
+                                supportsVR: false,
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return info with null values if not specified', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@tags.device = player.device()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            device: {
+                                supportsAR: null,
+                                supportsVR: null,
+                            },
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.enableAR()', () => {
+            it('should issue an EnableARAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.enableAR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([enableAR()]);
+            });
+        });
+
+        describe('player.disableAR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.disableAR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([disableAR()]);
+            });
+        });
+
+        describe('player.enableVR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.enableVR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([enableVR()]);
+            });
+        });
+
+        describe('player.disableVR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.disableVR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([disableVR()]);
             });
         });
 

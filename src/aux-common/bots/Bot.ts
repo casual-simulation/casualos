@@ -395,6 +395,11 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
+ * Whether the inventory is visible by default.
+ */
+export const DEFAULT_INVENTORY_VISIBLE = false;
+
+/**
  * The ID of the global configuration bot.
  */
 export const GLOBALS_BOT_ID = 'config';

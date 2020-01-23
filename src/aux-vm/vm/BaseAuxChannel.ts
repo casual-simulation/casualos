@@ -32,7 +32,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig } from './AuxConfig';
+import { AuxConfig, buildFormulaLibraryOptions } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import {
     StoredCausalTree,
@@ -414,7 +414,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         const partitions: any = this._partitions;
         let helper = new AuxHelper(
             partitions,
-            this._config.config,
+            buildFormulaLibraryOptions(this._config.config),
             this._options.sandboxFactory
         );
         helper.userId = this.user ? this.user.id : null;
@@ -506,6 +506,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._registerSubscriptions();
         }
 
+        console.log('[BaseAuxChannel] Sending init event');
         this._onConnectionStateChanged.next({
             type: 'init',
         });
@@ -574,6 +575,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         this._partitions[space] = partition;
+        this.helper.addPartition(space, partition);
         this._subs.push(
             ...this._getCleanupSubscriptionsForPartition(partition)
         );
@@ -594,6 +596,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         try {
             const userBot = this._helper.userBot;
+            console.log('[BaseAuxChannel] Init User bot', userBot);
             await this._helper.createOrUpdateUserBot(this.user, userBot);
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);

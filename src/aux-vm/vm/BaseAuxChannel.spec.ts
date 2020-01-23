@@ -88,7 +88,12 @@ describe('BaseAuxChannel', () => {
             },
         });
         config = {
-            config: { isBuilder: false, isPlayer: false },
+            config: {
+                isBuilder: false,
+                isPlayer: false,
+                version: 'v1.0.0',
+                versionHash: 'hash',
+            },
             partitions: {
                 shared: {
                     type: 'causal_tree',
@@ -191,7 +196,12 @@ describe('BaseAuxChannel', () => {
         it('should not error if the tree does not have a root atom', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             config = {
-                config: { isBuilder: false, isPlayer: false },
+                config: {
+                    isBuilder: false,
+                    isPlayer: false,
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
                 partitions: {
                     shared: {
                         type: 'causal_tree',
@@ -208,7 +218,12 @@ describe('BaseAuxChannel', () => {
         it('should error if unable to construct a partition', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             config = {
-                config: { isBuilder: false, isPlayer: false },
+                config: {
+                    isBuilder: false,
+                    isPlayer: false,
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
                 partitions: {
                     shared: {
                         type: 'remote_causal_tree',
@@ -517,7 +532,12 @@ describe('BaseAuxChannel', () => {
     describe('export()', () => {
         beforeEach(async () => {
             config = {
-                config: { isBuilder: false, isPlayer: false },
+                config: {
+                    isBuilder: false,
+                    isPlayer: false,
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
                 partitions: {
                     shared: {
                         type: 'causal_tree',

@@ -59,6 +59,10 @@ import {
     markHistory as calcMarkHistory,
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
+    enableAR as calcEnableAR,
+    disableAR as calcDisableAR,
+    enableVR as calcEnableVR,
+    disableVR as calcDisableVR,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1986,11 +1990,50 @@ function hideBarcode() {
 }
 
 /**
- * Shows the run bar.
- * @param prefill The inpux text that should be prefilled into the run bar's input box. (optional)
+ * Defines the possible options for showing the chat bar.
  */
-function showChat(prefill?: string) {
-    return addAction(calcShowRun(prefill));
+interface ShowChatOptions {
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Shows the chat bar.
+ */
+function showChat(): any;
+
+/**
+ * Shows the chat bar with the given placeholder.
+ * @param placeholder The placeholder text that should be in the chat bar.
+ */
+function showChat(placeholder: string): any;
+
+/**
+ * Shows the chat bar with the given options.
+ * @param options The options that should be used to show the chat bar.
+ */
+function showChat(options: ShowChatOptions): any;
+
+/**
+ * Shows the run bar.
+ * @param placeholderOrOptions The placeholder text or options. (optional)
+ */
+function showChat(placeholderOrOptions?: string | ShowChatOptions) {
+    if (typeof placeholderOrOptions === 'string') {
+        return addAction(
+            calcShowRun({
+                placeholder: placeholderOrOptions,
+            })
+        );
+    }
+    return addAction(calcShowRun(placeholderOrOptions));
 }
 
 /**
@@ -2188,6 +2231,64 @@ function changeState(bot: Bot, stateName: string, groupName: string = 'state') {
     whisper(bot, `${groupName}${stateName}OnEnter`, arg);
 }
 
+/**
+ * Enables Augmented Reality features.
+ */
+function enableAR() {
+    return addAction(calcEnableAR());
+}
+
+/**
+ * Enables Virtual Reality features.
+ */
+function enableVR() {
+    return addAction(calcEnableVR());
+}
+
+/**
+ * Disables Augmented Reality features.
+ */
+function disableAR() {
+    return addAction(calcDisableAR());
+}
+
+/**
+ * Disables Virtual Reality features.
+ */
+function disableVR() {
+    return addAction(calcDisableVR());
+}
+
+/**
+ * Gets information about the version of AUX that is running.
+ */
+function version() {
+    return {
+        hash: null as string,
+        version: null as string,
+        major: null as number,
+        minor: null as number,
+        patch: null as number,
+    };
+}
+
+/**
+ * Gets information about the device that the player is using.
+ */
+function device() {
+    return {
+        supportsAR: null as boolean,
+        supportsVR: null as boolean,
+    };
+}
+
+/**
+ * Gets whether the player is in the sheet dimension.
+ */
+function inSheet(): boolean {
+    return false;
+}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -2243,6 +2344,13 @@ const player = {
     downloadBots,
     showUploadAuxFile,
     downloadUniverse,
+    version,
+    inSheet,
+    device,
+    enableAR,
+    enableVR,
+    disableAR,
+    disableVR,
 
     openDevConsole,
 };

@@ -1,0 +1,6 @@
+.tag-value-editor-wrapper {
+    flex: 0 0 auto;
+    min-height: 250px;
+    max-height: 80%;
+    overflow-x: hidden;
+}

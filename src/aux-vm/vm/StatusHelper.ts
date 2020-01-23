@@ -84,6 +84,14 @@ export class StatusHelper implements SubscriptionLike {
                     });
                 }
             }
+        } else if (update.type === 'authentication') {
+            if (channelId === 0) {
+                this._updates.next(update);
+            }
+        } else if (update.type === 'authorization') {
+            if (channelId === 0) {
+                this._updates.next(update);
+            }
         } else {
             this._updates.next(update);
         }

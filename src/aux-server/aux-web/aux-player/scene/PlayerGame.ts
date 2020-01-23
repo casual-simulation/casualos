@@ -29,6 +29,7 @@ import {
     calculateNumericalTagValue,
     clamp,
     getBotChannel,
+    DEFAULT_INVENTORY_VISIBLE,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -67,7 +68,7 @@ export class PlayerGame extends Game {
 
     setupDelay: boolean = false;
 
-    invVisibleCurrent: boolean = true;
+    invVisibleCurrent: boolean = DEFAULT_INVENTORY_VISIBLE;
     defaultHeightCurrent: number = 0;
 
     defaultZoom: number = null;
@@ -217,7 +218,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        return null;
+        return DEFAULT_INVENTORY_VISIBLE;
     }
 
     getInventoryHeight(): number {
@@ -516,6 +517,18 @@ export class PlayerGame extends Game {
                     this.importAUX(sim, e.url);
                 } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
+                } else if (e.type === 'enable_ar') {
+                    if (e.enabled) {
+                        this.startXR();
+                    } else {
+                        this.stopXR();
+                    }
+                } else if (e.type === 'enable_vr') {
+                    if (e.enabled) {
+                        this.startVR();
+                    } else {
+                        this.stopVR();
+                    }
                 }
             })
         );
@@ -784,37 +797,11 @@ export class PlayerGame extends Game {
 
         this.invVisibleCurrent = this.getInventoryVisible();
 
-        if (this.invVisibleCurrent === false) {
-            this.inventoryViewport.setScale(null, 0);
-            if (this.sliderLeft === undefined)
-                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-
-            if (this.sliderRight === undefined)
-                this.sliderRight = document.querySelector(
-                    '.slider-hiddenRight'
-                );
-
-            if (this.menuElement === undefined)
-                this.menuElement = document.querySelector('.toolbar.menu');
-
-            (<HTMLElement>this.sliderLeft).style.display = 'none';
-            (<HTMLElement>this.sliderRight).style.display = 'none';
-
-            return;
+        if (this.invVisibleCurrent === true) {
+            this._showInventory();
         } else {
-            if (this.sliderLeft === undefined)
-                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-
-            if (this.sliderRight === undefined)
-                this.sliderRight = document.querySelector(
-                    '.slider-hiddenRight'
-                );
-
-            if (this.menuElement === undefined)
-                this.menuElement = document.querySelector('.toolbar.menu');
-
-            (<HTMLElement>this.sliderLeft).style.display = 'block';
-            (<HTMLElement>this.sliderRight).style.display = 'block';
+            this._hideInventory();
+            return;
         }
 
         let w = window.innerWidth;
@@ -894,6 +881,9 @@ export class PlayerGame extends Game {
 
             (<HTMLElement>this.menuElement).style.left =
                 this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.width =
+                this.inventoryViewport.width.toString() + 'px';
         } else {
             let invOffsetHeight = 40;
 
@@ -947,6 +937,31 @@ export class PlayerGame extends Game {
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
             resizeCameraRig(this.inventoryCameraRig);
         }
+    }
+
+    private _hideInventory() {
+        this.inventoryViewport.setScale(null, 0);
+        if (this.sliderLeft === undefined)
+            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+        if (this.sliderRight === undefined)
+            this.sliderRight = document.querySelector('.slider-hiddenRight');
+        if (this.menuElement === undefined)
+            this.menuElement = document.querySelector('.toolbar.menu');
+        (<HTMLElement>this.sliderLeft).style.display = 'none';
+        (<HTMLElement>this.sliderRight).style.display = 'none';
+        (<HTMLElement>this.menuElement).style.bottom =
+            this.menuOffset.toString() + 'px';
+    }
+
+    private _showInventory() {
+        if (this.sliderLeft === undefined)
+            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+        if (this.sliderRight === undefined)
+            this.sliderRight = document.querySelector('.slider-hiddenRight');
+        if (this.menuElement === undefined)
+            this.menuElement = document.querySelector('.toolbar.menu');
+        (<HTMLElement>this.sliderLeft).style.display = 'block';
+        (<HTMLElement>this.sliderRight).style.display = 'block';
     }
 
     async mouseDownSlider() {

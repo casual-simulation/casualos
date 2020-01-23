@@ -15,7 +15,7 @@ export class NodeSimulation extends BaseSimulation {
 
     constructor(
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean },
+        config: AuxConfig['config'],
         partitions: AuxPartitionConfig,
         channelFactory: (config: AuxConfig) => BaseAuxChannel
     ) {

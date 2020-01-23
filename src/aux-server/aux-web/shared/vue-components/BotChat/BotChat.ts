@@ -21,11 +21,18 @@ import { appManager } from '../../AppManager';
 export default class BotChat extends Vue {
     text: string = '';
 
+    @Prop({ default: null }) placeholder: string;
     @Prop({ default: null }) prefill: string;
 
     private _updatingText: boolean = false;
 
-    async sendMessage() {
+    async sendMessage(dropFocus: boolean) {
+        if (dropFocus) {
+            const input = <Vue>this.$refs.searchInput;
+            if (input) {
+                input.$el.blur();
+            }
+        }
         await this._ignoreTextUpdates(async text => {
             this.text = '';
             await appManager.simulationManager.primary.helper.action(
@@ -58,8 +65,8 @@ export default class BotChat extends Vue {
         });
     }
 
-    get placeholder() {
-        return 'Chat';
+    get finalPlaceholder() {
+        return this.placeholder || 'Chat';
     }
 
     constructor() {

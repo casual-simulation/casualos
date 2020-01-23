@@ -23,13 +23,14 @@ export function updateQuery(router: VueRouter, simulations: SimulationInfo[]) {
     const previousChannel = router.currentRoute.params.id;
     const previousDimension = router.currentRoute.params.dimension;
 
-    const channel =
-        appManager.simulationManager.primary.parsedId.channel ||
-        previousChannel;
+    const parsedId = appManager.simulationManager.primary.parsedId;
+
+    const channel = parsedId.channel || previousChannel;
     const dimension =
-        appManager.simulationManager.primary.parsedId.dimension ||
-        previousDimension;
-    if (channel && dimension) {
+        parsedId.dimension || parsedId.dimensionVisualizer
+            ? parsedId.dimension
+            : previousDimension;
+    if (channel) {
         let route = {
             name: 'home',
             params: {
@@ -64,6 +65,7 @@ export function navigateToDimension(
         sim.parsedId = {
             ...sim.parsedId,
             dimension: event.dimension,
+            dimensionVisualizer: event.dimension ? undefined : '*',
         };
     });
 

@@ -11,6 +11,7 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     BotIndexEvent,
+    DEFAULT_INVENTORY_VISIBLE,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -42,7 +43,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private _dimensionBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
-    private _inventoryVisible: boolean = true;
+    private _inventoryVisible: boolean = DEFAULT_INVENTORY_VISIBLE;
 
     private _inventoryPannable: boolean = false;
     private _inventoryPanMinX: number = null;
@@ -94,7 +95,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
         } else {
-            return true;
+            return DEFAULT_INVENTORY_VISIBLE;
         }
     }
 
@@ -504,7 +505,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             calc,
                             bot,
                             `auxDimensionInventoryVisible`,
-                            true
+                            DEFAULT_INVENTORY_VISIBLE
                         );
                         this._inventoryPannable = calculateBooleanTagValue(
                             calc,
@@ -636,7 +637,7 @@ export class PlayerSimulation3D extends Simulation3D {
         // Change the user's dimension after first adding and updating it
         // because the callback for update_bot was happening before we
         // could call botUpdated from botAdded.
-        if (bot.id === this.simulation.helper.userBot.id) {
+        if (bot.id === this.simulation.helper.userId) {
             this._updateUserBot(calc, bot);
         }
 
@@ -663,7 +664,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
-        const userBot = this.simulation.helper.userBot;
+        const userBot = bot;
         console.log(
             "[PlayerSimulation3D] Setting user's dimension to: " +
                 this.dimension
@@ -677,10 +678,10 @@ export class PlayerSimulation3D extends Simulation3D {
             ? new Color(userBackgroundColor)
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserDimension: this.dimension },
-        });
-        await this.simulation.helper.updateBot(userBot, {
-            tags: { _auxUserUniverse: this.simulation.id },
+            tags: {
+                _auxUserDimension: this.dimension,
+                _auxUserUniverse: this.simulation.id,
+            },
         });
         this._subs.push(
             this.simulation.watcher

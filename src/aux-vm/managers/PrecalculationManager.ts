@@ -55,7 +55,7 @@ export class PrecalculationManager {
         let nextState: Partial<PrecalculatedBotsState> = {};
 
         for (let bot of bots) {
-            nextState[bot.id] = {
+            let newBot: PrecalculatedBot = {
                 id: bot.id,
                 precalculated: true,
                 tags: bot.tags,
@@ -63,6 +63,11 @@ export class PrecalculationManager {
                     calculateCopiableValue(context, bot, tag, value)
                 ),
             };
+
+            if (bot.space) {
+                newBot.space = bot.space;
+            }
+            nextState[bot.id] = newBot;
         }
 
         this._updateBots(updated, context, nextState);

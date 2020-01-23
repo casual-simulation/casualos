@@ -1,5 +1,52 @@
 # AUX Changelog
 
+## V0.11.23
+
+### Date: TBD
+
+### Changes:
+
+#### :boom: **Breaking Changes**
+
+-   Renamed the `player.inDesigner()` function to `player.inSheet()`.
+-   Changed the `player.showChat(placeholder)` function to set the placeholder of the chat bar instead of the prefill.
+-   Removed the ability to trigger a listener by clicking the play button in the code editor.
+-   Removed the side menu from auxPlayer.
+
+#### :rocket: Features
+
+-   Added the ability to specify an options object when calling `player.showChat(options)`.
+    -   `options` is an object with the following properties:
+        -   `placeholder` - The placeholder. Will override the existing placeholder. (optional)
+        -   `prefill` - The prefill. Will only be set if there is no text already in the chat bar. (optional)
+-   Added the ability to click the `id` tag in the sheet to load all the bots.
+-   Added the ability to use the browser back button in the sheet.
+-   Added the version number to the loading popup.
+-   Added the `player.version()` function which gets information about the current version number.
+    -   Returns an object with the following properties:
+        -   `hash` - The Git hash that the build was made from.
+        -   `version` - The Git tag that the build was made from.
+        -   `major` - The major number of the build.
+        -   `minor` - The minor number of the build.
+        -   `patch` - The patch number of the build.
+-   Improved the chat bar to remove focus from the input box when the "Send Message" button is clicked/tapped.
+    -   This should cause the on-screen keyboard to automatically close.
+-   Improved the menu positioning so that it will appear at the bottom of the screen when the inventory is hidden.
+-   Added the ability to resize the code editor window.
+-   Added the `player.device()` function which gets information about the current device.
+    -   Returns an object with the following properties:
+        -   `supportsAR` - Whether AR is supported.
+        -   `supportsVR` - Whether VR is supported.
+-   Added the `player.enableAR()` and `player.disableAR()` functions.
+-   Added the `player.enableVR()` and `player.disableVR()` functions.
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where hidden tags would not get a button to toggle their visiblity in the sheet.
+-   Fixed an issue where the `space` tag in the sheet would sometimes show an incorrect value.
+-   Fixed an issue where sometimes AUX would crash when multiple tabs were open due to a race condition.
+-   Fixed an issue where bots from the history space would not be findable in scripts.
+
 ## V0.11.22
 
 ### Date: 1/16/2020

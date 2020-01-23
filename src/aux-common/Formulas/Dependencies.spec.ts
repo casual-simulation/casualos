@@ -1397,16 +1397,16 @@ describe('Dependencies', () => {
 
         it('should work on complicated formulas', () => {
             const tree = dependencies.dependencyTree(
-                'getBotTagValues("name").filter(a => a == "bob" || a == "alice").length + (player.isDesigner() ? 0 : 1)'
+                'getBotTagValues("name").filter(a => a == "bob" || a == "alice").length + (player.getCurrentUniverse() ? 0 : 1)'
             );
             const simple = dependencies.simplify(tree);
             const replacements: AuxScriptReplacements = {
-                'player.isDesigner': (
+                'player.getCurrentUniverse': (
                     node: AuxScriptSimpleFunctionDependency
                 ) => [
                     {
                         type: 'tag',
-                        name: 'aux.designers',
+                        name: '_auxUserUniverse',
                         dependencies: [],
                     },
                 ],
@@ -1448,7 +1448,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: 'aux.designers',
+                    name: '_auxUserUniverse',
                     dependencies: [],
                 },
                 {
@@ -1761,58 +1761,6 @@ describe('Dependencies', () => {
             });
         });
 
-        describe('player.isDesigner()', () => {
-            it('should replace with tag dependency on aux.designers', () => {
-                const tree = dependencies.dependencyTree(`player.isDesigner()`);
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
-
-                expect(replaced).toEqual([
-                    {
-                        type: 'tag',
-                        name: 'aux.designers',
-                        dependencies: [],
-                    },
-                ]);
-            });
-
-            it('should remove inner dependencies', () => {
-                const tree = dependencies.dependencyTree(
-                    `player.isDesigner(player.isDesigner("#def"))`
-                );
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
-
-                expect(replaced).toEqual([
-                    {
-                        type: 'tag',
-                        name: 'aux.designers',
-                        dependencies: [],
-                    },
-                ]);
-            });
-
-            it('should not replace if it is not a function call', () => {
-                const tree = dependencies.dependencyTree(`player.isDesigner`);
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
-
-                expect(replaced).toEqual([
-                    {
-                        type: 'member',
-                        name: 'player',
-                        dependencies: [
-                            {
-                                type: 'member',
-                                name: 'isDesigner',
-                                dependencies: [],
-                            },
-                        ],
-                    },
-                ]);
-            });
-        });
-
         describe('player.hasBotInInventory()', () => {
             // TODO: Improve to use a more restricted dependency style
             it('should replace with an all dependency', () => {
@@ -1854,19 +1802,19 @@ describe('Dependencies', () => {
 
         const playerContextCases = [
             [
-                'player.getMenuContext',
+                'player.getMenuDimension',
                 '_auxUserMenuDimension',
-                ['player', 'getMenuContext'],
+                ['player', 'getMenuDimension'],
             ],
             [
-                'player.getInventoryContext',
+                'player.getInventoryDimension',
                 '_auxUserInventoryDimension',
-                ['player', 'getInventoryContext'],
+                ['player', 'getInventoryDimension'],
             ],
             [
-                'player.getCurrentContext',
+                'player.getCurrentDimension',
                 '_auxUserDimension',
-                ['player', 'getCurrentContext'],
+                ['player', 'getCurrentDimension'],
             ],
         ];
 
