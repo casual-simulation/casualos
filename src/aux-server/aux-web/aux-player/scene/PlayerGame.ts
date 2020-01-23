@@ -518,9 +518,17 @@ export class PlayerGame extends Game {
                 } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
                 } else if (e.type === 'enable_ar') {
-                    this.toggleXR();
+                    if (e.enabled) {
+                        this.startXR();
+                    } else {
+                        this.stopXR();
+                    }
                 } else if (e.type === 'enable_vr') {
+                    if (e.enabled) {
                         this.startVR();
+                    } else {
+                        this.stopVR();
+                    }
                 }
             })
         );

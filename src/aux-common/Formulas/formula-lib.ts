@@ -60,7 +60,9 @@ import {
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
     enableAR as calcEnableAR,
+    disableAR as calcDisableAR,
     enableVR as calcEnableVR,
+    disableVR as calcDisableVR,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -2244,6 +2246,20 @@ function enableVR() {
 }
 
 /**
+ * Disables Augmented Reality features.
+ */
+function disableAR() {
+    return addAction(calcDisableAR());
+}
+
+/**
+ * Disables Virtual Reality features.
+ */
+function disableVR() {
+    return addAction(calcDisableVR());
+}
+
+/**
  * Gets information about the version of AUX that is running.
  */
 function version() {
@@ -2333,6 +2349,8 @@ const player = {
     device,
     enableAR,
     enableVR,
+    disableAR,
+    disableVR,
 
     openDevConsole,
 };

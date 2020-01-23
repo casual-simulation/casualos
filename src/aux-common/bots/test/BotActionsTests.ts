@@ -46,6 +46,8 @@ import {
     RestoreHistoryMarkAction,
     enableAR,
     enableVR,
+    disableVR,
+    disableAR,
 } from '../BotEvents';
 import { createBot, getActiveObjects } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -4137,6 +4139,33 @@ export function botActionsTests(
             });
         });
 
+        describe('player.disableAR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.disableAR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([disableAR()]);
+            });
+        });
+
         describe('player.enableVR()', () => {
             it('should issue an EnableVRAction', () => {
                 const state: BotsState = {
@@ -4163,6 +4192,34 @@ export function botActionsTests(
                 expect(result.events).toEqual([enableVR()]);
             });
         });
+
+        describe('player.disableVR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.disableVR()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    createFormulaLibrary({})
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([disableVR()]);
+            });
+        });
+
         describe('player.downloadBots()', () => {
             it('should emit a DownloadAction with the given bots formatted as JSON', () => {
                 const state: BotsState = {

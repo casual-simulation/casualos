@@ -1051,6 +1051,11 @@ export interface LoadSpaceAction {
  */
 export interface EnableARAction {
     type: 'enable_ar';
+
+    /**
+     * Whether AR features should be enabled.
+     */
+    enabled: boolean;
 }
 
 /**
@@ -1058,6 +1063,11 @@ export interface EnableARAction {
  */
 export interface EnableVRAction {
     type: 'enable_vr';
+
+    /**
+     * Whether VR features should be enabled.
+     */
+    enabled: boolean;
 }
 
 /**z
@@ -1766,11 +1776,36 @@ export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
 export function enableAR(): EnableARAction {
     return {
         type: 'enable_ar',
+        enabled: true,
+    };
+}
+
 /**
  * Creates a EnableVRAction.
  */
 export function enableVR(): EnableVRAction {
     return {
         type: 'enable_vr',
+        enabled: true,
+    };
+}
+
+/**
+ * Creates a EnableARAction that disables AR.
+ */
+export function disableAR(): EnableARAction {
+    return {
+        type: 'enable_ar',
+        enabled: false,
+    };
+}
+
+/**
+ * Creates a EnableVRAction that disables VR.
+ */
+export function disableVR(): EnableVRAction {
+    return {
+        type: 'enable_vr',
+        enabled: false,
     };
 }
