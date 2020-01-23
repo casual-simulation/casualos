@@ -12,6 +12,7 @@
 -   Changed the `player.showChat(placeholder)` function to set the placeholder of the chat bar instead of the prefill.
 -   Removed the ability to trigger a listener by clicking the play button in the code editor.
 -   Removed the side menu from auxPlayer.
+-   Removed [sharp](https://github.com/lovell/sharp) to allow us to make ARM builds on macOS.
 
 #### :rocket: Features
 
