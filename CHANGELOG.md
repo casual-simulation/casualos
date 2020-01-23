@@ -37,6 +37,8 @@
     -   Returns an object with the following properties:
         -   `supportsAR` - Whether AR is supported.
         -   `supportsVR` - Whether VR is supported.
+-   Added the `player.enableAR()` and `player.disableAR()` functions.
+-   Added the `player.enableVR()` and `player.disableVR()` functions.
 
 #### :bug: Bug Fixes
 
