@@ -31,7 +31,6 @@ import uuid from 'uuid/v4';
 import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
 import util from 'util';
-import sharp from 'sharp';
 import {
     parseCacheControlHeader,
     CacheControlHeaderValues,
@@ -386,10 +385,8 @@ export class ClientServer {
         contentType: string,
         data: Buffer
     ): Promise<[string, Buffer]> {
-        const optimized = await sharp(data)
-            .webp()
-            .toBuffer();
-        return ['image/webp', optimized];
+        const optimized = data;
+        return [contentType, optimized];
     }
 
     private _getDataForBrowser(
