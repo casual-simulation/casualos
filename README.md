@@ -2,6 +2,9 @@
     <img alt="Casual Simulation Logo" src="./.github/images/casual-sim-logo.gif" width="180"/>
     <br/>
     <br/>
+    <a href="https://github.com/casual-simulation/aux/releases">
+        <img alt="Latest Release" src="https://img.shields.io/github/v/release/casual-simulation/aux">
+    </a>
     <a href="https://github.com/casual-simulation/aux/issues">
         <img alt="GitHub Issues" src="https://img.shields.io/github/issues/casual-simulation/aux.svg">
     </a>
