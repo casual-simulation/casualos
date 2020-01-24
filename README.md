@@ -6,6 +6,8 @@ AUX (Ambient User Experience) is a set of tools designed to facilitate the creat
 
 This repository is a monorepo that contains the code which makes the AUX web platform work.
 
+[![AUX Demo](https://img.youtube.com/vi/ghwS5btUhU0/0.jpg)](https://youtu.be/ghwS5btUhU0)
+
 ## Contents
 
 ### Servers
