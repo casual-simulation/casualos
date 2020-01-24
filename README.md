@@ -11,6 +11,9 @@
     <a href="https://github.com/casual-simulation/aux/blob/develop/LICENSE.txt">
         <img alt="MIT License" src="https://img.shields.io/github/license/casual-simulation/aux.svg">
     </a>
+    <a href="https://github.com/casual-simulation/aux/actions">
+        <img alt="Build Status" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fcasual-simulation%2Faux%2Fbadge%3Fref%3Ddevelop&style=flat" />
+    </a>
     <h1>AUX</h1>
     <p>
         AUX (Ambient User Experience) is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
