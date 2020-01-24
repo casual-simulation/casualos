@@ -1,12 +1,28 @@
-# AUX
+<div align="center">
+    <img alt="Casual Simulation Logo" src="./.github/images/casual-sim-logo.gif" width="180"/>
+    <br/>
+    <br/>
+    <a href="https://github.com/casual-simulation/aux/issues">
+        <img alt="GitHub Issues" src="https://img.shields.io/github/issues/casual-simulation/aux.svg">
+    </a>
+    <a href="https://github.com/casual-simulation/aux/blob/develop/LICENSE.txt">
+        <img alt="MIT License" src="https://img.shields.io/github/license/casual-simulation/aux.svg">
+    </a>
+    <h1>AUX</h1>
+    <p>
+        AUX (Ambient User Experience) is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+    </p>
+    <p>
+        This repository is a monorepo that contains the code which makes the AUX web platform work.
+    </p>
+</div>
 
-![GitHub issues](https://img.shields.io/github/issues/casual-simulation/aux.svg) ![MIT License](https://img.shields.io/github/license/casual-simulation/aux.svg) ![npm type definitions](https://img.shields.io/npm/types/@casual-simulation/aux-common)
+## Table of Contents
 
-AUX (Ambient User Experience) is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
-
-This repository is a monorepo that contains the code which makes the AUX web platform work.
-
-[![AUX Demo](https://img.youtube.com/vi/ghwS5btUhU0/0.jpg)](https://youtu.be/ghwS5btUhU0)
+-   [Projects](#projects)
+-   [Demo](#demo)
+-   [Developing](#developing)
+-   [License](#license)
 
 ## Projects
 
@@ -74,6 +90,12 @@ A web service that can facilitate WebSocket tunnels from the external web to a d
 -   [Crypto Node](./src/crypto-node)
 -   [Tunnel](./src/tunnel)
 -   [AUX Benchmarks](./src/aux-benchmarks)
+
+## Demo
+
+<a href="https://youtu.be/ghwS5btUhU0">
+    <img alt="AUX Demo" src="https://img.youtube.com/vi/ghwS5btUhU0/0.jpg">
+</a>
 
 ## Developing
 
