@@ -55,9 +55,9 @@ A set of abstractions and common utilities required to run an AUX on any platfor
 
 #### Related libraries
 
--   [AUX VM Browser](./src/aux-vm-browser/README.md)
--   [AUX VM Client](./src/aux-vm-client/README.md)
--   [AUX VM Node](./src/aux-vm-node/README.md)
+-   [AUX VM Browser](./src/aux-vm-browser)
+-   [AUX VM Client](./src/aux-vm-client)
+-   [AUX VM Node](./src/aux-vm-node)
 
 ### [Causal Trees](./src/causal-trees/)
 
@@ -69,11 +69,11 @@ A library to create persistent, distributed, realtime, and conflict-free data ty
 
 #### Related libraries
 
--   [Causal Tree Client Socket.io](./src/causal-tree-client-socketio/README.md)
--   [Causal Tree Server](./src/causal-tree-server/README.md)
--   [Causal Tree Server Socket.io](./src/causal-tree-server-socketio/README.md)
--   [Causal Tree Store Browser](./src/causal-tree-store-browser/README.md)
--   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb/README.md)
+-   [Causal Tree Client Socket.io](./src/causal-tree-client-socketio)
+-   [Causal Tree Server](./src/causal-tree-server)
+-   [Causal Tree Server Socket.io](./src/causal-tree-server-socketio)
+-   [Causal Tree Store Browser](./src/causal-tree-store-browser)
+-   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
 
 ### [AUX Proxy](./src/aux-proxy/)
 
