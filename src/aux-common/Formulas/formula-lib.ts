@@ -1295,7 +1295,7 @@ function getGlobals(): Bot {
 function getMenuDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserMenuDimension');
+        return getTag(user, 'auxMenuPortal');
     } else {
         return null;
     }

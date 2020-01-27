@@ -1803,7 +1803,7 @@ describe('Dependencies', () => {
         const playerContextCases = [
             [
                 'player.getMenuDimension',
-                '_auxUserMenuDimension',
+                'auxMenuPortal',
                 ['player', 'getMenuDimension'],
             ],
             [

@@ -693,7 +693,7 @@ export function getUserBotColor(
  * @param userBot The bot for the user.
  */
 export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
-    return calculateBotValue(calc, userBot, '_auxUserMenuDimension');
+    return calculateBotValue(calc, userBot, 'auxMenuPortal');
 }
 
 /**

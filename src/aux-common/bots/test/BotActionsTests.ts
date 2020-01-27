@@ -3595,7 +3595,7 @@ export function botActionsTests(
         });
 
         describe('getUserMenuDimension()', () => {
-            it('should return the _auxUserMenuDimension tag from the user bot', () => {
+            it('should return the auxMenuPortal tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3607,7 +3607,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserMenuDimension: 'abc',
+                            auxMenuPortal: 'abc',
                         },
                     },
                 };

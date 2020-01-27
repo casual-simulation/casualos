@@ -1298,7 +1298,7 @@ describe('AuxHelper', () => {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: 'username',
                     ['auxInventoryPortal']: '_user_username_inventory',
-                    ['_auxUserMenuDimension']: '_user_username_menu',
+                    ['auxMenuPortal']: '_user_username_menu',
                     ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
             });
@@ -1337,14 +1337,14 @@ describe('AuxHelper', () => {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: 'username',
                     ['auxInventoryPortal']: '_user_username_inventory',
-                    ['_auxUserMenuDimension']: '_user_username_menu',
+                    ['auxMenuPortal']: '_user_username_menu',
                     ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
             });
         });
 
         const dimensionCases = [
-            ['menu dimension', '_auxUserMenuDimension', '_user_username_menu'],
+            ['menu dimension', 'auxMenuPortal', '_user_username_menu'],
             [
                 'inventory dimension',
                 'auxInventoryPortal',

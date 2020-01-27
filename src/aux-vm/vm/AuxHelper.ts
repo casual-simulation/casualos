@@ -306,7 +306,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: user.username,
                     ['auxInventoryPortal']: userInventoryDimension,
-                    ['_auxUserMenuDimension']: userMenuDimension,
+                    ['auxMenuPortal']: userMenuDimension,
                     ['_auxUserUniversesDimension']: userUniversesDimension,
                 },
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
@@ -315,10 +315,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             );
             console.log('[AuxHelper] User bot created');
         } else {
-            if (!userBot.tags['_auxUserMenuDimension']) {
+            if (!userBot.tags['auxMenuPortal']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserMenuDimension']: userMenuDimension,
+                        ['auxMenuPortal']: userMenuDimension,
                     },
                 });
             }
