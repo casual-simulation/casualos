@@ -1299,7 +1299,7 @@ describe('AuxHelper', () => {
                     ['_auxUser']: 'username',
                     ['auxInventoryPortal']: '_user_username_inventory',
                     ['auxMenuPortal']: '_user_username_menu',
-                    ['_auxUserUniversesDimension']: '_user_username_universes',
+                    ['auxUniversesPortal']: '_user_username_universes',
                 },
             });
         });
@@ -1338,7 +1338,7 @@ describe('AuxHelper', () => {
                     ['_auxUser']: 'username',
                     ['auxInventoryPortal']: '_user_username_inventory',
                     ['auxMenuPortal']: '_user_username_menu',
-                    ['_auxUserUniversesDimension']: '_user_username_universes',
+                    ['auxUniversesPortal']: '_user_username_universes',
                 },
             });
         });
@@ -1352,7 +1352,7 @@ describe('AuxHelper', () => {
             ],
             [
                 'universes dimension',
-                '_auxUserUniversesDimension',
+                'auxUniversesPortal',
                 '_user_username_universes',
             ],
         ];

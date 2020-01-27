@@ -498,7 +498,7 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemDimension(['_auxUserUniversesDimension']);
+        let simulations = new ItemDimension(['auxUniversesPortal']);
         this.subs.push(simulations);
         this.subs.push(
             simulations.itemsUpdated.subscribe(items =>

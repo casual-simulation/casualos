@@ -3,10 +3,10 @@
 exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
   "_auxUser": "username",
-  "_auxUserUniversesDimension": "_user_username_universes",
   "aux-users": true,
   "auxInventoryPortal": "_user_username_inventory",
   "auxMenuPortal": "_user_username_menu",
+  "auxUniversesPortal": "_user_username_universes",
 }
 `;
 

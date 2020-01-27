@@ -137,7 +137,7 @@ export interface BotTags {
     ['_auxUserUniverse']?: string;
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
-    ['_auxUserUniversesDimension']?: string;
+    ['auxUniversesPortal']?: string;
     ['_auxEditingBot']?: string;
     ['_auxSelectionMode']?: SelectionMode;
 
@@ -626,7 +626,7 @@ export const KNOWN_TAGS: string[] = [
     '_auxUserUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
-    '_auxUserUniversesDimension',
+    'auxUniversesPortal',
     '_auxEditingBot',
     '_auxSelectionMode',
     'auxConnectedSessions',

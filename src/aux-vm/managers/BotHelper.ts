@@ -181,7 +181,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
             await this.createBot(
                 botId,
                 {
-                    [this.userBot.tags['_auxUserUniversesDimension']]: true,
+                    [this.userBot.tags['auxUniversesPortal']]: true,
                     ['auxUniverse']: id,
                 },
                 true,
@@ -339,7 +339,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         // TODO: Make these functions support precalculated bot dimensions
         const simBots = botsInDimension(
             calc,
-            this.userBot.tags['_auxUserUniversesDimension']
+            this.userBot.tags['auxUniversesPortal']
         ).filter(f => getBotChannel(calc, f) === id);
 
         return <AuxObject[]>simBots;

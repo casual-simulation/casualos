@@ -307,7 +307,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     ['_auxUser']: user.username,
                     ['auxInventoryPortal']: userInventoryDimension,
                     ['auxMenuPortal']: userMenuDimension,
-                    ['_auxUserUniversesDimension']: userUniversesDimension,
+                    ['auxUniversesPortal']: userUniversesDimension,
                 },
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID
@@ -329,10 +329,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     },
                 });
             }
-            if (!userBot.tags['_auxUserUniversesDimension']) {
+            if (!userBot.tags['auxUniversesPortal']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserUniversesDimension']: userUniversesDimension,
+                        ['auxUniversesPortal']: userUniversesDimension,
                     },
                 });
             }
