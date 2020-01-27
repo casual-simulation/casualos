@@ -2,6 +2,22 @@
 
 ## V0.11.23
 
+### Date: TBD
+
+### Changes:
+
+#### :boom: **Breaking Changes**
+
+-   Renamed the following tags:
+    -   `_auxUserDimension` -> `auxPagePortal`
+    -   `_auxUserInventoryDimension` -> `auxInventoryPortal`
+    -   `_auxUserMenuDimension` -> `auxMenuPortal`
+    -   `_auxUserUniversesDimension` -> `auxUniversesPortal`
+    -   `_auxUserUniverse` -> `auxUniverse`
+-   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
+
+## V0.11.23
+
 ### Date: 1/23/2020
 
 ### Changes:
