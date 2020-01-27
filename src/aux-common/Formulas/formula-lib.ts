@@ -1210,7 +1210,7 @@ function isInDimension(givenDimension: string) {
 function getCurrentDimension(): string {
     const user = getUser();
     if (user) {
-        const dimension = getTag(user, '_auxUserDimension');
+        const dimension = getTag(user, 'auxPagePortal');
         return dimension || undefined;
     }
     return undefined;

@@ -690,7 +690,7 @@ export default class PlayerApp extends Vue {
                                     }
                                     await simulation.helper.updateBot(userBot, {
                                         tags: {
-                                            _auxUserDimension: dimension,
+                                            auxPagePortal: dimension,
                                             _auxUserUniverse: id,
                                         },
                                     });

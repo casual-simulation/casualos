@@ -468,7 +468,7 @@ export default class BuilderApp extends Vue {
                                             userBot,
                                             {
                                                 tags: {
-                                                    _auxUserDimension:
+                                                    auxPagePortal:
                                                         botManager.parsedId
                                                             .dimension || false,
                                                 },

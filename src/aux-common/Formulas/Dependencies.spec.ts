@@ -1813,7 +1813,7 @@ describe('Dependencies', () => {
             ],
             [
                 'player.getCurrentDimension',
-                '_auxUserDimension',
+                'auxPagePortal',
                 ['player', 'getCurrentDimension'],
             ],
         ];

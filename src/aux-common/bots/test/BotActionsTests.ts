@@ -4849,7 +4849,7 @@ export function botActionsTests(
         });
 
         describe('player.isInDimension()', () => {
-            it('should return true when _auxUserDimension equals the given value', () => {
+            it('should return true when auxPagePortal equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4861,7 +4861,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4886,7 +4886,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserDimension does not equal the given value', () => {
+            it('should return false when auxPagePortal does not equal the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4898,7 +4898,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4923,7 +4923,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserDimension is not set', () => {
+            it('should return false when auxPagePortal is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4960,7 +4960,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentDimension()', () => {
-            it('should return _auxUserDimension', () => {
+            it('should return auxPagePortal', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4972,7 +4972,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4997,7 +4997,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserDimension is not set', () => {
+            it('should return undefined when auxPagePortal is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',

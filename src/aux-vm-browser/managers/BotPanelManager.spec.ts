@@ -31,7 +31,7 @@ describe('BotPanelManager', () => {
         await vm.sendEvents([
             botAdded(
                 createBot('user', {
-                    _auxUserDimension: 'hello',
+                    auxPagePortal: 'hello',
                 })
             ),
         ]);
@@ -108,7 +108,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        _auxUserDimension: false,
+                        auxPagePortal: false,
                     },
                 }),
                 botAdded(
@@ -135,7 +135,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        _auxUserDimension: 'wow',
+                        auxPagePortal: 'wow',
                     },
                 }),
                 botAdded(

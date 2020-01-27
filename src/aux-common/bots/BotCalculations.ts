@@ -2239,7 +2239,7 @@ export function isBotInDimension(
         const userContextValue = calculateBotValue(
             context,
             bot,
-            '_auxUserDimension'
+            'auxPagePortal'
         );
         result = userContextValue == dimensionId;
     }

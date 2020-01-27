@@ -388,7 +388,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     protected _getDimensionTags() {
-        return ['_auxUserDimension'];
+        return ['auxPagePortal'];
     }
 
     protected _filterDimensionEvent(
@@ -679,7 +679,7 @@ export class PlayerSimulation3D extends Simulation3D {
             : undefined;
         await this.simulation.helper.updateBot(userBot, {
             tags: {
-                _auxUserDimension: this.dimension,
+                auxPagePortal: this.dimension,
                 _auxUserUniverse: this.simulation.id,
             },
         });

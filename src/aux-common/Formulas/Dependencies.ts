@@ -570,7 +570,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserDimension',
+                    name: 'auxPagePortal',
                     dependencies: [],
                 },
             ];

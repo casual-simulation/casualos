@@ -183,10 +183,10 @@ describe('BotDimensionManager', () => {
                 });
             });
 
-            it('should include user bots with _auxUserDimension set to the dimension', () => {
+            it('should include user bots with auxPagePortal set to the dimension', () => {
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserDimension: 'abc',
+                    auxPagePortal: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
                     auxDimensionConfig: 'abc',
@@ -215,7 +215,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['_auxUser', '_auxUserDimension']),
+                            tags: new Set(['_auxUser', 'auxPagePortal']),
                         },
                         {
                             bot: test,
@@ -462,12 +462,12 @@ describe('BotDimensionManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserDimension: 'abc',
+                    auxPagePortal: 'abc',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['_auxUserDimension']),
+                        tags: new Set(['auxPagePortal']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -490,7 +490,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['_auxUserDimension']),
+                            tags: new Set(['auxPagePortal']),
                         },
                     ],
                 });
@@ -559,7 +559,7 @@ describe('BotDimensionManager', () => {
                 });
                 const user = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserDimension: 'abc',
+                    auxPagePortal: 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -574,12 +574,12 @@ describe('BotDimensionManager', () => {
 
                 const userFinal = createPrecalculatedBot('user', {
                     _auxUser: 'user',
-                    _auxUserDimension: 'different',
+                    auxPagePortal: 'different',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['_auxUserDimension']),
+                        tags: new Set(['auxPagePortal']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -602,7 +602,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['_auxUserDimension']),
+                            tags: new Set(['auxPagePortal']),
                         },
                     ],
                 });
@@ -654,21 +654,21 @@ describe('BotDimensionManager', () => {
             let events = [] as BotDimensionsUpdate[];
 
             dimensions
-                .watchDimensions('_auxUserDimension')
+                .watchDimensions('auxPagePortal')
                 .subscribe(e => events.push(e));
 
             const test = createPrecalculatedBot('test', {
-                _auxUserDimension: 'abc',
+                auxPagePortal: 'abc',
             });
             index.addBots([test]);
 
             const test2 = createPrecalculatedBot('test', {
-                _auxUserDimension: '123',
+                auxPagePortal: '123',
             });
             index.updateBots([
                 {
                     bot: test2,
-                    tags: new Set(['_auxUserDimension']),
+                    tags: new Set(['auxPagePortal']),
                 },
             ]);
 
@@ -678,7 +678,7 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: '_auxUserDimension',
+                            dimensionTag: 'auxPagePortal',
                             dimensionBot: test,
                             dimension: 'abc',
                             existingBots: [],
@@ -687,7 +687,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['_auxUserDimension']),
+                            tags: new Set(['auxPagePortal']),
                         },
                     ],
                 },
@@ -696,14 +696,14 @@ describe('BotDimensionManager', () => {
                     events: [
                         {
                             type: 'dimension_added',
-                            dimensionTag: '_auxUserDimension',
+                            dimensionTag: 'auxPagePortal',
                             dimensionBot: test2,
                             dimension: '123',
                             existingBots: [],
                         },
                         {
                             type: 'dimension_removed',
-                            dimensionTag: '_auxUserDimension',
+                            dimensionTag: 'auxPagePortal',
                             dimensionBot: test2,
                             dimension: 'abc',
                         },
@@ -711,7 +711,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: test2,
-                            tags: new Set(['_auxUserDimension']),
+                            tags: new Set(['auxPagePortal']),
                         },
                     ],
                 },
