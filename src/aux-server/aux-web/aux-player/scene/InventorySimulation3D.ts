@@ -27,6 +27,10 @@ export class InventorySimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
+    get hasDimension() {
+        return this.dimensions.length > 0;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 

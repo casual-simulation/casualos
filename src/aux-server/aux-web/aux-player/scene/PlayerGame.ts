@@ -210,11 +210,11 @@ export class PlayerGame extends Game {
     }
 
     getInventoryVisible(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
+        for (let i = 0; i < this.inventorySimulations.length; i++) {
+            const sim = this.inventorySimulations[i];
 
-            if (sim.inventoryVisible != null) {
-                return sim.inventoryVisible;
+            if (sim.hasDimension === true) {
+                return sim.hasDimension;
             }
         }
 
