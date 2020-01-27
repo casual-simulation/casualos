@@ -295,9 +295,6 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const userInventoryDimension = `_user_${user.username}_inventory`;
-        const userMenuDimension = `_user_${user.username}_menu`;
-        const userUniversesDimension = `_user_${user.username}_universes`;
         if (!userBot) {
             console.log('[AuxHelper] Create user bot');
             await this.createBot(
@@ -305,37 +302,12 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: user.username,
-                    ['auxInventoryPortal']: userInventoryDimension,
-                    ['auxMenuPortal']: userMenuDimension,
-                    ['auxUniversesPortal']: userUniversesDimension,
                 },
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID
                     : undefined
             );
             console.log('[AuxHelper] User bot created');
-        } else {
-            if (!userBot.tags['auxMenuPortal']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['auxMenuPortal']: userMenuDimension,
-                    },
-                });
-            }
-            if (!userBot.tags['auxInventoryPortal']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['auxInventoryPortal']: userInventoryDimension,
-                    },
-                });
-            }
-            if (!userBot.tags['auxUniversesPortal']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['auxUniversesPortal']: userUniversesDimension,
-                    },
-                });
-            }
         }
     }
 
