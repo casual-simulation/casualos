@@ -26,6 +26,10 @@
         -   `sheet` - Gets the `auxSheetPortal` tag.
         -   `universes` - Gets the `auxUniversesPortal` tag.
 
+#### :bug: Bug Fixes
+
+-   Fixed an issue where the inventory camera would be placed at an impossible location if the inventory was hidden during startup.
+
 ## V0.11.23
 
 ### Date: 1/23/2020
