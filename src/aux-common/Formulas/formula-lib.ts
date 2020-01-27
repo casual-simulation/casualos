@@ -83,6 +83,7 @@ import {
     createBot,
     isScriptBot,
     getBotSpace,
+    getPortalTag,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -374,6 +375,11 @@ interface Bot {
  * The possible bot spaces.
  */
 type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
+
+/**
+ * The possible portal types.
+ */
+export type PortalType = 'page' | 'inventory' | 'menu' | 'sheet' | 'universes';
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -2260,6 +2266,27 @@ function disableVR() {
 }
 
 /**
+ * Gets the dimension that is loaded into the given portal for the player.
+ * If no dimension is loaded, then null is returned.
+ * @param portal The portal type.
+ */
+function getPortalDimension(portal: PortalType) {
+    const user = getUser();
+    if (!user) {
+        return null;
+    }
+
+    const portalTag = getPortalTag(portal);
+    const dimension = getTag(user, portalTag);
+
+    if (!hasValue(dimension)) {
+        return null;
+    }
+
+    return dimension;
+}
+
+/**
  * Gets information about the version of AUX that is running.
  */
 function version() {
@@ -2313,6 +2340,7 @@ const player = {
     getBot: getUser,
     getMenuDimension,
     getInventoryDimension,
+    getPortalDimension,
     playSound,
     toast,
     showHtml,

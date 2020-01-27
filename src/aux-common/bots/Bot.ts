@@ -58,6 +58,11 @@ export interface Bot {
 export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
 
 /**
+ * The possible portal types.
+ */
+export type PortalType = 'page' | 'inventory' | 'menu' | 'sheet' | 'universes';
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags

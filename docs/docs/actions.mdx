@@ -5,7 +5,18 @@ sidebar_label: Actions
 description: Actions affect the data in bots and also do things to the outside world.
 ---
 
-import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode, ActionLink } from './components.mdx';
+import { 
+  InterfaceCode,
+  FunctionCode,
+  TypeAliasCode,
+  TagLink,
+  Alert,
+  NormalCode,
+  ActionLink,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+} from './components.mdx';
 
 ## Data Actions
 
@@ -763,6 +774,45 @@ Disables virtual reality on the device.
 1. Disable VR.
 ```typescript
 player.disableVR();
+```
+
+### `player.getPortalDimension(portal)`
+
+<FunctionCode name='getPortalDimension'/>
+
+Gets the dimension that is loaded into the given portal.
+
+The **first parameter** is the portal that the dimension should be retrieved for. 
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The <TagLink tag='auxPagePortal'/>.
+  </PossibleValueCode>
+  <PossibleValueCode value='sheet'>
+    The <TagLink tag='auxSheetPortal'/>.
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The <TagLink tag='auxInventoryPortal'/>.
+  </PossibleValueCode>
+  <PossibleValueCode value='menu'>
+      The <TagLink tag='auxMenuPortal'/>.
+  </PossibleValueCode>
+  <PossibleValueCode value='universes'>
+      The <TagLink tag='auxUniversesPortal'/>.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the dimension that is currently showing in the <TagLink tag='auxPagePortal'/>.
+```typescript
+const dimension = player.getPortalDimension('page');
+```
+
+2. Get the dimension that is currently showing in the <TagLink tag='auxInventoryPortal'/>.
+```typescript
+const dimension = player.getPortalDimension('inventory');
 ```
 
 ### `player.inSheet()`

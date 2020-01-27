@@ -25,6 +25,7 @@ import {
     BotPositioningMode,
     BotSpace,
     BOT_SPACE_TAG,
+    PortalType,
 } from './Bot';
 
 import {
@@ -2235,6 +2236,15 @@ export function isBotInDimension(
     }
 
     return result;
+}
+
+/**
+ * Gets the tag that is used to set the dimension for the given portal type.
+ * @param portal The portal type.
+ */
+export function getPortalTag(portal: PortalType) {
+    const upper = portal[0].toUpperCase() + portal.slice(1);
+    return `aux${upper}Portal`;
 }
 
 /**

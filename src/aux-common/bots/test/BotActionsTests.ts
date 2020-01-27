@@ -5107,6 +5107,63 @@ export function botActionsTests(
             });
         });
 
+        describe('player.getPortalDimension()', () => {
+            const cases = [
+                ['page', 'pageDimension'],
+                ['inventory', 'inventoryDimension'],
+                ['menu', 'menuDimension'],
+                ['universes', 'universesDimension'],
+                ['sheet', 'sheetDimension'],
+                ['missing', null],
+                ['falsy', null],
+            ];
+
+            it.each(cases)(
+                'should get the dimension for the %s portal',
+                (portal, expectedDimension) => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@setTag(this, "#fun", player.getPortalDimension("${portal}"))`,
+                            },
+                        },
+                        userBot: {
+                            id: 'userBot',
+                            tags: {
+                                auxPagePortal: 'pageDimension',
+                                auxInventoryPortal: 'inventoryDimension',
+                                auxMenuPortal: 'menuDimension',
+                                auxUniversesPortal: 'universesDimension',
+                                auxSheetPortal: 'sheetDimension',
+                                falsy: false,
+                                number: 0,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action('test', ['thisBot'], 'userBot');
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                fun: expectedDimension,
+                            },
+                        }),
+                    ]);
+                }
+            );
+        });
+
         describe('player.showInputForTag()', () => {
             it('should emit a ShowInputForTagAction', () => {
                 const state: BotsState = {

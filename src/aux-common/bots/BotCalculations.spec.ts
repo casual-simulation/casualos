@@ -60,6 +60,7 @@ import {
     isScript,
     parseScript,
     getBotTag,
+    getPortalTag,
 } from './BotCalculations';
 import {
     Bot,
@@ -216,6 +217,24 @@ describe('BotCalculations', () => {
 
             expect(getBotTag(bot, 'abc')).toEqual('def');
         });
+    });
+
+    describe('getPortalTag()', () => {
+        const cases = [
+            ['page', 'auxPagePortal'],
+            ['inventory', 'auxInventoryPortal'],
+            ['menu', 'auxMenuPortal'],
+            ['universes', 'auxUniversesPortal'],
+            ['sheet', 'auxSheetPortal'],
+            ['other', 'auxOtherPortal'],
+        ];
+        it.each(cases)(
+            'should return the corresponding tag for the portal type',
+            (type, expected) => {
+                const tag = getPortalTag(type);
+                expect(tag).toBe(expected);
+            }
+        );
     });
 
     describe('calculateStateDiff()', () => {
