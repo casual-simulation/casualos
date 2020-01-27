@@ -269,6 +269,48 @@ describe('BotDimensionManager', () => {
                 });
             });
 
+            it('should emit a dimension_removed event when a dimension is removed via a tag_updated event', () => {
+                const test = createPrecalculatedBot('test', {
+                    auxDimensionConfig: 'abc',
+                });
+                const final = createPrecalculatedBot('test', {
+                    auxDimensionConfig: null,
+                });
+                const calc = createPrecalculatedContext([test]);
+                index.addBots([test]);
+                const indexEvents = index.updateBots([
+                    {
+                        bot: final,
+                        tags: new Set(['auxDimensionConfig']),
+                    },
+                ]);
+                const [result] = processIndexEvents(
+                    null,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['auxDimensionConfig']
+                );
+
+                expect(result).toEqual({
+                    calc: calc,
+                    events: [
+                        {
+                            type: 'dimension_removed',
+                            dimensionTag: 'auxDimensionConfig',
+                            dimensionBot: final,
+                            dimension: 'abc',
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: final,
+                            tags: new Set(['auxDimensionConfig']),
+                        },
+                    ],
+                });
+            });
+
             it('should emit a dimension_removed event when a dimension is removed via a tag_removed event', () => {
                 const test = createPrecalculatedBot('test', {
                     auxDimensionConfig: ['abc', 'def'],

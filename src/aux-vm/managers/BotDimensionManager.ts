@@ -156,7 +156,11 @@ export function processIndexEvents(
                 const previousDimensions =
                     event.type === 'bot_tag_updated'
                         ? calculateDimensions(calc, event.oldBot, event.tag)
-                        : calculateDimensions(calc, event.bot, event.tag);
+                        : calculateDimensions(
+                              calc,
+                              event.oldBot || event.bot,
+                              event.tag
+                          );
                 const currentDimensions =
                     event.type === 'bot_tag_removed'
                         ? []
