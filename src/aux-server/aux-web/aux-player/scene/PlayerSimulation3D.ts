@@ -679,7 +679,7 @@ export class PlayerSimulation3D extends Simulation3D {
         await this.simulation.helper.updateBot(userBot, {
             tags: {
                 auxPagePortal: this.dimension,
-                _auxUserUniverse: this.simulation.id,
+                auxUniverse: this.simulation.id,
             },
         });
         this._subs.push(

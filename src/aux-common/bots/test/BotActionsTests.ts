@@ -4356,7 +4356,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserUniverse: 'channel',
+                            auxUniverse: 'channel',
                         },
                     },
                 };
@@ -5034,7 +5034,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentUniverse()', () => {
-            it('should return _auxUserUniverse', () => {
+            it('should return auxUniverse', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5046,7 +5046,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserUniverse: 'dimension',
+                            auxUniverse: 'dimension',
                         },
                     },
                 };
@@ -5071,7 +5071,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserUniverse is not set', () => {
+            it('should return undefined when auxUniverse is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',

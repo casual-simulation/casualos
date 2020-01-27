@@ -122,7 +122,6 @@ export interface BotTags {
     ['auxIframeRotationZ']?: number;
     ['auxIframeElementWidth']?: number;
     ['auxIframeScale']?: number;
-    ['auxUniverse']?: string;
     ['auxCreator']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
@@ -134,7 +133,7 @@ export interface BotTags {
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
-    ['_auxUserUniverse']?: string;
+    ['auxUniverse']?: string;
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
     ['auxUniversesPortal']?: string;
@@ -612,7 +611,7 @@ export const KNOWN_TAGS: string[] = [
     '_auxUser',
     'auxUserActive',
     'auxPagePortal',
-    '_auxUserUniverse',
+    'auxUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
     'auxUniversesPortal',
@@ -679,7 +678,6 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarAnchor',
-    'auxUniverse',
     'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',

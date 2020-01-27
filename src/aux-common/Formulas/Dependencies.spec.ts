@@ -1406,7 +1406,7 @@ describe('Dependencies', () => {
                 ) => [
                     {
                         type: 'tag',
-                        name: '_auxUserUniverse',
+                        name: 'auxUniverse',
                         dependencies: [],
                     },
                 ],
@@ -1448,7 +1448,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: '_auxUserUniverse',
+                    name: 'auxUniverse',
                     dependencies: [],
                 },
                 {

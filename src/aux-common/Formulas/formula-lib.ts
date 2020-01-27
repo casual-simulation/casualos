@@ -1222,7 +1222,7 @@ function getCurrentDimension(): string {
 function getCurrentUniverse(): string {
     const user = getUser();
     if (user) {
-        const universe = getTag(user, '_auxUserUniverse') as string;
+        const universe = getTag(user, 'auxUniverse') as string;
 
         if (universe && universe.includes('/')) {
             return universe.split('/')[1];
