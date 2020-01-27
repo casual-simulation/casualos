@@ -139,7 +139,6 @@ export interface BotTags {
     ['auxMenuPortal']?: string;
     ['auxUniversesPortal']?: string;
     ['_auxEditingBot']?: string;
-    ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
     ['auxUniverseConnectedSessions']?: number;
@@ -260,11 +259,6 @@ export interface WorkspaceHex {
 }
 
 /**
- * Defines the possible selection modes a user can be in.
- */
-export type SelectionMode = 'single' | 'multi';
-
-/**
  * Defines the possible shapes that a bot can appear as.
  */
 export type BotShape = 'cube' | 'sphere' | 'sprite';
@@ -311,11 +305,6 @@ export type BackupType = 'github' | 'download';
  * "surface" means the dimension is visible and renders a worksurface.
  */
 export type DimensionVisualizeMode = true | false | 'surface';
-
-/**
- * The default selection mode.
- */
-export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 
 /**
  * The default bot shape.
@@ -628,7 +617,6 @@ export const KNOWN_TAGS: string[] = [
     'auxMenuPortal',
     'auxUniversesPortal',
     '_auxEditingBot',
-    '_auxSelectionMode',
     'auxConnectedSessions',
     'auxInventoryHeight',
     'auxDimensionInventoryColor',

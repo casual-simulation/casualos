@@ -2,14 +2,7 @@ import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
-import {
-    Bot,
-    SelectionMode,
-    DEFAULT_SELECTION_MODE,
-    getSelectionMode,
-    isBot,
-    goToDimension,
-} from '@casual-simulation/aux-common';
+import { Bot, isBot, goToDimension } from '@casual-simulation/aux-common';
 import BotTable from '../../shared/vue-components/BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
@@ -52,7 +45,6 @@ export default class BuilderHome extends Vue {
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
-    selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
@@ -70,10 +62,6 @@ export default class BuilderHome extends Vue {
 
     get hasBots() {
         return this.bots && this.bots.length > 0;
-    }
-
-    get singleSelection() {
-        return this.selectionMode === 'single' && this.bots.length > 0;
     }
 
     toggleSheetSize() {
@@ -167,17 +155,6 @@ export default class BuilderHome extends Vue {
                         );
                     }
                 })
-            );
-
-            subs.push(
-                userBotChanged(this._simulation)
-                    .pipe(
-                        tap(bot => {
-                            let previousSelectionMode = this.selectionMode;
-                            this.selectionMode = getSelectionMode(bot);
-                        })
-                    )
-                    .subscribe()
             );
 
             this.isLoading = false;

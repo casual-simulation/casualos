@@ -8,8 +8,6 @@ import {
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
-    SelectionMode,
-    DEFAULT_SELECTION_MODE,
     BotShape,
     DEFAULT_BOT_SHAPE,
     BotTags,
@@ -1976,14 +1974,6 @@ export function normalizeAUXBotURL(url: string): string {
     }
 
     return url;
-}
-
-/**
- * Gets the user selection mode value from the given bot.
- * @param bot The bot.
- */
-export function getSelectionMode(bot: Bot): SelectionMode {
-    return bot.tags['_auxSelectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
 /**

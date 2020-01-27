@@ -11,7 +11,6 @@ import {
     isFormula,
     getShortId,
     merge,
-    SelectionMode,
     AuxCausalTree,
     botAdded,
     getAllBotTags,
@@ -76,8 +75,6 @@ export default class BotTable extends Vue {
     extraTags: string[];
     @Prop({ default: false })
     readOnly: boolean;
-    @Prop({ default: 'single' })
-    selectionMode: SelectionMode;
     @Prop({ default: false })
     diffSelected: boolean;
     @Prop({ default: false })
