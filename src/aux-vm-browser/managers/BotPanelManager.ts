@@ -82,16 +82,16 @@ export class BotPanelManager implements SubscriptionLike {
         return bufferedEvents.pipe(
             flatMap(async () => {
                 if (this._helper.userBot) {
-                    if (!!this._helper.userBot.values.auxPagePortal) {
+                    if (!!this._helper.userBot.values.auxSheetPortal) {
                         return {
                             bots: filterBotsBySelection(
                                 this._helper.objects,
-                                this._helper.userBot.values.auxPagePortal
+                                this._helper.userBot.values.auxSheetPortal
                             ),
                             isDiff: false,
                         };
                     } else if (
-                        this._helper.userBot.values.auxPagePortal === false
+                        this._helper.userBot.values.auxSheetPortal === false
                     ) {
                         return {
                             bots: this._helper.objects,

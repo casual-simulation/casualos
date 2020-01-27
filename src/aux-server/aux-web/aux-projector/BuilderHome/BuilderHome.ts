@@ -149,7 +149,7 @@ export default class BuilderHome extends Vue {
                             this._simulation.helper.userBot,
                             {
                                 tags: {
-                                    auxPagePortal: e.dimension || false,
+                                    auxSheetPortal: e.dimension || false,
                                 },
                             }
                         );

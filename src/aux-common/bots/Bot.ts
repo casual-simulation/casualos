@@ -133,6 +133,7 @@ export interface BotTags {
     ['_auxUser']?: string;
     ['auxUserActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
+    ['auxSheetPortal']?: string | boolean;
     ['auxUniverse']?: string;
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
@@ -611,6 +612,7 @@ export const KNOWN_TAGS: string[] = [
     '_auxUser',
     'auxUserActive',
     'auxPagePortal',
+    'auxSheetPortal',
     'auxUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
