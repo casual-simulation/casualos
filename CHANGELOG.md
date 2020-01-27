@@ -16,6 +16,16 @@
     -   `_auxUserUniverse` -> `auxUniverse`
 -   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
 
+#### :rocket: Features
+
+-   Added the `player.getPortalDimension(portal)` function.
+    -   `portal` is a string with the name of the portal. Can be one of the following options:
+        -   `page` - Gets the `auxPagePortal` tag.
+        -   `inventory` - Gets the `auxInventoryPortal` tag.
+        -   `menu` - Gets the `auxMenuPortal` tag.
+        -   `sheet` - Gets the `auxSheetPortal` tag.
+        -   `universes` - Gets the `auxUniversesPortal` tag.
+
 ## V0.11.23
 
 ### Date: 1/23/2020
