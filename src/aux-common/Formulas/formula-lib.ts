@@ -1307,7 +1307,7 @@ function getMenuDimension(): string {
 function getInventoryDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserInventoryDimension');
+        return getTag(user, 'auxInventoryPortal');
     } else {
         return null;
     }

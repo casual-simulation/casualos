@@ -1808,7 +1808,7 @@ describe('Dependencies', () => {
             ],
             [
                 'player.getInventoryDimension',
-                '_auxUserInventoryDimension',
+                'auxInventoryPortal',
                 ['player', 'getInventoryDimension'],
             ],
             [

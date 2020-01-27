@@ -606,7 +606,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserInventoryDimension',
+                    name: 'auxInventoryPortal',
                     dependencies: [],
                 },
             ];

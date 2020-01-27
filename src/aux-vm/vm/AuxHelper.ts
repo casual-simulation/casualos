@@ -305,7 +305,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: user.username,
-                    ['_auxUserInventoryDimension']: userInventoryDimension,
+                    ['auxInventoryPortal']: userInventoryDimension,
                     ['_auxUserMenuDimension']: userMenuDimension,
                     ['_auxUserUniversesDimension']: userUniversesDimension,
                 },
@@ -322,10 +322,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     },
                 });
             }
-            if (!userBot.tags['_auxUserInventoryDimension']) {
+            if (!userBot.tags['auxInventoryPortal']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['_auxUserInventoryDimension']: userInventoryDimension,
+                        ['auxInventoryPortal']: userInventoryDimension,
                     },
                 });
             }

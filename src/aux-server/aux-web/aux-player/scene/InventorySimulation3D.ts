@@ -48,7 +48,7 @@ export class InventorySimulation3D extends Simulation3D {
                     filter(bot => !!bot),
                     tap(bot => {
                         const userInventoryDimensionValue =
-                            bot.values['_auxUserInventoryDimension'];
+                            bot.values['auxInventoryPortal'];
                         if (
                             !this.inventoryDimension ||
                             this.inventoryDimension !==
@@ -70,7 +70,7 @@ export class InventorySimulation3D extends Simulation3D {
     }
 
     protected _getDimensionTags() {
-        return ['_auxUserInventoryDimension'];
+        return ['auxInventoryPortal'];
     }
 
     protected _filterDimensionEvent(

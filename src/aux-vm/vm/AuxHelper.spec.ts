@@ -1297,7 +1297,7 @@ describe('AuxHelper', () => {
                 tags: {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: 'username',
-                    ['_auxUserInventoryDimension']: '_user_username_inventory',
+                    ['auxInventoryPortal']: '_user_username_inventory',
                     ['_auxUserMenuDimension']: '_user_username_menu',
                     ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
@@ -1336,7 +1336,7 @@ describe('AuxHelper', () => {
                 tags: {
                     [USERS_DIMENSION]: true,
                     ['_auxUser']: 'username',
-                    ['_auxUserInventoryDimension']: '_user_username_inventory',
+                    ['auxInventoryPortal']: '_user_username_inventory',
                     ['_auxUserMenuDimension']: '_user_username_menu',
                     ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
@@ -1347,7 +1347,7 @@ describe('AuxHelper', () => {
             ['menu dimension', '_auxUserMenuDimension', '_user_username_menu'],
             [
                 'inventory dimension',
-                '_auxUserInventoryDimension',
+                'auxInventoryPortal',
                 '_user_username_inventory',
             ],
             [
