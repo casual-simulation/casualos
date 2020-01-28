@@ -29,7 +29,7 @@
 #### :bug: Bug Fixes
 
 -   Fixed an issue where the inventory camera would be placed at an impossible location if the inventory was hidden during startup.
--   Fixed an issue where the inventory where setting `auxInventoryPortal` to null or `undefined` would not hide it.
+-   Fixed an issue with the inventory where setting `auxInventoryPortal` to null or `undefined` would not hide it.
 
 ## V0.11.23
 
