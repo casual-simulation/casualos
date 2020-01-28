@@ -14,6 +14,7 @@
     -   `_auxUserMenuDimension` -> `auxMenuPortal`
     -   `_auxUserUniversesDimension` -> `auxUniversesPortal`
     -   `_auxUserUniverse` -> `auxUniverse`
+    -   `_auxUser` -> `auxPlayerName`
 -   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
 
 #### :rocket: Features
