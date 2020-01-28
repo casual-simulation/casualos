@@ -15,6 +15,7 @@
     -   `_auxUserUniversesDimension` -> `auxUniversesPortal`
     -   `_auxUserUniverse` -> `auxUniverse`
     -   `_auxUser` -> `auxPlayerName`
+-   Removed the `_auxSelection` tag.
 -   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
 
 #### :rocket: Features
