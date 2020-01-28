@@ -516,11 +516,7 @@ export function isTagWellKnown(tag: string): boolean {
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
  * We also care about things like auxDraggable but not _position, _index _selection, etc.
  *
- * Well-known hidden tags include:
- * - _auxSelection
- * - dimension._index
- *
- * You can determine if a tag is "well-known" by using isWellKnownTag().
+ * You can determine if a tag is "well-known" by using isTagWellKnown().
  * @param first The first bot.
  * @param second The second bot.
  */
@@ -602,34 +598,6 @@ export function validateTag(tag: string) {
 }
 
 /**
- * Gets the ID of the selection that the user is using.
- * If the user doesn't have a selection, returns a new selection ID.
- * @param user The user's bot.
- */
-export function selectionIdForUser(user: Object) {
-    if (user && user.tags['_auxSelection']) {
-        return { id: user.tags['_auxSelection'] || null, newId: <string>null };
-    } else {
-        const id = newSelectionId();
-        return { id: id, newId: id };
-    }
-}
-
-/**
- * Gets a partial bot that updates a user's bot to reference the given selection.
- * @param selectionId The ID of the selection.
- * @param botId The ID of the bot that is being selected.
- */
-export function updateUserSelection(selectionId: string, botId: string) {
-    return {
-        tags: {
-            ['_auxSelection']: selectionId,
-            ['_auxEditingBot']: botId,
-        },
-    };
-}
-
-/**
  * Gets a partial bot that toggles whether the given bot is apart of the given selection.
  * @param bot The bot.
  * @param selectionId The ID of the selection.
@@ -645,13 +613,6 @@ export function toggleBotSelection(
             [selectionId]: !bot.tags[selectionId],
         },
     };
-}
-
-/**
- * Creates a new selection id.
- */
-export function newSelectionId() {
-    return `_auxSelection${shortUuid()}`;
 }
 
 /**

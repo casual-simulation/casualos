@@ -134,7 +134,6 @@ export interface BotTags {
     ['auxProgressBarAnchor']?: unknown;
 
     // User tags
-    ['_auxSelection']?: string;
     ['auxPlayerName']?: string;
     ['auxUserActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
@@ -613,7 +612,6 @@ export const AUX_BOT_VERSION: number = 1;
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    '_auxSelection',
     'auxPlayerName',
     'auxUserActive',
     'auxPagePortal',

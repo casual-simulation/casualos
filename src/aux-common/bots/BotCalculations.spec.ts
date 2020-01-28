@@ -18,7 +18,6 @@ import {
     createWorkspace,
     isBotMovable,
     isBotStackable,
-    newSelectionId,
     objectsAtDimensionGridPosition,
     calculateFormulaValue,
     filterBotsBySelection,
@@ -972,16 +971,6 @@ describe('BotCalculations', () => {
             const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
-        });
-    });
-
-    describe('newSelectionId()', () => {
-        beforeAll(() => {
-            uuidMock.mockReturnValue('test');
-        });
-
-        it('should return IDs that are well known', () => {
-            expect(isTagWellKnown(newSelectionId())).toBe(true);
         });
     });
 
