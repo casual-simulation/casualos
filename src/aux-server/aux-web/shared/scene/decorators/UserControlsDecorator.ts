@@ -191,20 +191,5 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
         if (!UPDATE_LAST_ACTIVE_TIME) {
             return;
         }
-        const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
-        if (
-            !this._lastActiveCheckTime ||
-            timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
-        ) {
-            this._lastActiveCheckTime = Date.now();
-            this.bot3D.dimensionGroup.simulation3D.simulation.helper.updateBot(
-                <AuxObject>this.bot3D.bot,
-                {
-                    tags: {
-                        [`aux._lastActiveTime`]: Date.now(),
-                    },
-                }
-            );
-        }
     }
 }

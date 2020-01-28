@@ -90,7 +90,7 @@ export class AdminModule implements AuxModule {
 
         await channel.helper.updateBot(getUserBot(), {
             tags: {
-                auxUserActive: true,
+                auxPlayerActive: true,
             },
         });
 
@@ -120,7 +120,7 @@ export class AdminModule implements AuxModule {
         let userBot = channel.helper.botsState[userId];
         await channel.helper.updateBot(userBot, {
             tags: {
-                auxUserActive: false,
+                auxPlayerActive: false,
             },
         });
     }

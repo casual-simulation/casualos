@@ -240,38 +240,6 @@ describe('BaseAuxChannel', () => {
             );
         });
 
-        it('should delete users that have been inactive for too long', async () => {
-            await tree.addBot(
-                createBot('user1', {
-                    'aux._lastActiveTime': 1000,
-                    auxPlayerName: 'user',
-                })
-            );
-
-            nowMock.mockReturnValue(1000 + DEFAULT_USER_DELETION_TIME + 1);
-
-            await channel.initAndWait();
-
-            const userBot = channel.helper.botsState['user1'];
-            expect(userBot).toBeFalsy();
-        });
-
-        it('should keep users that have not been inactive for too long', async () => {
-            await tree.addBot(
-                createBot('user1', {
-                    'aux._lastActiveTime': 1000,
-                    auxPlayerName: 'user',
-                })
-            );
-
-            nowMock.mockReturnValue(1000 + DEFAULT_USER_DELETION_TIME);
-
-            await channel.initAndWait();
-
-            const userBot = channel.helper.botsState['user1'];
-            expect(userBot).toBeTruthy();
-        });
-
         it('should keep dimensions in users that define a dimension', async () => {
             await tree.addBot(
                 createBot('user1', {

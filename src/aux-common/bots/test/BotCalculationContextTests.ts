@@ -2926,11 +2926,10 @@ export function botCalculationContextTests(
     });
 
     describe('isUserActive()', () => {
-        it('should return true if the last active time is within 60 seconds', () => {
+        it('should return true if the auxPlayerActive tag is true', () => {
             dateNowMock.mockReturnValue(1000 * 60 + 999);
             const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: true,
+                auxPlayerActive: true,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);
@@ -2938,23 +2937,10 @@ export function botCalculationContextTests(
             expect(update1).toBe(true);
         });
 
-        it('should return true if the last active time is within 60 seconds', () => {
-            dateNowMock.mockReturnValue(1000 * 61);
-            const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: true,
-            });
-            const calc = createCalculationContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
-
-            expect(update1).toBe(false);
-        });
-
         it('should return false if the user is not active', () => {
             dateNowMock.mockReturnValue(1000);
             const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: false,
+                auxPlayerActive: false,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);

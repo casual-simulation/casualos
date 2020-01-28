@@ -2266,32 +2266,7 @@ export function calculateFormulaValue(
 }
 
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
-    const active = calculateBooleanTagValue(calc, bot, `auxUserActive`, false);
-    if (!active) {
-        return false;
-    }
-    const lastActiveTime = calculateNumericalTagValue(
-        calc,
-        bot,
-        `aux._lastActiveTime`,
-        0
-    );
-    if (lastActiveTime) {
-        const milisecondsFromNow = Date.now() - lastActiveTime;
-        return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
-    } else {
-        return false;
-    }
-}
-
-export function shouldDeleteUser(bot: Bot) {
-    const lastActiveTime = bot.tags[`aux._lastActiveTime`];
-    if (lastActiveTime) {
-        const milisecondsFromNow = Date.now() - lastActiveTime;
-        return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
-    } else {
-        return false;
-    }
+    return calculateBooleanTagValue(calc, bot, `auxPlayerActive`, false);
 }
 
 function _parseFilterValue(value: string): any {
