@@ -2201,20 +2201,6 @@ function openDevConsole() {
 }
 
 /**
- * Determines if the user is currently connected to the server.
- */
-function isConnected(): boolean {
-    const user = getUser();
-    if (user) {
-        const val = getTag(user, 'aux.connected');
-        if (val) {
-            return val.valueOf() || false;
-        }
-    }
-    return false;
-}
-
-/**
  * Changes the state that the given bot is in.
  * @param bot The bot to change.
  * @param stateName The state that the bot should move to.
@@ -2359,7 +2345,6 @@ const player = {
     hasBotInInventory,
     showQRCode,
     hideQRCode,
-    isConnected,
     getCurrentDimension,
     getCurrentUniverse,
     showInputForTag,
