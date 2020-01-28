@@ -2,8 +2,8 @@
 
 exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
-  "auxPlayerName": "username",
   "aux-users": true,
+  "auxPlayerName": "username",
 }
 `;
 
