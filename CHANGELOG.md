@@ -32,6 +32,7 @@
         -   `menu` - Gets the `auxMenuPortal` tag.
         -   `sheet` - Gets the `auxSheetPortal` tag.
         -   `universes` - Gets the `auxUniversesPortal` tag.
+-   Added the ability to show the sheet in auxPlayer by setting the `auxSheetPortal` tag on the player bot.
 
 #### :bug: Bug Fixes
 
