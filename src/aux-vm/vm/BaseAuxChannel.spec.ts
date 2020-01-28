@@ -244,7 +244,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                 })
             );
 
@@ -260,7 +260,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                 })
             );
 
@@ -275,7 +275,7 @@ describe('BaseAuxChannel', () => {
         it('should keep dimensions in users that define a dimension', async () => {
             await tree.addBot(
                 createBot('user1', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                     auxDimensionConfig: `_user_user_1`,
                 })
             );
@@ -285,7 +285,7 @@ describe('BaseAuxChannel', () => {
             const userBot = channel.helper.botsState['user1'];
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
-                _auxUser: 'user',
+                auxPlayerName: 'user',
                 auxDimensionConfig: '_user_user_1',
             });
         });

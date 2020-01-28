@@ -185,7 +185,7 @@ describe('BotDimensionManager', () => {
 
             it('should include user bots with auxPagePortal set to the dimension', () => {
                 const user = createPrecalculatedBot('user', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                     auxPagePortal: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
@@ -215,7 +215,7 @@ describe('BotDimensionManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['_auxUser', 'auxPagePortal']),
+                            tags: new Set(['auxPlayerName', 'auxPagePortal']),
                         },
                         {
                             bot: test,
@@ -489,7 +489,7 @@ describe('BotDimensionManager', () => {
                     auxDimensionConfig: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -503,7 +503,7 @@ describe('BotDimensionManager', () => {
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                     auxPagePortal: 'abc',
                 });
                 indexEvents = index.updateBots([
@@ -600,7 +600,7 @@ describe('BotDimensionManager', () => {
                     auxDimensionConfig: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                     auxPagePortal: 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
@@ -615,7 +615,7 @@ describe('BotDimensionManager', () => {
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    _auxUser: 'user',
+                    auxPlayerName: 'user',
                     auxPagePortal: 'different',
                 });
                 indexEvents = index.updateBots([

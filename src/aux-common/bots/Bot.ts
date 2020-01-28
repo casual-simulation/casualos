@@ -135,7 +135,7 @@ export interface BotTags {
 
     // User tags
     ['_auxSelection']?: string;
-    ['_auxUser']?: string;
+    ['auxPlayerName']?: string;
     ['auxUserActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
     ['auxSheetPortal']?: string | boolean;
@@ -614,7 +614,7 @@ export const AUX_BOT_VERSION: number = 1;
  */
 export const KNOWN_TAGS: string[] = [
     '_auxSelection',
-    '_auxUser',
+    'auxPlayerName',
     'auxUserActive',
     'auxPagePortal',
     'auxSheetPortal',

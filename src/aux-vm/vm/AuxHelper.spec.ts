@@ -1296,7 +1296,7 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: 'username',
+                    ['auxPlayerName']: 'username',
                 },
             });
         });
@@ -1332,7 +1332,7 @@ describe('AuxHelper', () => {
                 space: 'tempLocal',
                 tags: {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: 'username',
+                    ['auxPlayerName']: 'username',
                 },
             });
         });

@@ -115,7 +115,7 @@ export function botCalculationContextTests(
                 dimension: true,
                 dimensionX: -1,
                 dimensionY: 1,
-                _auxUser: 'abc',
+                auxPlayerName: 'abc',
             });
             const bot2 = createBot('test2', {
                 dimension: true,
@@ -3728,7 +3728,7 @@ export function botCalculationContextTests(
 
         it('should return the default if the bot is a user bot', () => {
             const bot = createBot('bot', {
-                _auxUser: 'user',
+                auxPlayerName: 'user',
                 auxDimensionVisualize: 'surface',
             });
 
@@ -3740,7 +3740,7 @@ export function botCalculationContextTests(
 
         it('should still return the user bots dimension size', () => {
             const bot = createBot('bot', {
-                _auxUser: 'user',
+                auxPlayerName: 'user',
                 auxDimensionVisualize: 'surface',
                 auxDimensionSurfaceSize: 10,
             });
@@ -4306,7 +4306,7 @@ export function botCalculationContextTests(
             });
             const user = createBot('user', {
                 name: 'bob',
-                _auxUser: 'a',
+                auxPlayerName: 'a',
             });
             const bad = createBot('user2', {
                 name: 'bob',

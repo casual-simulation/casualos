@@ -5575,7 +5575,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5843,7 +5843,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5879,7 +5879,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5915,7 +5915,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };

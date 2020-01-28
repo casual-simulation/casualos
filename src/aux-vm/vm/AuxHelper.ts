@@ -301,7 +301,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 user.id,
                 {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: user.username,
+                    ['auxPlayerName']: user.username,
                 },
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID

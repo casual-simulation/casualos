@@ -180,7 +180,7 @@ export class BaseSimulation implements Simulation {
         const botIds = Object.keys(state);
         const bots = botIds.map(id => state[id]);
         const nonUserOrGlobalBots = bots.filter(
-            f => !f.tags['_auxUser'] && f.id !== GLOBALS_BOT_ID
+            f => !f.tags['auxPlayerName'] && f.id !== GLOBALS_BOT_ID
         );
         const deleteOps = nonUserOrGlobalBots.map(f => botRemoved(f.id));
         await this.helper.transaction(...deleteOps);

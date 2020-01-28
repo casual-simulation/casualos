@@ -28,7 +28,7 @@ export class AuxBot3DDecoratorFactory {
 
     loadDecorators(bot3d: AuxBot3D): AuxBot3DDecorator[] {
         let decorators: AuxBot3DDecorator[] = [];
-        const isUser = !!bot3d.bot && hasValue(bot3d.bot.tags['_auxUser']);
+        const isUser = !!bot3d.bot && hasValue(bot3d.bot.tags['auxPlayerName']);
         const isLocalUser = isUser && bot3d.bot.id === appManager.user.id;
 
         if (isUser) {

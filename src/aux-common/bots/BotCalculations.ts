@@ -1118,7 +1118,7 @@ export function getBotUsernameList(
         for (let i = 0; i < value.length; i++) {
             let v = value[i];
             if (isBot(v)) {
-                value[i] = v.tags['_auxUser'] || v.id;
+                value[i] = v.tags['auxPlayerName'] || v.id;
             }
         }
     }
@@ -1770,7 +1770,7 @@ export function nextAvailableObjectIndex(
  * Determines if the given bot is for a user.
  */
 export function isUserBot(bot: Bot): boolean {
-    return !!bot.tags['_auxUser'];
+    return !!bot.tags['auxPlayerName'];
 }
 
 /**
@@ -2226,7 +2226,7 @@ export function isBotInDimension(
         result = dimensionValue === true;
     }
 
-    if (!result && hasValue(bot.tags['_auxUser'])) {
+    if (!result && hasValue(bot.tags['auxPlayerName'])) {
         const userContextValue = calculateBotValue(
             context,
             bot,
