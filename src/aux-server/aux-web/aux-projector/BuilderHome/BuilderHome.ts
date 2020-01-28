@@ -16,6 +16,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
+import { navigateToUrl } from '../../shared/SharedUtils';
 
 @Component({
     components: {
@@ -41,7 +42,6 @@ export default class BuilderHome extends Vue {
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
     bots: Bot[] = [];
-    setLargeSheet: boolean = true;
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
@@ -64,20 +64,6 @@ export default class BuilderHome extends Vue {
         return this.bots && this.bots.length > 0;
     }
 
-    toggleSheetSize() {
-        this.setLargeSheet = !this.setLargeSheet;
-    }
-
-    getSheetStyleEditor(): any {
-        if (this.setLargeSheet) return { 'max-height': '100% !important' };
-        else return {};
-    }
-
-    getSheetStyleCard(): any {
-        if (this.setLargeSheet) return { 'max-width': '100% !important' };
-        else return {};
-    }
-
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
         this.contextMenuEvent = null;
@@ -98,6 +84,22 @@ export default class BuilderHome extends Vue {
 
     tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
         this._simulation.helper.setEditingBot(bot);
+    }
+
+    openInPlayer() {
+        const id = this._simulation.parsedId;
+
+        const url = new URL(
+            `/${this.dimension}/${id.channel || 'default'}`,
+            window.location.href
+        );
+
+        // open in new tab
+        navigateToUrl(url.toString(), '_blank', 'noreferrer');
+    }
+
+    goToTag(tag: string) {
+        this._simulation.helper.transaction(goToDimension(tag));
     }
 
     constructor() {
@@ -161,8 +163,6 @@ export default class BuilderHome extends Vue {
             this._setStatus('Waiting for input...');
             return subs;
         });
-
-        EventBus.$on('toggleSheetSize', this.toggleSheetSize);
     }
 
     destroyed() {}

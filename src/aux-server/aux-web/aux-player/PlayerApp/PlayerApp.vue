@@ -12,6 +12,7 @@
             </md-toolbar>
 
             <checkout></checkout>
+            <bot-sheet></bot-sheet>
 
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">

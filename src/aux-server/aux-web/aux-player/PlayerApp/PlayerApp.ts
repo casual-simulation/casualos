@@ -81,6 +81,7 @@ import {
     navigateToDimension,
     createSimulationInfo,
 } from '../../shared/RouterUtils';
+import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
 
 @Component({
     components: {
@@ -96,6 +97,7 @@ import {
         'upload-universe-modal': UploadUniverseModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
+        'bot-sheet': BotSheet,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

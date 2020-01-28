@@ -1,23 +1,22 @@
 <template>
-    <div>
-        <md-card ref="card" class="info-card maximized" v-if="!isLoading">
+    <div v-if="hasPortal" class="bot-sheet">
+        <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <bot-table
                     ref="table"
                     class="bots-table"
-                    @closeWindow="toggleOpen()"
                     @tagFocusChanged="tagFocusChanged"
-                    @exitSheet="openInPlayer()"
+                    @exitSheet="exitSheet()"
                     @goToTag="goToTag"
                     :bots="bots"
                     :updateTime="updateTime"
                     :diffSelected="isDiff"
                     :dimension="dimension"
-                    :showExitSheet="false"
+                    :showExitSheet="true"
                 ></bot-table>
             </md-card-content>
         </md-card>
     </div>
 </template>
-<script src="./BuilderHome.ts"></script>
-<style src="./BuilderHome.css"></style>
+<script src="./BotSheet.ts"></script>
+<style src="./BotSheet.css" scoped></style>
