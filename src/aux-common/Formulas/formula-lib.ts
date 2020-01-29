@@ -75,8 +75,6 @@ import {
     isBotInDimension,
     tagsOnBot,
     isDestroyable,
-    isInUsernameList,
-    getBotUsernameList,
     trimTag,
     trimEvent,
     hasValue,

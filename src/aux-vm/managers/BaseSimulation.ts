@@ -172,20 +172,6 @@ export class BaseSimulation implements Simulation {
         this._id = this._getTreeName(this._parsedId.channel);
     }
 
-    // TODO: This seems like a pretty dangerous function to keep around,
-    // but we'll add a config option to prevent this from happening on real sites.
-    async deleteEverything() {
-        console.warn('[BaseSimulation] Delete Everything!');
-        const state = this.helper.botsState;
-        const botIds = Object.keys(state);
-        const bots = botIds.map(id => state[id]);
-        const nonUserOrGlobalBots = bots.filter(
-            f => !f.tags['auxPlayerName'] && f.id !== GLOBALS_BOT_ID
-        );
-        const deleteOps = nonUserOrGlobalBots.map(f => botRemoved(f.id));
-        await this.helper.transaction(...deleteOps);
-    }
-
     /**
      * Forks the current session's aux into the given session ID.
      * @param forkName The ID of the new session.

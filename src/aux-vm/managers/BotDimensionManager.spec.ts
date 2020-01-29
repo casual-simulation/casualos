@@ -183,7 +183,7 @@ describe('BotDimensionManager', () => {
                 });
             });
 
-            it('should include user bots with auxPagePortal set to the dimension', () => {
+            it('should not include user bots with auxPagePortal set to the dimension', () => {
                 const user = createPrecalculatedBot('user', {
                     auxPlayerName: 'user',
                     auxPagePortal: 'abc',
@@ -209,7 +209,7 @@ describe('BotDimensionManager', () => {
                             dimensionTag: 'auxDimensionConfig',
                             dimensionBot: test,
                             dimension: 'abc',
-                            existingBots: [user],
+                            existingBots: [],
                         },
                     ],
                     updatedBots: [
@@ -484,7 +484,7 @@ describe('BotDimensionManager', () => {
                 });
             });
 
-            it('should emit a bot_added_to_dimension event when a user bot is updated into a dimension that has been defined', () => {
+            it('should not emit a bot_added_to_dimension event when a user bot is updated into a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
                     auxDimensionConfig: 'abc',
                 });
@@ -522,13 +522,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    events: [
-                        {
-                            type: 'bot_added_to_dimension',
-                            bot: userFinal,
-                            dimension: 'abc',
-                        },
-                    ],
+                    events: [],
                     updatedBots: [
                         {
                             bot: userFinal,
@@ -539,7 +533,7 @@ describe('BotDimensionManager', () => {
 
                 expect(state).toEqual({
                     dimensions: new Map([['abc', new Set(['test'])]]),
-                    botsInDimensions: new Map([['abc', new Set(['user'])]]),
+                    botsInDimensions: new Map([['abc', new Set([])]]),
                 });
             });
         });
@@ -595,7 +589,7 @@ describe('BotDimensionManager', () => {
                 });
             });
 
-            it('should emit a bot_removed_from_dimension event when a user bot is removed from a dimension that has been defined', () => {
+            it('should not emit a bot_removed_from_dimension event when a user bot is removed from a dimension that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
                     auxDimensionConfig: 'abc',
                 });
@@ -634,13 +628,7 @@ describe('BotDimensionManager', () => {
 
                 expect(result).toEqual({
                     calc: calc,
-                    events: [
-                        {
-                            type: 'bot_removed_from_dimension',
-                            bot: userFinal,
-                            dimension: 'abc',
-                        },
-                    ],
+                    events: [],
                     updatedBots: [
                         {
                             bot: userFinal,

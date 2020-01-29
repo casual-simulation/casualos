@@ -32,8 +32,6 @@ import {
     getBotLabelAnchor,
     getBotVersion,
     isBotInDimension,
-    getBotUsernameList,
-    isInUsernameList,
     getUserBotColor,
     calculateStringListTagValue,
     getChannelBotById,
@@ -108,32 +106,6 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual([bot1, bot2, bot3]);
-        });
-
-        it('should ignore user bots', () => {
-            const bot1 = createBot('test1', {
-                dimension: true,
-                dimensionX: -1,
-                dimensionY: 1,
-                auxPlayerName: 'abc',
-            });
-            const bot2 = createBot('test2', {
-                dimension: true,
-                dimensionX: -1,
-                dimensionY: 1,
-            });
-
-            const context = createCalculationContext([bot1, bot2]);
-            const result = objectsAtDimensionGridPosition(
-                context,
-                'dimension',
-                {
-                    x: -1,
-                    y: 1,
-                }
-            );
-
-            expect(result).toEqual([bot2]);
         });
 
         it('should cache the query and results', () => {
@@ -4248,85 +4220,6 @@ export function botCalculationContextTests(
 
             expect(result).toBe(true);
         });
-    });
-
-    describe('getBotUsernameList()', () => {
-        const tag = 'list';
-
-        it(`should return the ${tag}`, () => {
-            const bot = createBot('test', {
-                [tag]: '[Test, Test2]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toEqual([
-                'Test',
-                'Test2',
-            ]);
-        });
-
-        it('should always return an array', () => {
-            const bot = createBot('test', {
-                [tag]: 'Test',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toEqual(['Test']);
-        });
-
-        it('should handle falsy values', () => {
-            const bot = createBot('test', {
-                [tag]: '',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toBeFalsy();
-        });
-
-        it('should get the aux._user tag from bots', () => {
-            const bot = createBot('test', {
-                [tag]: '=getBots("name", "bob")',
-            });
-            const user = createBot('user', {
-                name: 'bob',
-                auxPlayerName: 'a',
-            });
-            const bad = createBot('user2', {
-                name: 'bob',
-            });
-
-            const calc = createCalculationContext([bot, user, bad]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toEqual(['a', 'user2']);
-        });
-    });
-
-    describe('isInUsernameList()', () => {
-        const extraCases = [
-            ['Test', '[Test, Test2]', true],
-            ['Test', '[Test2]', false],
-            ['Test', 'Test2', false],
-            ['Test2', 'Test2', true],
-            ['Test2', '', false],
-        ];
-
-        it.each(extraCases)(
-            'should determine if %s is in the list',
-            (username, list, expected) => {
-                const bot = createBot('test', {
-                    list: list,
-                });
-
-                const calc = createCalculationContext([bot]);
-
-                expect(isInUsernameList(calc, bot, 'list', username)).toBe(
-                    expected
-                );
-            }
-        );
     });
 
     describe('getUserBotColor()', () => {

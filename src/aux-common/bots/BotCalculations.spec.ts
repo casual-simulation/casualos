@@ -42,8 +42,6 @@ import {
     parseSimulationId,
     getBotVersion,
     isBotInDimension,
-    getBotUsernameList,
-    isInUsernameList,
     getBotDragMode,
     getBuilderDimensionGrid,
     SimulationIdParseSuccess,

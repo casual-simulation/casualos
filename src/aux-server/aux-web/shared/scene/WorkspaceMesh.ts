@@ -29,7 +29,6 @@ import {
     getDimensionGridHeight,
     calculateGridScale,
     getDimensionVisualizeMode,
-    isUserBot,
     Bot,
 } from '@casual-simulation/aux-common';
 import minBy from 'lodash/minBy';
@@ -254,9 +253,6 @@ export class WorkspaceMesh extends GameObject {
         );
 
         bots.forEach(bot => {
-            if (isUserBot(bot.bot)) {
-                return;
-            }
             let localPosition = calculateGridTileLocalCenter(
                 calculateBotValue(calc, bot.bot, bot.dimension + 'X'),
                 calculateBotValue(calc, bot.bot, bot.dimension + 'Y'),

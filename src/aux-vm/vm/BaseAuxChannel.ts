@@ -8,7 +8,6 @@ import {
     AuxCausalTree,
     botChangeObservables,
     GLOBALS_BOT_ID,
-    isInUsernameList,
     botRemoved,
     AuxOp,
     convertToCopiableValue,

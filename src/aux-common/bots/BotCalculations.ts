@@ -1042,52 +1042,6 @@ export function trimEvent(tag: string): string {
 }
 
 /**
- * Determines if the given username is in the username list in the given bot and tag.
- * @param calc The bot calculation context.
- * @param bot The bot.
- * @param tag The tag.
- * @param username The username to check.
- */
-export function isInUsernameList(
-    calc: BotCalculationContext,
-    bot: Bot,
-    tag: string,
-    username: string
-): boolean {
-    const list = getBotUsernameList(calc, bot, tag);
-    return list.indexOf(username) >= 0;
-}
-
-/**
- * Gets a list of usernames from the given bot and tag.
- * @param calc The bot calculation context.
- * @param bot The bot.
- * @param tag The tag.
- */
-export function getBotUsernameList(
-    calc: BotCalculationContext,
-    bot: Bot,
-    tag: string
-): string[] {
-    let value = calculateBotValue(calc, bot, tag);
-
-    if (value && !Array.isArray(value)) {
-        value = [value];
-    }
-
-    if (value) {
-        for (let i = 0; i < value.length; i++) {
-            let v = value[i];
-            if (isBot(v)) {
-                value[i] = v.tags['auxPlayerName'] || v.id;
-            }
-        }
-    }
-
-    return value;
-}
-
-/**
  * Gets a list of strings from the given bot and tag.
  * @param calc The bot calculation context.
  * @param bot The bot.
@@ -1636,7 +1590,7 @@ export function objectsAtDimensionGridPosition(
             );
             return <Bot[]>(
                 sortBy(
-                    botsAtPosition.filter(o => !isUserBot(o)),
+                    botsAtPosition,
                     o => getBotIndex(calc, o, dimension),
                     o => o.id
                 )
@@ -1725,13 +1679,6 @@ export function nextAvailableObjectIndex(
     }
 
     return nextIndex;
-}
-
-/**
- * Determines if the given bot is for a user.
- */
-export function isUserBot(bot: Bot): boolean {
-    return !!bot.tags['auxPlayerName'];
 }
 
 /**
@@ -2185,15 +2132,6 @@ export function isBotInDimension(
         result = true;
     } else {
         result = dimensionValue === true;
-    }
-
-    if (!result && hasValue(bot.tags['auxPlayerName'])) {
-        const userContextValue = calculateBotValue(
-            context,
-            bot,
-            'auxPagePortal'
-        );
-        result = userContextValue == dimensionId;
     }
 
     return result;

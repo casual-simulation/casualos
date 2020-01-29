@@ -694,26 +694,6 @@ export default class BuilderApp extends Vue {
         return [];
     }
 
-    nukeSite() {
-        if (this.online && this.synced) {
-            let options = new ConfirmDialogOptions();
-            options.title = 'Delete Everything?';
-            options.body =
-                'Are you sure you want to delete everything? This is permanent and cannot be undone.';
-            options.okText = 'Delete';
-            options.cancelText = 'Keep';
-
-            EventBus.$once(options.okEvent, async () => {
-                await appManager.simulationManager.primary.deleteEverything();
-                EventBus.$off(options.cancelEvent);
-            });
-            EventBus.$once(options.cancelEvent, () => {
-                EventBus.$off(options.okEvent);
-            });
-            EventBus.$emit('showConfirmDialog', options);
-        }
-    }
-
     async createChannel() {
         const channel = this.session;
         await this._createChannel(channel);
