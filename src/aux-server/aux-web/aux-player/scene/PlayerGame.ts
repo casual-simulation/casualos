@@ -494,14 +494,6 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemDimension(['auxUniversesPortal']);
-        this.subs.push(simulations);
-        this.subs.push(
-            simulations.itemsUpdated.subscribe(items =>
-                this.onSimsUpdated(items)
-            )
-        );
-
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.type === 'go_to_dimension') {
@@ -612,23 +604,6 @@ export class PlayerGame extends Game {
                 this.inventoryScene.remove(s);
             });
         }
-    }
-
-    private onSimsUpdated(items: DimensionItem[]) {
-        let simulations = uniq(
-            items.map(i => {
-                const sim = appManager.simulationManager.simulations.get(
-                    i.simulationId
-                );
-                const calc = sim.helper.createContext();
-                const channel = getBotChannel(calc, i.bot);
-                return channel;
-            })
-        );
-        appManager.simulationManager.updateSimulations([
-            appManager.simulationManager.primary.id,
-            ...simulations,
-        ]);
     }
 
     resetCameras() {

@@ -137,7 +137,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
     ['auxSheetPortal']?: string | boolean;
-    ['auxUniverse']?: string;
+    ['auxUniverse']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
     ['auxUniversesPortal']?: string;
@@ -606,6 +606,21 @@ export const ON_CHAT_ACTION_NAME: string = 'onChat';
  * in the future.
  */
 export const AUX_BOT_VERSION: number = 1;
+
+/**
+ * The list of all portal tags.
+ */
+export const KNOWN_PORTALS: string[] = [
+    'auxPagePortal',
+    'auxSheetPortal',
+    'auxInventoryPortal',
+    'auxMenuPortal',
+];
+
+/**
+ * The list of portal tags that should always be represented in the query string.
+ */
+export const QUERY_PORTALS: string[] = ['auxPagePortal', 'auxSheetPortal'];
 
 /*
  * The list of all tags that have existing functionality in casual sim

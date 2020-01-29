@@ -470,7 +470,7 @@ export abstract class BaseInteractionManager {
      * Gets groups of draggables for input testing.
      */
     getDraggableGroups(): DraggableGroup[] {
-        if (this._draggableGroupsDirty) {
+        if (this._draggableGroupsDirty || !this._draggableGroups) {
             const dimensions = flatMap(
                 this._game.getSimulations(),
                 s => s.dimensions

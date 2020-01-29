@@ -154,7 +154,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             this._draggableGroupsDirty = false;
         }
 
-        return this._draggableGroups;
+        return this._draggableGroups || [];
     }
 
     handlePointerEnter(

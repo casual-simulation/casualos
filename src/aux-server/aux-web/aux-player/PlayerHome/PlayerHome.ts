@@ -8,6 +8,7 @@ import {
     PrecalculatedBot,
     hasValue,
     BotCalculationContext,
+    QUERY_PORTALS,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -21,6 +22,8 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import intersection from 'lodash/intersection';
+import { Subscription } from 'rxjs';
+import isEqual from 'lodash/isEqual';
 
 @Component({
     components: {
@@ -32,9 +35,8 @@ export default class PlayerHome extends Vue {
 
     debug: boolean = false;
     isLoading: boolean = false;
-    setInitialValues: boolean = false;
 
-    private _sim: BrowserSimulation;
+    private _simulations: Map<BrowserSimulation, Subscription>;
 
     get user() {
         return appManager.user;
@@ -44,25 +46,18 @@ export default class PlayerHome extends Vue {
         return appManager.simulationManager.primary;
     }
 
-    // @Watch('channels')
-    // async onRouteChanged(
-    //     newChannels: string | string[],
-    //     oldChannels: string | string[]
-    // ) {
-    //     await this._updateChannels(newChannels);
-    // }
-
     @Watch('query')
     async onQueryChanged() {
-        if (this._sim) {
-            getUserBotAsync(this._sim).subscribe(
+        await this._setUniverse(this.query['auxUniverse'] as (
+            | string
+            | string[]));
+        for (let [sim, sub] of this._simulations) {
+            getUserBotAsync(sim).subscribe(
                 bot => {
-                    this._updatePlayerTags(this._sim, bot);
+                    this._updatePlayerTags(sim, bot);
                 },
                 err => console.error(err)
             );
-        } else {
-            await this._setUniverse(this.query['auxUniverse'] as string);
         }
     }
 
@@ -72,41 +67,68 @@ export default class PlayerHome extends Vue {
 
     async created() {
         this.isLoading = true;
-        this.setInitialValues = false;
-        appManager.whileLoggedIn((user, botManager) => {
-            this._sim = botManager;
-            const sub = userBotTagsChanged(botManager).subscribe(
-                update => {
-                    if (!this.setInitialValues) {
-                        this.setInitialValues = true;
-                        this._updatePlayerTags(botManager, update.bot);
-                    } else {
-                        this._handleQueryUpdates(botManager, update);
-                    }
+        this._simulations = new Map();
 
-                    // if (update.tags.has('auxUniverse')) {
-                    //     // Universe changed - update it
-                    //     const calc = botManager.helper.createContext();
-                    //     const universe = calculateBotValue(calc, update.bot, 'auxUniverse');
-                    //     if (hasValue(universe)) {
-                    //         this._setUniverse(universe);
-                    //     }
-                    // }
-                },
-                err => console.log(err)
-            );
+        appManager.simulationManager.simulationAdded.subscribe(sim => {
+            const sub = this._setupSimulation(sim);
+            this._simulations.set(sim, sub);
+        });
 
-            return [sub];
+        appManager.simulationManager.simulationRemoved.subscribe(sim => {
+            let sub = this._simulations.get(sim);
+            if (sub) {
+                sub.unsubscribe();
+            }
         });
 
         if (this.query) {
-            this._setUniverse(this.query['auxUniverse'] as string);
+            this._setUniverse(this.query['auxUniverse'] as (string | string[]));
         }
     }
 
-    private async _setUniverse(newUniverse: string) {
-        this._sim = await appManager.setPrimarySimulation(newUniverse);
-        this._sim.connection.syncStateChanged
+    private _setupSimulation(sim: BrowserSimulation): Subscription {
+        let setInitialValues = false;
+        return userBotTagsChanged(sim).subscribe(
+            update => {
+                if (!setInitialValues) {
+                    setInitialValues = true;
+                    this._updatePlayerTags(sim, update.bot);
+                } else {
+                    if (sim.id === appManager.simulationManager.primary.id) {
+                        this._handleQueryUpdates(sim, update);
+                        if (update.tags.has('auxUniverse')) {
+                            // Universe changed - update it
+                            const calc = sim.helper.createContext();
+                            const universe = calculateBotValue(
+                                calc,
+                                update.bot,
+                                'auxUniverse'
+                            );
+                            if (hasValue(universe)) {
+                                this._setUniverse(universe);
+                            }
+                        }
+                    }
+                }
+            },
+            err => console.log(err)
+        );
+    }
+
+    private async _setUniverse(newUniverse: string | string[]) {
+        if (typeof newUniverse === 'string') {
+            await this._loadPrimarySimulation(newUniverse);
+        } else {
+            if (!appManager.simulationManager.primary) {
+                await this._loadPrimarySimulation(newUniverse[0]);
+            }
+            await appManager.simulationManager.updateSimulations(newUniverse);
+        }
+    }
+
+    private async _loadPrimarySimulation(newUniverse: string) {
+        const sim = await appManager.setPrimarySimulation(newUniverse);
+        sim.connection.syncStateChanged
             .pipe(first(synced => synced))
             .subscribe(() => {
                 this.isLoading = false;
@@ -141,13 +163,18 @@ export default class PlayerHome extends Vue {
         update: UpdatedBotInfo
     ) {
         const calc = botManager.helper.createContext();
-        const tags = intersection([...update.tags], Object.keys(this.query));
+        const tags = intersection(
+            [...update.tags],
+
+            // Include the known portals so that they always update the URL
+            [...Object.keys(this.query), ...QUERY_PORTALS]
+        );
         let changes: Dictionary<any> = {};
         let hasChange = false;
         for (let tag of tags) {
             const oldValue = this.query[tag];
             const newValue = calculateBotValue(calc, update.bot, tag);
-            if (newValue !== oldValue) {
+            if (!isEqual(newValue, oldValue)) {
                 changes[tag] = newValue;
                 hasChange = true;
             }

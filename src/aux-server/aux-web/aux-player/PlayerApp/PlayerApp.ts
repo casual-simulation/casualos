@@ -40,6 +40,7 @@ import {
     onUniverseStreamLostArg,
     onUniverseSubscribedArg,
     onUniverseUnsubscribedArg,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -75,13 +76,9 @@ import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
-import {
-    updateQuery,
-    SimulationInfo,
-    navigateToDimension,
-    createSimulationInfo,
-} from '../../shared/RouterUtils';
+import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
+import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 
 @Component({
     components: {
@@ -212,6 +209,8 @@ export default class PlayerApp extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
+
+    @Provide() botRenderer: BotRenderer = getRenderer();
 
     private _inputDialogTarget: Bot = null;
     private _inputDialogSimulation: Simulation = null;
@@ -445,7 +444,44 @@ export default class PlayerApp extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[PlayerApp] Add simulation!');
-        await appManager.simulationManager.primary.helper.createSimulation(id);
+        this._addUniverseToSimulation(appManager.simulationManager.primary, id);
+    }
+
+    private _addUniverseToSimulation(sim: BrowserSimulation, id: string) {
+        const calc = sim.helper.createContext();
+        const list = calculateStringListTagValue(
+            calc,
+            sim.helper.userBot,
+            'auxUniverse',
+            []
+        );
+        if (list.indexOf(id) < 0) {
+            list.push(id);
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    auxUniverse: list,
+                },
+            });
+        }
+    }
+
+    private _removeUniverseFromSimulation(sim: BrowserSimulation, id: string) {
+        const calc = sim.helper.createContext();
+        const list = calculateStringListTagValue(
+            calc,
+            sim.helper.userBot,
+            'auxUniverse',
+            []
+        );
+        const index = list.indexOf(id);
+        if (index >= 0) {
+            list.splice(index, 1);
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    auxUniverse: list,
+                },
+            });
+        }
     }
 
     removeSimulation(info: SimulationInfo) {
@@ -465,9 +501,10 @@ export default class PlayerApp extends Vue {
     }
 
     removeSimulationById(id: string) {
-        appManager.simulationManager.simulations.forEach(sim => {
-            sim.helper.destroySimulations(id);
-        });
+        this._removeUniverseFromSimulation(
+            appManager.simulationManager.primary,
+            id
+        );
     }
 
     getQRCode(): string {
@@ -588,7 +625,6 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'go_to_dimension') {
                     this.updateTitleContext(e.dimension);
-                    navigateToDimension(e, this.$router, this.simulations);
                     this.setTitleToID();
                 } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
@@ -653,23 +689,6 @@ export default class PlayerApp extends Vue {
                     } else {
                         info.synced = true;
 
-                        getUserBotAsync(simulation).subscribe(
-                            async userBot => {
-                                if (!userBot) {
-                                    console.log(
-                                        '[PlayerApp] User bot',
-                                        userBot
-                                    );
-                                }
-                                await simulation.helper.updateBot(userBot, {
-                                    tags: {
-                                        auxUniverse: simulation.id,
-                                    },
-                                });
-                            },
-                            err => console.error(err)
-                        );
-
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
@@ -715,8 +734,6 @@ export default class PlayerApp extends Vue {
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
-
-        this._updateQuery();
     }
 
     private _showQRCode(code: string) {
@@ -893,12 +910,6 @@ export default class PlayerApp extends Vue {
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
-
-        this._updateQuery();
-    }
-
-    private _updateQuery() {
-        updateQuery(this.$router, this.simulations);
     }
 
     /**

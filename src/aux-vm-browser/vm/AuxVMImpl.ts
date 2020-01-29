@@ -150,51 +150,61 @@ export class AuxVMImpl implements AuxVM {
         return this._stateUpdated;
     }
 
-    setUser(user: AuxUser): Promise<void> {
-        return this._proxy.setUser(user);
+    async setUser(user: AuxUser): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.setUser(user);
     }
 
-    setGrant(grant: string): Promise<void> {
-        return this._proxy.setGrant(grant);
+    async setGrant(grant: string): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.setGrant(grant);
     }
 
     /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
-    sendEvents(events: BotAction[]): Promise<void> {
-        return this._proxy.sendEvents(events);
+    async sendEvents(events: BotAction[]): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.sendEvents(events);
     }
 
-    formulaBatch(formulas: string[]): Promise<void> {
-        return this._proxy.formulaBatch(formulas);
+    async formulaBatch(formulas: string[]): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.formulaBatch(formulas);
     }
 
-    search(search: string): Promise<any> {
-        return this._proxy.search(search);
+    async search(search: string): Promise<any> {
+        if (!this._proxy) return null;
+        return await this._proxy.search(search);
     }
 
-    forkAux(newId: string): Promise<void> {
-        return this._proxy.forkAux(newId);
+    async forkAux(newId: string): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.forkAux(newId);
     }
 
-    exportBots(botIds: string[]): Promise<StoredAux> {
-        return this._proxy.exportBots(botIds);
+    async exportBots(botIds: string[]): Promise<StoredAux> {
+        if (!this._proxy) return null;
+        return await this._proxy.exportBots(botIds);
     }
 
     /**
      * Exports the causal tree for the simulation.
      */
-    export(): Promise<StoredAux> {
-        return this._proxy.export();
+    async export(): Promise<StoredAux> {
+        if (!this._proxy) return null;
+        return await this._proxy.export();
     }
 
-    getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._proxy.getReferences(tag);
+    async getReferences(tag: string): Promise<BotDependentInfo> {
+        if (!this._proxy) return null;
+        return await this._proxy.getReferences(tag);
     }
 
-    getTags(): Promise<string[]> {
-        return this._proxy.getTags();
+    async getTags(): Promise<string[]> {
+        if (!this._proxy) return null;
+        return await this._proxy.getTags();
     }
 
     unsubscribe(): void {
