@@ -9,6 +9,7 @@ import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { userBotChangedCore } from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { UpdatedBotInfo } from '@casual-simulation/aux-vm/managers';
 
 console.log = jest.fn();
 
@@ -47,22 +48,23 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            const user = await userBotChangedCore(login, watcher)
+            const update = await userBotChangedCore(login, watcher)
                 .pipe(first())
                 .toPromise();
 
-            expect(user).toEqual(
-                createPrecalculatedBot(userId, {
+            expect(update).toEqual({
+                bot: createPrecalculatedBot(userId, {
                     test: 'abc',
-                })
-            );
+                }),
+                tags: new Set(['test']),
+            });
         });
 
         it('should resolve with the user once it is created', async () => {
-            let user: Bot = null;
+            let update: UpdatedBotInfo = null;
             userBotChangedCore(login, watcher)
                 .pipe(first())
-                .subscribe(u => (user = u));
+                .subscribe(u => (update = u));
 
             await helper.createBot(userId, {
                 test: 'abc',
@@ -80,18 +82,19 @@ describe('BrowserSimulationCalculations', () => {
 
             await waitAsync();
 
-            expect(user).toEqual(
-                createPrecalculatedBot(userId, {
+            expect(update).toEqual({
+                bot: createPrecalculatedBot(userId, {
                     test: 'abc',
-                })
-            );
+                }),
+                tags: new Set(['test']),
+            });
         });
 
         it('should resolve with the user once it is created', async () => {
-            let user: Bot = null;
+            let update: UpdatedBotInfo = null;
             userBotChangedCore(login, watcher)
                 .pipe(first())
-                .subscribe(u => (user = u));
+                .subscribe(u => (update = u));
 
             vm.connectionStateChanged.next({
                 type: 'authentication',
@@ -106,7 +109,7 @@ describe('BrowserSimulationCalculations', () => {
 
             await waitAsync();
 
-            expect(user).toEqual(null);
+            expect(update).toEqual(null);
 
             await helper.createBot(userId, {
                 test: 'abc',
@@ -114,11 +117,12 @@ describe('BrowserSimulationCalculations', () => {
 
             await waitAsync();
 
-            expect(user).toEqual(
-                createPrecalculatedBot(userId, {
+            expect(update).toEqual({
+                bot: createPrecalculatedBot(userId, {
                     test: 'abc',
-                })
-            );
+                }),
+                tags: new Set(['test']),
+            });
         });
     });
 });

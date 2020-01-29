@@ -30,7 +30,6 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
-    @Prop() dimension: string;
 
     lastMenuCount: number = null;
 

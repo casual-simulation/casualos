@@ -137,16 +137,6 @@ export default class PlayerApp extends Vue {
     showQRScanner: boolean = false;
 
     /**
-     * The session.
-     */
-    session: string = '';
-
-    /**
-     * The dimension.
-     */
-    dimension: string = '';
-
-    /**
      * The extra sidebar items shown in the app.
      */
     extraItems: SidebarItem[] = [];
@@ -342,8 +332,6 @@ export default class PlayerApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = botManager.parsedId.channel;
-                this.dimension = botManager.parsedId.dimension;
 
                 subs.push(
                     new Subscription(() => {
@@ -399,13 +387,6 @@ export default class PlayerApp extends Vue {
 
     refreshPage() {
         window.location.reload();
-    }
-
-    fixConflicts() {
-        this.$router.push({
-            name: 'merge-conflicts',
-            params: { id: this.session },
-        });
     }
 
     toggleOnlineOffline(info: SimulationInfo) {
@@ -666,48 +647,34 @@ export default class PlayerApp extends Vue {
                             info.lostConnection = true;
                             await this._superAction(
                                 ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-                                onUniverseStreamLostArg(
-                                    simulation.parsedId.channel
-                                )
+                                onUniverseStreamLostArg(simulation.id)
                             );
                         }
                     } else {
                         info.synced = true;
 
-                        if (simulation.parsedId.dimension) {
-                            let id = simulation.id;
-                            if (id.includes('/')) {
-                                id = id.split('/')[1];
-                            }
-
-                            const dimension = simulation.parsedId.dimension;
-
-                            getUserBotAsync(simulation).subscribe(
-                                async userBot => {
-                                    if (!userBot) {
-                                        console.log(
-                                            '[PlayerApp] User bot',
-                                            userBot
-                                        );
-                                    }
-                                    await simulation.helper.updateBot(userBot, {
-                                        tags: {
-                                            auxPagePortal: dimension,
-                                            auxUniverse: id,
-                                        },
-                                    });
-                                },
-                                err => console.error(err)
-                            );
-                        }
+                        getUserBotAsync(simulation).subscribe(
+                            async userBot => {
+                                if (!userBot) {
+                                    console.log(
+                                        '[PlayerApp] User bot',
+                                        userBot
+                                    );
+                                }
+                                await simulation.helper.updateBot(userBot, {
+                                    tags: {
+                                        auxUniverse: simulation.id,
+                                    },
+                                });
+                            },
+                            err => console.error(err)
+                        );
 
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
                                 ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-                                onUniverseSubscribedArg(
-                                    simulation.parsedId.channel
-                                )
+                                onUniverseSubscribedArg(simulation.id)
                             );
 
                             for (let info of this.simulations) {
@@ -717,21 +684,17 @@ export default class PlayerApp extends Vue {
                                 ) {
                                     continue;
                                 }
-                                const parsedId = parseSimulationId(info.id);
-                                if (!parsedId.success) {
-                                    continue;
-                                }
                                 await simulation.helper.action(
                                     ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onUniverseSubscribedArg(parsedId.channel)
+                                    onUniverseSubscribedArg(info.id)
                                 );
                             }
                         }
 
                         await this._superAction(
                             ON_UNIVERSE_STREAMING_ACTION_NAME,
-                            onUniverseStreamingArg(simulation.parsedId.channel)
+                            onUniverseStreamingArg(simulation.id)
                         );
                     }
                 }
@@ -745,7 +708,7 @@ export default class PlayerApp extends Vue {
             new Subscription(async () => {
                 await this._superAction(
                     ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
-                    onUniverseUnsubscribedArg(simulation.parsedId.channel)
+                    onUniverseUnsubscribedArg(simulation.id)
                 );
             })
         );

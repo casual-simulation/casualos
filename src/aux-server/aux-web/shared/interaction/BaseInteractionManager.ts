@@ -41,12 +41,18 @@ import {
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
+import { PlayerSimulation3D } from 'aux-web/aux-player/scene/PlayerSimulation3D';
 
 interface HoveredBot {
     /**
      * The bot that is being hovered on.
      */
     bot: Bot;
+
+    /**
+     * The 3D bot that is being hovered.
+     */
+    bot3D: AuxBot3D;
 
     /**
      * The simulation that the hover is occuring in.
@@ -208,6 +214,7 @@ export abstract class BaseInteractionManager {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
+                                gameObject,
                                 gameObject.bot,
                                 gameObject.dimensionGroup.simulation3D
                                     .simulation
@@ -292,6 +299,7 @@ export abstract class BaseInteractionManager {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
+                                gameObject,
                                 gameObject.bot,
                                 gameObject.dimensionGroup.simulation3D
                                     .simulation
@@ -330,6 +338,7 @@ export abstract class BaseInteractionManager {
                         gameObject == this._pressedBot
                     ) {
                         this.handlePointerUp(
+                            gameObject,
                             gameObject.bot,
                             gameObject.dimensionGroup.simulation3D.simulation
                         );
@@ -411,13 +420,14 @@ export abstract class BaseInteractionManager {
             } else {
                 // Create a new hovered bot object and add it to the list.
                 hoveredBot = {
+                    bot3D: gameObject,
                     bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
                 };
                 this._hoveredBots.push(hoveredBot);
                 this._updateHoveredBots();
-                this.handlePointerEnter(bot, simulation);
+                this.handlePointerEnter(gameObject, bot, simulation);
             }
         }
     }
@@ -431,7 +441,11 @@ export abstract class BaseInteractionManager {
         this._hoveredBots = this._hoveredBots.filter(hoveredBot => {
             if (hoveredBot.frame < curFrame) {
                 // No longer hovering on this bot.
-                this.handlePointerExit(hoveredBot.bot, hoveredBot.simulation);
+                this.handlePointerExit(
+                    hoveredBot.bot3D,
+                    hoveredBot.bot,
+                    hoveredBot.simulation
+                );
                 return false;
             }
 
@@ -714,10 +728,26 @@ export abstract class BaseInteractionManager {
         element: HTMLElement,
         vrController: VRController3D | null
     ): IOperation;
-    abstract handlePointerEnter(bot: Bot, simulation: Simulation): void;
-    abstract handlePointerExit(bot: Bot, simulation: Simulation): void;
-    abstract handlePointerDown(bot: Bot, simulation: Simulation): void;
-    abstract handlePointerUp(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handlePointerExit(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handlePointerDown(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handlePointerUp(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(

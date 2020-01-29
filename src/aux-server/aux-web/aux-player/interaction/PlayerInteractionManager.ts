@@ -53,13 +53,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (keysDown.length > 0) {
                 sim.helper.action('onKeyDown', null, {
                     keys: keysDown,
-                    dimension: sim.parsedId.dimension,
                 });
             }
             if (keysUp.length > 0) {
                 sim.helper.action('onKeyUp', null, {
                     keys: keysUp,
-                    dimension: sim.parsedId.dimension,
                 });
             }
         }
@@ -159,30 +157,34 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(bot: Bot, simulation: Simulation): void {
+    handlePointerEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void {
         simulation.helper.action('onPointerEnter', [bot], {
-            dimension: simulation.parsedId.dimension,
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
             bot: bot,
         });
     }
 
-    handlePointerExit(bot: Bot, simulation: Simulation): void {
+    handlePointerExit(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [bot], {
-            dimension: simulation.parsedId.dimension,
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
             bot: bot,
         });
     }
 
-    handlePointerDown(bot: Bot, simulation: Simulation): void {
+    handlePointerDown(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [bot], {
-            dimension: simulation.parsedId.dimension,
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
             bot: bot,
         });
     }
 
-    handlePointerUp(bot: Bot, simulation: Simulation): void {
+    handlePointerUp(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerUp', [bot], {
-            dimension: simulation.parsedId.dimension,
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
             bot: bot,
         });
     }

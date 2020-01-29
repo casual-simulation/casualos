@@ -479,11 +479,7 @@ export class PlayerGame extends Game {
     }
 
     private simulationAdded(sim: BrowserSimulation) {
-        const playerSim3D = new PlayerSimulation3D(
-            this.gameView.dimension,
-            this,
-            sim
-        );
+        const playerSim3D = new PlayerSimulation3D(this, sim);
         playerSim3D.init();
         playerSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
@@ -510,9 +506,14 @@ export class PlayerGame extends Game {
             playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.type === 'go_to_dimension') {
                     this.resetCameras();
-                    this.playerSimulations.forEach(s => {
-                        s.setDimension(e.dimension);
-                    });
+                    playerSim3D.simulation.helper.updateBot(
+                        playerSim3D.simulation.helper.userBot,
+                        {
+                            tags: {
+                                auxPagePortal: e.dimension,
+                            },
+                        }
+                    );
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
                 } else if (e.type === 'play_sound') {

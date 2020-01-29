@@ -74,7 +74,13 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    dimension: string;
+    get dimension(): string {
+        if (this._dimensionGroup) {
+            const dimensions = [...this._dimensionGroup.dimensions.values()];
+            return dimensions[0] || null;
+        }
+        return null;
+    }
     grid3D: PlayerGrid3D;
 
     /**
@@ -343,10 +349,8 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    constructor(dimension: string, game: Game, simulation: BrowserSimulation) {
+    constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
-
-        this.dimension = dimension;
 
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
@@ -370,16 +374,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     init() {
         super.init();
-    }
-
-    setDimension(dimension: string) {
-        if (this.dimension === dimension) {
-            return;
-        }
-        this.dimension = dimension;
-        this.unsubscribe();
-        this.closed = false;
-        this.init();
     }
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
@@ -640,21 +634,22 @@ export class PlayerSimulation3D extends Simulation3D {
             this._updateUserBot(calc, bot);
         }
 
-        // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
-        const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
-        const dimensionLocked = isDimensionLocked(calc, bot);
-        if (result.matchFound && !dimensionLocked) {
-            this._setupGrid(calc);
+        // TODO: Fix
+        // // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
+        // const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
+        // const dimensionLocked = isDimensionLocked(calc, bot);
+        // if (result.matchFound && !dimensionLocked) {
+        //     this._setupGrid(calc);
 
-            // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
-            this._watchDimensionBot(bot, calc);
-        } else if (result.matchFound && dimensionLocked) {
-            let message: string =
-                'The ' + this.dimension + ' dimension is locked.';
+        //     // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
+        //     this._watchDimensionBot(bot, calc);
+        // } else if (result.matchFound && dimensionLocked) {
+        //     let message: string =
+        //         'The ' + this.dimension + ' dimension is locked.';
 
-            this.simulation.helper.transaction(toast(message));
-            this.unsubscribe();
-        }
+        //     this.simulation.helper.transaction(toast(message));
+        //     this.unsubscribe();
+        // }
     }
 
     unsubscribe() {
@@ -663,11 +658,6 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
-        const userBot = bot;
-        console.log(
-            "[PlayerSimulation3D] Setting user's dimension to: " +
-                this.dimension
-        );
         let userBackgroundColor = calculateBotValue(
             calc,
             bot,
@@ -676,12 +666,6 @@ export class PlayerSimulation3D extends Simulation3D {
         this._userInventoryColor = hasValue(userBackgroundColor)
             ? new Color(userBackgroundColor)
             : undefined;
-        await this.simulation.helper.updateBot(userBot, {
-            tags: {
-                auxPagePortal: this.dimension,
-                auxUniverse: this.simulation.id,
-            },
-        });
         this._subs.push(
             this.simulation.watcher
                 .botChanged(bot.id)

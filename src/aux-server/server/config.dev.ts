@@ -13,7 +13,6 @@ const config: Config = {
     socketPort: 4567,
     httpPort: 3000,
     tls: null,
-    builder: projectorConfig,
     player: playerConfig,
     mongodb: {
         url: 'mongodb://127.0.0.1:27017',

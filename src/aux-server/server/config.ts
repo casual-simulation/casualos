@@ -10,7 +10,6 @@ export interface Config {
     socket: SocketIO.ServerOptions;
     socketPort: number;
     httpPort: number;
-    builder: ClientConfig;
     player: ClientConfig;
     mongodb: MongoDbConfig;
     redis: RedisConfig;
