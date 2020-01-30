@@ -224,6 +224,12 @@ describe('BotCalculations', () => {
             ['universes', 'auxUniversesPortal'],
             ['sheet', 'auxSheetPortal'],
             ['other', 'auxOtherPortal'],
+            ['page', 'auxPagePortal'],
+            ['auxInventoryPortal', 'auxInventoryPortal'],
+            ['auxMenuPortal', 'auxMenuPortal'],
+            ['auxUniversesPortal', 'auxUniversesPortal'],
+            ['auxSheetPortal', 'auxSheetPortal'],
+            ['auxOtherPortal', 'auxOtherPortal'],
         ];
         it.each(cases)(
             'should return the corresponding tag for the portal type',

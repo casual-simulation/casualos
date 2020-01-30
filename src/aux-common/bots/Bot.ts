@@ -60,7 +60,13 @@ export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
 /**
  * The possible portal types.
  */
-export type PortalType = 'page' | 'inventory' | 'menu' | 'sheet' | 'universes';
+export type PortalType =
+    | 'page'
+    | 'inventory'
+    | 'menu'
+    | 'sheet'
+    | 'universes'
+    | string;
 
 /**
  * Defines an interface for a bot in a script/formula.

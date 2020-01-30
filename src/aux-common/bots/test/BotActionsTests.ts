@@ -5008,10 +5008,15 @@ export function botActionsTests(
         describe('player.getPortalDimension()', () => {
             const cases = [
                 ['page', 'pageDimension'],
+                ['auxPagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
+                ['auxInventoryPortal', 'inventoryDimension'],
                 ['menu', 'menuDimension'],
+                ['auxMenuPortal', 'menuDimension'],
                 ['universes', 'universesDimension'],
+                ['auxUniversesPortal', 'universesDimension'],
                 ['sheet', 'sheetDimension'],
+                ['auxSheetPortal', 'sheetDimension'],
                 ['missing', null],
                 ['falsy', null],
             ];

@@ -2142,6 +2142,9 @@ export function isBotInDimension(
  * @param portal The portal type.
  */
 export function getPortalTag(portal: PortalType) {
+    if (portal.endsWith('Portal')) {
+        return portal;
+    }
     const upper = portal[0].toUpperCase() + portal.slice(1);
     return `aux${upper}Portal`;
 }

@@ -377,7 +377,13 @@ type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
 /**
  * The possible portal types.
  */
-export type PortalType = 'page' | 'inventory' | 'menu' | 'sheet' | 'universes';
+export type PortalType =
+    | 'page'
+    | 'inventory'
+    | 'menu'
+    | 'sheet'
+    | 'universes'
+    | string;
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
