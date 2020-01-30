@@ -1234,7 +1234,6 @@ export function isConfigForContext(
 /**
  * Gets whether the dimension(s) that the given bot represents are locked.
  * Uses at the auxPortalLocked tag to determine whether it is locked.
- * Defaults to false if the bot is a dimension. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1242,10 +1241,7 @@ export function isDimensionLocked(
     calc: BotCalculationContext,
     bot: Bot
 ): boolean {
-    if (isDimension(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'auxPortalLocked', false);
-    }
-    return true;
+    return calculateBooleanTagValue(calc, bot, 'auxPortalLocked', false);
 }
 
 /**

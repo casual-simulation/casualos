@@ -4049,15 +4049,6 @@ export function botCalculationContextTests(
             expect(locked).toEqual(false);
         });
 
-        it('should default to true when the bot is not a dimension', () => {
-            const bot = createBot('test', {});
-
-            const calc = createCalculationContext([bot]);
-            const locked = isDimensionLocked(calc, bot);
-
-            expect(locked).toEqual(true);
-        });
-
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
                 auxDimensionConfig: 'abc',

@@ -389,6 +389,17 @@ export class PlayerSimulation3D extends Simulation3D {
                             null
                         );
                         this.gridScale = calculateGridScale(calc, bot);
+
+                        const dimensionLocked = isDimensionLocked(calc, bot);
+                        if (dimensionLocked) {
+                            let message: string =
+                                'The ' +
+                                this.dimension +
+                                ' dimension is locked.';
+
+                            this.simulation.helper.transaction(toast(message));
+                            this.unsubscribe();
+                        }
                     })
                 )
                 .subscribe()
@@ -436,19 +447,6 @@ export class PlayerSimulation3D extends Simulation3D {
         // TODO: Fix
         // // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
         // const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
-        // const dimensionLocked = isDimensionLocked(calc, bot);
-        // if (result.matchFound && !dimensionLocked) {
-        //     this._setupGrid(calc);
-
-        //     // Subscribe to bot change updates for this dimension bot so that we can do things like change the background color to match the dimension color, etc.
-        //     this._watchDimensionBot(bot, calc);
-        // } else if (result.matchFound && dimensionLocked) {
-        //     let message: string =
-        //         'The ' + this.dimension + ' dimension is locked.';
-
-        //     this.simulation.helper.transaction(toast(message));
-        //     this.unsubscribe();
-        // }
     }
 
     unsubscribe() {

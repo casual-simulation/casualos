@@ -7,6 +7,8 @@ import {
     hasValue,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
+    isDimensionLocked,
+    toast,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -22,6 +24,7 @@ import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { Color, Texture } from 'three';
+import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
@@ -48,6 +51,19 @@ export class InventorySimulation3D extends Simulation3D {
     private _playerRotationX: number;
     private _playerRotationY: number;
     private _gridScale: number;
+
+    /**
+     * The current dimension group 3d that the AUX Player is rendering.
+     */
+    private _dimensionGroup: DimensionGroup3D;
+
+    get dimension(): string {
+        if (this._dimensionGroup) {
+            const dimensions = [...this._dimensionGroup.dimensions.values()];
+            return dimensions[0] || null;
+        }
+        return null;
+    }
 
     get hasDimension() {
         return this.dimensions.length > 0;
@@ -294,14 +310,14 @@ export class InventorySimulation3D extends Simulation3D {
     protected _createDimensionGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ) {
+    ): DimensionGroup3D {
         if (bot.id === this.simulation.helper.userId) {
-            return new InventoryDimensionGroup3D(
+            return (this._dimensionGroup = new InventoryDimensionGroup3D(
                 this,
                 this.simulation.helper.userBot,
                 'player',
                 this.decoratorFactory
-            );
+            ));
         }
 
         return null;
@@ -412,9 +428,25 @@ export class InventorySimulation3D extends Simulation3D {
                             null
                         );
                         this.gridScale = calculateGridScale(calc, bot);
+
+                        const dimensionLocked = isDimensionLocked(calc, bot);
+                        if (dimensionLocked) {
+                            let message: string =
+                                'The ' +
+                                this.dimension +
+                                ' dimension is locked.';
+
+                            this.simulation.helper.transaction(toast(message));
+                            this.unsubscribe();
+                        }
                     })
                 )
                 .subscribe()
         );
+    }
+
+    unsubscribe() {
+        this._dimensionGroup = null;
+        super.unsubscribe();
     }
 }
