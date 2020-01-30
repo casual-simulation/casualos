@@ -1,4 +1,9 @@
-import { LoginManager, BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import {
+    LoginManager,
+    BotHelper,
+    BotWatcher,
+    UpdatedBotInfo,
+} from '@casual-simulation/aux-vm';
 import {
     BotIndex,
     createBot,
@@ -14,7 +19,6 @@ import {
 } from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
 import { waitAsync, wait } from '@casual-simulation/aux-vm/test/TestHelpers';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm/managers';
 
 console.log = jest.fn();
 

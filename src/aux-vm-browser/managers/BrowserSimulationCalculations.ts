@@ -7,8 +7,12 @@ import {
 import { BrowserSimulation } from './BrowserSimulation';
 import { never, Observable } from 'rxjs';
 import { switchMap, first, map, distinctUntilChanged } from 'rxjs/operators';
-import { LoginManager, BotWatcher } from '@casual-simulation/aux-vm';
-import { UpdatedBotInfo, BotHelper } from '@casual-simulation/aux-vm/managers';
+import {
+    LoginManager,
+    BotWatcher,
+    UpdatedBotInfo,
+    BotHelper,
+} from '@casual-simulation/aux-vm';
 
 /**
  * Gets an observable that resolves whenever the user bot for the given simulation changes.
