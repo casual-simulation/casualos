@@ -1,9 +1,14 @@
-import { PrecalculatedBot } from '@casual-simulation/aux-common';
+import {
+    PrecalculatedBot,
+    PortalType,
+    getPortalConfigBotID,
+    Bot,
+} from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
 import { never, Observable } from 'rxjs';
-import { switchMap, first, map } from 'rxjs/operators';
+import { switchMap, first, map, distinctUntilChanged } from 'rxjs/operators';
 import { LoginManager, BotWatcher } from '@casual-simulation/aux-vm';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm/managers';
+import { UpdatedBotInfo, BotHelper } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Gets an observable that resolves whenever the user bot for the given simulation changes.
@@ -47,4 +52,44 @@ export function getUserBotAsync(
     simulation: BrowserSimulation
 ): Observable<PrecalculatedBot> {
     return userBotChanged(simulation).pipe(first(bot => !!bot));
+}
+
+/**
+ * Watches the config bot for the given portal for changes.
+ * @param simulation The simulation.
+ * @param portal The portal.
+ */
+export function watchPortalConfigBot(
+    simulation: BrowserSimulation,
+    portal: PortalType
+): Observable<PrecalculatedBot> {
+    return watchPortalConfigBotCore(
+        simulation.login,
+        simulation.watcher,
+        simulation.helper,
+        portal
+    );
+}
+
+/**
+ * Watches the config bot for the given portal for changes.
+ * @param login The login manager.
+ * @param watcher The bot watcher.
+ * @param helper The bot helper.
+ * @param portal The portal.
+ */
+export function watchPortalConfigBotCore(
+    login: LoginManager,
+    watcher: BotWatcher,
+    helper: BotHelper,
+    portal: PortalType
+): Observable<PrecalculatedBot> {
+    return userBotChangedCore(login, watcher).pipe(
+        map(update => {
+            const calc = helper.createContext();
+            return getPortalConfigBotID(calc, update.bot, portal);
+        }),
+        distinctUntilChanged(),
+        switchMap(id => watcher.botChanged(id))
+    );
 }

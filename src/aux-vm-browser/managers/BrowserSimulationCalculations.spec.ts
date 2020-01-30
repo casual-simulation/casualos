@@ -4,11 +4,16 @@ import {
     createBot,
     createPrecalculatedBot,
     Bot,
+    PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
-import { userBotChangedCore } from './BrowserSimulationCalculations';
+import {
+    userBotChangedCore,
+    watchPortalConfigBot,
+    watchPortalConfigBotCore,
+} from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { waitAsync, wait } from '@casual-simulation/aux-vm/test/TestHelpers';
 import { UpdatedBotInfo } from '@casual-simulation/aux-vm/managers';
 
 console.log = jest.fn();
@@ -123,6 +128,82 @@ describe('BrowserSimulationCalculations', () => {
                 }),
                 tags: new Set(['test']),
             });
+        });
+    });
+
+    describe('watchPortalConfigBot()', () => {
+        it('should resolve with the bot immediately if it is already created', async () => {
+            await helper.createBot(userId, {
+                auxPortalConfigBot: 'test',
+            });
+            await helper.createBot('test', {
+                abc: 'def',
+            });
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: {
+                    id: userId,
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+
+            const update = await watchPortalConfigBotCore(
+                login,
+                watcher,
+                helper,
+                'auxPortal'
+            )
+                .pipe(first())
+                .toPromise();
+
+            expect(update).toEqual(
+                createPrecalculatedBot('test', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should resolve with the bot once it is created', async () => {
+            let update: PrecalculatedBot = null;
+            watchPortalConfigBotCore(
+                login,
+                watcher,
+                helper,
+                'auxPortal'
+            ).subscribe(bot => (update = bot));
+
+            await helper.createBot(userId, {
+                auxPortalConfigBot: 'test',
+            });
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: {
+                    id: userId,
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+
+            await waitAsync();
+
+            expect(update).toBe(null);
+
+            await helper.createBot('test', {
+                abc: 'def',
+            });
+
+            await waitAsync();
+
+            expect(update).toEqual(
+                createPrecalculatedBot('test', {
+                    abc: 'def',
+                })
+            );
         });
     });
 });

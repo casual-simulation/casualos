@@ -12,13 +12,22 @@ import {
     calculateNumericalTagValue,
     BotIndexEvent,
     DEFAULT_INVENTORY_VISIBLE,
+    getPortalConfigBotID,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
     BrowserSimulation,
     userBotChanged,
+    userBotTagsChanged,
+    watchPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
-import { tap, filter } from 'rxjs/operators';
+import {
+    tap,
+    filter,
+    map,
+    distinctUntilChanged,
+    switchMap,
+} from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { doesBotDefinePlayerDimension } from '../PlayerUtils';
 import {
@@ -374,6 +383,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     init() {
         super.init();
+        this._watchDimensionBot();
     }
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
@@ -418,16 +428,13 @@ export class PlayerSimulation3D extends Simulation3D {
         return this._dimensionGroup;
     }
 
-    private _watchDimensionBot(
-        bot: PrecalculatedBot,
-        calc: BotCalculationContext
-    ) {
+    private _watchDimensionBot() {
         this._subs.push(
-            this.simulation.watcher
-                .botChanged(bot.id)
+            watchPortalConfigBot(this.simulation, 'auxPagePortal')
                 .pipe(
                     tap(update => {
                         const bot = update;
+                        const calc = this.simulation.helper.createContext();
                         // Update the dimension background color.
                         //let dimensionBackgroundColor =
                         //bot.tags['auxDimensionColor'];

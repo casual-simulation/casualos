@@ -2150,6 +2150,21 @@ export function getPortalTag(portal: PortalType) {
 }
 
 /**
+ * Gets the ID of the bot that should be used to configure the given portal.
+ * @param context The context.
+ * @param bot The bot that is defining the portal.
+ * @param portal The portal.
+ */
+export function getPortalConfigBotID(
+    context: BotCalculationContext,
+    bot: Bot,
+    portal: PortalType
+) {
+    const tag = `${getPortalTag(portal)}ConfigBot`;
+    return calculateStringTagValue(context, bot, tag, null);
+}
+
+/**
  * Gets the sort order that the given bot should appear in the given dimension.
  * @param context The bot calculation context.
  * @param bot The bot.

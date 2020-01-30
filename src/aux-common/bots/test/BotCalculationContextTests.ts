@@ -53,6 +53,7 @@ import {
     botDimensionSortOrder,
     getBotPositioningMode,
     convertToCopiableValue,
+    getPortalConfigBotID,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3377,6 +3378,31 @@ export function botCalculationContextTests(
 
             expect(getBotScale(calc, bot)).toBe(getBotScale(calc, bot));
             expect(getBotScale(calc, bot)).not.toBe(getBotScale(calc2, bot));
+        });
+    });
+
+    describe('getPortalConfigBotID()', () => {
+        it('should return the bot ID that the config bot tag points to', () => {
+            const userBot = createBot('userBot', {
+                auxPagePortal: 'abc',
+                auxPagePortalConfigBot: 'test',
+            });
+
+            const calc = createCalculationContext([userBot]);
+            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+
+            expect(id).toEqual('test');
+        });
+
+        it('should return null if the tag does not exist', () => {
+            const userBot = createBot('userBot', {
+                auxPagePortal: 'abc',
+            });
+
+            const calc = createCalculationContext([userBot]);
+            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+
+            expect(id).toEqual(null);
         });
     });
 
