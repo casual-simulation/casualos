@@ -898,7 +898,7 @@ export function createWorkspace(
                 auxDimensionY: 0,
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
-                auxDimensionLocked: true,
+                auxPortalLocked: true,
                 auxDimensionConfig: builderDimensionId,
             },
         };
@@ -963,13 +963,13 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxDimensionSurfaceScale`,
+            `auxPortalSurfaceScale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxDimensionGridScale`,
+            `auxPortalGridScale`,
             DEFAULT_WORKSPACE_GRID_SCALE
         );
         return scale * gridScale;
@@ -1233,7 +1233,7 @@ export function isConfigForContext(
 
 /**
  * Gets whether the dimension(s) that the given bot represents are locked.
- * Uses at the auxDimensionLocked tag to determine whether it is locked.
+ * Uses at the auxPortalLocked tag to determine whether it is locked.
  * Defaults to false if the bot is a dimension. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1243,7 +1243,7 @@ export function isDimensionLocked(
     bot: Bot
 ): boolean {
     if (isDimension(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'auxDimensionLocked', false);
+        return calculateBooleanTagValue(calc, bot, 'auxPortalLocked', false);
     }
     return true;
 }
@@ -1289,7 +1289,7 @@ export function getDimensionValue(
     dimensionBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, dimensionBot, `auxDimension${name}`);
+    return calculateBotValue(calc, dimensionBot, `auxPortal${name}`);
 }
 
 /**

@@ -2972,17 +2972,17 @@ export function botCalculationContextTests(
     });
 
     describe('isMinimized()', () => {
-        it('should return true when auxDimensionSurfaceMinimized is true', () => {
+        it('should return true when auxPortalSurfaceMinimized is true', () => {
             let bot = createBot('test', {
-                auxDimensionSurfaceMinimized: true,
+                auxPortalSurfaceMinimized: true,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(true);
         });
 
-        it('should return false when auxDimensionSurfaceMinimized is not true', () => {
+        it('should return false when auxPortalSurfaceMinimized is not true', () => {
             let bot = createBot('test', {
-                auxDimensionSurfaceMinimized: false,
+                auxPortalSurfaceMinimized: false,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(false);
@@ -3686,7 +3686,7 @@ export function botCalculationContextTests(
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
                 'auxDimensionConfig.surface.grid.0:1': 1,
-                auxDimensionGridScale: 50,
+                auxPortalGridScale: 50,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3760,9 +3760,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextGridScale()', () => {
-        it('should return the auxDimensionGridScale of the bot', () => {
+        it('should return the auxPortalGridScale of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionGridScale: 10,
+                auxPortalGridScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3771,9 +3771,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextScale()', () => {
-        it('should return the auxDimensionSurfaceScale of the bot', () => {
+        it('should return the auxPortalSurfaceScale of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionSurfaceScale: 10,
+                auxPortalSurfaceScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3789,9 +3789,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextDefaultHeight()', () => {
-        it('should return the auxDimensionSurfaceDefaultHeight of the bot', () => {
+        it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionSurfaceDefaultHeight: 10.123,
+                auxPortalSurfaceDefaultHeight: 10.123,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4061,7 +4061,7 @@ export function botCalculationContextTests(
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
                 auxDimensionConfig: 'abc',
-                auxDimensionLocked: '=true',
+                auxPortalLocked: '=true',
             });
 
             const calc = createCalculationContext([bot]);

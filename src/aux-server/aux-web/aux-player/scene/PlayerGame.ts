@@ -93,287 +93,138 @@ export class PlayerGame extends Game {
     }
 
     getBackground(): Color | Texture {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-            if (sim.backgroundColor) {
-                return sim.backgroundColor;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'backgroundColor'
+        );
     }
 
     getPannable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.pannable != null) {
-                return sim.pannable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'pannable');
     }
 
     getPanMinX(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.panMinX != null) {
-                return sim.panMinX;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'panMinX');
     }
 
     getPanMaxX(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.panMaxX != null) {
-                return sim.panMaxX;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'panMaxX');
     }
 
     getPanMinY(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.panMinY != null) {
-                return sim.panMinY;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'panMinY');
     }
 
     getPanMaxY(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.panMaxY != null) {
-                return sim.panMaxY;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'panMaxY');
     }
 
     getZoomable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.zoomable != null) {
-                return sim.zoomable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'zoomable');
     }
 
     getZoomMin(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.zoomMin != null) {
-                return sim.zoomMin;
-            }
-        }
-        return Orthographic_MinZoom;
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'zoomMin',
+            Orthographic_MinZoom
+        );
     }
 
     getZoomMax(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.zoomMax != null) {
-                return sim.zoomMax;
-            }
-        }
-        return Orthographic_MaxZoom;
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'zoomMax',
+            Orthographic_MaxZoom
+        );
     }
 
     getRotatable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.rotatable != null) {
-                return sim.rotatable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'rotatable');
     }
 
     getInventoryVisible(): boolean {
-        for (let i = 0; i < this.inventorySimulations.length; i++) {
-            const sim = this.inventorySimulations[i];
-
-            if (sim.hasDimension === true) {
-                return sim.hasDimension;
-            }
-        }
-
-        return DEFAULT_INVENTORY_VISIBLE;
+        return this._getSimulationValue(
+            this.inventorySimulations,
+            'hasDimension',
+            DEFAULT_INVENTORY_VISIBLE
+        );
     }
 
     getInventoryHeight(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryHeight != null) {
-                return sim.inventoryHeight;
-            }
-        }
-
-        return 1;
+        return this._getSimulationValue(this.inventorySimulations, 'height', 1);
     }
 
     getInventoryPannable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryPannable != null) {
-                return sim.inventoryPannable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'pannable');
     }
 
     getInventoryPanMinX(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryPanMinX != null) {
-                return sim.inventoryPanMinX;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'panMinX');
     }
 
     getInventoryPanMaxX(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryPanMaxX != null) {
-                return sim.inventoryPanMaxX;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'panMaxX');
     }
 
     getInventoryPanMinY(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryPanMinY != null) {
-                return sim.inventoryPanMinY;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'panMinY');
     }
 
     getInventoryPanMaxY(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryPanMaxY != null) {
-                return sim.inventoryPanMaxY;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'panMaxY');
     }
 
     getInventoryZoomable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryZoomable != null) {
-                return sim.inventoryZoomable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'zoomable');
     }
 
     getInventoryRotatable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryRotatable != null) {
-                return sim.inventoryRotatable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'rotatable');
     }
 
     getInventoryResizable(): boolean {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.inventoryResizable != null) {
-                return sim.inventoryResizable;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.inventorySimulations, 'resizable');
     }
 
     getPlayerZoom(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.playerZoom != null) {
-                return sim.playerZoom;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(this.playerSimulations, 'playerZoom');
     }
 
     getPlayerRotationX(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.playerRotationX != null) {
-                return sim.playerRotationX;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'playerRotationX'
+        );
     }
 
     getPlayerRotationY(): number {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-
-            if (sim.playerRotationY != null) {
-                return sim.playerRotationY;
-            }
-        }
-
-        return null;
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'playerRotationY'
+        );
     }
 
     getInventoryColor(): Color | Texture {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-            if (sim.inventoryColor) {
-                return sim.inventoryColor;
+        return this._getSimulationValue(
+            this.inventorySimulations,
+            'backgroundColor'
+        );
+    }
+
+    private _getSimulationValue<T, K extends keyof T>(
+        simulations: T[],
+        name: K,
+        defaultValue: T[K] = null
+    ): T[K] {
+        for (let i = 0; i < simulations.length; i++) {
+            const sim = simulations[i];
+            if (sim[name] !== null) {
+                return sim[name];
             }
         }
 
-        return null;
+        return defaultValue;
     }
 
     getViewports(): Viewport[] {

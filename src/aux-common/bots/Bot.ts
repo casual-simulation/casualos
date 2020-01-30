@@ -146,6 +146,10 @@ export interface BotTags {
     ['auxUniverse']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
+    ['auxPagePortalConfigBot']?: string;
+    ['auxSheetPortalConfigBot']?: string;
+    ['auxInventoryPortalConfigBot']?: string;
+    ['auxMenuPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
 
     // Admin channel bot-channel tags
@@ -168,44 +172,23 @@ export interface BotTags {
     // Context related tags
     ['auxDimensionConfig']?: string | number | boolean;
     ['auxPortalColor']?: string;
-    ['auxDimensionLocked']?: unknown;
-    ['auxDimensionGridScale']?: number;
-    ['auxDimensionVisualize']?: DimensionVisualizeMode;
-    ['auxDimensionX']?: number;
-    ['auxDimensionY']?: number;
-    ['auxDimensionZ']?: number;
-    ['auxDimensionOrientationX']?: number;
-    ['auxDimensionOrientationY']?: number;
-    ['auxDimensionOrientationZ']?: number;
-    ['auxDimensionSurfaceScale']?: number;
-    ['auxDimensionSurfaceSize']?: number;
-    ['auxDimensionSurfaceMinimized']?: boolean | null;
-    ['auxDimensionSurfaceDefaultHeight']?: number;
-    ['auxDimensionSurfaceMovable']?: unknown;
-    ['auxDimensionPlayerRotationX']?: number;
-    ['auxDimensionPlayerRotationY']?: number;
-    ['auxDimensionPlayerZoom']?: number;
-    ['auxDimensionDevicesVisible']?: boolean | null;
-    ['auxDimensionInventoryColor']?: string;
-    ['auxDimensionInventoryHeight']?: unknown;
-    ['auxDimensionInventoryPannable']?: boolean;
-    [`auxDimensionInventoryPannableMinX`]?: number | null;
-    [`auxDimensionInventoryPannableMaxX`]?: number | null;
-    [`auxDimensionInventoryPannableMinY`]?: number | null;
-    [`auxDimensionInventoryPannableMaxY`]?: number | null;
-    ['auxDimensionInventoryResizable']?: boolean;
-    ['auxDimensionInventoryRotatable']?: boolean;
-    ['auxDimensionInventoryZoomable']?: boolean;
-    ['auxDimensionInventoryVisible']?: unknown;
-    ['auxDimensionPannable']?: number | null;
-    [`auxDimensionPannableMinX`]?: number | null;
-    [`auxDimensionPannableMaxX`]?: number | null;
-    [`auxDimensionPannableMinY`]?: number | null;
-    [`auxDimensionPannableMaxY`]?: number | null;
-    ['auxDimensionZoomable']?: number | null;
-    [`auxDimensionZoomableMin`]?: number | null;
-    [`auxDimensionZoomableMax`]?: number | null;
-    ['auxDimensionRotatable']?: number | null;
+    ['auxPortalLocked']?: unknown;
+    ['auxPortalGridScale']?: number;
+    ['auxPortalSurfaceScale']?: number;
+    ['auxPortalPlayerRotationX']?: number;
+    ['auxPortalPlayerRotationY']?: number;
+    ['auxPortalPlayerZoom']?: number;
+    ['auxPortalPannable']?: number | null;
+    [`auxPortalPannableMinX`]?: number | null;
+    [`auxPortalPannableMaxX`]?: number | null;
+    [`auxPortalPannableMinY`]?: number | null;
+    [`auxPortalPannableMaxY`]?: number | null;
+    ['auxPortalZoomable']?: number | null;
+    [`auxPortalZoomableMin`]?: number | null;
+    [`auxPortalZoomableMax`]?: number | null;
+    ['auxPortalRotatable']?: number | null;
+    ['auxInventoryPortalHeight']?: unknown;
+    ['auxInventoryPortalResizable']?: boolean;
 
     // Stripe tags
     ['stripePublishableKey']?: string;
@@ -637,36 +620,32 @@ export const KNOWN_TAGS: string[] = [
     'auxUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
+    'auxPagePortalConfigBot',
+    'auxSheetPortalConfigBot',
+    'auxInventoryPortalConfigBot',
+    'auxMenuPortalConfigBot',
     '_auxEditingBot',
     'auxConnectedSessions',
-    'auxInventoryHeight',
-    'auxDimensionInventoryColor',
-    'auxDimensionInventoryHeight',
-    'auxDimensionInventoryVisible',
-    'auxDimensionInventoryPannable',
-    `auxDimensionInventoryPannableMinX`,
-    `auxDimensionInventoryPannableMaxX`,
-    `auxDimensionInventoryPannableMinY`,
-    `auxDimensionInventoryPannableMaxY`,
 
-    'auxDimensionInventoryResizable',
-    'auxDimensionInventoryRotatable',
-    'auxDimensionInventoryZoomable',
+    'auxPortalColor',
+    'auxPortalLocked',
+    'auxPortalPannable',
+    `auxPortalPannableMinX`,
+    `auxPortalPannableMaxX`,
+    `auxPortalPannableMinY`,
+    `auxPortalPannableMaxY`,
+    'auxPortalZoomable',
+    `auxPortalZoomableMin`,
+    `auxPortalZoomableMax`,
+    'auxPortalRotatable',
+    'auxPortalGridScale',
+    'auxPortalSurfaceScale',
+    `auxPortalPlayerZoom`,
+    `auxPortalPlayerRotationX`,
+    `auxPortalPlayerRotationY`,
+    'auxInventoryPortalHeight',
+    'auxInventoryPortalResizable',
 
-    'auxDimensionPannable',
-
-    `auxDimensionPannableMinX`,
-    `auxDimensionPannableMaxX`,
-
-    `auxDimensionPannableMinY`,
-    `auxDimensionPannableMaxY`,
-
-    'auxDimensionZoomable',
-
-    `auxDimensionZoomableMin`,
-    `auxDimensionZoomableMax`,
-
-    'auxDimensionRotatable',
     'auxUniverseColor',
     'auxUniverseUserPlayerColor',
     'auxUniverseUserBuilderColor',
@@ -712,26 +691,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'auxDimensionConfig',
-    'auxPortalColor',
-    'auxDimensionLocked',
-    'auxDimensionGridScale',
-    'auxDimensionX',
-    'auxDimensionY',
-    'auxDimensionZ',
-    'auxDimensionSurfaceDefaultHeight',
-    'auxDimensionOrientationX',
-    'auxDimensionOrientationY',
-    'auxDimensionOrientationZ',
-    'auxDimensionSurfaceScale',
-    'auxDimensionSurfaceSize',
-    'auxDimensionSurfaceMinimized',
-    'auxDimensionSurfaceMovable',
-    'auxDimensionVisualize',
-    'auxDimensionDevicesVisible',
-    `auxDimensionPlayerZoom`,
-    `auxDimensionPlayerRotationX`,
-    `auxDimensionPlayerRotationY`,
+
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',
