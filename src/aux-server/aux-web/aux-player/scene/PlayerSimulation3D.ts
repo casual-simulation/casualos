@@ -437,11 +437,11 @@ export class PlayerSimulation3D extends Simulation3D {
                         const calc = this.simulation.helper.createContext();
                         // Update the dimension background color.
                         //let dimensionBackgroundColor =
-                        //bot.tags['auxDimensionColor'];
+                        //bot.tags['auxPortalColor'];
                         let dimensionBackgroundColor = calculateBotValue(
                             calc,
                             bot,
-                            `auxDimensionColor`
+                            `auxPortalColor`
                         );
                         this._dimensionBackground = hasValue(
                             dimensionBackgroundColor
@@ -666,7 +666,7 @@ export class PlayerSimulation3D extends Simulation3D {
         let userBackgroundColor = calculateBotValue(
             calc,
             bot,
-            `auxDimensionColor`
+            `auxPortalColor`
         );
         this._userInventoryColor = hasValue(userBackgroundColor)
             ? new Color(userBackgroundColor)
@@ -681,7 +681,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         let userBackgroundColor = calculateBotValue(
                             calc,
                             bot,
-                            `auxDimensionColor`
+                            `auxPortalColor`
                         );
                         this._userInventoryColor = hasValue(userBackgroundColor)
                             ? new Color(userBackgroundColor)

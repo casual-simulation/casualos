@@ -167,7 +167,7 @@ export interface BotTags {
 
     // Context related tags
     ['auxDimensionConfig']?: string | number | boolean;
-    ['auxDimensionColor']?: string;
+    ['auxPortalColor']?: string;
     ['auxDimensionLocked']?: unknown;
     ['auxDimensionGridScale']?: number;
     ['auxDimensionVisualize']?: DimensionVisualizeMode;
@@ -713,7 +713,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeElementWidth',
     'auxIframeScale',
     'auxDimensionConfig',
-    'auxDimensionColor',
+    'auxPortalColor',
     'auxDimensionLocked',
     'auxDimensionGridScale',
     'auxDimensionX',

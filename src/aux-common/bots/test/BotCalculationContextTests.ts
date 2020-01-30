@@ -3749,9 +3749,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextColor()', () => {
-        it('should return the auxDimensionColor of the bot', () => {
+        it('should return the auxPortalColor of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionColor: 'red',
+                auxPortalColor: 'red',
             });
 
             const calc = createCalculationContext([bot]);
