@@ -12,13 +12,13 @@
     -   `_auxUserDimension` -> `auxPagePortal`
     -   `_auxUserInventoryDimension` -> `auxInventoryPortal`
     -   `_auxUserMenuDimension` -> `auxMenuPortal`
-    -   `_auxUserUniversesDimension` -> `auxUniversesPortal`
     -   `_auxUserUniverse` -> `auxUniverse`
 -   Removed the following tags:
     -   `aux._lastActiveTime`
     -   `_auxSelection`
     -   `aux.connected`
     -   `_auxUser`
+    -   `auxUserUniversesDimension`
 -   Removed the following function:
     -   `player.isConnected()`
 -   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
