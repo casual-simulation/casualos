@@ -221,13 +221,11 @@ describe('BotCalculations', () => {
             ['page', 'auxPagePortal'],
             ['inventory', 'auxInventoryPortal'],
             ['menu', 'auxMenuPortal'],
-            ['universes', 'auxUniversesPortal'],
             ['sheet', 'auxSheetPortal'],
             ['other', 'auxOtherPortal'],
             ['page', 'auxPagePortal'],
             ['auxInventoryPortal', 'auxInventoryPortal'],
             ['auxMenuPortal', 'auxMenuPortal'],
-            ['auxUniversesPortal', 'auxUniversesPortal'],
             ['auxSheetPortal', 'auxSheetPortal'],
             ['auxOtherPortal', 'auxOtherPortal'],
         ];

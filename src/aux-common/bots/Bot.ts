@@ -146,7 +146,6 @@ export interface BotTags {
     ['auxUniverse']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
-    ['auxUniversesPortal']?: string;
     ['_auxEditingBot']?: string;
 
     // Admin channel bot-channel tags
@@ -638,7 +637,6 @@ export const KNOWN_TAGS: string[] = [
     'auxUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
-    'auxUniversesPortal',
     '_auxEditingBot',
     'auxConnectedSessions',
     'auxInventoryHeight',
