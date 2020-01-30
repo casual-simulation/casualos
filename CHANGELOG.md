@@ -13,15 +13,40 @@
     -   `_auxUserInventoryDimension` -> `auxInventoryPortal`
     -   `_auxUserMenuDimension` -> `auxMenuPortal`
     -   `_auxUserUniverse` -> `auxUniverse`
+    -   `auxDimensionColor` -> `auxPortalColor`
+    -   `auxDimensionLocked` -> `auxPortalLocked`
+    -   `auxDimensionRotatable` -> `auxPortalRotatable`
+    -   `auxDimensionPannable` -> `auxPortalPannable`
+    -   `auxDimensionPannableMaxX` -> `auxPortalPannableMaxX`
+    -   `auxDimensionPannableMaxY` -> `auxPortalPannableMaxY`
+    -   `auxDimensionPannableMinX` -> `auxPortalPannableMinX`
+    -   `auxDimensionPannableMinY` -> `auxPortalPannableMinY`
+    -   `auxDimensionZoomable` -> `auxPortalZoomable`
+    -   `auxDimensionZoomableMax` -> `auxPortalZoomableMax`
+    -   `auxDimensionZoomableMin` -> `auxPortalZoomableMin`
+    -   `auxDimensionPlayerZoom` -> `auxPortalPlayerZoom`
+    -   `auxDimensionPlayerRotationX` -> `auxPortalPlayerRotationX`
+    -   `auxDimensionPlayerRotationY` -> `auxPortalPlayerRotationY`
+    -   `auxDimensionGridScale` -> `auxPortalGridScale`
+    -   `auxDimensionSurfaceScale` -> `auxPortalSurfaceScale`
+    -   `auxDimensionInventoryHeight` -> `auxInventoryPortalHeight`
+    -   `auxDimensionInventoryResizable` -> `auxInventoryPortalResizable`
+    -   Removed all the inventory-specific dimension config tags in favor of the normal ones.
+        -   e.g. `auxDimensionInventoryColor` is now just `auxPortalColor`
 -   Removed the following tags:
     -   `aux._lastActiveTime`
     -   `_auxSelection`
     -   `aux.connected`
     -   `_auxUser`
     -   `auxUserUniversesDimension`
+    -   `auxDimensionConfig`
 -   Removed the following function:
     -   `player.isConnected()`
 -   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
+-   Dimensions can no longer be configured using the `auxDimensionConfig` tag.
+    -   Instead of configuring dimensions, you must configure portals.
+    -   Use the new `aux{type}PortalConfigBot` (like `auxPagePortalConfigBot`) tags to specify the bot that should configure the portal.
+    -   The you can find a list of the possible tags under the "Portal Config Tags" header in the documentation.
 
 #### :rocket: Features
 
