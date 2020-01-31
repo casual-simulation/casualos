@@ -1,5 +1,27 @@
 # AUX Changelog
 
+## V0.11.25
+
+### Date: TBD
+
+### Changes:
+
+#### :boom: **Breaking Changes**
+
+-   Replaced the `@onPlayerEnterDimension` listener with `@onPlayerPortalChanged`.
+    -   `@onPlayerPortalChanged` is called whenever any portal changes whereas `@onPlayerEnterDimension` was only called for `auxPagePortal`.
+    -   Additionally, this fixes some of the issues that `@onPlayerEnterDimension` ran into.
+-   Changed the Webhook URLs to the new URL scheme.
+    -   Instead of `https://auxplayer.com/{dimension}/{universe}` you should use `https://auxplayer.com/webhook?auxUniverse={universe}`
+
+#### :rocket: Features
+
+-   Added the ability to click a Bot ID in the sheet to copy it.
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue that prevented the portals from reverting to default values if the config bot for the portal was cleared.
+
 ## V0.11.24
 
 ### Date: 1/31/2020
