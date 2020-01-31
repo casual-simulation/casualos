@@ -63,6 +63,7 @@
 
 -   Fixed an issue where the inventory camera would be placed at an impossible location if the inventory was hidden during startup.
 -   Fixed an issue with the inventory where setting `auxInventoryPortal` to null or `undefined` would not hide it.
+-   Fixed an issue where setting a dimension tag to a number would place the bot in the dimension.
 
 ## V0.11.23
 
