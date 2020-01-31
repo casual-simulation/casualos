@@ -1977,6 +1977,8 @@ export function calculateBooleanTagValue(
         const result = calculateBotValue(context, bot, tag);
         if (typeof result === 'boolean' && result !== null) {
             return result;
+        } else if (typeof result === 'object' && result instanceof Boolean) {
+            return result.valueOf();
         }
     }
     return defaultValue;
@@ -2111,26 +2113,14 @@ export function isBotInDimension(
 ): boolean {
     if (!dimensionId) return false;
 
-    let result: boolean;
+    let dimensionValue = calculateBooleanTagValue(
+        context,
+        bot,
+        dimensionId.valueOf(),
+        false
+    ); //calculateBotValue(context, bot, dimensionId.valueOf());
 
-    let dimensionValue = calculateBotValue(context, bot, dimensionId.valueOf());
-
-    if (
-        typeof dimensionValue === 'object' &&
-        typeof dimensionValue.valueOf === 'function'
-    ) {
-        dimensionValue = dimensionValue.valueOf();
-    }
-
-    if (typeof dimensionValue === 'string') {
-        result = dimensionValue === 'true';
-    } else if (typeof dimensionValue === 'number') {
-        result = true;
-    } else {
-        result = dimensionValue === true;
-    }
-
-    return result;
+    return dimensionValue;
 }
 
 /**

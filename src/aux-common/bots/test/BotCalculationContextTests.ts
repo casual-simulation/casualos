@@ -3605,7 +3605,7 @@ export function botCalculationContextTests(
             });
             const bot = createBot('bot');
             const bot2 = createBot('bot2', {
-                dimension: 0,
+                dimension: true,
             });
 
             const calc = createCalculationContext([user, bot, bot2]);
@@ -4202,21 +4202,10 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('isBotInContext()', () => {
+    describe('isBotInDimension()', () => {
         it('should handle boolean objects', () => {
             const thisBot = createBot('thisBot', {
                 dimension: new Boolean(true),
-            });
-
-            const calc = createCalculationContext([thisBot]);
-            const result = isBotInDimension(calc, thisBot, 'dimension');
-
-            expect(result).toBe(true);
-        });
-
-        it('should handle string objects', () => {
-            const thisBot = createBot('thisBot', {
-                dimension: new String('true'),
             });
 
             const calc = createCalculationContext([thisBot]);
@@ -4236,6 +4225,41 @@ export function botCalculationContextTests(
             ));
 
             expect(result).toBe(true);
+        });
+
+        booleanTagValueTests(false, (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                dimension: given,
+            });
+
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInDimension(calc, thisBot, 'dimension');
+
+            expect(result).toBe(expected);
+        });
+
+        const cases = [
+            ['true', true],
+            ['false', false],
+            ['abc', false],
+            [0, false],
+            [1, false],
+            [{}, false],
+            [null, false],
+            [undefined, false],
+            [true, true],
+            [false, false],
+        ];
+
+        it.each(cases)('should handle %s', (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                dimension: given,
+            });
+
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInDimension(calc, thisBot, 'dimension');
+
+            expect(result).toBe(expected);
         });
     });
 
@@ -4448,6 +4472,8 @@ function booleanTagValueTests(
         ['false', false],
         [true, true],
         ['true', true],
+        [new Boolean(true), true],
+        [new Boolean(false), false],
         ['=1', defaultValue],
         ['="hello"', defaultValue],
     ];
