@@ -553,14 +553,7 @@ export class Server {
         this._app.use(this._client.app);
 
         this._app.all(
-            '/:dimension/:channel',
-            asyncMiddleware(async (req, res) => {
-                await this._handleWebhook(req, res);
-            })
-        );
-
-        this._app.all(
-            '/:dimension/:channel/*',
+            '/webhook/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
@@ -605,7 +598,11 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.params.channel;
+        const id = req.query.auxUniverse;
+        if (!id) {
+            res.sendStatus(400);
+            return;
+        }
         let handled = await this._handleV1Webhook(req, res, id);
 
         if (handled) {
