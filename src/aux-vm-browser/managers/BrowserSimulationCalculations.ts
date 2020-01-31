@@ -5,7 +5,7 @@ import {
     Bot,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
-import { never, Observable } from 'rxjs';
+import { never, Observable, of } from 'rxjs';
 import { switchMap, first, map, distinctUntilChanged } from 'rxjs/operators';
 import {
     LoginManager,
@@ -94,6 +94,6 @@ export function watchPortalConfigBotCore(
             return getPortalConfigBotID(calc, update.bot, portal);
         }),
         distinctUntilChanged(),
-        switchMap(id => watcher.botChanged(id))
+        switchMap(id => (id ? watcher.botChanged(id) : of(null)))
     );
 }
