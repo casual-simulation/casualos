@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.11.23
+## V0.11.24
 
 ### Date: TBD
 
