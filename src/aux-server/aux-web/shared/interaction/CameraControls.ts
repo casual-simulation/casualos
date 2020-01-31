@@ -329,6 +329,10 @@ export class CameraControls {
             this._camera.zoom /
             this.viewport.height;
 
+        if (isNaN(distance)) {
+            return;
+        }
+
         let v = new Vector3();
         if (this.screenSpacePanning === true) {
             v.setFromMatrixColumn(this._camera.matrix, 1);

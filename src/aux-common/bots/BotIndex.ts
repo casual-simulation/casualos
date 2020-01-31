@@ -27,6 +27,7 @@ export interface BotTagAddedEvent {
 export interface BotTagRemovedEvent {
     type: 'bot_tag_removed';
     bot: Bot;
+    oldBot?: Bot;
     tag: string;
 }
 
@@ -174,6 +175,7 @@ export class BotIndex {
                     events.push({
                         type: 'bot_tag_removed',
                         bot: bot,
+                        oldBot: oldBot,
                         tag: tag,
                     });
                 }

@@ -1406,7 +1406,7 @@ describe('Dependencies', () => {
                 ) => [
                     {
                         type: 'tag',
-                        name: '_auxUserUniverse',
+                        name: 'auxUniverse',
                         dependencies: [],
                     },
                 ],
@@ -1448,7 +1448,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: '_auxUserUniverse',
+                    name: 'auxUniverse',
                     dependencies: [],
                 },
                 {
@@ -1803,17 +1803,17 @@ describe('Dependencies', () => {
         const playerContextCases = [
             [
                 'player.getMenuDimension',
-                '_auxUserMenuDimension',
+                'auxMenuPortal',
                 ['player', 'getMenuDimension'],
             ],
             [
                 'player.getInventoryDimension',
-                '_auxUserInventoryDimension',
+                'auxInventoryPortal',
                 ['player', 'getInventoryDimension'],
             ],
             [
                 'player.getCurrentDimension',
-                '_auxUserDimension',
+                'auxPagePortal',
                 ['player', 'getCurrentDimension'],
             ],
         ];

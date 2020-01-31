@@ -55,6 +55,8 @@ export class BotPanelManager implements SubscriptionLike {
         this._botsUpdated = new BehaviorSubject<BotsUpdatedEvent>({
             bots: [],
             isDiff: false,
+            hasPortal: false,
+            dimension: null,
         });
 
         this._subs.push(
@@ -82,25 +84,31 @@ export class BotPanelManager implements SubscriptionLike {
         return bufferedEvents.pipe(
             flatMap(async () => {
                 if (this._helper.userBot) {
-                    if (!!this._helper.userBot.values._auxUserDimension) {
+                    const dimension = this._helper.userBot.values
+                        .auxSheetPortal;
+                    if (!!dimension) {
                         return {
                             bots: filterBotsBySelection(
                                 this._helper.objects,
-                                this._helper.userBot.values._auxUserDimension
+                                dimension
                             ),
+                            hasPortal: true,
+                            dimension: dimension,
                             isDiff: false,
                         };
-                    } else if (
-                        this._helper.userBot.values._auxUserDimension === false
-                    ) {
+                    } else if (dimension === false) {
                         return {
                             bots: this._helper.objects,
+                            hasPortal: true,
+                            dimension: null,
                             isDiff: false,
                         };
                     }
                 }
                 return {
                     bots: [],
+                    hasPortal: false,
+                    dimension: null,
                     isDiff: false,
                 };
             })
@@ -110,5 +118,7 @@ export class BotPanelManager implements SubscriptionLike {
 
 export interface BotsUpdatedEvent {
     bots: PrecalculatedBot[];
+    dimension: string;
+    hasPortal: boolean;
     isDiff: boolean;
 }

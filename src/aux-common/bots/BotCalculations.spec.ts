@@ -18,7 +18,6 @@ import {
     createWorkspace,
     isBotMovable,
     isBotStackable,
-    newSelectionId,
     objectsAtDimensionGridPosition,
     calculateFormulaValue,
     filterBotsBySelection,
@@ -43,8 +42,6 @@ import {
     parseSimulationId,
     getBotVersion,
     isBotInDimension,
-    getBotUsernameList,
-    isInUsernameList,
     getBotDragMode,
     getBuilderDimensionGrid,
     SimulationIdParseSuccess,
@@ -60,6 +57,7 @@ import {
     isScript,
     parseScript,
     getBotTag,
+    getPortalTag,
 } from './BotCalculations';
 import {
     Bot,
@@ -216,6 +214,28 @@ describe('BotCalculations', () => {
 
             expect(getBotTag(bot, 'abc')).toEqual('def');
         });
+    });
+
+    describe('getPortalTag()', () => {
+        const cases = [
+            ['page', 'auxPagePortal'],
+            ['inventory', 'auxInventoryPortal'],
+            ['menu', 'auxMenuPortal'],
+            ['sheet', 'auxSheetPortal'],
+            ['other', 'auxOtherPortal'],
+            ['page', 'auxPagePortal'],
+            ['auxInventoryPortal', 'auxInventoryPortal'],
+            ['auxMenuPortal', 'auxMenuPortal'],
+            ['auxSheetPortal', 'auxSheetPortal'],
+            ['auxOtherPortal', 'auxOtherPortal'],
+        ];
+        it.each(cases)(
+            'should return the corresponding tag for the portal type',
+            (type, expected) => {
+                const tag = getPortalTag(type);
+                expect(tag).toBe(expected);
+            }
+        );
     });
 
     describe('calculateStateDiff()', () => {
@@ -785,14 +805,14 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['auxDimensionLocked']).toEqual(undefined);
+            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
         });
 
         it('should allow setting the workspace to be unlocked', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID', false);
 
-            expect(workspace.tags['auxDimensionLocked']).toEqual(undefined);
+            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
         });
     });
 
@@ -953,16 +973,6 @@ describe('BotCalculations', () => {
             const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
-        });
-    });
-
-    describe('newSelectionId()', () => {
-        beforeAll(() => {
-            uuidMock.mockReturnValue('test');
-        });
-
-        it('should return IDs that are well known', () => {
-            expect(isTagWellKnown(newSelectionId())).toBe(true);
         });
     });
 

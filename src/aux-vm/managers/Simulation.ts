@@ -89,10 +89,6 @@ export interface Simulation extends Initable {
      */
     onError: Observable<AuxChannelErrorType>;
 
-    // TODO: This seems like a pretty dangerous function to keep around,
-    // but we'll add a config option to prevent this from happening on real sites.
-    deleteEverything(): Promise<void>;
-
     /**
      * Forks the current session's aux into the given session ID.
      * @param forkName The ID of the new session.

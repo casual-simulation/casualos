@@ -156,7 +156,11 @@ export function processIndexEvents(
                 const previousDimensions =
                     event.type === 'bot_tag_updated'
                         ? calculateDimensions(calc, event.oldBot, event.tag)
-                        : calculateDimensions(calc, event.bot, event.tag);
+                        : calculateDimensions(
+                              calc,
+                              event.oldBot || event.bot,
+                              event.tag
+                          );
                 const currentDimensions =
                     event.type === 'bot_tag_removed'
                         ? []
@@ -215,7 +219,7 @@ export function processIndexEvents(
         }
 
         // Check for user bots
-        if (event.tag === '_auxUserDimension') {
+        if (event.tag === 'auxPagePortal') {
             if (event.type === 'bot_tag_updated') {
                 const currentDimension = calculateStringTagValue(
                     calc,
@@ -319,7 +323,7 @@ function addDimension(
     tag: string
 ) {
     let botsWithDimensionTag = index.findBotsWithTag(dimension);
-    let userBots = index.findBotsWithTag('_auxUserDimension');
+    let userBots = index.findBotsWithTag('auxPagePortal');
     let allBots = union(userBots, botsWithDimensionTag);
     let botsInDimension = allBots.filter(b =>
         isBotInDimension(calc, b, dimension)

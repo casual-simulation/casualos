@@ -570,7 +570,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserDimension',
+                    name: 'auxPagePortal',
                     dependencies: [],
                 },
             ];
@@ -582,7 +582,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserUniverse',
+                    name: 'auxUniverse',
                     dependencies: [],
                 },
             ];
@@ -594,7 +594,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserMenuDimension',
+                    name: 'auxMenuPortal',
                     dependencies: [],
                 },
             ];
@@ -606,7 +606,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: '_auxUserInventoryDimension',
+                    name: 'auxInventoryPortal',
                     dependencies: [],
                 },
             ];

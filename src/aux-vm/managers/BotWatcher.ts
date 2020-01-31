@@ -4,6 +4,7 @@ import {
     merge,
     BotIndex,
     BotIndexEvent,
+    tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
@@ -15,6 +16,7 @@ import {
     first,
     endWith,
     merge as rxMerge,
+    map,
 } from 'rxjs/operators';
 import values from 'lodash/values';
 import omitBy from 'lodash/omitBy';
@@ -213,8 +215,16 @@ export class BotWatcher implements SubscriptionLike {
      */
     botTagsChanged(id: string): Observable<UpdatedBotInfo> {
         const bot = this._helper.botsState ? this._helper.botsState[id] : null;
-        return this.botTagsUpdated.pipe(
+        const added = this._botsDiscoveredObservable.pipe(
             flatMap(bots => bots),
+            map(bot => ({
+                bot,
+                tags: new Set(tagsOnBot(bot)),
+            }))
+        );
+        const updated = this.botTagsUpdated.pipe(flatMap(bots => bots));
+        return updated.pipe(
+            rxMerge(added),
             takeUntil(
                 this.botsRemoved.pipe(
                     flatMap(botIds => botIds),
@@ -224,9 +234,9 @@ export class BotWatcher implements SubscriptionLike {
             filter(u => u.bot.id === id),
             startWith({
                 bot,
-                tags: new Set<string>(),
+                tags: new Set(bot ? tagsOnBot(bot) : []),
             }),
-            filter(f => !!f),
+            filter(f => !!f && !!f.bot),
             endWith(null)
         );
     }

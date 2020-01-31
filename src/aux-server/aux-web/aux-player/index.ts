@@ -104,31 +104,11 @@ function redirectToBuilder(id: string) {
 
 const routes: RouteConfig[] = [
     {
-        path: '/\\*/:id',
-        name: 'aux-builder',
-        redirect: to => {
-            if (appManager.config) {
-                redirectToBuilder(to.params.id);
-            }
-
-            return `/${to.params.id}`;
-        },
-    },
-    {
-        path: '/:dimension/:id?',
+        path: '*',
         name: 'home',
         component: PlayerHome,
-        beforeEnter: (to, from, next) => {
-            if (to.params.dimension === '*' || !to.params.dimension) {
-                redirectToBuilder(to.params.id);
-            } else {
-                next();
-            }
-        },
         props: route => ({
-            dimension: route.params.dimension,
-            primaryChannel: route.params.id,
-            channels: route.query.channels,
+            query: route.query,
         }),
     },
 ];

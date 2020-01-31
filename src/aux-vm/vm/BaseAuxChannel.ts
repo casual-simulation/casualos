@@ -8,8 +8,6 @@ import {
     AuxCausalTree,
     botChangeObservables,
     GLOBALS_BOT_ID,
-    isInUsernameList,
-    shouldDeleteUser,
     botRemoved,
     AuxOp,
     convertToCopiableValue,
@@ -281,13 +279,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * @param loadingProgress The loading progress.
      */
     protected async _initAux() {
-        this._handleStatusUpdated({
-            type: 'progress',
-            message: 'Removing old users...',
-            progress: 0.7,
-        });
-        await this._deleteAndUpdateOldUserBots();
-
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Initializing user bot...',
@@ -601,20 +592,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);
         }
-    }
-
-    private async _deleteAndUpdateOldUserBots() {
-        let events: BotAction[] = [];
-        for (let bot of this._helper.objects) {
-            if (bot.tags['_auxUser']) {
-                if (shouldDeleteUser(bot)) {
-                    console.log('[BaseAuxChannel] Removing User', bot.id);
-                    events.push(botRemoved(bot.id));
-                }
-            }
-        }
-
-        await this._helper.transaction(...events);
     }
 
     private async _initGlobalsBot() {

@@ -2,6 +2,79 @@
 
 ## V0.11.23
 
+### Date: TBD
+
+### Changes:
+
+#### :boom: **Breaking Changes**
+
+-   Renamed the following tags:
+    -   `_auxUserDimension` -> `auxPagePortal`
+    -   `_auxUserInventoryDimension` -> `auxInventoryPortal`
+    -   `_auxUserMenuDimension` -> `auxMenuPortal`
+    -   `_auxUserUniverse` -> `auxUniverse`
+    -   `auxDimensionColor` -> `auxPortalColor`
+    -   `auxDimensionLocked` -> `auxPortalLocked`
+    -   `auxDimensionRotatable` -> `auxPortalRotatable`
+    -   `auxDimensionPannable` -> `auxPortalPannable`
+    -   `auxDimensionPannableMaxX` -> `auxPortalPannableMaxX`
+    -   `auxDimensionPannableMaxY` -> `auxPortalPannableMaxY`
+    -   `auxDimensionPannableMinX` -> `auxPortalPannableMinX`
+    -   `auxDimensionPannableMinY` -> `auxPortalPannableMinY`
+    -   `auxDimensionZoomable` -> `auxPortalZoomable`
+    -   `auxDimensionZoomableMax` -> `auxPortalZoomableMax`
+    -   `auxDimensionZoomableMin` -> `auxPortalZoomableMin`
+    -   `auxDimensionPlayerZoom` -> `auxPortalPlayerZoom`
+    -   `auxDimensionPlayerRotationX` -> `auxPortalPlayerRotationX`
+    -   `auxDimensionPlayerRotationY` -> `auxPortalPlayerRotationY`
+    -   `auxDimensionGridScale` -> `auxPortalGridScale`
+    -   `auxDimensionSurfaceScale` -> `auxPortalSurfaceScale`
+    -   `auxDimensionInventoryHeight` -> `auxInventoryPortalHeight`
+    -   `auxDimensionInventoryResizable` -> `auxInventoryPortalResizable`
+    -   Removed all the inventory-specific dimension config tags in favor of the normal ones.
+        -   e.g. `auxDimensionInventoryColor` is now just `auxPortalColor`
+-   Removed the following tags:
+    -   `aux._lastActiveTime`
+    -   `_auxSelection`
+    -   `aux.connected`
+    -   `_auxUser`
+    -   `auxUserUniversesDimension`
+    -   `auxDimensionConfig`
+-   Removed the following function:
+    -   `player.isConnected()`
+-   The `player.isInDimension()` function has been updated to check whether the page portal is showing the given dimension.
+-   Dimensions can no longer be configured using the `auxDimensionConfig` tag.
+    -   Instead of configuring dimensions, you must configure portals.
+    -   Use the new `aux{type}PortalConfigBot` (like `auxPagePortalConfigBot`) tags to specify the bot that should configure the portal.
+    -   The you can find a list of the possible tags under the "Portal Config Tags" header in the documentation.
+
+#### :rocket: Features
+
+-   Added the `player.getPortalDimension(portal)` function.
+    -   `portal` is a string with the name of the portal. Can be one of the following options:
+        -   `page` - Gets the `auxPagePortal` tag.
+        -   `inventory` - Gets the `auxInventoryPortal` tag.
+        -   `menu` - Gets the `auxMenuPortal` tag.
+        -   `sheet` - Gets the `auxSheetPortal` tag.
+        -   `universes` - Gets the `auxUniversesPortal` tag.
+        -   You can also give it a tag that ends with `"Portal"` to get that tag directly. (e.g. `auxPagePortal` will return `auxPagePortal`)
+-   Added the `player.getDimensionalDepth(dimension)` function.
+    -   `dimension` is the dimension that should be searched for.
+    -   Returns the distance between the player bot and the given dimension.
+        -   A return value of `0` means that the player bot is in the given dimension.
+        -   A return value of `1` means that the player bot is viewing the given dimension through a portal.
+        -   A return value of `-1` means that the player bot cannot access the given dimension at this moment.
+-   Added the ability to show the sheet in auxPlayer by setting the `auxSheetPortal` tag on the player bot.
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where the inventory camera would be placed at an impossible location if the inventory was hidden during startup.
+-   Fixed an issue with the inventory where setting `auxInventoryPortal` to null or `undefined` would not hide it.
+-   Fixed an issue where setting a dimension tag to a number would place the bot in the dimension.
+-   Fixed an issue where tag autocomplete results would become duplicated after closing and reopening the sheet.
+
+## V0.11.23
+
 ### Date: 1/23/2020
 
 ### Changes:

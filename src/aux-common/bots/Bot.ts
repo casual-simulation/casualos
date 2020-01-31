@@ -58,6 +58,17 @@ export interface Bot {
 export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
 
 /**
+ * The possible portal types.
+ */
+export type PortalType =
+    | 'page'
+    | 'inventory'
+    | 'menu'
+    | 'sheet'
+    | 'universes'
+    | string;
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -122,7 +133,6 @@ export interface BotTags {
     ['auxIframeRotationZ']?: number;
     ['auxIframeElementWidth']?: number;
     ['auxIframeScale']?: number;
-    ['auxUniverse']?: string;
     ['auxCreator']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
@@ -130,16 +140,17 @@ export interface BotTags {
     ['auxProgressBarAnchor']?: unknown;
 
     // User tags
-    ['_auxSelection']?: string;
-    ['_auxUser']?: string;
-    ['auxUserActive']?: boolean;
-    ['_auxUserDimension']?: string | boolean;
-    ['_auxUserUniverse']?: string;
-    ['_auxUserInventoryDimension']?: string;
-    ['_auxUserMenuDimension']?: string;
-    ['_auxUserUniversesDimension']?: string;
+    ['auxPlayerActive']?: boolean;
+    ['auxPagePortal']?: string | boolean;
+    ['auxSheetPortal']?: string | boolean;
+    ['auxUniverse']?: string | string[];
+    ['auxInventoryPortal']?: string;
+    ['auxMenuPortal']?: string;
+    ['auxPagePortalConfigBot']?: string;
+    ['auxSheetPortalConfigBot']?: string;
+    ['auxInventoryPortalConfigBot']?: string;
+    ['auxMenuPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
-    ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
     ['auxUniverseConnectedSessions']?: number;
@@ -160,45 +171,24 @@ export interface BotTags {
 
     // Context related tags
     ['auxDimensionConfig']?: string | number | boolean;
-    ['auxDimensionColor']?: string;
-    ['auxDimensionLocked']?: unknown;
-    ['auxDimensionGridScale']?: number;
-    ['auxDimensionVisualize']?: DimensionVisualizeMode;
-    ['auxDimensionX']?: number;
-    ['auxDimensionY']?: number;
-    ['auxDimensionZ']?: number;
-    ['auxDimensionOrientationX']?: number;
-    ['auxDimensionOrientationY']?: number;
-    ['auxDimensionOrientationZ']?: number;
-    ['auxDimensionSurfaceScale']?: number;
-    ['auxDimensionSurfaceSize']?: number;
-    ['auxDimensionSurfaceMinimized']?: boolean | null;
-    ['auxDimensionSurfaceDefaultHeight']?: number;
-    ['auxDimensionSurfaceMovable']?: unknown;
-    ['auxDimensionPlayerRotationX']?: number;
-    ['auxDimensionPlayerRotationY']?: number;
-    ['auxDimensionPlayerZoom']?: number;
-    ['auxDimensionDevicesVisible']?: boolean | null;
-    ['auxDimensionInventoryColor']?: string;
-    ['auxDimensionInventoryHeight']?: unknown;
-    ['auxDimensionInventoryPannable']?: boolean;
-    [`auxDimensionInventoryPannableMinX`]?: number | null;
-    [`auxDimensionInventoryPannableMaxX`]?: number | null;
-    [`auxDimensionInventoryPannableMinY`]?: number | null;
-    [`auxDimensionInventoryPannableMaxY`]?: number | null;
-    ['auxDimensionInventoryResizable']?: boolean;
-    ['auxDimensionInventoryRotatable']?: boolean;
-    ['auxDimensionInventoryZoomable']?: boolean;
-    ['auxDimensionInventoryVisible']?: unknown;
-    ['auxDimensionPannable']?: number | null;
-    [`auxDimensionPannableMinX`]?: number | null;
-    [`auxDimensionPannableMaxX`]?: number | null;
-    [`auxDimensionPannableMinY`]?: number | null;
-    [`auxDimensionPannableMaxY`]?: number | null;
-    ['auxDimensionZoomable']?: number | null;
-    [`auxDimensionZoomableMin`]?: number | null;
-    [`auxDimensionZoomableMax`]?: number | null;
-    ['auxDimensionRotatable']?: number | null;
+    ['auxPortalColor']?: string;
+    ['auxPortalLocked']?: unknown;
+    ['auxPortalGridScale']?: number;
+    ['auxPortalSurfaceScale']?: number;
+    ['auxPortalPlayerRotationX']?: number;
+    ['auxPortalPlayerRotationY']?: number;
+    ['auxPortalPlayerZoom']?: number;
+    ['auxPortalPannable']?: number | null;
+    [`auxPortalPannableMinX`]?: number | null;
+    [`auxPortalPannableMaxX`]?: number | null;
+    [`auxPortalPannableMinY`]?: number | null;
+    [`auxPortalPannableMaxY`]?: number | null;
+    ['auxPortalZoomable']?: number | null;
+    [`auxPortalZoomableMin`]?: number | null;
+    [`auxPortalZoomableMax`]?: number | null;
+    ['auxPortalRotatable']?: number | null;
+    ['auxInventoryPortalHeight']?: unknown;
+    ['auxInventoryPortalResizable']?: boolean;
 
     // Stripe tags
     ['stripePublishableKey']?: string;
@@ -260,11 +250,6 @@ export interface WorkspaceHex {
 }
 
 /**
- * Defines the possible selection modes a user can be in.
- */
-export type SelectionMode = 'single' | 'multi';
-
-/**
  * Defines the possible shapes that a bot can appear as.
  */
 export type BotShape = 'cube' | 'sphere' | 'sprite';
@@ -311,11 +296,6 @@ export type BackupType = 'github' | 'download';
  * "surface" means the dimension is visible and renders a worksurface.
  */
 export type DimensionVisualizeMode = true | false | 'surface';
-
-/**
- * The default selection mode.
- */
-export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 
 /**
  * The default bot shape.
@@ -615,49 +595,57 @@ export const ON_CHAT_ACTION_NAME: string = 'onChat';
  */
 export const AUX_BOT_VERSION: number = 1;
 
+/**
+ * The list of all portal tags.
+ */
+export const KNOWN_PORTALS: string[] = [
+    'auxPagePortal',
+    'auxSheetPortal',
+    'auxInventoryPortal',
+    'auxMenuPortal',
+];
+
+/**
+ * The list of portal tags that should always be represented in the query string.
+ */
+export const QUERY_PORTALS: string[] = ['auxPagePortal', 'auxSheetPortal'];
+
 /*
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    '_auxSelection',
-    '_auxUser',
-    'auxUserActive',
-    '_auxUserDimension',
-    '_auxUserUniverse',
-    '_auxUserInventoryDimension',
-    '_auxUserMenuDimension',
-    '_auxUserUniversesDimension',
+    'auxPlayerActive',
+    'auxPagePortal',
+    'auxSheetPortal',
+    'auxUniverse',
+    'auxInventoryPortal',
+    'auxMenuPortal',
+    'auxPagePortalConfigBot',
+    'auxSheetPortalConfigBot',
+    'auxInventoryPortalConfigBot',
+    'auxMenuPortalConfigBot',
     '_auxEditingBot',
-    '_auxSelectionMode',
     'auxConnectedSessions',
-    'auxInventoryHeight',
-    'auxDimensionInventoryColor',
-    'auxDimensionInventoryHeight',
-    'auxDimensionInventoryVisible',
-    'auxDimensionInventoryPannable',
-    `auxDimensionInventoryPannableMinX`,
-    `auxDimensionInventoryPannableMaxX`,
-    `auxDimensionInventoryPannableMinY`,
-    `auxDimensionInventoryPannableMaxY`,
 
-    'auxDimensionInventoryResizable',
-    'auxDimensionInventoryRotatable',
-    'auxDimensionInventoryZoomable',
+    'auxPortalColor',
+    'auxPortalLocked',
+    'auxPortalPannable',
+    `auxPortalPannableMinX`,
+    `auxPortalPannableMaxX`,
+    `auxPortalPannableMinY`,
+    `auxPortalPannableMaxY`,
+    'auxPortalZoomable',
+    `auxPortalZoomableMin`,
+    `auxPortalZoomableMax`,
+    'auxPortalRotatable',
+    'auxPortalGridScale',
+    'auxPortalSurfaceScale',
+    `auxPortalPlayerZoom`,
+    `auxPortalPlayerRotationX`,
+    `auxPortalPlayerRotationY`,
+    'auxInventoryPortalHeight',
+    'auxInventoryPortalResizable',
 
-    'auxDimensionPannable',
-
-    `auxDimensionPannableMinX`,
-    `auxDimensionPannableMaxX`,
-
-    `auxDimensionPannableMinY`,
-    `auxDimensionPannableMaxY`,
-
-    'auxDimensionZoomable',
-
-    `auxDimensionZoomableMin`,
-    `auxDimensionZoomableMax`,
-
-    'auxDimensionRotatable',
     'auxUniverseColor',
     'auxUniverseUserPlayerColor',
     'auxUniverseUserBuilderColor',
@@ -691,7 +679,6 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarAnchor',
-    'auxUniverse',
     'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',
@@ -704,26 +691,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'auxDimensionConfig',
-    'auxDimensionColor',
-    'auxDimensionLocked',
-    'auxDimensionGridScale',
-    'auxDimensionX',
-    'auxDimensionY',
-    'auxDimensionZ',
-    'auxDimensionSurfaceDefaultHeight',
-    'auxDimensionOrientationX',
-    'auxDimensionOrientationY',
-    'auxDimensionOrientationZ',
-    'auxDimensionSurfaceScale',
-    'auxDimensionSurfaceSize',
-    'auxDimensionSurfaceMinimized',
-    'auxDimensionSurfaceMovable',
-    'auxDimensionVisualize',
-    'auxDimensionDevicesVisible',
-    `auxDimensionPlayerZoom`,
-    `auxDimensionPlayerRotationX`,
-    `auxDimensionPlayerRotationY`,
+
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',

@@ -84,80 +84,6 @@ describe('BotHelper', () => {
         });
     });
 
-    describe('createSimulation()', () => {
-        it('should create a new simulation bot', async () => {
-            helper.botsState = {
-                user: createPrecalculatedBot('user', {
-                    _auxUserUniversesDimension: 'abc',
-                }),
-            };
-
-            await helper.createSimulation('test', 'botId');
-            await helper.createSimulation('test2', 'botId2');
-
-            expect(vm.events).toEqual([
-                botAdded(
-                    createBot(
-                        'botId',
-                        {
-                            abc: true,
-                            auxUniverse: 'test',
-                        },
-                        'tempLocal'
-                    )
-                ),
-                action(CREATE_ACTION_NAME, ['botId'], 'user'),
-                action(CREATE_ANY_ACTION_NAME, null, 'user', {
-                    bot: createBot(
-                        'botId',
-                        {
-                            abc: true,
-                            auxUniverse: 'test',
-                        },
-                        'tempLocal'
-                    ),
-                }),
-                botAdded(
-                    createBot(
-                        'botId2',
-                        {
-                            abc: true,
-                            auxUniverse: 'test2',
-                        },
-                        'tempLocal'
-                    )
-                ),
-                action(CREATE_ACTION_NAME, ['botId2'], 'user'),
-                action(CREATE_ANY_ACTION_NAME, null, 'user', {
-                    bot: createBot(
-                        'botId2',
-                        {
-                            abc: true,
-                            auxUniverse: 'test2',
-                        },
-                        'tempLocal'
-                    ),
-                }),
-            ]);
-        });
-
-        it('should not create a new simulation when one already exists for the given channel ID', async () => {
-            helper.botsState = {
-                user: createPrecalculatedBot('user', {
-                    _auxUserUniversesDimension: 'abc',
-                }),
-                bot1: createPrecalculatedBot('bot1', {
-                    abc: true,
-                    auxUniverse: 'test',
-                }),
-            };
-
-            await helper.createSimulation('test', 'bot2');
-
-            expect(vm.events).toEqual([]);
-        });
-    });
-
     describe('createBot()', () => {
         it('should send onCreate() and onAnyCreate() shouts', async () => {
             await helper.createBot('abc', {
@@ -177,28 +103,6 @@ describe('BotHelper', () => {
                     }),
                 }),
             ]);
-        });
-    });
-
-    describe('destroySimulations()', () => {
-        it('should destroy the simulations that load the given ID', async () => {
-            helper.botsState = {
-                user: createPrecalculatedBot('user', {
-                    _auxUserUniversesDimension: 'abc',
-                }),
-                bot1: createPrecalculatedBot('bot1', {
-                    abc: true,
-                    auxUniverse: 'test',
-                }),
-                bot2: createPrecalculatedBot('bot2', {
-                    abc: true,
-                    auxUniverse: 'test',
-                }),
-            };
-
-            await helper.destroySimulations('test');
-
-            expect(vm.events).toEqual([botRemoved('bot1'), botRemoved('bot2')]);
         });
     });
 

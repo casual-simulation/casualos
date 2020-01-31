@@ -233,7 +233,7 @@ describe('AdminModule', () => {
             });
         });
 
-        it('should set the auxUserActive tag based on the session ID', async () => {
+        it('should set the auxPlayerActive tag based on the session ID', async () => {
             await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
 
             let testDevice1: DeviceInfo = {
@@ -249,7 +249,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    auxUserActive: true,
+                    auxPlayerActive: true,
                 },
             });
 
@@ -258,7 +258,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    auxUserActive: false,
+                    auxPlayerActive: false,
                 },
             });
 
@@ -267,7 +267,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    auxUserActive: true,
+                    auxPlayerActive: true,
                 },
             });
 
@@ -276,7 +276,7 @@ describe('AdminModule', () => {
             expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    auxUserActive: false,
+                    auxPlayerActive: false,
                 },
             });
         });

@@ -9,6 +9,7 @@ import {
     MOD_DROP_ACTION_NAME,
     BotsState,
     CREATE_ANY_ACTION_NAME,
+    KNOWN_PORTALS,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -75,14 +76,13 @@ import {
     isBotInDimension,
     tagsOnBot,
     isDestroyable,
-    isInUsernameList,
-    getBotUsernameList,
     trimTag,
     trimEvent,
     hasValue,
     createBot,
     isScriptBot,
     getBotSpace,
+    getPortalTag,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -374,6 +374,17 @@ interface Bot {
  * The possible bot spaces.
  */
 type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
+
+/**
+ * The possible portal types.
+ */
+export type PortalType =
+    | 'page'
+    | 'inventory'
+    | 'menu'
+    | 'sheet'
+    | 'universes'
+    | string;
 
 /**
  * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
@@ -1210,7 +1221,7 @@ function isInDimension(givenDimension: string) {
 function getCurrentDimension(): string {
     const user = getUser();
     if (user) {
-        const dimension = getTag(user, '_auxUserDimension');
+        const dimension = getTag(user, 'auxPagePortal');
         return dimension || undefined;
     }
     return undefined;
@@ -1222,7 +1233,7 @@ function getCurrentDimension(): string {
 function getCurrentUniverse(): string {
     const user = getUser();
     if (user) {
-        const universe = getTag(user, '_auxUserUniverse') as string;
+        const universe = getTag(user, 'auxUniverse') as string;
 
         if (universe && universe.includes('/')) {
             return universe.split('/')[1];
@@ -1231,6 +1242,26 @@ function getCurrentUniverse(): string {
         return universe || undefined;
     }
     return undefined;
+}
+
+/**
+ * Gets the distance that the player bot is from the given dimension.
+ *
+ * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+ *
+ * @param dimension The dimension to check for.
+ */
+function getDimensionalDepth(dimension: string): number {
+    const bot = getUser();
+    const calc = getCalculationContext();
+    if (isBotInDimension(calc, bot, dimension)) {
+        return 0;
+    } else if (
+        KNOWN_PORTALS.some(portal => getTag(bot, portal) === dimension)
+    ) {
+        return 1;
+    }
+    return -1;
 }
 
 /**
@@ -1295,7 +1326,7 @@ function getGlobals(): Bot {
 function getMenuDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserMenuDimension');
+        return getTag(user, 'auxMenuPortal');
     } else {
         return null;
     }
@@ -1307,7 +1338,7 @@ function getMenuDimension(): string {
 function getInventoryDimension(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, '_auxUserInventoryDimension');
+        return getTag(user, 'auxInventoryPortal');
     } else {
         return null;
     }
@@ -2195,20 +2226,6 @@ function openDevConsole() {
 }
 
 /**
- * Determines if the user is currently connected to the server.
- */
-function isConnected(): boolean {
-    const user = getUser();
-    if (user) {
-        const val = getTag(user, 'aux.connected');
-        if (val) {
-            return val.valueOf() || false;
-        }
-    }
-    return false;
-}
-
-/**
  * Changes the state that the given bot is in.
  * @param bot The bot to change.
  * @param stateName The state that the bot should move to.
@@ -2257,6 +2274,27 @@ function disableAR() {
  */
 function disableVR() {
     return addAction(calcDisableVR());
+}
+
+/**
+ * Gets the dimension that is loaded into the given portal for the player.
+ * If no dimension is loaded, then null is returned.
+ * @param portal The portal type.
+ */
+function getPortalDimension(portal: PortalType) {
+    const user = getUser();
+    if (!user) {
+        return null;
+    }
+
+    const portalTag = getPortalTag(portal);
+    const dimension = getTag(user, portalTag);
+
+    if (!hasValue(dimension)) {
+        return null;
+    }
+
+    return dimension;
 }
 
 /**
@@ -2313,6 +2351,7 @@ const player = {
     getBot: getUser,
     getMenuDimension,
     getInventoryDimension,
+    getPortalDimension,
     playSound,
     toast,
     showHtml,
@@ -2331,9 +2370,9 @@ const player = {
     hasBotInInventory,
     showQRCode,
     hideQRCode,
-    isConnected,
     getCurrentDimension,
     getCurrentUniverse,
+    getDimensionalDepth,
     showInputForTag,
     checkout,
     replaceDragBot,
