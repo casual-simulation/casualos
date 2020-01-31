@@ -57,6 +57,13 @@
         -   `menu` - Gets the `auxMenuPortal` tag.
         -   `sheet` - Gets the `auxSheetPortal` tag.
         -   `universes` - Gets the `auxUniversesPortal` tag.
+        -   You can also give it a tag that ends with `"Portal"` to get that tag directly. (e.g. `auxPagePortal` will return `auxPagePortal`)
+-   Added the `player.getDimensionalDepth(dimension)` function.
+    -   `dimension` is the dimension that should be searched for.
+    -   Returns the distance between the player bot and the given dimension.
+        -   A return value of `0` means that the player bot is in the given dimension.
+        -   A return value of `1` means that the player bot is viewing the given dimension through a portal.
+        -   A return value of `-1` means that the player bot cannot access the given dimension at this moment.
 -   Added the ability to show the sheet in auxPlayer by setting the `auxSheetPortal` tag on the player bot.
 
 #### :bug: Bug Fixes
