@@ -1,5 +1,5 @@
 <template>
-    <span class="tag bot-id clonable">
+    <span class="tag bot-id clonable" @click="copyID()">
         {{ shortID }}
     </span>
 </template>

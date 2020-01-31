@@ -50,7 +50,6 @@ import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
-import { navigateToUrl } from '../../SharedUtils';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 
 @Component({

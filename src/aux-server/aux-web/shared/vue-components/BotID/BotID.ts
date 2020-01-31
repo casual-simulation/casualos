@@ -1,7 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
-import { AuxBot } from '@casual-simulation/aux-common';
+import { AuxBot, Bot } from '@casual-simulation/aux-common';
+import { copyToClipboard } from '../../SharedUtils';
 
 @Component({
     components: {},
@@ -23,5 +24,9 @@ export default class BotID extends Vue {
 
     constructor() {
         super();
+    }
+
+    copyID() {
+        copyToClipboard(this.bots.id);
     }
 }
