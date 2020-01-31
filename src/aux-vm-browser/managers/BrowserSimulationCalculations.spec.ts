@@ -10,6 +10,7 @@ import {
     createPrecalculatedBot,
     Bot,
     PrecalculatedBot,
+    botUpdated,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
@@ -208,6 +209,54 @@ describe('BrowserSimulationCalculations', () => {
                     abc: 'def',
                 })
             );
+        });
+
+        it('should resolve with null if the bot is cleared', async () => {
+            let update: PrecalculatedBot = null;
+            watchPortalConfigBotCore(
+                login,
+                watcher,
+                helper,
+                'auxPortal'
+            ).subscribe(bot => (update = bot));
+
+            await helper.createBot(userId, {
+                auxPortalConfigBot: 'test',
+            });
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: {
+                    id: userId,
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+
+            await waitAsync();
+
+            expect(update).toBe(null);
+
+            await helper.createBot('test', {
+                abc: 'def',
+            });
+
+            await waitAsync();
+
+            expect(update).not.toEqual(null);
+
+            await helper.transaction(
+                botUpdated(userId, {
+                    tags: {
+                        auxPortalConfigBot: null,
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(update).toEqual(null);
         });
     });
 });

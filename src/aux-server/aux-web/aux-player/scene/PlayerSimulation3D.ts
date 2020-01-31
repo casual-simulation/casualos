@@ -13,6 +13,9 @@ import {
     BotIndexEvent,
     DEFAULT_INVENTORY_VISIBLE,
     getPortalConfigBotID,
+    DEFAULT_PORTAL_ROTATABLE,
+    DEFAULT_PORTAL_PANNABLE,
+    DEFAULT_PORTAL_ZOOMABLE,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -51,15 +54,15 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _dimensionBackground: Color | Texture = null;
 
-    private _pannable: boolean = true;
+    private _pannable: boolean = null;
     private _panMinX: number = null;
     private _panMaxX: number = null;
     private _panMinY: number = null;
     private _panMaxY: number = null;
 
-    private _rotatable: boolean = true;
+    private _rotatable: boolean = null;
 
-    private _zoomable: boolean = true;
+    private _zoomable: boolean = null;
     private _zoomMin: number = null;
     private _zoomMax: number = null;
 
@@ -97,7 +100,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (this._pannable != null) {
             return this._pannable;
         } else {
-            return false;
+            return DEFAULT_PORTAL_PANNABLE;
         }
     }
 
@@ -152,7 +155,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (this._rotatable != null) {
             return this._rotatable;
         } else {
-            return true;
+            return DEFAULT_PORTAL_ROTATABLE;
         }
     }
 
@@ -163,7 +166,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (this._zoomable != null) {
             return this._zoomable;
         } else {
-            return true;
+            return DEFAULT_PORTAL_ZOOMABLE;
         }
     }
 
@@ -302,108 +305,124 @@ export class PlayerSimulation3D extends Simulation3D {
                 .pipe(
                     tap(update => {
                         const bot = update;
-                        const calc = this.simulation.helper.createContext();
-                        // Update the dimension background color.
-                        //let dimensionBackgroundColor =
-                        //bot.tags['auxPortalColor'];
-                        let dimensionBackgroundColor = calculateBotValue(
-                            calc,
-                            bot,
-                            `auxPortalColor`
-                        );
-                        this._dimensionBackground = hasValue(
-                            dimensionBackgroundColor
-                        )
-                            ? new Color(dimensionBackgroundColor)
-                            : undefined;
-                        this._pannable = calculateBooleanTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPannable`,
-                            true
-                        );
-                        this._panMinX = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPannableMinX`,
-                            null
-                        );
-                        this._panMaxX = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPannableMaxX`,
-                            null
-                        );
-                        this._panMinY = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPannableMinY`,
-                            null
-                        );
-                        this._panMaxY = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPannableMaxY`,
-                            null
-                        );
-                        this._zoomable = calculateBooleanTagValue(
-                            calc,
-                            bot,
-                            `auxPortalZoomable`,
-                            true
-                        );
-                        this._zoomMin = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalZoomableMin`,
-                            null
-                        );
-                        this._zoomMax = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalZoomableMax`,
-                            null
-                        );
-                        this._rotatable = calculateBooleanTagValue(
-                            calc,
-                            bot,
-                            `auxPortalRotatable`,
-                            true
-                        );
-                        this._playerZoom = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPlayerZoom`,
-                            null
-                        );
-                        this._playerRotationX = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPlayerRotationX`,
-                            null
-                        );
-                        this._playerRotationY = calculateNumericalTagValue(
-                            calc,
-                            bot,
-                            `auxPortalPlayerRotationY`,
-                            null
-                        );
-                        this.gridScale = calculateGridScale(calc, bot);
 
-                        const dimensionLocked = isDimensionLocked(calc, bot);
-                        if (dimensionLocked) {
-                            let message: string =
-                                'The ' +
-                                this.dimension +
-                                ' dimension is locked.';
-
-                            this.simulation.helper.transaction(toast(message));
-                            this.unsubscribe();
+                        if (bot) {
+                            this._updatePortalValues(bot);
+                        } else {
+                            this._dimensionBackground = null;
+                            this._pannable = null;
+                            this._panMinX = null;
+                            this._panMaxX = null;
+                            this._panMinY = null;
+                            this._panMaxY = null;
+                            this._zoomable = null;
+                            this._zoomMin = null;
+                            this._zoomMax = null;
+                            this._rotatable = null;
+                            this._playerZoom = null;
+                            this._playerRotationX = null;
+                            this._playerRotationY = null;
+                            this.gridScale = calculateGridScale(null, null);
                         }
                     })
                 )
                 .subscribe()
         );
+    }
+
+    private _updatePortalValues(bot: PrecalculatedBot) {
+        const calc = this.simulation.helper.createContext();
+        // Update the dimension background color.
+        //let dimensionBackgroundColor =
+        //bot.tags['auxPortalColor'];
+        let dimensionBackgroundColor = calculateBotValue(
+            calc,
+            bot,
+            `auxPortalColor`
+        );
+        this._dimensionBackground = hasValue(dimensionBackgroundColor)
+            ? new Color(dimensionBackgroundColor)
+            : undefined;
+        this._pannable = calculateBooleanTagValue(
+            calc,
+            bot,
+            `auxPortalPannable`,
+            DEFAULT_PORTAL_PANNABLE
+        );
+        this._panMinX = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPannableMinX`,
+            null
+        );
+        this._panMaxX = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPannableMaxX`,
+            null
+        );
+        this._panMinY = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPannableMinY`,
+            null
+        );
+        this._panMaxY = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPannableMaxY`,
+            null
+        );
+        this._zoomable = calculateBooleanTagValue(
+            calc,
+            bot,
+            `auxPortalZoomable`,
+            DEFAULT_PORTAL_ZOOMABLE
+        );
+        this._zoomMin = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalZoomableMin`,
+            null
+        );
+        this._zoomMax = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalZoomableMax`,
+            null
+        );
+        this._rotatable = calculateBooleanTagValue(
+            calc,
+            bot,
+            `auxPortalRotatable`,
+            DEFAULT_PORTAL_ROTATABLE
+        );
+        this._playerZoom = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPlayerZoom`,
+            null
+        );
+        this._playerRotationX = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPlayerRotationX`,
+            null
+        );
+        this._playerRotationY = calculateNumericalTagValue(
+            calc,
+            bot,
+            `auxPortalPlayerRotationY`,
+            null
+        );
+        this.gridScale = calculateGridScale(calc, bot);
+        const dimensionLocked = isDimensionLocked(calc, bot);
+        if (dimensionLocked) {
+            let message: string =
+                'The ' + this.dimension + ' dimension is locked.';
+            this.simulation.helper.transaction(toast(message));
+            this.unsubscribe();
+        }
     }
 
     protected _isDimensionGroupEvent(event: BotIndexEvent) {
@@ -429,13 +448,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     _onLoaded() {
         super._onLoaded();
-
-        // need to cause an action when another user joins
-        // Send an event to all bots indicating that the given dimension was loaded.
-        this.simulation.helper.action('onPlayerEnterDimension', null, {
-            dimension: this.dimension,
-            player: this.simulation.helper.userBot,
-        });
     }
 
     protected _onBotAdded(

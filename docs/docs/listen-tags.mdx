@@ -359,14 +359,15 @@ let that: {
 };
 ```
 
-### `@onPlayerEnterDimension`
+### `@onPlayerPortalChanged`
 
-A shout that is sent to all bots when the player enters a dimension.
+A shout that is sent to all bots when a portal changes on the player.
 
 #### Arguments:
 ```typescript
 let that: {
-  dimension: string
+  portal: string;
+  dimension: string;
 };
 ```
 

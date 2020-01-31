@@ -380,6 +380,31 @@ export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 export const DEFAULT_INVENTORY_VISIBLE = false;
 
 /**
+ * Whether portals are pannable by default.
+ */
+export const DEFAULT_PORTAL_PANNABLE = true;
+
+/**
+ * Whether portals are rotatable by default.
+ */
+export const DEFAULT_PORTAL_ROTATABLE = true;
+
+/**
+ * Whether portals are zoomable by default.
+ */
+export const DEFAULT_PORTAL_ZOOMABLE = true;
+
+/**
+ * Whether inventory portals are resizable by default.
+ */
+export const DEFAULT_INVENTORY_PORTAL_RESIZABLE = true;
+
+/**
+ * The default height for inventory portals.
+ */
+export const DEFAULT_INVENTORY_PORTAL_HEIGHT = 0;
+
+/**
  * The ID of the global configuration bot.
  */
 export const GLOBALS_BOT_ID = 'config';
@@ -573,6 +598,12 @@ export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
     'onUniverseUnsubscribed';
 
 /**
+ * The name of the event that is triggered when portal tag is changed on the player.
+ */
+export const ON_PLAYER_PORTAL_CHANGED_ACTION_NAME: string =
+    'onPlayerPortalChanged';
+
+/**
  * The name of the event that is triggered when a script is executed.
  */
 export const ON_RUN_ACTION_NAME: string = 'onRun';
@@ -751,7 +782,7 @@ export const KNOWN_TAGS: string[] = [
     ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
     ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
     ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
-    'onPlayerEnterDimension',
+    ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
     'onGridClick',
