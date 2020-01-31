@@ -9,6 +9,7 @@ import {
     MOD_DROP_ACTION_NAME,
     BotsState,
     CREATE_ANY_ACTION_NAME,
+    KNOWN_PORTALS,
 } from '../bots/Bot';
 import {
     UpdateBotAction,
@@ -1244,6 +1245,26 @@ function getCurrentUniverse(): string {
 }
 
 /**
+ * Gets the distance that the player bot is from the given dimension.
+ *
+ * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+ *
+ * @param dimension The dimension to check for.
+ */
+function getDimensionalDepth(dimension: string): number {
+    const bot = getUser();
+    const calc = getCalculationContext();
+    if (isBotInDimension(calc, bot, dimension)) {
+        return 0;
+    } else if (
+        KNOWN_PORTALS.some(portal => getTag(bot, portal) === dimension)
+    ) {
+        return 1;
+    }
+    return -1;
+}
+
+/**
  * Determines whether the player has the given bot in their inventory.
  * @param bots The bot or bots to check.
  */
@@ -2351,6 +2372,7 @@ const player = {
     hideQRCode,
     getCurrentDimension,
     getCurrentUniverse,
+    getDimensionalDepth,
     showInputForTag,
     checkout,
     replaceDragBot,

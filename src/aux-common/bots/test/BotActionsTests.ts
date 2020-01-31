@@ -58,7 +58,7 @@ import {
     calculateFormulaEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotsState, DEVICE_BOT_ID, Bot } from '../Bot';
+import { BotsState, DEVICE_BOT_ID, Bot, KNOWN_PORTALS } from '../Bot';
 import {
     createCalculationContext,
     createFormulaLibrary,
@@ -3213,6 +3213,134 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(false);
                 expect(result.events).toEqual([]);
+            });
+        });
+
+        describe('player.getDimensionalDepth()', () => {
+            it('should return 0 when the bot is in the given dimension', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            dimension: true,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot', 'userBot'],
+                    'userBot'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            depth: 0,
+                        },
+                    }),
+                ]);
+            });
+
+            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+
+            it.each(portalCases)(
+                'should return 1 when the dimension is in the %s portal',
+                portal => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test:
+                                    '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                            },
+                        },
+                        userBot: {
+                            id: 'userBot',
+                            tags: {
+                                [portal]: 'dimension',
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action(
+                        'test',
+                        ['thisBot', 'userBot'],
+                        'userBot'
+                    );
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                depth: 1,
+                            },
+                        }),
+                    ]);
+                }
+            );
+
+            it('should return -1 otherwise', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot', 'userBot'],
+                    'userBot'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            depth: -1,
+                        },
+                    }),
+                ]);
             });
         });
 
