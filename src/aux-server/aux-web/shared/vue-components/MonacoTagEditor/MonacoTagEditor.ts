@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { Bot, isScript, isFormula } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
 import MonacoEditor from '../MonacoEditor/MonacoEditor';
@@ -30,7 +30,7 @@ export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) bot: Bot;
 
     private _simulation: BrowserSimulation;
-    private _sub: SubscriptionLike;
+    private _sub: Subscription;
     private _model: monaco.editor.ITextModel;
 
     @Watch('tag')
@@ -58,10 +58,15 @@ export default class MonacoTagEditor extends Vue {
     }
 
     created() {
-        this._sub = appManager.whileLoggedIn((user, sim) => {
-            this._simulation = sim;
-            return [watchSimulation(sim)];
-        });
+        this._sub = new Subscription();
+        this._sub.add(
+            appManager.whileLoggedIn((user, sim) => {
+                this._simulation = sim;
+                const sub = watchSimulation(sim);
+                this._sub.add(sub);
+                return [sub];
+            })
+        );
     }
 
     mounted() {
