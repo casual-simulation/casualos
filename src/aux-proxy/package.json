@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-proxy",
     "private": true,
-    "version": "0.11.20",
+    "version": "0.11.24",
     "description": "A simple web service that can initiate a reverse-reverse proxy session.",
     "keywords": [
         "aux"
