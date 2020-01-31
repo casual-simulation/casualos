@@ -9,7 +9,6 @@ import {
     getBotPosition,
     getBotRotation,
     getDimensionScale,
-    isUserBot,
     getDimensionGridHeight,
     cacheFunction,
     calculateBooleanTagValue,
@@ -223,21 +222,19 @@ export function calculateObjectPositionInGrid(
     localPosition.add(indexOffset);
 
     if (bot.dimensionGroup instanceof BuilderGroup3D) {
-        if (!isUserBot(bot.bot)) {
-            // Offset local position with hex grid height.
-            let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
-            let axial = realPosToGridPos(
-                new Vector2(localPosition.x, localPosition.z),
-                hexScale
-            );
-            let key = posToKey(axial);
-            let height = getDimensionGridHeight(
-                context,
-                bot.dimensionGroup.bot,
-                '0:0'
-            );
-            localPosition.add(new Vector3(0, height, 0));
-        }
+        // Offset local position with hex grid height.
+        let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
+        let axial = realPosToGridPos(
+            new Vector2(localPosition.x, localPosition.z),
+            hexScale
+        );
+        let key = posToKey(axial);
+        let height = getDimensionGridHeight(
+            context,
+            bot.dimensionGroup.bot,
+            '0:0'
+        );
+        localPosition.add(new Vector3(0, height, 0));
     }
 
     return localPosition;

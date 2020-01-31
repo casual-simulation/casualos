@@ -31,7 +31,7 @@ describe('BotPanelManager', () => {
         await vm.sendEvents([
             botAdded(
                 createBot('user', {
-                    _auxUserDimension: 'hello',
+                    auxSheetPortal: 'hello',
                 })
             ),
         ]);
@@ -108,7 +108,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        _auxUserDimension: false,
+                        auxSheetPortal: false,
                     },
                 }),
                 botAdded(
@@ -135,7 +135,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        _auxUserDimension: 'wow',
+                        auxSheetPortal: 'wow',
                     },
                 }),
                 botAdded(
@@ -153,11 +153,81 @@ describe('BotPanelManager', () => {
 
             expect(bots).toEqual([helper.botsState['test2']]);
         });
+
+        it('should indicate whether the portal has a value', async () => {
+            let hasPortal: boolean;
+            manager.botsUpdated.subscribe(e => {
+                hasPortal = e.hasPortal;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: 'wow',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                        wow: true,
+                    })
+                ),
+            ]);
+
+            expect(hasPortal).toBe(true);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: null,
+                    },
+                }),
+            ]);
+
+            expect(hasPortal).toBe(false);
+        });
+
+        it('should indicate the dimension that the portal is using', async () => {
+            let dimension: string;
+            manager.botsUpdated.subscribe(e => {
+                dimension = e.dimension;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: 'wow',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                        wow: true,
+                    })
+                ),
+            ]);
+
+            expect(dimension).toBe('wow');
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: null,
+                    },
+                }),
+            ]);
+
+            expect(dimension).toBe(null);
+        });
     });
 });
-
-async function waitForPromisesToFinish() {
-    for (let i = 0; i < 10; i++) {
-        await Promise.resolve();
-    }
-}

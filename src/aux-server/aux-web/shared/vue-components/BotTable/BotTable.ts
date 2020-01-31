@@ -11,7 +11,6 @@ import {
     isFormula,
     getShortId,
     merge,
-    SelectionMode,
     AuxCausalTree,
     botAdded,
     getAllBotTags,
@@ -29,6 +28,7 @@ import {
     getBotTag,
     goToDimension,
     simulationIdToString,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -76,25 +76,21 @@ export default class BotTable extends Vue {
     extraTags: string[];
     @Prop({ default: false })
     readOnly: boolean;
-    @Prop({ default: 'single' })
-    selectionMode: SelectionMode;
     @Prop({ default: false })
     diffSelected: boolean;
     @Prop({ default: false })
     isSearch: boolean;
-    @Prop({ default: false })
-    setLargeSheet: boolean;
     /**
      * A property that can be set to indicate to the table that its values should be updated.
      */
     @Prop({})
     updateTime: number;
 
-    @Prop({ default: true })
-    allowChangingSheetSize: boolean;
-
     @Prop({ default: null })
     dimension: string;
+
+    @Prop({ required: true })
+    showExitSheet: boolean;
 
     tags: string[] = [];
     readOnlyTags: string[] = [];
@@ -127,6 +123,14 @@ export default class BotTable extends Vue {
     showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
 
+    get exitButtonText() {
+        if (this.showExitSheet) {
+            return 'Exit sheet';
+        } else {
+            return `Open ${this.dimension} in auxPlayer`;
+        }
+    }
+
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
             return [
@@ -154,10 +158,6 @@ export default class BotTable extends Vue {
 
     isMobile(): boolean {
         return this._isMobile;
-    }
-
-    toggleSheet() {
-        EventBus.$emit('toggleSheetSize');
     }
 
     isWhitelistTagActive(index: number | string): boolean {
@@ -344,12 +344,13 @@ export default class BotTable extends Vue {
 
     async createBot() {
         const manager = this.getBotManager();
-        const calc = manager.helper.createContext();
-        const dimension = manager.parsedId.dimension;
-        const id = await manager.helper.createBot(
-            undefined,
-            addToDimensionDiff(calc, dimension)
-        );
+        const dimension = this.dimension;
+        let tags: BotTags;
+        if (this.dimension) {
+            const calc = manager.helper.createContext();
+            tags = addToDimensionDiff(calc, dimension);
+        }
+        const id = await manager.helper.createBot(undefined, tags);
     }
 
     selectNewTag() {
@@ -533,16 +534,8 @@ export default class BotTable extends Vue {
         this.cancelNewTag();
     }
 
-    openInPlayer() {
-        const id = appManager.simulationManager.primary.parsedId;
-
-        const url = new URL(
-            `/${this.dimension}/${id.channel || 'default'}`,
-            window.location.href
-        );
-
-        // open in new tab
-        navigateToUrl(url.toString(), '_blank', 'noreferrer');
+    exitSheet() {
+        this.$emit('exitSheet');
     }
 
     closeWindow() {
@@ -924,9 +917,7 @@ export default class BotTable extends Vue {
 
     searchForTag(tag: string) {
         if (tag === null || this.tagHasValue(tag)) {
-            appManager.simulationManager.primary.helper.transaction(
-                goToDimension(tag)
-            );
+            this.$emit('goToTag', tag);
         }
     }
 }

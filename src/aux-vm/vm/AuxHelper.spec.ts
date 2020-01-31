@@ -1296,10 +1296,6 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: 'username',
-                    ['_auxUserInventoryDimension']: '_user_username_inventory',
-                    ['_auxUserMenuDimension']: '_user_username_menu',
-                    ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
             });
         });
@@ -1335,50 +1331,9 @@ describe('AuxHelper', () => {
                 space: 'tempLocal',
                 tags: {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: 'username',
-                    ['_auxUserInventoryDimension']: '_user_username_inventory',
-                    ['_auxUserMenuDimension']: '_user_username_menu',
-                    ['_auxUserUniversesDimension']: '_user_username_universes',
                 },
             });
         });
-
-        const dimensionCases = [
-            ['menu dimension', '_auxUserMenuDimension', '_user_username_menu'],
-            [
-                'inventory dimension',
-                '_auxUserInventoryDimension',
-                '_user_username_inventory',
-            ],
-            [
-                'universes dimension',
-                '_auxUserUniversesDimension',
-                '_user_username_universes',
-            ],
-        ];
-
-        it.each(dimensionCases)(
-            'should add the %s to a user that doesnt have it',
-            async (desc, tag, value) => {
-                await helper.createOrUpdateUserBot(
-                    {
-                        id: 'user',
-                        username: 'username',
-                        name: 'test',
-                        isGuest: false,
-                        token: 'abc',
-                    },
-                    null
-                );
-
-                expect(helper.userBot).toMatchObject({
-                    id: 'user',
-                    tags: {
-                        [tag]: value,
-                    },
-                });
-            }
-        );
     });
 
     describe('createOrUpdateUserDimensionBot()', () => {

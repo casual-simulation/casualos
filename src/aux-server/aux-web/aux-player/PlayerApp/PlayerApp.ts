@@ -40,6 +40,7 @@ import {
     onUniverseStreamLostArg,
     onUniverseSubscribedArg,
     onUniverseUnsubscribedArg,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -75,12 +76,9 @@ import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
-import {
-    updateQuery,
-    SimulationInfo,
-    navigateToDimension,
-    createSimulationInfo,
-} from '../../shared/RouterUtils';
+import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
+import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
+import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 
 @Component({
     components: {
@@ -96,6 +94,7 @@ import {
         'upload-universe-modal': UploadUniverseModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
+        'bot-sheet': BotSheet,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -133,16 +132,6 @@ export default class PlayerApp extends Vue {
      * Whether to show the QR Code Scanner.
      */
     showQRScanner: boolean = false;
-
-    /**
-     * The session.
-     */
-    session: string = '';
-
-    /**
-     * The dimension.
-     */
-    dimension: string = '';
 
     /**
      * The extra sidebar items shown in the app.
@@ -220,6 +209,8 @@ export default class PlayerApp extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
+
+    @Provide() botRenderer: BotRenderer = getRenderer();
 
     private _inputDialogTarget: Bot = null;
     private _inputDialogSimulation: Simulation = null;
@@ -340,8 +331,6 @@ export default class PlayerApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = botManager.parsedId.channel;
-                this.dimension = botManager.parsedId.dimension;
 
                 subs.push(
                     new Subscription(() => {
@@ -397,13 +386,6 @@ export default class PlayerApp extends Vue {
 
     refreshPage() {
         window.location.reload();
-    }
-
-    fixConflicts() {
-        this.$router.push({
-            name: 'merge-conflicts',
-            params: { id: this.session },
-        });
     }
 
     toggleOnlineOffline(info: SimulationInfo) {
@@ -462,7 +444,44 @@ export default class PlayerApp extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[PlayerApp] Add simulation!');
-        await appManager.simulationManager.primary.helper.createSimulation(id);
+        this._addUniverseToSimulation(appManager.simulationManager.primary, id);
+    }
+
+    private _addUniverseToSimulation(sim: BrowserSimulation, id: string) {
+        const calc = sim.helper.createContext();
+        const list = calculateStringListTagValue(
+            calc,
+            sim.helper.userBot,
+            'auxUniverse',
+            []
+        );
+        if (list.indexOf(id) < 0) {
+            list.push(id);
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    auxUniverse: list,
+                },
+            });
+        }
+    }
+
+    private _removeUniverseFromSimulation(sim: BrowserSimulation, id: string) {
+        const calc = sim.helper.createContext();
+        const list = calculateStringListTagValue(
+            calc,
+            sim.helper.userBot,
+            'auxUniverse',
+            []
+        );
+        const index = list.indexOf(id);
+        if (index >= 0) {
+            list.splice(index, 1);
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    auxUniverse: list,
+                },
+            });
+        }
     }
 
     removeSimulation(info: SimulationInfo) {
@@ -482,9 +501,10 @@ export default class PlayerApp extends Vue {
     }
 
     removeSimulationById(id: string) {
-        appManager.simulationManager.simulations.forEach(sim => {
-            sim.helper.destroySimulations(id);
-        });
+        this._removeUniverseFromSimulation(
+            appManager.simulationManager.primary,
+            id
+        );
     }
 
     getQRCode(): string {
@@ -605,7 +625,6 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'go_to_dimension') {
                     this.updateTitleContext(e.dimension);
-                    navigateToDimension(e, this.$router, this.simulations);
                     this.setTitleToID();
                 } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
@@ -664,48 +683,17 @@ export default class PlayerApp extends Vue {
                             info.lostConnection = true;
                             await this._superAction(
                                 ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-                                onUniverseStreamLostArg(
-                                    simulation.parsedId.channel
-                                )
+                                onUniverseStreamLostArg(simulation.id)
                             );
                         }
                     } else {
                         info.synced = true;
 
-                        if (simulation.parsedId.dimension) {
-                            let id = simulation.id;
-                            if (id.includes('/')) {
-                                id = id.split('/')[1];
-                            }
-
-                            const dimension = simulation.parsedId.dimension;
-
-                            getUserBotAsync(simulation).subscribe(
-                                async userBot => {
-                                    if (!userBot) {
-                                        console.log(
-                                            '[PlayerApp] User bot',
-                                            userBot
-                                        );
-                                    }
-                                    await simulation.helper.updateBot(userBot, {
-                                        tags: {
-                                            _auxUserDimension: dimension,
-                                            _auxUserUniverse: id,
-                                        },
-                                    });
-                                },
-                                err => console.error(err)
-                            );
-                        }
-
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
                                 ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-                                onUniverseSubscribedArg(
-                                    simulation.parsedId.channel
-                                )
+                                onUniverseSubscribedArg(simulation.id)
                             );
 
                             for (let info of this.simulations) {
@@ -715,21 +703,17 @@ export default class PlayerApp extends Vue {
                                 ) {
                                     continue;
                                 }
-                                const parsedId = parseSimulationId(info.id);
-                                if (!parsedId.success) {
-                                    continue;
-                                }
                                 await simulation.helper.action(
                                     ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onUniverseSubscribedArg(parsedId.channel)
+                                    onUniverseSubscribedArg(info.id)
                                 );
                             }
                         }
 
                         await this._superAction(
                             ON_UNIVERSE_STREAMING_ACTION_NAME,
-                            onUniverseStreamingArg(simulation.parsedId.channel)
+                            onUniverseStreamingArg(simulation.id)
                         );
                     }
                 }
@@ -743,15 +727,13 @@ export default class PlayerApp extends Vue {
             new Subscription(async () => {
                 await this._superAction(
                     ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
-                    onUniverseUnsubscribedArg(simulation.parsedId.channel)
+                    onUniverseUnsubscribedArg(simulation.id)
                 );
             })
         );
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
-
-        this._updateQuery();
     }
 
     private _showQRCode(code: string) {
@@ -928,12 +910,6 @@ export default class PlayerApp extends Vue {
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
-
-        this._updateQuery();
-    }
-
-    private _updateQuery() {
-        updateQuery(this.$router, this.simulations);
     }
 
     /**

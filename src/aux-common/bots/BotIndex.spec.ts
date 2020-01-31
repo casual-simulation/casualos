@@ -251,6 +251,7 @@ describe('BotIndex', () => {
                 {
                     type: 'bot_tag_removed',
                     bot: final,
+                    oldBot: test,
                     tag: 'abc',
                 },
             ]);

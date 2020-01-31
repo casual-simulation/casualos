@@ -1,0 +1,44 @@
+{
+    "name": "@casual-simulation/aux-redirector",
+    "private": true,
+    "version": "0.11.20",
+    "description": "A simple web service that redirects old style aux URLs to the new version.",
+    "keywords": [
+        "aux"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://casualsimulation.com/",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "build": "npm run webpack",
+        "webpack": "webpack --config webpack.config.js",
+        "package": "docker build -t casualsimulation/aux-redirector -f Dockerfile .",
+        "start": "node dist/main.js"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "express": "^4.16.4"
+    }
+}

@@ -32,8 +32,6 @@ import {
     getBotLabelAnchor,
     getBotVersion,
     isBotInDimension,
-    getBotUsernameList,
-    isInUsernameList,
     getUserBotColor,
     calculateStringListTagValue,
     getChannelBotById,
@@ -55,6 +53,7 @@ import {
     botDimensionSortOrder,
     getBotPositioningMode,
     convertToCopiableValue,
+    getPortalConfigBotID,
 } from '../BotCalculations';
 import {
     Bot,
@@ -108,32 +107,6 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual([bot1, bot2, bot3]);
-        });
-
-        it('should ignore user bots', () => {
-            const bot1 = createBot('test1', {
-                dimension: true,
-                dimensionX: -1,
-                dimensionY: 1,
-                _auxUser: 'abc',
-            });
-            const bot2 = createBot('test2', {
-                dimension: true,
-                dimensionX: -1,
-                dimensionY: 1,
-            });
-
-            const context = createCalculationContext([bot1, bot2]);
-            const result = objectsAtDimensionGridPosition(
-                context,
-                'dimension',
-                {
-                    x: -1,
-                    y: 1,
-                }
-            );
-
-            expect(result).toEqual([bot2]);
         });
 
         it('should cache the query and results', () => {
@@ -2926,11 +2899,10 @@ export function botCalculationContextTests(
     });
 
     describe('isUserActive()', () => {
-        it('should return true if the last active time is within 60 seconds', () => {
+        it('should return true if the auxPlayerActive tag is true', () => {
             dateNowMock.mockReturnValue(1000 * 60 + 999);
             const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: true,
+                auxPlayerActive: true,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);
@@ -2938,23 +2910,10 @@ export function botCalculationContextTests(
             expect(update1).toBe(true);
         });
 
-        it('should return true if the last active time is within 60 seconds', () => {
-            dateNowMock.mockReturnValue(1000 * 61);
-            const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: true,
-            });
-            const calc = createCalculationContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
-
-            expect(update1).toBe(false);
-        });
-
         it('should return false if the user is not active', () => {
             dateNowMock.mockReturnValue(1000);
             const bot1 = createBot(undefined, {
-                'aux._lastActiveTime': 1000,
-                auxUserActive: false,
+                auxPlayerActive: false,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);
@@ -3013,17 +2972,17 @@ export function botCalculationContextTests(
     });
 
     describe('isMinimized()', () => {
-        it('should return true when auxDimensionSurfaceMinimized is true', () => {
+        it('should return true when auxPortalSurfaceMinimized is true', () => {
             let bot = createBot('test', {
-                auxDimensionSurfaceMinimized: true,
+                auxPortalSurfaceMinimized: true,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(true);
         });
 
-        it('should return false when auxDimensionSurfaceMinimized is not true', () => {
+        it('should return false when auxPortalSurfaceMinimized is not true', () => {
             let bot = createBot('test', {
-                auxDimensionSurfaceMinimized: false,
+                auxPortalSurfaceMinimized: false,
             });
             const context = createCalculationContext([bot]);
             expect(isMinimized(context, bot)).toBe(false);
@@ -3422,6 +3381,31 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('getPortalConfigBotID()', () => {
+        it('should return the bot ID that the config bot tag points to', () => {
+            const userBot = createBot('userBot', {
+                auxPagePortal: 'abc',
+                auxPagePortalConfigBot: 'test',
+            });
+
+            const calc = createCalculationContext([userBot]);
+            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+
+            expect(id).toEqual('test');
+        });
+
+        it('should return null if the tag does not exist', () => {
+            const userBot = createBot('userBot', {
+                auxPagePortal: 'abc',
+            });
+
+            const calc = createCalculationContext([userBot]);
+            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+
+            expect(id).toEqual(null);
+        });
+    });
+
     describe('interface.getBot()', () => {
         it('should return null if given null', () => {
             const calc = createCalculationContext([]);
@@ -3494,9 +3478,9 @@ export function botCalculationContextTests(
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from _auxUserMenuDimension', () => {
+        it('should return the value from auxMenuPortal', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
 
             const calc = createCalculationContext([user]);
@@ -3508,7 +3492,7 @@ export function botCalculationContextTests(
     describe('getBotsInMenu()', () => {
         it('should return the list of bots in the users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
             const bot1 = createBot('bot1', {
                 dimension: true,
@@ -3581,7 +3565,7 @@ export function botCalculationContextTests(
     describe('addBotToMenu()', () => {
         it('should return the update needed to add the given bot ID to the given users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3599,7 +3583,7 @@ export function botCalculationContextTests(
 
         it('should return the given sortOrder', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3617,11 +3601,11 @@ export function botCalculationContextTests(
 
         it('should return sortOrder needed to place the bot at the end of the list', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
             const bot = createBot('bot');
             const bot2 = createBot('bot2', {
-                dimension: 0,
+                dimension: true,
             });
 
             const calc = createCalculationContext([user, bot, bot2]);
@@ -3640,7 +3624,7 @@ export function botCalculationContextTests(
     describe('removeBotFromMenu()', () => {
         it('should return the update needed to remove the given bot from the users menu', () => {
             const user = createBot('user', {
-                _auxUserMenuDimension: 'dimension',
+                auxMenuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -3702,7 +3686,7 @@ export function botCalculationContextTests(
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
                 'auxDimensionConfig.surface.grid.0:1': 1,
-                auxDimensionGridScale: 50,
+                auxPortalGridScale: 50,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3728,7 +3712,7 @@ export function botCalculationContextTests(
 
         it('should return the default if the bot is a user bot', () => {
             const bot = createBot('bot', {
-                _auxUser: 'user',
+                auxPlayerName: 'user',
                 auxDimensionVisualize: 'surface',
             });
 
@@ -3740,7 +3724,7 @@ export function botCalculationContextTests(
 
         it('should still return the user bots dimension size', () => {
             const bot = createBot('bot', {
-                _auxUser: 'user',
+                auxPlayerName: 'user',
                 auxDimensionVisualize: 'surface',
                 auxDimensionSurfaceSize: 10,
             });
@@ -3765,9 +3749,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextColor()', () => {
-        it('should return the auxDimensionColor of the bot', () => {
+        it('should return the auxPortalColor of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionColor: 'red',
+                auxPortalColor: 'red',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3776,9 +3760,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextGridScale()', () => {
-        it('should return the auxDimensionGridScale of the bot', () => {
+        it('should return the auxPortalGridScale of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionGridScale: 10,
+                auxPortalGridScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3787,9 +3771,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextScale()', () => {
-        it('should return the auxDimensionSurfaceScale of the bot', () => {
+        it('should return the auxPortalSurfaceScale of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionSurfaceScale: 10,
+                auxPortalSurfaceScale: 10,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3805,9 +3789,9 @@ export function botCalculationContextTests(
     });
 
     describe('getContextDefaultHeight()', () => {
-        it('should return the auxDimensionSurfaceDefaultHeight of the bot', () => {
+        it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
             const bot = createBot('bot', {
-                auxDimensionSurfaceDefaultHeight: 10.123,
+                auxPortalSurfaceDefaultHeight: 10.123,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4065,19 +4049,10 @@ export function botCalculationContextTests(
             expect(locked).toEqual(false);
         });
 
-        it('should default to true when the bot is not a dimension', () => {
-            const bot = createBot('test', {});
-
-            const calc = createCalculationContext([bot]);
-            const locked = isDimensionLocked(calc, bot);
-
-            expect(locked).toEqual(true);
-        });
-
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
                 auxDimensionConfig: 'abc',
-                auxDimensionLocked: '=true',
+                auxPortalLocked: '=true',
             });
 
             const calc = createCalculationContext([bot]);
@@ -4162,7 +4137,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                _auxUserInventoryDimension: 'test',
+                auxInventoryPortal: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4188,7 +4163,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                _auxUserInventoryDimension: 'test',
+                auxInventoryPortal: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4214,7 +4189,7 @@ export function botCalculationContextTests(
                 test: false,
             });
             const user = createBot('userId', {
-                _auxUserInventoryDimension: 'test',
+                auxInventoryPortal: 'test',
             });
 
             const calc = createCalculationContext(
@@ -4227,21 +4202,10 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('isBotInContext()', () => {
+    describe('isBotInDimension()', () => {
         it('should handle boolean objects', () => {
             const thisBot = createBot('thisBot', {
                 dimension: new Boolean(true),
-            });
-
-            const calc = createCalculationContext([thisBot]);
-            const result = isBotInDimension(calc, thisBot, 'dimension');
-
-            expect(result).toBe(true);
-        });
-
-        it('should handle string objects', () => {
-            const thisBot = createBot('thisBot', {
-                dimension: new String('true'),
             });
 
             const calc = createCalculationContext([thisBot]);
@@ -4262,85 +4226,41 @@ export function botCalculationContextTests(
 
             expect(result).toBe(true);
         });
-    });
 
-    describe('getBotUsernameList()', () => {
-        const tag = 'list';
-
-        it(`should return the ${tag}`, () => {
-            const bot = createBot('test', {
-                [tag]: '[Test, Test2]',
+        booleanTagValueTests(false, (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                dimension: given,
             });
 
-            const calc = createCalculationContext([bot]);
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInDimension(calc, thisBot, 'dimension');
 
-            expect(getBotUsernameList(calc, bot, tag)).toEqual([
-                'Test',
-                'Test2',
-            ]);
+            expect(result).toBe(expected);
         });
 
-        it('should always return an array', () => {
-            const bot = createBot('test', {
-                [tag]: 'Test',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toEqual(['Test']);
-        });
-
-        it('should handle falsy values', () => {
-            const bot = createBot('test', {
-                [tag]: '',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toBeFalsy();
-        });
-
-        it('should get the aux._user tag from bots', () => {
-            const bot = createBot('test', {
-                [tag]: '=getBots("name", "bob")',
-            });
-            const user = createBot('user', {
-                name: 'bob',
-                _auxUser: 'a',
-            });
-            const bad = createBot('user2', {
-                name: 'bob',
-            });
-
-            const calc = createCalculationContext([bot, user, bad]);
-
-            expect(getBotUsernameList(calc, bot, tag)).toEqual(['a', 'user2']);
-        });
-    });
-
-    describe('isInUsernameList()', () => {
-        const extraCases = [
-            ['Test', '[Test, Test2]', true],
-            ['Test', '[Test2]', false],
-            ['Test', 'Test2', false],
-            ['Test2', 'Test2', true],
-            ['Test2', '', false],
+        const cases = [
+            ['true', true],
+            ['false', false],
+            ['abc', false],
+            [0, false],
+            [1, false],
+            [{}, false],
+            [null, false],
+            [undefined, false],
+            [true, true],
+            [false, false],
         ];
 
-        it.each(extraCases)(
-            'should determine if %s is in the list',
-            (username, list, expected) => {
-                const bot = createBot('test', {
-                    list: list,
-                });
+        it.each(cases)('should handle %s', (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                dimension: given,
+            });
 
-                const calc = createCalculationContext([bot]);
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInDimension(calc, thisBot, 'dimension');
 
-                expect(isInUsernameList(calc, bot, 'list', username)).toBe(
-                    expected
-                );
-            }
-        );
+            expect(result).toBe(expected);
+        });
     });
 
     describe('getUserBotColor()', () => {
@@ -4552,6 +4472,8 @@ function booleanTagValueTests(
         ['false', false],
         [true, true],
         ['true', true],
+        [new Boolean(true), true],
+        [new Boolean(false), false],
         ['=1', defaultValue],
         ['="hello"', defaultValue],
     ];

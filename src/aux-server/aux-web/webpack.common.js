@@ -19,7 +19,6 @@ const latestTag = childProcess
 
 module.exports = {
     entry: {
-        projector: path.resolve(__dirname, 'aux-projector', 'index.ts'),
         player: path.resolve(__dirname, 'aux-player', 'index.ts'),
         vm: path.resolve(
             __dirname,
@@ -191,14 +190,7 @@ module.exports = {
         }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
-            chunks: ['projector', 'vendors', 'monaco'],
-            // inject: false,
-            template: path.resolve(__dirname, 'aux-projector', 'index.html'),
-            title: 'auxPlayer',
-            filename: 'projector.html',
-        }),
-        new HtmlWebpackPlugin({
-            chunks: ['player', 'vendors'],
+            chunks: ['player', 'vendors', 'monaco'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
             title: 'auxPlayer',
@@ -244,14 +236,6 @@ module.exports = {
             // },
             cacheMaps: [
                 {
-                    match: function(requestUrl) {
-                        let url = new URL(requestUrl);
-                        const parts = url.pathname.slice(1).split('/');
-                        if (parts.length > 1 && parts[0].startsWith('*')) {
-                            return new URL('/projector.html', location);
-                        }
-                        return new URL('/player.html', location);
-                    },
                     requestTypes: ['navigate'],
                 },
             ],

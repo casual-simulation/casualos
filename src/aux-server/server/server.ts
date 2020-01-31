@@ -114,7 +114,6 @@ export class ClientServer {
     private _app: express.Express;
     private _redisClient: RedisClient;
     private _hgetall: any;
-    private _builder: ClientConfig;
     private _player: ClientConfig;
     private _config: Config;
     private _cacheExpireSeconds: number;
@@ -126,7 +125,6 @@ export class ClientServer {
 
     constructor(
         config: Config,
-        builder: ClientConfig,
         player: ClientConfig,
         redisClient: RedisClient,
         channelManager: ChannelManager,
@@ -134,7 +132,6 @@ export class ClientServer {
     ) {
         this._app = express();
         this._config = config;
-        this._builder = builder;
         this._player = player;
         this._redisClient = redisClient;
         this._channelManager = channelManager;
@@ -148,20 +145,12 @@ export class ClientServer {
 
     configure() {
         this._app.get(
-            '/api/:dimension/:channel/config',
+            '/api/config',
             asyncMiddleware(async (req, res) => {
-                if (req.params.dimension.indexOf('*') === 0) {
-                    await this._sendConfig(req, res, this._builder.web);
-                } else {
-                    await this._sendConfig(req, res, this._player.web);
-                }
-            })
-        );
-
-        this._app.get(
-            '/api/:channel/config',
-            asyncMiddleware(async (req, res) => {
-                await this._sendConfig(req, res, this._player.web);
+                res.send({
+                    ...this._player.web,
+                    version: 2,
+                });
             })
         );
 
@@ -345,35 +334,9 @@ export class ClientServer {
         );
         */
 
-        this._app.get('/:dimension/:channel?', (req, res) => {
-            if (req.params.dimension.indexOf('*') === 0) {
-                res.sendFile(path.join(this._config.dist, this._builder.index));
-            } else {
-                res.sendFile(path.join(this._config.dist, this._player.index));
-            }
-        });
-
         this._app.get('*', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._builder.index));
+            res.sendFile(path.join(this._config.dist, this._player.index));
         });
-    }
-
-    private async _sendConfig(req: Request, res: Response, config: WebConfig) {
-        const info: RealtimeChannelInfo = {
-            id: getTreeName(req.params.channel),
-            type: 'aux',
-        };
-        if (await this._channelManager.hasChannel(info)) {
-            res.send({
-                ...config,
-                version: 1,
-            });
-        } else {
-            res.send({
-                ...config,
-                version: 2,
-            });
-        }
     }
 
     /**
@@ -496,7 +459,6 @@ export class Server {
 
         this._client = new ClientServer(
             this._config,
-            this._config.builder,
             this._config.player,
             this._redisClient,
             this._channelManager,

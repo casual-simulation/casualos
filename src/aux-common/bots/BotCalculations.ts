@@ -8,8 +8,6 @@ import {
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
-    SelectionMode,
-    DEFAULT_SELECTION_MODE,
     BotShape,
     DEFAULT_BOT_SHAPE,
     BotTags,
@@ -27,6 +25,7 @@ import {
     BotPositioningMode,
     BotSpace,
     BOT_SPACE_TAG,
+    PortalType,
 } from './Bot';
 
 import {
@@ -517,11 +516,7 @@ export function isTagWellKnown(tag: string): boolean {
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
  * We also care about things like auxDraggable but not _position, _index _selection, etc.
  *
- * Well-known hidden tags include:
- * - _auxSelection
- * - dimension._index
- *
- * You can determine if a tag is "well-known" by using isWellKnownTag().
+ * You can determine if a tag is "well-known" by using isTagWellKnown().
  * @param first The first bot.
  * @param second The second bot.
  */
@@ -603,34 +598,6 @@ export function validateTag(tag: string) {
 }
 
 /**
- * Gets the ID of the selection that the user is using.
- * If the user doesn't have a selection, returns a new selection ID.
- * @param user The user's bot.
- */
-export function selectionIdForUser(user: Object) {
-    if (user && user.tags['_auxSelection']) {
-        return { id: user.tags['_auxSelection'] || null, newId: <string>null };
-    } else {
-        const id = newSelectionId();
-        return { id: id, newId: id };
-    }
-}
-
-/**
- * Gets a partial bot that updates a user's bot to reference the given selection.
- * @param selectionId The ID of the selection.
- * @param botId The ID of the bot that is being selected.
- */
-export function updateUserSelection(selectionId: string, botId: string) {
-    return {
-        tags: {
-            ['_auxSelection']: selectionId,
-            ['_auxEditingBot']: botId,
-        },
-    };
-}
-
-/**
  * Gets a partial bot that toggles whether the given bot is apart of the given selection.
  * @param bot The bot.
  * @param selectionId The ID of the selection.
@@ -646,13 +613,6 @@ export function toggleBotSelection(
             [selectionId]: !bot.tags[selectionId],
         },
     };
-}
-
-/**
- * Creates a new selection id.
- */
-export function newSelectionId() {
-    return `_auxSelection${shortUuid()}`;
 }
 
 /**
@@ -693,7 +653,7 @@ export function getUserBotColor(
  * @param userBot The bot for the user.
  */
 export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
-    return calculateBotValue(calc, userBot, '_auxUserMenuDimension');
+    return calculateBotValue(calc, userBot, 'auxMenuPortal');
 }
 
 /**
@@ -938,7 +898,7 @@ export function createWorkspace(
                 auxDimensionY: 0,
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
-                auxDimensionLocked: true,
+                auxPortalLocked: true,
                 auxDimensionConfig: builderDimensionId,
             },
         };
@@ -1003,13 +963,13 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxDimensionSurfaceScale`,
+            `auxPortalSurfaceScale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
-            `auxDimensionGridScale`,
+            `auxPortalGridScale`,
             DEFAULT_WORKSPACE_GRID_SCALE
         );
         return scale * gridScale;
@@ -1079,52 +1039,6 @@ export function trimEvent(tag: string): string {
         return withoutHash.substring(0, withoutHash.length - 2);
     }
     return withoutHash;
-}
-
-/**
- * Determines if the given username is in the username list in the given bot and tag.
- * @param calc The bot calculation context.
- * @param bot The bot.
- * @param tag The tag.
- * @param username The username to check.
- */
-export function isInUsernameList(
-    calc: BotCalculationContext,
-    bot: Bot,
-    tag: string,
-    username: string
-): boolean {
-    const list = getBotUsernameList(calc, bot, tag);
-    return list.indexOf(username) >= 0;
-}
-
-/**
- * Gets a list of usernames from the given bot and tag.
- * @param calc The bot calculation context.
- * @param bot The bot.
- * @param tag The tag.
- */
-export function getBotUsernameList(
-    calc: BotCalculationContext,
-    bot: Bot,
-    tag: string
-): string[] {
-    let value = calculateBotValue(calc, bot, tag);
-
-    if (value && !Array.isArray(value)) {
-        value = [value];
-    }
-
-    if (value) {
-        for (let i = 0; i < value.length; i++) {
-            let v = value[i];
-            if (isBot(v)) {
-                value[i] = v.tags['_auxUser'] || v.id;
-            }
-        }
-    }
-
-    return value;
 }
 
 /**
@@ -1319,8 +1233,7 @@ export function isConfigForContext(
 
 /**
  * Gets whether the dimension(s) that the given bot represents are locked.
- * Uses at the auxDimensionLocked tag to determine whether it is locked.
- * Defaults to false if the bot is a dimension. Otherwise it defaults to true.
+ * Uses at the auxPortalLocked tag to determine whether it is locked.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1328,10 +1241,7 @@ export function isDimensionLocked(
     calc: BotCalculationContext,
     bot: Bot
 ): boolean {
-    if (isDimension(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'auxDimensionLocked', false);
-    }
-    return true;
+    return calculateBooleanTagValue(calc, bot, 'auxPortalLocked', false);
 }
 
 /**
@@ -1375,7 +1285,7 @@ export function getDimensionValue(
     dimensionBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, dimensionBot, `auxDimension${name}`);
+    return calculateBotValue(calc, dimensionBot, `auxPortal${name}`);
 }
 
 /**
@@ -1676,7 +1586,7 @@ export function objectsAtDimensionGridPosition(
             );
             return <Bot[]>(
                 sortBy(
-                    botsAtPosition.filter(o => !isUserBot(o)),
+                    botsAtPosition,
                     o => getBotIndex(calc, o, dimension),
                     o => o.id
                 )
@@ -1765,13 +1675,6 @@ export function nextAvailableObjectIndex(
     }
 
     return nextIndex;
-}
-
-/**
- * Determines if the given bot is for a user.
- */
-export function isUserBot(bot: Bot): boolean {
-    return !!bot.tags['_auxUser'];
 }
 
 /**
@@ -1979,14 +1882,6 @@ export function normalizeAUXBotURL(url: string): string {
 }
 
 /**
- * Gets the user selection mode value from the given bot.
- * @param bot The bot.
- */
-export function getSelectionMode(bot: Bot): SelectionMode {
-    return bot.tags['_auxSelectionMode'] || DEFAULT_SELECTION_MODE;
-}
-
-/**
  * Calculates the value of the given tag on the given bot. If the result is not a bot, then the given default value
  * is returned.
  * @param context The context.
@@ -2082,6 +1977,8 @@ export function calculateBooleanTagValue(
         const result = calculateBotValue(context, bot, tag);
         if (typeof result === 'boolean' && result !== null) {
             return result;
+        } else if (typeof result === 'object' && result instanceof Boolean) {
+            return result.valueOf();
         }
     }
     return defaultValue;
@@ -2216,35 +2113,41 @@ export function isBotInDimension(
 ): boolean {
     if (!dimensionId) return false;
 
-    let result: boolean;
+    let dimensionValue = calculateBooleanTagValue(
+        context,
+        bot,
+        dimensionId.valueOf(),
+        false
+    ); //calculateBotValue(context, bot, dimensionId.valueOf());
 
-    let dimensionValue = calculateBotValue(context, bot, dimensionId.valueOf());
+    return dimensionValue;
+}
 
-    if (
-        typeof dimensionValue === 'object' &&
-        typeof dimensionValue.valueOf === 'function'
-    ) {
-        dimensionValue = dimensionValue.valueOf();
+/**
+ * Gets the tag that is used to set the dimension for the given portal type.
+ * @param portal The portal type.
+ */
+export function getPortalTag(portal: PortalType) {
+    if (portal.endsWith('Portal')) {
+        return portal;
     }
+    const upper = portal[0].toUpperCase() + portal.slice(1);
+    return `aux${upper}Portal`;
+}
 
-    if (typeof dimensionValue === 'string') {
-        result = dimensionValue === 'true';
-    } else if (typeof dimensionValue === 'number') {
-        result = true;
-    } else {
-        result = dimensionValue === true;
-    }
-
-    if (!result && hasValue(bot.tags['_auxUser'])) {
-        const userContextValue = calculateBotValue(
-            context,
-            bot,
-            '_auxUserDimension'
-        );
-        result = userContextValue == dimensionId;
-    }
-
-    return result;
+/**
+ * Gets the ID of the bot that should be used to configure the given portal.
+ * @param context The context.
+ * @param bot The bot that is defining the portal.
+ * @param portal The portal.
+ */
+export function getPortalConfigBotID(
+    context: BotCalculationContext,
+    bot: Bot,
+    portal: PortalType
+) {
+    const tag = `${getPortalTag(portal)}ConfigBot`;
+    return calculateStringTagValue(context, bot, tag, null);
 }
 
 /**
@@ -2305,32 +2208,7 @@ export function calculateFormulaValue(
 }
 
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
-    const active = calculateBooleanTagValue(calc, bot, `auxUserActive`, false);
-    if (!active) {
-        return false;
-    }
-    const lastActiveTime = calculateNumericalTagValue(
-        calc,
-        bot,
-        `aux._lastActiveTime`,
-        0
-    );
-    if (lastActiveTime) {
-        const milisecondsFromNow = Date.now() - lastActiveTime;
-        return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
-    } else {
-        return false;
-    }
-}
-
-export function shouldDeleteUser(bot: Bot) {
-    const lastActiveTime = bot.tags[`aux._lastActiveTime`];
-    if (lastActiveTime) {
-        const milisecondsFromNow = Date.now() - lastActiveTime;
-        return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
-    } else {
-        return false;
-    }
+    return calculateBooleanTagValue(calc, bot, `auxPlayerActive`, false);
 }
 
 function _parseFilterValue(value: string): any {

@@ -539,7 +539,7 @@ describe('BotWatcher', () => {
             expect(bots).toEqual([
                 {
                     bot: state['test'],
-                    tags: new Set(),
+                    tags: new Set(['test']),
                 },
                 {
                     bot: createPrecalculatedBot('test', { abc: 'def' }),
@@ -579,6 +579,40 @@ describe('BotWatcher', () => {
                     tags: new Set(),
                 },
                 null,
+            ]);
+        });
+
+        it('should not resolve with a null bot if the bot is not created yet', async () => {
+            let state = {
+                test2: createPrecalculatedBot('test2'),
+            };
+            vm.sendState({
+                state: state,
+                addedBots: ['test2'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let bots: UpdatedBotInfo[] = [];
+            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
+
+            let secondState: PrecalculatedBotsState = {
+                test: createPrecalculatedBot('test'),
+            };
+            vm.sendState({
+                state: secondState,
+                addedBots: ['test'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            await waitAsync();
+
+            expect(bots).toEqual([
+                {
+                    bot: secondState['test'],
+                    tags: new Set(),
+                },
             ]);
         });
     });

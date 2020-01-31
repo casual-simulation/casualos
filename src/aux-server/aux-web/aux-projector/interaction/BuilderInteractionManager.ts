@@ -331,13 +331,29 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         this._game.simulation3D.simulation.helper.updateBot(bot.bot, partial);
     }
 
-    handlePointerEnter(bot: Bot, simulation: BrowserSimulation): void {}
+    handlePointerEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: BrowserSimulation
+    ): void {}
 
-    handlePointerExit(bot: Bot, simulation: BrowserSimulation): void {}
+    handlePointerExit(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: BrowserSimulation
+    ): void {}
 
-    handlePointerDown(bot: Bot, simulation: BrowserSimulation): void {}
+    handlePointerDown(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: BrowserSimulation
+    ): void {}
 
-    handlePointerUp(bot: Bot, simulation: BrowserSimulation): void {}
+    handlePointerUp(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: BrowserSimulation
+    ): void {}
 
     /**
      * Calculates the grid location and workspace that the given page position intersects with.

@@ -131,6 +131,7 @@ def BuildDocker() {
 
     /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
     /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
+    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" ./src/aux-redirector
     """
 }
 
@@ -212,6 +213,8 @@ def PublishDocker() {
     /usr/local/bin/docker push casualsimulation/aux:latest
     /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
     /usr/local/bin/docker push casualsimulation/aux-proxy:latest
+    /usr/local/bin/docker push casualsimulation/aux-redirector:${gitTag}
+    /usr/local/bin/docker push casualsimulation/aux-redirector:latest
     """
 }
 

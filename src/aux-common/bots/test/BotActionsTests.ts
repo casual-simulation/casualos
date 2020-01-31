@@ -58,7 +58,7 @@ import {
     calculateFormulaEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotsState, DEVICE_BOT_ID, Bot } from '../Bot';
+import { BotsState, DEVICE_BOT_ID, Bot, KNOWN_PORTALS } from '../Bot';
 import {
     createCalculationContext,
     createFormulaLibrary,
@@ -3216,6 +3216,134 @@ export function botActionsTests(
             });
         });
 
+        describe('player.getDimensionalDepth()', () => {
+            it('should return 0 when the bot is in the given dimension', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            dimension: true,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot', 'userBot'],
+                    'userBot'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            depth: 0,
+                        },
+                    }),
+                ]);
+            });
+
+            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+
+            it.each(portalCases)(
+                'should return 1 when the dimension is in the %s portal',
+                portal => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test:
+                                    '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                            },
+                        },
+                        userBot: {
+                            id: 'userBot',
+                            tags: {
+                                [portal]: 'dimension',
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action(
+                        'test',
+                        ['thisBot', 'userBot'],
+                        'userBot'
+                    );
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                depth: 1,
+                            },
+                        }),
+                    ]);
+                }
+            );
+
+            it('should return -1 otherwise', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "depth", player.getDimensionalDepth("dimension"))',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot', 'userBot'],
+                    'userBot'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            depth: -1,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('player.getBot()', () => {
             it('should get the current users bot', () => {
                 const state: BotsState = {
@@ -3595,7 +3723,7 @@ export function botActionsTests(
         });
 
         describe('getUserMenuDimension()', () => {
-            it('should return the _auxUserMenuDimension tag from the user bot', () => {
+            it('should return the auxMenuPortal tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3607,7 +3735,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserMenuDimension: 'abc',
+                            auxMenuPortal: 'abc',
                         },
                     },
                 };
@@ -4356,7 +4484,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserUniverse: 'channel',
+                            auxUniverse: 'channel',
                         },
                     },
                 };
@@ -4746,110 +4874,8 @@ export function botActionsTests(
             });
         });
 
-        describe('isConnected()', () => {
-            it('should get the aux.connected property from the current user bot', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test: '@setTag(this, "#fun", player.isConnected())',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            'aux.connected': true,
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            fun: true,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should default to false when there is no user', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test: '@setTag(this, "#fun", player.isConnected())',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            fun: false,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should default to false', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            test: '@setTag(this, "#fun", player.isConnected())',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {},
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            fun: false,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('player.isInDimension()', () => {
-            it('should return true when _auxUserDimension equals the given value', () => {
+            it('should return true when auxPagePortal equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4861,7 +4887,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4886,7 +4912,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserDimension does not equal the given value', () => {
+            it('should return false when auxPagePortal does not equal the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4898,7 +4924,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4923,7 +4949,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when _auxUserDimension is not set', () => {
+            it('should return false when auxPagePortal is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4960,7 +4986,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentDimension()', () => {
-            it('should return _auxUserDimension', () => {
+            it('should return auxPagePortal', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -4972,7 +4998,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserDimension: 'dimension',
+                            auxPagePortal: 'dimension',
                         },
                     },
                 };
@@ -4997,7 +5023,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserDimension is not set', () => {
+            it('should return undefined when auxPagePortal is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5034,7 +5060,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentUniverse()', () => {
-            it('should return _auxUserUniverse', () => {
+            it('should return auxUniverse', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5046,7 +5072,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUserUniverse: 'dimension',
+                            auxUniverse: 'dimension',
                         },
                     },
                 };
@@ -5071,7 +5097,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when _auxUserUniverse is not set', () => {
+            it('should return undefined when auxUniverse is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5105,6 +5131,65 @@ export function botActionsTests(
                     }),
                 ]);
             });
+        });
+
+        describe('player.getPortalDimension()', () => {
+            const cases = [
+                ['page', 'pageDimension'],
+                ['auxPagePortal', 'pageDimension'],
+                ['inventory', 'inventoryDimension'],
+                ['auxInventoryPortal', 'inventoryDimension'],
+                ['menu', 'menuDimension'],
+                ['auxMenuPortal', 'menuDimension'],
+                ['sheet', 'sheetDimension'],
+                ['auxSheetPortal', 'sheetDimension'],
+                ['missing', null],
+                ['falsy', null],
+            ];
+
+            it.each(cases)(
+                'should get the dimension for the %s portal',
+                (portal, expectedDimension) => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: `@setTag(this, "#fun", player.getPortalDimension("${portal}"))`,
+                            },
+                        },
+                        userBot: {
+                            id: 'userBot',
+                            tags: {
+                                auxPagePortal: 'pageDimension',
+                                auxInventoryPortal: 'inventoryDimension',
+                                auxMenuPortal: 'menuDimension',
+                                auxSheetPortal: 'sheetDimension',
+                                falsy: false,
+                                number: 0,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action('test', ['thisBot'], 'userBot');
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                fun: expectedDimension,
+                            },
+                        }),
+                    ]);
+                }
+            );
         });
 
         describe('player.showInputForTag()', () => {
@@ -5518,7 +5603,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5786,7 +5871,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5822,7 +5907,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };
@@ -5858,7 +5943,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            _auxUser: 'testUser',
+                            auxPlayerName: 'testUser',
                         },
                     },
                 };

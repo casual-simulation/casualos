@@ -170,52 +170,6 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Creates a new bot for the current user that loads the simulation with the given ID.
-     * @param id The ID of the simulation to load.
-     * @param botId The ID of the bot to create.
-     */
-    async createSimulation(id: string, botId?: string) {
-        const simBots = this.getSimulationBots(id);
-
-        if (simBots.length === 0) {
-            await this.createBot(
-                botId,
-                {
-                    [this.userBot.tags['_auxUserUniversesDimension']]: true,
-                    ['auxUniverse']: id,
-                },
-                true,
-                'tempLocal'
-            );
-        }
-    }
-
-    /**
-     * Gets the list of bots that are loading the simulation with the given ID.
-     * @param id The ID of the simulation.
-     */
-    getSimulationBots(id: string) {
-        const calc = this.createContext();
-        const simBots = this._getSimulationBots(calc, id);
-        return simBots;
-    }
-
-    /**
-     * Deletes all the bots in the current user's simulation dimension that load the given simulation ID.
-     * @param id The ID of the simulation to load.
-     */
-    async destroySimulations(id: string) {
-        const calc = this.createContext();
-        const simBots = this._getSimulationBots(calc, id);
-
-        const events = flatMap(simBots, f =>
-            calculateDestroyBotEvents(calc, f)
-        );
-
-        await this.transaction(...events);
-    }
-
-    /**
      * Deletes the given bot.
      * @param bot The bot to delete.
      */
@@ -326,22 +280,5 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
     search(search: string): Promise<any> {
         return this._vm.search(search);
-    }
-
-    /**
-     * Gets the list of simulation bots that are in the current user's simulation dimension.
-     * @param id The ID of the simulation to search for.
-     */
-    private _getSimulationBots(
-        calc: BotCalculationContext,
-        id: string
-    ): AuxObject[] {
-        // TODO: Make these functions support precalculated bot dimensions
-        const simBots = botsInDimension(
-            calc,
-            this.userBot.tags['_auxUserUniversesDimension']
-        ).filter(f => getBotChannel(calc, f) === id);
-
-        return <AuxObject[]>simBots;
     }
 }

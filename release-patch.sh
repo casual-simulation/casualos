@@ -20,8 +20,11 @@ git fetch origin
 git reset origin/master --hard
 git merge develop --no-ff
 
-# 5. Run `lerna version` specify patch
-lerna version patch --yes --no-push
+# 5. Get version
+VERSION=$(./script/next_version.sh)
 
-# 6. Push to origin with tags
+# 6/ Run `lerna version` specify patch
+lerna version "$VERSION" --yes --no-push
+
+# 7. Push to origin with tags
 git push origin --follow-tags

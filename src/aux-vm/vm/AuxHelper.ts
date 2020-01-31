@@ -295,47 +295,18 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const userInventoryDimension = `_user_${user.username}_inventory`;
-        const userMenuDimension = `_user_${user.username}_menu`;
-        const userUniversesDimension = `_user_${user.username}_universes`;
         if (!userBot) {
             console.log('[AuxHelper] Create user bot');
             await this.createBot(
                 user.id,
                 {
                     [USERS_DIMENSION]: true,
-                    ['_auxUser']: user.username,
-                    ['_auxUserInventoryDimension']: userInventoryDimension,
-                    ['_auxUserMenuDimension']: userMenuDimension,
-                    ['_auxUserUniversesDimension']: userUniversesDimension,
                 },
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID
                     : undefined
             );
             console.log('[AuxHelper] User bot created');
-        } else {
-            if (!userBot.tags['_auxUserMenuDimension']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['_auxUserMenuDimension']: userMenuDimension,
-                    },
-                });
-            }
-            if (!userBot.tags['_auxUserInventoryDimension']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['_auxUserInventoryDimension']: userInventoryDimension,
-                    },
-                });
-            }
-            if (!userBot.tags['_auxUserUniversesDimension']) {
-                await this.updateBot(userBot, {
-                    tags: {
-                        ['_auxUserUniversesDimension']: userUniversesDimension,
-                    },
-                });
-            }
         }
     }
 
