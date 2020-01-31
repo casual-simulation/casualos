@@ -9,6 +9,9 @@ import {
     hasValue,
     BotCalculationContext,
     QUERY_PORTALS,
+    KNOWN_PORTALS,
+    BotAction,
+    ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -110,9 +113,40 @@ export default class PlayerHome extends Vue {
                         }
                     }
                 }
+
+                this._sendPortalChangedEvents(sim, update);
             },
             err => console.log(err)
         );
+    }
+
+    private async _sendPortalChangedEvents(
+        sim: BrowserSimulation,
+        update: UpdatedBotInfo
+    ) {
+        const actions: BotAction[] = [];
+        const calc = sim.helper.createContext();
+        for (let portal of KNOWN_PORTALS) {
+            if (update.tags.has(portal)) {
+                const value = calculateBotValue(calc, update.bot, portal);
+                actions.push(
+                    ...sim.helper.actions([
+                        {
+                            bots: null,
+                            eventName: ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
+                            arg: {
+                                portal: portal,
+                                dimension: value,
+                            },
+                        },
+                    ])
+                );
+            }
+        }
+
+        if (actions.length > 0) {
+            await sim.helper.transaction(...actions);
+        }
     }
 
     private async _setUniverse(newUniverse: string | string[]) {

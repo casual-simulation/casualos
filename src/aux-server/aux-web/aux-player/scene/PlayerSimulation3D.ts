@@ -429,13 +429,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     _onLoaded() {
         super._onLoaded();
-
-        // need to cause an action when another user joins
-        // Send an event to all bots indicating that the given dimension was loaded.
-        this.simulation.helper.action('onPlayerEnterDimension', null, {
-            dimension: this.dimension,
-            player: this.simulation.helper.userBot,
-        });
     }
 
     protected _onBotAdded(
