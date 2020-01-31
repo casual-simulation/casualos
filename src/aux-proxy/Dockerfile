@@ -9,6 +9,7 @@ RUN npm install --only=production
 COPY ./dist ./dist/
 
 ENV PRODUCTION 1
+ENV NODE_ENV production
 
 # HTTP
 EXPOSE 3000
