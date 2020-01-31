@@ -443,10 +443,6 @@ export class PlayerSimulation3D extends Simulation3D {
         bot: PrecalculatedBot
     ): void {
         super._onBotAdded(calc, bot);
-
-        // TODO: Fix
-        // // We dont have a dimension group yet. We are in search of a bot that defines a player dimension that matches the user's current dimension.
-        // const result = doesBotDefinePlayerDimension(bot, this.dimension, calc);
     }
 
     unsubscribe() {
