@@ -47,6 +47,14 @@
     -   Instead of configuring dimensions, you must configure portals.
     -   Use the new `aux{type}PortalConfigBot` (like `auxPagePortalConfigBot`) tags to specify the bot that should configure the portal.
     -   The you can find a list of the possible tags under the "Portal Config Tags" header in the documentation.
+-   Channel Designer is no more.
+    -   In addition, the URL scheme has changed. Instead of `auxplayer.com/*{dimension}/{universe}` to get the sheet, you now have to specify the portals via URL query parameters. (e.g. `auxplayer.com?auxUniverse={universe}&auxSheetPortal={dimension}`)
+    -   The possible portal values are:
+        -   `auxSheetPortal` - Loads the sheet with the given dimension.
+        -   `auxPagePortal` - Loads the normal 3D view with the given dimension.
+        -   `auxMenuPortal` - Loads the menu with the given dimension.
+        -   `auxInventoryPortal` - Loads the inventory with the given dimension.
+    -   As a shortcut, you can go to `casualos.com/{dimension}/{universe}` and it will redirect you to `auxplayer.com?auxUniverse={universe}&auxPagePortal={dimension}` or `auxplayer.com?auxUniverse={universe}&auxSheetPortal={dimension}` depending on if you include the `*` for the dimension.
 
 #### :rocket: Features
 
