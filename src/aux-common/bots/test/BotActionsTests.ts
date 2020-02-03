@@ -1709,7 +1709,7 @@ export function botActionsTests(
                 // ]);
             });
 
-            it('should not convert the argument fields to script bots if they are bots', () => {
+            it.skip('should convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1738,17 +1738,14 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
-
-                // expect(result.hasUserDefinedEvents).toBe(true);
-                // expect(result.events).toEqual([
-                //     botUpdated('otherBot', {
-                //         tags: {
-                //             hi: 'changed',
-                //         },
-                //     }),
-                // ]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
             it('should not convert bots in arrays to script bots', () => {
@@ -3213,6 +3210,44 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(false);
                 expect(result.events).toEqual([]);
+            });
+
+            it('should set the state tag on a bot from an argument to the given value', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@changeState(that, "abc")',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action(
+                    'test',
+                    ['thisBot'],
+                    null,
+                    state['thatBot']
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thatBot', {
+                        tags: {
+                            state: 'abc',
+                        },
+                    }),
+                ]);
             });
         });
 
@@ -5853,6 +5888,47 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             equal: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should allow setting a tag on a bot from an argument', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@setTag(that, "#name", "bob")',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'wrong',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot'],
+                    null,
+                    state['thatBot']
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thatBot', {
+                        tags: {
+                            name: 'bob',
                         },
                     }),
                 ]);

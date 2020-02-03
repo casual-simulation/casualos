@@ -1735,6 +1735,10 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     } else if (bot && isScriptBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
+    } else if (bot && isBot(bot)) {
+        const calc = getCalculationContext();
+        const b = calc.sandbox.interface.getBot(bot.id);
+        return calc.sandbox.interface.setTag(b, tag, value);
     } else {
         if (tag !== 'id' && tag !== BOT_SPACE_TAG) {
             (<BotTags>bot)[tag] = value;
