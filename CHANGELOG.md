@@ -37,6 +37,11 @@
     -   `player.checkout()`
     -   `player.openDevConsole()`
     -   `server.finishCheckout()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
+    -   `server.shell()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
 
 #### :bug: Bug Fixes
 

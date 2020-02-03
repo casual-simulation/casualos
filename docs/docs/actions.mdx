@@ -1511,6 +1511,51 @@ player.toast(info);
 
 ## Server Actions
 
+### `server.backupToGithub(auth)`
+
+<FunctionCode name='backupToGithub'/>
+
+Saves all the universes to GitHub as a private Gist using the given authentication token.
+
+Just like <ActionLink action='server.shell(script)'/>, you need 
+
+The **first parameter** is the Github Personal Access Token that should be used to grant access to your Github account.
+See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+
+<Alert type='info'>
+    By default, backing up to GitHub is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup all the universes to a Github Gist.
+```typescript
+server.backupToGithub('your auth token');
+```
+
+### `server.backupAsDownload(target)`
+
+<FunctionCode name='backupAsDownload'/>
+
+Saves all the universes to a zip file and downloads it to the session matching the given target.
+
+The **first parameter** is an object that indicates which session the zip file should be downloaded to.
+
+<Alert type='info'>
+    By default, backing up as a download is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup and download to this tab.
+```typescript
+server.backupAsDownload({
+    session: getID(player.getBot())
+});
+```
+
 ### `server.finishCheckout(options)`
 
 Finishes the checkout process by charging payment to the player.
@@ -1670,6 +1715,93 @@ let mark = getBot(byTag("#auxHistory", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMarkToUniverse(mark, "test");
+```
+
+### `server.shell(script)`
+
+<FunctionCode name='shell'/>
+
+Executes the given script on the server.
+
+The **first parameter** is the shell script that should be executed.
+
+<Alert type='info'>
+    By default, shell scripts are disabled on a universe.
+    To enable them, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+### `server.loadFile(path, options?)`
+
+<FunctionCode name='serverLoadFile'/>
+
+Loads a file from the server at the given path.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Loading a file from a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and have files with the same name, then the file from the USB drive in the smallest numbered port is used.
+
+The **first parameter** is the path that the file should be loaded from. This is usually just the full name of the file to load. (name + file extension)
+
+The **second parameter** are the options that should be used for loading the file.
+
+<Alert type='info'>
+    By default, loading files is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Load a file named "book.txt" and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+2. Load a file named "book.txt" from drive `2` and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('/2/book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+### `server.saveFile(path, data, options?)`
+
+<FunctionCode name='serverSaveFile'/>
+
+Saves a file at the given path with the given data.
+If the file already exists, then the options are used to determine if the file should be overwritten. By default the file will not be overwritten.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Saving a file to a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and a drive is not specified, then the file will be saved to the first drive.
+
+The **first parameter** is the path that the file should be saved to. This is usually just the full name of the file to save. (name + file extension)
+
+The **second parameter** is the data that should be saved into the file.
+
+The **third parameter** are the options that should be used for saving the file.
+
+<Alert type='info'>
+    By default, saving files is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Save a file named "book.txt" and trigger a `@onBookSaved` shout when it is saved.
+```typescript
+server.saveFile('book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved'
+});
+```
+
+2. Save a file named "book.txt" to drive `2` and trigger a `@onBookSaved` shout when it is loaded.
+```typescript
+server.loadFile('/2/book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved',
+    overwriteExistingFile: true
+});
 ```
 
 [listen-tag]: docs/listen-tags

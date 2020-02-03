@@ -101,16 +101,4 @@ describe('NodeAuxChannel', () => {
 
         expect(channel.helper.botsState['test']).toBeUndefined();
     });
-
-    // describe('say_hello', () => {
-    //     it('should print "hello" to the console', async () => {
-    //         const channel = createChannel('aux-admin');
-
-    //         await channel.initAndWait();
-
-    //         await channel.sendEvents([sayHello('abc')]);
-
-    //         expect(logMock).toBeCalledWith('User abc says "Hello!"');
-    //     });
-    // });
 });

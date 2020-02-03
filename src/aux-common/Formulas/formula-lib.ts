@@ -33,10 +33,8 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     botUpdated,
-    sayHello as calcSayHello,
     shell as calcShell,
     openConsole as calcOpenConsole,
-    echo as calcEcho,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
     openBarcodeScanner as calcOpenBarcodeScanner,
@@ -2157,23 +2155,6 @@ function importAUX(url: string) {
     return addAction(event);
 }
 
-/**
- * Sends a "hello" event to the server.
- */
-function sayHello() {
-    let actions = getActions();
-    actions.push(calcRemote(calcSayHello()));
-}
-
-/**
- * Sends an echo event to the server.
- * @param message The message to send to the server.
- */
-function echo(message: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcEcho(message)));
-}
-
 function unwrapBotOrMod(botOrMod: Mod) {
     if (isScriptBot(botOrMod)) {
         const calc = getCalculationContext();
@@ -2399,9 +2380,7 @@ const player = {
 };
 
 const server = {
-    sayHello,
     shell,
-    echo,
     backupToGithub,
     backupAsDownload,
     finishCheckout,
