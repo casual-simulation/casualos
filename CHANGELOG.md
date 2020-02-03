@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.11.26
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue that prevented `changeState()` from working on bots which were provided from a `that`/`data` argument.
+
 ## V0.11.25
 
 ### Date: 1/31/2020
