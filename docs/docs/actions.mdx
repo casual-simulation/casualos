@@ -655,6 +655,50 @@ Hides the "chat bar" at the top of the screen in auxPlayer.
 player.hideChat();
 ```
 
+### `player.showHtml(html)`
+
+<FunctionCode name='showHtml'/>
+
+Shows some HTML to the player in a popup modal. This can be useful for loading a separate webpage or providing some formatted text.
+
+The **first parameter** is the HTML that should be shown to the user.
+
+#### Examples:
+
+1. Show a header with some text.
+```typescript
+player.showHtml(`
+  <h1>This is some text!</h1>
+`);
+```
+
+2. Show a YouTube video.
+```typescript
+player.showHtml(`
+  <iframe
+      width="560" 
+      height="315"
+      src="https://www.youtube.com/embed/BHACKCNDMW8"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+  </iframe>
+`);
+```
+
+### `player.hideHtml()`
+
+<FunctionCode name='hideHtml'/>
+
+Closes the HTML popup modal.
+
+#### Examples:
+
+1. Hide the HTML popup.
+```typescript
+player.hideHtml();
+```
+
 ### `player.toast(message, duration?)`
 
 <FunctionCode name='toast'/>
@@ -676,6 +720,241 @@ player.toast("Hello!");
 2. Show the player a code for 5 seconds.
 ```typescript
 player.toast("this is the code", 5);
+```
+
+### `player.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
+
+<FunctionCode name='tweenTo'/>
+
+Smoothly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
+Additionally, a duration can be specified for the length of the tween. If the target bot is in the page portal, then the page portal view will be moved. 
+If the bot is in the inventory portal, then the inventory portal view will be moved. If the target bot is not in either portal, then nothing happens.
+
+The **first parameter** is the bot or bot ID that the player's view should be moved to.
+
+The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
+If no value is specified, then the zoom will remain at its current value.
+
+The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
+
+The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
+
+The **fifth parameter** is optional and is the amount of time in seconds that the transition should take to finish.
+
+#### Examples:
+
+1. Transition the player's view to show a bot named bob.
+```typescript
+player.tweenTo(getBot("#name", "bob"))
+```
+
+### `player.moveTo(bot, zoomValue?, rotX?, rotY?)`
+
+<FunctionCode name='moveTo'/>
+
+Instantly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
+If the target bot is in the page portal, then the page portal view will be moved. If the bot is in the inventory portal, then the inventory portal view will be moved.
+If the target bot is not in either portal, then nothing happens.
+
+The **first parameter** is the bot or bot ID that the player's view should be moved to.
+
+The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
+If no value is specified, then the zoom will remain at its current value.
+
+The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
+If no value is specified, then the X rotation will remain at its current value.
+
+The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
+If no value is specified, then the Y rotation will remain at its current value.
+
+#### Examples:
+
+1. Move the player's view to show a bot named bob.
+```typescript
+player.moveTo(getBot("#name", "bob"))
+```
+
+### `player.openQRCodeScanner(camera?)`
+
+<FunctionCode name='openQRCodeScanner'/>
+
+Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <ActionLink action='@onQRCodeScanned'/> shout.
+Optionally accepts which camera to use for scanning. (front/back)
+
+The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
+If the given camera type is not available, then the default camera will be used.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='rear'>
+    The rear-facing camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    The front-facing camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Open the QR Code scanner.
+```typescript
+player.openQRCodeScanner();
+```
+
+2. Open the QR Code scanner for the front-facing camera.
+```typescript
+player.openQRCodeScanner("front");
+```
+
+### `player.closeQRCodeScanner(camera?)`
+
+<FunctionCode name='closeQRCodeScanner'/>
+
+Closes the QR Code scanner.
+
+#### Examples:
+
+1. Close the QR Code scanner.
+```typescript
+player.closeQRCodeScanner();
+```
+
+### `player.showQRCode(code)`
+
+<FunctionCode name='showQRCode'/>
+
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data.
+
+The **first parameter** is the text or data that the generated QR Code should represent.
+
+#### Examples:
+
+1. Show a QR Code that contains the data "hello".
+```typescript
+player.showQRCode("hello");
+```
+
+### `player.hideQRCode()`
+
+<FunctionCode name='hideQRCode'/>
+
+Closes the QR Code popup modal.
+
+#### Examples:
+
+1. Hides the QR Code popup modal.
+```typescript
+player.hideQRCode();
+```
+
+### `player.openBarcodeScanner(camera?)`
+
+<FunctionCode name='openBarcodeScanner'/>
+
+Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <ActionLink action='@onBarcodeScanned'/> shout.
+Optionally accepts which camera to use for scanning. (front/back)
+
+The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
+If the given camera type is not available, then the default camera will be used.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='rear'>
+    The rear-facing camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    The front-facing camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Open the Barcode scanner.
+```typescript
+player.openBarcodeScanner();
+```
+
+2. Open the Barcode scanner for the front-facing camera.
+```typescript
+player.openBarcodeScanner("front");
+```
+
+### `player.closeBarcodeScanner(camera?)`
+
+<FunctionCode name='closeBarcodeScanner'/>
+
+Closes the Barcode scanner.
+
+#### Examples:
+
+1. Close the Barcode scanner.
+```typescript
+player.closeBarcodeScanner();
+```
+
+### `player.showBarcode(code, format?)`
+
+<FunctionCode name='showBarcode'/>
+
+Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data. Optionally accepts the format that the barcode should be displayed in.
+
+The **first parameter** is the text or data that the generated Barcode should represent.
+
+The **second parameter** is optional and is the format that the barcode should be displayed in.
+Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='code128'>
+    The <a href="https://en.wikipedia.org/wiki/Code_128">Code 128</a> barcode format. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='code39'>
+    The <a href="https://en.wikipedia.org/wiki/Code_39">Code 39</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='ean13'>
+    The <a href="https://en.wikipedia.org/wiki/International_Article_Number">EAN-13</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='ean8'>
+    The <a href="https://en.wikipedia.org/wiki/International_Article_Number">EAN-8</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='upc'>
+    The <a href="https://en.wikipedia.org/wiki/Universal_Product_Code">UPC</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='itf14'>
+    The <a href="https://en.wikipedia.org/wiki/ITF-14">IFT-14</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='msi'>
+    The <a href="https://en.wikipedia.org/wiki/MSI_Barcode">MSI</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='pharmacode'>
+    The <a href="https://en.wikipedia.org/wiki/Pharmacode">Pharmacode</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='codabar'>
+    The <a href="https://en.wikipedia.org/wiki/Codabar">Codabar</a> barcode format.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Show a Barcode that contains the data "hello".
+```typescript
+player.showBarcode("hello");
+```
+
+1. Show a UPC Barcode that contains the data "123456".
+```typescript
+player.showBarcode("123456", 'upc');
+```
+
+### `player.hideBarcode()`
+
+<FunctionCode name='hideBarcode'/>
+
+Closes the Barcode popup modal.
+
+#### Examples:
+
+1. Hides the Barcode popup modal.
+```typescript
+player.hideBarcode();
 ```
 
 ### `player.setClipboard(text)`
@@ -776,6 +1055,74 @@ Disables virtual reality on the device.
 player.disableVR();
 ```
 
+### `player.getCurrentUniverse()`
+
+<FunctionCode name='getCurrentUniverse'/>
+
+Gets the universe that the player is in.
+
+#### Examples:
+
+1. Show a message of the current universe.
+```typescript
+const universe = player.getCurrentUniverse();
+player.toast(universe);
+```
+
+### `player.getCurrentDimension()`
+
+<FunctionCode name='getCurrentDimension'/>
+
+Gets the dimension that is loaded into the <TagLink tag='auxPagePortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxPagePortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxPagePortal'/> portal.
+```typescript
+const dimension = player.getCurrentDimension();
+player.toast(dimension);
+```
+
+### `player.getMenuDimension()`
+
+<FunctionCode name='getMenuDimension' />
+
+Gets the dimension that is loaded into the <TagLink tag='auxMenuPortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxMenuPortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxMenuPortal'/> portal.
+```typescript
+const dimension = player.getMenuDimension();
+player.toast(dimension);
+```
+
+### `player.getInventoryDimension()`
+
+<FunctionCode name='getInventoryDimension' />
+
+Gets the dimension that is loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxInventoryPortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxInventoryPortal'/> portal.
+```typescript
+const dimension = player.getInventoryDimension();
+player.toast(dimension);
+```
+
 ### `player.getPortalDimension(portal)`
 
 <FunctionCode name='getPortalDimension'/>
@@ -851,6 +1198,71 @@ if (distance === 0) {
 } else {
     player.toast("Player cannot access the fun dimension");
 }
+```
+
+### `player.getBot()`
+
+<FunctionCode name='getUser'/>
+
+Gets the player bot. This is the bot that represents the player's browser tab.
+
+#### Examples:
+
+1. Get the player bot and set a username on it.
+```typescript
+const playerBot = player.getBot();
+playerBot.tags.username = "bob";
+```
+
+2. Open the sheet to "testDimension".
+```typescript
+const playerBot = player.getBot();
+playerBot.tags.auxSheetPortal = "testDimension";
+```
+
+### `player.goToURL(url)`
+
+<FunctionCode name='goToURL'/>
+
+Redirects the current tab to the given URL. Useful for sending the player to another webpage or ambient experience.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that the player should be sent to. Usually this is a website like `https://example.com`.
+
+#### Examples:
+
+1. Send the player to `https://example.com`.
+```typescript
+player.goToURL("https://example.com");
+```
+
+### `player.openURL(url)`
+
+<FunctionCode name='openURL'/>
+
+Opens a new tab with the given URL. Useful for opening another webpage without redirecting the current tab.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that should be loaded. Usually this is a website like `https://example.com`.
+
+#### Examples:
+
+1. Open `https://example.com` in a new tab.
+```typescript
+player.openURL("https://example.com");
+```
+
+### `player.playSound(url)`
+
+<FunctionCode name='playSound'/>
+
+Loads and plays the audio (MP3, WAV, etc.) from the given URL.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be played.
+
+#### Examples:
+
+1. Play a MP3 file from another website.
+```typescript
+player.playSound("https://www.testsounds.com/track06.mp3");
 ```
 
 ### `player.inSheet()`

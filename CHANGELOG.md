@@ -6,6 +6,30 @@
 
 ### Changes:
 
+#### :book: Documentation
+
+-   Added documentation for the following actions:
+    -   `player.getCurrentUniverse()`
+    -   `player.getCurrentDimension()`
+    -   `player.getInventoryDimension()`
+    -   `player.getMenuDimension()`
+    -   `player.goToURL()`
+    -   `player.openURL()`
+    -   `player.getBot()`
+    -   `player.playSound()`
+    -   `player.showHtml()`
+    -   `player.hideHtml()`
+    -   `player.tweenTo()`
+    -   `player.moveTo()`
+    -   `player.openQRCodeScanner()`
+    -   `player.closeQRCodeScanner()`
+    -   `player.showQRCode()`
+    -   `player.hideQRCode()`
+    -   `player.openBarcodeScanner()`
+    -   `player.closeBarcodeScanner()`
+    -   `player.showBarcode()`
+    -   `player.hideBarcode()`
+
 #### :bug: Bug Fixes
 
 -   Fixed an issue that prevented `changeState()` from working on bots which were provided from a `that`/`data` argument.

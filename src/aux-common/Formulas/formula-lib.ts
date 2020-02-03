@@ -1216,7 +1216,7 @@ function isInDimension(givenDimension: string) {
 }
 
 /**
- * Gets the dimension that the player is currently in.
+ * Gets the dimension that the player is currently viewing.
  */
 function getCurrentDimension(): string {
     const user = getUser();
