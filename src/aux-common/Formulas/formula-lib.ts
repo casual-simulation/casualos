@@ -1208,9 +1208,9 @@ function restoreHistoryMarkToUniverse(mark: Bot | string, universe: string) {
  * Derermines whether the player is in the given dimension.
  * @param dimension The dimension.
  */
-function isInDimension(givenDimension: string) {
+function isInDimension(dimension: string) {
     return (
-        getCurrentDimension() === givenDimension &&
+        getCurrentDimension() === dimension &&
         getCurrentDimension() != undefined
     );
 }

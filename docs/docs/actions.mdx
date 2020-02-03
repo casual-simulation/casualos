@@ -514,6 +514,31 @@ whisper(this, "setColor", "red");
 
 ## Player Actions
 
+### `player.checkout(options)`
+
+<FunctionCode name='checkout'/>
+
+Shows a payment screen modal that lets the player purchase something.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing universe.
+
+The **first parameter** is the options to use to setup the checkout screen.
+
+<Alert type='warning'>
+    Note that while this is functional, it is not recommended be used due to potential security issues.
+</Alert>
+
+#### Examples:
+
+1. Show a checkout box for 10 cookies.
+```typescript
+player.checkout({
+    productId: '10_cookies',
+    title: '10 Cookies',
+    description: '$5.00',
+    processingUniverse: 'cookies_checkout'
+});
+```
+
 ### `player.downloadBots(bots, filename)`
 
 <FunctionCode name='downloadBots'/>
@@ -778,7 +803,7 @@ player.moveTo(getBot("#name", "bob"))
 
 <FunctionCode name='openQRCodeScanner'/>
 
-Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <ActionLink action='@onQRCodeScanned'/> shout.
+Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <TagLink tag='@onQRCodeScanned'/> shout.
 Optionally accepts which camera to use for scanning. (front/back)
 
 The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
@@ -851,7 +876,7 @@ player.hideQRCode();
 
 <FunctionCode name='openBarcodeScanner'/>
 
-Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <ActionLink action='@onBarcodeScanned'/> shout.
+Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <TagLink tag='@onBarcodeScanned'/> shout.
 Optionally accepts which camera to use for scanning. (front/back)
 
 The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
@@ -957,6 +982,49 @@ Closes the Barcode popup modal.
 player.hideBarcode();
 ```
 
+### `player.showInputForTag(bot, tag, options?)`
+
+<FunctionCode name='showInputForTag'/>
+
+Shows an input modal for the given bot and tag with the given options.
+When shown, the player will be able to change the value stored in the given tag.
+Triggers the <TagLink tag='@onSaveInput'/> whisper when the modal is closed with saving and the <TagLink tag='@onCloseInput'/> whisper when the modal is closed without saving.
+
+The **first parameter** is the bot or bot ID that the input should be shown for,
+
+The **second parameter** is the tag that should be edited on the bot.
+
+The **third parameter** is optional and is the possible cusomization options for the input modal.
+
+#### Examples:
+
+1. Show a basic text input modal for the `#name` tag on this bot.
+```typescript
+player.showInputForTag(this, "name");
+```
+
+2. Show a text input modal with a placeholder for the `#name` tag.
+```typescript
+player.showInputForTag(this, "name", {
+    placeholder: 'Enter a name'
+});
+```
+
+3. Show a input modal with a custom title.
+```typescript
+player.showInputForTag(this, "name", {
+    title: 'Edit name'
+});
+```
+
+4. Show a color input modal with a custom title.
+```typescript
+player.showInputForTag(this, "auxColor", {
+    type: 'color',
+    title: 'Enter a custom color'
+});
+```
+
 ### `player.setClipboard(text)`
 
 <FunctionCode name='setClipboard'/>
@@ -984,6 +1052,36 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 1. Show the "Upload AUX File" dialog.
 ```typescript
 player.showUploadAuxFile();
+```
+
+### `player.loadUniverse(universe)`
+
+<FunctionCode name='loadUniverse'/>
+
+Loads the given univese into the current browser tab. When the universe is loaded, the <TagLink tag='@onUniverseSubscribed'/> shout will be triggered.
+
+Note that separate universes cannot interact directly. They must instead interact via super shouts.
+
+The **first parameter** is the name of the universe to load.
+
+#### Examples:
+
+1. Load the `fun` universe.
+```typescript
+player.loadUniverse("fun");
+```
+
+### `player.unloadUniverse()`
+
+Unloads the given universe from the current browser tab. When the universe is unloaded, the <TagLink tag='@onUniverseUnsubscribed'/> shout will be triggered.
+
+The **first parameter** is the name of the universe to unload.
+
+#### Examples:
+
+1. Unload the `fun` universe.
+```typescript
+player.unloadUniverse('fun');
 ```
 
 ### `player.downloadUniverse()`
@@ -1123,6 +1221,24 @@ const dimension = player.getInventoryDimension();
 player.toast(dimension);
 ```
 
+### `player.hasBotInInventory(bot)`
+
+<FunctionCode name='hasBotInInventory'/>
+
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+
+The **first parameter** is the bot that should be checked.
+
+#### Examples:
+
+1. Show a message if a bot named bob is in the inventory.
+```typescript
+const bob = getBot("#name", "bob");
+if (player.hasBotInInventory(bob)) {
+    player.toast("bob is in the inventory!");
+}
+```
+
 ### `player.getPortalDimension(portal)`
 
 <FunctionCode name='getPortalDimension'/>
@@ -1220,6 +1336,22 @@ const playerBot = player.getBot();
 playerBot.tags.auxSheetPortal = "testDimension";
 ```
 
+### `player.goToDimension(dimension)`
+
+<FunctionCode name='goToDimension'/>
+
+Loads the given dimension into the <TagLink tag='auxPagePortal'/> portal.
+Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
+
+The **first parameter** is the dimension that should be loaded.
+
+#### Examples:
+
+1. Load the `abc` dimension.
+```typescript
+player.goToDimension('abc');
+```
+
 ### `player.goToURL(url)`
 
 <FunctionCode name='goToURL'/>
@@ -1250,6 +1382,19 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that sho
 player.openURL("https://example.com");
 ```
 
+### `player.openDevConsole()`
+
+<FunctionCode name='openDevConsole'/>
+
+Opens the developer console which contains a list of errors that scripts have issued.
+
+#### Examples:
+
+1. Open the developer console.
+```typescript
+player.openDevConsole();
+```
+
 ### `player.playSound(url)`
 
 <FunctionCode name='playSound'/>
@@ -1265,6 +1410,23 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the a
 player.playSound("https://www.testsounds.com/track06.mp3");
 ```
 
+### `player.isInDimension(dimension)`
+
+<FunctionCode name='isInDimension'/>
+
+Gets whether the given dimension is loaded into the <TagLink tag='auxPagePortal'/> portal.
+
+The **first parameter** is the dimension to check for.
+
+#### Examples:
+
+1. Show a toast if the player is viewing the `abc` dimension.
+```typescript
+if (player.isInDimension("abc")) {
+    player.toast("In the dimension!");
+}
+```
+
 ### `player.inSheet()`
 
 <FunctionCode name='inSheet'/>
@@ -1278,6 +1440,24 @@ Gets whether the player is in the sheet dimension.
 if (player.inSheet()) {
     player.toast("You are in the sheet!");
 }
+```
+
+### `player.importAUX(url)`
+
+<FunctionCode name='importAUX' />
+
+Downloads and imports the AUX file from the given [URL](https://en.wikipedia.org/wiki/URL).
+
+This is useful to quickly download a AUX file and load it into the current universe from a site such as https://gist.github.com/.
+
+The **first parameter** is the URL that the AUX file should be downloaded from.
+
+#### Examples:
+
+1. Import an AUX file from a file.
+```typescript
+const path = '/drives/myFile.aux';
+player.importAUX(path);
 ```
 
 ### `player.version()`
@@ -1330,6 +1510,27 @@ player.toast(info);
 ```
 
 ## Server Actions
+
+### `server.finishCheckout(options)`
+
+Finishes the checkout process by charging payment to the player.
+Best used during the <TagLink tag='@onCheckout'/> shout.
+
+The **first parameter** are the options needed to finish the checkout process.
+
+#### Examples:
+
+1. Finish the checkout process.
+```typescript
+server.finishCheckout({
+    token: 'token from onCheckout',
+
+    // 1000 cents == $10.00
+    amount: 1000,
+    currency: 'usd',
+    description: 'Description for purchase'
+});
+```
 
 ### `server.setupUniverse(universe, botOrMod?)`
 

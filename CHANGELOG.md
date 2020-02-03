@@ -29,6 +29,14 @@
     -   `player.closeBarcodeScanner()`
     -   `player.showBarcode()`
     -   `player.hideBarcode()`
+    -   `player.loadUniverse()`
+    -   `player.unloadUniverse()`
+    -   `player.importAUX()`
+    -   `player.hasBotInInventory()`
+    -   `player.showInputForTag()`
+    -   `player.checkout()`
+    -   `player.openDevConsole()`
+    -   `server.finishCheckout()`
 
 #### :bug: Bug Fixes
 
