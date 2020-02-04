@@ -2424,7 +2424,6 @@ export default {
 
     // Global functions
     create,
-    byCreator,
     destroy,
     shout,
     superShout,
@@ -2444,12 +2443,15 @@ export default {
     getBot,
     getBots,
     getBotTagValues,
+
+    // Bot filter functions
     byTag,
-    byMod,
+    atPosition,
     inDimension,
     inStack,
+    byCreator,
     bySpace,
-    atPosition,
+    byMod,
     neighboring,
     either,
     not,

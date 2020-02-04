@@ -136,6 +136,30 @@ applyMod(bot, {
 });
 ```
 
+### `removeTags(bot, tagSection)`
+
+<FunctionCode name='removeTags'/>
+
+Removes all the tags from the given bot that match the given tag section.
+
+The **first parameter** is the bot or list of bots that should have the tags removed.
+
+The **second parameter** is a string or regex that specifies which tags to remove.
+If given a string, then all the tags that start with the given string will be removed.
+If given a regex, then all the tags which match the regex will be removed.
+
+#### Examples:
+
+1. Remove tags started with `"abc"` from the `this` bot.
+```typescript
+removeTags(this, "abc");
+```
+
+2. Remove tags named `"hello"` using a case-insensitive regex from the `this` bot.
+```typescript
+removeTags(this, /^hello$/gi)
+```
+
 ### `changeState(bot, stateName, groupName?)`
 
 <FunctionCode name='changeState'/>
@@ -269,6 +293,30 @@ let foundBot = getBot("#height", height => height > 2);
 let foundBot = getBot("#test");
 ```
 
+### `getBotTagValues(tag, filter?)`
+
+<FunctionCode name='getBotTagValues'/>
+
+Gets a list of all the values in the universe for the given tag. Optionally accepts a filter for the tag values.
+
+The **first parameter** is the name of the tag to search for.
+
+The **second parameter** is optional and is the filter that the tag values should match. If not specified, then all the tag values are included.
+If it is a function, then it will be used to match values. Otherwise, only tags that match the value will be included.
+
+#### Examples:
+
+1. Find the number of bots named bot and print it.
+```typescript
+const numberOfBobs = getBotTagValues("#name", "bob").length;
+player.toast(numberOfBobs);
+```
+
+2. Find all the bot ages above `10`.
+```typescript
+const agesOver10 = getBotTagValues("#age", age => age > 10);
+```
+
 ### `getID(bot)`
 
 <FunctionCode name='getID'/>
@@ -334,6 +382,102 @@ let mod = getMod(bot, "auxColor", "auxLabel");
 3. Get a mod with every tag that starts with "on".
 ```typescript
 let mod = getMod(bot, /^on/g);
+```
+
+### `webhook(options)`
+
+Sends a webhook using the given options.
+
+The **first parameter** is an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP GET request to `https://example.com`.
+```typescript
+webhook({
+    method: 'GET',
+    url: 'https://example.com',
+    responseShout: 'onResponse'
+});
+```
+
+2. Send a HTTP PUT request to `https://example.com` with some data.
+```typescript
+webhook({
+    method: 'PUT',
+    url: 'https://example.com',
+    data: {
+        some: 'data'
+    }
+});
+```
+
+### `webhook.post(url, data?, options?)`
+
+Sends a HTTP POST request using the given options.
+
+The **first parameter** is the URL that the request should be sent to.
+
+The **second parameter** is the data that should be included in the request.
+
+The **third parameter** is an optional object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP POST request to `https://example.com`.
+```typescript
+webhook.post('https://example.com', {
+    some: 'data'
+}, {
+    responseShout: 'onResponse'
+});
 ```
 
 ## Bot Filters
@@ -461,6 +605,75 @@ The **first parameter** is the space that the bots are in.
 let bots = getBots(bySpace("tempLocal"));
 ```
 
+### `byMod(mod)`
+
+<FunctionCode name='byMod'/>
+
+Creates a bot filter that includes bots that match the given mod.
+
+The **first parameter** is the bot or mod that the other bots should match.
+
+#### Examples:
+
+1. Find all the bots with `#height` set to `1` and `#auxColor` set to `"red"`.
+```typescript
+const bots = getBots(byMod({
+    height: 1,
+    auxColor: "red"
+}));
+```
+
+### `neighboring(bot, dimension, direction)`
+
+<FunctionCode name='neighboring'/>
+
+Creates a bot filter that includes bots which are neighboring the given bot.
+Optionally takes a direction that the neighboring bots must be in.
+
+The **first parameter** is the bot that the other bots need to be neighboring.
+
+The **second parameter** is the dimension that the other bots need to be in.
+
+The **third parameter** is the neighboring direction to check.
+
+#### Examples:
+
+1. Find all bots in front of `this` bot in the `test` dimension.
+```typescript
+const bots = getBots(neighboring(this, "test", "front"));
+```
+
+### `either(...filters)`
+
+Creates a bot filter that includes bots which match any (i.e. one or more) of the given filters.
+
+**Each parameter** is a bot filter.
+
+#### Examples:
+
+1. Find all bots with the `#name` `"bob"` or a `#height` of 2.
+```typescript
+const bots = getBots(
+    either(
+        byTag("#name", "bob"),
+        byTag("height", 2)
+    )
+);
+```
+
+### `not(filter)`
+
+Creates a function that includes bots which _do not_ match the given filter.
+
+The **first parameter** is the bot filter whose results should be negated.
+
+#### Examples.
+
+1. Find all bots that are not in the `"test"` dimension.
+```typescript
+const bots = getBots(not(inDimension("test")));
+```
+
 ## Event Actions
 
 ### `shout(name, arg?)`
@@ -510,6 +723,97 @@ whisper(bots, "reset");
 2. Send a `@setColor` event to ourself:
 ```typescript
 whisper(this, "setColor", "red");
+```
+
+### `superShout(name, arg?)`
+
+<FunctionCode name='superShout' />
+
+Sends a shout to all of the other universes that are loaded.
+
+The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
+
+The **second parameter** is the optional `that` argument to include with the shout.
+
+#### Examples:
+
+1. Send a `"hello"` super shout to all the loaded universes.
+```typescript
+superShout("hello");
+```
+
+### `remote(action, target?)`
+
+<FunctionCode name='remote'/>
+
+Sends the given action to another player.
+
+In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
+
+For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
+However, before any action is performed, it is run through the <TagLink tag='@onUniverseAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+This lets you write rules for what actions each player is allowed to take.
+
+There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onUniverseAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
+
+The **first parameter** is the action to send.
+
+The **second parameter** is optional and is a object specifing which player to send the action to. If not specified, then the action is sent to the server player.
+If specified, then the action is sent to all players that match the given values.
+
+#### Examples:
+
+1. Send a toast message to another player.
+```typescript
+// TODO: Get the bot ID of the other player.
+const otherPlayerBotId = 'otherPlayerBotId';
+
+// Create a toast action
+const toastAction = player.toast('My message!');
+
+// Send the action to the other player
+// The toastAction will not be performed locally because
+// it is being sent to another player.
+remote(toastAction, {
+    session: otherPlayerBotId
+});
+```
+
+### `action.perform(action)`
+
+<FunctionCode name='perform'/>
+
+Queues the given action to be performed at a later time.
+
+The **first parameter** is the action that should be performed.
+
+#### Examples:
+
+1. Perform a toast message by manually queuing it.
+```typescript
+action.perform({
+    type: 'show_toast',
+    message: 'My toast message!',
+    duration: 2000 // 2 seconds in miliseconds
+});
+```
+
+### `action.reject(action)`
+
+<FunctionCode name='reject'/>
+
+Prevents a previous action from being performed.
+
+This is especially useful when used in a <TagLink tag='@onUniverseAction'/> listener since it lets you reject actions before they are performed.
+
+The **first parameter** is the action that should be prevented/rejected.
+
+1. Prevent a toast message from being performed.
+```typescript
+const toastAction = player.toast("my message");
+action.reject(toastAction);
 ```
 
 ## Player Actions

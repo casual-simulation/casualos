@@ -42,6 +42,18 @@
     -   `server.shell()`
     -   `server.backupToGithub()`
     -   `server.backupAsDownload()`
+    -   `superShout()`
+    -   `action.perform()`
+    -   `action.reject()`
+    -   `getBotTagValues()`
+    -   `remote()`
+    -   `webhook()`
+    -   `webhook.post()`
+    -   `byMod()`
+    -   `neighboring()`
+    -   `either()`
+    -   `not()`
+    -   `removeTags()`
 
 #### :bug: Bug Fixes
 
