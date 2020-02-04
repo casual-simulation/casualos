@@ -136,6 +136,61 @@ applyMod(bot, {
 });
 ```
 
+### `subtractMods(bot, ...mods)`
+
+<FunctionCode name='subtractMods'/>
+
+Removes the tags contained in the given mod(s) from the given bot or mod.
+
+The **first parameter** is the bot or mod that the tags should be removed from.
+
+The **other parameters** are the bots or mods that contain the tags which should be removed from the original bot.
+
+#### Examples:
+
+1. Remove a mod from this bot.
+```typescript
+const mod = {
+    auxColor: 'red',
+    name: 'bob'
+};
+
+subtractMods(this, mod);
+```
+
+2. Remove multiple mods from this bot.
+```typescript
+subtractMods(this, {
+    auxColor: 'red'
+}, {
+    name: 'bob'
+});
+```
+
+### `removeTags(bot, tagSection)`
+
+<FunctionCode name='removeTags'/>
+
+Removes all the tags from the given bot that match the given tag section.
+
+The **first parameter** is the bot or list of bots that should have the tags removed.
+
+The **second parameter** is a string or regex that specifies which tags to remove.
+If given a string, then all the tags that start with the given string will be removed.
+If given a regex, then all the tags which match the regex will be removed.
+
+#### Examples:
+
+1. Remove tags started with `"abc"` from the `this` bot.
+```typescript
+removeTags(this, "abc");
+```
+
+2. Remove tags named `"hello"` using a case-insensitive regex from the `this` bot.
+```typescript
+removeTags(this, /^hello$/gi)
+```
+
 ### `changeState(bot, stateName, groupName?)`
 
 <FunctionCode name='changeState'/>
@@ -269,6 +324,30 @@ let foundBot = getBot("#height", height => height > 2);
 let foundBot = getBot("#test");
 ```
 
+### `getBotTagValues(tag, filter?)`
+
+<FunctionCode name='getBotTagValues'/>
+
+Gets a list of all the values in the universe for the given tag. Optionally accepts a filter for the tag values.
+
+The **first parameter** is the name of the tag to search for.
+
+The **second parameter** is optional and is the filter that the tag values should match. If not specified, then all the tag values are included.
+If it is a function, then it will be used to match values. Otherwise, only tags that match the value will be included.
+
+#### Examples:
+
+1. Find the number of bots named bot and print it.
+```typescript
+const numberOfBobs = getBotTagValues("#name", "bob").length;
+player.toast(numberOfBobs);
+```
+
+2. Find all the bot ages above `10`.
+```typescript
+const agesOver10 = getBotTagValues("#age", age => age > 10);
+```
+
 ### `getID(bot)`
 
 <FunctionCode name='getID'/>
@@ -334,6 +413,102 @@ let mod = getMod(bot, "auxColor", "auxLabel");
 3. Get a mod with every tag that starts with "on".
 ```typescript
 let mod = getMod(bot, /^on/g);
+```
+
+### `webhook(options)`
+
+Sends a webhook using the given options.
+
+The **first parameter** is an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP GET request to `https://example.com`.
+```typescript
+webhook({
+    method: 'GET',
+    url: 'https://example.com',
+    responseShout: 'onResponse'
+});
+```
+
+2. Send a HTTP PUT request to `https://example.com` with some data.
+```typescript
+webhook({
+    method: 'PUT',
+    url: 'https://example.com',
+    data: {
+        some: 'data'
+    }
+});
+```
+
+### `webhook.post(url, data?, options?)`
+
+Sends a HTTP POST request using the given options.
+
+The **first parameter** is the URL that the request should be sent to.
+
+The **second parameter** is the data that should be included in the request.
+
+The **third parameter** is an optional object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+};
+```
+
+#### Examples:
+
+1. Send a HTTP POST request to `https://example.com`.
+```typescript
+webhook.post('https://example.com', {
+    some: 'data'
+}, {
+    responseShout: 'onResponse'
+});
 ```
 
 ## Bot Filters
@@ -461,6 +636,75 @@ The **first parameter** is the space that the bots are in.
 let bots = getBots(bySpace("tempLocal"));
 ```
 
+### `byMod(mod)`
+
+<FunctionCode name='byMod'/>
+
+Creates a bot filter that includes bots that match the given mod.
+
+The **first parameter** is the bot or mod that the other bots should match.
+
+#### Examples:
+
+1. Find all the bots with `#height` set to `1` and `#auxColor` set to `"red"`.
+```typescript
+const bots = getBots(byMod({
+    height: 1,
+    auxColor: "red"
+}));
+```
+
+### `neighboring(bot, dimension, direction)`
+
+<FunctionCode name='neighboring'/>
+
+Creates a bot filter that includes bots which are neighboring the given bot.
+Optionally takes a direction that the neighboring bots must be in.
+
+The **first parameter** is the bot that the other bots need to be neighboring.
+
+The **second parameter** is the dimension that the other bots need to be in.
+
+The **third parameter** is the neighboring direction to check.
+
+#### Examples:
+
+1. Find all bots in front of `this` bot in the `test` dimension.
+```typescript
+const bots = getBots(neighboring(this, "test", "front"));
+```
+
+### `either(...filters)`
+
+Creates a bot filter that includes bots which match any (i.e. one or more) of the given filters.
+
+**Each parameter** is a bot filter.
+
+#### Examples:
+
+1. Find all bots with the `#name` `"bob"` or a `#height` of 2.
+```typescript
+const bots = getBots(
+    either(
+        byTag("#name", "bob"),
+        byTag("height", 2)
+    )
+);
+```
+
+### `not(filter)`
+
+Creates a function that includes bots which _do not_ match the given filter.
+
+The **first parameter** is the bot filter whose results should be negated.
+
+#### Examples.
+
+1. Find all bots that are not in the `"test"` dimension.
+```typescript
+const bots = getBots(not(inDimension("test")));
+```
+
 ## Event Actions
 
 ### `shout(name, arg?)`
@@ -512,7 +756,123 @@ whisper(bots, "reset");
 whisper(this, "setColor", "red");
 ```
 
+### `superShout(name, arg?)`
+
+<FunctionCode name='superShout' />
+
+Sends a shout to all of the other universes that are loaded.
+
+The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
+
+The **second parameter** is the optional `that` argument to include with the shout.
+
+#### Examples:
+
+1. Send a `"hello"` super shout to all the loaded universes.
+```typescript
+superShout("hello");
+```
+
+### `remote(action, target?)`
+
+<FunctionCode name='remote'/>
+
+Sends the given action to another player.
+
+In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
+
+For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
+However, before any action is performed, it is run through the <TagLink tag='@onUniverseAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+This lets you write rules for what actions each player is allowed to take.
+
+There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onUniverseAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
+
+The **first parameter** is the action to send.
+
+The **second parameter** is optional and is a object specifing which player to send the action to. If not specified, then the action is sent to the server player.
+If specified, then the action is sent to all players that match the given values.
+
+#### Examples:
+
+1. Send a toast message to another player.
+```typescript
+// TODO: Get the bot ID of the other player.
+const otherPlayerBotId = 'otherPlayerBotId';
+
+// Create a toast action
+const toastAction = player.toast('My message!');
+
+// Send the action to the other player
+// The toastAction will not be performed locally because
+// it is being sent to another player.
+remote(toastAction, {
+    session: otherPlayerBotId
+});
+```
+
+### `action.perform(action)`
+
+<FunctionCode name='perform'/>
+
+Queues the given action to be performed at a later time.
+
+The **first parameter** is the action that should be performed.
+
+#### Examples:
+
+1. Perform a toast message by manually queuing it.
+```typescript
+action.perform({
+    type: 'show_toast',
+    message: 'My toast message!',
+    duration: 2000 // 2 seconds in miliseconds
+});
+```
+
+### `action.reject(action)`
+
+<FunctionCode name='reject'/>
+
+Prevents a previous action from being performed.
+
+This is especially useful when used in a <TagLink tag='@onUniverseAction'/> listener since it lets you reject actions before they are performed.
+
+The **first parameter** is the action that should be prevented/rejected.
+
+1. Prevent a toast message from being performed.
+```typescript
+const toastAction = player.toast("my message");
+action.reject(toastAction);
+```
+
 ## Player Actions
+
+### `player.checkout(options)`
+
+<FunctionCode name='checkout'/>
+
+Shows a payment screen modal that lets the player purchase something.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing universe.
+
+The **first parameter** is the options to use to setup the checkout screen.
+
+<Alert type='warning'>
+    Note that while this is functional, it is not recommended be used due to potential security issues.
+</Alert>
+
+#### Examples:
+
+1. Show a checkout box for 10 cookies.
+```typescript
+player.checkout({
+    productId: '10_cookies',
+    title: '10 Cookies',
+    description: '$5.00',
+    processingUniverse: 'cookies_checkout'
+});
+```
 
 ### `player.downloadBots(bots, filename)`
 
@@ -655,6 +1015,50 @@ Hides the "chat bar" at the top of the screen in auxPlayer.
 player.hideChat();
 ```
 
+### `player.showHtml(html)`
+
+<FunctionCode name='showHtml'/>
+
+Shows some HTML to the player in a popup modal. This can be useful for loading a separate webpage or providing some formatted text.
+
+The **first parameter** is the HTML that should be shown to the user.
+
+#### Examples:
+
+1. Show a header with some text.
+```typescript
+player.showHtml(`
+  <h1>This is some text!</h1>
+`);
+```
+
+2. Show a YouTube video.
+```typescript
+player.showHtml(`
+  <iframe
+      width="560" 
+      height="315"
+      src="https://www.youtube.com/embed/BHACKCNDMW8"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+  </iframe>
+`);
+```
+
+### `player.hideHtml()`
+
+<FunctionCode name='hideHtml'/>
+
+Closes the HTML popup modal.
+
+#### Examples:
+
+1. Hide the HTML popup.
+```typescript
+player.hideHtml();
+```
+
 ### `player.toast(message, duration?)`
 
 <FunctionCode name='toast'/>
@@ -676,6 +1080,284 @@ player.toast("Hello!");
 2. Show the player a code for 5 seconds.
 ```typescript
 player.toast("this is the code", 5);
+```
+
+### `player.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
+
+<FunctionCode name='tweenTo'/>
+
+Smoothly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
+Additionally, a duration can be specified for the length of the tween. If the target bot is in the page portal, then the page portal view will be moved. 
+If the bot is in the inventory portal, then the inventory portal view will be moved. If the target bot is not in either portal, then nothing happens.
+
+The **first parameter** is the bot or bot ID that the player's view should be moved to.
+
+The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
+If no value is specified, then the zoom will remain at its current value.
+
+The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
+
+The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
+
+The **fifth parameter** is optional and is the amount of time in seconds that the transition should take to finish.
+
+#### Examples:
+
+1. Transition the player's view to show a bot named bob.
+```typescript
+player.tweenTo(getBot("#name", "bob"))
+```
+
+### `player.moveTo(bot, zoomValue?, rotX?, rotY?)`
+
+<FunctionCode name='moveTo'/>
+
+Instantly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
+If the target bot is in the page portal, then the page portal view will be moved. If the bot is in the inventory portal, then the inventory portal view will be moved.
+If the target bot is not in either portal, then nothing happens.
+
+The **first parameter** is the bot or bot ID that the player's view should be moved to.
+
+The **second parameter** is optional and is the zoom value that the camera should be transitioned to. Possible values are between `0` and `Infinity`. `1` is the default.
+If no value is specified, then the zoom will remain at its current value.
+
+The **third parameter** is optional and is the X rotation value that the camera should be transitioned to.
+If no value is specified, then the X rotation will remain at its current value.
+
+The **fourth parameter** is optional and is the Y rotation value that the camera should be transitioned to.
+If no value is specified, then the Y rotation will remain at its current value.
+
+#### Examples:
+
+1. Move the player's view to show a bot named bob.
+```typescript
+player.moveTo(getBot("#name", "bob"))
+```
+
+### `player.openQRCodeScanner(camera?)`
+
+<FunctionCode name='openQRCodeScanner'/>
+
+Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <TagLink tag='@onQRCodeScanned'/> shout.
+Optionally accepts which camera to use for scanning. (front/back)
+
+The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
+If the given camera type is not available, then the default camera will be used.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='rear'>
+    The rear-facing camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    The front-facing camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Open the QR Code scanner.
+```typescript
+player.openQRCodeScanner();
+```
+
+2. Open the QR Code scanner for the front-facing camera.
+```typescript
+player.openQRCodeScanner("front");
+```
+
+### `player.closeQRCodeScanner(camera?)`
+
+<FunctionCode name='closeQRCodeScanner'/>
+
+Closes the QR Code scanner.
+
+#### Examples:
+
+1. Close the QR Code scanner.
+```typescript
+player.closeQRCodeScanner();
+```
+
+### `player.showQRCode(code)`
+
+<FunctionCode name='showQRCode'/>
+
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data.
+
+The **first parameter** is the text or data that the generated QR Code should represent.
+
+#### Examples:
+
+1. Show a QR Code that contains the data "hello".
+```typescript
+player.showQRCode("hello");
+```
+
+### `player.hideQRCode()`
+
+<FunctionCode name='hideQRCode'/>
+
+Closes the QR Code popup modal.
+
+#### Examples:
+
+1. Hides the QR Code popup modal.
+```typescript
+player.hideQRCode();
+```
+
+### `player.openBarcodeScanner(camera?)`
+
+<FunctionCode name='openBarcodeScanner'/>
+
+Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <TagLink tag='@onBarcodeScanned'/> shout.
+Optionally accepts which camera to use for scanning. (front/back)
+
+The **first parameter** is optional and is a string specifing which camera to use. Defaults to 'rear'.
+If the given camera type is not available, then the default camera will be used.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='rear'>
+    The rear-facing camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    The front-facing camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Open the Barcode scanner.
+```typescript
+player.openBarcodeScanner();
+```
+
+2. Open the Barcode scanner for the front-facing camera.
+```typescript
+player.openBarcodeScanner("front");
+```
+
+### `player.closeBarcodeScanner(camera?)`
+
+<FunctionCode name='closeBarcodeScanner'/>
+
+Closes the Barcode scanner.
+
+#### Examples:
+
+1. Close the Barcode scanner.
+```typescript
+player.closeBarcodeScanner();
+```
+
+### `player.showBarcode(code, format?)`
+
+<FunctionCode name='showBarcode'/>
+
+Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data. Optionally accepts the format that the barcode should be displayed in.
+
+The **first parameter** is the text or data that the generated Barcode should represent.
+
+The **second parameter** is optional and is the format that the barcode should be displayed in.
+Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='code128'>
+    The <a href="https://en.wikipedia.org/wiki/Code_128">Code 128</a> barcode format. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='code39'>
+    The <a href="https://en.wikipedia.org/wiki/Code_39">Code 39</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='ean13'>
+    The <a href="https://en.wikipedia.org/wiki/International_Article_Number">EAN-13</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='ean8'>
+    The <a href="https://en.wikipedia.org/wiki/International_Article_Number">EAN-8</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='upc'>
+    The <a href="https://en.wikipedia.org/wiki/Universal_Product_Code">UPC</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='itf14'>
+    The <a href="https://en.wikipedia.org/wiki/ITF-14">IFT-14</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='msi'>
+    The <a href="https://en.wikipedia.org/wiki/MSI_Barcode">MSI</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='pharmacode'>
+    The <a href="https://en.wikipedia.org/wiki/Pharmacode">Pharmacode</a> barcode format.
+  </PossibleValueCode>
+  <PossibleValueCode value='codabar'>
+    The <a href="https://en.wikipedia.org/wiki/Codabar">Codabar</a> barcode format.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Show a Barcode that contains the data "hello".
+```typescript
+player.showBarcode("hello");
+```
+
+1. Show a UPC Barcode that contains the data "123456".
+```typescript
+player.showBarcode("123456", 'upc');
+```
+
+### `player.hideBarcode()`
+
+<FunctionCode name='hideBarcode'/>
+
+Closes the Barcode popup modal.
+
+#### Examples:
+
+1. Hides the Barcode popup modal.
+```typescript
+player.hideBarcode();
+```
+
+### `player.showInputForTag(bot, tag, options?)`
+
+<FunctionCode name='showInputForTag'/>
+
+Shows an input modal for the given bot and tag with the given options.
+When shown, the player will be able to change the value stored in the given tag.
+Triggers the <TagLink tag='@onSaveInput'/> whisper when the modal is closed with saving and the <TagLink tag='@onCloseInput'/> whisper when the modal is closed without saving.
+
+The **first parameter** is the bot or bot ID that the input should be shown for,
+
+The **second parameter** is the tag that should be edited on the bot.
+
+The **third parameter** is optional and is the possible cusomization options for the input modal.
+
+#### Examples:
+
+1. Show a basic text input modal for the `#name` tag on this bot.
+```typescript
+player.showInputForTag(this, "name");
+```
+
+2. Show a text input modal with a placeholder for the `#name` tag.
+```typescript
+player.showInputForTag(this, "name", {
+    placeholder: 'Enter a name'
+});
+```
+
+3. Show a input modal with a custom title.
+```typescript
+player.showInputForTag(this, "name", {
+    title: 'Edit name'
+});
+```
+
+4. Show a color input modal with a custom title.
+```typescript
+player.showInputForTag(this, "auxColor", {
+    type: 'color',
+    title: 'Enter a custom color'
+});
 ```
 
 ### `player.setClipboard(text)`
@@ -705,6 +1387,36 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 1. Show the "Upload AUX File" dialog.
 ```typescript
 player.showUploadAuxFile();
+```
+
+### `player.loadUniverse(universe)`
+
+<FunctionCode name='loadUniverse'/>
+
+Loads the given univese into the current browser tab. When the universe is loaded, the <TagLink tag='@onUniverseSubscribed'/> shout will be triggered.
+
+Note that separate universes cannot interact directly. They must instead interact via super shouts.
+
+The **first parameter** is the name of the universe to load.
+
+#### Examples:
+
+1. Load the `fun` universe.
+```typescript
+player.loadUniverse("fun");
+```
+
+### `player.unloadUniverse()`
+
+Unloads the given universe from the current browser tab. When the universe is unloaded, the <TagLink tag='@onUniverseUnsubscribed'/> shout will be triggered.
+
+The **first parameter** is the name of the universe to unload.
+
+#### Examples:
+
+1. Unload the `fun` universe.
+```typescript
+player.unloadUniverse('fun');
 ```
 
 ### `player.downloadUniverse()`
@@ -774,6 +1486,92 @@ Disables virtual reality on the device.
 1. Disable VR.
 ```typescript
 player.disableVR();
+```
+
+### `player.getCurrentUniverse()`
+
+<FunctionCode name='getCurrentUniverse'/>
+
+Gets the universe that the player is in.
+
+#### Examples:
+
+1. Show a message of the current universe.
+```typescript
+const universe = player.getCurrentUniverse();
+player.toast(universe);
+```
+
+### `player.getCurrentDimension()`
+
+<FunctionCode name='getCurrentDimension'/>
+
+Gets the dimension that is loaded into the <TagLink tag='auxPagePortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxPagePortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxPagePortal'/> portal.
+```typescript
+const dimension = player.getCurrentDimension();
+player.toast(dimension);
+```
+
+### `player.getMenuDimension()`
+
+<FunctionCode name='getMenuDimension' />
+
+Gets the dimension that is loaded into the <TagLink tag='auxMenuPortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxMenuPortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxMenuPortal'/> portal.
+```typescript
+const dimension = player.getMenuDimension();
+player.toast(dimension);
+```
+
+### `player.getInventoryDimension()`
+
+<FunctionCode name='getInventoryDimension' />
+
+Gets the dimension that is loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxInventoryPortal".
+</Alert>
+
+#### Examples:
+
+1. Show a message of the dimension that is currently in the <TagLink tag='auxInventoryPortal'/> portal.
+```typescript
+const dimension = player.getInventoryDimension();
+player.toast(dimension);
+```
+
+### `player.hasBotInInventory(bot)`
+
+<FunctionCode name='hasBotInInventory'/>
+
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+
+The **first parameter** is the bot that should be checked.
+
+#### Examples:
+
+1. Show a message if a bot named bob is in the inventory.
+```typescript
+const bob = getBot("#name", "bob");
+if (player.hasBotInInventory(bob)) {
+    player.toast("bob is in the inventory!");
+}
 ```
 
 ### `player.getPortalDimension(portal)`
@@ -853,6 +1651,117 @@ if (distance === 0) {
 }
 ```
 
+### `player.getBot()`
+
+<FunctionCode name='getUser'/>
+
+Gets the player bot. This is the bot that represents the player's browser tab.
+
+#### Examples:
+
+1. Get the player bot and set a username on it.
+```typescript
+const playerBot = player.getBot();
+playerBot.tags.username = "bob";
+```
+
+2. Open the sheet to "testDimension".
+```typescript
+const playerBot = player.getBot();
+playerBot.tags.auxSheetPortal = "testDimension";
+```
+
+### `player.goToDimension(dimension)`
+
+<FunctionCode name='goToDimension'/>
+
+Loads the given dimension into the <TagLink tag='auxPagePortal'/> portal.
+Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
+
+The **first parameter** is the dimension that should be loaded.
+
+#### Examples:
+
+1. Load the `abc` dimension.
+```typescript
+player.goToDimension('abc');
+```
+
+### `player.goToURL(url)`
+
+<FunctionCode name='goToURL'/>
+
+Redirects the current tab to the given URL. Useful for sending the player to another webpage or ambient experience.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that the player should be sent to. Usually this is a website like `https://example.com`.
+
+#### Examples:
+
+1. Send the player to `https://example.com`.
+```typescript
+player.goToURL("https://example.com");
+```
+
+### `player.openURL(url)`
+
+<FunctionCode name='openURL'/>
+
+Opens a new tab with the given URL. Useful for opening another webpage without redirecting the current tab.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) that should be loaded. Usually this is a website like `https://example.com`.
+
+#### Examples:
+
+1. Open `https://example.com` in a new tab.
+```typescript
+player.openURL("https://example.com");
+```
+
+### `player.openDevConsole()`
+
+<FunctionCode name='openDevConsole'/>
+
+Opens the developer console which contains a list of errors that scripts have issued.
+
+#### Examples:
+
+1. Open the developer console.
+```typescript
+player.openDevConsole();
+```
+
+### `player.playSound(url)`
+
+<FunctionCode name='playSound'/>
+
+Loads and plays the audio (MP3, WAV, etc.) from the given URL.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be played.
+
+#### Examples:
+
+1. Play a MP3 file from another website.
+```typescript
+player.playSound("https://www.testsounds.com/track06.mp3");
+```
+
+### `player.isInDimension(dimension)`
+
+<FunctionCode name='isInDimension'/>
+
+Gets whether the given dimension is loaded into the <TagLink tag='auxPagePortal'/> portal.
+
+The **first parameter** is the dimension to check for.
+
+#### Examples:
+
+1. Show a toast if the player is viewing the `abc` dimension.
+```typescript
+if (player.isInDimension("abc")) {
+    player.toast("In the dimension!");
+}
+```
+
 ### `player.inSheet()`
 
 <FunctionCode name='inSheet'/>
@@ -866,6 +1775,24 @@ Gets whether the player is in the sheet dimension.
 if (player.inSheet()) {
     player.toast("You are in the sheet!");
 }
+```
+
+### `player.importAUX(url)`
+
+<FunctionCode name='importAUX' />
+
+Downloads and imports the AUX file from the given [URL](https://en.wikipedia.org/wiki/URL).
+
+This is useful to quickly download a AUX file and load it into the current universe from a site such as https://gist.github.com/.
+
+The **first parameter** is the URL that the AUX file should be downloaded from.
+
+#### Examples:
+
+1. Import an AUX file from a file.
+```typescript
+const path = '/drives/myFile.aux';
+player.importAUX(path);
 ```
 
 ### `player.version()`
@@ -918,6 +1845,72 @@ player.toast(info);
 ```
 
 ## Server Actions
+
+### `server.backupToGithub(auth)`
+
+<FunctionCode name='backupToGithub'/>
+
+Saves all the universes to GitHub as a private Gist using the given authentication token.
+
+Just like <ActionLink action='server.shell(script)'/>, you need 
+
+The **first parameter** is the Github Personal Access Token that should be used to grant access to your Github account.
+See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+
+<Alert type='info'>
+    By default, backing up to GitHub is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup all the universes to a Github Gist.
+```typescript
+server.backupToGithub('your auth token');
+```
+
+### `server.backupAsDownload(target)`
+
+<FunctionCode name='backupAsDownload'/>
+
+Saves all the universes to a zip file and downloads it to the session matching the given target.
+
+The **first parameter** is an object that indicates which session the zip file should be downloaded to.
+
+<Alert type='info'>
+    By default, backing up as a download is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup and download to this tab.
+```typescript
+server.backupAsDownload({
+    session: getID(player.getBot())
+});
+```
+
+### `server.finishCheckout(options)`
+
+Finishes the checkout process by charging payment to the player.
+Best used during the <TagLink tag='@onCheckout'/> shout.
+
+The **first parameter** are the options needed to finish the checkout process.
+
+#### Examples:
+
+1. Finish the checkout process.
+```typescript
+server.finishCheckout({
+    token: 'token from onCheckout',
+
+    // 1000 cents == $10.00
+    amount: 1000,
+    currency: 'usd',
+    description: 'Description for purchase'
+});
+```
 
 ### `server.setupUniverse(universe, botOrMod?)`
 
@@ -1057,6 +2050,260 @@ let mark = getBot(byTag("#auxHistory", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMarkToUniverse(mark, "test");
+```
+
+### `server.shell(script)`
+
+<FunctionCode name='shell'/>
+
+Executes the given script on the server.
+
+The **first parameter** is the shell script that should be executed.
+
+<Alert type='info'>
+    By default, shell scripts are disabled on a universe.
+    To enable them, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+### `server.loadFile(path, options?)`
+
+<FunctionCode name='serverLoadFile'/>
+
+Loads a file from the server at the given path.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Loading a file from a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and have files with the same name, then the file from the USB drive in the smallest numbered port is used.
+
+The **first parameter** is the path that the file should be loaded from. This is usually just the full name of the file to load. (name + file extension)
+
+The **second parameter** are the options that should be used for loading the file.
+
+<Alert type='info'>
+    By default, loading files is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Load a file named "book.txt" and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+2. Load a file named "book.txt" from drive `2` and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('/2/book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+### `server.saveFile(path, data, options?)`
+
+<FunctionCode name='serverSaveFile'/>
+
+Saves a file at the given path with the given data.
+If the file already exists, then the options are used to determine if the file should be overwritten. By default the file will not be overwritten.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Saving a file to a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and a drive is not specified, then the file will be saved to the first drive.
+
+The **first parameter** is the path that the file should be saved to. This is usually just the full name of the file to save. (name + file extension)
+
+The **second parameter** is the data that should be saved into the file.
+
+The **third parameter** are the options that should be used for saving the file.
+
+<Alert type='info'>
+    By default, saving files is disabled on a universe.
+    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Save a file named "book.txt" and trigger a `@onBookSaved` shout when it is saved.
+```typescript
+server.saveFile('book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved'
+});
+```
+
+2. Save a file named "book.txt" to drive `2` and trigger a `@onBookSaved` shout when it is loaded.
+```typescript
+server.loadFile('/2/book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved',
+    overwriteExistingFile: true
+});
+```
+
+## Utility Actions
+
+### `setTag(bot, tag, value)`
+
+<FunctionCode name='setTag' />
+
+Sets the given tag to the given value on the given bot, list of bots, or mod.
+
+The **first parameter** is the bot, list of bots, or mod that the tag should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='auxColor'/> to `"green"`.
+```typescript
+setTag(this, "#auxColor", "green");
+```
+
+### `getTag(bot, tag)`
+
+<FunctionCode name='getTag'/>
+
+Gets the given tag value from the given bot.
+
+The **first parameter** is the bot that the tag should be retrieved from.
+
+The **second parameter** is the tag that should be retrieved.
+
+#### Examples:
+
+1. Get the <TagLink tag='auxColor'/> tag from `this` bot.
+```typescript
+const color = getTag(this, "#auxColor");
+```
+
+## Math Actions
+
+### `math.sum(list)`
+
+<FunctionCode name='sum'/>
+
+Calculates the numerical sum of the given values.
+
+The **first parameter** is the list of values that should be summed up.
+If any value in the list is not a number, it will be converted to one.
+If the list is not actually a list, then it will be converted to a number and returned.
+
+#### Examples:
+
+1. Calculate the sum of a list of numbers.
+```typescript
+const total = math.sum([92, 123, 21]);
+```
+
+2. Calculate the total `#age` of all the bots.
+```typescript
+const totalAge = math.sum(getBotTagValues('#age'));
+```
+
+### `math.avg(list)`
+
+<FunctionCode name='avg'/>
+
+Calculates the arithmetic mean of the given list of values.
+That is, the sum of the values divided by the number of values.
+
+The **first parameter** is the list of values that average should be calculated for.
+
+#### Examples:
+
+1. Calculate the average of a list of numbers.
+```typescript
+const average = math.avg([4, 54.2, 31]);
+```
+
+2. Calculate the average `#age` of all the bots.
+```typescript
+const averageAge = math.avg(getBotTagValues('#age'));
+```
+
+### `math.sqrt(value)`
+
+<FunctionCode name='sqrt'/>
+
+Calculates the square root of the given value.
+
+The **first parameter** is the value that the square root should be calculated for.
+
+#### Examples:
+
+1. Calculate the square root of `4`.
+```typescript
+const rootOf4 = math.sqrt(4);
+```
+
+### `math.abs(number)`
+
+<FunctionCode name='abs'/>
+
+Calculates the absolute value of the given number.
+
+The **first parameter** is the number that the absolute value should be calculated for.
+
+#### Examples:
+
+1. Calculate the absolute value for the number `-42`.
+```typescript
+const _42 = math.abs(-42);
+```
+
+### `math.stdDev(list)`
+
+<FunctionCode name='stdDev'/>
+
+Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) for the given list of values.
+
+The **first parameter** is the list of values that the standard deviation should be calculated for.
+
+#### Examples:
+
+1. Calculate the standard deviation of a list of numbers.
+```typescript
+const standardDeviation = math.stdDev([2, 97, 745]);
+```
+
+2. Calculate the standard deviation of the `#age` of all the bots.
+```typescript
+const ageDeviation = math.stdDev(getBotTagValues('#age'));
+```
+
+### `math.randomInt(min, max)`
+
+<FunctionCode name='randomInt'/>
+
+Generates a random integer number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `5` and `10`.
+```typescript
+const number = math.randomInt(5, 10);
+```
+
+### `math.random(min, max)`
+
+<FunctionCode name='random'/>
+
+Generates a random number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `0` and `Math.PI`.
+```typescript
+const number = math.random(0, Math.PI);
 ```
 
 [listen-tag]: docs/listen-tags

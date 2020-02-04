@@ -22,7 +22,6 @@ import {
     ShellAction,
     getChannelBotById,
     LocalActions,
-    EchoAction,
     action,
     SendWebhookAction,
     BotAction,

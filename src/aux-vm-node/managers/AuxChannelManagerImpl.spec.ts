@@ -25,7 +25,6 @@ import {
     GLOBALS_BOT_ID,
     botAdded,
     createBot,
-    sayHello,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
@@ -275,9 +274,9 @@ describe('AuxChannelManager', () => {
         let events: RemoteAction[] = [];
         returned.events.subscribe(e => events.push(...e));
 
-        await returned.channel.sendEvents([remote(sayHello())]);
+        await returned.channel.sendEvents([remote({ type: 'abc' })]);
 
-        expect(events).toEqual([remote(sayHello())]);
+        expect(events).toEqual([remote({ type: 'abc' })]);
     });
 });
 

@@ -1,11 +1,9 @@
 import {
     AuxCausalTree,
-    sayHello,
     botAdded,
     createBot,
     shell,
     GLOBALS_BOT_ID,
-    echo,
     action,
 } from '@casual-simulation/aux-common';
 import {

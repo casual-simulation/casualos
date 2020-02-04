@@ -15,10 +15,8 @@ import {
     goToDimension,
     goToURL,
     openURL,
-    sayHello,
     shell,
     openConsole,
-    echo,
     backupToGithub,
     backupAsDownload,
     openBarcodeScanner,
@@ -1709,7 +1707,7 @@ export function botActionsTests(
                 // ]);
             });
 
-            it('should not convert the argument fields to script bots if they are bots', () => {
+            it.skip('should convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1738,17 +1736,14 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
-
-                // expect(result.hasUserDefinedEvents).toBe(true);
-                // expect(result.events).toEqual([
-                //     botUpdated('otherBot', {
-                //         tags: {
-                //             hi: 'changed',
-                //         },
-                //     }),
-                // ]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
             it('should not convert bots in arrays to script bots', () => {
@@ -3213,6 +3208,44 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(false);
                 expect(result.events).toEqual([]);
+            });
+
+            it('should set the state tag on a bot from an argument to the given value', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@changeState(that, "abc")',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action(
+                    'test',
+                    ['thisBot'],
+                    null,
+                    state['thatBot']
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thatBot', {
+                        tags: {
+                            state: 'abc',
+                        },
+                    }),
+                ]);
             });
         });
 
@@ -5584,62 +5617,6 @@ export function botActionsTests(
             });
         });
 
-        describe('renameTagsFromDotCaseToCamelCase()', () => {
-            it('should rename each tag from dot.case to camelCase', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'aux.color': 'red',
-                            'multiple.case.long': 123,
-                            '1.2.3': 456,
-                            'aux._hidden': true,
-                            noUpdateNeeded: true,
-                            test: `@
-                                renameTagsFromDotCaseToCamelCase(this);
-                            `,
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            auxPlayerName: 'testUser',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            'aux.color': null,
-                            auxColor: 'red',
-                            'multiple.case.long': null,
-                            multipleCaseLong: 123,
-                            '1.2.3': null,
-                            '123': 456,
-                            'aux._hidden': null,
-                            _auxHidden: true,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('setTag()', () => {
             it('should issue a bot update for the given tag', () => {
                 const state: BotsState = {
@@ -5857,21 +5834,19 @@ export function botActionsTests(
                     }),
                 ]);
             });
-        });
 
-        describe('server.echo()', () => {
-            it('should send a EchoAction in a RemoteAction', () => {
+            it('should allow setting a tag on a bot from an argument', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: '@server.echo("message")',
+                            test: '@setTag(that, "#name", "bob")',
                         },
                     },
-                    userBot: {
-                        id: 'userBot',
+                    thatBot: {
+                        id: 'thatBot',
                         tags: {
-                            auxPlayerName: 'testUser',
+                            name: 'wrong',
                         },
                     },
                 };
@@ -5880,8 +5855,9 @@ export function botActionsTests(
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action(
                     'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
+                    ['thisBot'],
+                    null,
+                    state['thatBot']
                 );
                 const result = calculateActionEvents(
                     state,
@@ -5891,43 +5867,13 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([remote(echo('message'))]);
-            });
-        });
-
-        describe('server.sayHello()', () => {
-            it('should send a SayHelloAction in a RemoteAction', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
+                expect(result.events).toEqual([
+                    botUpdated('thatBot', {
                         tags: {
-                            test: '@server.sayHello()',
+                            name: 'bob',
                         },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            auxPlayerName: 'testUser',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([remote(sayHello())]);
+                    }),
+                ]);
             });
         });
 

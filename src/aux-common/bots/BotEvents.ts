@@ -57,10 +57,8 @@ export type ExtraActions =
     | ImportAUXAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
-    | SayHelloAction
     | ShellAction
     | OpenConsoleAction
-    | EchoAction
     | DownloadAction
     | BackupToGithubAction
     | BackupAsDownloadAction
@@ -179,25 +177,6 @@ export interface ReplaceDragBotAction extends Action {
      * The bot that should be used to drag.
      */
     bot: Bot | BotTags;
-}
-
-/**
- * An event that is used to print a "hello" message.
- */
-export interface SayHelloAction extends Action {
-    type: 'say_hello';
-}
-
-/**
- * An event that is used to request that a message is sent back to you.
- */
-export interface EchoAction extends Action {
-    type: 'echo';
-
-    /**
-     * The message.
-     */
-    message: string;
 }
 
 /**
@@ -1475,25 +1454,6 @@ export function playSound(url: string): PlaySoundAction {
     return {
         type: 'play_sound',
         url: url,
-    };
-}
-
-/**
- * Creates a new SayHelloAction.
- */
-export function sayHello(): SayHelloAction {
-    return {
-        type: 'say_hello',
-    };
-}
-
-/**
- * Creates an new EchoAction.
- */
-export function echo(message: string): EchoAction {
-    return {
-        type: 'echo',
-        message,
     };
 }
 

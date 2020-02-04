@@ -33,10 +33,8 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     botUpdated,
-    sayHello as calcSayHello,
     shell as calcShell,
     openConsole as calcOpenConsole,
-    echo as calcEcho,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
     openBarcodeScanner as calcOpenBarcodeScanner,
@@ -628,21 +626,6 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
     }
 }
 
-/**
- * Renames the tags on the given bot or bots from using dot casing (dot.case) to camel casing (camelCasing).
- * This is a helper function to make it easier to update your bots.
- * @param bot The bot or array of bots that should be updated.
- */
-function renameTagsFromDotCaseToCamelCase(bot: Bot | Bot[]) {
-    if (Array.isArray(bot)) {
-        for (let b of bot) {
-            renameTagsSingle(b);
-        }
-    } else {
-        renameTagsSingle(bot);
-    }
-}
-
 function renameTagsSingle(bot: Bot) {
     for (let tag of tagsOnBot(bot)) {
         let updated = dotCaseToCamelCase(tag);
@@ -1208,15 +1191,15 @@ function restoreHistoryMarkToUniverse(mark: Bot | string, universe: string) {
  * Derermines whether the player is in the given dimension.
  * @param dimension The dimension.
  */
-function isInDimension(givenDimension: string) {
+function isInDimension(dimension: string) {
     return (
-        getCurrentDimension() === givenDimension &&
+        getCurrentDimension() === dimension &&
         getCurrentDimension() != undefined
     );
 }
 
 /**
- * Gets the dimension that the player is currently in.
+ * Gets the dimension that the player is currently viewing.
  */
 function getCurrentDimension(): string {
     const user = getUser();
@@ -1735,6 +1718,10 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     } else if (bot && isScriptBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
+    } else if (bot && isBot(bot)) {
+        const calc = getCalculationContext();
+        const b = calc.sandbox.interface.getBot(bot.id);
+        return calc.sandbox.interface.setTag(b, tag, value);
     } else {
         if (tag !== 'id' && tag !== BOT_SPACE_TAG) {
             (<BotTags>bot)[tag] = value;
@@ -2153,23 +2140,6 @@ function importAUX(url: string) {
     return addAction(event);
 }
 
-/**
- * Sends a "hello" event to the server.
- */
-function sayHello() {
-    let actions = getActions();
-    actions.push(calcRemote(calcSayHello()));
-}
-
-/**
- * Sends an echo event to the server.
- * @param message The message to send to the server.
- */
-function echo(message: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcEcho(message)));
-}
-
 function unwrapBotOrMod(botOrMod: Mod) {
     if (isScriptBot(botOrMod)) {
         const calc = getCalculationContext();
@@ -2395,9 +2365,7 @@ const player = {
 };
 
 const server = {
-    sayHello,
     shell,
-    echo,
     backupToGithub,
     backupAsDownload,
     finishCheckout,
@@ -2441,7 +2409,6 @@ export default {
 
     // Global functions
     create,
-    byCreator,
     destroy,
     shout,
     superShout,
@@ -2461,12 +2428,15 @@ export default {
     getBot,
     getBots,
     getBotTagValues,
+
+    // Bot filter functions
     byTag,
-    byMod,
+    atPosition,
     inDimension,
     inStack,
+    byCreator,
     bySpace,
-    atPosition,
+    byMod,
     neighboring,
     either,
     not,
@@ -2475,7 +2445,6 @@ export default {
     getTag,
     setTag,
     removeTags,
-    renameTagsFromDotCaseToCamelCase,
 
     // Engine functions
     __energyCheck,
