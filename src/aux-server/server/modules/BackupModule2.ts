@@ -21,7 +21,6 @@ import {
     ShellAction,
     getChannelBotById,
     LocalActions,
-    EchoAction,
     action,
     BackupToGithubAction,
     merge,
