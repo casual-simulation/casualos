@@ -54,6 +54,20 @@
     -   `either()`
     -   `not()`
     -   `removeTags()`
+    -   `subtractMods()`
+    -   `getTag()`
+    -   `setTag()`
+    -   `math.sum()`
+    -   `math.avg()`
+    -   `math.abs()`
+    -   `math.sqrt()`
+    -   `math.stdDev()`
+    -   `math.randomInt()`
+    -   `math.random()`
+-   Removed the following functions:
+    -   `renameTagsFromDotCaseToCamelCase()`
+    -   `server.sayHello()`
+    -   `server.echo()`
 
 #### :bug: Bug Fixes
 
