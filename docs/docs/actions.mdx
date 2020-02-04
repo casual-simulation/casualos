@@ -2177,4 +2177,133 @@ The **second parameter** is the tag that should be retrieved.
 const color = getTag(this, "#auxColor");
 ```
 
+## Math Actions
+
+### `math.sum(list)`
+
+<FunctionCode name='sum'/>
+
+Calculates the numerical sum of the given values.
+
+The **first parameter** is the list of values that should be summed up.
+If any value in the list is not a number, it will be converted to one.
+If the list is not actually a list, then it will be converted to a number and returned.
+
+#### Examples:
+
+1. Calculate the sum of a list of numbers.
+```typescript
+const total = math.sum([92, 123, 21]);
+```
+
+2. Calculate the total `#age` of all the bots.
+```typescript
+const totalAge = math.sum(getBotTagValues('#age'));
+```
+
+### `math.avg(list)`
+
+<FunctionCode name='avg'/>
+
+Calculates the arithmetic mean of the given list of values.
+That is, the sum of the values divided by the number of values.
+
+The **first parameter** is the list of values that average should be calculated for.
+
+#### Examples:
+
+1. Calculate the average of a list of numbers.
+```typescript
+const average = math.avg([4, 54.2, 31]);
+```
+
+2. Calculate the average `#age` of all the bots.
+```typescript
+const averageAge = math.avg(getBotTagValues('#age'));
+```
+
+### `math.sqrt(value)`
+
+<FunctionCode name='sqrt'/>
+
+Calculates the square root of the given value.
+
+The **first parameter** is the value that the square root should be calculated for.
+
+#### Examples:
+
+1. Calculate the square root of `4`.
+```typescript
+const rootOf4 = math.sqrt(4);
+```
+
+### `math.abs(number)`
+
+<FunctionCode name='abs'/>
+
+Calculates the absolute value of the given number.
+
+The **first parameter** is the number that the absolute value should be calculated for.
+
+#### Examples:
+
+1. Calculate the absolute value for the number `-42`.
+```typescript
+const _42 = math.abs(-42);
+```
+
+### `math.stdDev(list)`
+
+<FunctionCode name='stdDev'/>
+
+Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) for the given list of values.
+
+The **first parameter** is the list of values that the standard deviation should be calculated for.
+
+#### Examples:
+
+1. Calculate the standard deviation of a list of numbers.
+```typescript
+const standardDeviation = math.stdDev([2, 97, 745]);
+```
+
+2. Calculate the standard deviation of the `#age` of all the bots.
+```typescript
+const ageDeviation = math.stdDev(getBotTagValues('#age'));
+```
+
+### `math.randomInt(min, max)`
+
+<FunctionCode name='randomInt'/>
+
+Generates a random integer number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `5` and `10`.
+```typescript
+const number = math.randomInt(5, 10);
+```
+
+### `math.random(min, max)`
+
+<FunctionCode name='random'/>
+
+Generates a random number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `0` and `Math.PI`.
+```typescript
+const number = math.random(0, Math.PI);
+```
+
 [listen-tag]: docs/listen-tags
