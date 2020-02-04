@@ -24,12 +24,12 @@ import {
     createBot,
     botAdded,
     botRemoved,
-    sayHello,
     bot,
     del,
     tag,
     value,
     DEFAULT_USER_DELETION_TIME,
+    browseHistory,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -476,9 +476,9 @@ describe('BaseAuxChannel', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
 
-            await channel.formulaBatch(['server.sayHello()']);
+            await channel.formulaBatch(['server.browseHistory()']);
 
-            expect(channel.remoteEvents).toEqual([remote(sayHello())]);
+            expect(channel.remoteEvents).toEqual([remote(browseHistory())]);
         });
     });
 

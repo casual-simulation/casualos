@@ -626,21 +626,6 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
     }
 }
 
-/**
- * Renames the tags on the given bot or bots from using dot casing (dot.case) to camel casing (camelCasing).
- * This is a helper function to make it easier to update your bots.
- * @param bot The bot or array of bots that should be updated.
- */
-function renameTagsFromDotCaseToCamelCase(bot: Bot | Bot[]) {
-    if (Array.isArray(bot)) {
-        for (let b of bot) {
-            renameTagsSingle(b);
-        }
-    } else {
-        renameTagsSingle(bot);
-    }
-}
-
 function renameTagsSingle(bot: Bot) {
     for (let tag of tagsOnBot(bot)) {
         let updated = dotCaseToCamelCase(tag);
@@ -2460,7 +2445,6 @@ export default {
     getTag,
     setTag,
     removeTags,
-    renameTagsFromDotCaseToCamelCase,
 
     // Engine functions
     __energyCheck,

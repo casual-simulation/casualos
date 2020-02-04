@@ -15,10 +15,8 @@ import {
     goToDimension,
     goToURL,
     openURL,
-    sayHello,
     shell,
     openConsole,
-    echo,
     backupToGithub,
     backupAsDownload,
     openBarcodeScanner,
@@ -5613,62 +5611,6 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             val: 123,
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('renameTagsFromDotCaseToCamelCase()', () => {
-            it('should rename each tag from dot.case to camelCase', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'aux.color': 'red',
-                            'multiple.case.long': 123,
-                            '1.2.3': 456,
-                            'aux._hidden': true,
-                            noUpdateNeeded: true,
-                            test: `@
-                                renameTagsFromDotCaseToCamelCase(this);
-                            `,
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            auxPlayerName: 'testUser',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            'aux.color': null,
-                            auxColor: 'red',
-                            'multiple.case.long': null,
-                            multipleCaseLong: 123,
-                            '1.2.3': null,
-                            '123': 456,
-                            'aux._hidden': null,
-                            _auxHidden: true,
                         },
                     }),
                 ]);
