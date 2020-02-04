@@ -119,7 +119,7 @@ module.exports = {
         alias: {
             'webxr-polyfill': path.resolve(
                 __dirname,
-                'aux-projector/public/scripts/webxr-polyfill.js'
+                'shared/public/scripts/webxr-polyfill.js'
             ),
             'vue-json-tree-view': path.resolve(
                 __dirname,
