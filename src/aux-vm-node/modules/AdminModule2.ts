@@ -15,7 +15,6 @@ import {
     ShellAction,
     getChannelBotById,
     LocalActions,
-    EchoAction,
     action,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';

@@ -15,7 +15,6 @@ import {
     ShellAction,
     getChannelBotById,
     LocalActions,
-    EchoAction,
     action,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -163,19 +162,6 @@ async function setChannelCount(
             },
         });
     }
-}
-
-function echo(
-    info: RealtimeChannelInfo,
-    channel: NodeAuxChannel,
-    device: DeviceInfo,
-    event: EchoAction
-) {
-    return channel.sendEvents([
-        remote(action(event.message), {
-            sessionId: device.claims[SESSION_ID_CLAIM],
-        }),
-    ]);
 }
 
 function shell(
