@@ -136,6 +136,37 @@ applyMod(bot, {
 });
 ```
 
+### `subtractMods(bot, ...mods)`
+
+<FunctionCode name='subtractMods'/>
+
+Removes the tags contained in the given mod(s) from the given bot or mod.
+
+The **first parameter** is the bot or mod that the tags should be removed from.
+
+The **other parameters** are the bots or mods that contain the tags which should be removed from the original bot.
+
+#### Examples:
+
+1. Remove a mod from this bot.
+```typescript
+const mod = {
+    auxColor: 'red',
+    name: 'bob'
+};
+
+subtractMods(this, mod);
+```
+
+2. Remove multiple mods from this bot.
+```typescript
+subtractMods(this, {
+    auxColor: 'red'
+}, {
+    name: 'bob'
+});
+```
+
 ### `removeTags(bot, tagSection)`
 
 <FunctionCode name='removeTags'/>
@@ -2106,6 +2137,44 @@ server.loadFile('/2/book.txt', 'My memoirs', {
     callbackShout: 'onBookSaved',
     overwriteExistingFile: true
 });
+```
+
+## Utility Actions
+
+### `setTag(bot, tag, value)`
+
+<FunctionCode name='setTag' />
+
+Sets the given tag to the given value on the given bot, list of bots, or mod.
+
+The **first parameter** is the bot, list of bots, or mod that the tag should be set on.
+
+The **second parameter** is the tag that should be changed.
+
+The **third parameter** is the value that should be placed into the tag(s).
+
+#### Examples:
+
+1. Set a bot's <TagLink tag='auxColor'/> to `"green"`.
+```typescript
+setTag(this, "#auxColor", "green");
+```
+
+### `getTag(bot, tag)`
+
+<FunctionCode name='getTag'/>
+
+Gets the given tag value from the given bot.
+
+The **first parameter** is the bot that the tag should be retrieved from.
+
+The **second parameter** is the tag that should be retrieved.
+
+#### Examples:
+
+1. Get the <TagLink tag='auxColor'/> tag from `this` bot.
+```typescript
+const color = getTag(this, "#auxColor");
 ```
 
 [listen-tag]: docs/listen-tags
