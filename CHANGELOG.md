@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.11.27
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where creating a bot inside a shout would prevent the new bot from being modified by future shouts.
+-   Fixed an issue where creating and then updating a bot that was not in the shared space would cause all the updates to be incorrectly routed to the shared space and dropped.
+
 ## V0.11.26
 
 ### Date: 2/4/2020
