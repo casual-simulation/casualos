@@ -46,6 +46,7 @@ import {
     breakIntoIndividualEvents,
     ON_RUN_ACTION_NAME,
     TEMPORARY_BOT_PARTITION_ID,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -472,8 +473,21 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     private async _sendEvents(events: BotAction[]) {
         let map = new Map<AuxPartition, BotAction[]>();
+        let newBotPartitions = new Map<string, AuxPartition>();
         for (let event of events) {
-            const partition = this._partitionForEvent(event);
+            let partition = this._partitionForEvent(event);
+            if (!hasValue(partition)) {
+                if (
+                    event.type === 'update_bot' ||
+                    event.type === 'remove_bot'
+                ) {
+                    partition = newBotPartitions.get(event.id);
+                }
+            } else {
+                if (event.type === 'add_bot') {
+                    newBotPartitions.set(event.bot.id, partition);
+                }
+            }
             if (typeof partition === 'undefined') {
                 console.warn('[AuxHelper] No partition for event', event);
                 continue;
@@ -529,7 +543,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotEvent(event: BotActions): AuxPartition {
-        return this._partitionForBotType(this._botSpace(event));
+        const space = this._botSpace(event);
+        if (!space) {
+            return null;
+        }
+        return this._partitionForBotType(space);
     }
 
     private _partitionForBotType(type: string): AuxPartition {
@@ -554,7 +572,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
 
         if (!bot) {
-            return 'shared';
+            return null;
         }
         return getBotSpace(bot);
     }

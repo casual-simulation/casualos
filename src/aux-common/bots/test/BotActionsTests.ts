@@ -7470,6 +7470,224 @@ export function botActionsTests(
                 ]);
             });
 
+            it('should be able to shout multiple times to a bot that was created during another shout', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@shout("create"); shout("abc"); shout("def")`,
+                        },
+                    },
+                    creatorBot: {
+                        id: 'creatorBot',
+                        tags: {
+                            create: `@${name}(getBots("test", true), { auxListening: true, space: 'custom' });`,
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        tags: {
+                            test: true,
+                            abc: `@tags.hit = true;`,
+                            def: `@tags.hit2 = true;`,
+                            auxListening: false,
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        space: <any>'custom',
+                        tags: {
+                            auxCreator: null,
+                            test: true,
+                            auxListening: true,
+                            abc: `@tags.hit = true;`,
+                            def: `@tags.hit2 = true;`,
+                        },
+                    }),
+                    botUpdated(expectedId, {
+                        tags: {
+                            hit: true,
+                            hit2: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should be able to whisper to a bot that was created during another shout', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@let [newBot] = shout("create"); whisper(newBot, "abc");`,
+                        },
+                    },
+                    creatorBot: {
+                        id: 'creatorBot',
+                        tags: {
+                            create: `@return ${name}(getBots("test", true), { auxListening: true });`,
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        tags: {
+                            test: true,
+                            abc: `@tags.hit = true;`,
+                            auxListening: false,
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        tags: {
+                            auxCreator: 'creatorBot',
+                            test: true,
+                            auxListening: true,
+                            abc: `@tags.hit = true;`,
+                        },
+                    }),
+                    botUpdated(expectedId, {
+                        tags: {
+                            hit: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should be able to whisper to itself after being created', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@shout("create"); shout("abc");`,
+                        },
+                    },
+                    creatorBot: {
+                        id: 'creatorBot',
+                        tags: {
+                            create: `@return ${name}(getBots("test", true), { auxListening: true });`,
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        tags: {
+                            test: true,
+                            abc: `@tags.value = 10; whisper(this, "def")`,
+                            def: `@tags.hit = tags.value === 10;`,
+                            auxListening: false,
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        tags: {
+                            auxCreator: 'creatorBot',
+                            test: true,
+                            auxListening: true,
+                            abc: `@tags.value = 10; whisper(this, "def")`,
+                            def: `@tags.hit = tags.value === 10;`,
+                        },
+                    }),
+                    botUpdated(expectedId, {
+                        tags: {
+                            hit: true,
+                            value: 10,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support complicated setup expressions', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@shout("ensureCreated"); shout("ensureCreated");`,
+                        },
+                    },
+                    creatorBot: {
+                        id: 'creatorBot',
+                        tags: {
+                            ensureCreated: `@
+                                let b = getBot(byTag("test", true), bySpace("custom"));
+                                if (!b) {
+                                    b = ${name}(getBots("test", true), { auxListening: true, space: "custom" });
+                                    whisper(b, "setup");
+                                }
+
+                                return b;
+                            `,
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        tags: {
+                            test: true,
+                            setup: `@whisper(this, "otherPart")`,
+                            otherPart: `@tags.hitSetup = true`,
+                            auxListening: false,
+                        },
+                    },
+                };
+                // specify the UUID to use next
+                uuidMock.mockReturnValue(id);
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botAdded({
+                        id: expectedId,
+                        space: <any>'custom',
+                        tags: {
+                            auxCreator: null,
+                            test: true,
+                            auxListening: true,
+                            setup: `@whisper(this, "otherPart")`,
+                            otherPart: `@tags.hitSetup = true`,
+                        },
+                    }),
+                    botUpdated(expectedId, {
+                        tags: {
+                            hitSetup: true,
+                        },
+                    }),
+                ]);
+            });
+
             describe('space', () => {
                 it('should set the space of the bot', () => {
                     const state: BotsState = {
