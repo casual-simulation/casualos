@@ -74,7 +74,7 @@ export function calculateActionResults(
             undefined,
             sandboxFactory
         );
-    const { bots, objects } = getBotsForAction(state, action, calc);
+    const { bots, objects } = getBotsForAction(action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
@@ -114,7 +114,7 @@ export function calculateActionEvents(
         library,
         sandboxFactory
     );
-    const { bots, objects } = getBotsForAction(state, action, calc);
+    const { bots, objects } = getBotsForAction(action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
@@ -156,7 +156,7 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [botEvents] = formulaActions(state, context, null, null, [formula]);
+    let [botEvents] = formulaActions(context, null, null, [formula]);
 
     return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 }

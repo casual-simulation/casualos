@@ -3464,6 +3464,27 @@ export function botCalculationContextTests(
                 expect(types.isProxy(unwrapped[key])).toBe(false);
             }
         });
+
+        it('should return an object that includes the bots space', () => {
+            const test = createBot(
+                'test',
+                {
+                    auxColor: 'red',
+                },
+                <any>'abc'
+            );
+
+            const calc = createCalculationContext([test]);
+            const bot = calc.sandbox.interface.getBot('test');
+            const unwrapped = calc.sandbox.interface.unwrapBot(bot) as any;
+            expect(unwrapped).toEqual({
+                id: 'test',
+                space: 'abc',
+                tags: {
+                    auxColor: 'red',
+                },
+            });
+        });
     });
 
     describe('botDimensionSortOrder()', () => {
