@@ -47,6 +47,8 @@ import {
     ON_RUN_ACTION_NAME,
     TEMPORARY_BOT_PARTITION_ID,
     hasValue,
+    addState,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -323,6 +325,45 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             auxDimensionConfig: USERS_DIMENSION,
             auxDimensionVisualize: true,
         });
+    }
+
+    async createOrUpdateBuilderBots(builder: string) {
+        const state = JSON.parse(builder);
+        const objects = getActiveObjects(state);
+        const stateCalc = createCalculationContext(
+            objects,
+            this.userId,
+            this._lib,
+            this._sandboxFactory
+        );
+        const calc = this.createContext();
+        let needsUpdate = false;
+        for (let bot of objects) {
+            const newVersion = calculateBotValue(
+                stateCalc,
+                bot,
+                'builderVersion'
+            );
+            if (typeof newVersion === 'number') {
+                const sameBot = this.botsState[bot.id];
+                if (sameBot) {
+                    const currentVersion = calculateBotValue(
+                        calc,
+                        sameBot,
+                        'builderVersion'
+                    );
+                    needsUpdate =
+                        !currentVersion || newVersion > currentVersion;
+                } else {
+                    needsUpdate = true;
+                }
+                break;
+            }
+        }
+        if (needsUpdate) {
+            console.log('[AuxHelper] Updating Builder...');
+            await this.transaction(addState(state));
+        }
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {

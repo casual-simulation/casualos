@@ -293,6 +293,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         });
         await this._initGlobalsBot();
         await this._initUserDimensionBot();
+        await this._initBuilderBots();
     }
 
     async setUser(user: AuxUser): Promise<void> {
@@ -621,6 +622,23 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 '[BaseAuxChannel] Unable to init user dimension bot:',
                 err
             );
+        }
+    }
+
+    private async _initBuilderBots() {
+        if (
+            !this._config ||
+            !this._config.config ||
+            !this._config.config.builder
+        ) {
+            return;
+        }
+        try {
+            await this._helper.createOrUpdateBuilderBots(
+                this._config.config.builder
+            );
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init builder bot:', err);
         }
     }
 

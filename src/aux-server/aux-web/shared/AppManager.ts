@@ -33,6 +33,7 @@ import {
 import { fromByteArray } from 'base64-js';
 import { WebVRDisplays } from './WebVRDisplays';
 import { supportsXR } from './SharedUtils';
+import builder from './builder/builder.v1.json';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -107,6 +108,7 @@ export class AppManager {
                     version: this.version.latestTaggedVersion,
                     versionHash: this.version.gitCommit,
                     device: this._deviceConfig,
+                    builder: JSON.stringify(builder),
                 },
                 this._config.version
             );
