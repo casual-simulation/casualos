@@ -6,6 +6,36 @@
 
 ### Changes:
 
+#### :rocket: Features
+
+-   Added an initial version of Builder.
+    -   Builder is a bot that helps you build things in aux.
+    -   Builder lives in the `auxBuilder` dimension and can be woken up by clicking it.
+    -   Builder currently has the following chat commands:
+        -   `..` - Wakes Builder up.
+        -   `.sleep` - Puts Builder to sleep.
+        -   `.sheet [dimension]` - Opens the sheet to the given dimension. If the dimension is omitted, then the sheet will be opened for the current dimension.
+        -   `.new bot` - Creates a new bot in the current dimension.
+        -   `.download` - Downloads the entire universe.
+        -   `.upload` - Shows the upload dialog.
+        -   `.goto {dimension}` - Redirects the page portal to the given dimension.
+        -   `.new universe {universeName}` - Creates a new universe with the given name and opens it in a new tab.
+        -   `.show history` - Loads the history and goes to the `auxHistory` dimension.
+        -   `.mark history` - Creates a new history mark for the current state.
+        -   `.show docs` - Opens the documentation website in a new tab.
+        -   `.summon` - Summons the Builder helper into the current dimension.
+    -   Builder has a helper bot which will follow you around the universe.
+        -   If you enter an empty dimension, the helper bot will automatically appear.
+        -   If you enter a dimension that has a bot, you need to summon it using the `.summon` command.
+        -   You can click on helper to show a menu of possible options.
+        -   Dragging helper will give you a cursor that lets you teleport helper around or select other bots.
+        -   Dragging another bot onto helper will turn helper into a pallete so when you drag helper it will make a clone of the other bot.
+            -   Clicking helper will return it to normal.
+-   Added hotkeys to show/hide the chat bar.
+    -   Use the `~` key to show the char bar.
+    -   Use the `3342` finger tap code on mobile to show the chat bar.
+    -   Use a `5` finger tap on mobile to hide the chat bar.
+
 #### :bug: Bug Fixes
 
 -   Fixed an issue where creating a bot inside a shout would prevent the new bot from being modified by future shouts.
