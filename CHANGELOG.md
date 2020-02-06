@@ -12,7 +12,7 @@
     -   Builder is a bot that helps you build things in aux.
     -   Builder lives in the `auxBuilder` dimension and can be woken up by clicking it.
     -   Builder currently has the following chat commands:
-        -   `..` - Wakes Builder up.
+        -   `.. [name]` - Wakes Builder with the given name. If the name is omitted, then the `b001` Builder will be woken.
         -   `.sleep` - Puts Builder to sleep.
         -   `.sheet [dimension]` - Opens the sheet to the given dimension. If the dimension is omitted, then the sheet will be opened for the current dimension.
         -   `.new bot` - Creates a new bot in the current dimension.
@@ -24,6 +24,7 @@
         -   `.mark history` - Creates a new history mark for the current state.
         -   `.show docs` - Opens the documentation website in a new tab.
         -   `.summon` - Summons the Builder helper into the current dimension.
+        -   `.new builder {name}` - Creates a clone of the current builder with the given name.
     -   Builder has a helper bot which will follow you around the universe.
         -   If you enter an empty dimension, the helper bot will automatically appear.
         -   If you enter a dimension that has a bot, you need to summon it using the `.summon` command.
