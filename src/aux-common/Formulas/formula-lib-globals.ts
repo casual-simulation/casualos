@@ -3,7 +3,6 @@ import { BotAction } from '../bots/BotEvents';
 import { BotSandboxContext } from '../bots/BotCalculationContext';
 
 let actions: BotAction[] = [];
-let state: BotsState = null;
 let calc: BotSandboxContext = null;
 let currentBot: ScriptBot = null;
 let currentEnergy: number = 0;
@@ -22,12 +21,8 @@ export function addAction(event: BotAction) {
     return event;
 }
 
-export function setBotState(value: BotsState) {
-    state = value;
-}
-
 export function getBotState(): BotsState {
-    return state;
+    return calc ? calc.sandbox.interface.state : null;
 }
 
 export function setCalculationContext(context: BotSandboxContext) {

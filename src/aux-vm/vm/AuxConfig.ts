@@ -18,6 +18,7 @@ export interface AuxConfigParameters {
     isPlayer: boolean;
     version: string;
     versionHash: string;
+    builder?: string;
     device?: FormulaLibraryOptions['device'];
 }
 

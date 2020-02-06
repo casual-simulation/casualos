@@ -89,7 +89,6 @@ import {
     getBotState,
     getCalculationContext,
     getActions,
-    setBotState,
     getUserId,
     getEnergy,
     setEnergy,
@@ -732,11 +731,6 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     const calc = getCalculationContext();
     for (let i = 0; i < bots.length; i++) {
         ret[i] = calc.sandbox.interface.addBot(bots[i]);
-        setBotState(
-            Object.assign({}, getBotState(), {
-                [bots[i].id]: bots[i],
-            })
-        );
     }
 
     event(CREATE_ACTION_NAME, ret);

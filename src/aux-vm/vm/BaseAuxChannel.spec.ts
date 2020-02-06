@@ -41,6 +41,7 @@ import {
 import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
 import uuid from 'uuid/v4';
 import { createMemoryPartition } from '../partitions';
+import merge from 'lodash/merge';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -131,6 +132,102 @@ describe('BaseAuxChannel', () => {
             const globals = channel.helper.globalsBot;
             expect(globals).toBeTruthy();
             expect(globals.tags).toMatchSnapshot();
+        });
+
+        it('should load the builder aux file', async () => {
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 0,
+                            }),
+                        }),
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toMatchObject({
+                id: 'builder',
+                tags: {
+                    abc: 'def',
+                    builderVersion: 0,
+                },
+            });
+        });
+
+        it('should not overwrite changes to builder from the aux file if the version is not newer', async () => {
+            await tree.addBot(
+                createBot('builder', {
+                    different: true,
+                    builderVersion: 2,
+                })
+            );
+
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 2,
+                            }),
+                        }),
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toMatchObject({
+                id: 'builder',
+                tags: {
+                    different: true,
+                    builderVersion: 2,
+                },
+            });
+        });
+
+        it('should overwrite changes to builder from the aux file if the version is newer', async () => {
+            await tree.addBot(
+                createBot('builder', {
+                    different: true,
+                    builderVersion: 2,
+                })
+            );
+
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 3,
+                            }),
+                        }),
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toMatchObject({
+                id: 'builder',
+                tags: {
+                    different: true,
+                    abc: 'def',
+                    builderVersion: 3,
+                },
+            });
         });
 
         it('should allow users with the admin role', async () => {

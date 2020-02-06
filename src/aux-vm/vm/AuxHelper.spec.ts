@@ -276,6 +276,66 @@ describe('AuxHelper', () => {
             });
         });
 
+        it('should send updates that occur in the same batch as an added bot to the correct partition', async () => {
+            let TEST = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    userId: createBot('userId'),
+                },
+            });
+            helper = new AuxHelper({
+                shared: shared,
+                TEST: TEST,
+            });
+            helper.userId = 'userId';
+
+            await helper.transaction(
+                botAdded(
+                    createBot(
+                        'bot1',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'TEST'
+                    )
+                ),
+                botUpdated('bot1', {
+                    tags: {
+                        newTag: 123,
+                    },
+                })
+            );
+
+            expect(TEST.state).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                        newTag: 123,
+                    },
+                    <any>'TEST'
+                ),
+            });
+            expect(shared.state).toEqual({
+                userId: createBot('userId'),
+            });
+            expect(helper.botsState).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                        newTag: 123,
+                    },
+                    <any>'TEST'
+                ),
+                userId: createBot('userId', undefined, 'shared'),
+            });
+        });
+
         describe('addPartition()', () => {
             it('should add the bots from the partition to the helper', () => {
                 helper = new AuxHelper({
