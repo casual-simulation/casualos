@@ -1,4 +1,4 @@
-import { Bot, ScriptBot } from '../bots/Bot';
+import { Bot, ScriptBot, BotsState } from '../bots/Bot';
 import { UpdateBotAction } from '../bots/BotEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
@@ -16,6 +16,11 @@ export interface SandboxInterface {
      * The list of objects contained by the interface.
      */
     objects: ScriptBot[];
+
+    /**
+     * The current bots state.
+     */
+    state: { [id: string]: ScriptBot };
 
     /**
      * Calculates the list of tag values for the given tag.

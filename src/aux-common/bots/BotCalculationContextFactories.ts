@@ -131,6 +131,15 @@ class SandboxInterfaceImpl implements SandboxInterface {
     objects: ScriptBot[];
     context: BotCalculationContext;
 
+    get state() {
+        let state: { [id: string]: ScriptBot } = {};
+        for (let bot of this.objects) {
+            state[bot.id] = bot;
+        }
+
+        return state;
+    }
+
     constructor(context: BotCalculationContext, userId: string) {
         const objs = sortBy(context.objects, 'id');
         this.objects = objs.map(o => createScriptBot(context, o));
@@ -202,6 +211,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         }
         return {
             id: bot.id,
+            space: bot.space,
             tags: bot.tags.toJSON(),
         };
     }

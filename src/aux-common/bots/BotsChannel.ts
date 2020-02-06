@@ -21,10 +21,8 @@ import {
 import {
     getActions,
     getCalculationContext,
-    getBotState,
     getUserId,
     setActions,
-    setBotState,
     setCalculationContext,
     getEnergy,
     setEnergy,
@@ -60,7 +58,7 @@ export function calculateActionResultsUsingContext(
     context: BotSandboxContext,
     executeOnShout?: boolean
 ): [BotAction[], any[]] {
-    const { bots, objects } = getBotsForAction(state, action, context);
+    const { bots, objects } = getBotsForAction(action, context);
     const [events, results] = calculateBotActionEvents(
         state,
         action,
@@ -72,13 +70,14 @@ export function calculateActionResultsUsingContext(
     return [events, results];
 }
 
-export function getBotsForAction(
-    state: BotsState,
-    action: ShoutAction,
-    calc: BotSandboxContext
-) {
-    const objects = getActiveObjects(state);
-    let bots = !!action.botIds ? action.botIds.map(id => state[id]) : objects;
+export function getBotsForAction(action: ShoutAction, calc: BotSandboxContext) {
+    const objects = calc.sandbox.interface.objects.map(b =>
+        calc.sandbox.interface.unwrapBot(b)
+    );
+    const state = calc.sandbox.interface.state;
+    let bots = !!action.botIds
+        ? action.botIds.map(id => calc.sandbox.interface.unwrapBot(state[id]))
+        : objects;
 
     bots = action.sortBotIds ? sortBy(bots, f => (!f ? '' : f.id)) : bots;
 
@@ -105,8 +104,6 @@ export function calculateBotActionEvents(
 
     for (let f of bots) {
         const [e, r, valid] = eventActions(
-            state,
-            bots,
             context,
             f,
             event.eventName,
@@ -155,8 +152,6 @@ export function calculateBotActionEvents(
 }
 
 function eventActions(
-    state: BotsState,
-    objects: Bot[],
     context: BotSandboxContext,
     bot: Bot,
     eventName: string,
@@ -171,19 +166,12 @@ function eventActions(
         .filter(hasValue)
         .map(script => `(function() { \n${script.toString()}\n }).call(this)`);
 
-    const [events, results] = formulaActions(
-        state,
-        context,
-        bot,
-        argument,
-        scripts
-    );
+    const [events, results] = formulaActions(context, bot, argument, scripts);
 
     return [events, results, scripts.length > 0];
 }
 
 export function formulaActions(
-    state: BotsState,
     context: BotSandboxContext,
     thisObject: Bot,
     arg: any,
@@ -191,7 +179,6 @@ export function formulaActions(
 ): [BotAction[], any[]] {
     let previous = getActions();
     let prevContext = getCalculationContext();
-    let prevState = getBotState();
     let prevUserId = getUserId();
     let prevEnergy = getEnergy();
     let prevBot = getCurrentBot();
@@ -200,7 +187,6 @@ export function formulaActions(
         [key: string]: any;
     } = {};
     setActions(actions);
-    setBotState(state);
     setCalculationContext(context);
 
     const scriptBot = getScriptBot(context, thisObject);
@@ -229,7 +215,6 @@ export function formulaActions(
         results.push(result.result);
     }
     setActions(previous);
-    setBotState(prevState);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
     setCurrentBot(prevBot);
