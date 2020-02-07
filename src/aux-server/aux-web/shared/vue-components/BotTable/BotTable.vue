@@ -38,6 +38,10 @@
                                 <cube-icon></cube-icon>
                                 <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
+                            <md-button class="md-icon-button exit-sheet" @click="exitSheet()">
+                                <md-icon>exit_to_app</md-icon>
+                                <md-tooltip>{{ exitButtonText }}</md-tooltip>
+                            </md-button>
                         </div>
                     </div>
 
@@ -96,7 +100,7 @@
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
-                                @click="selectMod(bot)"
+                                @click="selectBot(bot)"
                             >
                             </mini-bot>
                         </div>
@@ -165,12 +169,6 @@
                 </div>
                 <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
                     <div class="bot-section-holder-inner">
-                        <div class="bot-section" v-if="dimension">
-                            <md-button class="bot-section active" @click="exitSheet()">
-                                <md-icon>exit_to_app</md-icon>
-                                <md-tooltip>{{ exitButtonText }}</md-tooltip>
-                            </md-button>
-                        </div>
                         <div
                             v-for="(tagWhitelist, index) in getTagWhitelist()"
                             :key="index"

@@ -2319,6 +2319,36 @@ export function botActionsTests(
                 ]);
             });
 
+            it('should handle when a bot in the shout list is deleted', () => {
+                const state: BotsState = {
+                    bBot: {
+                        id: 'bBot',
+                        tags: {
+                            test: '@tags.hit = true',
+                        },
+                    },
+                    aBot: {
+                        id: 'aBot',
+                        tags: {
+                            test: '@destroy("bBot")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([botRemoved('bBot')]);
+            });
+
             it.each(trimEventCases)(
                 'should handle %s in the event name.',
                 (desc, eventName) => {

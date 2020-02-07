@@ -261,6 +261,11 @@ th:last-child {
     height: 24px;
 }
 
+.md-button.exit-sheet .md-button-content {
+    width: 24px;
+    height: 24px;
+}
+
 .create-surface svg {
     color: #888;
 }

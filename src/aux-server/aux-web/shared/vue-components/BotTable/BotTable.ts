@@ -29,6 +29,7 @@ import {
     goToDimension,
     simulationIdToString,
     BotTags,
+    tweenTo,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../EventBus';
 
@@ -548,11 +549,14 @@ export default class BotTable extends Vue {
     clearSearch() {}
 
     async clearSelection() {
-        await this.selectMod(this.bots[0]);
+        await this.selectBot(this.bots[0]);
     }
 
-    async selectMod(bot: Bot) {
-        this.addedTags = [];
+    async selectBot(bot: Bot) {
+        this.exitSheet();
+        this.getBotManager().helper.transaction(
+            tweenTo(bot.id, undefined, undefined, undefined, 0)
+        );
     }
 
     async downloadBots() {
