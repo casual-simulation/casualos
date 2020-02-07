@@ -195,24 +195,26 @@ export function formulaActions(
     setEnergy(DEFAULT_ENERGY);
     setCurrentBot(scriptBot);
 
-    // BUG: This causes issues with onUniverseAction() and action.reject() because the
-    // input action is cloned and it causes resolveRejectedActions() to fail the SameValueZero check in Set.has().
-    // arg = mapBotsToScriptBots(context, arg);
-
-    vars['that'] = arg;
-    vars['data'] = arg;
-    vars['bot'] = scriptBot;
-    vars['tags'] = scriptBot ? scriptBot.tags : null;
-    vars['raw'] = scriptBot ? scriptBot.raw : null;
-    vars['creator'] = getCreatorVariable(context, scriptBot);
-
     let results: any[] = [];
-    for (let script of scripts) {
-        const result = context.sandbox.run(script, {}, scriptBot, vars);
-        if (result.error) {
-            throw result.error;
+    if ((scriptBot && thisObject) || (!scriptBot && !thisObject)) {
+        // BUG: This causes issues with onUniverseAction() and action.reject() because the
+        // input action is cloned and it causes resolveRejectedActions() to fail the SameValueZero check in Set.has().
+        // arg = mapBotsToScriptBots(context, arg);
+
+        vars['that'] = arg;
+        vars['data'] = arg;
+        vars['bot'] = scriptBot;
+        vars['tags'] = scriptBot ? scriptBot.tags : null;
+        vars['raw'] = scriptBot ? scriptBot.raw : null;
+        vars['creator'] = getCreatorVariable(context, scriptBot);
+
+        for (let script of scripts) {
+            const result = context.sandbox.run(script, {}, scriptBot, vars);
+            if (result.error) {
+                throw result.error;
+            }
+            results.push(result.result);
         }
-        results.push(result.result);
     }
     setActions(previous);
     setCalculationContext(prevContext);
