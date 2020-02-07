@@ -6,6 +6,10 @@
 
 ### Changes:
 
+#### :rocket: Other Improvements
+
+-   Moved the "Exit Sheet" button from the bottom of the sheet the top of the sheet. (next to the "Create Bot" button)
+
 #### :bug: Bug Fixes
 
 -   Fixed an issue where destroying a bot during a shout would error if the destroyed bot also had a listener for the same shout.
