@@ -39,7 +39,7 @@
                                 <md-tooltip>Create Empty Bot</md-tooltip>
                             </md-button>
                             <md-button class="md-icon-button exit-sheet" @click="exitSheet()">
-                                <md-icon>exit_to_app</md-icon>
+                                <md-icon>cancel_presentation</md-icon>
                                 <md-tooltip>{{ exitButtonText }}</md-tooltip>
                             </md-button>
                         </div>

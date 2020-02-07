@@ -125,7 +125,7 @@ export default class BotTable extends Vue {
 
     get exitButtonText() {
         if (this.showExitSheet) {
-            return 'Exit sheet';
+            return 'Close sheet';
         } else {
             return `Open ${this.dimension} in auxPlayer`;
         }
