@@ -100,7 +100,7 @@
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
-                                @click="selectMod(bot)"
+                                @click="selectBot(bot)"
                             >
                             </mini-bot>
                         </div>
