@@ -1,8 +1,14 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
-import { AuxBot, Bot } from '@casual-simulation/aux-common';
+import {
+    AuxBot,
+    Bot,
+    toast,
+    setClipboard,
+} from '@casual-simulation/aux-common';
 import { copyToClipboard } from '../../SharedUtils';
+import { appManager } from '../../AppManager';
 
 @Component({
     components: {},
@@ -28,5 +34,9 @@ export default class BotID extends Vue {
 
     copyID() {
         copyToClipboard(this.bots.id);
+        const sim = appManager.simulationManager.primary;
+        if (sim) {
+            sim.helper.transaction(toast('Copied!'));
+        }
     }
 }
