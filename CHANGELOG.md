@@ -19,6 +19,7 @@
 -   Renamed the default Builder to `ab-1`
 -   Dragging a bot into Builder will cause Builder to expand to contain the bot and make Builder produce additional copies of the bot when dragged.
 -   Added the `.list commands` command to show a HTML popup with a list of available commands.
+-   Added the ability to change the color of the Builder.
 -   Updated how hints are displayed in the chat bar.
 -   Renamed several labels.
 
