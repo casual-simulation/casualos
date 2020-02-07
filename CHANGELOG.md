@@ -6,6 +6,18 @@
 
 ### Changes:
 
+#### :robot: Builder Improvements
+
+-   Renamed the `.summon` command to `.`.
+-   The Builder menu will now close automatically in the following scenarios:
+    -   Any bot is clicked
+    -   The grid is clicked
+    -   A menu item is selected
+    -   A chat command is sent
+-   The Builder's cursor is now perfectly flat and is the same color as the Builder.
+-   Renamed the default Builder to `ab-1`
+-   Dragging a bot into Builder will cause Builder to expand to contain the bot and make Builder produce additional copies of the bot when dragged.
+
 #### :rocket: Other Improvements
 
 -   Moved the "Exit Sheet" button from the bottom of the sheet the top of the sheet. (next to the "Create Bot" button)
