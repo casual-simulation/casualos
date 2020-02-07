@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.11.28
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where destroying a bot during a shout would error if the destroyed bot also had a listener for the same shout.
+
 ## V0.11.27
 
 ### Date: 2/6/2020
