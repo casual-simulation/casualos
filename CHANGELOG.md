@@ -9,6 +9,7 @@
 #### :robot: Builder Improvements
 
 -   Renamed the `.summon` command to `.`.
+-   Renamed the `.new builder` command to `.clone builder`
 -   The Builder menu will now close automatically in the following scenarios:
     -   Any bot is clicked
     -   The grid is clicked
@@ -17,10 +18,15 @@
 -   The Builder's cursor is now perfectly flat and is the same color as the Builder.
 -   Renamed the default Builder to `ab-1`
 -   Dragging a bot into Builder will cause Builder to expand to contain the bot and make Builder produce additional copies of the bot when dragged.
+-   Added the `.list commands` command to show a HTML popup with a list of available commands.
+-   Updated how hints are displayed in the chat bar.
+-   Renamed several labels.
 
 #### :rocket: Other Improvements
 
 -   Moved the "Exit Sheet" button from the bottom of the sheet the top of the sheet. (next to the "Create Bot" button)
+-   Added the ability to click a bot in the sheet to hide the sheet and warp to the clicked bot.
+-   Added a notification that pops up when a bot ID is copied from the sheet.
 
 #### :bug: Bug Fixes
 
