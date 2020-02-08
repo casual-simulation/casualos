@@ -212,6 +212,7 @@ export class Input {
         this._handleMouseDown = this._handleMouseDown.bind(this);
         this._handleMouseMove = this._handleMouseMove.bind(this);
         this._handleMouseUp = this._handleMouseUp.bind(this);
+        this._handleMouseLeave = this._handleMouseLeave.bind(this);
         this._handleWheel = this._handleWheel.bind(this);
         this._handleTouchStart = this._handleTouchStart.bind(this);
         this._handleTouchMove = this._handleTouchMove.bind(this);
@@ -225,6 +226,7 @@ export class Input {
         element.addEventListener('mousedown', this._handleMouseDown);
         element.addEventListener('mousemove', this._handleMouseMove);
         element.addEventListener('mouseup', this._handleMouseUp);
+        element.addEventListener('mouseleave', this._handleMouseLeave);
         element.addEventListener('wheel', this._handleWheel);
         element.addEventListener('touchstart', this._handleTouchStart);
         document.addEventListener('keydown', this._handleKeyDown);
@@ -766,6 +768,25 @@ export class Input {
     }
 
     /**
+     * Returns the matching MouseButtonData objects for the given mouse buttons number.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+     * @param buttons The number that represents the buttons that are held down.
+     */
+    private _getMouseButtonStates(buttons: number): InputState[] {
+        let states = [] as InputState[];
+        if ((buttons & 1) === 1) {
+            states.push(this._getMouseButtonState(MouseButtonId.Left));
+        }
+        if ((buttons & 2) === 2) {
+            states.push(this._getMouseButtonState(MouseButtonId.Right));
+        }
+        if ((buttons & 4) === 4) {
+            states.push(this._getMouseButtonState(MouseButtonId.Middle));
+        }
+        return states;
+    }
+
+    /**
      * Calculates the Three.js screen position of the pointer from the given pointer event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
      * @param pageX
@@ -845,6 +866,42 @@ export class Input {
         }
     }
 
+    private _handleMouseLeave(event: MouseEvent) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Mouse;
+        if (this._inputType != InputType.Mouse) return;
+
+        if (this.isEventForAnyElement(event, this.htmlElements)) {
+            event.preventDefault();
+        }
+
+        // Clear all the button states when the mouse leaves the window
+        let buttonStates: InputState[] = [
+            this._mouseData.leftButtonState,
+            this._mouseData.rightButtonState,
+            this._mouseData.middleButtonState,
+        ];
+        for (let buttonState of buttonStates) {
+            buttonState.setUpFrame(this.time.frameCount);
+        }
+        if (this.debugLevel >= 1) {
+            console.log(
+                'mouse button ' +
+                    event.button +
+                    ' leave. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+
+        this._targetData.inputUp = <HTMLElement>event.target;
+        this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
+        this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
+        this._mouseData.screenPos = this._calculateScreenPos(
+            event.pageX,
+            event.pageY
+        );
+    }
+
     private _handleMouseMove(event: MouseEvent) {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Mouse;
@@ -852,6 +909,32 @@ export class Input {
 
         if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
+        }
+
+        // Resend the mouse down events if the button is actually down
+        // but is not recorded as such.
+        const buttonStates: InputState[] = this._getMouseButtonStates(
+            event.buttons
+        );
+        let hadButtonDown = false;
+        for (let state of buttonStates) {
+            let down = state.getDownFrame();
+            let up = state.getUpFrame();
+
+            if (up > down || down === -1) {
+                state.setDownFrame(this.time.frameCount);
+                hadButtonDown = true;
+            }
+        }
+        if (hadButtonDown) {
+            if (this.debugLevel >= 1) {
+                console.log(
+                    'mouse buttons ' +
+                        event.buttons +
+                        ' already down. fireInputOnFrame: ' +
+                        this.time.frameCount
+                );
+            }
         }
 
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
@@ -873,6 +956,7 @@ export class Input {
             console.log(
                 '  clientPos: ' + JSON.stringify(this._mouseData.clientPos)
             );
+            console.log('  button: ' + JSON.stringify(event.button));
         }
     }
 
