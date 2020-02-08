@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V1.0.1
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue with mouse input where dragging the mouse off the browser window would cause the dragging action to persist even when the mouse button is released.
+
 ## V1.0.0
 
 ### Date: 2/7/2020
