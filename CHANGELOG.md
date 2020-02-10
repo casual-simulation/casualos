@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V1.0.2
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where dragging normal bots was broken.
+
 ## V1.0.1
 
 ### Date: TBD
