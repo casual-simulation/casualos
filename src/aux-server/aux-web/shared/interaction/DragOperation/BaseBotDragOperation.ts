@@ -122,13 +122,15 @@ export abstract class BaseBotDragOperation implements IOperation {
                         if (sub) {
                             sub.unsubscribe();
                         }
-                        this._onDragPromise = null;
                         this._replaceDragBot(action.bot);
                     }
                 }
             );
             this._sub.add(sub);
             this._onDragPromise = this._sendOnDragEvents(fromCoord, bots);
+            this._onDragPromise.then(() => {
+                this._onDragPromise = null;
+            });
         }
     }
 
