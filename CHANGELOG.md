@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V1.0.1
+
+### Date: 2/10/2020
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue with mouse input where dragging the mouse off the browser window would cause the dragging action to persist even when the mouse button is released.
+-   Fixed an issue where sometimes a touch handler would be called twice due to event propagation. This would cause other touch events to be lost which would leave the input system in an unrecoverable state.
+-   Fixed an issue where sometimes `player.replaceDragBot()` would not work for the entire session.
+
 ## V1.0.0
 
 ### Date: 2/7/2020
