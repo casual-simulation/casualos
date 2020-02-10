@@ -36,6 +36,7 @@ import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
+import { Subscription } from 'rxjs';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
@@ -68,6 +69,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
+    protected _sub: Subscription;
 
     protected get game() {
         return this._simulation3D.game;
@@ -103,6 +105,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._inDimension = true;
         this._vrController = vrController;
         this._fromCoord = fromCoord;
+        this._sub = new Subscription();
 
         if (this._vrController) {
             this._lastVRControllerPose = this._vrController.worldPose.clone();
@@ -116,15 +119,16 @@ export abstract class BaseBotDragOperation implements IOperation {
             const sub = this._simulation3D.simulation.localEvents.subscribe(
                 action => {
                     if (action.type === 'replace_drag_bot') {
+                        if (sub) {
+                            sub.unsubscribe();
+                        }
+                        this._onDragPromise = null;
                         this._replaceDragBot(action.bot);
                     }
                 }
             );
+            this._sub.add(sub);
             this._onDragPromise = this._sendOnDragEvents(fromCoord, bots);
-            this._onDragPromise.then(() => {
-                sub.unsubscribe();
-                this._onDragPromise = null;
-            });
         }
     }
 
@@ -231,6 +235,9 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
         this._disposeCore();
         this.game.setGridsVisible(false);
+        if (this._sub) {
+            this._sub.unsubscribe();
+        }
         this._bots = null;
         this._bot = null;
     }
