@@ -1119,6 +1119,7 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        event.stopImmediatePropagation();
         if (this.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
@@ -1169,6 +1170,8 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        event.stopImmediatePropagation();
+
         const count = this._touchListenerCounts.get(event.target) || 0;
         if (count <= event.changedTouches.length) {
             event.target.removeEventListener(
@@ -1183,7 +1186,12 @@ export class Input {
             this._touchListenerCounts.set(event.target, 0);
 
             if (this.debugLevel >= 1) {
-                console.log('removing touch listeners for ', event.target);
+                console.log(
+                    `removing ${count} (${
+                        event.changedTouches.length
+                    }) touch listeners for `,
+                    event.target
+                );
             }
         } else if (count > 0) {
             this._touchListenerCounts.set(
@@ -1191,7 +1199,11 @@ export class Input {
                 count - event.changedTouches.length
             );
             if (this.debugLevel >= 1) {
-                console.log(count - 1, ' touch events left for', event.target);
+                console.log(
+                    count - event.changedTouches.length,
+                    ' touch events left for',
+                    event.target
+                );
             }
         }
 
@@ -1242,6 +1254,8 @@ export class Input {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        event.stopImmediatePropagation();
 
         const count = this._touchListenerCounts.get(event.target) || 0;
         if (count <= event.changedTouches.length) {
