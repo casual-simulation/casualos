@@ -157,6 +157,7 @@ describe('BaseAuxChannel', () => {
                 tags: {
                     abc: 'def',
                     builderVersion: 0,
+                    builderState: 'Enabled',
                 },
             });
         });
@@ -200,6 +201,7 @@ describe('BaseAuxChannel', () => {
                 createBot('builder', {
                     different: true,
                     builderVersion: 2,
+                    builderState: 'Disabled',
                 })
             );
 
@@ -226,6 +228,43 @@ describe('BaseAuxChannel', () => {
                     different: true,
                     abc: 'def',
                     builderVersion: 3,
+                    builderState: 'Disabled',
+                },
+            });
+        });
+
+        it('should enable builder if the builderState tag is not specified on the existing builder', async () => {
+            await tree.addBot(
+                createBot('builder', {
+                    different: true,
+                    builderVersion: 2,
+                })
+            );
+
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 3,
+                            }),
+                        }),
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toMatchObject({
+                id: 'builder',
+                tags: {
+                    different: true,
+                    abc: 'def',
+                    builderVersion: 3,
+                    builderState: 'Enabled',
                 },
             });
         });

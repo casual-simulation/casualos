@@ -328,7 +328,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     async createOrUpdateBuilderBots(builder: string) {
-        const state = JSON.parse(builder);
+        let state = JSON.parse(builder);
         const objects = getActiveObjects(state);
         const stateCalc = createCalculationContext(
             objects,
@@ -338,6 +338,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         );
         const calc = this.createContext();
         let needsUpdate = false;
+        let needsToBeEnabled = false;
+        let builderId: string;
         for (let bot of objects) {
             const newVersion = calculateBotValue(
                 stateCalc,
@@ -354,12 +356,35 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     );
                     needsUpdate =
                         !currentVersion || newVersion > currentVersion;
+
+                    const currentState = calculateBotValue(
+                        calc,
+                        sameBot,
+                        'builderState'
+                    );
+                    if (!hasValue(currentState)) {
+                        needsToBeEnabled = true;
+                        builderId = bot.id;
+                    }
                 } else {
                     needsUpdate = true;
+                    needsToBeEnabled = true;
+                    builderId = bot.id;
                 }
                 break;
             }
         }
+
+        if (needsToBeEnabled) {
+            state = merge(state, {
+                [builderId]: {
+                    tags: {
+                        builderState: 'Enabled',
+                    },
+                },
+            });
+        }
+
         if (needsUpdate) {
             console.log('[AuxHelper] Updating Builder...');
             await this.transaction(addState(state));
