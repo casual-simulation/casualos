@@ -17,6 +17,7 @@
 -   Waking builder will automatically summon it to the current dimension.
 -   Clicking in an empty space when builder is awake will summon him to the clicked space.
 -   Made the main builder flat.
+-   Builder is now enabled by default in new universes.
 
 #### :rocket: Other Features
 
