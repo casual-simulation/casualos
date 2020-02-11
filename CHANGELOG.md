@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V1.0.3
+
+### Date: TBD
+
+### Changes:
+
+#### :robot: Builder Improvements
+
+-   Making a clone of a bot now puts builder into palette mode.
+-   Added the `.help` command to show a list of available commands.
+-   Made the main builder taller than the other builders.
+-   Added the "Go to Builder Dimension` menu action.
+-   Dragging a bot into builder no longer changes builder's color to white.
+
 ## V1.0.2
 
 ### Date: 2/10/2020
