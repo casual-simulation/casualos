@@ -19,6 +19,7 @@
 -   Made the main builder flat.
 -   Builder is now enabled by default in new universes.
 -   Added the "Restore Mark" menu item to restore history to the selected history mark.
+-   Simplified a bunch of examples.
 
 #### :rocket: Other Features
 
