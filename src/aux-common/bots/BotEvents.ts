@@ -77,7 +77,8 @@ export type ExtraActions =
     | RestoreHistoryMarkAction
     | LoadSpaceAction
     | EnableARAction
-    | EnableVRAction;
+    | EnableVRAction
+    | ShowJoinCodeAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1049,6 +1050,23 @@ export interface EnableVRAction {
     enabled: boolean;
 }
 
+/**
+ * Defines an event that shows a QR code that is a link to a universe & dimension.
+ */
+export interface ShowJoinCodeAction {
+    type: 'show_join_code';
+
+    /**
+     * The universe that should be joined.
+     */
+    universe?: string;
+
+    /**
+     * The dimension that should be joined.
+     */
+    dimension?: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1767,5 +1785,21 @@ export function disableVR(): EnableVRAction {
     return {
         type: 'enable_vr',
         enabled: false,
+    };
+}
+
+/**
+ * Creates a ShowJoinCodeAction.
+ * @param universe The universe to link to.
+ * @param dimension The dimension to link to.
+ */
+export function showJoinCode(
+    universe?: string,
+    dimension?: string
+): ShowJoinCodeAction {
+    return {
+        type: 'show_join_code',
+        universe,
+        dimension,
     };
 }

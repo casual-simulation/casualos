@@ -1207,6 +1207,29 @@ Closes the QR Code popup modal.
 player.hideQRCode();
 ```
 
+### `player.showJoinCode(universe?, dimension?)`
+
+<FunctionCode name='showJoinCode'/>
+
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given universe and dimension.
+If the universe and dimension are omitted, then the current universe and dimension will be used.
+
+The **first parameter** is the universe that the code should be shown for.
+
+The **second parameter** is the dimension that the code should be shown for.
+
+#### Examples:
+
+1. Show a join QR Code.
+```typescript
+player.showJoinCode();
+```
+
+2. Show a join QR Code for a universe and dimension.
+```typescript
+player.showJoinCode("universe", "dimension");
+```
+
 ### `player.openBarcodeScanner(camera?)`
 
 <FunctionCode name='openBarcodeScanner'/>

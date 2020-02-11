@@ -62,6 +62,7 @@ import {
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
+    showJoinCode as calcShowJoinCode,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1884,6 +1885,16 @@ function playSound(url: string) {
 }
 
 /**
+ * Shows a QR Code that contains a link to a universe and dimension.
+ * @param universe The universe that should be joined. Defaults to the current universe.
+ * @param dimension The dimension that should be joined. Defaults to the current dimension.
+ */
+function showJoinCode(universe?: string, dimension?: string) {
+    const event = calcShowJoinCode(universe, dimension);
+    return addAction(event);
+}
+
+/**
  * Shows some HTML to the user.
  * @param html The HTML to show.
  */
@@ -2354,6 +2365,7 @@ const player = {
     enableVR,
     disableAR,
     disableVR,
+    showJoinCode,
 
     openDevConsole,
 };
