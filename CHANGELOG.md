@@ -23,6 +23,7 @@
 #### :rocket: Other Features
 
 -   Added the `player.showJoinCode()` function to quickly show a QR Code to join a universe.
+-   Made the chat bar auto-focus when it is first shown.
 
 #### :bug: Bug Fixes
 
