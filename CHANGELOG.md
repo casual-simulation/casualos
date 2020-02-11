@@ -9,10 +9,22 @@
 #### :robot: Builder Improvements
 
 -   Making a clone of a bot now puts builder into palette mode.
--   Added the `.help` command to show a list of available commands.
--   Made the main builder taller than the other builders.
--   Added the "Go to Builder Dimension` menu action.
 -   Dragging a bot into builder no longer changes builder's color to white.
+-   Added the `.help` command to show a list of available commands.
+-   Added the `.sleep` command to the helper builder menu.
+-   Added the "Go to Builder Dimension` menu action.
+-   Added a "Show Join Code" menu item to show a QR Code to quickly join.
+-   Waking builder will automatically summon it to the current dimension.
+-   Clicking in an empty space when builder is awake will summon him to the clicked space.
+-   Made the main builder flat.
+
+#### :rocket: Other Features
+
+-   Added the `player.showJoinCode()` function to quickly show a QR Code to join a universe.
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue that would cause the URL portal tag sync to break.
 
 ## V1.0.2
 
