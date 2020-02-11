@@ -28,7 +28,9 @@
 
 #### :bug: Bug Fixes
 
--   Fixed an issue that would cause the URL portal tag sync to break.
+-   Fixed an issue that would cause the URL portal tag sync to break, this in turn also caused `@onPlayerPortalChanged` events to not be sent.
+    -   This is also the issue that caused the inventory portal colors to not update.
+-   Fixed an issue that would cause the tag autocomplete list to stop showing tags when an invalid tag was entered.
 
 ## V1.0.2
 
