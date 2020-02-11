@@ -18,6 +18,7 @@
 -   Clicking in an empty space when builder is awake will summon him to the clicked space.
 -   Made the main builder flat.
 -   Builder is now enabled by default in new universes.
+-   Added the "Restore Mark" menu item to restore history to the selected history mark.
 
 #### :rocket: Other Features
 
