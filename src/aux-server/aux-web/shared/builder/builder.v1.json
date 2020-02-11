@@ -43,7 +43,7 @@
             "commandChangeColor": "@player.showInputForTag(this, \"#builderColor\", {\n    type: \"color\",\n    subtype: \"basic\",\n    title: \"Change Builder Color\"\n});",
             "onSaveInput": "@shout(\"builderSetColor\", tags.builderColor);",
             "builderGetPlayerHelper": "@let filters = [byTag(\"#auxBuilderLibrary\", \"playerTemplate\"), byTag(\"#builderName\", tags.builderName)];\r\nlet helper = getBot(...filters, bySpace(\"tempLocal\"));\r\nif (!helper && that.create) {\r\n    const prefab = getBot(...filters);\r\n    helper = create(prefab, { \r\n        space: \"tempLocal\",\r\n        auxListening: true,\r\n        auxBuilderId: bot.id,\r\n        builderColor: tags.builderColor,\r\n    });\r\n}\r\n\r\nreturn helper;",
-            "commandShowChat": "@let example = [`\"..\"`, `to wake ${tags.builderName}`];\r\nif (tags.builderState === \"Enabled\") {\r\n    const examples = [].concat.apply([], tags.chatCommands.map(c => c.examples).filter(e => e));\r\n    const index = math.randomInt(0, examples.length);\r\n    example = examples[index];\r\n}\r\nplayer.showChat(`tip: say ${example.join(' ')}`);",
+            "commandShowChat": "@let example = [`Say`, `\"..\"`, `to wake ${tags.builderName}`];\r\nif (tags.builderState === \"Enabled\") {\r\n    const examples = [].concat.apply([], tags.chatCommands.map(c => c.examples).filter(e => e));\r\n    const index = math.randomInt(0, examples.length);\r\n    example = [`Try`, ...examples[index].slice(0, 1)];\r\n}\r\nplayer.showChat(`tip: ${example.join(' ')}`);",
             "commandListCommands": "@// TODO: Update to use something like Vue for HTML generation.\nplayer.showHtml(`\n    <html>\n        <head>\n            <style>\n                body {\n                    font: 400 16px system-ui;\n                    padding: 8px;\n                }\n\n                code {\n                    background-color: #eee;\n                }\n                li {\n                    margin-bottom: 8px;\n                }\n            </style>\n        </head>\n\n        <body>\n            <h3>Examples</h3>\n            <ul>\n            ${tags.chatCommands.map(c => \n                (`<li>Say <code>${c.examples[0][0].slice(1, -1)}</code> ${c.examples[0].slice(1)}</li>`)).join(``)}\n            </li>\n        </body>\n    </html>\n`);",
             "onCreate": "@tags.builderState = null;\n",
             "onUniverseSubscribed": "@if (!tags.builderColor) {\r\n    tags.builderColor = \"#3333CC\";\r\n}\r\nif (that.universe === player.getCurrentUniverse() && tags.builderState === \"Enabled\") {\r\n    whisper(this, \"builderGetPlayerHelper\", { create: true });\r\n}",
@@ -52,7 +52,7 @@
             "commandShowJoinCode": "@player.showJoinCode();",
             "auxScaleZ": "0.01",
             "builderStateEnabledOnEnter": "@player.toast(`(${tags.builderName}) hello`);\r\nwhisper(this, \"commandShowChat\");\r\nwhisper(this, \"builderGetPlayerHelper\", { create: true });\r\nshout(\"summonDimensionBuilder\");",
-            "builderVersion": "25",
+            "builderVersion": "26",
             "commandRestoreMark": "@const b = that;\r\nif (b) {\r\n    server.restoreHistoryMark(b);\r\n}"
         }
     },
