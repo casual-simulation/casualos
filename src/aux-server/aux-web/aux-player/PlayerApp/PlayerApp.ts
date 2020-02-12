@@ -649,6 +649,21 @@ export default class PlayerApp extends Vue {
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);
                     }
+                } else if (e.type === 'show_join_code') {
+                    const player = simulation.helper.userBot;
+                    const calc = simulation.helper.createContext();
+                    const universe =
+                        e.universe ||
+                        calculateBotValue(calc, player, 'auxUniverse');
+                    const dimension =
+                        e.dimension ||
+                        calculateBotValue(calc, player, 'auxPagePortal');
+                    const code = `${location.protocol}//${
+                        location.host
+                    }?auxUniverse=${encodeURIComponent(
+                        universe
+                    )}&auxPagePortal=${encodeURIComponent(dimension)}`;
+                    this._showQRCode(code);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

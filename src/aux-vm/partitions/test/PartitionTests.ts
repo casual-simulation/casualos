@@ -136,6 +136,23 @@ export function testPartitionImplementation(
 
             expect(removed).toEqual(['test2', 'test']);
         });
+
+        it('should be able to remove a bot that was just added to the partition', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot1), botRemoved('test')]);
+
+            await waitAsync();
+
+            expect(added).toEqual([]);
+            expect(updated).toEqual([]);
+            expect(removed).toEqual([]);
+        });
     });
 
     describe('update_bot', () => {

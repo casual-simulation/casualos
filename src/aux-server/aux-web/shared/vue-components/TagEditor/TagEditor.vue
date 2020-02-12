@@ -32,7 +32,7 @@
                 {{ errorMessage }}
             </md-menu-item>
 
-            <template v-else-if="isOpen" class="tag-editor-autofill-holder">
+            <template v-if="isOpen" class="tag-editor-autofill-holder">
                 <md-menu-item
                     ref="knownTags"
                     v-for="(result, i) in results"

@@ -79,13 +79,20 @@ export default class BotChat extends Vue {
 
     mounted() {
         this.setPrefill(this.prefill);
+        this.$nextTick(() => {
+            this.focus();
+        });
     }
 
-    startChat() {
+    focus() {
         const search = <Vue>this.$refs.searchInput;
         if (search) {
             search.$el.focus();
         }
+    }
+
+    startChat() {
+        this.focus();
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {
