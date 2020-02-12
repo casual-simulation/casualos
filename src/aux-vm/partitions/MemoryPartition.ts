@@ -133,7 +133,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let added: Bot[] = [];
+        let added = new Map<string, Bot>();
         let removed: string[] = [];
         let updated = new Map<string, UpdatedBot>();
         for (let event of events) {
@@ -142,11 +142,13 @@ class MemoryPartitionImpl implements MemoryPartition {
                 this.state = Object.assign({}, this.state, {
                     [event.bot.id]: event.bot,
                 });
-                added.push(event.bot);
+                added.set(event.bot.id, event.bot);
             } else if (event.type === 'remove_bot') {
                 let { [event.id]: removedBot, ...state } = this.state;
                 this.state = state;
-                removed.push(event.id);
+                if (!added.delete(event.id)) {
+                    removed.push(event.id);
+                }
             } else if (event.type === 'update_bot') {
                 if (!event.update.tags) {
                     continue;
@@ -184,8 +186,8 @@ class MemoryPartitionImpl implements MemoryPartition {
             }
         }
 
-        if (added.length > 0) {
-            this._onBotsAdded.next(added);
+        if (added.size > 0) {
+            this._onBotsAdded.next([...added.values()]);
         }
         if (removed.length > 0) {
             this._onBotsRemoved.next(removed);

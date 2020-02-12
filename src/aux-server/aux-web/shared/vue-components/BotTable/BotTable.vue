@@ -11,6 +11,10 @@
                     <!-- New Tag and New Bot buttons -->
                     <div class="bot-cell header">
                         <div v-show="!isMakingNewTag">
+                            <md-button class="md-icon-button exit-sheet" @click="exitSheet()">
+                                <md-icon>cancel_presentation</md-icon>
+                                <md-tooltip>{{ exitButtonText }}</md-tooltip>
+                            </md-button>
                             <!-- keep place here so it shows up as empty-->
                             <md-button
                                 v-show="hasBots"
@@ -37,10 +41,6 @@
                             >
                                 <cube-icon></cube-icon>
                                 <md-tooltip>Create Empty Bot</md-tooltip>
-                            </md-button>
-                            <md-button class="md-icon-button exit-sheet" @click="exitSheet()">
-                                <md-icon>cancel_presentation</md-icon>
-                                <md-tooltip>{{ exitButtonText }}</md-tooltip>
                             </md-button>
                         </div>
                     </div>

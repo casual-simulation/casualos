@@ -147,20 +147,23 @@ export class BotWatcher implements SubscriptionLike {
                         const added = update.addedBots.map(
                             id => this._helper.botsState[id]
                         );
-                        const updated = update.updatedBots.map(
-                            id => this._helper.botsState[id]
-                        );
-                        const tagUpdates = update.updatedBots.map(id => {
-                            let u = update.state[id];
-                            let tags = u && u.tags ? Object.keys(u.tags) : [];
-                            let valueTags =
-                                u && u.values ? Object.keys(u.values) : [];
-                            let bot = this._helper.botsState[id];
-                            return {
-                                bot,
-                                tags: new Set([...tags, ...valueTags]),
-                            };
-                        });
+                        const updated = update.updatedBots
+                            .map(id => this._helper.botsState[id])
+                            .filter(u => !!u);
+                        const tagUpdates = update.updatedBots
+                            .map(id => {
+                                let u = update.state[id];
+                                let tags =
+                                    u && u.tags ? Object.keys(u.tags) : [];
+                                let valueTags =
+                                    u && u.values ? Object.keys(u.values) : [];
+                                let bot = this._helper.botsState[id];
+                                return {
+                                    bot,
+                                    tags: new Set([...tags, ...valueTags]),
+                                };
+                            })
+                            .filter(u => !!u.bot);
 
                         this._botsDiscoveredObservable.next(added);
                         this._botsRemovedObservable.next(update.removedBots);

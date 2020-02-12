@@ -46,8 +46,9 @@ import {
     enableVR,
     disableVR,
     disableAR,
+    showJoinCode,
 } from '../BotEvents';
-import { createBot, getActiveObjects } from '../BotCalculations';
+import { createBot, getActiveObjects, isBot } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
     calculateActionEvents,
@@ -3887,6 +3888,59 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([toast('hello, world!')]);
+            });
+        });
+
+        describe('player.showJoinCode()', () => {
+            it('should emit a ShowJoinCodeEvent', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.showJoinCode()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showJoinCode()]);
+            });
+
+            it('should allow linking to a specific universe and dimension', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@player.showJoinCode("universe", "dimension")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showJoinCode('universe', 'dimension'),
+                ]);
             });
         });
 

@@ -91,15 +91,17 @@ export default class TagEditor extends Vue {
         let finalTags = [];
 
         for (let i = 0; i < tagsToSort.length; i++) {
+            const tag = tagsToSort[i];
             if (
-                tagsToSort[i].toLowerCase().startsWith(this.value.toLowerCase())
+                tag.toLowerCase().startsWith(this.value.toLowerCase()) &&
+                (!this.tagExists || tag !== this.value)
             ) {
-                if (tagsToSort[i].startsWith('aux._')) {
+                if (tag.startsWith('aux._')) {
                     if (this.value.toLowerCase().startsWith('aux._')) {
-                        finalTags.push(tagsToSort[i]);
+                        finalTags.push(tag);
                     }
                 } else {
-                    finalTags.push(tagsToSort[i]);
+                    finalTags.push(tag);
                 }
             }
         }

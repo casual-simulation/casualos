@@ -504,6 +504,35 @@ describe('BotWatcher', () => {
 
             expect(bots).toEqual([state['test'], secondState['test']]);
         });
+
+        it('should handle updates for bots that dont exist', async () => {
+            let state = {};
+            vm.sendState({
+                state: state,
+                addedBots: [],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let bots: Bot[] = [];
+            let err: any;
+            watcher
+                .botChanged('test')
+                .subscribe(f => bots.push(f), e => (err = e));
+
+            let secondState = {};
+            vm.sendState({
+                state: <any>secondState,
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
+            });
+
+            await waitAsync();
+
+            expect(bots).toEqual([]);
+            expect(err).toBeFalsy();
+        });
     });
 
     describe('botTagsChanged()', () => {
@@ -614,6 +643,35 @@ describe('BotWatcher', () => {
                     tags: new Set(),
                 },
             ]);
+        });
+
+        it('should handle updates for bots that dont exist', async () => {
+            let state = {};
+            vm.sendState({
+                state: state,
+                addedBots: [],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let bots: UpdatedBotInfo[] = [];
+            let err: any;
+            watcher
+                .botTagsChanged('test')
+                .subscribe(f => bots.push(f), e => (err = e));
+
+            let secondState = {};
+            vm.sendState({
+                state: <any>secondState,
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
+            });
+
+            await waitAsync();
+
+            expect(bots).toEqual([]);
+            expect(err).toBeFalsy();
         });
     });
 });
