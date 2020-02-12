@@ -292,8 +292,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         box.getSize(size);
         const maxScale = Math.max(size.x, size.y, size.z);
         gltf.scene.scale.divideScalar(maxScale);
-        this.scene = this.collider = gltf.scene;
-        this.bot3D.colliders.push(this.collider);
+        this.scene = gltf.scene;
         this.container.add(gltf.scene);
         this.bot3D.updateMatrixWorld(true);
     }
