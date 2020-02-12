@@ -47,6 +47,8 @@ import {
     disableVR,
     disableAR,
     showJoinCode,
+    requestFullscreen,
+    exitFullscreen,
 } from '../BotEvents';
 import { createBot, getActiveObjects, isBot } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
@@ -3941,6 +3943,58 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     showJoinCode('universe', 'dimension'),
                 ]);
+            });
+        });
+
+        describe('player.requestFullscreenMode()', () => {
+            it('should issue a request_fullscreen action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.requestFullscreenMode()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([requestFullscreen()]);
+            });
+        });
+
+        describe('player.exitFullscreenMode()', () => {
+            it('should issue a request_fullscreen action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.exitFullscreenMode()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([exitFullscreen()]);
             });
         });
 
