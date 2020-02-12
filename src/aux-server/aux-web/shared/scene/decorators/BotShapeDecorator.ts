@@ -5,6 +5,8 @@ import {
     calculateBotValue,
     getBotShape,
     BotShape,
+    getBotSubShape,
+    BotSubShape,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -16,6 +18,9 @@ import {
     Vector3,
     MeshToonMaterial,
     Sprite,
+    Box3,
+    Scene,
+    Object3D,
 } from 'three';
 import {
     createCube,
@@ -24,17 +29,31 @@ import {
     disposeMesh,
     createSphere,
     createSprite,
+    disposeScene,
+    disposeObject3D,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { getPolyKey } from '../PolyUtils';
+import axios from 'axios';
+import { loadNewGLTF, loadOldGLTF } from '../GLTFHelpers';
 
 export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
+    private _subShape: BotSubShape = null;
+    private _address: string = null;
     private _canHaveStroke = false;
 
     container: Group;
     mesh: Mesh | Sprite;
+    collider: Object3D;
+    scene: Scene;
+
+    get allowModifications() {
+        return this._subShape === null;
+    }
 
     /**
      * The optional stroke outline for the bot.
@@ -46,17 +65,35 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
 
-        this._rebuildShape('cube');
+        this._rebuildShape('cube', null, null);
     }
+
+    // frameUpdate?(calc: BotCalculationContext): void {
+
+    // }
 
     botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.bot3D.bot);
-        if (this._shape !== shape) {
-            this._rebuildShape(shape);
+        const subShape = getBotSubShape(calc, this.bot3D.bot);
+        const address = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormAddress'
+        );
+        if (this._needsUpdate(shape, subShape, address)) {
+            this._rebuildShape(shape, subShape, address);
         }
 
         this._updateColor(calc);
         this._updateStroke(calc);
+    }
+
+    private _needsUpdate(shape: string, subShape: string, address: string) {
+        return (
+            this._shape !== shape ||
+            this._subShape !== subShape ||
+            (shape === 'mesh' && this._address !== address)
+        );
     }
 
     private _updateStroke(calc: BotCalculationContext) {
@@ -107,7 +144,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     dispose(): void {
-        const index = this.bot3D.colliders.indexOf(this.mesh);
+        const index = this.bot3D.colliders.indexOf(this.collider);
         if (index >= 0) {
             this.bot3D.colliders.splice(index, 1);
         }
@@ -115,9 +152,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
         disposeMesh(this.stroke);
+        disposeObject3D(this.collider);
+        disposeScene(this.scene);
 
         this.mesh = null;
+        this.collider = null;
         this.container = null;
+        this.scene = null;
         this.stroke = null;
     }
 
@@ -131,6 +172,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _setColor(color: any) {
+        if (!this.mesh) {
+            return;
+        }
         const shapeMat = <MeshStandardMaterial | MeshToonMaterial>(
             this.mesh.material
         );
@@ -145,9 +189,15 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
     }
 
-    private _rebuildShape(shape: BotShape) {
+    private _rebuildShape(
+        shape: BotShape,
+        subShape: BotSubShape,
+        address: string
+    ) {
         this._shape = shape;
-        if (this.mesh) {
+        this._subShape = subShape;
+        this._address = address;
+        if (this.mesh || this.scene) {
             this.dispose();
         }
 
@@ -157,33 +207,124 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {
-            // Cube Mesh
-            this.mesh = createCube(1);
-            this.container.add(this.mesh);
-            this.bot3D.colliders.push(this.mesh);
-
-            // Stroke
-            this.stroke = null;
-            this._canHaveStroke = true;
+            this._createCube();
         } else if (this._shape === 'sphere') {
-            // Sphere Mesh
-            this.mesh = createSphere(new Vector3(0, 0, 0), 0x000000, 0.5);
-            this.container.add(this.mesh);
-            this.bot3D.colliders.push(this.mesh);
-
-            this.stroke = null;
-            this._canHaveStroke = false;
+            this._createSphere();
         } else if (this._shape === 'sprite') {
-            // Sprite Mesh
-            this.mesh = createSprite();
-            this.container.add(this.mesh);
-            this.bot3D.colliders.push(this.mesh);
-
-            this.stroke = null;
-            this._canHaveStroke = false;
+            this._createSprite();
+        } else if (this._shape === 'mesh') {
+            if (this._subShape === 'gltf' && this._address) {
+                this._createGltf();
+            } else if (this._subShape === 'poly' && this._address) {
+                this._createPoly();
+            } else {
+                this._createCube();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
+    }
+
+    private async _createPoly() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+
+        const group = this.bot3D.dimensionGroup;
+        if (!group) {
+            return;
+        }
+        const simulation = group.simulation3D.simulation;
+        if (!simulation) {
+            return;
+        }
+        const apiKey = getPolyKey(simulation);
+        if (!apiKey) {
+            console.warn(
+                '[BotShapeDecorator] Trying to use a poly form but no poly api key is specified.'
+            );
+            return;
+        }
+        const id = this._address;
+        try {
+            const resp = await axios.get(
+                `https://poly.googleapis.com/v1/assets/${id}/?key=${apiKey}`
+            );
+            const asset = resp.data;
+            const format = asset.formats.find(
+                (format: any) => format.formatType === 'GLTF'
+            );
+            if (!!format) {
+                const url = format.root.url;
+                await this._loadGLTF(url, true);
+            }
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load Poly ' + this._address,
+                err
+            );
+        }
+    }
+
+    private _createGltf() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        this._loadGLTF(this._address, false);
+    }
+
+    private async _loadGLTF(url: string, legacy: boolean) {
+        try {
+            const gltf = !legacy
+                ? await loadNewGLTF(url)
+                : await loadOldGLTF(url);
+            this._setGltf(gltf);
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load GLTF ' + url,
+                err
+            );
+        }
+    }
+
+    private _setGltf(gltf: GLTF) {
+        let box = new Box3();
+        box.setFromObject(gltf.scene);
+        let size = new Vector3();
+        box.getSize(size);
+        const maxScale = Math.max(size.x, size.y, size.z);
+        gltf.scene.scale.divideScalar(maxScale);
+        this.scene = this.collider = gltf.scene;
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(gltf.scene);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
+    private _createSprite() {
+        this.mesh = this.collider = createSprite();
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createSphere() {
+        this.mesh = this.collider = createSphere(
+            new Vector3(0, 0, 0),
+            0x000000,
+            0.5
+        );
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createCube() {
+        this.mesh = this.collider = createCube(1);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        // Stroke
+        this.stroke = null;
+        this._canHaveStroke = true;
     }
 }
 

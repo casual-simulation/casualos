@@ -402,6 +402,17 @@ export function disposeObject3D(
 }
 
 /**
+ * Disposes of the entire scene.
+ * @param scene The scene to dispose.
+ */
+export function disposeScene(scene: Scene) {
+    if (!scene) {
+        return;
+    }
+    scene.traverse(obj => disposeObject3D(obj));
+}
+
+/**
  * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
  * @param anchorBounds The bounds being anchored to.
  * @param anchorType The anchor type that will be calculated.

@@ -129,6 +129,10 @@ module.exports = {
                 __dirname,
                 'shared/public/three-bmfont-text/'
             ),
+            'three-legacy-gltf-loader': path.resolve(
+                __dirname,
+                'shared/public/three-legacy-gltf-loader/LegacyGLTFLoader.js'
+            ),
             'layout-bmfont-text': path.resolve(
                 __dirname,
                 'shared/public/layout-bmfont-text/index.js'
