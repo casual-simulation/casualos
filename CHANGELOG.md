@@ -11,6 +11,15 @@
 -   Added the `player.requestFullscreenMode()` and `player.exitFullscreenMode()` functions.
     -   These functions allow jumping in and out of fullscreen, thereby hiding the browser UI controls.
 -   Added the `apple-mobile-web-app-*` meta tags to support jumping into fullscreen mode when launching from a bookmark on the iOS home screen.
+-   Added the ability to load GLTF and [poly.google.com](https://poly.google.com) meshes.
+    -   To load a GLTF model from a URL:
+        -   Set `#auxForm` to `mesh`.
+        -   Set `#auxFormSubtype` to `gltf`.
+        -   Set `#auxFormAddress` to the URL.
+    -   To load a model from [poly.google.com](https://poly.google.com):
+        -   Set `#auxForm` to `mesh`.
+        -   Set `#auxFormSubtype` to `poly`.
+        -   Set `#auxFormAddress` to the ID of the model.
 
 ## V1.0.3
 
