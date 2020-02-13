@@ -471,6 +471,11 @@ export const CREATE_ANY_ACTION_NAME: string = 'onAnyCreate';
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
+ * The name of the event that represents a bot being clicked.
+ */
+export const CLICK_ACTION_NAME: string = 'onClick';
+
+/**
  * The name of the event that represents a bot entering over another bot.
  */
 export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
@@ -759,7 +764,7 @@ export const KNOWN_TAGS: string[] = [
     'stripeError',
     'stripeErrorType',
 
-    'onClick',
+    CLICK_ACTION_NAME,
     'onAnyBotClicked',
     MOD_DROP_ENTER_ACTION_NAME,
     MOD_DROP_EXIT_ACTION_NAME,
@@ -805,6 +810,21 @@ export const KNOWN_TAGS: string[] = [
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
 ];
+
+export function onClickArg(face: string, dimension: string) {
+    return {
+        face,
+        dimension,
+    };
+}
+
+export function onDragArg(bot: Bot, from: BotDropDestination, face: string) {
+    return {
+        face,
+        bot,
+        from,
+    };
+}
 
 export function onModDropArg(mod: BotTags, dimension: string) {
     return {

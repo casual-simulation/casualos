@@ -146,6 +146,8 @@ A whisper that is sent whenever a bot is starting to be dragged.
 #### Arguments:
 ```typescript
 let that: {
+  bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
   from: {
     x: number,
     y: number,
@@ -541,6 +543,7 @@ A shout that is sent whenever a bot starts to be dragged.
 ```typescript
 let that: {
   bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
   from: {
     x: number,
     y: number,

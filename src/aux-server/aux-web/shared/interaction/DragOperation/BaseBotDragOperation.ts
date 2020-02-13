@@ -29,6 +29,7 @@ import {
     BotDropDestination,
     onDropArg,
     BotDropToDestination,
+    onDragArg,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -58,6 +59,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _originalDimension: string;
     protected _vrController: VRController3D;
     protected _childOperation: IOperation;
+    protected _clickedFace: string;
 
     /**
      * The bot that the onDropEnter event was sent to.
@@ -93,7 +95,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         dimension: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2,
-        skipOnDragEvents?: boolean
+        skipOnDragEvents?: boolean,
+        clickedFace?: string
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -105,6 +108,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._inDimension = true;
         this._vrController = vrController;
         this._fromCoord = fromCoord;
+        this._clickedFace = clickedFace;
         this._sub = new Subscription();
 
         if (this._vrController) {
@@ -146,29 +150,26 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
         let events: BotAction[] = [];
         // Trigger drag into dimension
+
+        const arg = onDragArg(
+            bots[0],
+            {
+                x: fromX,
+                y: fromY,
+                dimension: this._originalDimension,
+            },
+            this._clickedFace || null
+        );
         let result = this.simulation.helper.actions([
             {
                 eventName: DRAG_ACTION_NAME,
                 bots: this._bots,
-                arg: {
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        dimension: this._originalDimension,
-                    },
-                },
+                arg: arg,
             },
             {
                 eventName: DRAG_ANY_ACTION_NAME,
                 bots: null,
-                arg: {
-                    bot: bots[0],
-                    from: {
-                        x: fromX,
-                        y: fromY,
-                        dimension: this._originalDimension,
-                    },
-                },
+                arg: arg,
             },
         ]);
         events.push(...result);

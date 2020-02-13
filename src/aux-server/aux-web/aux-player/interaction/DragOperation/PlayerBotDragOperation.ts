@@ -62,7 +62,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         dimension: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2,
-        skipOnDragEvents: boolean = false
+        skipOnDragEvents: boolean = false,
+        clickedFace?: string
     ) {
         super(
             playerSimulation3D,
@@ -71,7 +72,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             dimension,
             vrController,
             fromCoord,
-            skipOnDragEvents
+            skipOnDragEvents,
+            clickedFace
         );
 
         this._botsInStack = drop(bots, 1);
@@ -91,7 +93,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._dimension,
             this._vrController,
             this._fromCoord,
-            true
+            true,
+            this._clickedFace
         );
     }
 
