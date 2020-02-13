@@ -63,6 +63,8 @@ import {
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
     showJoinCode as calcShowJoinCode,
+    requestFullscreen,
+    exitFullscreen,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1895,6 +1897,23 @@ function showJoinCode(universe?: string, dimension?: string) {
 }
 
 /**
+ * Requests that AUX enters fullscreen mode.
+ * Depending on the web browser, this may ask the player for permission.
+ */
+function requestFullscreenMode() {
+    const event = requestFullscreen();
+    return addAction(event);
+}
+
+/**
+ * Exits fullscreen mode.
+ */
+function exitFullscreenMode() {
+    const event = exitFullscreen();
+    return addAction(event);
+}
+
+/**
  * Shows some HTML to the user.
  * @param html The HTML to show.
  */
@@ -2366,6 +2385,8 @@ const player = {
     disableAR,
     disableVR,
     showJoinCode,
+    requestFullscreenMode,
+    exitFullscreenMode,
 
     openDevConsole,
 };

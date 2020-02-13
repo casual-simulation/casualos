@@ -664,6 +664,20 @@ export default class PlayerApp extends Vue {
                         universe
                     )}&auxPagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
+                } else if (e.type === 'request_fullscreen_mode') {
+                    if (document.fullscreenElement) {
+                        return;
+                    }
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    }
+                } else if (e.type === 'exit_fullscreen_mode') {
+                    if (!document.fullscreenElement) {
+                        return;
+                    }
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
