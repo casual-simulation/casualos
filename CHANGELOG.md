@@ -20,6 +20,12 @@
         -   Set `#auxForm` to `mesh`.
         -   Set `#auxFormSubtype` to `poly`.
         -   Set `#auxFormAddress` to the ID of the model.
+-   Added the `face` property to the `@onDrag` and `@onAnyBotDrag` listen arguments.
+    -   This is the same value that you would get in an `@onClick`.
+
+#### :robot: Builder Improvements
+
+-   Improved builder to draw a line to the selected bot.
 
 #### :bug: Bug Fixes
 
