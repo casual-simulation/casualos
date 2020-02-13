@@ -31,6 +31,7 @@ import {
     createSprite,
     disposeScene,
     disposeObject3D,
+    setColor,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -174,21 +175,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _setColor(color: any) {
-        if (!this.mesh) {
-            return;
-        }
-        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>(
-            this.mesh.material
-        );
-        if (color) {
-            shapeMat.visible = !isTransparent(color);
-            if (shapeMat.visible) {
-                shapeMat.color = new Color(color);
-            }
-        } else {
-            shapeMat.visible = true;
-            shapeMat.color = new Color(0xffffff);
-        }
+        setColor(this.mesh, color);
     }
 
     private _rebuildShape(
@@ -293,6 +280,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const maxScale = Math.max(size.x, size.y, size.z);
         gltf.scene.scale.divideScalar(maxScale);
         this.scene = gltf.scene;
+        const collider = (this.collider = createCube(0.8));
+        this.collider.position.set(0, 0.25, 0);
+        setColor(collider, 'clear');
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
         this.container.add(gltf.scene);
         this.bot3D.updateMatrixWorld(true);
     }

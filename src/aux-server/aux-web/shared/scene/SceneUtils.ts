@@ -28,6 +28,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
     Color,
+    MeshStandardMaterial,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -593,4 +594,25 @@ export function disposeHtmlMixerContext(
     parentElement: HTMLElement
 ) {
     parentElement.removeChild(mixerContext.rendererCss.domElement);
+}
+
+/**
+ * Changes the mesh's material to the given color.
+ * @param mesh The mesh.
+ * @param color The color.
+ */
+export function setColor(mesh: Mesh | Sprite, color: string) {
+    if (!mesh) {
+        return;
+    }
+    const shapeMat = <MeshStandardMaterial | MeshToonMaterial>mesh.material;
+    if (color) {
+        shapeMat.visible = !isTransparent(color);
+        if (shapeMat.visible) {
+            shapeMat.color = new Color(color);
+        }
+    } else {
+        shapeMat.visible = true;
+        shapeMat.color = new Color(0xffffff);
+    }
 }
