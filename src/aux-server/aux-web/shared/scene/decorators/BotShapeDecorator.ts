@@ -39,6 +39,7 @@ import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getPolyKey } from '../PolyUtils';
 import axios from 'axios';
 import { getGLTFPool } from '../GLTFHelpers';
+import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 const gltfPool = getGLTFPool('main');
 
@@ -273,19 +274,32 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _setGltf(gltf: GLTF) {
+        // Positioning
         let box = new Box3();
         box.setFromObject(gltf.scene);
         let size = new Vector3();
         box.getSize(size);
+        let center = new Vector3();
+        box.getCenter(center);
         const maxScale = Math.max(size.x, size.y, size.z);
+        size.divideScalar(maxScale);
+        center.divideScalar(maxScale);
+
+        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+
+        // Scene
         gltf.scene.scale.divideScalar(maxScale);
+        gltf.scene.position.copy(bottomCenter);
         this.scene = gltf.scene;
-        const collider = (this.collider = createCube(0.8));
-        this.collider.position.set(0, 0.25, 0);
+        this.container.add(gltf.scene);
+
+        // Collider
+        const collider = (this.collider = createCube(1));
+        this.collider.scale.copy(size);
         setColor(collider, 'clear');
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
-        this.container.add(gltf.scene);
+
         this.bot3D.updateMatrixWorld(true);
     }
 
