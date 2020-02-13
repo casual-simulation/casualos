@@ -10,6 +10,7 @@ import {
     BotCalculationContext,
     calculateBotValue,
     hasValue,
+    getBotShape,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
@@ -108,6 +109,10 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _updateTargetMeshTexture(): void {
+        if (!this._targetMeshDecorator.allowModifications) {
+            return;
+        }
+
         let material = <
             | MeshBasicMaterial
             | MeshToonMaterial

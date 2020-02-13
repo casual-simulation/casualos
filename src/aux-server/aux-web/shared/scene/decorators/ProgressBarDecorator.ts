@@ -37,6 +37,10 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
+    get allowModifications() {
+        return true;
+    }
+
     private _anchor: BotLabelAnchor = 'top';
     private _targetMeshDecorator: IMeshDecorator;
 

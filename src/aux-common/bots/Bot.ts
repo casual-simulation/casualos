@@ -252,7 +252,12 @@ export interface WorkspaceHex {
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type BotShape = 'cube' | 'sphere' | 'sprite';
+export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh';
+
+/**
+ * Defines the possible subtypes for shapes that a bot can appear as.
+ */
+export type BotSubShape = 'gltf' | 'poly' | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -705,6 +710,7 @@ export const KNOWN_TAGS: string[] = [
     'auxScaleY',
     'auxScaleZ',
     'auxFormAddress',
+    'auxFormSubtype',
     'auxForm',
     'auxProgressBar',
     'auxProgressBarColor',
@@ -722,6 +728,8 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
+
+    'polyApiKey',
 
     'auxTaskOutput',
     'auxTaskError',

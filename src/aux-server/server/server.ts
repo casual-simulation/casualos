@@ -97,6 +97,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
+import { pickBy } from 'lodash';
 
 const connect = pify(MongoClient.connect);
 
@@ -180,7 +181,8 @@ export class ClientServer {
                             const status = parseInt(cached.status.toString());
                             const data: Buffer = cached.data;
                             const optimized: Buffer = cached.optimizedData;
-                            const optimizedContentType = cached.optimizedContentType.toString();
+                            const optimizedContentType =
+                                cached.optimizedContentType;
 
                             let [
                                 retContentType,
@@ -189,7 +191,9 @@ export class ClientServer {
                                 req,
                                 contentType,
                                 data,
-                                optimizedContentType,
+                                optimizedContentType
+                                    ? optimizedContentType.toString()
+                                    : null,
                                 optimized
                             );
                             res.status(status);
@@ -257,13 +261,19 @@ export class ClientServer {
                         console.log(
                             `[Server] Caching ${contentType} for ${expire} seconds.`
                         );
-                        this._redisClient.hmset(url, {
-                            contentType: contentType,
-                            status: status,
-                            data: <any>data,
-                            optimizedData: <any>optimizedData,
-                            optimizedContentType: optimizedContentType,
-                        });
+                        this._redisClient.hmset(
+                            url,
+                            pickBy(
+                                {
+                                    contentType: contentType,
+                                    status: status,
+                                    data: <any>data,
+                                    optimizedData: <any>optimizedData,
+                                    optimizedContentType: optimizedContentType,
+                                },
+                                val => !!val
+                            )
+                        );
 
                         this._redisClient.EXPIRE(url, expire);
                         cacheControl = {

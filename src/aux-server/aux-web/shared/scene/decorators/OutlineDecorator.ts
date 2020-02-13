@@ -51,6 +51,10 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
      */
     color: string = DEFAULT_OUTLINE_COLOR;
 
+    get allowModifications() {
+        return true;
+    }
+
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     private _targetMeshDecorator: IMeshDecorator;

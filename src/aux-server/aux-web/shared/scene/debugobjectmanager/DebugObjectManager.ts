@@ -256,7 +256,7 @@ export namespace DebugObjectManager {
      * @param point The Vector3 to represent.
      * @param size How big the axes helper should be. Default is 1.
      * @param color The color the debug object should. Default is the color of axes that the lines represent (red, green, blue).
-     * @param duration How long the debug object should render for. Default is one frame.
+     * @param duration The number of seconds the point should render for. Default is one frame.
      */
     export function drawPoint(
         point: Vector3,

@@ -46,21 +46,26 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
-        let botBoundingBox = this.bot3D.boundingBox;
-        if (!botBoundingBox) {
-            this.bot3D.remove(this.wordBubble);
-            this.wordBubble.visible = false;
-            return;
-        }
-
         let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const wasVisible = this.wordBubble.visible;
-        this.wordBubble.visible = anchor === 'floating';
+
+        const hasBubble = (this.wordBubble.visible = anchor === 'floating');
         if (wasVisible && !this.wordBubble.visible) {
             this.bot3D.remove(this.wordBubble);
         } else if (!wasVisible && this.wordBubble.visible) {
             this.bot3D.add(this.wordBubble);
             this.wordBubble.updateMatrixWorld(true);
+        }
+
+        if (!hasBubble) {
+            return;
+        }
+
+        let botBoundingBox = this.bot3D.boundingBox;
+        if (!botBoundingBox) {
+            this.bot3D.remove(this.wordBubble);
+            this.wordBubble.visible = false;
+            return;
         }
 
         let arrowPoint = new Vector3();

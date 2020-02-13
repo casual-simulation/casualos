@@ -86,7 +86,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.add(this.display);
 
         this.decorators = decoratorFactory.loadDecorators(this);
-        this._frameUpdateList = this.decorators.filter(d => !!d.frameUpdate);
+        this.updateFrameUpdateList();
     }
 
     /**
@@ -172,6 +172,10 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             );
         }
         this._updatesInFrame = 0;
+    }
+
+    updateFrameUpdateList() {
+        this._frameUpdateList = this.decorators.filter(d => !!d.frameUpdate);
     }
 
     dispose() {
