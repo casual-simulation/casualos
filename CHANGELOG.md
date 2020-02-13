@@ -21,6 +21,10 @@
         -   Set `#auxFormSubtype` to `poly`.
         -   Set `#auxFormAddress` to the ID of the model.
 
+#### :bug: Bug Fixes
+
+-   Fixed positioning of `#auxLabelAnchor` and `#auxProgressBarAnchor` when the values were set to `left` or `right`.
+
 ## V1.0.3
 
 ### Date: 2/11/2020

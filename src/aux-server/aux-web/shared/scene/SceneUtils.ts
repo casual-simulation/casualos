@@ -507,7 +507,7 @@ export function calculateAnchorPosition(
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0),
         ];
-    } else if (anchorType === 'left') {
+    } else if (anchorType === 'right') {
         const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
@@ -526,7 +526,7 @@ export function calculateAnchorPosition(
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
         ];
-    } else if (anchorType === 'right') {
+    } else if (anchorType === 'left') {
         const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
