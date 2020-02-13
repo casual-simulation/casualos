@@ -37,7 +37,9 @@ import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getPolyKey } from '../PolyUtils';
 import axios from 'axios';
-import { loadNewGLTF, loadOldGLTF } from '../GLTFHelpers';
+import { getGLTFPool } from '../GLTFHelpers';
+
+const gltfPool = getGLTFPool('main');
 
 export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
@@ -273,9 +275,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     private async _loadGLTF(url: string, legacy: boolean) {
         try {
-            const gltf = !legacy
-                ? await loadNewGLTF(url)
-                : await loadOldGLTF(url);
+            const gltf = await gltfPool.loadGLTF(url, legacy);
             this._setGltf(gltf);
         } catch (err) {
             console.error(
