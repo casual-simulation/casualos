@@ -1867,6 +1867,32 @@ const info = player.device();
 player.toast(info);
 ```
 
+### `player.requestFullscreenMode()`
+
+<FunctionCode name='requestFullscreenMode'/>
+
+Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
+
+#### Examples:
+
+1. Enter fullscreen mode.
+```typescript
+player.requestFullscreenMode();
+```
+
+### `player.exitFullscreenMode()`
+
+<FunctionCode name='exitFullscreenMode'/>
+
+Exists fullscreen mode.
+
+#### Examples:
+
+1. Exit fullscreen mode.
+```typescript
+player.exitFullscreenMode();
+```
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`

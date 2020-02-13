@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V1.0.4
+
+### Date: TBD
+
+### Changes:
+
+#### :rocket: Features
+
+-   Added the `player.requestFullscreenMode()` and `player.exitFullscreenMode()` functions.
+    -   These functions allow jumping in and out of fullscreen, thereby hiding the browser UI controls.
+-   Added the `apple-mobile-web-app-*` meta tags to support jumping into fullscreen mode when launching from a bookmark on the iOS home screen.
+
 ## V1.0.3
 
 ### Date: 2/11/2020
