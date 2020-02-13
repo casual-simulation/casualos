@@ -252,7 +252,12 @@ export interface WorkspaceHex {
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type BotShape = 'cube' | 'sphere' | 'sprite';
+export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh';
+
+/**
+ * Defines the possible subtypes for shapes that a bot can appear as.
+ */
+export type BotSubShape = 'gltf' | 'poly' | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -464,6 +469,11 @@ export const CREATE_ANY_ACTION_NAME: string = 'onAnyCreate';
  * The name of the event that represents a bot being destroyed.
  */
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
+
+/**
+ * The name of the event that represents a bot being clicked.
+ */
+export const CLICK_ACTION_NAME: string = 'onClick';
 
 /**
  * The name of the event that represents a bot entering over another bot.
@@ -705,6 +715,7 @@ export const KNOWN_TAGS: string[] = [
     'auxScaleY',
     'auxScaleZ',
     'auxFormAddress',
+    'auxFormSubtype',
     'auxForm',
     'auxProgressBar',
     'auxProgressBarColor',
@@ -722,6 +733,8 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
+
+    'polyApiKey',
 
     'auxTaskOutput',
     'auxTaskError',
@@ -751,7 +764,7 @@ export const KNOWN_TAGS: string[] = [
     'stripeError',
     'stripeErrorType',
 
-    'onClick',
+    CLICK_ACTION_NAME,
     'onAnyBotClicked',
     MOD_DROP_ENTER_ACTION_NAME,
     MOD_DROP_EXIT_ACTION_NAME,
@@ -797,6 +810,21 @@ export const KNOWN_TAGS: string[] = [
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
 ];
+
+export function onClickArg(face: string, dimension: string) {
+    return {
+        face,
+        dimension,
+    };
+}
+
+export function onDragArg(bot: Bot, from: BotDropDestination, face: string) {
+    return {
+        face,
+        bot,
+        from,
+    };
+}
 
 export function onModDropArg(mod: BotTags, dimension: string) {
     return {

@@ -54,6 +54,7 @@ import {
     getBotPositioningMode,
     convertToCopiableValue,
     getPortalConfigBotID,
+    getBotSubShape,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3282,7 +3283,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotShape()', () => {
-        const cases = [['cube'], ['sphere'], ['sprite']];
+        const cases = [['cube'], ['sphere'], ['sprite'], ['mesh']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxForm: <any>shape,
@@ -3310,6 +3311,28 @@ export function botCalculationContextTests(
             const shape = getBotShape(calc, bot);
 
             expect(shape).toBe('sphere');
+        });
+    });
+
+    describe('getBotSubShape()', () => {
+        const cases = [['gltf'], ['poly']];
+        it.each(cases)('should return %s', (shape: string) => {
+            const bot = createBot('test', {
+                auxFormSubtype: <any>shape,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotSubShape(calc, bot)).toBe(shape);
+        });
+
+        it('should default to null', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = getBotSubShape(calc, bot);
+
+            expect(shape).toBe(null);
         });
     });
 

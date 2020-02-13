@@ -372,6 +372,27 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='sprite'>
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
+  <PossibleValueCode value='mesh'>
+    A mesh loaded from the web. See <TagLink tag="#auxFormSubtype"/> for additional options.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxFormSubtype`
+
+The subtype that the form should use. Useful for specifying how a mesh should be loaded.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No subtype (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='gltf'>
+    A [GLTF mesh](https://en.wikipedia.org/wiki/GlTF) loaded from a URL.
+  </PossibleValueCode>
+  <PossibleValueCode value='poly'>
+    A mesh loaded from [poly.google.com](https://poly.google.com).
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxFormAddress`
@@ -379,6 +400,8 @@ The shape that the bot should be displayed as.
 The address that the bot should represent data from.
 
 When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `poly`, the address should be the ID of the mesh that should be displayed.
 
 ### `auxProgressBar`
 

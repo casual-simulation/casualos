@@ -28,6 +28,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
     Color,
+    MeshStandardMaterial,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -402,6 +403,17 @@ export function disposeObject3D(
 }
 
 /**
+ * Disposes of the entire scene.
+ * @param scene The scene to dispose.
+ */
+export function disposeScene(scene: Scene) {
+    if (!scene) {
+        return;
+    }
+    scene.traverse(obj => disposeObject3D(obj));
+}
+
+/**
  * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
  * @param anchorBounds The bounds being anchored to.
  * @param anchorType The anchor type that will be calculated.
@@ -495,7 +507,7 @@ export function calculateAnchorPosition(
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0),
         ];
-    } else if (anchorType === 'left') {
+    } else if (anchorType === 'right') {
         const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
@@ -514,7 +526,7 @@ export function calculateAnchorPosition(
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
         ];
-    } else if (anchorType === 'right') {
+    } else if (anchorType === 'left') {
         const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
@@ -582,4 +594,25 @@ export function disposeHtmlMixerContext(
     parentElement: HTMLElement
 ) {
     parentElement.removeChild(mixerContext.rendererCss.domElement);
+}
+
+/**
+ * Changes the mesh's material to the given color.
+ * @param mesh The mesh.
+ * @param color The color.
+ */
+export function setColor(mesh: Mesh | Sprite, color: string) {
+    if (!mesh) {
+        return;
+    }
+    const shapeMat = <MeshStandardMaterial | MeshToonMaterial>mesh.material;
+    if (color) {
+        shapeMat.visible = !isTransparent(color);
+        if (shapeMat.visible) {
+            shapeMat.color = new Color(color);
+        }
+    } else {
+        shapeMat.visible = true;
+        shapeMat.color = new Color(0xffffff);
+    }
 }

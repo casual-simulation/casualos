@@ -12,6 +12,7 @@ import {
     Bot,
     getBotDragMode,
     tagsOnBot,
+    CLICK_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
@@ -46,7 +47,11 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
 
         this._argument.dimension = bot3D.dimension;
 
-        this.simulation.helper.action('onClick', [this._bot], this._argument);
+        this.simulation.helper.action(
+            CLICK_ACTION_NAME,
+            [this._bot],
+            this._argument
+        );
 
         this.simulation.helper.action('onAnyBotClicked', null, {
             ...this._argument,
@@ -86,7 +91,9 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 draggedObjects,
                 bot3D.dimension,
                 this._vrController,
-                fromCoord
+                fromCoord,
+                undefined,
+                this._argument.face
             );
         }
 

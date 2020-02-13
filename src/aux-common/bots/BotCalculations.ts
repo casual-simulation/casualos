@@ -26,6 +26,7 @@ import {
     BotSpace,
     BOT_SPACE_TAG,
     PortalType,
+    BotSubShape,
 } from './Bot';
 
 import {
@@ -1183,10 +1184,31 @@ export function getBotScale(
  */
 export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
     const shape: BotShape = calculateBotValue(calc, bot, 'auxForm');
-    if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
+    if (
+        shape === 'cube' ||
+        shape === 'sphere' ||
+        shape === 'sprite' ||
+        shape === 'mesh'
+    ) {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
+}
+
+/**
+ * Gets the sub-shape of the bot.
+ * @param calc The calculation context to use.
+ * @param bot The bot.
+ */
+export function getBotSubShape(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotSubShape {
+    const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
+    if (shape === 'gltf' || shape === 'poly') {
+        return shape;
+    }
+    return null;
 }
 
 /**
