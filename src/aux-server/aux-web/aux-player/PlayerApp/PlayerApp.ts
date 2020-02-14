@@ -665,18 +665,32 @@ export default class PlayerApp extends Vue {
                     )}&auxPagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
-                    if (document.fullscreenElement) {
+                    if (
+                        document.fullscreenElement ||
+                        (<any>document).webkitFullscreenElement
+                    ) {
                         return;
                     }
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen();
+                    } else if (
+                        (<any>document.documentElement).webkitRequestFullScreen
+                    ) {
+                        (<any>(
+                            document.documentElement
+                        )).webkitRequestFullScreen();
                     }
                 } else if (e.type === 'exit_fullscreen_mode') {
-                    if (!document.fullscreenElement) {
+                    if (
+                        !document.fullscreenElement &&
+                        !(<any>document).webkitFullscreenElement
+                    ) {
                         return;
                     }
                     if (document.exitFullscreen) {
                         document.exitFullscreen();
+                    } else if ((<any>document).webkitExitFullscreen) {
+                        (<any>document).webkitExitFullscreen();
                     }
                 }
             }),
