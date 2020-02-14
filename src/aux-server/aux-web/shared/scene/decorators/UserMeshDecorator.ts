@@ -36,6 +36,10 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
      */
     container: Group;
 
+    get allowModifications() {
+        return true;
+    }
+
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     constructor(bot3D: AuxBot3D) {

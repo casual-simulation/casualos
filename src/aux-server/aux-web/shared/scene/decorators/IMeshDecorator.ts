@@ -8,6 +8,12 @@ export interface IMeshDecorator {
     mesh: Mesh | Sprite;
 
     /**
+     * Whether additional modifications to the mesh
+     * are allowed.
+     */
+    allowModifications: boolean;
+
+    /**
      * Event that gets fired when the mesh is updated.
      */
     onMeshUpdated: ArgEvent<IMeshDecorator>;

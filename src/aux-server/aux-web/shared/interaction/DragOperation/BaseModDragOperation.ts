@@ -17,8 +17,6 @@ import {
     MOD_DROP_ACTION_NAME,
     toast,
     createBot,
-    DRAG_ANY_ACTION_NAME,
-    DRAG_ACTION_NAME,
     BotTags,
     botAdded,
     merge,

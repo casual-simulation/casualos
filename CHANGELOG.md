@@ -1,5 +1,52 @@
 # AUX Changelog
 
+## V1.0.5
+
+### Date: 2/14/2020
+
+### Changes:
+
+#### :book: Documentation
+
+-   Added docs for the `polyApiKey`, `stripePublishableKey`, and `stripeSecretKey` tags.
+-   Added a "Player Bot Tags" section with a description of what the player tags do.
+
+#### Other Changes
+
+-   Added support for the webkit-specific versions of the [`requestFullscreen()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) function.
+    -   This may enable support for fullscreen on iPad, but it also may do nothing.
+
+## V1.0.4
+
+### Date: 2/13/2020
+
+### Changes:
+
+#### :rocket: Features
+
+-   Added the `player.requestFullscreenMode()` and `player.exitFullscreenMode()` functions.
+    -   These functions allow jumping in and out of fullscreen, thereby hiding the browser UI controls.
+-   Added the `apple-mobile-web-app-*` meta tags to support jumping into fullscreen mode when launching from a bookmark on the iOS home screen.
+-   Added the ability to load GLTF and [poly.google.com](https://poly.google.com) meshes.
+    -   To load a GLTF model from a URL:
+        -   Set `#auxForm` to `mesh`.
+        -   Set `#auxFormSubtype` to `gltf`.
+        -   Set `#auxFormAddress` to the URL.
+    -   To load a model from [poly.google.com](https://poly.google.com):
+        -   Set `#auxForm` to `mesh`.
+        -   Set `#auxFormSubtype` to `poly`.
+        -   Set `#auxFormAddress` to the ID of the model.
+-   Added the `face` property to the `@onDrag` and `@onAnyBotDrag` listen arguments.
+    -   This is the same value that you would get in an `@onClick`.
+
+#### :robot: Builder Improvements
+
+-   Improved builder to draw a line to the selected bot.
+
+#### :bug: Bug Fixes
+
+-   Fixed positioning of `#auxLabelAnchor` and `#auxProgressBarAnchor` when the values were set to `left` or `right`.
+
 ## V1.0.3
 
 ### Date: 2/11/2020

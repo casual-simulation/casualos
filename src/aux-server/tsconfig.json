@@ -6,6 +6,9 @@
         "paths": {
             "vue-json-tree-view": [
                 "aux-web/shared/public/VueJsonTreeView/index.ts"
+            ],
+            "three-legacy-gltf-loader": [
+                "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
             ]
         },
         "lib": ["es2015", "es5", "dom", "webworker"]

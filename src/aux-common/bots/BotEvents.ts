@@ -78,7 +78,9 @@ export type ExtraActions =
     | LoadSpaceAction
     | EnableARAction
     | EnableVRAction
-    | ShowJoinCodeAction;
+    | ShowJoinCodeAction
+    | RequestFullscreenAction
+    | ExitFullscreenAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1067,6 +1069,21 @@ export interface ShowJoinCodeAction {
     dimension?: string;
 }
 
+/**
+ * Defines an event that requests that AUX enter fullscreen mode.
+ * This can be denied by the user.
+ */
+export interface RequestFullscreenAction {
+    type: 'request_fullscreen_mode';
+}
+
+/**
+ * Defines an event that exits fullscreen mode.
+ */
+export interface ExitFullscreenAction {
+    type: 'exit_fullscreen_mode';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -1801,5 +1818,23 @@ export function showJoinCode(
         type: 'show_join_code',
         universe,
         dimension,
+    };
+}
+
+/**
+ * Requests that the app go into fullscreen mode.
+ */
+export function requestFullscreen(): RequestFullscreenAction {
+    return {
+        type: 'request_fullscreen_mode',
+    };
+}
+
+/**
+ * Exists fullscreen mode.
+ */
+export function exitFullscreen(): ExitFullscreenAction {
+    return {
+        type: 'exit_fullscreen_mode',
     };
 }
