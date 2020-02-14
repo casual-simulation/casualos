@@ -389,10 +389,11 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     No subtype (default)
   </PossibleValueCode>
   <PossibleValueCode value='gltf'>
-    A [GLTF mesh](https://en.wikipedia.org/wiki/GlTF) loaded from a URL.
+    A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
   <PossibleValueCode value='poly'>
-    A mesh loaded from [poly.google.com](https://poly.google.com).
+    A mesh loaded from <a href="https://poly.google.com">poly.google.com</a>.
+    Requres the <TagLink tag='polyApiKey'/> tag to be set on the config bot.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -401,7 +402,9 @@ The subtype that the form should use. Useful for specifying how a mesh should be
 The address that the bot should represent data from.
 
 When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `poly`, the address should be the ID of the mesh that should be displayed.
 
 ### `auxProgressBar`
@@ -1006,13 +1009,11 @@ You can use this tag as a way to find previous marks from a mark.
 
 The time that the mark was created.
 
-## Hidden Tags
+## Player Bot Tags
 
-Hidden tags are tags that are hidden in the sheet by default.
-
-<Alert type='info'>
-  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
-</Alert>
+All tags on the player bot will be synced with the URL query parameters.
+This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
+It also means that putting `auxInventoryPortal=myDimension` into the query string will set the <TagLink tag='auxInventoryPortal'/> tag to `myDimension`.
 
 ### `auxUniverse`
 
@@ -1058,6 +1059,14 @@ Only available on the player bot.
 The dimension that is loaded into the "menu" portal in auxPlayer.
 Only available on the player bot.
 
+## Hidden Tags
+
+Hidden tags are tags that are hidden in the sheet by default.
+
+<Alert type='info'>
+  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
+</Alert>
+
 ### `_auxEditingBot`
 
 <Badges>
@@ -1089,8 +1098,7 @@ You can get an API Key by following the "Get an API Key" instructions on the [Po
 The Stripe publishable [API Key][api-key] that should be used for checkouts.
 Must be placed on the config bot to work.
 
-Because this key is meant to be public, you should place this in the universe that you call
-<ActionLink action='player.checkout(options)'/> from.
+Because this key is meant to be public, you should place this in the universe that you call <ActionLink action='player.checkout(options)'/> from.
 
 See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
 
@@ -1104,7 +1112,7 @@ The Stripe secret [API Key][api-key] that should be used to finish checkouts.
 Must be placed on the config bot to work.
 
 Because this key is meant to be private, you should place this in the processing universe that was specified
-by the call to <ActionLink action='player.checkout(options)'/>.
+in the call to <ActionLink action='player.checkout(options)'/>.
 
 See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
 
