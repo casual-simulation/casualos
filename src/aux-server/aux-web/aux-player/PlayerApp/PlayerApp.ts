@@ -674,11 +674,11 @@ export default class PlayerApp extends Vue {
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen();
                     } else if (
-                        (<any>document.documentElement).webkitRequestFullScreen
+                        (<any>document.documentElement).webkitRequestFullscreen
                     ) {
                         (<any>(
                             document.documentElement
-                        )).webkitRequestFullScreen();
+                        )).webkitRequestFullscreen();
                     }
                 } else if (e.type === 'exit_fullscreen_mode') {
                     if (
