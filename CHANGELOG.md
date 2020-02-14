@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V1.0.5
+
+### Date: TBD
+
+### Changes:
+
+#### :book: Documentation
+
+-   Added docs for the `polyApiKey`, `stripePublishableKey`, and `stripeSecretKey` tags.
+-   Added a "Player Bot Tags" section with a description of what the player tags do.
+
 ## V1.0.4
 
 ### Date: 2/13/2020
