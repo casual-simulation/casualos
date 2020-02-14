@@ -25,12 +25,12 @@ import {
 <FunctionCode name='create' />
 
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
-By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `"shared"`.
+By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
 
 If <TagLink tag='auxCreator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='auxCreator'/> will be set to `null`.
 
 **Each parameter** is a mod that should be applied to the new bot(s).
-If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `"shared"`.
+If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
 If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
 
 #### Examples:
@@ -59,7 +59,7 @@ let myChildBot = create({
 });
 ```
 
-4. Create a empty bot in the `"tempLocal"` space:
+4. Create a empty bot in the `tempLocal` space:
 ```typescript
 let myBot = create({ space: "tempLocal" });
 ```
@@ -181,12 +181,12 @@ If given a regex, then all the tags which match the regex will be removed.
 
 #### Examples:
 
-1. Remove tags started with `"abc"` from the `this` bot.
+1. Remove tags started with `abc` from the `this` bot.
 ```typescript
 removeTags(this, "abc");
 ```
 
-2. Remove tags named `"hello"` using a case-insensitive regex from the `this` bot.
+2. Remove tags named `hello` using a case-insensitive regex from the `this` bot.
 ```typescript
 removeTags(this, /^hello$/gi)
 ```
@@ -631,7 +631,7 @@ The **first parameter** is the space that the bots are in.
 
 #### Examples
 
-1. Find all bots in the `"tempLocal"` space.
+1. Find all bots in the `tempLocal` space.
 ```typescript
 let bots = getBots(bySpace("tempLocal"));
 ```
@@ -646,7 +646,7 @@ The **first parameter** is the bot or mod that the other bots should match.
 
 #### Examples:
 
-1. Find all the bots with `#height` set to `1` and `#auxColor` set to `"red"`.
+1. Find all the bots with `#height` set to `1` and `#auxColor` set to `red`.
 ```typescript
 const bots = getBots(byMod({
     height: 1,
@@ -682,7 +682,7 @@ Creates a bot filter that includes bots which match any (i.e. one or more) of th
 
 #### Examples:
 
-1. Find all bots with the `#name` `"bob"` or a `#height` of 2.
+1. Find all bots with the `#name` `bob` or a `#height` of 2.
 ```typescript
 const bots = getBots(
     either(
@@ -700,7 +700,7 @@ The **first parameter** is the bot filter whose results should be negated.
 
 #### Examples.
 
-1. Find all bots that are not in the `"test"` dimension.
+1. Find all bots that are not in the `test` dimension.
 ```typescript
 const bots = getBots(not(inDimension("test")));
 ```
@@ -714,7 +714,7 @@ const bots = getBots(not(inDimension("test")));
 Sends a shout to all bots that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
-The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all <TagLink tag='@onClick'/> listeners.
+The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all <TagLink tag='@onClick'/> listeners.
 
 The **second parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
 
@@ -739,13 +739,13 @@ Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
 The **first parameter** is the bot, array of bots, bot <TagLink tag='id'/>, or array of bot <TagLink tag='id'/> that the whisper should be sent to.
 
-The **second parameter** is the name of the whisper. e.g. Using `"onClick"` for the name will trigger the <TagLink tag='@onClick'/> listener for the specified bots.
+The **second parameter** is the name of the whisper. e.g. Using `onClick` for the name will trigger the <TagLink tag='@onClick'/> listener for the specified bots.
 
 The **third parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
 
 #### Examples:
 
-1. Send a `@reset` event to all bots named `"Bob"`:
+1. Send a `@reset` event to all bots named `Bob`:
 ```typescript
 let bots = getBots("#name", "Bob");
 whisper(bots, "reset");
@@ -762,13 +762,13 @@ whisper(this, "setColor", "red");
 
 Sends a shout to all of the other universes that are loaded.
 
-The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
+The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
 
 The **second parameter** is the optional `that` argument to include with the shout.
 
 #### Examples:
 
-1. Send a `"hello"` super shout to all the loaded universes.
+1. Send a `hello` super shout to all the loaded universes.
 ```typescript
 superShout("hello");
 ```
@@ -1873,6 +1873,8 @@ player.toast(info);
 
 Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
 
+Note that iPhones currently don't support fullscreen mode.
+
 #### Examples:
 
 1. Enter fullscreen mode.
@@ -2204,7 +2206,7 @@ The **third parameter** is the value that should be placed into the tag(s).
 
 #### Examples:
 
-1. Set a bot's <TagLink tag='auxColor'/> to `"green"`.
+1. Set a bot's <TagLink tag='auxColor'/> to `green`.
 ```typescript
 setTag(this, "#auxColor", "green");
 ```

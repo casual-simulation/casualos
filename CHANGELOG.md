@@ -1,5 +1,21 @@
 # AUX Changelog
 
+## V1.0.5
+
+### Date: 2/14/2020
+
+### Changes:
+
+#### :book: Documentation
+
+-   Added docs for the `polyApiKey`, `stripePublishableKey`, and `stripeSecretKey` tags.
+-   Added a "Player Bot Tags" section with a description of what the player tags do.
+
+#### Other Changes
+
+-   Added support for the webkit-specific versions of the [`requestFullscreen()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) function.
+    -   This may enable support for fullscreen on iPad, but it also may do nothing.
+
 ## V1.0.4
 
 ### Date: 2/13/2020
