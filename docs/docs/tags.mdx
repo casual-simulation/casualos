@@ -1080,4 +1080,32 @@ Must be placed on the config bot to work.
 
 You can get an API Key by following the "Get an API Key" instructions on the [Poly developers website](https://developers.google.com/poly/develop/web#get_an_api_key).
 
+### `stripePublishableKey`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The Stripe publishable [API Key][api-key] that should be used for checkouts.
+Must be placed on the config bot to work.
+
+Because this key is meant to be public, you should place this in the universe that you call
+<ActionLink action='player.checkout(options)'/> from.
+
+See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
+
+### `stripeSecretKey`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The Stripe secret [API Key][api-key] that should be used to finish checkouts.
+Must be placed on the config bot to work.
+
+Because this key is meant to be private, you should place this in the processing universe that was specified
+by the call to <ActionLink action='player.checkout(options)'/>.
+
+See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
+
 [api-key]: https://en.wikipedia.org/wiki/Application_programming_interface_key
