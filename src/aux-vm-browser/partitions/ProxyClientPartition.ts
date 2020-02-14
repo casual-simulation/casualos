@@ -20,7 +20,7 @@ import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';
 
 /**
- * Attempts to create a CausalTreePartition that is loaded from a remote server.
+ * Attempts to create a proxy client partition that is loaded from a remote server.
  * @param options The options to use.
  * @param config The config to use.
  */

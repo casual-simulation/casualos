@@ -33,7 +33,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
 import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { BackupModule } from './BackupModule';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import { take, flatMap } from 'rxjs/operators';

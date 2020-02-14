@@ -1,77 +1,29 @@
-import {
-    LocalActions,
-    auxCausalTreeFactory,
-    AuxCausalTree,
-    GLOBALS_BOT_ID,
-    tagsOnBot,
-    ON_ACTION_ACTION_NAME,
-    BotTags,
-} from '@casual-simulation/aux-common';
-import {
-    CausalTreeManager,
-    SocketManager,
-} from '@casual-simulation/causal-tree-client-socketio';
+import { LocalActions } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     BaseAuxChannel,
     AuxUser,
     AuxChannelOptions,
-    CausalTreePartitionConfig,
     createMemoryPartition,
     createAuxPartition,
     createCausalRepoPartition,
     PartitionConfig,
     AuxPartition,
     iteratePartitions,
-    filterAtomFactory,
     createCausalRepoClientPartition,
     createCausalRepoHistoryClientPartition,
 } from '@casual-simulation/aux-vm';
-import {
-    SyncedRealtimeCausalTree,
-    RemoteAction,
-    RealtimeCausalTreeOptions,
-} from '@casual-simulation/causal-trees';
-import { SigningCryptoImpl } from '@casual-simulation/crypto';
-import { CausalTreeStore } from '@casual-simulation/causal-trees';
-import {
-    createRemoteCausalTreePartitionFactory,
-    RemoteCausalTreePartitionOptions,
-    RemoteCausalTreePartitionImpl,
-} from '../partitions/RemoteCausalTreePartition';
 import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartitionFactory';
 
-export interface RemoteAuxChannelOptions extends AuxChannelOptions {
-    partitionOptions?: RemoteCausalTreePartitionOptions;
-}
+export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
 export class RemoteAuxChannel extends BaseAuxChannel {
-    protected _treeManager: CausalTreeManager;
-    protected _socketManager: SocketManager;
-    protected _partitionOptions: RemoteCausalTreePartitionOptions;
-
     constructor(
         user: AuxUser,
         config: AuxConfig,
         options: RemoteAuxChannelOptions
     ) {
         super(user, config, options);
-        this._partitionOptions = {
-            ...(options.partitionOptions || {
-                defaultHost: null,
-            }),
-            treeOptions: {
-                filter: filterAtomFactory(() => this.helper),
-            },
-        };
-        //  {
-        //     defaultHost: defaultHost,
-        //     store: options.store,
-        //     crypto: options.crypto,
-        //     treeOptions: {
-        //         filter: filterAtomFactory(() => this.helper),
-        //     },
-        // };
     }
 
     protected async _createPartition(
@@ -79,10 +31,6 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     ): Promise<AuxPartition> {
         return await createAuxPartition(
             config,
-            createRemoteCausalTreePartitionFactory(
-                this._partitionOptions,
-                this.user
-            ),
             createMemoryPartition,
             config => createCausalRepoPartition(config, this.user),
             config => createRemoteCausalRepoPartition(config, this.user),

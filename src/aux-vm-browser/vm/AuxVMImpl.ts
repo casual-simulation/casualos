@@ -1,4 +1,4 @@
-import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer } from 'comlink';
 import {
@@ -17,7 +17,6 @@ import {
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
-    StoredCausalTree,
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,

@@ -6,11 +6,9 @@ import {
 } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
-    RealtimeChannelInfo,
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,
-    CausalTreeStore,
     DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
@@ -35,7 +33,8 @@ import {
 } from '@casual-simulation/aux-vm-node';
 import Stripe from 'stripe';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import { StripeFactory } from './CheckoutModule';
+
+export type StripeFactory = (key: string) => Stripe;
 
 /**
  * Defines an module that adds Github-related functionality.

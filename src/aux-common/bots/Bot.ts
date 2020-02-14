@@ -47,6 +47,11 @@ export interface Bot {
     tags: BotTags;
 }
 
+export interface UpdatedBot {
+    bot: Bot;
+    tags: string[];
+}
+
 /**
  * The possible bot types.
  *
