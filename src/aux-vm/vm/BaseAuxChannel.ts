@@ -9,10 +9,6 @@ import {
     convertToCopiableValue,
     SandboxLibrary,
     Sandbox,
-    botUpdated,
-    tagsOnBot,
-    ON_ACTION_ACTION_NAME,
-    BotTags,
     BotsState,
     BOT_SPACE_TAG,
 } from '@casual-simulation/aux-common';
@@ -273,7 +269,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async setUser(user: AuxUser): Promise<void> {
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
+        for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.setUser) {
                 await partition.setUser(user);
             }
@@ -302,7 +298,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     async forkAux(newId: string): Promise<any> {}
 
     async setGrant(grant: string): Promise<void> {
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
+        for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.setGrant) {
                 await partition.setGrant(grant);
             }
@@ -344,7 +340,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * @param events The events.
      */
     protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
+        for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.sendRemoteEvents) {
                 await partition.sendRemoteEvents(events);
             }
@@ -376,7 +372,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._sendRemoteEvents(e);
             })
         );
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
+        for (let [, partition] of iteratePartitions(this._partitions)) {
             this._registerStateSubscriptionsForPartition(partition);
         }
     }

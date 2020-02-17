@@ -1,14 +1,12 @@
-import { createBot, saveFile, loadFile } from '@casual-simulation/aux-common';
+import { saveFile, loadFile } from '@casual-simulation/aux-common';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
-import { ADMIN_ROLE } from '@casual-simulation/causal-trees';
-import { Subscription, Subject } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
-import uuid from 'uuid/v4';
+import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import fs from 'fs';
 import { FilesModule2 } from './FilesModule2';
 import mockFs from 'mock-fs';
-
+import uuid from 'uuid/v4';
 let dateNowMock = (Date.now = jest.fn());
 
 console.log = jest.fn();

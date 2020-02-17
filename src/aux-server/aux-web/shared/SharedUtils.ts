@@ -1,4 +1,4 @@
-import { AuxObject, Bot, AuxCausalTree } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import Bowser from 'bowser';
 

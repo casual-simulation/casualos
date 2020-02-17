@@ -1,47 +1,24 @@
 import {
-    botAdded,
-    AuxCausalTree,
-    createBot,
-    backupToGithub,
-    backupAsDownload,
-    download,
     checkoutSubmitted,
     LocalActions,
     toast,
     finishCheckout,
-    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    AuxChannelManager,
-    AuxLoadedChannel,
-    NodeSimulation,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    storedTree,
-    site,
-    RealtimeChannelInfo,
     DeviceInfo,
-    ADMIN_ROLE,
-    RemoteAction,
-    remote,
     deviceInfo,
 } from '@casual-simulation/causal-trees';
-import { Subscription, Subject } from 'rxjs';
-import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
-import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
-import { take, flatMap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
+import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
 import { CheckoutModule2 } from './CheckoutModule2';
-import { TestChannelManager, createChannel } from './test/TestChannelManager';
 import {
     CausalRepoClient,
-    MemoryConnectionClient,
     MemoryCausalRepoStore,
     MemoryStageStore,
 } from '@casual-simulation/causal-trees/core2';
@@ -109,8 +86,6 @@ describe('CheckoutModule2', () => {
             'processing',
             'processing'
         );
-
-        // manager = new TestChannelManager();
 
         create = jest.fn();
         api = {

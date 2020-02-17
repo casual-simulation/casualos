@@ -1,10 +1,5 @@
-import { BaseAuxChannel, filterAtom } from './BaseAuxChannel';
+import { BaseAuxChannel } from './BaseAuxChannel';
 import {
-    RealtimeCausalTree,
-    LocalRealtimeCausalTree,
-    storedTree,
-    site,
-    AuthorizationMessage,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
@@ -12,23 +7,10 @@ import {
     DeviceAction,
     remote,
     DeviceInfo,
-    ADMIN_ROLE,
-    SERVER_ROLE,
-    RealtimeCausalTreeOptions,
-    atom,
-    atomId,
 } from '@casual-simulation/causal-trees';
 import {
-    AuxCausalTree,
-    GLOBALS_BOT_ID,
     createBot,
     botAdded,
-    botRemoved,
-    bot,
-    del,
-    tag,
-    value,
-    DEFAULT_USER_DELETION_TIME,
     browseHistory,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
@@ -38,15 +20,13 @@ import {
     PartitionConfig,
     MemoryPartitionConfig,
 } from '../partitions/AuxPartitionConfig';
-import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
+import { createAuxPartition } from '../partitions/AuxPartitionFactories';
 import uuid from 'uuid/v4';
 import { createMemoryPartition } from '../partitions';
 import merge from 'lodash/merge';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
-
-const nowMock = (Date.now = jest.fn());
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -262,7 +242,7 @@ describe('BaseAuxChannel', () => {
                     versionHash: 'hash',
                 },
                 partitions: {
-                    shared: {
+                    shared: <any>{
                         type: 'remote_causal_tree',
                         id: 'auxId',
                         host: 'host',
@@ -532,10 +512,6 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
-        return createAuxPartition(
-            config,
-            createLocalCausalTreePartitionFactory({}, this.user, this._device),
-            cfg => createMemoryPartition(cfg)
-        );
+        return createAuxPartition(config, cfg => createMemoryPartition(cfg));
     }
 }

@@ -1,13 +1,7 @@
-import {
-    AuxModule2,
-    AuxChannel,
-    Simulation,
-    AuxUser,
-} from '@casual-simulation/aux-vm';
+import { AuxModule2, Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     DeviceInfo,
-    remote,
     SESSION_ID_CLAIM,
     DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
@@ -18,19 +12,12 @@ import {
     CheckoutSubmittedAction,
     ON_CHECKOUT_ACTION_NAME,
     FinishCheckoutAction,
-    calculateStringTagValue,
     BotTags,
     action,
     ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
     ON_PAYMENT_FAILED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    isAdminChannel,
-    AuxChannelManager,
-    nodeSimulationWithConfig,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import Stripe from 'stripe';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 

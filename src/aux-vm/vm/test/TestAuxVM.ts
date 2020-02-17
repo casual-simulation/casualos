@@ -4,26 +4,17 @@ import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
-    AuxCausalTree,
     LocalActions,
     BotAction,
     PrecalculatedBotsState,
     BotsState,
     createCalculationContext,
     merge,
-    AuxObject,
     searchBotState,
-    AuxOp,
     getActiveObjects,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
-import {
-    storedTree,
-    site,
-    RealtimeCausalTree,
-    StatusUpdate,
-    DeviceAction,
-} from '@casual-simulation/causal-trees';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import values from 'lodash/values';
 import union from 'lodash/union';
@@ -86,7 +77,7 @@ export class TestAuxVM implements AuxVM {
             for (let event of events) {
                 if (event.type === 'add_bot') {
                     this.state[event.bot.id] = event.bot;
-                    added.push(<AuxObject>event.bot);
+                    added.push(event.bot);
                 } else if (event.type === 'remove_bot') {
                     delete this.state[event.id];
                     removed.push(event.id);
@@ -96,7 +87,7 @@ export class TestAuxVM implements AuxVM {
                         event.update
                     );
                     updated.push({
-                        bot: <AuxObject>this.state[event.id],
+                        bot: this.state[event.id],
                         tags: Object.keys(event.update.tags),
                     });
                 }
@@ -131,17 +122,17 @@ export class TestAuxVM implements AuxVM {
     async forkAux(newId: string): Promise<void> {}
 
     async exportBots(botIds: string[]): Promise<StoredAux> {
-        return storedTree(site(1));
+        return {
+            version: 1,
+            state: {},
+        };
     }
 
     async export(): Promise<StoredAux> {
-        return storedTree(site(1));
-    }
-
-    async getRealtimeTree(): Promise<
-        Remote<RealtimeCausalTree<AuxCausalTree>>
-    > {
-        return null;
+        return {
+            version: 1,
+            state: {},
+        };
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {

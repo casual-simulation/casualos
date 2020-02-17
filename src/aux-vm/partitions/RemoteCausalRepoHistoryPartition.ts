@@ -1,67 +1,26 @@
 import {
     User,
-    RealtimeCausalTree,
     StatusUpdate,
-    DeviceAction,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    USER_ROLE,
     RemoteAction,
     Action,
 } from '@casual-simulation/causal-trees';
 import {
-    Weave,
-    WeaveResult,
-    atom,
-    atomId,
-    Atom,
-    SiteStatus,
-    newSite,
-    createAtom,
-    updateSite,
-    WeaveNode,
-    iterateCausalGroup,
-    addedAtom,
-    insertAtom,
-    addedAtoms,
-    removedAtoms,
     CausalRepoClient,
     CausalRepoCommit,
 } from '@casual-simulation/causal-trees/core2';
-import {
-    AuxCausalTree,
-    auxTree,
-    applyEvents,
-    BotStateUpdates,
-    applyAtoms,
-} from '@casual-simulation/aux-common/aux-format-2';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
-import { filter, map, switchMap, startWith } from 'rxjs/operators';
+import { Observable, Subscription, Subject } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
     BotsState,
     UpdatedBot,
-    merge,
-    BotTags,
-    hasValue,
     getActiveObjects,
-    AddBotAction,
-    RemoveBotAction,
-    UpdateBotAction,
-    breakIntoIndividualEvents,
-    MarkHistoryAction,
-    loadSpace,
-    BrowseHistoryAction,
     createBot,
     RestoreHistoryMarkAction,
 } from '@casual-simulation/aux-common';
-import flatMap from 'lodash/flatMap';
 import {
     PartitionConfig,
-    RemoteCausalRepoPartitionConfig,
-    CausalRepoClientPartitionConfig,
     CausalRepoHistoryClientPartitionConfig,
 } from './AuxPartitionConfig';
 import { RemoteCausalRepoPartition } from './AuxPartition';

@@ -12,14 +12,7 @@ import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
-import {
-    getChannelBotById,
-    getChannelConnectedDevices,
-    getConnectedDevices,
-    ON_WEBHOOK_ACTION_NAME,
-    merge,
-} from '@casual-simulation/aux-common';
-import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
+import { ON_WEBHOOK_ACTION_NAME, merge } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
@@ -36,27 +29,16 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    SERVER_ROLE,
     deviceInfoFromUser,
-    RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
 import {
-    DeviceManagerImpl,
-    NullDeviceAuthenticator,
-    NullChannelAuthorizer,
-    ChannelManager,
     CausalRepoServer,
     MultiConnectionServer,
     ConnectionBridge,
     FixedConnectionServer,
 } from '@casual-simulation/causal-tree-server';
-import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUser, getTreeName, Simulation } from '@casual-simulation/aux-vm';
+import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import {
-    AuxChannelManagerImpl,
-    AuxLoadedChannel,
-    AdminModule,
-    AuxChannelManager,
     AuxCausalRepoManager,
     AdminModule2,
     nodeSimulationForBranch,
@@ -71,11 +53,8 @@ import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
 import { DirectoryClient } from './directory/DirectoryClient';
-import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
 import Stripe from 'stripe';
-import csp from 'helmet-csp';
-import { CspOptions } from 'helmet-csp/dist/lib/types';
 import { RedisStageStore } from './redis/RedisStageStore';
 import {
     MemoryStageStore,
@@ -104,7 +83,6 @@ export class ClientServer {
     private _player: ClientConfig;
     private _config: Config;
     private _cacheExpireSeconds: number;
-    private _channelManager: ChannelManager;
 
     get app() {
         return this._app;
@@ -114,14 +92,12 @@ export class ClientServer {
         config: Config,
         player: ClientConfig,
         redisClient: RedisClient,
-        channelManager: ChannelManager,
         redisConfig: RedisConfig
     ) {
         this._app = express();
         this._config = config;
         this._player = player;
         this._redisClient = redisClient;
-        this._channelManager = channelManager;
         this._hgetall = redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
             : null;
@@ -206,7 +182,7 @@ export class ClientServer {
                         this._redisClient &&
                         this._shouldCache(contentType, cacheControl)
                     ) {
-                        if (this._shouldOptimize(req, contentType)) {
+                        if (this._shouldOptimize(contentType)) {
                             console.log('[Server] Optimizing image...');
                             const beforeSize = data.length;
                             const beforeContentType = contentType;
@@ -369,7 +345,7 @@ export class ClientServer {
         }
     }
 
-    private _shouldOptimize(req: Request, contentType: string) {
+    private _shouldOptimize(contentType: string) {
         if (contentType === 'image/webp') {
             return false;
         }
@@ -398,8 +374,6 @@ export class Server {
     private _client: ClientServer;
     private _mongoClient: MongoClient;
     private _redisClient: RedisClient;
-    private _channelManager: AuxChannelManager;
-    private _adminChannel: AuxLoadedChannel;
     private _directory: DirectoryService;
     private _directoryStore: DirectoryStore;
     private _directoryClient: DirectoryClient;
@@ -448,7 +422,6 @@ export class Server {
             this._config,
             this._config.player,
             this._redisClient,
-            this._channelManager,
             this._config.redis
         );
         this._client.configure();
@@ -501,57 +474,14 @@ export class Server {
         );
     }
 
-    private _applyCSP() {
-        const normalCspOptions: CspOptions = {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
-                styleSrc: ['*', "'unsafe-inline'"],
-                objectSrc: ['*'],
-                fontSrc: ['*'],
-                imgSrc: ['*', 'data:', 'blob:'],
-                mediaSrc: ['*'],
-                frameSrc: ['*'],
-                connectSrc: ['*'],
-                workerSrc: ["'self'", 'blob:'],
-                upgradeInsecureRequests: true,
-                sandbox: false,
-            },
-        };
-        const normalCSP = csp(normalCspOptions);
-        const kindleCSP = csp(
-            merge(normalCspOptions, {
-                directives: {
-                    // BUG: the 'self' directive doesn't work for scripts loaded
-                    // from a sandboxed iframe on the Kindle Silk Browser
-                    scriptSrc: ['*', 'blob:', "'unsafe-eval'"],
-                },
-            })
-        );
-        this._app.use((req, res, next) => {
-            const agent = useragent.parse(req.headers['user-agent']);
-            if (agent.device.family === 'Kindle') {
-                kindleCSP(req, res, next);
-            } else {
-                normalCSP(req, res, next);
-            }
-        });
-    }
-
     private async _handleWebhook(req: Request, res: Response) {
         const id = req.query.auxUniverse;
         if (!id) {
             res.sendStatus(400);
             return;
         }
-        let handled = await this._handleV1Webhook(req, res, id);
 
-        if (handled) {
-            res.sendStatus(204);
-            return;
-        }
-
-        handled = await this._handleV2Webhook(req, res, id);
+        let handled = await this._handleV2Webhook(req, id);
         if (handled) {
             res.sendStatus(204);
             return;
@@ -560,36 +490,7 @@ export class Server {
         res.sendStatus(404);
     }
 
-    private async _handleV1Webhook(
-        req: Request,
-        res: Response,
-        id: string
-    ): Promise<boolean> {
-        const info: RealtimeChannelInfo = {
-            id: `aux-${id}`,
-            type: 'aux',
-        };
-        const hasChannel = await this._channelManager.hasChannel(info);
-
-        if (!hasChannel) {
-            return false;
-        }
-
-        const channel = await this._channelManager.loadChannel(info);
-        try {
-            await this._sendWebhook(req, channel.simulation);
-        } finally {
-            channel.subscription.unsubscribe();
-        }
-
-        return true;
-    }
-
-    private async _handleV2Webhook(
-        req: Request,
-        res: Response,
-        id: string
-    ): Promise<boolean> {
+    private async _handleV2Webhook(req: Request, id: string): Promise<boolean> {
         const exists = await this._webhooksClient
             .branchInfo(id)
             .pipe(

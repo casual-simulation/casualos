@@ -1,29 +1,15 @@
-import {
-    NodeAuxChannel,
-    AuxLoadedChannel,
-    nodeSimulationWithConfig,
-} from '@casual-simulation/aux-vm-node';
-import {
-    botAdded,
-    createBot,
-    AuxCausalTree,
-    webhook,
-} from '@casual-simulation/aux-common';
+import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
+import { webhook } from '@casual-simulation/aux-common';
 import {
     DeviceInfo,
-    RealtimeChannelInfo,
-    storedTree,
-    site,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { WebhooksModule2 } from './WebhooksModule2';
 import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
-import { TestChannelManager, createChannel } from './test/TestChannelManager';
 
 jest.mock('axios');
 
@@ -33,7 +19,6 @@ describe('WebhooksModule2', () => {
     let simulation: Simulation;
     let user: AuxUser;
     let device: DeviceInfo;
-    let serverDevice: DeviceInfo;
     let config: AuxConfig;
     let subject: WebhooksModule2;
     let sub: Subscription;
@@ -67,14 +52,6 @@ describe('WebhooksModule2', () => {
                 [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
-        };
-        serverDevice = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [SERVER_ROLE],
         };
 
         simulation = nodeSimulationWithConfig(user, 'test', config);

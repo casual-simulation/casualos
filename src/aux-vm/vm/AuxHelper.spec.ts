@@ -1,6 +1,4 @@
 import {
-    AuxCausalTree,
-    AuxObject,
     BotAction,
     botAdded,
     createBot,
@@ -11,31 +9,22 @@ import {
     toast,
     Sandbox,
     addState,
-    updateBot,
     botRemoved,
-    BotActions,
     USERS_DIMENSION,
-    BotsState,
     runScript,
     ON_RUN_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
 import {
-    storedTree,
-    site,
-    USERNAME_CLAIM,
     DeviceAction,
     RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import {
-    createLocalCausalTreePartitionFactory,
-    createMemoryPartition,
-} from '..';
+import { createMemoryPartition } from '../partitions/MemoryPartition';
 import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
+import { MemoryPartition } from '../partitions/AuxPartition';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -46,26 +35,21 @@ console.error = jest.fn();
 
 describe('AuxHelper', () => {
     let userId: string = 'user';
-    let tree: AuxCausalTree;
-    let vm: TestAuxVM;
+    let memory: MemoryPartition;
     let helper: AuxHelper;
 
     beforeEach(async () => {
         uuidMock.mockReset();
-        tree = new AuxCausalTree(storedTree(site(1)));
+        memory = createMemoryPartition({
+            type: 'memory',
+            initialState: {},
+        });
         helper = new AuxHelper({
-            shared: await createLocalCausalTreePartitionFactory({}, null, null)(
-                {
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'testAux',
-                }
-            ),
+            shared: memory,
         });
         helper.userId = userId;
 
-        await tree.root();
-        await tree.bot('user');
+        await memory.applyEvents([botAdded(createBot('user'))]);
     });
 
     it('should use the given sandbox factory', async () => {
@@ -76,18 +60,10 @@ describe('AuxHelper', () => {
         };
         helper = new AuxHelper(
             {
-                shared: await createLocalCausalTreePartitionFactory(
-                    {},
-                    null,
-                    null
-                )({
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'testAux',
-                }),
+                shared: memory,
             },
             undefined,
-            lib => sandbox
+            () => sandbox
         );
         helper.userId = userId;
 
@@ -419,7 +395,7 @@ describe('AuxHelper', () => {
 
     describe('userBot', () => {
         it('should return the bot that has the same ID as the user ID', async () => {
-            const bot = tree.value['user'];
+            const bot = memory.state['user'];
             const user = helper.userBot;
 
             expect(user).toEqual({
@@ -431,19 +407,9 @@ describe('AuxHelper', () => {
 
     describe('objects', () => {
         it('should return active objects', async () => {
-            const { added: bot1 } = await tree.bot('test1');
-            const { added: bot2 } = await tree.bot('test2');
-
             const objs = helper.objects;
 
-            expect(objs).toEqual([
-                {
-                    ...tree.value['test2'],
-                    space: 'shared',
-                },
-                { ...tree.value['test1'], space: 'shared' },
-                helper.userBot,
-            ]);
+            expect(objs).toEqual([helper.userBot]);
         });
     });
 
@@ -452,15 +418,7 @@ describe('AuxHelper', () => {
             it('should return true when in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        shared: await createLocalCausalTreePartitionFactory(
-                            {},
-                            null,
-                            null
-                        )({
-                            type: 'causal_tree',
-                            tree: tree,
-                            id: 'testAux',
-                        }),
+                        shared: memory,
                     },
                     buildFormulaLibraryOptions({
                         isBuilder: true,
@@ -479,15 +437,7 @@ describe('AuxHelper', () => {
             it('should return false when not in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        shared: await createLocalCausalTreePartitionFactory(
-                            {},
-                            null,
-                            null
-                        )({
-                            type: 'causal_tree',
-                            tree: tree,
-                            id: 'testAux',
-                        }),
+                        shared: memory,
                     },
                     buildFormulaLibraryOptions({
                         isBuilder: false,
@@ -505,15 +455,7 @@ describe('AuxHelper', () => {
 
             it('should default to not in aux builder or player', async () => {
                 helper = new AuxHelper({
-                    shared: await createLocalCausalTreePartitionFactory(
-                        {},
-                        null,
-                        null
-                    )({
-                        type: 'causal_tree',
-                        tree: tree,
-                        id: 'testAux',
-                    }),
+                    shared: memory,
                 });
                 helper.userId = userId;
 
@@ -567,15 +509,7 @@ describe('AuxHelper', () => {
         it('should support player.inSheet() in actions', async () => {
             helper = new AuxHelper(
                 {
-                    shared: await createLocalCausalTreePartitionFactory(
-                        {},
-                        null,
-                        null
-                    )({
-                        type: 'causal_tree',
-                        tree: tree,
-                        id: 'testAux',
-                    }),
+                    shared: memory,
                 },
                 buildFormulaLibraryOptions({
                     isBuilder: true,
@@ -597,7 +531,16 @@ describe('AuxHelper', () => {
 
         it('should emit local events from actions', async () => {
             let events: LocalActions[] = [];
-            helper.localEvents.subscribe(e => events.push(...e));
+            helper.localEvents.subscribe(e =>
+                events.push(
+                    ...e.filter(
+                        e =>
+                            e.type !== 'add_bot' &&
+                            e.type !== 'update_bot' &&
+                            e.type !== 'remove_bot'
+                    )
+                )
+            );
 
             await helper.createBot('test', {
                 action: '@player.toast("test")',
@@ -1227,15 +1170,7 @@ describe('AuxHelper', () => {
         it('should support player.inSheet()', async () => {
             helper = new AuxHelper(
                 {
-                    shared: await createLocalCausalTreePartitionFactory(
-                        {},
-                        null,
-                        null
-                    )({
-                        type: 'causal_tree',
-                        tree: tree,
-                        id: 'testAux',
-                    }),
+                    shared: memory,
                 },
                 buildFormulaLibraryOptions({
                     isBuilder: true,
@@ -1279,15 +1214,7 @@ describe('AuxHelper', () => {
         it('should support player.inSheet()', async () => {
             helper = new AuxHelper(
                 {
-                    shared: await createLocalCausalTreePartitionFactory(
-                        {},
-                        null,
-                        null
-                    )({
-                        type: 'causal_tree',
-                        tree: tree,
-                        id: 'testAux',
-                    }),
+                    shared: memory,
                 },
                 buildFormulaLibraryOptions({
                     isBuilder: true,
@@ -1312,21 +1239,15 @@ describe('AuxHelper', () => {
 
     describe('createOrUpdateUserBot()', () => {
         it('should create a bot for the user', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
             helper = new AuxHelper({
-                shared: await createLocalCausalTreePartitionFactory(
-                    {},
-                    null,
-                    null
-                )({
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'testAux',
-                }),
+                shared: memory,
             });
             helper.userId = userId;
 
-            await tree.root();
             await helper.createOrUpdateUserBot(
                 {
                     id: 'testUser',
@@ -1347,7 +1268,10 @@ describe('AuxHelper', () => {
         });
 
         it('should put the bot in the tempLocal partition if it is available', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
             helper = new AuxHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
@@ -1360,7 +1284,6 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await tree.root();
             await helper.createOrUpdateUserBot(
                 {
                     id: 'testUser',
@@ -1384,21 +1307,14 @@ describe('AuxHelper', () => {
 
     describe('createOrUpdateUserDimensionBot()', () => {
         it('should create a dimension bot for all the users', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
             helper = new AuxHelper({
-                shared: await createLocalCausalTreePartitionFactory(
-                    {},
-                    null,
-                    null
-                )({
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'testAux',
-                }),
+                shared: memory,
             });
             helper.userId = userId;
-
-            await tree.root();
 
             uuidMock.mockReturnValueOnce('dimension');
             await helper.createOrUpdateUserDimensionBot();
@@ -1413,21 +1329,15 @@ describe('AuxHelper', () => {
         });
 
         it('should not create a dimension bot for all the users if one already exists', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
             helper = new AuxHelper({
-                shared: await createLocalCausalTreePartitionFactory(
-                    {},
-                    null,
-                    null
-                )({
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'testAux',
-                }),
+                shared: memory,
             });
             helper.userId = userId;
 
-            await tree.root();
             await helper.createBot('userDimension', {
                 auxDimensionConfig: USERS_DIMENSION,
             });

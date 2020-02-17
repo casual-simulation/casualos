@@ -1,5 +1,4 @@
 import {
-    AuxCausalTree,
     botAdded,
     createBot,
     shell,
@@ -7,25 +6,17 @@ import {
     action,
 } from '@casual-simulation/aux-common';
 import {
-    storedTree,
-    site,
     DeviceInfo,
     USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    ADMIN_ROLE,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    RemoteAction,
-    remote,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
-import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AdminModule2 } from './AdminModule2';
 import { Subscription } from 'rxjs';
 import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
-import { NodeSimulation } from '../managers/NodeSimulation';
 import { nodeSimulationForLocalRepo } from '../managers/NodeSimulationFactories';
 
 console.error = jest.fn();
@@ -40,8 +31,6 @@ describe('AdminModule2', () => {
     let simulation: Simulation;
     let user: AuxUser;
     let device: DeviceInfo;
-    let serverDevice: DeviceInfo;
-    let config: AuxConfig;
     let subject: AdminModule2;
     let sub: Subscription;
 
@@ -53,19 +42,6 @@ describe('AdminModule2', () => {
             username: 'username',
             token: 'token',
         };
-        config = {
-            config: {
-                isBuilder: false,
-                isPlayer: false,
-                versionHash: 'abc',
-                version: 'v1.0.0',
-            },
-            partitions: {
-                shared: {
-                    type: 'causal_repo',
-                },
-            },
-        };
         device = {
             claims: {
                 [USERNAME_CLAIM]: 'username',
@@ -73,14 +49,6 @@ describe('AdminModule2', () => {
                 [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
-        };
-        serverDevice = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [SERVER_ROLE],
         };
 
         simulation = nodeSimulationForLocalRepo(user, 'simulationId');

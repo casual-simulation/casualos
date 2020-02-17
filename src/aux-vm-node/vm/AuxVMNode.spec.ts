@@ -1,9 +1,6 @@
 import { AuxVMNode } from './AuxVMNode';
-import { AuxCausalTree, GLOBALS_BOT_ID } from '@casual-simulation/aux-common';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import {
-    storedTree,
-    site,
     DeviceInfo,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
@@ -11,19 +8,25 @@ import {
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from './NodeAuxChannel';
+import {
+    MemoryPartition,
+    createMemoryPartition,
+} from '@casual-simulation/aux-vm/partitions';
 
 console.log = jest.fn();
 
 describe('AuxVMNode', () => {
-    let tree: AuxCausalTree;
+    let memory: MemoryPartition;
     let config: AuxConfig;
     let user: AuxUser;
     let device: DeviceInfo;
     let vm: AuxVMNode;
     let channel: NodeAuxChannel;
     beforeEach(async () => {
-        tree = new AuxCausalTree(storedTree(site(1)));
-        await tree.root();
+        memory = createMemoryPartition({
+            type: 'memory',
+            initialState: {},
+        });
 
         config = {
             config: {
@@ -34,9 +37,8 @@ describe('AuxVMNode', () => {
             },
             partitions: {
                 shared: {
-                    type: 'causal_tree',
-                    tree: tree,
-                    id: 'id',
+                    type: 'memory',
+                    partition: memory,
                 },
             },
         };
@@ -56,14 +58,14 @@ describe('AuxVMNode', () => {
             roles: [SERVER_ROLE],
         };
 
-        channel = new NodeAuxChannel(tree, user, device, config);
+        channel = new NodeAuxChannel(user, device, config);
         vm = new AuxVMNode(channel);
     });
 
-    it('initialize the channel', async () => {
+    it('should initialize the channel', async () => {
         await vm.init();
 
-        const globals = tree.value[GLOBALS_BOT_ID];
-        expect(globals).toBeTruthy();
+        const bot = memory.state['server'];
+        expect(bot).toBeTruthy();
     });
 });

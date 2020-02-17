@@ -58,17 +58,14 @@ import {
 } from '../BotCalculations';
 import {
     Bot,
-    PartialBot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
-    DEFAULT_WORKSPACE_HEIGHT,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
-import { AuxBot } from '../../aux-format/AuxState';
 import { types } from 'util';
 
 export function botCalculationContextTests(
@@ -2677,7 +2674,7 @@ export function botCalculationContextTests(
         });
 
         it('should remove the metadata property from bots', () => {
-            const obj: AuxBot = {
+            const obj: any = {
                 id: 'test',
                 metadata: {
                     ref: null,

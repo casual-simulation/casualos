@@ -1,25 +1,13 @@
-import { AuxModule2, AuxChannel, Simulation } from '@casual-simulation/aux-vm';
+import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
-    RealtimeChannelInfo,
     DeviceInfo,
-    remote,
     SESSION_ID_CLAIM,
-    GUEST_ROLE,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
-import {
-    calculateBotValue,
-    AuxBot,
-    ShellAction,
-    getChannelBotById,
-    LocalActions,
-    action,
-} from '@casual-simulation/aux-common';
-import { NodeAuxChannel } from '../vm/NodeAuxChannel';
+import { ShellAction, LocalActions } from '@casual-simulation/aux-common';
 import { exec } from 'child_process';
-import { isAdminChannel } from './ModuleHelpers';
 
 /**
  * Defines an AuxModule that adds Admin-related functionality to the module.
@@ -53,7 +41,6 @@ export class AdminModule2 implements AuxModule2 {
         console.log('[AdminModule] Device Connected!');
 
         const userId = device.claims[SESSION_ID_CLAIM];
-        const username = device.claims[USERNAME_CLAIM];
         if (!getUserBot()) {
             return;
         }
