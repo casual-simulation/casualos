@@ -98,10 +98,10 @@ describe('AuxChannelManager', () => {
         };
         const returned = await manager.loadChannel(info);
 
-        // The NodeAuxChannel should create the globals bot
+        // The NodeAuxChannel should create the user bot
         // during initialization
-        const globals = returned.tree.value[GLOBALS_BOT_ID];
-        expect(globals).toBeTruthy();
+        const user = returned.tree.value['userId'];
+        expect(user).toBeTruthy();
     });
 
     it('should reuse the created aux channel', async () => {

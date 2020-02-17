@@ -1,5 +1,10 @@
 import { MemoryPartition } from './AuxPartition';
-import { MemoryPartitionConfig, PartitionConfig } from './AuxPartitionConfig';
+import {
+    MemoryPartitionConfig,
+    PartitionConfig,
+    MemoryPartitionInstanceConfig,
+    MemoryPartitionStateConfig,
+} from './AuxPartitionConfig';
 import {
     BotsState,
     BotAction,
@@ -37,7 +42,11 @@ export function createMemoryPartition(
     config: PartitionConfig
 ): MemoryPartition {
     if (config.type === 'memory') {
-        return new MemoryPartitionImpl(config);
+        if ('initialState' in config) {
+            return new MemoryPartitionImpl(config);
+        } else {
+            return config.partition;
+        }
     }
     return undefined;
 }
@@ -78,7 +87,7 @@ class MemoryPartitionImpl implements MemoryPartition {
         return this._onStatusUpdated;
     }
 
-    constructor(config: MemoryPartitionConfig) {
+    constructor(config: MemoryPartitionStateConfig) {
         this.private = config.private || false;
         this.state = config.initialState;
     }

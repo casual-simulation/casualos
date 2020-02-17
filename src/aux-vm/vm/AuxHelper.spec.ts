@@ -429,20 +429,6 @@ describe('AuxHelper', () => {
         });
     });
 
-    describe('globalsBot', () => {
-        it('should return the bot with the globals ID', async () => {
-            await tree.bot(GLOBALS_BOT_ID);
-
-            const bot = tree.value[GLOBALS_BOT_ID];
-            const globals = helper.globalsBot;
-
-            expect(globals).toEqual({
-                ...bot,
-                space: 'shared',
-            });
-        });
-    });
-
     describe('objects', () => {
         it('should return active objects', async () => {
             const { added: bot1 } = await tree.bot('test1');
@@ -896,8 +882,8 @@ describe('AuxHelper', () => {
         });
 
         describe('onUniverseAction()', () => {
-            it('should emit an onUniverseAction() call to the globals bot', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+            it('should shout an onUniverseAction() call', async () => {
+                await helper.createBot('abc', {
                     onUniverseAction: '@setTag(this, "hit", true)',
                 });
 
@@ -906,8 +892,8 @@ describe('AuxHelper', () => {
                     url: 'test',
                 });
 
-                expect(helper.globalsBot).toMatchObject({
-                    id: GLOBALS_BOT_ID,
+                expect(helper.botsState['abc']).toMatchObject({
+                    id: 'abc',
                     tags: {
                         onUniverseAction: '@setTag(this, "hit", true)',
                         hit: true,
@@ -916,7 +902,7 @@ describe('AuxHelper', () => {
             });
 
             it('should skip actions that onUniverseAction() rejects', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: '@action.reject(that.action)',
                 });
 
@@ -939,7 +925,7 @@ describe('AuxHelper', () => {
             });
 
             it('should allow rejecting rejections', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: '@action.reject(that.action)',
                 });
 
@@ -972,7 +958,7 @@ describe('AuxHelper', () => {
             it.each(falsyTests)(
                 'should allow actions that onUniverseAction() returns %s for',
                 async val => {
-                    await helper.createBot(GLOBALS_BOT_ID, {
+                    await helper.createBot('abc', {
                         onUniverseAction: `@return ${val};`,
                     });
 
@@ -996,7 +982,7 @@ describe('AuxHelper', () => {
             );
 
             it('should allow actions that onUniverseAction() returns true for', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: '@return true',
                 });
 
@@ -1019,7 +1005,7 @@ describe('AuxHelper', () => {
             });
 
             it('should allow actions when onUniverseAction() errors out', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: '@throw new Error("Error")',
                 });
 
@@ -1042,7 +1028,7 @@ describe('AuxHelper', () => {
             });
 
             it('should be able to filter based on action type', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
@@ -1070,7 +1056,7 @@ describe('AuxHelper', () => {
             });
 
             it('should filter actions from inside shouts', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
@@ -1084,8 +1070,8 @@ describe('AuxHelper', () => {
 
                 await helper.transaction(action('test'));
 
-                expect(helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
-                    id: GLOBALS_BOT_ID,
+                expect(helper.botsState['abc']).toMatchObject({
+                    id: 'abc',
                     tags: expect.not.objectContaining({
                         abc: true,
                     }),
@@ -1093,7 +1079,7 @@ describe('AuxHelper', () => {
             });
 
             it('should be able to filter out actions before they are run', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: `@
                         if (that.action.type === 'action') {
                             action.reject(that.action);
@@ -1107,8 +1093,8 @@ describe('AuxHelper', () => {
 
                 await helper.transaction(action('test'));
 
-                expect(helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
-                    id: GLOBALS_BOT_ID,
+                expect(helper.botsState['abc']).toMatchObject({
+                    id: 'abc',
                     tags: expect.not.objectContaining({
                         abc: true,
                     }),
@@ -1116,10 +1102,10 @@ describe('AuxHelper', () => {
             });
 
             it('should allow updates to the onUniverseAction() handler by default', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {});
+                await helper.createBot('abc', {});
 
                 await helper.transaction(
-                    botUpdated(GLOBALS_BOT_ID, {
+                    botUpdated('abc', {
                         tags: {
                             onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
@@ -1131,8 +1117,8 @@ describe('AuxHelper', () => {
                     })
                 );
 
-                expect(helper.globalsBot).toMatchObject({
-                    id: GLOBALS_BOT_ID,
+                expect(helper.botsState['abc']).toMatchObject({
+                    id: 'abc',
                     tags: expect.objectContaining({
                         onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
@@ -1145,10 +1131,10 @@ describe('AuxHelper', () => {
             });
 
             it('should allow the entire update and not just the onUniverseAction() part', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {});
+                await helper.createBot('abc', {});
 
                 await helper.transaction(
-                    botUpdated(GLOBALS_BOT_ID, {
+                    botUpdated('abc', {
                         tags: {
                             onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
@@ -1161,8 +1147,8 @@ describe('AuxHelper', () => {
                     })
                 );
 
-                expect(helper.globalsBot).toMatchObject({
-                    id: GLOBALS_BOT_ID,
+                expect(helper.botsState['abc']).toMatchObject({
+                    id: 'abc',
                     tags: expect.objectContaining({
                         onUniverseAction: `@
                                 if (that.action.type === 'update_bot') {
@@ -1175,12 +1161,12 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should prevent deleting the globals bot by default', async () => {
+            it('should not prevent deleting the globals bot by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(botRemoved(GLOBALS_BOT_ID));
 
-                expect(helper.globalsBot).toBeTruthy();
+                expect(helper.botsState[GLOBALS_BOT_ID]).toBeFalsy();
             });
 
             it('should run once per action event', async () => {
@@ -1188,7 +1174,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test1')
                     .mockReturnValueOnce('test2');
 
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: `@
                         if (that.action.type === 'action') {
                             create(null, {
@@ -1211,7 +1197,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test1')
                     .mockReturnValueOnce('test2');
 
-                await helper.createBot(GLOBALS_BOT_ID, {
+                await helper.createBot('abc', {
                     onUniverseAction: `@
                         if (that.action.type === 'update_bot') {
                             create(null, {
@@ -1224,7 +1210,7 @@ describe('AuxHelper', () => {
                 await helper.createBot('test', {});
 
                 await helper.transaction(
-                    botUpdated(GLOBALS_BOT_ID, {
+                    botUpdated('abc', {
                         tags: {
                             update: 123,
                         },

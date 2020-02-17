@@ -35,11 +35,8 @@ import {
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import { getPolyKey } from '../PolyUtils';
-import axios from 'axios';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
-import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 const gltfPool = getGLTFPool('main');
 
@@ -205,54 +202,12 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
-            } else if (this._subShape === 'poly' && this._address) {
-                this._createPoly();
             } else {
                 this._createCube();
             }
         }
 
         this.onMeshUpdated.invoke(this);
-    }
-
-    private async _createPoly() {
-        this.stroke = null;
-        this._canHaveStroke = false;
-
-        const group = this.bot3D.dimensionGroup;
-        if (!group) {
-            return;
-        }
-        const simulation = group.simulation3D.simulation;
-        if (!simulation) {
-            return;
-        }
-        const apiKey = getPolyKey(simulation);
-        if (!apiKey) {
-            console.warn(
-                '[BotShapeDecorator] Trying to use a poly form but no poly api key is specified.'
-            );
-            return;
-        }
-        const id = this._address;
-        try {
-            const resp = await axios.get(
-                `https://poly.googleapis.com/v1/assets/${id}/?key=${apiKey}`
-            );
-            const asset = resp.data;
-            const format = asset.formats.find(
-                (format: any) => format.formatType === 'GLTF'
-            );
-            if (!!format) {
-                const url = format.root.url;
-                await this._loadGLTF(url, true);
-            }
-        } catch (err) {
-            console.error(
-                '[BotShapeDecorator] Unable to load Poly ' + this._address,
-                err
-            );
-        }
     }
 
     private _createGltf() {

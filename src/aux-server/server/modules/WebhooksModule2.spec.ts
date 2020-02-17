@@ -141,18 +141,13 @@ describe('WebhooksModule2', () => {
                     onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
-                await simulation.helper.updateBot(
-                    simulation.helper.globalsBot,
-                    {
-                        tags: {
-                            onUniverseAction: `@
+                await simulation.helper.createBot('filter', {
+                    onUniverseAction: `@
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }
                         `,
-                        },
-                    }
-                );
+                });
 
                 await simulation.helper.transaction({
                     type: 'device',

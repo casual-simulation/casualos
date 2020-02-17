@@ -158,14 +158,12 @@ describe('AdminModule', () => {
                     testShout: '@setTag(this, "abc", true)',
                 });
 
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        onUniverseAction: `@
-                                if (that.action.type === 'device') {
-                                    action.perform(that.action.event);
-                                }
-                            `,
-                    },
+                await channel.helper.createBot('filter', {
+                    onUniverseAction: `@
+                            if (that.action.type === 'device') {
+                                action.perform(that.action.event);
+                            }
+                        `,
                 });
 
                 await channel.sendEvents([
@@ -189,48 +187,6 @@ describe('AdminModule', () => {
     });
 
     describe('deviceConnected()', () => {
-        it('should set the number of connected devices on the globals bot', async () => {
-            await subject.deviceConnected(info, channel, device);
-
-            let testDevice2: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername2',
-                    [DEVICE_ID_CLAIM]: 'deviceId2',
-                    [SESSION_ID_CLAIM]: 'sessionId2',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(info, channel, testDevice2);
-
-            expect(channel.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 2,
-                },
-            });
-
-            await subject.deviceDisconnected(info, channel, device);
-
-            expect(channel.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 1,
-                },
-            });
-
-            await subject.deviceDisconnected(info, channel, testDevice2);
-
-            // Wait for the async operations to finish
-            await waitAsync();
-
-            expect(channel.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 0,
-                },
-            });
-        });
-
         it('should set the auxPlayerActive tag based on the session ID', async () => {
             await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
 

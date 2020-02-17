@@ -499,14 +499,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         context: BotSandboxContext,
         event: BotAction
     ): BotAction[] {
-        if (!this.globalsBot) {
-            return [];
-        }
-
         try {
             const [actions, results] = calculateActionResults(
                 this.botsState,
-                action(ON_ACTION_ACTION_NAME, [GLOBALS_BOT_ID], this.userId, {
+                action(ON_ACTION_ACTION_NAME, null, this.userId, {
                     action: event,
                 }),
                 undefined,
@@ -514,20 +510,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 false
             );
 
-            if (results.length > 0) {
-                return actions;
-            }
-
-            let defaultActions: BotAction[] = [];
-
-            // default handler
-            if (event.type === 'remove_bot') {
-                if (event.id === GLOBALS_BOT_ID) {
-                    defaultActions.push(reject(event));
-                }
-            }
-
-            return defaultActions;
+            return actions;
         } catch (err) {
             console.error(
                 '[AuxHelper] The onUniverseAction() handler errored:',

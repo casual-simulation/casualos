@@ -14,6 +14,7 @@ import {
     isUserActive,
     calculateBooleanTagValue,
     USERS_DIMENSION,
+    DEFAULT_PLAYER_USER_COLOR,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
@@ -96,14 +97,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
             return;
         }
 
-        const isInAuxPlayer = this.bot3D.dimension !== USERS_DIMENSION;
-        const color = getUserBotColor(
-            calc,
-            this.bot3D.bot,
-            this.bot3D.dimensionGroup.simulation3D.simulation.helper.globalsBot,
-            isInAuxPlayer ? 'player' : 'builder'
-        );
-
+        const color = DEFAULT_PLAYER_USER_COLOR;
         const material: MeshToonMaterial = <MeshToonMaterial>this.mesh.material;
         material.color.set(new Color(color));
 

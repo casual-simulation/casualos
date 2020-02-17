@@ -257,7 +257,7 @@ export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh';
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | 'poly' | null;
+export type BotSubShape = 'gltf' | null;
 
 /**
  * Defines the possible drag modes that a bot can have.

@@ -25,13 +25,7 @@ import { isAdminChannel } from './ModuleHelpers';
  * Defines an AuxModule that adds Admin-related functionality to the module.
  */
 export class AdminModule2 implements AuxModule2 {
-    private _channelCounts: Map<string, number>;
-    private _totalCount: number;
-
-    constructor() {
-        this._channelCounts = new Map();
-        this._totalCount = 0;
-    }
+    constructor() {}
 
     async setup(simulation: Simulation): Promise<Subscription> {
         let sub = new Subscription();
@@ -58,9 +52,6 @@ export class AdminModule2 implements AuxModule2 {
     ): Promise<void> {
         console.log('[AdminModule] Device Connected!');
 
-        this._totalCount += 1;
-        await setChannelCount(simulation, this._addCount(simulation.id, 1));
-
         const userId = device.claims[SESSION_ID_CLAIM];
         const username = device.claims[USERNAME_CLAIM];
         if (!getUserBot()) {
@@ -84,10 +75,6 @@ export class AdminModule2 implements AuxModule2 {
     ): Promise<void> {
         console.log('[AdminModule] Device Disconnected.');
 
-        const count = this._addCount(simulation.id, -1);
-        this._totalCount += -1;
-        await setChannelCount(simulation, count);
-
         const userId = device.claims[SESSION_ID_CLAIM];
         let userBot = simulation.helper.botsState[userId];
         if (!userBot) {
@@ -97,29 +84,6 @@ export class AdminModule2 implements AuxModule2 {
         await simulation.helper.updateBot(userBot, {
             tags: {
                 auxPlayerActive: false,
-            },
-        });
-    }
-
-    private _addCount(id: string, amount: number): number {
-        let count = this._channelCounts.get(id);
-        if (!count) {
-            count = 0;
-        }
-
-        count += amount;
-        this._channelCounts.set(id, count);
-        return count;
-    }
-}
-
-async function setChannelCount(simulation: Simulation, count: number) {
-    const bot = simulation.helper.globalsBot;
-
-    if (bot) {
-        await simulation.helper.updateBot(bot, {
-            tags: {
-                auxConnectedSessions: count,
             },
         });
     }

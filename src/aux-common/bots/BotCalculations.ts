@@ -1205,7 +1205,7 @@ export function getBotSubShape(
     bot: Bot
 ): BotSubShape {
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
-    if (shape === 'gltf' || shape === 'poly') {
+    if (shape === 'gltf') {
         return shape;
     }
     return null;

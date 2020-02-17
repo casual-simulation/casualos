@@ -593,23 +593,11 @@ export class PlayerGame extends Game {
     setupInventory(height: number) {
         let invHeightScale = 1;
 
-        const context = appManager.simulationManager.primary.helper.createContext();
-        const globalsBot =
-            appManager.simulationManager.primary.helper.globalsBot;
         let defaultHeight = this.getInventoryHeight();
 
         if (this.defaultHeightCurrent != this.getInventoryHeight()) {
             this.inventoryHeightOverride = null;
             this.defaultHeightCurrent = this.getInventoryHeight();
-        }
-
-        if (defaultHeight === null || defaultHeight === 0) {
-            defaultHeight = calculateNumericalTagValue(
-                context,
-                globalsBot,
-                'auxInventoryHeight',
-                null
-            );
         }
 
         if (defaultHeight != null && defaultHeight != 0) {

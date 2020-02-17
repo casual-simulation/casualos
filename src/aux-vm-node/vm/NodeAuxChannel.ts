@@ -83,20 +83,5 @@ export class NodeAuxChannel extends BaseAuxChannel {
 
     protected async _createGlobalsBot() {
         await super._createGlobalsBot();
-
-        const catchAllPartition = this._config.partitions['shared'];
-        if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
-            return;
-        }
-
-        if (catchAllPartition.id === 'admin') {
-            const globals = this.helper.globalsBot;
-
-            await this.helper.updateBot(globals, {
-                tags: {
-                    'aux.whitelist.roles': [ADMIN_ROLE],
-                },
-            });
-        }
     }
 }

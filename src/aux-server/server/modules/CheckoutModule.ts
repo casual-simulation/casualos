@@ -137,14 +137,7 @@ export class CheckoutModule implements AuxModule {
         event: FinishCheckoutAction
     ) {
         try {
-            const calc = channel.helper.createContext();
-            const globals = channel.helper.globalsBot;
-            const key = calculateStringTagValue(
-                calc,
-                globals,
-                'stripeSecretKey',
-                null
-            );
+            const key = event.secretKey;
 
             if (!key) {
                 console.log(

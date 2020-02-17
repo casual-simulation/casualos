@@ -1,7 +1,11 @@
 import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import { AuxPartition, ProxyBridgePartition } from './AuxPartition';
+import {
+    AuxPartition,
+    ProxyBridgePartition,
+    MemoryPartition,
+} from './AuxPartition';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -23,7 +27,8 @@ export type PartitionConfig =
     | RemoteCausalRepoPartitionConfig
     | CausalRepoHistoryClientPartitionConfig
     | CausalRepoClientPartitionConfig
-    | MemoryPartitionConfig
+    | MemoryPartitionStateConfig
+    | MemoryPartitionInstanceConfig
     | ProxyPartitionConfig
     | ProxyClientPartitionConfig
     | LocalStoragePartitionConfig;
@@ -47,11 +52,17 @@ export interface PartitionConfigBase {
  */
 export interface MemoryPartitionConfig extends PartitionConfigBase {
     type: 'memory';
+}
 
+export interface MemoryPartitionStateConfig extends MemoryPartitionConfig {
     /**
      * The initial state for the memory partition.
      */
     initialState: BotsState;
+}
+
+export interface MemoryPartitionInstanceConfig extends MemoryPartitionConfig {
+    partition?: MemoryPartition;
 }
 
 /**

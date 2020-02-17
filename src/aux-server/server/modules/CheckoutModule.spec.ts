@@ -191,23 +191,7 @@ describe('CheckoutModule', () => {
         });
 
         describe('finish_checkout', () => {
-            it('should not send the data to the stripe API if there is no secret key on the config bot', async () => {
-                expect.assertions(1);
-
-                await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc'),
-                ]);
-
-                expect(factory).not.toBeCalled();
-            });
-
             it('should send the data to the stripe API', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                    },
-                });
-
                 uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
@@ -219,7 +203,7 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                    finishCheckout('secret_key', 'token1', 123, 'usd', 'Desc'),
                 ]);
 
                 await waitAsync();
@@ -247,12 +231,6 @@ describe('CheckoutModule', () => {
             });
 
             it('should record the outcome of the charge in the created bot', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                    },
-                });
-
                 uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
@@ -272,7 +250,7 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                    finishCheckout('secret_key', 'token1', 123, 'usd', 'Desc'),
                 ]);
 
                 await waitAsync();
@@ -306,11 +284,8 @@ describe('CheckoutModule', () => {
             });
 
             it('should handle errors sent from the API', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                        onPaymentFailed: `@setTag(this, 'failedMessage', that.error.message)`,
-                    },
+                await channel.helper.createBot('handler', {
+                    onPaymentFailed: `@setTag(this, 'failedMessage', that.error.message)`,
                 });
 
                 uuidMock.mockReturnValue('botId');
@@ -321,7 +296,7 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                    finishCheckout('secret_key', 'token1', 123, 'usd', 'Desc'),
                 ]);
 
                 await waitAsync(30);
@@ -343,7 +318,7 @@ describe('CheckoutModule', () => {
                         stripeError: 'The card is invalid',
                     },
                 });
-                expect(channel.helper.globalsBot).toMatchObject({
+                expect(channel.helper.botsState['handler']).toMatchObject({
                     tags: expect.objectContaining({
                         failedMessage: 'The card is invalid',
                     }),
@@ -351,11 +326,8 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                        onPaymentFailed: `@setTag(this, 'failed', that.extra)`,
-                    },
+                await channel.helper.createBot('handler', {
+                    onPaymentFailed: `@setTag(this, "failed", that.extra)`,
                 });
 
                 uuidMock.mockReturnValue('botId');
@@ -366,14 +338,14 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc', {
+                    finishCheckout('secret_key', 'token1', 123, 'usd', 'Desc', {
                         abc: 'def',
                     }),
                 ]);
 
                 await waitAsync(30);
 
-                expect(channel.helper.globalsBot).toMatchObject({
+                expect(channel.helper.botsState['handler']).toMatchObject({
                     tags: expect.objectContaining({
                         failed: {
                             abc: 'def',
@@ -383,11 +355,8 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the bot that got created', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                        onPaymentSuccessful: `@setTag(this, 'successId', that.bot.id)`,
-                    },
+                await channel.helper.createBot('handler', {
+                    onPaymentSuccessful: `@setTag(this, 'successId', that.bot.id)`,
                 });
 
                 uuidMock.mockReturnValue('botId');
@@ -401,12 +370,12 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                    finishCheckout('handler', 'token1', 123, 'usd', 'Desc'),
                 ]);
 
                 await waitAsync();
 
-                expect(channel.helper.globalsBot).toMatchObject({
+                expect(channel.helper.botsState['handler']).toMatchObject({
                     tags: expect.objectContaining({
                         successId: 'botId',
                     }),
@@ -414,11 +383,8 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        stripeSecretKey: 'secret_key',
-                        onPaymentSuccessful: `@setTag(this, 'success', that.extra)`,
-                    },
+                await channel.helper.createBot('handler', {
+                    onPaymentSuccessful: `@setTag(this, 'success', that.extra)`,
                 });
 
                 uuidMock.mockReturnValue('botId');
@@ -432,14 +398,14 @@ describe('CheckoutModule', () => {
                 });
 
                 await channel.sendEvents([
-                    finishCheckout('token1', 123, 'usd', 'Desc', {
+                    finishCheckout('secret_key', 'token1', 123, 'usd', 'Desc', {
                         abc: 'def',
                     }),
                 ]);
 
                 await waitAsync();
 
-                expect(channel.helper.globalsBot).toMatchObject({
+                expect(channel.helper.botsState['handler']).toMatchObject({
                     tags: expect.objectContaining({
                         success: {
                             abc: 'def',

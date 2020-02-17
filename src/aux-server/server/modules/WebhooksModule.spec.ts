@@ -157,14 +157,12 @@ describe('WebhooksModule', () => {
                     onResponse: '@setTag(this, "data", that.response.data)',
                 });
 
-                await channel.helper.updateBot(channel.helper.globalsBot, {
-                    tags: {
-                        onUniverseAction: `@
-                            if (that.action.type === 'device') {
-                                action.perform(that.action.event);
-                            }
-                        `,
-                    },
+                await channel.helper.createBot('filter', {
+                    onUniverseAction: `@
+                        if (that.action.type === 'device') {
+                            action.perform(that.action.event);
+                        }
+                    `,
                 });
 
                 await channel.sendEvents([

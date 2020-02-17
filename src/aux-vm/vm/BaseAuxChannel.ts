@@ -291,7 +291,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Launching interface...',
             progress: 0.9,
         });
-        await this._initGlobalsBot();
         await this._initUserDimensionBot();
         await this._initBuilderBots();
     }
@@ -323,34 +322,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return convertToCopiableValue(this._helper.search(search));
     }
 
-    async forkAux(newId: string): Promise<any> {
-        console.log('[BaseAuxChannel] Forking AUX');
-        let events: BotAction[] = [];
-        const globals = this._helper.globalsBot;
-        if (globals) {
-            console.log('[BaseAuxChannel] Cleaning Config bot.');
-            let badTags = tagsOnBot(globals).filter(tag => {
-                return tag === ON_ACTION_ACTION_NAME;
-            });
-            let tags: BotTags = {};
-            for (let tag of badTags) {
-                console.log(`[BaseAuxChannel] Removing ${tag} tag.`);
-                tags[tag] = null;
-            }
-            events.push(
-                botUpdated(globals.id, {
-                    tags: tags,
-                })
-            );
-        }
-
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            if ('fork' in partition) {
-                await partition.fork(newId, events);
-            }
-        }
-        console.log('[BaseAuxChannel] Finished');
-    }
+    async forkAux(newId: string): Promise<any> {}
 
     async setGrant(grant: string): Promise<void> {
         for (let [key, partition] of iteratePartitions(this._partitions)) {
@@ -592,25 +564,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             await this._helper.createOrUpdateUserBot(this.user, userBot);
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);
-        }
-    }
-
-    private async _initGlobalsBot() {
-        try {
-            let globalsBot = this._helper.globalsBot;
-            if (!globalsBot) {
-                const oldGlobalsBot = this._helper.botsState['globals'];
-                if (oldGlobalsBot) {
-                    await this._helper.createBot(
-                        GLOBALS_BOT_ID,
-                        oldGlobalsBot.tags
-                    );
-                } else {
-                    await this._createGlobalsBot();
-                }
-            }
-        } catch (err) {
-            console.error('[BaseAuxChannel] Unable to init globals bot:', err);
         }
     }
 

@@ -9,6 +9,7 @@
                 :description="description"
                 :requestBillingAddress="requestBillingAddress"
                 :paymentRequest="paymentRequest"
+                :publishableKey="publishableKey"
                 @paymentSuccess="checkoutFinished"
                 @paymentCanceled="checkoutCanceled"
             ></checkout-form>

@@ -63,11 +63,6 @@ export class AdminModule implements AuxModule {
     ): Promise<void> {
         console.log('[AdminModule] Device Connected!');
 
-        let channelId = info.id.substring(4);
-        this._totalCount += 1;
-        await setChannelCount(channel, channelId, this._addCount(channelId, 1));
-        // await setTotalCount(this._adminChannel, this._totalCount);
-
         if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
             return;
         }
@@ -104,13 +99,6 @@ export class AdminModule implements AuxModule {
         device: DeviceInfo
     ): Promise<void> {
         console.log('[AdminModule] Device Disconnected.');
-        let channelId = info.id.substring(4);
-
-        const count = this._addCount(channelId, -1);
-        this._totalCount += -1;
-        await setChannelCount(channel, channelId, count);
-        // await setTotalCount(this._adminChannel, this._totalCount);
-
         if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
             return;
         }
@@ -120,45 +108,6 @@ export class AdminModule implements AuxModule {
         await channel.helper.updateBot(userBot, {
             tags: {
                 auxPlayerActive: false,
-            },
-        });
-    }
-
-    private _addCount(id: string, amount: number): number {
-        let count = this._channelCounts.get(id);
-        if (!count) {
-            count = 0;
-        }
-
-        count += amount;
-        this._channelCounts.set(id, count);
-        return count;
-    }
-}
-
-async function setTotalCount(channel: NodeAuxChannel, count: number) {
-    const context = channel.helper.createContext();
-    const globals = channel.helper.globalsBot;
-    if (globals) {
-        await channel.helper.updateBot(globals, {
-            tags: {
-                auxConnectedSessions: count,
-            },
-        });
-    }
-}
-
-async function setChannelCount(
-    channel: NodeAuxChannel,
-    id: string,
-    count: number
-) {
-    const bot = channel.helper.globalsBot;
-
-    if (bot) {
-        await channel.helper.updateBot(bot, {
-            tags: {
-                auxConnectedSessions: count,
             },
         });
     }

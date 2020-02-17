@@ -505,52 +505,6 @@ export class Server {
             })
         );
 
-        this._app.get(
-            '/api/:channel/status',
-            asyncMiddleware(async (req, res) => {
-                const id = req.params.channel;
-
-                if (id) {
-                    const info: RealtimeChannelInfo = {
-                        id: `aux-${id}`,
-                        type: 'aux',
-                    };
-                    if (await this._channelManager.hasChannel(info)) {
-                        const context = this._adminChannel.simulation.helper.createContext();
-                        const channelBot = getChannelBotById(context, id);
-
-                        if (channelBot) {
-                            const count = getChannelConnectedDevices(
-                                context,
-                                channelBot
-                            );
-                            // const locked = locked
-                            res.send({
-                                connectedDevices: count,
-                            });
-                            return;
-                        }
-                    }
-
-                    // TODO: Add support for new repo-based channels
-                }
-
-                res.sendStatus(404);
-            })
-        );
-
-        this._app.get(
-            '/api/status',
-            asyncMiddleware(async (req, res) => {
-                const context = this._adminChannel.simulation.helper.createContext();
-                const globals = this._adminChannel.simulation.helper.globalsBot;
-                const count = getConnectedDevices(context, globals);
-                res.send({
-                    connectedDevices: count,
-                });
-            })
-        );
-
         this._directoryStore = new MongoDBDirectoryStore(
             this._mongoClient,
             this._config.directory.dbName

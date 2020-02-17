@@ -3315,7 +3315,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotSubShape()', () => {
-        const cases = [['gltf'], ['poly']];
+        const cases = [['gltf']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxFormSubtype: <any>shape,
