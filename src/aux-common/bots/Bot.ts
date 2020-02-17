@@ -137,7 +137,7 @@ export interface BotTags {
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
-    ['auxProgressBarAnchor']?: unknown;
+    ['auxProgressBarPosition']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
@@ -720,7 +720,7 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
-    'auxProgressBarAnchor',
+    'auxProgressBarPosition',
     'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',
