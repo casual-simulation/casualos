@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V1.0.6
+
+### Date: TBD
+
+### Changes:
+
+#### :boom: Breaking Changes
+
+-   Renamed `auxLabelAnchor` to `auxLabelPosition`.
+-   Renamed `auxProgressBarAnchor` to `auxProgressBarPosition`.
+
 ## V1.0.5
 
 ### Date: 2/14/2020
