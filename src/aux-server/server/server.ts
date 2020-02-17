@@ -10,16 +10,9 @@ import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
+import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
+import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
-    CausalTreeServerSocketIO,
-    SocketIOConnectionServer,
-} from '@casual-simulation/causal-tree-server-socketio';
-import {
-    MongoDBTreeStore,
-    MongoDBRepoStore,
-} from '@casual-simulation/causal-tree-store-mongodb';
-import {
-    auxCausalTreeFactory,
     getChannelBotById,
     getChannelConnectedDevices,
     getConnectedDevices,
@@ -39,14 +32,13 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import {
-    CausalTreeStore,
-    RealtimeChannelInfo,
     DeviceInfo,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     SERVER_ROLE,
     deviceInfoFromUser,
+    RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
 import {
     DeviceManagerImpl,
@@ -70,7 +62,6 @@ import {
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
 import {
-    BackupModule,
     WebhooksModule2,
     FilesModule2,
     CheckoutModule2,
@@ -82,14 +73,9 @@ import { DirectoryStore } from './directory/DirectoryStore';
 import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
-import { CheckoutModule } from './modules/CheckoutModule';
-import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
-import { FilesModule } from './modules/FilesModule';
-import { SetupChannelModule } from './modules/SetupChannelModule';
-import { WebConfig } from '../shared/WebConfig';
 import { RedisStageStore } from './redis/RedisStageStore';
 import {
     MemoryStageStore,
@@ -408,13 +394,10 @@ export class Server {
     private _app: express.Express;
     private _http: Http.Server;
     private _socket: SocketIO.Server;
-    private _treeServer: CausalTreeServerSocketIO;
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
-    private _userCount: number;
     private _redisClient: RedisClient;
-    private _store: CausalTreeStore;
     private _channelManager: AuxChannelManager;
     private _adminChannel: AuxLoadedChannel;
     private _directory: DirectoryService;
@@ -444,7 +427,6 @@ export class Server {
                   return_buffers: true,
               })
             : null;
-        this._userCount = 0;
     }
 
     async configure() {
@@ -458,12 +440,7 @@ export class Server {
         this._app.use(cors());
 
         this._mongoClient = await connect(this._config.mongodb.url);
-        this._store = new MongoDBTreeStore(
-            this._mongoClient,
-            this._config.trees.dbName
-        );
 
-        await this._configureCausalTreeServices();
         await this._configureCausalRepoServices();
         this._app.use(bodyParser.json());
 
@@ -757,74 +734,6 @@ export class Server {
             console.log(`[Server] Starting Directory Client`);
             this._directoryClient.init();
         }
-    }
-
-    private async _configureCausalTreeServices() {
-        await this._store.init();
-        const serverUser: AuxUser = getServerUser();
-        const serverDevice: DeviceInfo = deviceInfoFromUser(serverUser);
-
-        const checkout = new CheckoutModule(key => new Stripe(key));
-        const webhook = new WebhooksModule();
-        const setupChannel = new SetupChannelModule();
-        this._channelManager = new AuxChannelManagerImpl(
-            serverUser,
-            serverDevice,
-            this._store,
-            auxCausalTreeFactory(),
-            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [
-                new AdminModule(),
-                new BackupModule(this._store),
-                new FilesModule(this._config.drives),
-                checkout,
-                webhook,
-                setupChannel,
-            ]
-        );
-        this._channelManager.automaticallyCreateTrees = false;
-
-        checkout.setChannelManager(this._channelManager);
-        webhook.setChannelManager(this._channelManager);
-        setupChannel.setChannelManager(this._channelManager);
-
-        const authenticator = new NullDeviceAuthenticator();
-        const authorizer = new NullChannelAuthorizer();
-
-        this._treeServer = new CausalTreeServerSocketIO(
-            serverDevice,
-            this._socket,
-            new DeviceManagerImpl(),
-            this._channelManager,
-            authenticator,
-            authorizer
-        );
-
-        this._socket.on('connection', socket => {
-            this._userCount += 1;
-            console.log(
-                '[Server] A user connected! There are now',
-                this._userCount,
-                'users connected.'
-            );
-
-            socket.on('version', (callback: (version: AppVersion) => void) => {
-                callback({
-                    gitTag: GIT_TAG,
-                    gitHash: GIT_HASH,
-                    apiVersion: apiVersion,
-                });
-            });
-
-            socket.on('disconnect', reason => {
-                this._userCount -= 1;
-                console.log(
-                    `[Server] A user disconnected! Reason: ${reason}. There are now`,
-                    this._userCount,
-                    'users connected.'
-                );
-            });
-        });
     }
 
     private async _configureCausalRepoServices() {

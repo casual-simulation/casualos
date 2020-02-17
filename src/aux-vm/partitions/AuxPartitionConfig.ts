@@ -1,5 +1,4 @@
-import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
-import { User } from '@casual-simulation/causal-trees';
+import { BotsState } from '@casual-simulation/aux-common';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
     AuxPartition,
@@ -21,8 +20,6 @@ export interface AuxPartitionConfig {
  * That is, a config which specifies how to build a partition.
  */
 export type PartitionConfig =
-    | RemoteCausalTreePartitionConfig
-    | CausalTreePartitionConfig
     | CausalRepoPartitionConfig
     | RemoteCausalRepoPartitionConfig
     | CausalRepoHistoryClientPartitionConfig
@@ -104,24 +101,6 @@ export interface LocalStoragePartitionConfig extends PartitionConfigBase {
 }
 
 /**
- * Defines a causal tree partition.
- * That is, a configuration that specifies that bots should be stored in a causal tree.
- */
-export interface CausalTreePartitionConfig extends PartitionConfigBase {
-    type: 'causal_tree';
-
-    /**
-     * The tree to use.
-     */
-    tree: AuxCausalTree;
-
-    /**
-     * The ID of the tree.
-     */
-    id: string;
-}
-
-/**
  * Defines a causal tree partition that uses the new Causal Repo API.
  */
 export interface CausalRepoPartitionConfig extends PartitionConfigBase {
@@ -170,6 +149,12 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be loaded in read-only mode.
      */
     readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
 }
 
 /**
@@ -188,28 +173,4 @@ export interface CausalRepoHistoryClientPartitionConfig
      * The client that should be used to load the history.
      */
     client: CausalRepoClient;
-}
-
-/**
- * Defines a remote causal tree partition.
- * That is, a configuration that specifies that bots should be stored in a causal tree
- * which is loaded from a remote server.
- */
-export interface RemoteCausalTreePartitionConfig extends PartitionConfigBase {
-    type: 'remote_causal_tree';
-
-    /**
-     * The ID of the tree.
-     */
-    id: string;
-
-    /**
-     * The host that should be connected to.
-     */
-    host: string;
-
-    /**
-     * The name of the tree to load.
-     */
-    treeName: string;
 }

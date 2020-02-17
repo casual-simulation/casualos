@@ -1,9 +1,4 @@
-import {
-    RemoteCausalTreePartitionConfig,
-    AuxPartitionConfig,
-    PartitionConfig,
-    MemoryPartitionConfig,
-} from './AuxPartitionConfig';
+import { PartitionConfig } from './AuxPartitionConfig';
 import { AuxPartition, MemoryPartition } from './AuxPartition';
 import {
     BotsState,

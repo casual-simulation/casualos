@@ -1,9 +1,5 @@
-import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
-import {
-    StoredCausalTree,
-    StatusUpdate,
-    DeviceAction,
-} from '@casual-simulation/causal-trees';
+import { LocalActions, BotAction } from '@casual-simulation/aux-common';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';

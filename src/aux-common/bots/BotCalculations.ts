@@ -62,8 +62,6 @@ import {
 } from '../Formulas/formula-lib-globals';
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import { AuxBot, AuxObject, AuxOp, AuxState } from '../aux-format';
-import { Atom } from '@casual-simulation/causal-trees';
 import { differenceBy, maxBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
@@ -477,7 +475,7 @@ export function isNumber(value: string): boolean {
  * Determines if the given object is a bot.
  * @param object The object to check.
  */
-export function isBot(object: any): object is AuxObject {
+export function isBot(object: any): object is Bot {
     if (object) {
         return !!object.id && !!object.tags;
     }
@@ -986,12 +984,10 @@ export function calculateGridScale(
  * This operation runs in O(n) time where n is the number of bots.
  * @param prev The previous state.
  * @param current The current state.
- * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'add_bot', 'remove_bot', or 'update_bot' event.
  */
 export function calculateStateDiff(
     prev: BotsState,
-    current: BotsState,
-    events?: Atom<AuxOp>[]
+    current: BotsState
 ): BotsStateDiff {
     prev = prev || {};
     current = current || {};
