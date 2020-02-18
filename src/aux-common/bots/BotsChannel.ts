@@ -17,6 +17,7 @@ import {
     isBot,
     isScript,
     parseScript,
+    getConfigVariable,
 } from './BotCalculations';
 import {
     getActions,
@@ -207,6 +208,7 @@ export function formulaActions(
         vars['tags'] = scriptBot ? scriptBot.tags : null;
         vars['raw'] = scriptBot ? scriptBot.raw : null;
         vars['creator'] = getCreatorVariable(context, scriptBot);
+        vars['config'] = getConfigVariable(context, scriptBot);
 
         for (let script of scripts) {
             const result = context.sandbox.run(script, {}, scriptBot, vars);

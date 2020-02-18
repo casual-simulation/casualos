@@ -139,6 +139,7 @@ export interface BotTags {
     ['auxIframeElementWidth']?: number;
     ['auxIframeScale']?: number;
     ['auxCreator']?: string;
+    ['auxConfigBot']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
@@ -196,8 +197,6 @@ export interface BotTags {
     ['auxInventoryPortalResizable']?: boolean;
 
     // Stripe tags
-    ['stripePublishableKey']?: string;
-    ['stripeSecretKey']?: string;
     ['stripeCharges']?: boolean;
     ['stripeSuccessfulCharges']?: boolean;
     ['stripeFailedCharges']?: boolean;
@@ -698,6 +697,7 @@ export const KNOWN_TAGS: string[] = [
 
     'auxColor',
     'auxCreator',
+    'auxConfigBot',
     'auxDraggable',
     'auxDraggableMode',
     'auxPositioningMode',

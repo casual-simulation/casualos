@@ -2396,10 +2396,22 @@ export function convertToCopiableValue(value: any): any {
 }
 
 export function getCreatorVariable(context: BotSandboxContext, bot: ScriptBot) {
+    return getBotVariable(context, bot, 'auxCreator');
+}
+
+export function getConfigVariable(context: BotSandboxContext, bot: ScriptBot) {
+    return getBotVariable(context, bot, 'auxConfigBot');
+}
+
+export function getBotVariable(
+    context: BotSandboxContext,
+    bot: ScriptBot,
+    tag: string
+): ScriptBot {
     if (!bot) {
         return null;
     }
-    let creatorId = context.sandbox.interface.getTag(bot, 'auxCreator');
+    let creatorId = context.sandbox.interface.getTag(bot, tag);
     if (creatorId) {
         let obj = context.sandbox.interface.getBot(creatorId);
         if (obj) {
