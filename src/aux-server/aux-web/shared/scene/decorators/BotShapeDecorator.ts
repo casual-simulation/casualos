@@ -7,6 +7,7 @@ import {
     BotShape,
     getBotSubShape,
     BotSubShape,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -44,6 +45,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
     private _subShape: BotSubShape = null;
+    private _gltfVersion: number = null;
     private _address: string = null;
     private _canHaveStroke = false;
 
@@ -66,7 +68,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
 
-        this._rebuildShape('cube', null, null);
+        this._rebuildShape('cube', null, null, null);
     }
 
     // frameUpdate?(calc: BotCalculationContext): void {
@@ -81,19 +83,31 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.bot3D.bot,
             'auxFormAddress'
         );
-        if (this._needsUpdate(shape, subShape, address)) {
-            this._rebuildShape(shape, subShape, address);
+        const version = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxGLTFVersion',
+            2
+        );
+        if (this._needsUpdate(shape, subShape, address, version)) {
+            this._rebuildShape(shape, subShape, address, version);
         }
 
         this._updateColor(calc);
         this._updateStroke(calc);
     }
 
-    private _needsUpdate(shape: string, subShape: string, address: string) {
+    private _needsUpdate(
+        shape: string,
+        subShape: string,
+        address: string,
+        version: number
+    ) {
         return (
             this._shape !== shape ||
             this._subShape !== subShape ||
-            (shape === 'mesh' && this._address !== address)
+            (shape === 'mesh' &&
+                (this._address !== address || this._gltfVersion !== version))
         );
     }
 
@@ -179,11 +193,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
-        address: string
+        address: string,
+        version: number
     ) {
         this._shape = shape;
         this._subShape = subShape;
         this._address = address;
+        this._gltfVersion = version;
         if (this.mesh || this.scene) {
             this.dispose();
         }
@@ -213,7 +229,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _createGltf() {
         this.stroke = null;
         this._canHaveStroke = false;
-        this._loadGLTF(this._address, false);
+        this._loadGLTF(this._address, this._gltfVersion < 2);
     }
 
     private async _loadGLTF(url: string, legacy: boolean) {

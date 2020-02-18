@@ -722,6 +722,7 @@ export const KNOWN_TAGS: string[] = [
     'auxFormAddress',
     'auxFormSubtype',
     'auxForm',
+    'auxGLTFVersion',
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
@@ -739,8 +740,6 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeElementWidth',
     'auxIframeScale',
 
-    'polyApiKey',
-
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',
@@ -749,8 +748,6 @@ export const KNOWN_TAGS: string[] = [
     'auxTaskBackupType',
     'auxTaskBackupUrl',
 
-    'stripePublishableKey',
-    'stripeSecretKey',
     'stripeCharges',
     'stripeSuccessfulCharges',
     'stripeFailedCharges',

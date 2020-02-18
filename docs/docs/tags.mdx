@@ -391,10 +391,6 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   <PossibleValueCode value='gltf'>
     A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
-  <PossibleValueCode value='poly'>
-    A mesh loaded from <a href="https://poly.google.com">poly.google.com</a>.
-    Requres the <TagLink tag='polyApiKey'/> tag to be set on the config bot.
-  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxFormAddress`
@@ -405,7 +401,21 @@ When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the addre
 
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `poly`, the address should be the ID of the mesh that should be displayed.
+### `auxGLTFVersion`
+
+The GLTF specification version that should be used to load a GLTF model.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='2'>
+    Load the GLTF model with version 2 of the specification. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Numbers < 2'>
+    Load the GLTF Model with version 1 of the specification.
+    This is useful for loading meshes from <a href="https://poly.google.com">poly.google.com</a>.
+  </PossibleValueCode>
+</PossibleValuesTable>
 
 ### `auxProgressBar`
 
@@ -1075,45 +1085,3 @@ Hidden tags are tags that are hidden in the sheet by default.
 
 The ID of the bot that the user is currently editing.
 Only available on the player bot.
-
-## Third-Party Tags
-
-### `polyApiKey`
-
-<Badges>
-  <ConfigBotBadge/>
-</Badges>
-
-The [API Key][api-key] that should be used to access the [poly.google.com](https://poly.google.com) [API](https://developers.google.com/poly).
-Must be placed on the config bot to work.
-
-You can get an API Key by following the "Get an API Key" instructions on the [Poly developers website](https://developers.google.com/poly/develop/web#get_an_api_key).
-
-### `stripePublishableKey`
-
-<Badges>
-  <ConfigBotBadge/>
-</Badges>
-
-The Stripe publishable [API Key][api-key] that should be used for checkouts.
-Must be placed on the config bot to work.
-
-Because this key is meant to be public, you should place this in the universe that you call <ActionLink action='player.checkout(options)'/> from.
-
-See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
-
-### `stripeSecretKey`
-
-<Badges>
-  <ConfigBotBadge/>
-</Badges>
-
-The Stripe secret [API Key][api-key] that should be used to finish checkouts.
-Must be placed on the config bot to work.
-
-Because this key is meant to be private, you should place this in the processing universe that was specified
-in the call to <ActionLink action='player.checkout(options)'/>.
-
-See the [Stripe documentation](https://stripe.com/docs/keys) for more information.
-
-[api-key]: https://en.wikipedia.org/wiki/Application_programming_interface_key
