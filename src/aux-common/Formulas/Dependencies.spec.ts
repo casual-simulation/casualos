@@ -1519,6 +1519,17 @@ describe('Dependencies', () => {
                     name: 'test',
                     dependencies: [{ type: 'this' }],
                 },
+                {
+                    type: 'tag_value',
+                    name: 'value1',
+                    dependencies: [
+                        {
+                            type: 'tag_value',
+                            name: 'value2',
+                            dependencies: [],
+                        },
+                    ],
+                },
             ]);
 
             expect(result).toEqual([
@@ -1607,6 +1618,22 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'this',
+                },
+                {
+                    type: 'tag_value',
+                    name: 'value1',
+                    dependencies: [
+                        {
+                            type: 'tag_value',
+                            name: 'value2',
+                            dependencies: [],
+                        },
+                    ],
+                },
+                {
+                    type: 'tag_value',
+                    name: 'value2',
+                    dependencies: [],
                 },
             ]);
         });
@@ -2033,6 +2060,126 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should support using the tags variable in a bot reference', () => {
+                const tree = dependencies.dependencyTree(`ref.${name}.abc`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'ref',
+                        dependencies: [
+                            {
+                                type: 'tag_value',
+                                name: 'abc',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it.skip('should support using the tagName variable in an indexer', () => {
+                const tree = dependencies.dependencyTree(`${name}[tagName]`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
+
+        const botTagDependencyCases = [
+            ['creator', 'auxCreator'],
+            ['config', 'auxConfigBot'],
+        ];
+
+        describe.each(botTagDependencyCases)('%s', (name, tag) => {
+            it('should replace with a tag value dependency', () => {
+                const tree = dependencies.dependencyTree(`${name}`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: tag,
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should preserve dependencies', () => {
+                const tree = dependencies.dependencyTree(`${name}.prop.abc`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: tag,
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: 'prop',
+                                dependencies: [
+                                    {
+                                        type: 'member',
+                                        name: 'abc',
+                                        dependencies: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it.each(tagsVariableCases)(
+                'should support using the %s variable',
+                variable => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}.${variable}.abc`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual([
+                        {
+                            type: 'tag_value',
+                            name: tag,
+                            dependencies: [
+                                {
+                                    type: 'tag_value',
+                                    name: 'abc',
+                                    dependencies: [],
+                                },
+                            ],
+                        },
+                    ]);
+                }
+            );
+        });
+
+        it('should support using the configTag variable', () => {
+            const tree = dependencies.dependencyTree(`configTag`);
+            const simple = dependencies.simplify(tree);
+            const replaced = dependencies.replaceAuxDependencies(simple);
+
+            expect(replaced).toEqual([
+                {
+                    type: 'tag_value',
+                    dependencies: [],
+                },
+            ]);
         });
     });
 

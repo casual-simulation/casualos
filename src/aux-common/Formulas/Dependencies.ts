@@ -3,6 +3,8 @@ import { traverse, VisitorOption } from 'estraverse';
 import flatMap from 'lodash/flatMap';
 import { getTag, trimTag } from '../bots';
 
+export const defaultReplacement = Symbol('defaultReplacement');
+
 export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
 
@@ -112,7 +114,9 @@ export class Dependencies {
                     node.type !== 'all' &&
                     node.type !== 'this'
                 ) {
-                    const replacement = replacements[node.name];
+                    const replacement =
+                        replacements[node.name] ||
+                        replacements[defaultReplacement];
                     if (replacement) {
                         yield* replacement(node);
                         replaced = true;
@@ -506,6 +510,32 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
 
             return [];
         },
+        creator: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'auxCreator',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
+        config: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'auxConfigBot',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
         getBot: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
@@ -618,6 +648,35 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'all',
+                },
+            ];
+        },
+        configTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    dependencies: [],
+                },
+            ];
+        },
+        [defaultReplacement]: (node: AuxScriptSimpleDependency) => {
+            if (
+                node.type !== 'member' &&
+                node.type !== 'function' &&
+                node.type !== 'bot' &&
+                node.type !== 'tag'
+            ) {
+                return [node];
+            }
+
+            return [
+                {
+                    ...node,
+                    dependencies: replace(node.dependencies),
                 },
             ];
         },
@@ -770,11 +829,12 @@ export interface AuxScriptSimpleThisDependency {
 
 export interface AuxScriptSimpleTagValueDependency {
     type: 'tag_value';
-    name: string;
+    name?: string;
     dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptReplacements {
+    [defaultReplacement]?: AuxScriptReplacement;
     [key: string]: AuxScriptReplacement;
 }
 
