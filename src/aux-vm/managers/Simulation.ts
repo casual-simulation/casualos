@@ -1,15 +1,11 @@
 import {
     SimulationIdParseSuccess,
     LocalActions,
-    AuxOp,
     BotIndex,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
-import {
-    StoredCausalTree,
-    DeviceAction,
-} from '@casual-simulation/causal-trees';
+import { DeviceAction } from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
 import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';

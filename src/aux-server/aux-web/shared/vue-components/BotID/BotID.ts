@@ -1,12 +1,7 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject } from 'vue-property-decorator';
-import {
-    AuxBot,
-    Bot,
-    toast,
-    setClipboard,
-} from '@casual-simulation/aux-common';
+import { Prop } from 'vue-property-decorator';
+import { Bot, toast } from '@casual-simulation/aux-common';
 import { copyToClipboard } from '../../SharedUtils';
 import { appManager } from '../../AppManager';
 
@@ -26,7 +21,7 @@ export default class BotID extends Vue {
     shortID: string;
 
     @Prop()
-    bots: AuxBot;
+    bots: Bot;
 
     constructor() {
         super();

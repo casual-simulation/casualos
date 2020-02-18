@@ -25,10 +25,7 @@ import uniq from 'lodash/uniq';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    getBotsStateFromStoredTree,
-    calculateNumericalTagValue,
     clamp,
-    getBotChannel,
     DEFAULT_INVENTORY_VISIBLE,
 } from '@casual-simulation/aux-common';
 import {

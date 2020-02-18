@@ -6,16 +6,9 @@ import {
     OrthographicCamera,
 } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import {
-    Object,
-    AuxBot,
-    BotCalculationContext,
-    getBotConfigDimensions,
-    Bot,
-} from '@casual-simulation/aux-common';
+import { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import flatMap from 'lodash/flatMap';
-import union from 'lodash/union';
 import remove from 'lodash/remove';
 import { CameraControls } from './CameraControls';
 import { MouseButtonId, InputType, Input } from '../scene/Input';
@@ -41,7 +34,6 @@ import {
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
-import { PlayerSimulation3D } from 'aux-web/aux-player/scene/PlayerSimulation3D';
 
 interface HoveredBot {
     /**
@@ -660,15 +652,15 @@ export abstract class BaseInteractionManager {
         return gameObject == null || gameObject == undefined;
     }
 
-    protected _handleBotAdded(bot: AuxBot): void {
+    protected _handleBotAdded(bot: Bot): void {
         this._markDirty();
     }
 
-    protected _handleBotUpdated(bot: AuxBot): void {
+    protected _handleBotUpdated(bot: Bot): void {
         this._markDirty();
     }
 
-    protected _handleBotRemoved(bot: AuxBot): void {
+    protected _handleBotRemoved(bot: Bot): void {
         this._markDirty();
     }
 

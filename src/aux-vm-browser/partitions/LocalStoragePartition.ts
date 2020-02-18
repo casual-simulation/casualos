@@ -2,7 +2,6 @@ import {
     Bot,
     UpdatedBot,
     BotAction,
-    createBot,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
@@ -10,18 +9,12 @@ import {
     botRemoved,
     botUpdated,
     breakIntoIndividualEvents,
-    merge,
     BotsState,
-    AuxObject,
     getActiveObjects,
     tagsOnBot,
     hasValue,
 } from '@casual-simulation/aux-common';
-import {
-    DeviceAction,
-    StatusUpdate,
-    Action,
-} from '@casual-simulation/causal-trees';
+import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
@@ -212,11 +205,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
                 let update = updated.get(event.id);
                 if (update) {
-                    update.bot = <AuxObject>newBot;
+                    update.bot = newBot;
                     update.tags = union(update.tags, changedTags);
                 } else {
                     updated.set(event.id, {
-                        bot: <AuxObject>newBot,
+                        bot: newBot,
                         tags: changedTags,
                     });
                 }

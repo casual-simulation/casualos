@@ -2,29 +2,20 @@ import {
     WebGLRenderer,
     OrthographicCamera,
     Scene,
-    WebGLRenderTarget,
     Box3,
     Vector3,
     Math as ThreeMath,
     Color,
-    MeshBasicMaterial,
-    Vector2,
     Object3D,
-    Box3Helper,
-    Light,
-    HemisphereLight,
     AmbientLight,
     DirectionalLight,
 } from 'three';
 import {
-    Object,
-    botRemoved,
     merge,
-    AuxObject,
     BotCalculationContext,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { AuxBot3D } from './AuxBot3D';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 
@@ -85,7 +76,7 @@ export class BotRenderer {
     }
 
     async render(
-        bot: AuxObject,
+        bot: Bot,
         calc: BotCalculationContext,
         diffball: boolean = false
     ): Promise<string> {

@@ -1,7 +1,7 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Prop, Watch } from 'vue-property-decorator';
-import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
+import { Prop } from 'vue-property-decorator';
+import { validateTag, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { EventBus } from '../../EventBus';
 
@@ -32,7 +32,7 @@ export default class TagEditor extends Vue {
     }
 
     get showMenu() {
-        if (value.length > 0) {
+        if (this.value.length > 0) {
             // call the sort applicable tags function here
             this.results = this.sortTags();
             if (this.results.length != this.lastResultCount) {

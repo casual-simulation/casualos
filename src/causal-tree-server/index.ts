@@ -1,6 +1,4 @@
 export * from './DeviceChannelConnection';
-export * from './DeviceChannelInfoRequest';
-export * from './DeviceChannelWeaveExchangeRequest';
 export * from './DeviceConnection';
 export * from './DeviceManager';
 export * from './DeviceManagerHelpers';
