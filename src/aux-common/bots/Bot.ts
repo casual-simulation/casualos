@@ -47,6 +47,11 @@ export interface Bot {
     tags: BotTags;
 }
 
+export interface UpdatedBot {
+    bot: Bot;
+    tags: string[];
+}
+
 /**
  * The possible bot types.
  *
@@ -118,7 +123,7 @@ export interface BotTags {
     ['auxLabelColor']?: unknown;
     ['auxLabelSize']?: unknown;
     ['auxLabelSizeMode']?: 'auto' | null;
-    ['auxLabelAnchor']?: BotLabelAnchor | null | string;
+    ['auxLabelPosition']?: BotLabelAnchor | null | string;
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
     ['auxFormAddress']?: string;
@@ -137,7 +142,7 @@ export interface BotTags {
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
-    ['auxProgressBarAnchor']?: unknown;
+    ['auxProgressBarPosition']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
@@ -257,7 +262,7 @@ export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh';
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | 'poly' | null;
+export type BotSubShape = 'gltf' | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -708,7 +713,7 @@ export const KNOWN_TAGS: string[] = [
     'auxLabelColor',
     'auxLabelSize',
     'auxLabelSizeMode',
-    'auxLabelAnchor',
+    'auxLabelPosition',
     'auxListening',
     'auxScale',
     'auxScaleX',
@@ -717,10 +722,11 @@ export const KNOWN_TAGS: string[] = [
     'auxFormAddress',
     'auxFormSubtype',
     'auxForm',
+    'auxGLTFVersion',
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
-    'auxProgressBarAnchor',
+    'auxProgressBarPosition',
     'auxUniverseConnectedSessions',
     'auxIframe',
     'auxIframeX',
@@ -734,8 +740,6 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeElementWidth',
     'auxIframeScale',
 
-    'polyApiKey',
-
     'auxTaskOutput',
     'auxTaskError',
     'auxTaskTime',
@@ -744,8 +748,6 @@ export const KNOWN_TAGS: string[] = [
     'auxTaskBackupType',
     'auxTaskBackupUrl',
 
-    'stripePublishableKey',
-    'stripeSecretKey',
     'stripeCharges',
     'stripeSuccessfulCharges',
     'stripeFailedCharges',

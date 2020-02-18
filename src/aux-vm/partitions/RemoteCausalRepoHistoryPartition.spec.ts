@@ -1,57 +1,33 @@
-import { testPartitionImplementation } from './test/PartitionTests';
 import {
     RemoteCausalRepoHistoryPartitionImpl,
     COMMIT_ID_NAMESPACE,
 } from './RemoteCausalRepoHistoryPartition';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import {
-    Atom,
     atom,
     atomId,
     ADD_ATOMS,
     AddAtomsEvent,
     MemoryConnectionClient,
     CausalRepoClient,
-    SEND_EVENT,
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
-    COMMIT,
     WATCH_COMMITS,
     AddCommitsEvent,
     ADD_COMMITS,
     index,
     commit,
-    CHECKOUT,
     RESTORE,
 } from '@casual-simulation/causal-trees/core2';
-import {
-    remote,
-    DeviceAction,
-    device,
-    deviceInfo,
-    Action,
-} from '@casual-simulation/causal-trees';
-import flatMap from 'lodash/flatMap';
+import { remote } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../test/TestHelpers';
 import {
-    botAdded,
     createBot,
-    botUpdated,
     Bot,
     UpdatedBot,
     restoreHistoryMark,
 } from '@casual-simulation/aux-common';
-import {
-    AuxOpType,
-    addAuxResults,
-    bot,
-    tag,
-    value,
-} from '@casual-simulation/aux-common/aux-format-2';
-import {
-    RemoteCausalRepoPartitionConfig,
-    CausalRepoHistoryClientPartitionConfig,
-} from './AuxPartitionConfig';
+import { CausalRepoHistoryClientPartitionConfig } from './AuxPartitionConfig';
 import uuid from 'uuid/v5';
 
 console.log = jest.fn();

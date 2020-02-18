@@ -27,6 +27,5 @@ export * from './utils';
 export * from './state-machine';
 export * from './bots';
 export * from './Formulas';
-export * from './aux-format';
 export * from './AppVersion';
 export * from './ApiVersion';

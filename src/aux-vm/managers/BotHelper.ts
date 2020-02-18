@@ -3,7 +3,6 @@ import {
     Bot,
     BotAction,
     BotsState,
-    AuxObject,
     BotCalculationContext,
     createBot,
     createWorkspace,
@@ -12,8 +11,6 @@ import {
     Workspace,
     calculateFormattedBotValue,
     calculateBotValue,
-    botsInDimension,
-    getBotChannel,
     calculateDestroyBotEvents,
     merge,
     PrecalculatedBot,
@@ -28,7 +25,6 @@ import {
     CREATE_ANY_ACTION_NAME,
     BotSpace,
 } from '@casual-simulation/aux-common';
-import flatMap from 'lodash/flatMap';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
 

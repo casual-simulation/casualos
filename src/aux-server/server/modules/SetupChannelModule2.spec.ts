@@ -1,30 +1,8 @@
-import {
-    NodeAuxChannel,
-    AuxLoadedChannel,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
-import {
-    botAdded,
-    createBot,
-    AuxCausalTree,
-    webhook,
-    setupUniverse,
-    createPrecalculatedBot,
-} from '@casual-simulation/aux-common';
-import {
-    DeviceInfo,
-    RealtimeChannelInfo,
-    storedTree,
-    site,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    SERVER_ROLE,
-    deviceInfo,
-    ADMIN_ROLE,
-} from '@casual-simulation/causal-trees';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
+import { createBot, setupUniverse } from '@casual-simulation/aux-common';
+import { deviceInfo } from '@casual-simulation/causal-trees';
 import { SetupChannelModule2 } from './SetupChannelModule2';
-import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
+import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import {
@@ -43,7 +21,6 @@ describe('SetupChannelModule2', () => {
     let user: AuxUser;
     let serverUser: AuxUser;
     let processingUser: AuxUser;
-    let device: DeviceInfo;
     let subject: SetupChannelModule2;
     let serverClient: CausalRepoClient;
     let processingClient: CausalRepoClient;
@@ -71,14 +48,6 @@ describe('SetupChannelModule2', () => {
             name: 'Processing',
             username: 'processing',
             token: 'processing',
-        };
-        device = {
-            claims: {
-                [USERNAME_CLAIM]: 'username',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [],
         };
         const serverDevice = deviceInfo('server', 'server', 'server');
         const processingDevice = deviceInfo(

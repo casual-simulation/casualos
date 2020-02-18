@@ -44,7 +44,6 @@
         "@casual-simulation/aux-vm": "^1.0.4",
         "@casual-simulation/aux-vm-client": "^1.0.4",
         "@casual-simulation/causal-tree-client-socketio": "^1.0.0",
-        "@casual-simulation/causal-tree-store-browser": "^1.0.0",
         "@casual-simulation/causal-trees": "^1.0.0",
         "@casual-simulation/crypto": "^1.0.0",
         "@casual-simulation/crypto-browser": "^1.0.0",

@@ -1,5 +1,4 @@
 import {
-    AuxCausalTree,
     createBot,
     createCalculationContext,
     createPrecalculatedBot,
@@ -8,7 +7,6 @@ import {
     botUpdated,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from './PrecalculationManager';
-import { storedTree, site } from '@casual-simulation/causal-trees';
 import values from 'lodash/values';
 import { MemoryPartition, createMemoryPartition } from '../partitions';
 

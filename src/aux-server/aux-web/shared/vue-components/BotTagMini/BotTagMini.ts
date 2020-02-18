@@ -1,8 +1,8 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject } from 'vue-property-decorator';
-import { AuxBot } from '@casual-simulation/aux-common';
+import { Prop } from 'vue-property-decorator';
 import MiniBot from '../MiniBot/MiniBot';
+import { Bot } from '@casual-simulation/aux-common';
 
 @Component({
     components: {
@@ -25,7 +25,7 @@ export default class BotTagMini extends Vue {
     createMod: boolean;
 
     @Prop()
-    bots: AuxBot;
+    bots: Bot;
 
     click() {
         this.$emit('click');

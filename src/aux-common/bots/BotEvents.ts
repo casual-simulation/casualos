@@ -228,6 +228,11 @@ export interface BackupOptions {
 
 export interface StartCheckoutOptions {
     /**
+     * The publishable API key that should be used for interfacing with the Stripe API.
+     */
+    publishableKey: string;
+
+    /**
      * The ID of the product that is being checked out.
      */
     productId: string;
@@ -322,6 +327,11 @@ export interface CheckoutSubmittedAction extends Action {
  */
 export interface FinishCheckoutAction extends Action {
     type: 'finish_checkout';
+
+    /**
+     * The Secret API Key that should be used to finish the checkout process.
+     */
+    secretKey: string;
 
     /**
      * The token that was created from the checkout process.
@@ -1591,6 +1601,7 @@ export function checkoutSubmitted(
 
 /**
  * Creates a new FinishCheckoutAction.
+ * @param secretKey The secret stripe API Key.
  * @param token The token.
  * @param amount The amount.
  * @param currency The currency.
@@ -1598,6 +1609,7 @@ export function checkoutSubmitted(
  * @param extra Any extra info to send.
  */
 export function finishCheckout(
+    secretKey: string,
     token: string,
     amount: number,
     currency: string,
@@ -1606,6 +1618,7 @@ export function finishCheckout(
 ): FinishCheckoutAction {
     return {
         type: 'finish_checkout',
+        secretKey: secretKey,
         amount: amount,
         currency: currency,
         description: description,

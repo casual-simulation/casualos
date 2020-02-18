@@ -6186,6 +6186,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@player.checkout({
+                                publishableKey: 'key',
                                 productId: 'ID1',
                                 title: 'Product 1',
                                 description: '$50.43',
@@ -6208,6 +6209,7 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([
                     checkout({
+                        publishableKey: 'key',
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
@@ -6224,6 +6226,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@server.finishCheckout({
+                                secretKey: 'key',
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -6245,7 +6248,7 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    finishCheckout('token1', 100, 'usd', 'Test'),
+                    finishCheckout('key', 'token1', 100, 'usd', 'Test'),
                 ]);
             });
 
@@ -6255,6 +6258,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@server.finishCheckout({
+                                secretKey: 'key',
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -6279,7 +6283,7 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    finishCheckout('token1', 100, 'usd', 'Test', {
+                    finishCheckout('key', 'token1', 100, 'usd', 'Test', {
                         abc: 'def',
                     }),
                 ]);
@@ -6434,12 +6438,14 @@ export function botActionsTests(
                 ],
                 [
                     `player.checkout({
+                    publishableKey: 'my_key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
                     processingUniverse: 'channel2'
                 })`,
                     checkout({
+                        publishableKey: 'my_key',
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',

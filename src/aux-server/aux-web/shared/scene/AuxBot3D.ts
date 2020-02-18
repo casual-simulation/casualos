@@ -1,14 +1,6 @@
 import { GameObject } from './GameObject';
-import { AuxBot } from '@casual-simulation/aux-common/aux-format';
 import { Object3D, Box3, Sphere, Group, Color } from 'three';
-import {
-    Bot,
-    TagUpdatedEvent,
-    BotCalculationContext,
-    AuxDomain,
-    isBotInDimension,
-    GLOBALS_BOT_ID,
-} from '@casual-simulation/aux-common';
+import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
@@ -119,7 +111,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      * @param bot The bot.
      * @param calc The calculation context.
      */
-    botAdded(bot: AuxBot, calc: BotCalculationContext) {}
+    botAdded(bot: Bot, calc: BotCalculationContext) {}
 
     /**
      * Notifies this mesh that the given bot has been updated.

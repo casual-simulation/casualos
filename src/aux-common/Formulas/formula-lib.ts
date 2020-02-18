@@ -168,6 +168,11 @@ interface ShowInputOptions {
  */
 interface CheckoutOptions {
     /**
+     * The publishable API Key that should be used to checkout with stripe.
+     */
+    publishableKey: string;
+
+    /**
      * The ID of the product that is being purchased.
      */
     productId: string;
@@ -232,6 +237,11 @@ export interface PaymentRequestOptions {
  * Defines an interface for options that complete payment for a product.
  */
 interface FinishCheckoutOptions {
+    /**
+     * The secret API key that should be used to checkout with stripe.
+     */
+    secretKey: string;
+
     /**
      * The token that authorized payment from the user.
      */
@@ -1125,6 +1135,7 @@ function checkout(options: CheckoutOptions) {
  * @example
  * // Finish the checkout process
  * server.finishCheckout({
+ *   secretKey: 'YOUR_SECRET_API_KEY',
  *   token: 'token from onCheckout',
  *
  *   // 1000 cents == $10.00
@@ -1135,6 +1146,7 @@ function checkout(options: CheckoutOptions) {
  */
 function finishCheckout(options: FinishCheckoutOptions) {
     const event = calcFinishCheckout(
+        options.secretKey,
         options.token,
         options.amount,
         options.currency,

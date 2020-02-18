@@ -1,18 +1,3 @@
-import { calculateStringTagValue } from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
-
-export function getStripeKey(sim: Simulation): string {
-    const calc = sim.helper.createContext();
-    const config = sim.helper.globalsBot;
-    const key = calculateStringTagValue(
-        calc,
-        config,
-        'stripePublishableKey',
-        null
-    );
-    return key;
-}
-
 let stripeLoaded = false;
 
 export async function loadStripe() {

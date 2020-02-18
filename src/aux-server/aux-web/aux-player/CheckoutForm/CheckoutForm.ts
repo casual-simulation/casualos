@@ -16,7 +16,7 @@ import {
     PaymentRequestOptions,
 } from '@casual-simulation/aux-common';
 import { Prop, Watch } from 'vue-property-decorator';
-import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
+import { loadStripe } from '../../shared/checkout/utils';
 import { remote } from '@casual-simulation/causal-trees';
 
 @Component({})
@@ -28,6 +28,7 @@ export default class CheckoutForm extends Vue {
     @Prop({ required: true }) requestBillingAddress: boolean;
     @Prop() paymentRequest: PaymentRequestOptions;
     @Prop({ required: true }) processingUniverse: string;
+    @Prop({ required: true }) publishableKey: string;
 
     billingName: string = '';
     billingEmail: string = '';
@@ -253,7 +254,7 @@ export default class CheckoutForm extends Vue {
     }
 
     private async _initForm() {
-        const key = getStripeKey(this._checkoutSim);
+        const key = this.publishableKey;
         const hasKey = hasValue(key);
         if (!hasKey) {
             this._checkoutSim.helper.transaction(

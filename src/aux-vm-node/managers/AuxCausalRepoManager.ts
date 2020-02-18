@@ -1,12 +1,10 @@
 import {
     CausalRepoClient,
-    LOAD_BRANCH,
     DEVICE_CONNECTED_TO_BRANCH,
-    DEVICE_DISCONNECTED_FROM_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { DeviceInfo, SESSION_ID_CLAIM } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxModule2, Simulation } from '@casual-simulation/aux-vm';
-import { tap, flatMap, concatMap } from 'rxjs/operators';
+import { concatMap } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { nodeSimulationForBranch } from './NodeSimulationFactories';
 

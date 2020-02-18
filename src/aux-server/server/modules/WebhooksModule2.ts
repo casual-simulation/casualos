@@ -1,28 +1,8 @@
 import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
-import {
-    USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    DeviceInfo,
-    remote,
-    SESSION_ID_CLAIM,
-    GUEST_ROLE,
-} from '@casual-simulation/causal-trees';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
-import { flatMap, tap } from 'rxjs/operators';
-import {
-    calculateBotValue,
-    AuxBot,
-    ShellAction,
-    getChannelBotById,
-    LocalActions,
-    action,
-    SendWebhookAction,
-    BotAction,
-} from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    AuxChannelManager,
-} from '@casual-simulation/aux-vm-node';
+import { flatMap } from 'rxjs/operators';
+import { SendWebhookAction } from '@casual-simulation/aux-common';
 import { sendWebhook } from '../../shared/WebhookUtils';
 
 /**

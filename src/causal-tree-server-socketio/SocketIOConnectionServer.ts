@@ -20,20 +20,6 @@ export class SocketIOConnectionServer implements ConnectionServer {
     }
 
     constructor(socketServer: Server) {
-        // socketServer.on('connection', socket => {
-        //     let listener = (token: DeviceToken) => {
-        //         console.log(`[SocketIOConnectionServer] On Login!`);
-        //         const info = deviceInfo(token.username, token.username, token.id);
-
-        //         const conn = new SocketIOConnection(socket, info);
-        //         socket.off('login', listener);
-        //         socket.emi
-
-        //         this._connection.next(conn);
-        //     };
-        //     socket.on('login', listener);
-        // });
-
         const onConnection = fromEventPattern<Socket>(h =>
             socketServer.on('connection', h)
         );

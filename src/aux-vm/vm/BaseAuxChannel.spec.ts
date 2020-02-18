@@ -1,10 +1,5 @@
-import { BaseAuxChannel, filterAtom } from './BaseAuxChannel';
+import { BaseAuxChannel } from './BaseAuxChannel';
 import {
-    RealtimeCausalTree,
-    LocalRealtimeCausalTree,
-    storedTree,
-    site,
-    AuthorizationMessage,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
@@ -12,41 +7,26 @@ import {
     DeviceAction,
     remote,
     DeviceInfo,
-    ADMIN_ROLE,
-    SERVER_ROLE,
-    RealtimeCausalTreeOptions,
-    atom,
-    atomId,
 } from '@casual-simulation/causal-trees';
 import {
-    AuxCausalTree,
-    GLOBALS_BOT_ID,
     createBot,
     botAdded,
-    botRemoved,
-    bot,
-    del,
-    tag,
-    value,
-    DEFAULT_USER_DELETION_TIME,
     browseHistory,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
-import { AuxPartition } from '../partitions/AuxPartition';
+import { AuxPartition, MemoryPartition } from '../partitions/AuxPartition';
 import {
     PartitionConfig,
     MemoryPartitionConfig,
 } from '../partitions/AuxPartitionConfig';
-import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
+import { createAuxPartition } from '../partitions/AuxPartitionFactories';
 import uuid from 'uuid/v4';
 import { createMemoryPartition } from '../partitions';
 import merge from 'lodash/merge';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
-
-const nowMock = (Date.now = jest.fn());
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -57,7 +37,7 @@ describe('BaseAuxChannel', () => {
     let user: AuxUser;
     let device: DeviceInfo;
     let config: AuxConfig;
-    let tree: AuxCausalTree;
+    let memory: MemoryPartition;
 
     beforeEach(async () => {
         user = {
@@ -75,19 +55,7 @@ describe('BaseAuxChannel', () => {
             },
             roles: [],
         };
-        tree = new AuxCausalTree(storedTree(site(1)), {
-            filter: (tree, atom) => {
-                if (channel) {
-                    return filterAtom(
-                        <AuxCausalTree>tree,
-                        atom,
-                        () => channel.helper
-                    );
-                } else {
-                    return true;
-                }
-            },
-        });
+        memory = createMemoryPartition({ type: 'memory', initialState: {} });
         config = {
             config: {
                 isBuilder: false,
@@ -97,13 +65,11 @@ describe('BaseAuxChannel', () => {
             },
             partitions: {
                 shared: {
-                    type: 'causal_tree',
-                    id: 'auxId',
-                    tree: tree,
+                    type: 'memory',
+                    partition: memory,
                 },
             },
         };
-        await tree.root();
 
         channel = new AuxChannelImpl(user, device, config);
     });
@@ -124,14 +90,6 @@ describe('BaseAuxChannel', () => {
             const dimensionBot = channel.helper.botsState['dimensionBot'];
             expect(dimensionBot).toBeTruthy();
             expect(dimensionBot.tags).toMatchSnapshot();
-        });
-
-        it('should create the globals bot', async () => {
-            await channel.initAndWait();
-
-            const globals = channel.helper.globalsBot;
-            expect(globals).toBeTruthy();
-            expect(globals.tags).toMatchSnapshot();
         });
 
         it('should load the builder aux file', async () => {
@@ -163,12 +121,14 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should not overwrite changes to builder from the aux file if the version is not newer', async () => {
-            await tree.addBot(
-                createBot('builder', {
-                    different: true,
-                    builderVersion: 2,
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('builder', {
+                        different: true,
+                        builderVersion: 2,
+                    })
+                ),
+            ]);
 
             channel = new AuxChannelImpl(
                 user,
@@ -197,13 +157,15 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should overwrite changes to builder from the aux file if the version is newer', async () => {
-            await tree.addBot(
-                createBot('builder', {
-                    different: true,
-                    builderVersion: 2,
-                    builderState: 'Disabled',
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('builder', {
+                        different: true,
+                        builderVersion: 2,
+                        builderState: 'Disabled',
+                    })
+                ),
+            ]);
 
             channel = new AuxChannelImpl(
                 user,
@@ -234,12 +196,14 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should enable builder if the builderState tag is not specified on the existing builder', async () => {
-            await tree.addBot(
-                createBot('builder', {
-                    different: true,
-                    builderVersion: 2,
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('builder', {
+                        different: true,
+                        builderVersion: 2,
+                    })
+                ),
+            ]);
 
             channel = new AuxChannelImpl(
                 user,
@@ -269,90 +233,7 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should allow users with the admin role', async () => {
-            config.config.isBuilder = true;
-            await tree.addBot(
-                createBot(GLOBALS_BOT_ID, {
-                    'aux.designers': ['notusername'],
-                })
-            );
-
-            let messages: AuthorizationMessage[] = [];
-            channel.onConnectionStateChanged.subscribe(m => {
-                if (m.type === 'authorization') {
-                    messages.push(m);
-                }
-            });
-
-            device.roles.push(ADMIN_ROLE);
-            await channel.init();
-
-            for (let i = 0; i < 100; i++) {
-                await Promise.resolve();
-            }
-
-            expect(messages).toEqual([
-                {
-                    type: 'authorization',
-                    authorized: true,
-                },
-            ]);
-        });
-
-        it('should allow users with the server role', async () => {
-            config.config.isBuilder = true;
-            await tree.addBot(
-                createBot(GLOBALS_BOT_ID, {
-                    'aux.designers': ['notusername'],
-                })
-            );
-
-            let messages: AuthorizationMessage[] = [];
-            channel.onConnectionStateChanged.subscribe(m => {
-                if (m.type === 'authorization') {
-                    messages.push(m);
-                }
-            });
-
-            device.roles.push(SERVER_ROLE);
-            await channel.init();
-
-            for (let i = 0; i < 100; i++) {
-                await Promise.resolve();
-            }
-
-            expect(messages).toEqual([
-                {
-                    type: 'authorization',
-                    authorized: true,
-                },
-            ]);
-        });
-
-        it('should not error if the tree does not have a root atom', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
-            config = {
-                config: {
-                    isBuilder: false,
-                    isPlayer: false,
-                    version: 'v1.0.0',
-                    versionHash: 'hash',
-                },
-                partitions: {
-                    shared: {
-                        type: 'causal_tree',
-                        id: 'auxId',
-                        tree: tree,
-                    },
-                },
-            };
-            channel = new AuxChannelImpl(user, device, config);
-
-            await channel.initAndWait();
-        });
-
         it('should error if unable to construct a partition', async () => {
-            tree = new AuxCausalTree(storedTree(site(1)));
             config = {
                 config: {
                     isBuilder: false,
@@ -361,7 +242,7 @@ describe('BaseAuxChannel', () => {
                     versionHash: 'hash',
                 },
                 partitions: {
-                    shared: {
+                    shared: <any>{
                         type: 'remote_causal_tree',
                         id: 'auxId',
                         host: 'host',
@@ -377,12 +258,14 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should keep dimensions in users that define a dimension', async () => {
-            await tree.addBot(
-                createBot('user1', {
-                    auxPlayerName: 'user',
-                    auxDimensionConfig: `_user_user_1`,
-                })
-            );
+            await memory.applyEvents([
+                botAdded(
+                    createBot('user1', {
+                        auxPlayerName: 'user',
+                        auxDimensionConfig: `_user_user_1`,
+                    })
+                ),
+            ]);
 
             await channel.initAndWait();
 
@@ -391,106 +274,6 @@ describe('BaseAuxChannel', () => {
             expect(userBot.tags).toEqual({
                 auxPlayerName: 'user',
                 auxDimensionConfig: '_user_user_1',
-            });
-        });
-    });
-
-    describe('onUniverseAction()', () => {
-        it('should send new bot atoms through the onUniverseAction() filter', async () => {
-            await channel.initAndWait();
-            await tree.updateBot(channel.helper.globalsBot, {
-                tags: {
-                    onUniverseAction: `@
-                        if (that.action.type === 'add_bot') {
-                            action.reject(that.action);
-                        }
-                    `,
-                },
-            });
-
-            const a = atom(atomId(2, 100), tree.weave.atoms[0].id, bot('test'));
-            const { rejected } = await tree.add(a);
-
-            expect(rejected).toEqual({
-                atom: a,
-                reason: 'rejected_by_filter',
-            });
-        });
-
-        it('should send delete bot atoms through the onUniverseAction() filter', async () => {
-            await channel.initAndWait();
-            await tree.updateBot(channel.helper.globalsBot, {
-                tags: {
-                    onUniverseAction: `@
-                        if (that.action.type === 'remove_bot') {
-                            action.reject(that.action);
-                        }
-                    `,
-                },
-            });
-
-            const { added } = await tree.addBot(createBot('test'));
-
-            const a = atom(atomId(2, 100), added[0].id, del());
-            const { rejected } = await tree.add(a);
-
-            expect(rejected).toEqual({
-                atom: a,
-                reason: 'rejected_by_filter',
-            });
-        });
-
-        it('should send update tag atoms through the onUniverseAction() filter', async () => {
-            await channel.initAndWait();
-            await tree.updateBot(channel.helper.globalsBot, {
-                tags: {
-                    onUniverseAction: `@
-                        if (that.action.type === 'update_bot') {
-                            action.reject(that.action);
-                        }
-                    `,
-                },
-            });
-
-            const { added } = await tree.addBot(createBot('test'));
-
-            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
-            const { rejected: rejected1 } = await tree.add(a1);
-
-            const a2 = atom(atomId(2, 101), a1.id, value(123));
-            const { rejected: rejected2 } = await tree.add(a2);
-
-            expect(rejected1).toBe(null);
-            expect(rejected2).toEqual({
-                atom: a2,
-                reason: 'rejected_by_filter',
-            });
-        });
-
-        it('should send delete tag atoms through the onUniverseAction() filter', async () => {
-            await channel.initAndWait();
-            await tree.updateBot(channel.helper.globalsBot, {
-                tags: {
-                    onUniverseAction: `@
-                        if (that.action.type === 'update_bot') {
-                            action.reject(that.action);
-                        }
-                    `,
-                },
-            });
-
-            const { added } = await tree.addBot(createBot('test'));
-
-            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
-            const { rejected: rejected1 } = await tree.add(a1);
-
-            const a2 = atom(atomId(2, 101), a1.id, del());
-            const { rejected: rejected2 } = await tree.add(a2);
-
-            expect(rejected1).toBe(null);
-            expect(rejected2).toEqual({
-                atom: a2,
-                reason: 'rejected_by_filter',
             });
         });
     });
@@ -644,9 +427,8 @@ describe('BaseAuxChannel', () => {
                 },
                 partitions: {
                     shared: {
-                        type: 'causal_tree',
-                        id: 'auxId',
-                        tree: tree,
+                        type: 'memory',
+                        partition: memory,
                     },
                     tempLocal: {
                         type: 'memory',
@@ -663,7 +445,6 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            await tree.root();
 
             channel = new AuxChannelImpl(user, device, config);
         });
@@ -679,7 +460,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    config: expect.any(Object),
                     dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
@@ -688,7 +468,7 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should inlcude the ID, tags, and space properties', async () => {
+        it('should include the ID, tags, and space properties', async () => {
             uuidMock.mockReturnValue('dimensionBot');
             await channel.initAndWait();
 
@@ -699,7 +479,6 @@ describe('BaseAuxChannel', () => {
             expect(exported).toEqual({
                 version: 1,
                 state: {
-                    config: expect.any(Object),
                     dimensionBot: expect.any(Object),
                     userId: expect.any(Object),
                     test: createBot('test', {}, 'shared'),
@@ -733,10 +512,6 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
-        return createAuxPartition(
-            config,
-            createLocalCausalTreePartitionFactory({}, this.user, this._device),
-            cfg => createMemoryPartition(cfg)
-        );
+        return createAuxPartition(config, cfg => createMemoryPartition(cfg));
     }
 }

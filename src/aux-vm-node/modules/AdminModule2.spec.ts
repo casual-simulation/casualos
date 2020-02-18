@@ -1,5 +1,4 @@
 import {
-    AuxCausalTree,
     botAdded,
     createBot,
     shell,
@@ -7,25 +6,17 @@ import {
     action,
 } from '@casual-simulation/aux-common';
 import {
-    storedTree,
-    site,
     DeviceInfo,
     USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    ADMIN_ROLE,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    RemoteAction,
-    remote,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
-import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AdminModule2 } from './AdminModule2';
 import { Subscription } from 'rxjs';
 import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
-import { NodeSimulation } from '../managers/NodeSimulation';
 import { nodeSimulationForLocalRepo } from '../managers/NodeSimulationFactories';
 
 console.error = jest.fn();
@@ -40,8 +31,6 @@ describe('AdminModule2', () => {
     let simulation: Simulation;
     let user: AuxUser;
     let device: DeviceInfo;
-    let serverDevice: DeviceInfo;
-    let config: AuxConfig;
     let subject: AdminModule2;
     let sub: Subscription;
 
@@ -53,19 +42,6 @@ describe('AdminModule2', () => {
             username: 'username',
             token: 'token',
         };
-        config = {
-            config: {
-                isBuilder: false,
-                isPlayer: false,
-                versionHash: 'abc',
-                version: 'v1.0.0',
-            },
-            partitions: {
-                shared: {
-                    type: 'causal_repo',
-                },
-            },
-        };
         device = {
             claims: {
                 [USERNAME_CLAIM]: 'username',
@@ -73,14 +49,6 @@ describe('AdminModule2', () => {
                 [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
-        };
-        serverDevice = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [SERVER_ROLE],
         };
 
         simulation = nodeSimulationForLocalRepo(user, 'simulationId');
@@ -152,18 +120,13 @@ describe('AdminModule2', () => {
                     testShout: '@setTag(this, "abc", true)',
                 });
 
-                await simulation.helper.updateBot(
-                    simulation.helper.globalsBot,
-                    {
-                        tags: {
-                            onUniverseAction: `@
-                                if (that.action.type === 'device') {
-                                    action.perform(that.action.event);
-                                }
-                            `,
-                        },
-                    }
-                );
+                await simulation.helper.createBot('filter', {
+                    onUniverseAction: `@
+                            if (that.action.type === 'device') {
+                                action.perform(that.action.event);
+                            }
+                        `,
+                });
 
                 await simulation.helper.transaction({
                     type: 'device',
@@ -184,48 +147,6 @@ describe('AdminModule2', () => {
     });
 
     describe('deviceConnected()', () => {
-        it('should set the number of connected devices on the globals bot', async () => {
-            await subject.deviceConnected(simulation, device);
-
-            let testDevice2: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername2',
-                    [DEVICE_ID_CLAIM]: 'deviceId2',
-                    [SESSION_ID_CLAIM]: 'sessionId2',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(simulation, testDevice2);
-
-            expect(simulation.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 2,
-                },
-            });
-
-            await subject.deviceDisconnected(simulation, device);
-
-            expect(simulation.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 1,
-                },
-            });
-
-            await subject.deviceDisconnected(simulation, testDevice2);
-
-            // Wait for the async operations to finish
-            await waitAsync();
-
-            expect(simulation.helper.globalsBot).toMatchObject({
-                id: GLOBALS_BOT_ID,
-                tags: {
-                    auxConnectedSessions: 0,
-                },
-            });
-        });
-
         it('should set the auxPlayerActive tag based on the session ID', async () => {
             await simulation.helper.transaction(
                 botAdded(createBot(GLOBALS_BOT_ID, {}))

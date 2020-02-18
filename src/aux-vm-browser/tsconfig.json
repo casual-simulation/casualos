@@ -15,7 +15,6 @@
         { "path": "../aux-vm" },
         { "path": "../aux-vm-client" },
         { "path": "../causal-tree-client-socketio" },
-        { "path": "../causal-tree-store-browser" },
         { "path": "../crypto-browser" }
     ]
 }

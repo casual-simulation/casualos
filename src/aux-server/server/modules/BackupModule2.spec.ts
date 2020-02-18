@@ -1,35 +1,22 @@
 import {
-    botAdded,
-    AuxCausalTree,
-    createBot,
     backupToGithub,
     backupAsDownload,
     download,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    storedTree,
-    site,
-    RealtimeChannelInfo,
     DeviceInfo,
-    ADMIN_ROLE,
-    RemoteAction,
-    remote,
     device as deviceEvent,
     deviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
-import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
+import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { BackupModule2 } from './BackupModule2';
-import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
-import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
-import { take, flatMap } from 'rxjs/operators';
+import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { take } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 import {
     CausalRepoClient,

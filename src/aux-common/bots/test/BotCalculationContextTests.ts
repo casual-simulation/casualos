@@ -58,17 +58,14 @@ import {
 } from '../BotCalculations';
 import {
     Bot,
-    PartialBot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
-    DEFAULT_WORKSPACE_HEIGHT,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
-import { AuxBot } from '../../aux-format/AuxState';
 import { types } from 'util';
 
 export function botCalculationContextTests(
@@ -2677,7 +2674,7 @@ export function botCalculationContextTests(
         });
 
         it('should remove the metadata property from bots', () => {
-            const obj: AuxBot = {
+            const obj: any = {
                 id: 'test',
                 metadata: {
                     ref: null,
@@ -3315,7 +3312,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotSubShape()', () => {
-        const cases = [['gltf'], ['poly']];
+        const cases = [['gltf']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxFormSubtype: <any>shape,
@@ -4127,7 +4124,7 @@ export function botCalculationContextTests(
         ];
         it.each(cases)('given %s it should return %s', (anchor, expected) => {
             const bot = createBot('bot', {
-                auxLabelAnchor: anchor,
+                auxLabelPosition: anchor,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4138,7 +4135,7 @@ export function botCalculationContextTests(
 
         it('should support formulas', () => {
             const bot = createBot('bot', {
-                auxLabelAnchor: '="front"',
+                auxLabelPosition: '="front"',
             });
 
             const calc = createCalculationContext([bot]);

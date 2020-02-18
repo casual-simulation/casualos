@@ -1,5 +1,22 @@
 # AUX Changelog
 
+## V1.0.6
+
+### Date: TBD
+
+### Changes:
+
+#### :boom: Breaking Changes
+
+-   Renamed `auxLabelAnchor` to `auxLabelPosition`.
+-   Renamed `auxProgressBarAnchor` to `auxProgressBarPosition`.
+-   Removed the `config` bot.
+-   Moved the `#stripePublishableKey` and `#stripeSecretKey` tags from the config bot to the `player.checkout()` and `server.finishCheckout()` function options.
+-   `@onUniverseAction` is now a shout.
+-   Removed [poly.google.com](https://poly.google.com) support.
+    -   To load meshes from poly.google.com, you must make the API requests manually.
+    -   See https://casualos.com/home/google-poly-example for an example.
+
 ## V1.0.5
 
 ### Date: 2/14/2020
