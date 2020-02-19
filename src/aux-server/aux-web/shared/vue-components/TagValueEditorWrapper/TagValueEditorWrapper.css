@@ -3,4 +3,5 @@
     min-height: 250px;
     max-height: 80%;
     overflow-x: hidden;
+    overflow: visible;
 }
