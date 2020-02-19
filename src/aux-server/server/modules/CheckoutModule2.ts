@@ -1,16 +1,8 @@
-import {
-    AuxModule2,
-    AuxChannel,
-    Simulation,
-    AuxUser,
-} from '@casual-simulation/aux-vm';
+import { AuxModule2, Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
-    RealtimeChannelInfo,
     DeviceInfo,
-    remote,
     SESSION_ID_CLAIM,
-    CausalTreeStore,
     DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
@@ -20,22 +12,16 @@ import {
     CheckoutSubmittedAction,
     ON_CHECKOUT_ACTION_NAME,
     FinishCheckoutAction,
-    calculateStringTagValue,
     BotTags,
     action,
     ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
     ON_PAYMENT_FAILED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    isAdminChannel,
-    AuxChannelManager,
-    nodeSimulationWithConfig,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import Stripe from 'stripe';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import { StripeFactory } from './CheckoutModule';
+
+export type StripeFactory = (key: string) => Stripe;
 
 /**
  * Defines an module that adds Github-related functionality.
@@ -150,14 +136,7 @@ export class CheckoutModule2 implements AuxModule2 {
         event: FinishCheckoutAction
     ) {
         try {
-            const calc = channel.helper.createContext();
-            const globals = channel.helper.globalsBot;
-            const key = calculateStringTagValue(
-                calc,
-                globals,
-                'stripeSecretKey',
-                null
-            );
+            const key = event.secretKey;
 
             if (!key) {
                 console.log(

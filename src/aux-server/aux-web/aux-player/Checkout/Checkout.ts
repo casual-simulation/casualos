@@ -13,7 +13,7 @@ import {
     StartCheckoutAction,
 } from '@casual-simulation/aux-common';
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
-import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
+import { loadStripe } from '../../shared/checkout/utils';
 import { remote } from '@casual-simulation/causal-trees';
 import { PaymentRequestOptions } from '@casual-simulation/aux-common/Formulas/formula-lib';
 
@@ -32,6 +32,7 @@ export default class Checkout extends Vue {
     description: string = '';
     requestBillingAddress: boolean = false;
     paymentRequest: PaymentRequestOptions = null;
+    publishableKey: string = null;
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]>;
@@ -72,15 +73,6 @@ export default class Checkout extends Vue {
         let subs: SubscriptionLike[] = [];
 
         subs.push(
-            sim.connection.syncStateChanged
-                .pipe(first(connected => connected))
-                .subscribe(connected => {
-                    const key = getStripeKey(sim);
-                    const hasKey = hasValue(key);
-                    if (hasKey) {
-                        loadStripe();
-                    }
-                }),
             sim.localEvents.subscribe(e => {
                 if (e.type === 'start_checkout') {
                     this._startCheckout(sim, e);
@@ -101,6 +93,8 @@ export default class Checkout extends Vue {
     }
 
     private async _startCheckout(sim: Simulation, event: StartCheckoutAction) {
+        loadStripe();
+
         this.showCheckoutDialog = true;
         this.simulationId = sim.id;
         this.description = event.description;
@@ -109,5 +103,6 @@ export default class Checkout extends Vue {
         this.productId = event.productId;
         this.processingUniverse = event.processingUniverse;
         this.paymentRequest = event.paymentRequest;
+        this.publishableKey = event.publishableKey;
     }
 }

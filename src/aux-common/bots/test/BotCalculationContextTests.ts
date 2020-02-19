@@ -58,17 +58,14 @@ import {
 } from '../BotCalculations';
 import {
     Bot,
-    PartialBot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
-    DEFAULT_WORKSPACE_HEIGHT,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
-import { AuxBot } from '../../aux-format/AuxState';
 import { types } from 'util';
 
 export function botCalculationContextTests(
@@ -314,6 +311,36 @@ export function botCalculationContextTests(
 
             it('should return bots that have the same ID as the selection', () => {
                 const selectionId = 'abcdefg1234';
+                const bot1 = createBot('test1');
+                const bot2 = createBot('abcdefg1234');
+
+                bot1.tags[selectionId] = true;
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1, bot2]);
+            });
+
+            it('should support the id tag', () => {
+                const selectionId = 'id';
+                const bot1 = createBot('test1');
+                const bot2 = createBot('abcdefg1234');
+
+                bot1.tags[selectionId] = true;
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1, bot2]);
+            });
+
+            it('should support the space tag', () => {
+                const selectionId = 'space';
                 const bot1 = createBot('test1');
                 const bot2 = createBot('abcdefg1234');
 
@@ -2474,6 +2501,51 @@ export function botCalculationContextTests(
                 });
             });
 
+            describe('config', () => {
+                it('should define a config variable which is the bot that referenced by auxConfigBot', () => {
+                    const bot = createBot('test', {
+                        auxConfigBot: 'other',
+                        formula: `=config.id`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('other');
+                });
+            });
+
+            describe('tagName', () => {
+                it('should define a tagName variable which is equal to the current tag', () => {
+                    const bot = createBot('test', {
+                        formula: `=tagName`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('formula');
+                });
+            });
+
+            describe('configTag', () => {
+                it('should define a configTag variable which is equal to config.tags[tagName]', () => {
+                    const bot = createBot('test', {
+                        auxConfigBot: 'other',
+                        formula: `=configTag`,
+                    });
+                    const other = createBot('other', {
+                        formula: 'abc',
+                    });
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('abc');
+                });
+            });
+
             describe('getID()', () => {
                 it('should get the ID of the given bot', () => {
                     const bot = createBot('test', {
@@ -2677,7 +2749,7 @@ export function botCalculationContextTests(
         });
 
         it('should remove the metadata property from bots', () => {
-            const obj: AuxBot = {
+            const obj: any = {
                 id: 'test',
                 metadata: {
                     ref: null,
@@ -3315,7 +3387,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotSubShape()', () => {
-        const cases = [['gltf'], ['poly']];
+        const cases = [['gltf']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxFormSubtype: <any>shape,
@@ -4127,7 +4199,7 @@ export function botCalculationContextTests(
         ];
         it.each(cases)('given %s it should return %s', (anchor, expected) => {
             const bot = createBot('bot', {
-                auxLabelAnchor: anchor,
+                auxLabelPosition: anchor,
             });
 
             const calc = createCalculationContext([bot]);
@@ -4138,7 +4210,7 @@ export function botCalculationContextTests(
 
         it('should support formulas', () => {
             const bot = createBot('bot', {
-                auxLabelAnchor: '="front"',
+                auxLabelPosition: '="front"',
             });
 
             const calc = createCalculationContext([bot]);

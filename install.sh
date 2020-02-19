@@ -143,6 +143,28 @@ docker() {
 }
 
 docker_compose() {
+    # Install Docker Compose Dependencies
+    echo "DEBUG: Installing Docker Compose Dependencies..."
+    sudo apt-get install -y \
+    python3-jsonschema \
+    python3-requests \
+    python3-websocket \
+    python3-six \
+    python3-cached-property \
+    python3-texttable \
+    python3-docopt \
+    python3-pretty-yaml \
+    python3-dockerpty \
+    python3-paramiko \
+    python3-setuptools \
+    python3-attr \
+    python3-nacl \
+    python3-cryptography \
+    python3-bcrypt \
+    python3-cffi
+
+
+
     # Install Docker Compose
     echo "DEBUG: Installing Docker Compose..."
     sudo pip3 install docker-compose

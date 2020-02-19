@@ -1,26 +1,15 @@
-import {
-    Vector3,
-    Group,
-    Mesh,
-    Math as ThreeMath,
-    MeshToonMaterial,
-    Color,
-} from 'three';
-import { Text3D } from '../Text3D';
+import { Group, Mesh, Math as ThreeMath, MeshToonMaterial, Color } from 'three';
 import {
     BotCalculationContext,
-    AuxObject,
-    getUserBotColor,
     isUserActive,
     calculateBooleanTagValue,
-    USERS_DIMENSION,
+    DEFAULT_PLAYER_USER_COLOR,
 } from '@casual-simulation/aux-common';
-import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { disposeMesh, createUserCone } from '../SceneUtils';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
-import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
-import { appManager } from '../../AppManager';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
@@ -64,8 +53,6 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let bot = <AuxObject>this.bot3D.bot;
-
         // visible if not destroyed, and was active in the last minute
         this.container.visible = this._isActive(calc);
     }
@@ -96,14 +83,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
             return;
         }
 
-        const isInAuxPlayer = this.bot3D.dimension !== USERS_DIMENSION;
-        const color = getUserBotColor(
-            calc,
-            this.bot3D.bot,
-            this.bot3D.dimensionGroup.simulation3D.simulation.helper.globalsBot,
-            isInAuxPlayer ? 'player' : 'builder'
-        );
-
+        const color = DEFAULT_PLAYER_USER_COLOR;
         const material: MeshToonMaterial = <MeshToonMaterial>this.mesh.material;
         material.color.set(new Color(color));
 

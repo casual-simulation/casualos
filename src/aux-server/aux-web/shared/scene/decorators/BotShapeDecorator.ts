@@ -7,6 +7,7 @@ import {
     BotShape,
     getBotSubShape,
     BotSubShape,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -35,11 +36,8 @@ import {
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import { getPolyKey } from '../PolyUtils';
-import axios from 'axios';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
-import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 const gltfPool = getGLTFPool('main');
 
@@ -47,6 +45,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
     private _subShape: BotSubShape = null;
+    private _gltfVersion: number = null;
     private _address: string = null;
     private _canHaveStroke = false;
 
@@ -69,7 +68,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
 
-        this._rebuildShape('cube', null, null);
+        this._rebuildShape('cube', null, null, null);
     }
 
     // frameUpdate?(calc: BotCalculationContext): void {
@@ -84,19 +83,31 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.bot3D.bot,
             'auxFormAddress'
         );
-        if (this._needsUpdate(shape, subShape, address)) {
-            this._rebuildShape(shape, subShape, address);
+        const version = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxGLTFVersion',
+            2
+        );
+        if (this._needsUpdate(shape, subShape, address, version)) {
+            this._rebuildShape(shape, subShape, address, version);
         }
 
         this._updateColor(calc);
         this._updateStroke(calc);
     }
 
-    private _needsUpdate(shape: string, subShape: string, address: string) {
+    private _needsUpdate(
+        shape: string,
+        subShape: string,
+        address: string,
+        version: number
+    ) {
         return (
             this._shape !== shape ||
             this._subShape !== subShape ||
-            (shape === 'mesh' && this._address !== address)
+            (shape === 'mesh' &&
+                (this._address !== address || this._gltfVersion !== version))
         );
     }
 
@@ -182,11 +193,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
-        address: string
+        address: string,
+        version: number
     ) {
         this._shape = shape;
         this._subShape = subShape;
         this._address = address;
+        this._gltfVersion = version;
         if (this.mesh || this.scene) {
             this.dispose();
         }
@@ -205,8 +218,6 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
-            } else if (this._subShape === 'poly' && this._address) {
-                this._createPoly();
             } else {
                 this._createCube();
             }
@@ -215,50 +226,10 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.onMeshUpdated.invoke(this);
     }
 
-    private async _createPoly() {
-        this.stroke = null;
-        this._canHaveStroke = false;
-
-        const group = this.bot3D.dimensionGroup;
-        if (!group) {
-            return;
-        }
-        const simulation = group.simulation3D.simulation;
-        if (!simulation) {
-            return;
-        }
-        const apiKey = getPolyKey(simulation);
-        if (!apiKey) {
-            console.warn(
-                '[BotShapeDecorator] Trying to use a poly form but no poly api key is specified.'
-            );
-            return;
-        }
-        const id = this._address;
-        try {
-            const resp = await axios.get(
-                `https://poly.googleapis.com/v1/assets/${id}/?key=${apiKey}`
-            );
-            const asset = resp.data;
-            const format = asset.formats.find(
-                (format: any) => format.formatType === 'GLTF'
-            );
-            if (!!format) {
-                const url = format.root.url;
-                await this._loadGLTF(url, true);
-            }
-        } catch (err) {
-            console.error(
-                '[BotShapeDecorator] Unable to load Poly ' + this._address,
-                err
-            );
-        }
-    }
-
     private _createGltf() {
         this.stroke = null;
         this._canHaveStroke = false;
-        this._loadGLTF(this._address, false);
+        this._loadGLTF(this._address, this._gltfVersion < 2);
     }
 
     private async _loadGLTF(url: string, legacy: boolean) {

@@ -17,20 +17,14 @@ import {
     AddAtomsEvent,
     ADD_ATOMS,
 } from '@casual-simulation/causal-trees/core2';
+import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
 import {
-    AuxModule2,
-    AuxChannel,
-    BaseSimulation,
-    Simulation,
-} from '@casual-simulation/aux-vm';
-import {
-    RealtimeChannelInfo,
     DeviceInfo,
     SESSION_ID_CLAIM,
     deviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
-import { waitAsync, wait } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 
 console.log = jest.fn();
 

@@ -1,12 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import {
-    Object,
-    AuxBot,
-    tagsOnBot,
-    botTags,
-} from '@casual-simulation/aux-common';
+import { tagsOnBot, botTags, Bot } from '@casual-simulation/aux-common';
 import { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';
@@ -19,7 +14,7 @@ import debounce from 'lodash/debounce';
     },
 })
 export default class MiniBot extends Vue {
-    @Prop() bot: AuxBot;
+    @Prop() bot: Bot;
     @Prop({ default: false })
     large: boolean;
     @Prop({ default: false })
@@ -52,7 +47,7 @@ export default class MiniBot extends Vue {
     }
 
     @Watch('bot')
-    private _botChanged(bot: AuxBot) {
+    private _botChanged(bot: Bot) {
         this._updateBot();
     }
 
@@ -109,7 +104,7 @@ export default class MiniBot extends Vue {
         this.$forceUpdate();
     }
 
-    private _handleBotRenderRefresh(bot: AuxBot): void {
+    private _handleBotRenderRefresh(bot: Bot): void {
         if (this.bot === bot) {
             this._botChanged(bot);
         }

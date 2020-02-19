@@ -12,7 +12,6 @@
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
         { "path": "../causal-trees" },
-        { "path": "../causal-tree-store-browser" },
         { "path": "../crypto" },
         { "path": "../crypto-browser" }
     ]

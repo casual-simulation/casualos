@@ -867,6 +867,7 @@ The **first parameter** is the options to use to setup the checkout screen.
 1. Show a checkout box for 10 cookies.
 ```typescript
 player.checkout({
+    publishableKey: 'YOUR_PUBLISHABLE_API_KEY',
     productId: '10_cookies',
     title: '10 Cookies',
     description: '$5.00',
@@ -1954,6 +1955,8 @@ The **first parameter** are the options needed to finish the checkout process.
 1. Finish the checkout process.
 ```typescript
 server.finishCheckout({
+    secretKey: 'YOUR_SECRET_API_KEY',
+    
     token: 'token from onCheckout',
 
     // 1000 cents == $10.00

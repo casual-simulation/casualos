@@ -1,5 +1,4 @@
 import { Atom, AtomId, atom, atomId } from './Atom2';
-import { SiteInfo } from '../core/SiteIdInfo';
 
 /**
  * Defines a class that can create atoms based on a site ID and lamport timestamp.

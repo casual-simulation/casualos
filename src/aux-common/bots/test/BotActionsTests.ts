@@ -529,45 +529,380 @@ export function botActionsTests(
             ]);
         });
 
-        it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'abc',
-                        auxCreator: 'thatBot',
-                        test: '@setTag(this, "creatorId", creator.id)',
+        describe('creator', () => {
+            it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            auxCreator: 'thatBot',
+                            test: '@setTag(this, "creatorId", creator.id)',
+                        },
                     },
-                },
-                thatBot: {
-                    id: 'thatBot',
-                    tags: {
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'def',
-                        name: 'Joe',
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'def',
+                            name: 'Joe',
+                        },
                     },
-                },
-            };
+                };
 
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
-                state,
-                botAction,
-                createSandbox
-            );
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(true);
 
-            expect(result.events).toEqual([
-                botUpdated('thisBot', {
-                    tags: {
-                        creatorId: 'thatBot',
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            creatorId: 'thatBot',
+                        },
+                    }),
+                ]);
+            });
+
+            it('the creator variable should be null if the bot has no creator', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test:
+                                '@setTag(this, "hasCreator", creator !== null)',
+                        },
                     },
-                }),
-            ]);
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            hasCreator: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('the creator variable should be null if the bot is referencing a missing creator', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            auxCreator: 'none',
+                            test:
+                                '@setTag(this, "hasCreator", creator !== null)',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            hasCreator: false,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('config', () => {
+            it('should pass in a config variable which equals getBot("id", tags.auxConfigBot)', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            auxConfigBot: 'thatBot',
+                            test: '@setTag(this, "configId", config.id)',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            configId: 'thatBot',
+                        },
+                    }),
+                ]);
+            });
+
+            it('the config variable should be null if auxConfigBot is not set', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@setTag(this, "hasConfig", config !== null)',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            hasConfig: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('the config variable should be null if auxConfigBot is referencing a missing bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            auxConfigBot: 'none',
+                            test: '@setTag(this, "hasConfig", config !== null)',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            hasConfig: false,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('tagName', () => {
+            it('should pass in a tagName variable which is the name of the tag that is currently executing', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@setTag(this, "runningTag", tagName)',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            runningTag: 'test',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should set the tagName variable to the name of the original tag even in formulas', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            val: '@setTag(this, "runningTag", tagName)',
+                            test: '=tags.val',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            runningTag: 'test',
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('configTag', () => {
+            it('should define a configTag variable which equals config.tags[tagName]', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            auxConfigBot: 'thatBot',
+                            test: '@setTag(this, "parentScript", configTag)',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            test: 'player.toast("hello")',
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            parentScript: 'player.toast("hello")',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should contain the value that the config bot contained when the script started', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            auxConfigBot: 'thatBot',
+                            test: `@config.tags.test = "abc"; setTag(this, "parentScript", configTag)`,
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        tags: {
+                            test: 'player.toast("hello")',
+                            name: 'Joe',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thatBot', {
+                        tags: {
+                            test: 'abc',
+                        },
+                    }),
+                    botUpdated('thisBot', {
+                        tags: {
+                            parentScript: 'player.toast("hello")',
+                        },
+                    }),
+                ]);
+            });
         });
 
         it('should not allow changing the ID', () => {
@@ -6186,6 +6521,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@player.checkout({
+                                publishableKey: 'key',
                                 productId: 'ID1',
                                 title: 'Product 1',
                                 description: '$50.43',
@@ -6208,6 +6544,7 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([
                     checkout({
+                        publishableKey: 'key',
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',
@@ -6224,6 +6561,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@server.finishCheckout({
+                                secretKey: 'key',
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -6245,7 +6583,7 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    finishCheckout('token1', 100, 'usd', 'Test'),
+                    finishCheckout('key', 'token1', 100, 'usd', 'Test'),
                 ]);
             });
 
@@ -6255,6 +6593,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             test: `@server.finishCheckout({
+                                secretKey: 'key',
                                 token: 'token1',
                                 description: 'Test',
                                 amount: 100,
@@ -6279,7 +6618,7 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    finishCheckout('token1', 100, 'usd', 'Test', {
+                    finishCheckout('key', 'token1', 100, 'usd', 'Test', {
                         abc: 'def',
                     }),
                 ]);
@@ -6434,12 +6773,14 @@ export function botActionsTests(
                 ],
                 [
                     `player.checkout({
+                    publishableKey: 'my_key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
                     processingUniverse: 'channel2'
                 })`,
                     checkout({
+                        publishableKey: 'my_key',
                         productId: 'ID1',
                         title: 'Product 1',
                         description: '$50.43',

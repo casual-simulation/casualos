@@ -1,44 +1,16 @@
-import {
-    User,
-    RealtimeCausalTree,
-    StatusUpdate,
-    DeviceAction,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    USER_ROLE,
-    Action,
-} from '@casual-simulation/causal-trees';
-import {
-    Weave,
-    WeaveResult,
-    atom,
-    atomId,
-    Atom,
-    SiteStatus,
-    newSite,
-    createAtom,
-    updateSite,
-    WeaveNode,
-    iterateCausalGroup,
-    addedAtom,
-} from '@casual-simulation/causal-trees/core2';
+import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
     auxTree,
     applyEvents,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
-import { AuxPartitionBase, CausalRepoPartition } from './AuxPartition';
-import { filter, map, switchMap, startWith } from 'rxjs/operators';
+import { Observable, Subscription, Subject } from 'rxjs';
+import { CausalRepoPartition } from './AuxPartition';
+import { startWith } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
-    BotsState,
     UpdatedBot,
-    merge,
-    BotTags,
-    hasValue,
     getActiveObjects,
     AddBotAction,
     RemoveBotAction,
@@ -75,7 +47,6 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
-    private _user: User;
 
     // private _weave: Weave<AuxOp> = new Weave<AuxOp>();
     // private _site: SiteStatus = newSite();
@@ -124,7 +95,6 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     private: boolean;
 
     constructor(user: User, config: CausalRepoPartitionConfig) {
-        this._user = user;
         this.private = config.private || false;
     }
 

@@ -1,29 +1,11 @@
 import {
     User,
-    RealtimeCausalTree,
     StatusUpdate,
-    DeviceAction,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    USER_ROLE,
     RemoteAction,
     Action,
 } from '@casual-simulation/causal-trees';
 import {
-    Weave,
-    WeaveResult,
-    atom,
-    atomId,
     Atom,
-    SiteStatus,
-    newSite,
-    createAtom,
-    updateSite,
-    WeaveNode,
-    iterateCausalGroup,
-    addedAtom,
-    insertAtom,
     addedAtoms,
     removedAtoms,
     CausalRepoClient,
@@ -35,16 +17,12 @@ import {
     BotStateUpdates,
     applyAtoms,
 } from '@casual-simulation/aux-common/aux-format-2';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
-import { filter, map, switchMap, startWith } from 'rxjs/operators';
+import { Observable, Subscription, Subject } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
-    BotsState,
     UpdatedBot,
-    merge,
-    BotTags,
-    hasValue,
     getActiveObjects,
     AddBotAction,
     RemoveBotAction,
@@ -172,7 +150,6 @@ export class RemoteCausalRepoPartitionImpl
                 const markHistory = <MarkHistoryAction>event.event;
                 this._client.commit(this._branch, markHistory.message);
             } else if (event.event.type === 'browse_history') {
-                const browseHistory = <BrowseHistoryAction>event.event;
                 this._onEvents.next([
                     loadSpace('history', <
                         CausalRepoHistoryClientPartitionConfig

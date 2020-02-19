@@ -3,7 +3,6 @@ import {
     parseSimulationId,
     SimulationIdParseSuccess,
     GLOBALS_BOT_ID,
-    AuxOp,
     BotIndex,
 } from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike } from 'rxjs';

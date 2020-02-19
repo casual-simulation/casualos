@@ -1,7 +1,6 @@
 import { Vector3, Euler, OrthographicCamera } from 'three';
 import {
     BotCalculationContext,
-    AuxObject,
     calculateGridScale,
     getBotRotation,
     getBotPosition,
@@ -72,7 +71,7 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let bot = <AuxObject>this.bot3D.bot;
+        let bot = this.bot3D.bot;
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {

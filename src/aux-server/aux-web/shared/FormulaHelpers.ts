@@ -25,6 +25,11 @@ export function calculateFormulaDefinitions(options?: FormulaLibraryOptions) {
             ...Object.keys(formulaLib).map(k => `  const ${k}: _${k};`),
             `  const bot: Bot;`,
             `  const tags: BotTags;`,
+            `  const raw: BotTags;`,
+            `  const creator: Bot;`,
+            `  const config: Bot`,
+            `  const tagName: string;`,
+            `  const configTag: any`,
             '}',
         ].join('\n');
 

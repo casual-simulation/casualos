@@ -4,8 +4,6 @@ import {
     BotsState,
     getActiveObjects,
     createCalculationContext,
-    AuxBot,
-    AuxState,
     BotAction,
     BotActions,
     createBot,
@@ -26,7 +24,6 @@ import {
     Sandbox,
     SandboxFactory,
     searchBotState,
-    AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
     addToDimensionDiff,
@@ -50,12 +47,7 @@ import {
     addState,
     calculateBotValue,
 } from '@casual-simulation/aux-common';
-import {
-    storedTree,
-    StoredCausalTree,
-    RemoteAction,
-    DeviceAction,
-} from '@casual-simulation/causal-trees';
+import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
 import flatMap from 'lodash/flatMap';
 import fromPairs from 'lodash/fromPairs';
@@ -68,8 +60,6 @@ import {
     AuxPartitions,
     getPartitionState,
     AuxPartition,
-    iteratePartitions,
-    CausalTreePartition,
 } from '../partitions/AuxPartition';
 import { StoredAux } from '../StoredAux';
 import transform from 'lodash/transform';
@@ -78,7 +68,7 @@ import transform from 'lodash/transform';
  * Definesa a class that contains a set of functions to help an AuxChannel
  * run formulas and process bot events.
  */
-export class AuxHelper extends BaseHelper<AuxBot> {
+export class AuxHelper extends BaseHelper<Bot> {
     private static readonly _debug = false;
     private _partitions: AuxPartitions;
     private _lib: SandboxLibrary;
@@ -86,8 +76,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     private _remoteEvents: Subject<RemoteAction[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _sandboxFactory: SandboxFactory;
-    private _partitionStates: Map<string, AuxState>;
-    private _stateCache: Map<string, AuxState>;
+    private _partitionStates: Map<string, BotsState>;
+    private _stateCache: Map<string, BotsState>;
 
     /**
      * Creates a new bot helper.
@@ -113,14 +103,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     /**
      * Gets the current local bot state.
      */
-    get botsState(): AuxState {
+    get botsState(): BotsState {
         return this._getPartitionsState('all', () => true);
     }
 
     /**
      * Gets the public bot state.
      */
-    get publicBotsState(): AuxState {
+    get publicBotsState(): BotsState {
         return this._getPartitionsState('public', p => !p.private);
     }
 
@@ -143,7 +133,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     private _getPartitionsState(
         cacheName: string,
         filter: (partition: AuxPartition) => boolean
-    ): AuxState {
+    ): BotsState {
         const cachedState = this._getCachedState(cacheName, filter);
 
         if (cachedState) {
@@ -162,7 +152,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             if (!filter(partition)) {
                 continue;
             }
-            const bots = <AuxState>getPartitionState(partition);
+            const bots = getPartitionState(partition);
             this._partitionStates.set(key, bots);
 
             const finalBots = transform<Bot, Bot>(bots, (result, value, id) => {
@@ -182,8 +172,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             }
         }
 
-        this._stateCache.set(cacheName, <AuxState>state);
-        return <AuxState>state;
+        this._stateCache.set(cacheName, state);
+        return state;
     }
 
     private _getCachedState(
@@ -198,7 +188,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 if (!filter(partition)) {
                     continue;
                 }
-                const bots = <AuxState>getPartitionState(partition);
+                const bots = getPartitionState(partition);
                 const cached = this._partitionStates.get(key);
 
                 if (bots !== cached) {
@@ -265,7 +255,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param bot The bot.
      * @param newData The new data that the bot should have.
      */
-    async updateBot(bot: AuxBot, newData: PartialBot): Promise<void> {
+    async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
         updateBot(bot, this.userBot ? this.userBot.id : null, newData, () =>
             this.createContext()
         );
@@ -297,7 +287,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param user The user that the bot is for.
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
+    async createOrUpdateUserBot(user: AuxUser, userBot: Bot) {
         if (!userBot) {
             console.log('[AuxHelper] Create user bot');
             await this.createBot(
@@ -499,14 +489,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         context: BotSandboxContext,
         event: BotAction
     ): BotAction[] {
-        if (!this.globalsBot) {
-            return [];
-        }
-
         try {
             const [actions, results] = calculateActionResults(
                 this.botsState,
-                action(ON_ACTION_ACTION_NAME, [GLOBALS_BOT_ID], this.userId, {
+                action(ON_ACTION_ACTION_NAME, null, this.userId, {
                     action: event,
                 }),
                 undefined,
@@ -514,20 +500,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 false
             );
 
-            if (results.length > 0) {
-                return actions;
-            }
-
-            let defaultActions: BotAction[] = [];
-
-            // default handler
-            if (event.type === 'remove_bot') {
-                if (event.id === GLOBALS_BOT_ID) {
-                    defaultActions.push(reject(event));
-                }
-            }
-
-            return defaultActions;
+            return actions;
         } catch (err) {
             console.error(
                 '[AuxHelper] The onUniverseAction() handler errored:',

@@ -7,6 +7,7 @@ import {
     AuxScriptSimpleFunctionDependency,
     AuxScriptReplacements,
     AuxScriptSimpleMemberDependency,
+    tagNameSymbol,
 } from './Dependencies';
 
 describe('Dependencies', () => {
@@ -33,11 +34,13 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'num',
+                            reference: null,
                             object: {
                                 type: type,
                                 identifier: {
                                     type: 'member',
                                     identifier: symbol,
+                                    reference: null,
                                     object: null,
                                 },
                                 dependencies: [
@@ -51,11 +54,13 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'num',
+                            reference: null,
                             object: {
                                 type: type,
                                 identifier: {
                                     type: 'member',
                                     identifier: symbol,
+                                    reference: null,
                                     object: null,
                                 },
                                 dependencies: [
@@ -81,11 +86,13 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'num',
+                            reference: null,
                             object: {
                                 type: type,
                                 identifier: {
                                     type: 'member',
                                     identifier: symbol,
+                                    reference: null,
                                     object: null,
                                 },
                                 dependencies: [
@@ -113,6 +120,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: symbol,
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -147,6 +155,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: symbol,
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -162,9 +171,11 @@ describe('Dependencies', () => {
                                             identifier: {
                                                 type: 'member',
                                                 identifier: 'indexOf',
+                                                reference: null,
                                                 object: {
                                                     type: 'member',
                                                     identifier: 'x',
+                                                    reference: null,
                                                     object: null,
                                                 },
                                             },
@@ -200,6 +211,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: symbol,
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -222,6 +234,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     identifier: 'isBuilder',
+                                    reference: null,
                                     object: null,
                                 },
                             ],
@@ -241,14 +254,17 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'second',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'first',
+                                reference: null,
                                 object: {
                                     type: type,
                                     identifier: {
                                         type: 'member',
                                         identifier: symbol,
+                                        reference: null,
                                         object: null,
                                     },
                                     dependencies: [
@@ -275,11 +291,13 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'funny',
+                            reference: null,
                             object: {
                                 type: type,
                                 identifier: {
                                     type: 'member',
                                     identifier: symbol,
+                                    reference: null,
                                     object: null,
                                 },
                                 dependencies: [
@@ -315,9 +333,11 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'sum',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'math',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -325,11 +345,13 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     identifier: 'length',
+                                    reference: null,
                                     object: {
                                         type: type,
                                         identifier: {
                                             type: 'member',
                                             identifier: symbol,
+                                            reference: null,
                                             object: null,
                                         },
                                         dependencies: [
@@ -359,11 +381,13 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'filter',
+                                reference: null,
                                 object: {
                                     type: type,
                                     identifier: {
                                         type: 'member',
                                         identifier: symbol,
+                                        reference: null,
                                         object: null,
                                     },
                                     dependencies: [
@@ -393,6 +417,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: symbol,
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -406,14 +431,17 @@ describe('Dependencies', () => {
                                         {
                                             type: 'member',
                                             identifier: 'x',
+                                            reference: null,
                                             object: null,
                                         },
                                         {
                                             type: 'member',
                                             identifier: 'val',
+                                            reference: null,
                                             object: {
                                                 type: 'member',
                                                 identifier: 'this',
+                                                reference: null,
                                                 object: null,
                                             },
                                         },
@@ -438,6 +466,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: symbol,
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -451,14 +480,17 @@ describe('Dependencies', () => {
                                         {
                                             type: 'member',
                                             identifier: 'x',
+                                            reference: null,
                                             object: null,
                                         },
                                         {
                                             type: 'member',
                                             identifier: 'val',
+                                            reference: null,
                                             object: {
                                                 type: 'member',
                                                 identifier: 'this',
+                                                reference: null,
                                                 object: null,
                                             },
                                         },
@@ -483,30 +515,37 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'num',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'this',
+                                reference: null,
                                 object: null,
                             },
                         },
                         {
                             type: 'member',
                             identifier: 'index',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'this',
+                                reference: null,
                                 object: null,
                             },
                         },
                         {
                             type: 'member',
                             identifier: 'else',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'something',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'this',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -514,12 +553,15 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'thing',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'other',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'this',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -537,6 +579,7 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'this',
+                            reference: null,
                             object: null,
                         },
                     ],
@@ -554,6 +597,7 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'abc',
+                            reference: null,
                             object: null,
                         },
                     ],
@@ -570,9 +614,11 @@ describe('Dependencies', () => {
 
                             // Should be null because we can't figure out the name
                             identifier: null,
+                            reference: 'def',
                             object: {
                                 type: 'member',
                                 identifier: 'abc',
+                                reference: null,
                                 object: null,
                             },
                         },
@@ -590,9 +636,11 @@ describe('Dependencies', () => {
 
                             // Should be null because we can't figure out the name
                             identifier: null,
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'abc',
+                                reference: null,
                                 object: null,
                             },
                         },
@@ -615,6 +663,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'getBotsInContext',
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -641,15 +690,18 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'getBotsInContext',
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
                                 {
                                     type: 'member',
                                     identifier: 'abc',
+                                    reference: null,
                                     object: {
                                         type: 'member',
                                         identifier: 'this',
+                                        reference: null,
                                         object: null,
                                     },
                                 },
@@ -676,9 +728,11 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'toast',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'player',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -686,9 +740,11 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     identifier: 'abc',
+                                    reference: null,
                                     object: {
                                         type: 'member',
                                         identifier: 'this',
+                                        reference: null,
                                         object: null,
                                     },
                                 },
@@ -709,9 +765,11 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'toast',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'player',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -719,6 +777,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     identifier: 'abc',
+                                    reference: null,
                                     object: null,
                                 },
                             ],
@@ -738,14 +797,17 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'test',
+                            reference: null,
                             object: {
                                 type: 'call',
                                 identifier: {
                                     type: 'member',
                                     identifier: 'toast',
+                                    reference: null,
                                     object: {
                                         type: 'member',
                                         identifier: 'player',
+                                        reference: null,
                                         object: null,
                                     },
                                 },
@@ -753,6 +815,7 @@ describe('Dependencies', () => {
                                     {
                                         type: 'member',
                                         identifier: 'abc',
+                                        reference: null,
                                         object: null,
                                     },
                                 ],
@@ -775,6 +838,7 @@ describe('Dependencies', () => {
                             identifier: {
                                 type: 'member',
                                 identifier: 'toast',
+                                reference: null,
                                 object: null,
                             },
                             dependencies: [
@@ -790,6 +854,7 @@ describe('Dependencies', () => {
                                             identifier: {
                                                 type: 'member',
                                                 identifier: 'getBots',
+                                                reference: null,
                                                 object: null,
                                             },
                                             dependencies: [
@@ -804,6 +869,7 @@ describe('Dependencies', () => {
                                             identifier: {
                                                 type: 'member',
                                                 identifier: 'func',
+                                                reference: null,
                                                 object: null,
                                             },
                                             dependencies: [],
@@ -871,9 +937,11 @@ describe('Dependencies', () => {
                         identifier: {
                             type: 'member',
                             identifier: 'abc',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'test',
+                                reference: null,
                                 object: null,
                             },
                         },
@@ -900,9 +968,11 @@ describe('Dependencies', () => {
                         identifier: {
                             type: 'member',
                             identifier: 'abc',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'test',
+                                reference: null,
                                 object: null,
                             },
                         },
@@ -910,18 +980,22 @@ describe('Dependencies', () => {
                             {
                                 type: 'member',
                                 identifier: 'xyz',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'this',
+                                    reference: null,
                                     object: null,
                                 },
                             },
                             {
                                 type: 'member',
                                 identifier: 'def',
+                                reference: null,
                                 object: {
                                     type: 'member',
                                     identifier: 'this',
+                                    reference: null,
                                     object: null,
                                 },
                             },
@@ -963,6 +1037,7 @@ describe('Dependencies', () => {
                         identifier: {
                             type: 'member',
                             identifier: 'toast',
+                            reference: null,
                             object: null,
                         },
                         dependencies: [
@@ -983,6 +1058,7 @@ describe('Dependencies', () => {
                                         identifier: {
                                             type: 'member',
                                             identifier: 'func',
+                                            reference: null,
                                             object: null,
                                         },
                                         dependencies: [],
@@ -1027,6 +1103,7 @@ describe('Dependencies', () => {
                         identifier: {
                             type: 'member',
                             identifier: 'abc',
+                            reference: null,
                             object: {
                                 type: 'tag',
                                 name: 'test',
@@ -1037,6 +1114,7 @@ describe('Dependencies', () => {
                             {
                                 type: 'member',
                                 identifier: 'def',
+                                reference: null,
                                 object: null,
                             },
                         ],
@@ -1053,6 +1131,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'def',
+                    reference: null,
                     dependencies: [],
                 },
             ]);
@@ -1065,9 +1144,11 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         identifier: 'abc',
+                        reference: null,
                         object: {
                             type: 'member',
                             identifier: 'test',
+                            reference: null,
                             object: null,
                         },
                     },
@@ -1078,10 +1159,12 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'test',
+                    reference: null,
                     dependencies: [
                         {
                             type: 'member',
                             name: 'abc',
+                            reference: null,
                             dependencies: [],
                         },
                     ],
@@ -1096,9 +1179,11 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         identifier: 'abc',
+                        reference: null,
                         object: {
                             type: 'member',
                             identifier: 'test.other',
+                            reference: null,
                             object: null,
                         },
                     },
@@ -1109,10 +1194,12 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'test.other',
+                    reference: null,
                     dependencies: [
                         {
                             type: 'member',
                             name: 'abc',
+                            reference: null,
                             dependencies: [],
                         },
                     ],
@@ -1132,9 +1219,11 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             identifier: 'abc',
+                            reference: null,
                             object: {
                                 type: 'member',
                                 identifier: 'test',
+                                reference: null,
                                 object: {
                                     type: type,
                                     name: 'hello',
@@ -1165,6 +1254,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     identifier: 'isBuilder',
+                                    reference: null,
                                     object: null,
                                 },
                                 {
@@ -1172,9 +1262,11 @@ describe('Dependencies', () => {
                                     identifier: {
                                         type: 'member',
                                         identifier: 'isBuilder',
+                                        reference: null,
                                         object: {
                                             type: 'member',
                                             identifier: 'player',
+                                            reference: null,
                                             object: null,
                                         },
                                     },
@@ -1193,6 +1285,7 @@ describe('Dependencies', () => {
                             {
                                 type: 'member',
                                 name: 'isBuilder',
+                                reference: null,
                                 dependencies: [],
                             },
                             {
@@ -1212,6 +1305,7 @@ describe('Dependencies', () => {
             const result = dependencies.getMemberName({
                 type: 'member',
                 identifier: 'abc',
+                reference: null,
                 object: null,
             });
 
@@ -1222,9 +1316,11 @@ describe('Dependencies', () => {
             const result = dependencies.getMemberName({
                 type: 'member',
                 identifier: 'abc',
+                reference: null,
                 object: {
                     type: 'member',
                     identifier: 'def',
+                    reference: null,
                     object: null,
                 },
             });
@@ -1236,11 +1332,13 @@ describe('Dependencies', () => {
             const result = dependencies.getMemberName({
                 type: 'member',
                 identifier: 'abc',
+                reference: null,
                 object: {
                     type: 'call',
                     identifier: {
                         type: 'member',
                         identifier: 'def',
+                        reference: null,
                         object: null,
                     },
                     dependencies: [],
@@ -1260,9 +1358,11 @@ describe('Dependencies', () => {
                 const result = dependencies.getMemberName({
                     type: 'member',
                     identifier: 'abc',
+                    reference: null,
                     object: {
                         type: 'member',
                         identifier: 'def',
+                        reference: null,
                         object: {
                             type: type,
                             name: 'tag.abc',
@@ -1371,6 +1471,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'myVar',
+                                    reference: null,
                                     dependencies: [],
                                 },
                             ],
@@ -1430,6 +1531,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'a',
+                    reference: null,
                     dependencies: [],
                 },
                 {
@@ -1439,7 +1541,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'a',
-
+                    reference: null,
                     dependencies: [],
                 },
                 {
@@ -1469,6 +1571,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'abc',
+                    reference: null,
                     dependencies: [],
                 },
                 {
@@ -1503,6 +1606,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'this',
+                                    reference: null,
                                     dependencies: [],
                                 },
                             ],
@@ -1519,12 +1623,24 @@ describe('Dependencies', () => {
                     name: 'test',
                     dependencies: [{ type: 'this' }],
                 },
+                {
+                    type: 'tag_value',
+                    name: 'value1',
+                    dependencies: [
+                        {
+                            type: 'tag_value',
+                            name: 'value2',
+                            dependencies: [],
+                        },
+                    ],
+                },
             ]);
 
             expect(result).toEqual([
                 {
                     type: 'member',
                     name: 'abc',
+                    reference: null,
                     dependencies: [],
                 },
                 {
@@ -1568,6 +1684,7 @@ describe('Dependencies', () => {
                                 {
                                     type: 'member',
                                     name: 'this',
+                                    reference: null,
                                     dependencies: [],
                                 },
                             ],
@@ -1586,6 +1703,7 @@ describe('Dependencies', () => {
                         {
                             type: 'member',
                             name: 'this',
+                            reference: null,
                             dependencies: [],
                         },
                     ],
@@ -1593,6 +1711,7 @@ describe('Dependencies', () => {
                 {
                     type: 'member',
                     name: 'this',
+                    reference: null,
                     dependencies: [],
                 },
                 {
@@ -1607,6 +1726,22 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'this',
+                },
+                {
+                    type: 'tag_value',
+                    name: 'value1',
+                    dependencies: [
+                        {
+                            type: 'tag_value',
+                            name: 'value2',
+                            dependencies: [],
+                        },
+                    ],
+                },
+                {
+                    type: 'tag_value',
+                    name: 'value2',
+                    dependencies: [],
                 },
             ]);
         });
@@ -1686,6 +1821,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: name,
+                        reference: null,
                         dependencies: [],
                     },
                 ]);
@@ -1755,6 +1891,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'getBotTagValues',
+                        reference: null,
                         dependencies: [],
                     },
                 ]);
@@ -1788,10 +1925,12 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'player',
+                        reference: null,
                         dependencies: [
                             {
                                 type: 'member',
                                 name: 'hasBotInInventory',
+                                reference: null,
                                 dependencies: [],
                             },
                         ],
@@ -1858,10 +1997,12 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: names[0],
+                        reference: null,
                         dependencies: [
                             {
                                 type: 'member',
                                 name: names[1],
+                                reference: null,
                                 dependencies: [],
                             },
                         ],
@@ -1883,7 +2024,12 @@ describe('Dependencies', () => {
                         type: 'tag_value',
                         name: 'abc.xyz',
                         dependencies: [
-                            { type: 'member', name: 'myVar', dependencies: [] },
+                            {
+                                type: 'member',
+                                name: 'myVar',
+                                reference: null,
+                                dependencies: [],
+                            },
                         ],
                     },
                 ]);
@@ -1901,7 +2047,12 @@ describe('Dependencies', () => {
                         type: 'tag_value',
                         name: 'abc.xyz',
                         dependencies: [
-                            { type: 'member', name: 'myVar', dependencies: [] },
+                            {
+                                type: 'member',
+                                name: 'myVar',
+                                reference: null,
+                                dependencies: [],
+                            },
                         ],
                     },
                     {
@@ -1921,6 +2072,7 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'getTag',
+                        reference: null,
                         dependencies: [],
                     },
                 ]);
@@ -2033,6 +2185,145 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should support using the tags variable in a bot reference', () => {
+                const tree = dependencies.dependencyTree(`ref.${name}.abc`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'ref',
+                        reference: null,
+                        dependencies: [
+                            {
+                                type: 'tag_value',
+                                name: 'abc',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it('should support using the tagName variable in an indexer', () => {
+                const tree = dependencies.dependencyTree(`${name}[tagName]`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: tagNameSymbol,
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
+
+        it('should support using the tagName variable as a normal variable', () => {
+            const tree = dependencies.dependencyTree(`tagName`);
+            const simple = dependencies.simplify(tree);
+            const replaced = dependencies.replaceAuxDependencies(simple);
+
+            expect(replaced).toEqual([
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ]);
+        });
+
+        const botTagDependencyCases = [
+            ['creator', 'auxCreator'],
+            ['config', 'auxConfigBot'],
+        ];
+
+        describe.each(botTagDependencyCases)('%s', (name, tag) => {
+            it('should replace with a tag value dependency', () => {
+                const tree = dependencies.dependencyTree(`${name}`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: tag,
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should preserve dependencies', () => {
+                const tree = dependencies.dependencyTree(`${name}.prop.abc`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: tag,
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: 'prop',
+                                reference: null,
+                                dependencies: [
+                                    {
+                                        type: 'member',
+                                        name: 'abc',
+                                        reference: null,
+                                        dependencies: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it.each(tagsVariableCases)(
+                'should support using the %s variable',
+                variable => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}.${variable}.abc`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+
+                    expect(replaced).toEqual([
+                        {
+                            type: 'tag_value',
+                            name: tag,
+                            dependencies: [
+                                {
+                                    type: 'tag_value',
+                                    name: 'abc',
+                                    dependencies: [],
+                                },
+                            ],
+                        },
+                    ]);
+                }
+            );
+        });
+
+        it('should support using the configTag variable', () => {
+            const tree = dependencies.dependencyTree(`configTag`);
+            const simple = dependencies.simplify(tree);
+            const replaced = dependencies.replaceAuxDependencies(simple);
+
+            expect(replaced).toEqual([
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ]);
         });
     });
 
@@ -2065,7 +2356,12 @@ describe('Dependencies', () => {
                     type: 'tag_value',
                     name: 'def',
                     dependencies: [
-                        { type: 'member', name: 'abc', dependencies: [] },
+                        {
+                            type: 'member',
+                            name: 'abc',
+                            reference: null,
+                            dependencies: [],
+                        },
                     ],
                 },
             ]);

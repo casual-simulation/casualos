@@ -98,7 +98,7 @@ describe('BotPanelManager', () => {
             expect(bots).toEqual([]);
         });
 
-        it('should include all bots when the dimension is set to false', async () => {
+        it('should include all bots when the dimension is set to true', async () => {
             manager = new BotPanelManager(watcher, helper, false);
             let bots: PrecalculatedBot[];
             manager.botsUpdated.subscribe(e => {
@@ -108,7 +108,35 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: false,
+                        auxSheetPortal: true,
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                    })
+                ),
+            ]);
+
+            expect(bots).toEqual(helper.objects);
+        });
+
+        it('should include all bots when the dimension is set to id', async () => {
+            manager = new BotPanelManager(watcher, helper, false);
+            let bots: PrecalculatedBot[];
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: 'id',
                     },
                 }),
                 botAdded(

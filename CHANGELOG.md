@@ -1,5 +1,37 @@
 # AUX Changelog
 
+## V1.0.6
+
+### Date: 2/19/2020
+
+### Changes:
+
+#### :boom: Breaking Changes
+
+-   Renamed `auxLabelAnchor` to `auxLabelPosition`.
+-   Renamed `auxProgressBarAnchor` to `auxProgressBarPosition`.
+-   Removed the `config` bot.
+-   Moved the `#stripePublishableKey` and `#stripeSecretKey` tags from the config bot to the `player.checkout()` and `server.finishCheckout()` function options.
+-   `@onUniverseAction` is now a shout.
+-   Removed [poly.google.com](https://poly.google.com) support.
+    -   To load meshes from poly.google.com, you must make the API requests manually.
+    -   See https://casualos.com/home/google-poly-example for an example.
+
+#### :rocket: Improvements
+
+-   Added the `config`, `configTag`, and `tagName` variables.
+    -   These variables are useful for creating values and scripts that are shared across multiple bots.
+    -   The `config` variable is a shortcut for `getBot("#id", tags.auxConfigBot)`.
+    -   The `tagName` variable is the name of the tag that the script is running in.
+    -   The `configTag` variable is a shortcut for `config.tags[tagName]`.
+-   Made the player menu full width on mobile devices.
+-   Improved the sheet portal to load all bots when set to `true`, `id`, or `space`.
+
+#### :bug: Bug Fixes
+
+-   Made bots be hidden while their images are loading.
+-   Improved the image loading logic to cache requests for the same URL.
+
 ## V1.0.5
 
 ### Date: 2/14/2020

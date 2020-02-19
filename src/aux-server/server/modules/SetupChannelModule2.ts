@@ -1,41 +1,14 @@
-import {
-    AuxModule2,
-    AuxChannel,
-    getTreeName,
-    AuxUser,
-    CausalRepoClientPartitionConfig,
-    Simulation,
-} from '@casual-simulation/aux-vm';
-import {
-    USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    DeviceInfo,
-    remote,
-    SESSION_ID_CLAIM,
-    GUEST_ROLE,
-} from '@casual-simulation/causal-trees';
+import { AuxModule2, AuxUser, Simulation } from '@casual-simulation/aux-vm';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 import {
-    calculateBotValue,
-    AuxBot,
-    ShellAction,
-    getChannelBotById,
-    LocalActions,
     action,
-    SendWebhookAction,
-    BotAction,
     SetupChannelAction,
     isBot,
-    createBot,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    AuxChannelManager,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 
 /**

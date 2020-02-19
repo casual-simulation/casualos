@@ -1,34 +1,13 @@
-import { AuxModule2, AuxChannel, Simulation } from '@casual-simulation/aux-vm';
-import {
-    USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    DeviceInfo,
-    remote,
-    SESSION_ID_CLAIM,
-    CausalTreeStore,
-    DEVICE_ID_CLAIM,
-} from '@casual-simulation/causal-trees';
+import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    LocalActions,
-    CheckoutSubmittedAction,
-    ON_CHECKOUT_ACTION_NAME,
-    FinishCheckoutAction,
-    calculateStringTagValue,
-    BotTags,
     action,
-    ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
-    ON_PAYMENT_FAILED_ACTION_NAME,
     SaveFileAction,
     LoadFileAction,
 } from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    isAdminChannel,
-    AuxChannelManager,
-} from '@casual-simulation/aux-vm-node';
-import fs, { readdir } from 'fs';
+import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import { DRIVES_URL } from '../config';

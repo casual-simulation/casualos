@@ -1,5 +1,8 @@
 import { Texture, ImageLoader, RGBFormat, RGBAFormat, Loader } from 'three';
 
+// TODO: Put a max size on the cache.
+const cache = new Map<string, Promise<Texture>>();
+
 /**
  * Custom version of THREE.TextureLoader that exposes the ability to cancel an image load.
  */
@@ -14,7 +17,18 @@ export class AuxTextureLoader {
 
     constructor() {}
 
-    load(
+    load(url: string): Promise<Texture> {
+        let promise = cache.get(url);
+        if (!promise) {
+            promise = new Promise((resolve, reject) =>
+                this._load(url, resolve, reject)
+            );
+            cache.set(url, promise);
+        }
+        return promise;
+    }
+
+    private _load(
         url: string,
         onLoad?: (texture: Texture) => void,
         onError?: (event: ErrorEvent) => void

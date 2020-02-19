@@ -3,6 +3,9 @@ import { traverse, VisitorOption } from 'estraverse';
 import flatMap from 'lodash/flatMap';
 import { getTag, trimTag } from '../bots';
 
+export const defaultReplacement = Symbol('defaultReplacement');
+export const tagNameSymbol = Symbol('tagName');
+
 export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
 
@@ -112,7 +115,9 @@ export class Dependencies {
                     node.type !== 'all' &&
                     node.type !== 'this'
                 ) {
-                    const replacement = replacements[node.name];
+                    const replacement =
+                        replacements[<string>node.name] ||
+                        replacements[defaultReplacement];
                     if (replacement) {
                         yield* replacement(node);
                         replaced = true;
@@ -171,6 +176,7 @@ export class Dependencies {
                 let nextMember: AuxScriptSimpleMemberDependency = {
                     type: 'member',
                     name: abc.identifier,
+                    reference: abc.reference,
                     dependencies: [],
                 };
 
@@ -383,6 +389,7 @@ export class Dependencies {
         return {
             type: 'member',
             identifier: this._getIdentifier(node),
+            reference: this._getReference(node),
             object: this._objectDependency(node.object, node),
         };
     }
@@ -411,6 +418,7 @@ export class Dependencies {
         return {
             type: 'member',
             identifier: node.name,
+            reference: null,
             object: null,
         };
     }
@@ -419,6 +427,7 @@ export class Dependencies {
         return {
             type: 'member',
             identifier: 'this',
+            reference: null,
             object: null,
         };
     }
@@ -431,6 +440,13 @@ export class Dependencies {
         } else {
             return null;
         }
+    }
+
+    private _getReference(node: any) {
+        if (node.computed && node.property.type === 'Identifier') {
+            return node.property.name;
+        }
+        return null;
     }
 }
 
@@ -505,6 +521,32 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
 
             return [];
+        },
+        creator: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'auxCreator',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
+        config: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: 'auxConfigBot',
+                    dependencies: replace(node.dependencies),
+                },
+            ];
         },
         getBot: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
@@ -621,6 +663,49 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
+        configTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ];
+        },
+        tagName: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'member') {
+                return [node];
+            }
+
+            return [
+                {
+                    type: 'tag_value',
+                    name: tagNameSymbol,
+                    dependencies: [],
+                },
+            ];
+        },
+        [defaultReplacement]: (node: AuxScriptSimpleDependency) => {
+            if (
+                node.type !== 'member' &&
+                node.type !== 'function' &&
+                node.type !== 'bot' &&
+                node.type !== 'tag'
+            ) {
+                return [node];
+            }
+
+            return [
+                {
+                    ...node,
+                    dependencies: replace(node.dependencies),
+                },
+            ];
+        },
     };
 }
 
@@ -639,9 +724,15 @@ function getNodeValue(node: AuxScriptSimpleDependency): string {
     return null;
 }
 
-function getMemberName(node: AuxScriptSimpleDependency): string {
+function getMemberName(node: AuxScriptSimpleDependency): string | symbol {
     if (node.type === 'member') {
-        return trimTag(node.name);
+        if (node.name) {
+            return trimTag(node.name);
+        } else if (node.reference) {
+            if (node.reference === 'tagName') {
+                return tagNameSymbol;
+            }
+        }
     }
     return null;
 }
@@ -669,6 +760,7 @@ export interface AuxScriptExpressionDependencies {
 export interface AuxScriptMemberDependency {
     type: 'member';
     identifier: string;
+    reference: string;
     object: AuxScriptObjectDependency;
 }
 
@@ -755,6 +847,7 @@ export interface AuxScriptSimpleFunctionDependency {
 export interface AuxScriptSimpleMemberDependency {
     type: 'member';
     name: string;
+    reference: string;
     dependencies: AuxScriptSimpleDependency[];
 }
 
@@ -770,11 +863,12 @@ export interface AuxScriptSimpleThisDependency {
 
 export interface AuxScriptSimpleTagValueDependency {
     type: 'tag_value';
-    name: string;
+    name?: string | symbol;
     dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptReplacements {
+    [defaultReplacement]?: AuxScriptReplacement;
     [key: string]: AuxScriptReplacement;
 }
 

@@ -6,16 +6,10 @@ import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
 import { map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from './DownloadHelpers';
 import {
-    StoredCausalTree,
     ProgressMessage,
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
-import {
-    AuxOp,
-    AuxCausalTree,
-    normalizeAUXBotURL,
-    getBotsStateFromStoredTree,
-} from '@casual-simulation/aux-common';
+import { normalizeAUXBotURL } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
@@ -99,19 +93,14 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new BotManager(
-                this._user,
-                id,
-                {
-                    isBuilder: this._config.isBuilder,
-                    isPlayer: this._config.isPlayer,
-                    version: this.version.latestTaggedVersion,
-                    versionHash: this.version.gitCommit,
-                    device: this._deviceConfig,
-                    builder: JSON.stringify(builder),
-                },
-                this._config.version
-            );
+            return new BotManager(this._user, id, {
+                isBuilder: this._config.isBuilder,
+                isPlayer: this._config.isPlayer,
+                version: this.version.latestTaggedVersion,
+                versionHash: this.version.gitCommit,
+                device: this._deviceConfig,
+                builder: JSON.stringify(builder),
+            });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();

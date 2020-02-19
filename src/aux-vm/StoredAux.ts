@@ -1,10 +1,6 @@
-import {
-    BotsState,
-    getBotsStateFromStoredTree,
-} from '@casual-simulation/aux-common';
-import { StoredCausalTree } from '@casual-simulation/causal-trees';
+import { BotsState } from '@casual-simulation/aux-common';
 
-export type StoredAux = StoredCausalTree<any> | StoredAuxVersion1;
+export type StoredAux = StoredAuxVersion1;
 
 export interface StoredAuxVersion1 {
     version: 1;
@@ -16,9 +12,5 @@ export interface StoredAuxVersion1 {
  * @param stored The stored tree to load.
  */
 export async function getBotsStateFromStoredAux(stored: StoredAux) {
-    if ('version' in stored) {
-        return stored.state;
-    } else {
-        return await getBotsStateFromStoredTree(stored);
-    }
+    return stored.state;
 }

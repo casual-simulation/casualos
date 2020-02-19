@@ -2,7 +2,6 @@ import {
     botAdded,
     createBot,
     botUpdated,
-    GLOBALS_BOT_ID,
     PrecalculatedBotsState,
     createPrecalculatedBot,
     botRemoved,
@@ -34,19 +33,6 @@ describe('BotHelper', () => {
             const user = helper.userBot;
 
             expect(user).toBe(state.user);
-        });
-    });
-
-    describe('globalsBot', () => {
-        it('should return the bot with the globals ID', () => {
-            const state: PrecalculatedBotsState = {
-                [GLOBALS_BOT_ID]: createPrecalculatedBot(GLOBALS_BOT_ID, {}),
-            };
-            helper.botsState = state;
-            const bot = state[GLOBALS_BOT_ID];
-            const globals = helper.globalsBot;
-
-            expect(globals).toBe(bot);
         });
     });
 

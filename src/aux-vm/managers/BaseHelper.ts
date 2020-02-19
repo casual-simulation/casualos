@@ -52,16 +52,6 @@ export abstract class BaseHelper<TBot extends Bot> {
     }
 
     /**
-     * Gets the globals bot for the simulation.
-     */
-    get globalsBot(): TBot {
-        if (!this.botsState) {
-            return null;
-        }
-        return <TBot>this.botsState[GLOBALS_BOT_ID];
-    }
-
-    /**
      * Gets the current local bot state.
      */
     abstract get botsState(): BotsState;

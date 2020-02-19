@@ -1,5 +1,4 @@
 import {
-    AuxCausalTree,
     BotsState,
     BotAction,
     merge,
@@ -7,7 +6,6 @@ import {
     UpdatedBot,
 } from '@casual-simulation/aux-common';
 import {
-    RealtimeCausalTree,
     StatusUpdate,
     RemoteAction,
     User,
@@ -27,9 +25,7 @@ export interface AuxPartitions {
  * Defines a set of valid partition types.
  */
 export type AuxPartition =
-    | CausalTreePartition
     | MemoryPartition
-    | RemoteCausalTreePartition
     | CausalRepoPartition
     | RemoteCausalRepoPartition
     | LocalStoragePartition
@@ -157,44 +153,6 @@ export interface RemoteCausalRepoPartition extends CausalRepoPartition {
 }
 
 /**
- * Defines a causal tree partition.
- */
-export interface CausalTreePartition extends AuxPartitionBase {
-    type: 'causal_tree';
-
-    /**
-     * The causal tree for the partition.
-     */
-    tree: AuxCausalTree;
-}
-
-/**
- * Defines a remote causal tree partition.
- * That is, a causal tree partition that was loaded from a remote server.
- */
-export interface RemoteCausalTreePartition extends CausalTreePartition {
-    /**
-     * The realtime causal tree that represents the partition connnection.
-     */
-    sync: RealtimeCausalTree<AuxCausalTree>;
-
-    /**
-     * Forks the current causal tree to a channel with the given ID.
-     * @param newId The ID of the new channel.
-     * @param events The events that should be applied to the newly forked causal tree. Use this to apply some sort of reset operation.
-     */
-    fork(newId: string, events: BotAction[]): Promise<void>;
-
-    setUser(user: User): Promise<void>;
-    setGrant(grant: string): Promise<void>;
-
-    /**
-     * Gets or sets whether the partition has been forced offline.
-     */
-    forcedOffline: boolean;
-}
-
-/**
  * Defines a memory partition.
  */
 export interface MemoryPartition extends AuxPartitionBase {
@@ -229,11 +187,7 @@ export interface LocalStoragePartition extends AuxPartitionBase {
  * @param partition The partition.
  */
 export function getPartitionState(partition: AuxPartition): BotsState {
-    if (partition.type === 'causal_tree') {
-        return partition.tree.value;
-    } else {
-        return partition.state;
-    }
+    return partition.state;
 }
 
 /**

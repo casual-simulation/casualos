@@ -1,47 +1,19 @@
-import {
-    AuxModule2,
-    AuxChannel,
-    Simulation,
-    AuxUser,
-    CausalRepoClientPartitionConfig,
-} from '@casual-simulation/aux-vm';
-import {
-    USERNAME_CLAIM,
-    RealtimeChannelInfo,
-    DeviceInfo,
-    remote,
-    SESSION_ID_CLAIM,
-    CausalTreeStore,
-} from '@casual-simulation/causal-trees';
+import { AuxModule2, Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { DeviceInfo, remote } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
-import {
-    calculateBotValue,
-    AuxBot,
-    ShellAction,
-    getChannelBotById,
-    LocalActions,
-    action,
-    BackupToGithubAction,
-    merge,
-} from '@casual-simulation/aux-common';
-import {
-    NodeAuxChannel,
-    isAdminChannel,
-    nodeSimulationForBranch,
-} from '@casual-simulation/aux-vm-node';
+import { BackupToGithubAction, merge } from '@casual-simulation/aux-common';
+import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import Octokit from '@octokit/rest';
 import {
-    getBotChannel,
-    botsInDimension,
     BackupAsDownloadAction,
     download,
     BackupOptions,
 } from '@casual-simulation/aux-common/bots';
-import { getChannelIds } from './BackupHelpers';
 import JSZip from 'jszip';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import { OctokitFactory } from './BackupModule';
+
+export type OctokitFactory = (auth: string) => Octokit;
 
 /**
  * Defines an module that adds Github-related functionality.

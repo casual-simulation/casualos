@@ -12,10 +12,3 @@ Object {
   "auxDimensionVisualize": true,
 }
 `;
-
-exports[`BaseAuxChannel init() should create the globals bot 1`] = `
-Object {
-  "auxDestroyable": false,
-  "auxVersion": 1,
-}
-`;
