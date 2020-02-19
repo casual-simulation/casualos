@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V1.0.7
+
+### Date: TBD
+
+### Changes:
+
+#### :bug: Bug Fixes
+
+-   Fixed an issue where the hint text for a function was being clipped.
+
 ## V1.0.6
 
 ### Date: 2/19/2020
