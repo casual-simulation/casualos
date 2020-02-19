@@ -24,6 +24,13 @@
     -   The `config` variable is a shortcut for `getBot("#id", tags.auxConfigBot)`.
     -   The `tagName` variable is the name of the tag that the script is running in.
     -   The `configTag` variable is a shortcut for `config.tags[tagName]`.
+-   Made the player menu full width on mobile devices.
+-   Improved the sheet portal to load all bots when set to `true`, `id`, or `space`.
+
+#### :bug: Bug Fixes
+
+-   Made bots be hidden while their images are loading.
+-   Improved the image loading logic to cache requests for the same URL.
 
 ## V1.0.5
 
