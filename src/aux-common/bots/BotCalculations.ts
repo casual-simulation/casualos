@@ -2403,6 +2403,15 @@ export function getConfigVariable(context: BotSandboxContext, bot: ScriptBot) {
     return getBotVariable(context, bot, 'auxConfigBot');
 }
 
+export function getConfigTagVariable(
+    context: BotSandboxContext,
+    bot: ScriptBot,
+    tag: keyof BotTags,
+    config: ScriptBot
+) {
+    return config && tag ? config.tags[tag] : null;
+}
+
 export function getBotVariable(
     context: BotSandboxContext,
     bot: ScriptBot,
@@ -2442,11 +2451,16 @@ function _calculateFormulaValue(
     const scriptBot = getScriptBot(context, object);
     setCurrentBot(scriptBot);
 
+    const creator = getCreatorVariable(context, scriptBot);
+    const config = getConfigVariable(context, scriptBot);
     let vars = {
         bot: scriptBot,
         tags: scriptBot ? scriptBot.tags : null,
         raw: scriptBot ? scriptBot.raw : null,
-        creator: getCreatorVariable(context, scriptBot),
+        tagName: tag || null,
+        creator: creator,
+        config: config,
+        configTag: getConfigTagVariable(context, scriptBot, tag, config),
     };
 
     // NOTE: The energy should not get reset

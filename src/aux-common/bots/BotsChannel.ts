@@ -18,6 +18,7 @@ import {
     isScript,
     parseScript,
     getConfigVariable,
+    getConfigTagVariable,
 } from './BotCalculations';
 import {
     getActions,
@@ -219,7 +220,12 @@ export function formulaActions(
         vars['tagName'] = tag || null;
         vars['creator'] = getCreatorVariable(context, scriptBot);
         const config = (vars['config'] = getConfigVariable(context, scriptBot));
-        vars['configTag'] = config && tag ? config.tags[tag] : null;
+        vars['configTag'] = getConfigTagVariable(
+            context,
+            scriptBot,
+            tag,
+            config
+        );
 
         const result = context.sandbox.run(script, {}, scriptBot, vars);
         if (result.error) {

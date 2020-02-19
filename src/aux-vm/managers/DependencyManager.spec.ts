@@ -310,6 +310,29 @@ describe('DependencyManager', () => {
                 test: new Set(['formula']),
             });
         });
+
+        it('should support tagName references', async () => {
+            let subject = new DependencyManager();
+
+            let test = createBot('test', {
+                control: 'abc',
+                formula: '=getBots(tagName)',
+            });
+
+            let test3 = createBot('test3', {
+                name: 'bot3',
+                formula: 'abc',
+            });
+
+            let updates = subject.addBot(test);
+            expect(updates).toEqual({});
+
+            updates = subject.addBot(test3);
+
+            expect(updates).toEqual({
+                test: new Set(['formula']),
+            });
+        });
     });
 
     describe('addBots()', () => {
