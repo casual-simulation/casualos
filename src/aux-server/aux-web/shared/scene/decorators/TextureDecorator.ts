@@ -81,11 +81,12 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
 
             // Assign value of texture.
             if (this.image) {
-                this._loader.load(
-                    this.image,
-                    this._handleTextureLoaded,
-                    this._handleTextureError
-                );
+                if (this._targetMeshDecorator.allowModifications) {
+                    this.bot3D.display.visible = false;
+                }
+                this._loader
+                    .load(this.image)
+                    .then(this._handleTextureLoaded, this._handleTextureError);
             } else {
                 this._texture = null;
             }
@@ -130,13 +131,20 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _handleTextureLoaded(texture: Texture): void {
+        if (this._targetMeshDecorator.allowModifications) {
+            this.bot3D.display.visible = true;
+        }
         this._texture = texture;
+
         texture.needsUpdate = true;
         this._updateTargetMeshTexture();
         EventBus.$emit('bot_render_refresh', this.bot3D.bot);
     }
 
     private _handleTextureError(error: ErrorEvent): void {
+        if (this._targetMeshDecorator.allowModifications) {
+            this.bot3D.display.visible = true;
+        }
         if (this._texture) {
             this._texture.dispose();
         }
