@@ -17,6 +17,14 @@
     -   To load meshes from poly.google.com, you must make the API requests manually.
     -   See https://casualos.com/home/google-poly-example for an example.
 
+#### :rocket: Improvements
+
+-   Added the `config`, `configTag`, and `tagName` variables.
+    -   These variables are useful for creating values and scripts that are shared across multiple bots.
+    -   The `config` variable is a shortcut for `getBot("#id", tags.auxConfigBot)`.
+    -   The `tagName` variable is the name of the tag that the script is running in.
+    -   The `configTag` variable is a shortcut for `config.tags[tagName]`.
+
 ## V1.0.5
 
 ### Date: 2/14/2020

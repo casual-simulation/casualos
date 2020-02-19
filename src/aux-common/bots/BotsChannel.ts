@@ -17,6 +17,8 @@ import {
     isBot,
     isScript,
     parseScript,
+    getConfigVariable,
+    getConfigTagVariable,
 } from './BotCalculations';
 import {
     getActions,
@@ -161,21 +163,30 @@ function eventActions(
         return;
     }
 
-    const scripts = [calculateBotValue(context, bot, eventName)]
-        .map(parseScript)
-        .filter(hasValue)
-        .map(script => `(function() { \n${script.toString()}\n }).call(this)`);
+    const rawScript = calculateBotValue(context, bot, eventName);
+    const parsed = parseScript(rawScript);
+    if (!hasValue(parsed)) {
+        return [[], [], false];
+    }
+    const final = `(function() { \n${parsed.toString()}\n }).call(this)`;
 
-    const [events, results] = formulaActions(context, bot, argument, scripts);
+    const [events, results] = formulaActions(
+        context,
+        bot,
+        argument,
+        final,
+        eventName
+    );
 
-    return [events, results, scripts.length > 0];
+    return [events, results, true];
 }
 
 export function formulaActions(
     context: BotSandboxContext,
     thisObject: Bot,
     arg: any,
-    scripts: string[]
+    script: string,
+    tag?: string
 ): [BotAction[], any[]] {
     let previous = getActions();
     let prevContext = getCalculationContext();
@@ -206,15 +217,21 @@ export function formulaActions(
         vars['bot'] = scriptBot;
         vars['tags'] = scriptBot ? scriptBot.tags : null;
         vars['raw'] = scriptBot ? scriptBot.raw : null;
+        vars['tagName'] = tag || null;
         vars['creator'] = getCreatorVariable(context, scriptBot);
+        const config = (vars['config'] = getConfigVariable(context, scriptBot));
+        vars['configTag'] = getConfigTagVariable(
+            context,
+            scriptBot,
+            tag,
+            config
+        );
 
-        for (let script of scripts) {
-            const result = context.sandbox.run(script, {}, scriptBot, vars);
-            if (result.error) {
-                throw result.error;
-            }
-            results.push(result.result);
+        const result = context.sandbox.run(script, {}, scriptBot, vars);
+        if (result.error) {
+            throw result.error;
         }
+        results.push(result.result);
     }
     setActions(previous);
     setCalculationContext(prevContext);

@@ -6,6 +6,7 @@ import {
     isFormula,
     Dependencies,
     AuxScriptExternalDependency,
+    tagNameSymbol,
 } from '@casual-simulation/aux-common';
 import mergeWith from 'lodash/mergeWith';
 import reduce from 'lodash/reduce';
@@ -437,8 +438,18 @@ export class DependencyManager {
         return dependents;
     }
 
-    private _getBotDependents(tag: string, id: string) {
-        const dependents = this._getTagDependents(tag);
+    private _getBotDependents(
+        sourceTag: string,
+        tag: string | symbol,
+        id: string
+    ): Set<string> {
+        const targetTag = this._getTargetTag(sourceTag, tag);
+
+        if (!targetTag) {
+            return new Set();
+        }
+
+        const dependents = this._getTagDependents(targetTag);
         let botDependents = dependents[id];
         if (!botDependents) {
             botDependents = new Set();
@@ -446,6 +457,14 @@ export class DependencyManager {
         }
 
         return botDependents;
+    }
+
+    private _getTargetTag(sourceTag: string, tag: string | symbol) {
+        return typeof tag === 'string'
+            ? tag
+            : tag === tagNameSymbol
+            ? sourceTag
+            : null;
     }
 
     private _addTagDependents(
@@ -456,7 +475,7 @@ export class DependencyManager {
         for (let dep of formulaDependencies) {
             // TODO: Support "this" dependencies
             if (dep.type !== 'all' && dep.type !== 'this') {
-                const botDeps = this._getBotDependents(dep.name, bot.id);
+                const botDeps = this._getBotDependents(tag, dep.name, bot.id);
                 botDeps.add(tag);
             } else if (dep.type === 'all') {
                 const tags = this._allMap[bot.id];
@@ -483,7 +502,9 @@ export class DependencyManager {
         const deps = dependencies[tag];
         for (let dep of deps) {
             if (dep.type !== 'all' && dep.type !== 'this') {
-                const tagDeps = this._dependentMap.get(dep.name);
+                const tagDeps = this._dependentMap.get(
+                    this._getTargetTag(tag, dep.name)
+                );
                 if (tagDeps) {
                     let botDeps = tagDeps[botId];
                     if (botDeps) {

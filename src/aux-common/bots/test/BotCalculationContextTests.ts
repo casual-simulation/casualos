@@ -2471,6 +2471,51 @@ export function botCalculationContextTests(
                 });
             });
 
+            describe('config', () => {
+                it('should define a config variable which is the bot that referenced by auxConfigBot', () => {
+                    const bot = createBot('test', {
+                        auxConfigBot: 'other',
+                        formula: `=config.id`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('other');
+                });
+            });
+
+            describe('tagName', () => {
+                it('should define a tagName variable which is equal to the current tag', () => {
+                    const bot = createBot('test', {
+                        formula: `=tagName`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('formula');
+                });
+            });
+
+            describe('configTag', () => {
+                it('should define a configTag variable which is equal to config.tags[tagName]', () => {
+                    const bot = createBot('test', {
+                        auxConfigBot: 'other',
+                        formula: `=configTag`,
+                    });
+                    const other = createBot('other', {
+                        formula: 'abc',
+                    });
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('abc');
+                });
+            });
+
             describe('getID()', () => {
                 it('should get the ID of the given bot', () => {
                     const bot = createBot('test', {
