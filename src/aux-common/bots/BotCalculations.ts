@@ -193,6 +193,9 @@ export function filterBotsBySelection<TBot extends Bot>(
         if (f.id === selectionId) {
             return true;
         }
+        if (selectionId === 'id' || selectionId === 'space') {
+            return true;
+        }
         for (let prop in f.tags) {
             const val = f.tags[prop];
             if (prop === selectionId && val) {

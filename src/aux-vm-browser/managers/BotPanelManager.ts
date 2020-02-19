@@ -86,7 +86,7 @@ export class BotPanelManager implements SubscriptionLike {
                 if (this._helper.userBot) {
                     const dimension = this._helper.userBot.values
                         .auxSheetPortal;
-                    if (!!dimension) {
+                    if (!!dimension && dimension !== true) {
                         return {
                             bots: filterBotsBySelection(
                                 this._helper.objects,
@@ -96,7 +96,7 @@ export class BotPanelManager implements SubscriptionLike {
                             dimension: dimension,
                             isDiff: false,
                         };
-                    } else if (dimension === false) {
+                    } else if (dimension === true) {
                         return {
                             bots: this._helper.objects,
                             hasPortal: true,

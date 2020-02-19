@@ -323,6 +323,36 @@ export function botCalculationContextTests(
 
                 expect(selected).toEqual([bot1, bot2]);
             });
+
+            it('should support the id tag', () => {
+                const selectionId = 'id';
+                const bot1 = createBot('test1');
+                const bot2 = createBot('abcdefg1234');
+
+                bot1.tags[selectionId] = true;
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1, bot2]);
+            });
+
+            it('should support the space tag', () => {
+                const selectionId = 'space';
+                const bot1 = createBot('test1');
+                const bot2 = createBot('abcdefg1234');
+
+                bot1.tags[selectionId] = true;
+
+                const selected = filterBotsBySelection(
+                    [bot1, bot2],
+                    selectionId
+                );
+
+                expect(selected).toEqual([bot1, bot2]);
+            });
         });
 
         describe('formulas', () => {
