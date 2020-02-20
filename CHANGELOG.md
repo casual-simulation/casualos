@@ -10,6 +10,11 @@
 
 -   The "Create Empty Bot" button is now hidden when opening the sheet for a single bot.
 
+#### :robot: Builder Improvements
+
+-   Re-labeled the "Copy" menu item to "Copy to Clipboard".
+-   Re-labeled the "Make Clone" menu item to "Clone".
+
 #### :bug: Bug Fixes
 
 -   Fixed an issue with `getBots(tag, value)` that caused falsy values (like `0` or `false`) to return all bots with the given tag.
