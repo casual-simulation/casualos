@@ -9,6 +9,8 @@
 #### :bug: Bug Fixes
 
 -   Fixed an issue where the hint text for a function was being clipped.
+-   Fixed an issue with uploading .aux files that were downloaded from a previous version.
+-   Fixed an issue with downloading .aux files in the wrong format.
 
 ## V1.0.6
 
