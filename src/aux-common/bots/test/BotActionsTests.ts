@@ -4930,8 +4930,11 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     download(
                         JSON.stringify({
-                            funBot: state.funBot,
-                            funBot2: state.funBot2,
+                            version: 1,
+                            state: {
+                                funBot: state.funBot,
+                                funBot2: state.funBot2,
+                            },
                         }),
                         'test.aux',
                         'application/json'
@@ -4978,8 +4981,11 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     download(
                         JSON.stringify({
-                            funBot: state.funBot,
-                            funBot2: state.funBot2,
+                            version: 1,
+                            state: {
+                                funBot: state.funBot,
+                                funBot2: state.funBot2,
+                            },
                         }),
                         'test.aux',
                         'application/json'
@@ -5044,7 +5050,10 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([
                     download(
-                        JSON.stringify(state),
+                        JSON.stringify({
+                            version: 1,
+                            state: state,
+                        }),
                         'channel.aux',
                         'application/json'
                     ),

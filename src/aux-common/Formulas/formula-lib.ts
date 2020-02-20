@@ -2117,7 +2117,7 @@ function downloadBots(bots: Bot[], filename: string) {
     }
     return addAction(
         download(
-            JSON.stringify(state),
+            JSON.stringify(getDownloadState(state)),
             formatAuxFilename(filename),
             'application/json'
         )
@@ -2135,11 +2135,18 @@ function downloadUniverse() {
     const state = getBotState();
     return addAction(
         download(
-            JSON.stringify(state),
+            JSON.stringify(getDownloadState(state)),
             `${getCurrentUniverse()}.aux`,
             'application/json'
         )
     );
+}
+
+function getDownloadState(state: BotsState) {
+    return {
+        version: 1,
+        state,
+    };
 }
 
 /**
