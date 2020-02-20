@@ -633,6 +633,11 @@ export const ON_CHAT_TYPING_ACTION_NAME: string = 'onChatTyping';
 export const ON_CHAT_ACTION_NAME: string = 'onChat';
 
 /**
+ * The name of the event that is triggered when text is pasted into aux.
+ */
+export const ON_PASTE_ACTION_NAME: string = 'onPaste';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -811,6 +816,7 @@ export const KNOWN_TAGS: string[] = [
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
+    ON_PASTE_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {
@@ -880,6 +886,12 @@ export function onChatTypingArg(message: string) {
 export function onChatArg(message: string) {
     return {
         message,
+    };
+}
+
+export function onPasteArg(text: string) {
+    return {
+        text,
     };
 }
 

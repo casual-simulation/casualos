@@ -503,6 +503,19 @@ let that: {
 };
 ```
 
+### `@onPaste`
+
+A shout that is sent when some text is pasted into the universe.
+
+This happens by pressing <kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Cmd</kbd>+<kbd>V</kbd> while something is in your clipboard.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string;
+};
+```
+
 ### `@onPaymentSuccessful`
 
 A shout that is sent when payment has been approved for a checkout.

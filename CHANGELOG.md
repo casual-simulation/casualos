@@ -1,5 +1,27 @@
 # AUX Changelog
 
+## V1.0.8
+
+### Date: TBD
+
+### Changes:
+
+#### :rocket: Improvements
+
+-   Added the `@onPaste` listener which is triggered when some text is pasted into an AUX.
+    -   `that` is an object with the following properties:
+        -   `text` - the text that was pasted.
+
+#### :robot: Builder Improvements
+
+-   Changed all the menu items to use normal labels instead of the chat commands.
+-   Added a menu item to open a bot directly in the sheet.
+-   Added a menu item to copy a bot to the clipboard.
+-   Pasting a bot/mod when builder is in the dimension will now put builder into clone mode with the copied bot/mod.
+-   Moving builder when builder is in clone mode will now also move the clone.
+-   Cloning a bot with a custom scale will now make builder large enough to cover the entire bot.
+-   Builder will now automatically hide when the sheet is opened.
+
 ## V1.0.7
 
 ### Date: 2/19/2020
