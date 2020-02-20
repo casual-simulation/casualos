@@ -4,9 +4,21 @@ import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { writeTextToClipboard } from '../../ClipboardHelpers';
+import {
+    writeTextToClipboard,
+    readTextFromClipboard,
+} from '../../ClipboardHelpers';
+import Hotkey from '../Hotkey/Hotkey';
+import {
+    ON_PASTE_ACTION_NAME,
+    onPasteArg,
+} from '@casual-simulation/aux-common';
 
-@Component
+@Component({
+    components: {
+        hotkey: Hotkey,
+    },
+})
 export default class ClipboardModal extends Vue {
     open: boolean = false;
     text: string = '';
@@ -42,6 +54,15 @@ export default class ClipboardModal extends Vue {
     async doCopy() {
         await this.$copyText(this.text);
         this.closeDialog();
+    }
+
+    async onPaste() {
+        const text = await readTextFromClipboard();
+        if (text) {
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                sim.helper.action(ON_PASTE_ACTION_NAME, null, onPasteArg(text));
+            }
+        }
     }
 
     private _simulationAdded(sim: Simulation): void {

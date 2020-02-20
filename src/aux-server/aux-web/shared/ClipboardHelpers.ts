@@ -10,3 +10,17 @@ export async function writeTextToClipboard(text: string) {
         throw ex;
     }
 }
+
+export async function readTextFromClipboard(): Promise<string> {
+    if (!navigator.clipboard) {
+        throw new Error('[Clipboard] Not supported.');
+    }
+    try {
+        const text = await navigator.clipboard.readText();
+        console.log('[Clipboard] Read Clipboard!');
+        return text;
+    } catch (ex) {
+        console.error('[Clipboard] Could not read from clipboard: ', ex);
+        throw ex;
+    }
+}
