@@ -207,6 +207,17 @@ export function filterBotsBySelection<TBot extends Bot>(
 }
 
 /**
+ * Gets the state that should be uploaded from the given data.
+ * @param data The data.
+ */
+export function getUploadState(data: any): BotsState {
+    if ('version' in data) {
+        return data.state;
+    }
+    return data;
+}
+
+/**
  * Gets a list of tags that the given bots contain.
  *
  * @param bots The array of bots that the list of tags should be retrieved

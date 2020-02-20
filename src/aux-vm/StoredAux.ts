@@ -1,4 +1,4 @@
-import { BotsState } from '@casual-simulation/aux-common';
+import { BotsState, getUploadState } from '@casual-simulation/aux-common';
 
 export type StoredAux = StoredAuxVersion1;
 
@@ -12,5 +12,5 @@ export interface StoredAuxVersion1 {
  * @param stored The stored tree to load.
  */
 export async function getBotsStateFromStoredAux(stored: StoredAux) {
-    return stored.state;
+    return getUploadState(stored);
 }

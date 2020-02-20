@@ -26,13 +26,14 @@ import {
     parseScript,
     getBotTag,
     getPortalTag,
+    getUploadState,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import { createCalculationContext } from './BotCalculationContextFactories';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
-import { BotCalculationContext } from '.';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
+import { BotCalculationContext } from './BotCalculationContext';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1552,6 +1553,33 @@ describe('BotCalculations', () => {
         it('should convert errors to strings', () => {
             const error = new Error('test');
             expect(formatValue(error)).toBe(error.toString());
+        });
+    });
+
+    describe('getUploadState()', () => {
+        it('should support aux files that are just bot state', () => {
+            const data = {
+                test: createBot('test'),
+                test2: createBot('test2'),
+            };
+
+            const result = getUploadState(data);
+
+            expect(result).toEqual(data);
+        });
+
+        it('should support aux files that contain a version number', () => {
+            const data = {
+                version: 1,
+                state: {
+                    test: createBot('test'),
+                    test2: createBot('test2'),
+                },
+            };
+
+            const result = getUploadState(data);
+
+            expect(result).toEqual(data.state);
         });
     });
 
