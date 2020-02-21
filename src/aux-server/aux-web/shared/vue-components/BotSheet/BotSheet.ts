@@ -17,6 +17,7 @@ export default class BotSheet extends Vue {
     isDiff: boolean = false;
     updateTime: number = -1;
     hasPortal: boolean = false;
+    showNewBot: boolean = true;
 
     private _simulation: BrowserSimulation;
 
@@ -37,6 +38,7 @@ export default class BotSheet extends Vue {
                     this.isDiff = e.isDiff;
                     this.hasPortal = e.hasPortal;
                     this.dimension = e.dimension;
+                    this.showNewBot = !e.isSingleBot;
                     const now = Date.now();
                     this.updateTime = now;
                 })

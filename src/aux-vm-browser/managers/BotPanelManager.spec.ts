@@ -257,5 +257,51 @@ describe('BotPanelManager', () => {
 
             expect(dimension).toBe(null);
         });
+
+        it('should indicate that a single bot is selected', async () => {
+            let isSingleBot = false;
+            let bots: PrecalculatedBot[];
+            manager.botsUpdated.subscribe(e => {
+                isSingleBot = e.isSingleBot;
+                bots = e.bots;
+            });
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: 'test',
+                    },
+                }),
+                botAdded(
+                    createBot('test', {
+                        hello: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        hello: false,
+                        wow: true,
+                    })
+                ),
+            ]);
+
+            expect(isSingleBot).toBe(true);
+            expect(bots).toEqual([
+                createPrecalculatedBot('test', {
+                    hello: true,
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        auxSheetPortal: null,
+                    },
+                }),
+            ]);
+
+            expect(isSingleBot).toBe(false);
+            expect(bots).toEqual([]);
+        });
     });
 });

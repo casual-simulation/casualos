@@ -252,7 +252,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     private _filterObjects(objs: Bot[], filter: FilterFunction, tag: string) {
-        if (filter) {
+        if (hasValue(filter)) {
             if (typeof filter === 'function') {
                 return objs.filter(o => filter(this._calculateValue(o, tag)));
             } else {

@@ -13,6 +13,7 @@
                     :diffSelected="isDiff"
                     :dimension="dimension"
                     :showExitSheet="true"
+                    :showNewBot="showNewBot"
                 ></bot-table>
             </md-card-content>
         </md-card>

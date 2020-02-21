@@ -35,7 +35,7 @@
                                 <md-tooltip>Add Tag</md-tooltip>
                             </md-button>
                             <md-button
-                                v-if="!isSearch"
+                                v-if="!isSearch && showNewBot"
                                 class="md-icon-button create-bot"
                                 @click="createBot()"
                             >

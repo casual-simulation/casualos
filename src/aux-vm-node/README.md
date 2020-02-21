@@ -15,7 +15,7 @@ npm install @casual-simulation/aux-vm-node
 #### Connect to an AUX served from a remote server
 
 ```javascript
-import { nodeSimulationForRemote } from '@casual-simulation/aux-vm-node';
+import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 
 start();
@@ -36,16 +36,28 @@ async function start() {
     // connects to the given channel on the AUX server.
     // This is a high-level abstraction for
     // an AUX virtual machine and makes it easier to use AUXes.
-    const sim = nodeSimulationForRemote(
-        'https://auxplayer.com', // The URL of the AUX Server
+    const sim = nodeSimulationWithConfig(
         user, // The user that we're connecting as
-        'hello', // The channel that we want to load
+        'hello', // The ID of the simulation
+        {
+            config: { // The config values for the AUX Scripts
+                isBuilder: false,
+                isPlayer: false,
 
-        // Options which tell the simulation
-        // what type of application we are.
-        // Currently, the only two options are Channel Designer (isBuilder)
-        // and AUXPlayer (isPlayer)
-        { isBuilder: false, isPlayer: false }
+                // The values that should be returned for player.version()
+                version: 'v1.0.0',
+                versionHash: 'abc',
+            },
+            partitions: { // The partitions that should be loaded
+                // Specify that the "shared" space should be mapped
+                // to the 'hello' universe hosted from auxplayer.com.
+                shared: {
+                    type: 'remote_causal_repo';
+                    branch: 'hello';
+                    host: 'https://auxplayer.com';
+                }
+            }
+        }
     );
 
     // Initialize the simulation.
