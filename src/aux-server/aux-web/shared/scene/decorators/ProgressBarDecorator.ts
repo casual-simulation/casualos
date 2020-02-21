@@ -9,6 +9,8 @@ import {
     BotLabelAnchor,
     clamp,
     hasValue,
+    calculateStringTagValue,
+    getBotTagAnchor,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -20,7 +22,12 @@ import {
     Euler,
     Math as ThreeMath,
 } from 'three';
-import { isTransparent, disposeMesh, createPlane } from '../SceneUtils';
+import {
+    isTransparent,
+    disposeMesh,
+    createPlane,
+    calculateAnchorPosition,
+} from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
@@ -74,6 +81,12 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
 
         barTagValue = clamp(barTagValue, 0, 1);
 
+        let anchorValue = getBotTagAnchor(
+            calc,
+            this.bot3D.bot,
+            'auxProgressBarPosition'
+        );
+
         if (this.progressValue !== barTagValue) {
             this.progressValue = barTagValue;
 
@@ -82,6 +95,16 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
             }
 
             this._updateFill();
+        }
+
+        if (this._anchor !== anchorValue) {
+            this._anchor = anchorValue;
+
+            if (!this.mesh) {
+                this._rebuildBarMeshes();
+            } else {
+                this._updatePosition();
+            }
         }
 
         // Flag that detected if the color values have changed.
@@ -196,12 +219,15 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         this.mesh = createPlane(1);
         this.container.add(this.mesh);
 
-        const [pos, rotation] = this.calculateProgressAnchorPosition();
-
-        this.container.position.copy(pos);
-        this.container.rotation.copy(rotation);
+        this._updatePosition();
 
         this.onMeshUpdated.invoke(this);
+    }
+
+    private _updatePosition() {
+        const [pos, rotation] = this.calculateProgressAnchorPosition();
+        this.container.position.copy(pos);
+        this.container.rotation.copy(rotation);
     }
 
     private _destroyMeshes(): void {
@@ -230,13 +256,6 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         let targetCenter = new Vector3(0, 0.5, 0);
 
         const positionMultiplier = 0.6;
-
-        if (this.bot3D.bot && this.bot3D.bot.tags['auxProgressBarPosition']) {
-            // TODO: Support formulas
-            this._anchor = <BotLabelAnchor>(
-                this.bot3D.bot.tags['auxProgressBarPosition']
-            );
-        }
 
         if (this._anchor === 'floating') {
             //let posOffset = this.container.position.clone().sub(bottomCenter);

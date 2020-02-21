@@ -1230,11 +1230,15 @@ export function getBotLabelAnchor(
     calc: BotCalculationContext,
     bot: Bot
 ): BotLabelAnchor {
-    const anchor: BotLabelAnchor = calculateBotValue(
-        calc,
-        bot,
-        'auxLabelPosition'
-    );
+    return getBotTagAnchor(calc, bot, 'auxLabelPosition');
+}
+
+export function getBotTagAnchor(
+    calc: BotCalculationContext,
+    bot: Bot,
+    tag: string
+): BotLabelAnchor {
+    const anchor: BotLabelAnchor = calculateBotValue(calc, bot, tag);
     if (
         anchor === 'back' ||
         anchor === 'floating' ||

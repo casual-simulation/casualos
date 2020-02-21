@@ -42,11 +42,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     botUpdated(calc: BotCalculationContext): void {
         let label = this.bot3D.bot.tags['auxLabel'];
 
-        const anchor: BotLabelAnchor = calculateBotValue(
-            calc,
-            this.bot3D.bot,
-            'auxLabelPosition'
-        );
+        const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
 
         let botWidth = calculateNumericalTagValue(
             calc,

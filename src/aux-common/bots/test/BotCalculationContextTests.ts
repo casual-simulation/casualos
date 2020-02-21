@@ -4240,7 +4240,7 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getLabelAnchor()', () => {
+    describe('getBotLabelAnchor()', () => {
         it('should default to top', () => {
             const bot = createBot('bot');
 
