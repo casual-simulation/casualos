@@ -18,6 +18,7 @@
 #### :bug: Bug Fixes
 
 -   Fixed an issue with `getBots(tag, value)` that caused falsy values (like `0` or `false`) to return all bots with the given tag.
+-   Fixed an issue where the progress bar's position would only be updated if the progress bar value changed.
 
 ## V1.0.8
 
