@@ -90,6 +90,9 @@ export default class BotTable extends Vue {
     @Prop({ required: true })
     showExitSheet: boolean;
 
+    @Prop({ required: true })
+    showNewBot: boolean;
+
     tags: string[] = [];
     readOnlyTags: string[] = [];
     addedTags: string[] = [];

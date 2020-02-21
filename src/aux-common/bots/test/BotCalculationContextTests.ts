@@ -1249,6 +1249,68 @@ export function botCalculationContextTests(
                     expect(unwrapped).toEqual([bot3, bot2, bot]);
                 });
 
+                const falsyCases = [['false', false], ['0', 0]];
+
+                it.each(falsyCases)(
+                    'should return only the bots that match %s',
+                    (desc, val) => {
+                        const bot = createBot('test', {
+                            formula: `=getBots("tag", ${val})`,
+                        });
+
+                        const bot2 = createBot('test2', {
+                            tag: 2,
+                        });
+
+                        const bot3 = createBot('test3', {
+                            tag: val,
+                        });
+
+                        const context = createCalculationContext([
+                            bot,
+                            bot2,
+                            bot3,
+                        ]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        expect(value).toMatchObject([bot3]);
+                    }
+                );
+
+                it.each(falsyCases)(
+                    'should return only the bots that match %s when using byTag()',
+                    (desc, val) => {
+                        const bot = createBot('test', {
+                            formula: `=getBots(byTag("tag", ${val}))`,
+                        });
+
+                        const bot2 = createBot('test2', {
+                            tag: 2,
+                        });
+
+                        const bot3 = createBot('test3', {
+                            tag: val,
+                        });
+
+                        const context = createCalculationContext([
+                            bot,
+                            bot2,
+                            bot3,
+                        ]);
+                        const value = calculateBotValue(
+                            context,
+                            bot,
+                            'formula'
+                        );
+
+                        expect(value).toMatchObject([bot3]);
+                    }
+                );
+
                 it('should return all bots if no arguments are provdided', () => {
                     const bot = createBot('test', {
                         formula: '=getBots()',
@@ -4178,7 +4240,7 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getLabelAnchor()', () => {
+    describe('getBotLabelAnchor()', () => {
         it('should default to top', () => {
             const bot = createBot('bot');
 

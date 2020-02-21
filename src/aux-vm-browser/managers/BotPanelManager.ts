@@ -57,6 +57,7 @@ export class BotPanelManager implements SubscriptionLike {
             isDiff: false,
             hasPortal: false,
             dimension: null,
+            isSingleBot: false,
         });
 
         this._subs.push(
@@ -87,14 +88,18 @@ export class BotPanelManager implements SubscriptionLike {
                     const dimension = this._helper.userBot.values
                         .auxSheetPortal;
                     if (!!dimension && dimension !== true) {
+                        const bots = filterBotsBySelection(
+                            this._helper.objects,
+                            dimension
+                        );
+                        const singleBot =
+                            bots.length === 1 && bots[0].id === dimension;
                         return {
-                            bots: filterBotsBySelection(
-                                this._helper.objects,
-                                dimension
-                            ),
+                            bots: bots,
                             hasPortal: true,
                             dimension: dimension,
                             isDiff: false,
+                            isSingleBot: singleBot,
                         };
                     } else if (dimension === true) {
                         return {
@@ -102,6 +107,7 @@ export class BotPanelManager implements SubscriptionLike {
                             hasPortal: true,
                             dimension: null,
                             isDiff: false,
+                            isSingleBot: false,
                         };
                     }
                 }
@@ -110,6 +116,7 @@ export class BotPanelManager implements SubscriptionLike {
                     hasPortal: false,
                     dimension: null,
                     isDiff: false,
+                    isSingleBot: false,
                 };
             })
         );
@@ -121,4 +128,5 @@ export interface BotsUpdatedEvent {
     dimension: string;
     hasPortal: boolean;
     isDiff: boolean;
+    isSingleBot: boolean;
 }

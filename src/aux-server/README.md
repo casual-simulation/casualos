@@ -1,20 +1,16 @@
 # AUX Server
 
-A web application that serves the Channel Designer and AUX Player experiences.
+A web application that serves the auxPlayer experience.
 Built on top of the AUX Common library.
 
-### Channel Designer
-
-A single page web application that allows people to edit AUXes in realtime.
-
-### AUX Player
+### auxPlayer
 
 A single page web application that allows people to view and interact with AUXes in realtime.
 
 ### Server
 
-A Node.JS server that is able to facilitate realtime communication for the Channel Designer and AUX Player applications via WebSockets.
-Also serves the actual Channel Designer and AUX Player HTML and JavaScript files.
+A Node.JS server that is able to facilitate realtime communication for the auxPlayer application via WebSockets.
+Also serves the actual auxPlayer HTML and JavaScript files.
 
 ## Installation
 
@@ -79,7 +75,7 @@ $ ./install-aux.sh
 
 You're done!
 
-To access your AUX, simply visit `http://{your_ip_address}/*/admin` in a web browser.
+To access your AUX, simply visit `http://{your_ip_address}/?auxUniverse=test&auxPagePortal=home` in a web browser.
 
 ## Configuration
 
