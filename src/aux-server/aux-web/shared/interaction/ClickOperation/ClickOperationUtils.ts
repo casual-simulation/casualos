@@ -1,5 +1,4 @@
-import { Pose } from '../../../shared/scene/vr/VRController3D';
-import { Vector2 } from 'three';
+import { Vector2, Object3D } from 'three';
 
 export const DragThreshold: number = 0.03;
 export const VRDragAngleThreshold: number = 0.06;
@@ -13,7 +12,10 @@ export function DragThresholdPassed(
     return distance >= DragThreshold;
 }
 
-export function VRDragThresholdPassed(startPose: Pose, curPose: Pose): boolean {
+export function VRDragThresholdPassed(
+    startPose: Object3D,
+    curPose: Object3D
+): boolean {
     const angle = curPose.quaternion.angleTo(startPose.quaternion);
     const distance = curPose.position.distanceTo(startPose.position);
 
@@ -22,4 +24,11 @@ export function VRDragThresholdPassed(startPose: Pose, curPose: Pose): boolean {
     const distPassed = distance >= VRDragPosThreshold;
 
     return anglePassed || distPassed;
+}
+
+export function posesEqual(first: Object3D, second: Object3D): boolean {
+    return (
+        first.position.equals(second.position) &&
+        first.rotation.equals(second.rotation)
+    );
 }

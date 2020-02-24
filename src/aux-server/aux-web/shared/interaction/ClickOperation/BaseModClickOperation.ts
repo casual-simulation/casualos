@@ -1,4 +1,4 @@
-import { InputType } from '../../../shared/scene/Input';
+import { InputType, InputMethod } from '../../../shared/scene/Input';
 import { Vector2 } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
@@ -9,7 +9,6 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { Simulation3D } from '../../scene/Simulation3D';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { BaseClickOperation } from './BaseClickOperation';
 
 /**
@@ -22,9 +21,9 @@ export abstract class BaseModClickOperation extends BaseClickOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         mod: BotTags,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
-        super(simulation3D, interaction, vrController);
+        super(simulation3D, interaction, inputMethod);
         this._mod = mod;
     }
 

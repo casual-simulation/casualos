@@ -1,4 +1,4 @@
-import { Input } from '../../../shared/scene/Input';
+import { Input, InputMethod } from '../../../shared/scene/Input';
 import { Ray } from 'three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -6,9 +6,9 @@ import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
 import { BotCalculationContext } from '@casual-simulation/aux-common';
+import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -24,9 +24,9 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
     constructor(
         game: PlayerGame,
         interaction: PlayerInteractionManager,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
-        super(game, interaction, vrController);
+        super(game, interaction, inputMethod);
         this._game = game;
         this._interaction = interaction;
     }
@@ -50,8 +50,8 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                 let inputRay: Ray;
 
                 // Calculate input ray.
-                if (this._vrController) {
-                    inputRay = this._vrController.pointerRay;
+                if (this._controller) {
+                    inputRay = objectForwardRay(this._controller.ray);
                     inputDimension = sim3D.dimension;
                 } else {
                     const pagePos = this._game.getInput().getMousePagePos();

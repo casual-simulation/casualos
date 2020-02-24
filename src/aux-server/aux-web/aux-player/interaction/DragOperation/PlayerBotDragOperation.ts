@@ -11,16 +11,15 @@ import {
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { Intersection, Vector2, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Input } from '../../../shared/scene/Input';
+import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import differenceBy from 'lodash/differenceBy';
 import take from 'lodash/take';
 import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
+import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -60,7 +59,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
-        vrController: VRController3D | null,
+        inputMethod: InputMethod,
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
         clickedFace?: string
@@ -70,7 +69,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             interaction,
             take(bots, 1),
             dimension,
-            vrController,
+            inputMethod,
             fromCoord,
             skipOnDragEvents,
             clickedFace
@@ -91,7 +90,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._interaction,
             [bot],
             this._dimension,
-            this._vrController,
+            this._inputMethod,
             this._fromCoord,
             true,
             this._clickedFace
@@ -104,7 +103,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inventorySimulation3D,
             this._interaction,
             mod,
-            this._vrController
+            this._inputMethod
         );
     }
 
@@ -113,7 +112,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         let nextContext = this._simulation3D.dimension;
 
-        if (!this._vrController) {
+        if (!this._controller) {
             // Test to see if we are hovering over the inventory simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
@@ -144,8 +143,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         // Get input ray for grid ray cast.
         let inputRay: Ray;
-        if (this._vrController) {
-            inputRay = this._vrController.pointerRay.clone();
+        if (this._controller) {
+            inputRay = objectForwardRay(this._controller.ray);
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();

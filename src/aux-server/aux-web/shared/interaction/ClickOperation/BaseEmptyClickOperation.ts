@@ -1,12 +1,15 @@
-import { Input } from '../../../shared/scene/Input';
-import { Vector2 } from 'three';
+import {
+    Input,
+    InputMethod,
+    ControllerData,
+} from '../../../shared/scene/Input';
+import { Vector2, Object3D } from 'three';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import { Game } from '../../../shared/scene/Game';
 import {
@@ -21,10 +24,10 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     protected _interaction: BaseInteractionManager;
     protected _game: Game;
     protected _finished: boolean;
-    protected _vrController: VRController3D;
+    protected _controller: ControllerData;
 
     protected _startScreenPos: Vector2;
-    protected _startVRControllerPose: Pose;
+    protected _startVRControllerPose: Object3D;
 
     get simulation() {
         return appManager.simulationManager.primary;
@@ -33,15 +36,16 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     constructor(
         game: Game,
         interaction: BaseInteractionManager,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
         this._game = game;
         this._interaction = interaction;
-        this._vrController = vrController;
+        this._controller =
+            inputMethod.type === 'controller' ? inputMethod.controller : null;
 
-        if (this._vrController) {
+        if (this._controller) {
             // Store the pose of the vr controller when the click occured.
-            this._startVRControllerPose = this._vrController.worldPose.clone();
+            this._startVRControllerPose = this._controller.ray.clone();
         } else {
             // Store the screen position of the input when the click occured.
             this._startScreenPos = this._game.getInput().getMouseScreenPos();
@@ -53,15 +57,16 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     public update(calc: BotCalculationContext): void {
         if (this._finished) return;
 
-        const buttonHeld: boolean = this._vrController
-            ? this._vrController.getPrimaryButtonHeld()
-            : this._game.getInput().getMouseButtonHeld(0);
+        const input = this._game.getInput();
+        const buttonHeld: boolean = this._controller
+            ? input.getControllerPrimaryButtonHeld(this._controller)
+            : input.getMouseButtonHeld(0);
 
         if (!buttonHeld) {
-            let dragThresholdPassed: boolean = this._vrController
+            let dragThresholdPassed: boolean = this._controller
                 ? VRDragThresholdPassed(
                       this._startVRControllerPose,
-                      this._vrController.worldPose
+                      this._controller.ray
                   )
                 : DragThresholdPassed(
                       this._startScreenPos,

@@ -1,6 +1,6 @@
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2 } from 'three';
+import { Vector2, Object3D } from 'three';
 import {
     Bot,
     botUpdated,
@@ -36,8 +36,9 @@ import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { Subscription } from 'rxjs';
+import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
@@ -51,13 +52,14 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
     protected _lastIndex: number;
-    protected _lastVRControllerPose: Pose;
+    protected _lastVRControllerPose: Object3D;
     protected _merge: boolean;
     protected _other: Bot;
     protected _dimension: string;
     protected _previousDimension: string;
     protected _originalDimension: string;
-    protected _vrController: VRController3D;
+    protected _controller: ControllerData;
+    protected _inputMethod: InputMethod;
     protected _childOperation: IOperation;
     protected _clickedFace: string;
 
@@ -93,7 +95,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         interaction: BaseInteractionManager,
         bots: Bot[],
         dimension: string,
-        vrController: VRController3D | null,
+        inputMethod: InputMethod,
         fromCoord?: Vector2,
         skipOnDragEvents?: boolean,
         clickedFace?: string
@@ -106,13 +108,15 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._lastGridPos = null;
         this._lastIndex = null;
         this._inDimension = true;
-        this._vrController = vrController;
+        this._inputMethod = inputMethod;
+        this._controller =
+            inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
         this._clickedFace = clickedFace;
         this._sub = new Subscription();
 
-        if (this._vrController) {
-            this._lastVRControllerPose = this._vrController.worldPose.clone();
+        if (this._controller) {
+            this._lastVRControllerPose = this._controller.ray.clone();
         } else {
             this._lastScreenPos = this._simulation3D.game
                 .getInput()
@@ -200,16 +204,20 @@ export abstract class BaseBotDragOperation implements IOperation {
             return;
         }
 
-        const buttonHeld: boolean = this._vrController
-            ? this._vrController.getPrimaryButtonHeld()
-            : this.game.getInput().getMouseButtonHeld(0);
+        const input = this.game.getInput();
+        const buttonHeld: boolean = this._controller
+            ? input.getControllerPrimaryButtonHeld(this._controller)
+            : input.getMouseButtonHeld(0);
 
         if (buttonHeld) {
             let shouldUpdateDrag: boolean;
 
-            if (this._vrController) {
-                const curPose = this._vrController.worldPose.clone();
-                shouldUpdateDrag = !curPose.equals(this._lastVRControllerPose);
+            if (this._controller) {
+                const curPose = this._controller.ray.clone();
+                shouldUpdateDrag = !posesEqual(
+                    curPose,
+                    this._lastVRControllerPose
+                );
                 this._lastVRControllerPose = curPose;
             } else {
                 const curScreenPos = this.game.getInput().getMouseScreenPos();

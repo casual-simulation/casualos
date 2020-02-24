@@ -33,7 +33,6 @@ import {
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType } from './Input';
-import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
@@ -53,11 +52,12 @@ import find from 'lodash/find';
 import flatMap from 'lodash/flatMap';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
-import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
 import { supportsXR } from '../SharedUtils';
+
+export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -74,7 +74,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
     protected renderer: WebGLRenderer;
     protected time: Time;
     protected input: Input;
-    protected inputVR: InputVR;
     protected interaction: BaseInteractionManager;
     protected gridChecker: GridChecker;
     protected htmlMixerContext: HtmlMixer.Context;
@@ -116,7 +115,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.setupRenderer();
         this.setupScenes();
         this.input = new Input(this);
-        this.inputVR = new InputVR(this);
         this.interaction = this.setupInteraction();
 
         // await this.setupWebVR();
@@ -164,9 +162,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
     }
     getInput() {
         return this.input;
-    }
-    getInputVR() {
-        return this.inputVR;
     }
     getInteraction() {
         return this.interaction;
@@ -539,7 +534,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
         DebugObjectManager.update();
 
         this.input.update(xrFrame);
-        this.inputVR.update();
         this.interaction.update();
 
         const simulations = this.getSimulations();
@@ -753,13 +747,15 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.startXR('immersive-ar');
     }
 
-    protected async stopXR() {
+    protected async stopXR(ending: boolean = false) {
         if (!this.xrSession) {
             console.log('[Game] XR already stopped!');
             return;
         }
         console.log('[Game] Stop XR');
-        await this.xrSession.end();
+        if (!ending) {
+            await this.xrSession.end();
+        }
         this.xrSession = null;
 
         // Restart the regular animation update loop.
@@ -767,6 +763,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.renderer.setAnimationLoop(this.frameUpdate);
         // Go back to the orthographic camera type when exiting XR.
         this.setCameraType('orthographic');
+        this.input.currentInputType = InputType.Undefined;
     }
 
     protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
@@ -786,11 +783,27 @@ export abstract class Game implements AuxBotVisualizerFinder {
         document.documentElement.classList.add('ar-app');
 
         const nav: any = navigator;
-        this.xrSession = await nav.xr.requestSession(mode);
+        let supportsPreferredReferenceSpace = true;
+        this.xrSession = await nav.xr
+            .requestSession(mode, {
+                requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
+            })
+            .catch((err: any) => {
+                supportsPreferredReferenceSpace = false;
+                return nav.xr.requestSession(mode);
+            });
 
+        const referenceSpaceType = supportsPreferredReferenceSpace
+            ? PREFERRED_XR_REFERENCE_SPACE
+            : 'local';
         this.renderer.xr.enabled = true;
-        this.renderer.xr.setReferenceSpaceType('local');
+        this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
         this.renderer.xr.setSession(this.xrSession);
+
+        const referenceSpace = await this.xrSession.requestReferenceSpace(
+            referenceSpaceType
+        );
+        this.input.setXRSession(this.xrSession, referenceSpace);
 
         this.xrSession.addEventListener('end', (ev: any) =>
             this.handleXRSessionEnded()
@@ -801,20 +814,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
             throw new Error('Cannot start presenting without a xrSession');
         }
 
-        // Set the xrSession's base layer into which the app will render
-        // this.xrSession.baseLayer = new win.XRWebGLLayer(
-        //     this.xrSession,
-        //     this.renderer.context
-        // );
-
-        // Handle layer focus events
-        // this.xrSession.baseLayer.addEventListener('focus', (ev: any) => {
-        //     this.handleXRLayerFocus();
-        // });
-        // this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
-        //     this.handleXRLayerBlur();
-        // });
-
         // Stop regular animation update loop and use the one from the xr session.
         this.renderer.setAnimationLoop(null);
         this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
@@ -824,6 +823,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     protected handleXRSessionEnded() {
         console.log('[Game] handleXRSessionEnded');
+        this.stopXR(true);
     }
 
     protected stopVR() {

@@ -29,6 +29,7 @@ import {
     OrthographicCamera,
     Color,
     MeshStandardMaterial,
+    Ray,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -615,4 +616,22 @@ export function setColor(mesh: Mesh | Sprite, color: string) {
         shapeMat.visible = true;
         shapeMat.color = new Color(0xffffff);
     }
+}
+
+/**
+ * Creates a ray for the given direction from the given object's perspective.
+ * @param direction The direction.
+ * @param obj The object.
+ */
+export function objectDirectionRay(direction: Vector3, obj: Object3D): Ray {
+    const forward = direction.applyQuaternion(obj.quaternion);
+    return new Ray(obj.position, forward);
+}
+
+/**
+ * Creates a ray for the given object's forward direction.
+ * @param obj The object.
+ */
+export function objectForwardRay(obj: Object3D): Ray {
+    return objectDirectionRay(new Vector3(0, 0, -1), obj);
 }

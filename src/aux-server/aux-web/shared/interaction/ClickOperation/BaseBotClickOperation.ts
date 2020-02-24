@@ -1,4 +1,8 @@
-import { InputType } from '../../../shared/scene/Input';
+import {
+    InputType,
+    ControllerData,
+    InputMethod,
+} from '../../../shared/scene/Input';
 import { Vector2 } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
@@ -12,7 +16,6 @@ import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,
@@ -31,9 +34,9 @@ export abstract class BaseBotClickOperation extends BaseClickOperation {
         interaction: BaseInteractionManager,
         bot: Bot,
         bot3D: AuxBot3D | DimensionGroup3D | null,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
-        super(simulation3D, interaction, vrController);
+        super(simulation3D, interaction, inputMethod);
         this._bot = bot;
         this._bot3D = bot3D;
     }
