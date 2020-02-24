@@ -1,5 +1,5 @@
 import {
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Mesh,
     Object3D,
     DoubleSide,

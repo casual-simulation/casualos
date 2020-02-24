@@ -38,7 +38,7 @@ import {
     Texture,
     OrthographicCamera,
     PerspectiveCamera,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
 } from 'three';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';

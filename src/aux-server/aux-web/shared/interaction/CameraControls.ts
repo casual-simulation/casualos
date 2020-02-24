@@ -5,7 +5,7 @@ import {
     Vector2,
     Quaternion,
     Matrix4,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     OrthographicCamera,
 } from 'three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';

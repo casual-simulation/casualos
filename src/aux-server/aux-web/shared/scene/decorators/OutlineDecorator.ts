@@ -1,7 +1,7 @@
 import {
     Group,
     Mesh,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Color,
     MeshBasicMaterial,
     BackSide,
@@ -133,7 +133,6 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         let outlineGeo = this._targetMeshDecorator.mesh.geometry;
         let outlineMat = new MeshBasicMaterial({
             color: new Color(DEFAULT_OUTLINE_COLOR),
-            lights: false,
             side: BackSide,
         });
 

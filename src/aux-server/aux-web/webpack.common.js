@@ -117,10 +117,6 @@ module.exports = {
     resolve: {
         extensions: ['.vue', '.js', '.ts', '.css'],
         alias: {
-            'webxr-polyfill': path.resolve(
-                __dirname,
-                'shared/public/scripts/webxr-polyfill.js'
-            ),
             'vue-json-tree-view': path.resolve(
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'

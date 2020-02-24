@@ -64,8 +64,6 @@ import PlayerApp from './PlayerApp/PlayerApp';
 import PlayerHome from './PlayerHome/PlayerHome';
 import Loading from '../shared/vue-components/Loading/Loading';
 
-// Import the WebXR Polyfill
-import 'webxr-polyfill';
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
 

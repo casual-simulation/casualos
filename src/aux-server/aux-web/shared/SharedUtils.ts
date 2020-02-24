@@ -101,16 +101,8 @@ export function navigateToUrl(url: string, target?: string, rel?: string) {
 
 /**
  * Gets whether WebXR is supported.
- * Currently just checks for the Mozilla WebXR polyfill and if the browser is safari.
  */
-export function supportsXR(xrDisplay: any): boolean {
-    // The worst hack of all time.
-    // Basically does the check that the webxr polyfill does
-    // to see it the device really supports Web XR.
-    const arSupported =
-        typeof (<any>window).webkit !== 'undefined' ||
-        xrDisplay._reality._vrDisplay;
-    const bowser = Bowser.parse(navigator.userAgent);
-    // Also we're gonna limit this to Safari only for now. (The mozilla webxr viewer reports itself as Safari).
-    return bowser.browser.name == 'Safari' && arSupported;
+export function supportsXR(): boolean {
+    const nav: any = navigator;
+    return !!nav.xr;
 }

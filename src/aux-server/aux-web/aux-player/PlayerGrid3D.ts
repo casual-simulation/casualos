@@ -8,7 +8,7 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     LineBasicMaterial,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Plane,
     PlaneHelper,
     Quaternion,

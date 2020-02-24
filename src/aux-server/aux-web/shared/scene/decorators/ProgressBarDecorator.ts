@@ -20,7 +20,7 @@ import {
     Vector3,
     MeshToonMaterial,
     Euler,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
 } from 'three';
 import {
     isTransparent,

@@ -25,8 +25,6 @@ import {
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
-import { WebVRDisplays } from './WebVRDisplays';
-import { supportsXR } from './SharedUtils';
 import builder from './builder/builder.v1.json';
 
 /**
@@ -219,18 +217,18 @@ export class AppManager {
             arSupported = await nav.xr
                 .isSessionSupported('immersive-ar')
                 .catch(() => false);
-            // const vrSupportedInXR = await nav.xr.isSessionSupported('immersive-vr');
         }
 
-        let vrSupportedOld = false;
-        if (WebVRDisplays.supportsVR()) {
-            const displays = await navigator.getVRDisplays().catch(() => []);
-            vrSupportedOld = displays.length > 0;
+        let vrSupported = false;
+        if (nav.xr) {
+            vrSupported = await nav.xr
+                .isSessionSupported('immersive-vr')
+                .catch(() => false);
         }
 
         this._deviceConfig = {
             supportsAR: arSupported,
-            supportsVR: vrSupportedOld,
+            supportsVR: vrSupported,
         };
     }
 

@@ -19,7 +19,7 @@ import {
     MeshToonMaterial,
     AmbientLight,
     DirectionalLight,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Euler,
     SpriteMaterial,
     Sprite,
@@ -200,14 +200,14 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 
     // Detach
     if (object3d.parent && object3d.parent !== scene) {
-        object3d.applyMatrix(object3d.parent.matrixWorld);
+        object3d.applyMatrix4(object3d.parent.matrixWorld);
         object3d.parent.remove(object3d);
         scene.add(object3d);
     }
 
     // Attach
     if (parent) {
-        object3d.applyMatrix(new Matrix4().getInverse(parent.matrixWorld));
+        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
         scene.remove(object3d);
         parent.add(object3d);
     }

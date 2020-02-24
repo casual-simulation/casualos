@@ -5,6 +5,8 @@ import {
     BufferAttribute,
     Vector3,
     Line,
+    DynamicDrawUsage,
+    StaticDrawUsage,
 } from 'three';
 
 /**
@@ -49,7 +51,9 @@ export class LineHelper extends Line {
     }
 
     setDynamic(dynamic: boolean): void {
-        this._positionAttribute.setDynamic(dynamic);
+        this._positionAttribute.setUsage(
+            dynamic ? DynamicDrawUsage : StaticDrawUsage
+        );
     }
 
     updateMatrixWorld(force?: boolean): void {
