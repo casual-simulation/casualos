@@ -8,7 +8,6 @@ declare module 'filepond-plugin-file-validate-type';
 declare module 'jsbarcode';
 declare module 'quagga';
 declare module 'clipboard-polyfill';
-declare module 'three-legacy-gltf-loader';
 
 declare module '*.jpg' {
     const url: string;
