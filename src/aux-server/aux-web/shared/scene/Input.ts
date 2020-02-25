@@ -1,11 +1,22 @@
 import Vue from 'vue';
-import { Vector2, Vector3, Ray, Group } from 'three';
+import { Vector2, Vector3, Ray, Group, Object3D } from 'three';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
 import { Subscription } from 'rxjs';
 import uuid from 'uuid/v4';
+import {
+    XRInputSource,
+    XRFrame,
+    XRInputSourceEvent,
+    XRInputSourcesChangeEvent,
+    XRSpace,
+    XRSession,
+    XRPose,
+} from './xr/WebXRTypes';
+import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
+import { createMotionController, copyPose } from './xr/WebXRHelpers';
 
 export class Input {
     /**
@@ -227,6 +238,7 @@ export class Input {
         this._lastPrimaryControllerData = {
             identifier: null,
             inputSource: null,
+            mesh: null,
             primaryInputState: new InputState(),
             ray: new Group(),
         };
@@ -743,6 +755,13 @@ export class Input {
     private _updateControllers(xrFrame: XRFrame) {
         for (let controller of this._controllerData) {
             this._updateControllerRay(xrFrame, controller);
+            if (controller.mesh) {
+                const pose = xrFrame.getPose(
+                    controller.inputSource.gripSpace,
+                    this._xrReferenceSpace
+                );
+                controller.mesh.update(pose);
+            }
         }
     }
 
@@ -769,6 +788,9 @@ export class Input {
             }
         });
         this._xrSubscription = new Subscription(() => {
+            for (let controller of this._controllerData) {
+                this._disposeController(controller);
+            }
             this._controllerData = [];
             this._xrSession.removeEventListener(
                 'inputsourceschange',
@@ -845,6 +867,7 @@ export class Input {
         this._lastPrimaryControllerData.inputSource = data.inputSource;
         this._lastPrimaryControllerData.primaryInputState = data.primaryInputState.clone();
         this._lastPrimaryControllerData.ray.copy(data.ray, false);
+        this._lastPrimaryControllerData.mesh = data.mesh;
     }
 
     /**
@@ -1418,11 +1441,13 @@ export class Input {
             if (!controller) {
                 controller = {
                     primaryInputState: new InputState(),
+                    mesh: null,
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
                 };
                 this._controllerData.push(controller);
+                this._setupControllerMesh(controller);
             }
         }
         for (let source of event.removed) {
@@ -1430,9 +1455,25 @@ export class Input {
                 c => c.inputSource === source
             );
             if (index >= 0) {
-                this._controllerData.splice(index, 1);
+                const removed = this._controllerData.splice(index, 1);
+                for (let r of removed) {
+                    this._disposeController(r);
+                }
             }
         }
+    }
+
+    private async _setupControllerMesh(controller: ControllerData) {
+        let mesh: WebXRControllerMesh = null;
+        const motionController = await createMotionController(
+            controller.inputSource
+        );
+        if (motionController) {
+            mesh = new WebXRControllerMesh(motionController);
+            await mesh.init();
+            this._game.getScene().add(mesh.scene);
+        }
+        controller.mesh = mesh;
     }
 
     private _handleXRSelect(event: XRInputSourceEvent) {}
@@ -1502,15 +1543,15 @@ export class Input {
             controller.inputSource.targetRaySpace,
             this._xrReferenceSpace
         );
-        controller.ray.matrix.fromArray(pose.transform.matrix);
-        controller.ray.matrix.decompose(
-            controller.ray.position,
-            <any>controller.ray.rotation,
-            controller.ray.scale
-        );
+        copyPose(pose, controller.ray);
     }
 
-    // private _handleController
+    private _disposeController(controller: ControllerData) {
+        if (controller.mesh) {
+            this._game.getScene().remove(controller.mesh.scene);
+            controller.mesh.unsubscribe();
+        }
+    }
 
     private _handleContextMenu(event: MouseEvent) {
         // Prevent context menu from triggering.
@@ -1729,6 +1770,11 @@ export interface ControllerData {
     primaryInputState: InputState;
 
     /**
+     * The object representing the controller mesh.
+     */
+    mesh: WebXRControllerMesh;
+
+    /**
      * The ray that the controller is pointing at.
      */
     ray: Group;
@@ -1795,42 +1841,4 @@ class WheelData {
         });
         // console.log('removeOldFrames after filter wheelFrameCount: ' + this._wheelFrames.length);
     }
-}
-
-export interface XRInputSourcesChangeEvent extends Event {
-    added: XRInputSource[];
-    removed: XRInputSource[];
-}
-
-export interface XRInputSourceEvent extends Event {
-    frame: XRFrame;
-    inputSource: XRInputSource;
-}
-
-export interface XRSession extends EventTarget {
-    inputSources: XRInputSource[];
-}
-
-export interface XRInputSource {
-    handedness: XRHandedness;
-    targetRayMode: XRTargetRayMode;
-    targetRaySpace: XRSpace;
-    gripSpace: XRSpace;
-}
-
-export interface XRFrame {
-    getPose(space: XRSpace, baseSpace: XRSpace): XRPose;
-}
-
-export type XRHandedness = 'none' | 'left' | 'right';
-export type XRTargetRayMode = 'gaze' | 'tracked-pointer' | 'screen';
-
-export interface XRSpace {}
-export interface XRPose {
-    transform: XRRigidTransform;
-    emulatedPosition: boolean;
-}
-
-export interface XRRigidTransform {
-    matrix: Float32Array;
 }
