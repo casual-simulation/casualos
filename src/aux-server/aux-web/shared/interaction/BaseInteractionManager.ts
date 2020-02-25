@@ -293,6 +293,8 @@ export abstract class BaseInteractionManager {
                 );
                 if (gameObject) {
                     this._startClickingGameObject(gameObject, hit, inputMethod);
+                } else {
+                    this._startClickingEmptySpace(inputMethod);
                 }
             } else if (input.getControllerPrimaryButtonUp(controller)) {
                 this._stopClickingGameObject(inputMethod);
@@ -343,7 +345,9 @@ export abstract class BaseInteractionManager {
         if (emptyClickOperation !== null) {
             this._operations.push(emptyClickOperation);
         }
-        this.setCameraControlsEnabled(true);
+        if (inputMethod.type !== 'controller') {
+            this.setCameraControlsEnabled(true);
+        }
     }
 
     private _startClickingGameObject(
