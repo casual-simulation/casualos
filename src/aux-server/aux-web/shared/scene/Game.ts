@@ -620,13 +620,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
             return;
         }
         console.log('[Game] Start XR');
-        // XR requires that we be using a perspective camera.
-        this.setCameraType('perspective');
-        // Remove the camera toggle from the menu while in XR.
-        this.removeSidebarItem('toggle_camera_type');
-
-        document.documentElement.classList.add('ar-app');
-
         const nav: any = navigator;
         let supportsPreferredReferenceSpace = true;
         this.xrSession = await nav.xr
@@ -645,6 +638,11 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.renderer.xr.enabled = true;
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
         this.renderer.xr.setSession(this.xrSession);
+        // XR requires that we be using a perspective camera.
+        this.setCameraType('perspective');
+        // Remove the camera toggle from the menu while in XR.
+        this.removeSidebarItem('toggle_camera_type');
+        document.documentElement.classList.add('ar-app');
 
         const referenceSpace = await this.xrSession.requestReferenceSpace(
             referenceSpaceType
