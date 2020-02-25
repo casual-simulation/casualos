@@ -756,11 +756,7 @@ export class Input {
         for (let controller of this._controllerData) {
             this._updateControllerRay(xrFrame, controller);
             if (controller.mesh) {
-                const pose = xrFrame.getPose(
-                    controller.inputSource.gripSpace,
-                    this._xrReferenceSpace
-                );
-                controller.mesh.update(pose);
+                controller.mesh.update(xrFrame, this._xrReferenceSpace);
             }
         }
     }
@@ -1471,7 +1467,7 @@ export class Input {
         if (motionController) {
             mesh = new WebXRControllerMesh(motionController);
             await mesh.init();
-            this._game.getScene().add(mesh.scene);
+            this._game.getScene().add(mesh.group);
         }
         controller.mesh = mesh;
     }
@@ -1548,7 +1544,7 @@ export class Input {
 
     private _disposeController(controller: ControllerData) {
         if (controller.mesh) {
-            this._game.getScene().remove(controller.mesh.scene);
+            this._game.getScene().remove(controller.mesh.group);
             controller.mesh.unsubscribe();
         }
     }
