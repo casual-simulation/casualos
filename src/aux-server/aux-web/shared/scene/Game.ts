@@ -86,6 +86,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
     showMainCameraHome: boolean;
 
     xrSession: any = null;
+    xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -449,87 +450,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
-    // protected async setupWebVR() {
-    //     this.handleVRDisplayConnect = this.handleVRDisplayConnect.bind(this);
-    //     this.handleVRDisplayDisconnect = this.handleVRDisplayDisconnect.bind(
-    //         this
-    //     );
-    //     this.handleVRDisplayActivate = this.handleVRDisplayActivate.bind(this);
-    //     this.handleVRDisplayDeactivate = this.handleVRDisplayDeactivate.bind(
-    //         this
-    //     );
-    //     this.handleVRDisplayBlur = this.handleVRDisplayBlur.bind(this);
-    //     this.handleVRDisplayFocus = this.handleVRDisplayFocus.bind(this);
-    //     this.handleVRDisplayPresentChange = this.handleVRDisplayPresentChange.bind(
-    //         this
-    //     );
-
-    //     WebVRDisplays.onVRDisplayConnect.addListener(
-    //         this.handleVRDisplayConnect
-    //     );
-    //     WebVRDisplays.onVRDisplayDisconnect.addListener(
-    //         this.handleVRDisplayDisconnect
-    //     );
-    //     WebVRDisplays.onVRDisplayActivate.addListener(
-    //         this.handleVRDisplayActivate
-    //     );
-    //     WebVRDisplays.onVRDisplayDeactivate.addListener(
-    //         this.handleVRDisplayDeactivate
-    //     );
-    //     WebVRDisplays.onVRDisplayBlur.addListener(this.handleVRDisplayBlur);
-    //     WebVRDisplays.onVRDisplayFocus.addListener(this.handleVRDisplayFocus);
-    //     WebVRDisplays.onVRDisplayPresentChange.addListener(
-    //         this.handleVRDisplayPresentChange
-    //     );
-
-    //     await WebVRDisplays.init();
-
-    //     if (WebVRDisplays.mainVRDisplay()) {
-    //         // When being used on a vr headset, force the normal input module to use touch instead of mouse.
-    //         // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
-    //         this.input.currentInputType = InputType.Touch;
-    //     }
-
-    //     // We want to control when the frame gets sent to the VRDisplay so we nullify the core WebVRManager.submitFrame
-    //     // function and will call submitFrame on the VRDisplay manually in order to have better flow control over VR frame rendering.
-    //     this.renderer.vr.submitFrame = (): void => {
-    //         // Do absolutely nothing.
-    //     };
-    // }
-
-    // TODO: All this needs to be reworked to use the right WebXR polyfill
-    // - Use this one: https://github.com/immersive-web/webxr-polyfill
-    // - instead of this one: https://github.com/mozilla/webxr-polyfill
-    // protected async setupWebAR() {
-    //     const win = <any>window;
-    //     const navigator = <any>win.navigator;
-    //     const xr = navigator.xr;
-
-    //     if (typeof xr === 'undefined') {
-    //         console.log('[Game] WebXR Not Supported.');
-    //         return;
-    //     }
-
-    //     const displays = await xr.getDisplays();
-    //     this.xrSessionInitParameters = {
-    //         exclusive: false,
-    //         type: win.XRSession.AUGMENTATION,
-    //         videoFrames: false, //computer_vision_data
-    //         alignEUS: true,
-    //         worldSensing: false,
-    //     };
-    //     const matchingDisplay = find(displays, d =>
-    //         d.supportsSession(this.xrSessionInitParameters)
-    //     );
-    //     if (matchingDisplay ) {
-    //         this.xrDisplay = matchingDisplay;
-    //         this.addSidebarItem('enable_xr', 'Enable AR', () => {
-    //             this.toggleXR();
-    //         });
-    //         console.log('[Game] WebXR Supported!');
-    //     }
-    // }
-
     protected frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
 
@@ -561,45 +481,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     private renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#000', 0);
-
-            // for (const view of xrFrame.views) {
-            //     // Each XRView has its own projection matrix, so set the main camera to use that
-            //     const matrix = new Matrix4();
-            //     matrix.fromArray(view.viewMatrix);
-
-            //     const position = new Vector3();
-            //     position.setFromMatrixPosition(matrix);
-            //     position.multiplyScalar(10);
-
-            //     // Move the player up about a foot above the world.
-            //     position.add(new Vector3(0, 2, 3));
-            //     this.mainCameraRig.mainCamera.position.copy(position);
-
-            //     const rotation = new Quaternion();
-            //     rotation.setFromRotationMatrix(matrix);
-            //     this.mainCameraRig.mainCamera.setRotationFromQuaternion(
-            //         rotation
-            //     );
-
-            //     this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
-            //         view.projectionMatrix
-            //     );
-
-            //     this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-            //     // Set up the _renderer to the XRView's viewport and then render
-            //     const viewport = view.getViewport(this.xrSession.baseLayer);
-
-            //     this.renderer.setViewport(
-            //         viewport.x,
-            //         viewport.y,
-            //         viewport.width,
-            //         viewport.height
-            //     );
-
-            // }
+            if (this.xrMode === 'immersive-ar') {
+                this.mainScene.background = null;
+                this.renderer.setClearColor('#000', 0);
+            }
             this.renderXR();
         } else {
             this.renderBrowser();
@@ -699,46 +584,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
-    // private _showHomeButtonForCameraRig(cameraRig: CameraRig, distance: number): boolean {
-
-    //     if (rigControls) {
-    //         if (distance > 0) {
-    //             const target = rigControls.controls.target.clone();
-    //             const distSqr = target.distanceToSquared(
-    //                 new Vector3(0, 0, 0)
-    //             );
-
-    //             return distSqr >= distance;
-    //         } else {
-    //             // Always show the button.
-    //             return true;
-    //         }
-    //     } else {
-    //         return false;
-    //     }
-    // }
-
-    // private async toggleXR() {
-    //     console.log('[Game] Toggle XR');
-    //     if (this.xrDisplay) {
-    //         if (this.xrSession) {
-    //             this.removeSidebarItem('disable_xr');
-    //             this.addSidebarItem('enable_xr', 'Enable AR', () => {
-    //                 this.toggleXR();
-    //             });
-
-    //             await this.stopAR();
-    //         } else {
-    //             this.removeSidebarItem('enable_xr');
-    //             this.addSidebarItem('disable_xr', 'Disable AR', () => {
-    //                 this.toggleXR();
-    //             });
-
-    //             await this.startAR();
-    //         }
-    //     }
-    // }
-
     protected async stopAR() {
         this.stopXR();
     }
@@ -792,6 +637,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
                 supportsPreferredReferenceSpace = false;
                 return nav.xr.requestSession(mode);
             });
+        this.xrMode = mode;
 
         const referenceSpaceType = supportsPreferredReferenceSpace
             ? PREFERRED_XR_REFERENCE_SPACE
