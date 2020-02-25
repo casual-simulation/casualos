@@ -1,6 +1,5 @@
 import { Bot } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
-import Bowser from 'bowser';
 
 /**
  * Pads the given string with zeros up to the given length.

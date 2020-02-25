@@ -2,7 +2,15 @@ import {
     MotionController,
     Constants,
 } from '@webxr-input-profiles/motion-controllers';
-import { Mesh, Object3D, Scene, Quaternion, Group } from 'three';
+import {
+    Mesh,
+    Object3D,
+    Scene,
+    Quaternion,
+    Group,
+    MeshBasicMaterial,
+    SphereGeometry,
+} from 'three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
 import { disposeScene, objectForwardRay } from '../SceneUtils';
@@ -190,11 +198,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
                         }, in touchpad component ${componentId}`
                     );
                 } else {
-                    const sphereGeometry = new THREE.SphereGeometry(0.001);
-                    const material = new THREE.MeshBasicMaterial({
+                    const sphereGeometry = new SphereGeometry(0.001);
+                    const material = new MeshBasicMaterial({
                         color: 0x0000ff,
                     });
-                    const sphere = new THREE.Mesh(sphereGeometry, material);
+                    const sphere = new Mesh(sphereGeometry, material);
                     touchPointRoot.add(sphere);
                 }
             }
