@@ -16,6 +16,8 @@
     -   The `player.device()` function returns whether AR/VR are supported.
     -   The `player.enableAR()` and `player.enableVR()` functions are used to jump into AR/VR.
     -   The world is placed on the ground (if supported by the device) and bots are 1 meter cubed by default.
+    -   When using a controller, dragging a bot with `#auxPositioningMode` set to `absolute` will move it in free space.
+        -   Additionally, using the grip/squeeze button on the controller while dragging will allow rotating the bot.
 
 -   :bug: Bug Fixes
     -   Fixed several issues with using numbers for the `auxUniverse` and `auxPagePortal` query parameters.
