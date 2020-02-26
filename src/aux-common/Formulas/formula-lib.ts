@@ -1225,10 +1225,12 @@ function getCurrentDimension(): string {
 function getCurrentUniverse(): string {
     const user = getUser();
     if (user) {
-        const universe = getTag(user, 'auxUniverse') as string;
-
-        if (universe && universe.includes('/')) {
-            return universe.split('/')[1];
+        let universe = getTag(user, 'auxUniverse');
+        if (hasValue(universe)) {
+            universe = universe.toString();
+            if (universe.includes('/')) {
+                return universe.split('/')[1];
+            }
         }
 
         return universe || undefined;
@@ -1638,8 +1640,8 @@ function not(filter: BotFilterFunction): BotFilterFunction {
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
+        const tag = trimTag(tags[i].toString());
         if (isScriptBot(current)) {
-            const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1647,7 +1649,6 @@ function getTag(bot: Bot, ...tags: string[]): any {
                 current = bot.tags[tag];
             }
         } else if (isBot(current)) {
-            const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
                 const script = calc.sandbox.interface.getBot(current.id);

@@ -50,7 +50,12 @@ import {
     requestFullscreen,
     exitFullscreen,
 } from '../BotEvents';
-import { createBot, getActiveObjects, isBot } from '../BotCalculations';
+import {
+    createBot,
+    getActiveObjects,
+    isBot,
+    hasValue,
+} from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
     calculateActionEvents,
@@ -67,6 +72,10 @@ import {
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
 import { types } from 'util';
+import {
+    numericalTagValueTests,
+    possibleTagValueCases,
+} from './BotTestHelpers';
 
 export function botActionsTests(
     uuidMock: jest.Mock,
@@ -5682,6 +5691,49 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it.each(possibleTagValueCases)(
+                'it should support %s',
+                (given, actual) => {
+                    const expected = hasValue(actual)
+                        ? actual.toString()
+                        : undefined;
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test:
+                                    '@setTag(this, "#dimension", player.getCurrentUniverse())',
+                            },
+                        },
+                        userBot: {
+                            id: 'userBot',
+                            tags: {
+                                auxUniverse: given,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action('test', ['thisBot'], 'userBot');
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                dimension: expected,
+                            },
+                        }),
+                    ]);
+                }
+            );
         });
 
         describe('player.getPortalDimension()', () => {

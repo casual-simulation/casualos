@@ -67,6 +67,12 @@ import {
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
 import { types } from 'util';
+import {
+    stringTagValueTests,
+    booleanTagValueTests,
+    numericalTagValueTests,
+    possibleTagNameCases,
+} from './BotTestHelpers';
 
 export function botCalculationContextTests(
     uuidMock: jest.Mock,
@@ -1758,6 +1764,27 @@ export function botCalculationContextTests(
 
                     expect(result).toEqual('alice');
                 });
+
+                it.each(possibleTagNameCases)(
+                    'should convert %s to %s',
+                    (given, expected) => {
+                        const botA = createBot('a', {
+                            [expected]: 'bob',
+                            formula: `=getTag(this, ${given})`,
+                        });
+
+                        // specify the UUID to use next
+                        uuidMock.mockReturnValue('uuid-0');
+                        const context = createCalculationContext([botA]);
+                        const result = calculateBotValue(
+                            context,
+                            botA,
+                            'formula'
+                        );
+
+                        expect(result).toEqual('bob');
+                    }
+                );
             });
 
             describe('byTag()', () => {
@@ -4632,80 +4659,4 @@ export function botCalculationContextTests(
             });
         });
     });
-}
-
-function booleanTagValueTests(
-    defaultValue: boolean,
-    testFunc: (given: any, expected: boolean) => void
-) {
-    let cases = [
-        ['', defaultValue],
-        [null, defaultValue],
-        [0, defaultValue],
-        ['=false', false],
-        ['=0', defaultValue],
-        ['a', defaultValue],
-        [1, defaultValue],
-        [false, false],
-        ['false', false],
-        [true, true],
-        ['true', true],
-        [new Boolean(true), true],
-        [new Boolean(false), false],
-        ['=1', defaultValue],
-        ['="hello"', defaultValue],
-    ];
-
-    it.each(cases)('should map %s to %s', testFunc);
-}
-
-function numericalTagValueTests(
-    defaultValue: number,
-    testFunc: (given: any, expected: number) => void
-) {
-    let cases = [
-        ['', defaultValue],
-        [null, defaultValue],
-        [0, 0],
-        ['=false', defaultValue],
-        ['=0', 0],
-        ['a', defaultValue],
-        [1, 1],
-        [-10, -10],
-        ['1', 1],
-        ['.5', 0.5],
-        [false, defaultValue],
-        ['false', defaultValue],
-        [true, defaultValue],
-        ['true', defaultValue],
-        ['=1', 1],
-        ['="hello"', defaultValue],
-    ];
-
-    it.each(cases)('should map %s to %s', testFunc);
-}
-
-function stringTagValueTests(
-    defaultValue: string,
-    testFunc: (given: any, expected: string) => void
-) {
-    let cases = [
-        ['', ''],
-        [null, defaultValue],
-        [0, defaultValue],
-        ['=false', defaultValue],
-        ['=0', defaultValue],
-        ['a', 'a'],
-        [1, defaultValue],
-        ['1', defaultValue],
-        ['.5', defaultValue],
-        [false, defaultValue],
-        ['false', defaultValue],
-        [true, defaultValue],
-        ['true', defaultValue],
-        ['=1', defaultValue],
-        ['="hello"', 'hello'],
-    ];
-
-    it.each(cases)('should map %s to %s', testFunc);
 }
