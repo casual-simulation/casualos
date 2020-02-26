@@ -240,6 +240,7 @@ export class Input {
             inputSource: null,
             mesh: null,
             primaryInputState: new InputState(),
+            squeezeInputState: new InputState(),
             ray: new Group(),
         };
 
@@ -260,6 +261,8 @@ export class Input {
         );
         this._handleXRSelectStart = this._handleXRSelectStart.bind(this);
         this._handleXRSelectEnd = this._handleXRSelectEnd.bind(this);
+        this._handleXRSqueezeStart = this._handleXRSqueezeStart.bind(this);
+        this._handleXRSqueezeEnd = this._handleXRSqueezeEnd.bind(this);
 
         let element = document.getElementById('app');
         element.addEventListener('mousedown', this._handleMouseDown);
@@ -556,6 +559,14 @@ export class Input {
         return controller.primaryInputState.isHeldOnFrame(this.time.frameCount);
     }
 
+    /**
+     * Returns true while the controller's squeeze button is pressed.
+     * @param controller
+     */
+    public getControllerSqueezeButtonHeld(controller: ControllerData) {
+        return controller.squeezeInputState.isHeldOnFrame(this.time.frameCount);
+    }
+
     private _getButtonInputState(buttonId: MouseButtonId): InputState {
         if (this._inputType == InputType.Mouse) {
             let buttonState = this._getMouseButtonState(buttonId);
@@ -777,6 +788,14 @@ export class Input {
             this._handleXRSelectStart
         );
         this._xrSession.addEventListener('selectend', this._handleXRSelectEnd);
+        this._xrSession.addEventListener(
+            'squeezestart',
+            this._handleXRSqueezeStart
+        );
+        this._xrSession.addEventListener(
+            'squeezeend',
+            this._handleXRSqueezeEnd
+        );
         this._xrSession.addEventListener('end', () => {
             if (this._xrSubscription) {
                 this._xrSubscription.unsubscribe();
@@ -799,6 +818,14 @@ export class Input {
             this._xrSession.removeEventListener(
                 'selectend',
                 this._handleXRSelectEnd
+            );
+            this._xrSession.removeEventListener(
+                'squeezestart',
+                this._handleXRSqueezeStart
+            );
+            this._xrSession.removeEventListener(
+                'squeezeend',
+                this._handleXRSqueezeEnd
             );
         });
     }
@@ -1437,6 +1464,7 @@ export class Input {
             if (!controller) {
                 controller = {
                     primaryInputState: new InputState(),
+                    squeezeInputState: new InputState(),
                     mesh: null,
                     ray: new Group(),
                     inputSource: source,
@@ -1524,6 +1552,63 @@ export class Input {
         if (this.debugLevel >= 1) {
             console.log(
                 'XR select ' +
+                    controller.identifier +
+                    ' end. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
+
+    private _handleXRSqueezeStart(event: XRInputSourceEvent) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Controller;
+        if (this._inputType != InputType.Controller) return;
+        const controller = this._controllerData.find(
+            c => c.inputSource === event.inputSource
+        );
+        if (!controller) {
+            return;
+        }
+        this._updateControllerRay(event.frame, controller);
+        controller.squeezeInputState.setDownFrame(this.time.frameCount);
+
+        if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
+            this._copyToPrimaryControllerData(controller);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'XR squeeze ' +
+                    controller.identifier +
+                    ' start. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
+
+    private _handleXRSqueezeEnd(event: XRInputSourceEvent) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Controller;
+        if (this._inputType != InputType.Controller) return;
+        const controller = this._controllerData.find(
+            c => c.inputSource === event.inputSource
+        );
+        if (!controller) {
+            return;
+        }
+        this._updateControllerRay(event.frame, controller);
+        controller.squeezeInputState.setUpFrame(this.time.frameCount);
+
+        if (
+            controller.inputSource ===
+            this._lastPrimaryControllerData.inputSource
+        ) {
+            this._copyToPrimaryControllerData(controller);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'XR squeeze ' +
                     controller.identifier +
                     ' end. fireInputOnFrame: ' +
                     this.time.frameCount
@@ -1764,6 +1849,11 @@ export interface ControllerData {
      * The state that the controller's primary input is in.
      */
     primaryInputState: InputState;
+
+    /**
+     * The state that the controller's "squeeze" button is in.
+     */
+    squeezeInputState: InputState;
 
     /**
      * The object representing the controller mesh.

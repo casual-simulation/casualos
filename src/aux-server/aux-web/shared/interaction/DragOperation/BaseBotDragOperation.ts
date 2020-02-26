@@ -1,6 +1,6 @@
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2, Object3D, Vector3 } from 'three';
+import { Vector2, Object3D, Vector3, Euler } from 'three';
 import {
     Bot,
     botUpdated,
@@ -39,6 +39,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { Subscription } from 'rxjs';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
+import merge from 'lodash/merge';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.
@@ -266,7 +267,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         bots: Bot[],
         gridPosition: Vector2 | Vector3,
         index: number,
-        calc: BotCalculationContext
+        calc: BotCalculationContext,
+        rotation?: Euler
     ) {
         if (!this._dimension) {
             return;
@@ -274,13 +276,28 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._inDimension = true;
 
         if (gridPosition instanceof Vector2) {
-            await this._updateBotsGridPositions(bots, gridPosition, index, calc);
+            await this._updateBotsGridPositions(
+                bots,
+                gridPosition,
+                index,
+                calc
+            );
         } else {
-            await this._updateBotsAbsolutePositions(bots, gridPosition, calc);
+            await this._updateBotsAbsolutePositions(
+                bots,
+                gridPosition,
+                calc,
+                rotation
+            );
         }
     }
 
-    private async _updateBotsAbsolutePositions(bots: Bot[], position: Vector3, calc: BotCalculationContext) {
+    private async _updateBotsAbsolutePositions(
+        bots: Bot[],
+        position: Vector3,
+        calc: BotCalculationContext,
+        rotation: Euler
+    ) {
         this._lastGridPos = null;
         this._lastIndex = 0;
 
@@ -296,6 +313,15 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [`${this._dimension}SortOrder`]: 0,
                 },
             };
+            if (rotation) {
+                merge(tags, {
+                    tags: {
+                        [`${this._dimension}RotationX`]: rotation.x,
+                        [`${this._dimension}RotationY`]: rotation.y,
+                        [`${this._dimension}RotationZ`]: rotation.z,
+                    },
+                });
+            }
             if (this._previousDimension) {
                 tags.tags[this._previousDimension] = null;
             }

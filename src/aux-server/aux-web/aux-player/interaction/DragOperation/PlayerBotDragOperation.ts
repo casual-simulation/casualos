@@ -11,7 +11,7 @@ import {
     getBotPositioningMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { Intersection, Vector2, Ray, Vector3 } from 'three';
+import { Intersection, Vector2, Ray, Vector3, Quaternion, Euler } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
@@ -180,26 +180,54 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
     }
 
-    private _dragFreeSpace(calc: BotCalculationContext, grid3D: PlayerGrid3D, inputRay: Ray) {
+    private _dragFreeSpace(
+        calc: BotCalculationContext,
+        grid3D: PlayerGrid3D,
+        inputRay: Ray
+    ) {
         const position = new Vector3();
         inputRay.at(0.25, position);
-        const gridPosition =  grid3D.getGridPosition(position);
-        this._updateBotsPositions(this._bots, gridPosition, 0, calc);
+        const gridPosition = grid3D.getGridPosition(position);
+        let rotation: Euler = null;
+        const input = this.game.getInput();
+        if (input.getControllerSqueezeButtonHeld(this._controller)) {
+            const temp = this._controller.ray.rotation;
+            rotation = new Euler(temp.x, temp.z, temp.y);
+        }
+        this._updateBotsPositions(this._bots, gridPosition, 0, calc, rotation);
     }
 
-    private _dragOnGrid(calc: BotCalculationContext, grid3D: PlayerGrid3D, inputRay: Ray) {
+    private _dragOnGrid(
+        calc: BotCalculationContext,
+        grid3D: PlayerGrid3D,
+        inputRay: Ray
+    ) {
         const gridTile = grid3D.getTileFromRay(inputRay);
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
-            const result = calculateBotDragStackPosition(calc, this._dimension, gridTile.tileCoordinate, ...this._bots);
+            const result = calculateBotDragStackPosition(
+                calc,
+                this._dimension,
+                gridTile.tileCoordinate,
+                ...this._bots
+            );
             this._other = result.other;
             this._merge = result.merge;
             this._sendDropEnterExitEvents(this._other);
             if (result.stackable || result.index === 0) {
-                this._updateBotsPositions(this._bots, gridTile.tileCoordinate, result.index, calc);
-            }
-            else if (!result.stackable) {
-                this._updateBotsPositions(this._bots, gridTile.tileCoordinate, 0, calc);
+                this._updateBotsPositions(
+                    this._bots,
+                    gridTile.tileCoordinate,
+                    result.index,
+                    calc
+                );
+            } else if (!result.stackable) {
+                this._updateBotsPositions(
+                    this._bots,
+                    gridTile.tileCoordinate,
+                    0,
+                    calc
+                );
             }
         }
     }
