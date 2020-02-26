@@ -9,12 +9,16 @@
 #### :rocket: Improvements
 
 -   Added Basic WebXR Support
+
     -   This replaces the original WebVR and WebXR support.
     -   Supports both the Oculus Quest and Chrome 80+ on Android.
     -   Supports all pointer events (click, drag, hover).
     -   The `player.device()` function returns whether AR/VR are supported.
     -   The `player.enableAR()` and `player.enableVR()` functions are used to jump into AR/VR.
     -   The world is placed on the ground (if supported by the device) and bots are 1 meter cubed by default.
+
+-   :bug: Bug Fixes
+    -   Fixed several issues with using numbers for the `auxUniverse` and `auxPagePortal` query parameters.
 
 ## V1.0.9
 
