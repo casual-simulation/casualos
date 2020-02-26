@@ -92,7 +92,7 @@
         "socket.io": "2.2.0",
         "socket.io-client": "2.2.0",
         "stripe": "7.9.0",
-        "three": "^0.105.2",
+        "three": "0.113.2",
         "useragent": "^2.3.0",
         "uuid": "^3.3.2",
         "vhost": "^3.0.2",
@@ -106,6 +106,7 @@
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "webvr-polyfill": "^0.10.10"
+        "@webxr-input-profiles/assets": "~1.0.1",
+        "@webxr-input-profiles/motion-controllers": "~1.0.0"
     }
 }

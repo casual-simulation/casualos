@@ -69,6 +69,8 @@ function _cloneGLTF(gltf: GLTF): GLTF {
         cameras: [],
         scenes: [scene],
         scene,
+        parser: null,
+        userData: {},
     };
 }
 

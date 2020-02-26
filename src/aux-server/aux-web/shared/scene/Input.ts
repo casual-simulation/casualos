@@ -1,9 +1,22 @@
 import Vue from 'vue';
-import { Vector2, Vector3 } from 'three';
+import { Vector2, Vector3, Ray, Group, Object3D } from 'three';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
+import { Subscription } from 'rxjs';
+import uuid from 'uuid/v4';
+import {
+    XRInputSource,
+    XRFrame,
+    XRInputSourceEvent,
+    XRInputSourcesChangeEvent,
+    XRSpace,
+    XRSession,
+    XRPose,
+} from './xr/WebXRTypes';
+import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
+import { createMotionController, copyPose } from './xr/WebXRHelpers';
 
 export class Input {
     /**
@@ -20,10 +33,15 @@ export class Input {
     // Internal pointer data.
     private _mouseData: MouseData;
     private _touchData: TouchData[];
+    private _controllerData: ControllerData[];
     private _keyData: Map<string, KeyData>;
     private _touchListenerCounts: Map<EventTarget, number>;
     private _wheelData: WheelData;
     private _targetData: TargetData;
+
+    private _xrSession: XRSession;
+    private _xrSubscription: Subscription;
+    private _xrReferenceSpace: XRSpace;
 
     private _game: Game;
     private _inputType: InputType = InputType.Undefined;
@@ -31,6 +49,7 @@ export class Input {
     // Keep track of the touch data for finger index 0 at all times.
     // This gives better support to the getMouse* functions while using touch.
     private _lastPrimaryTouchData: TouchData;
+    private _lastPrimaryControllerData: ControllerData;
 
     private _htmlElements: () => HTMLElement[];
 
@@ -54,6 +73,13 @@ export class Input {
      */
     set currentInputType(inputType: InputType) {
         this._inputType = inputType;
+    }
+
+    /**
+     * Gets the list of controllers that are currently available.
+     */
+    get controllers(): ControllerData[] {
+        return this._controllerData;
     }
 
     /**
@@ -197,6 +223,7 @@ export class Input {
             inputOver: null,
         };
         this._touchData = [];
+        this._controllerData = [];
         this._keyData = new Map();
         this._touchListenerCounts = new Map();
         this._wheelData = new WheelData();
@@ -207,6 +234,13 @@ export class Input {
             pagePos: new Vector2(0, 0),
             screenPos: new Vector2(0, 0),
             state: new InputState(),
+        };
+        this._lastPrimaryControllerData = {
+            identifier: null,
+            inputSource: null,
+            mesh: null,
+            primaryInputState: new InputState(),
+            ray: new Group(),
         };
 
         this._handleMouseDown = this._handleMouseDown.bind(this);
@@ -221,6 +255,11 @@ export class Input {
         this._handleContextMenu = this._handleContextMenu.bind(this);
         this._handleKeyDown = this._handleKeyDown.bind(this);
         this._handleKeyUp = this._handleKeyUp.bind(this);
+        this._handleInputSourcesUpdated = this._handleInputSourcesUpdated.bind(
+            this
+        );
+        this._handleXRSelectStart = this._handleXRSelectStart.bind(this);
+        this._handleXRSelectEnd = this._handleXRSelectEnd.bind(this);
 
         let element = document.getElementById('app');
         element.addEventListener('mousedown', this._handleMouseDown);
@@ -260,6 +299,11 @@ export class Input {
             'contextmenu',
             this._handleContextMenu
         );
+
+        if (this._xrSubscription) {
+            this._xrSubscription.unsubscribe();
+            this._xrSubscription = null;
+        }
 
         this._game = null;
     }
@@ -389,19 +433,9 @@ export class Input {
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
     public getMouseButtonDown(buttonId: MouseButtonId): boolean {
-        if (this._inputType == InputType.Mouse) {
-            let buttonState = this._getMouseButtonState(buttonId);
-            if (buttonState) {
-                return buttonState.isDownOnFrame(this.time.frameCount);
-            }
-        } else if (this._inputType == InputType.Touch) {
-            if (buttonId == MouseButtonId.Left) {
-                return this._lastPrimaryTouchData.state.isDownOnFrame(
-                    this.time.frameCount
-                );
-            } else {
-                // TODO: Support right button with touch?
-            }
+        const state = this._getButtonInputState(buttonId);
+        if (state) {
+            return state.isDownOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -434,19 +468,9 @@ export class Input {
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
     public getMouseButtonUp(buttonId: MouseButtonId): boolean {
-        if (this._inputType == InputType.Mouse) {
-            let buttonState = this._getMouseButtonState(buttonId);
-            if (buttonState) {
-                return buttonState.isUpOnFrame(this.time.frameCount);
-            }
-        } else if (this._inputType == InputType.Touch) {
-            if (buttonId == MouseButtonId.Left) {
-                return this._lastPrimaryTouchData.state.isUpOnFrame(
-                    this.time.frameCount
-                );
-            } else {
-                // TODO: Support right button with touch?
-            }
+        const state = this._getButtonInputState(buttonId);
+        if (state) {
+            return state.isUpOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -479,19 +503,9 @@ export class Input {
      * If on mobile device, will return the held state of the first finger touching the screen.
      */
     public getMouseButtonHeld(buttonId: MouseButtonId): boolean {
-        if (this._inputType == InputType.Mouse) {
-            let buttonState = this._getMouseButtonState(buttonId);
-            if (buttonState) {
-                return buttonState.isHeldOnFrame(this.time.frameCount);
-            }
-        } else if (this._inputType == InputType.Touch) {
-            if (buttonId == MouseButtonId.Left) {
-                return this._lastPrimaryTouchData.state.isHeldOnFrame(
-                    this.time.frameCount
-                );
-            } else {
-                // TODO: Support right button with touch?
-            }
+        const state = this._getButtonInputState(buttonId);
+        if (state) {
+            return state.isHeldOnFrame(this.time.frameCount);
         }
 
         return false;
@@ -516,6 +530,46 @@ export class Input {
             return keyData.state.isHeldOnFrame(this.time.frameCount);
         }
         return false;
+    }
+
+    /**
+     * Returns true on the frame that the controller's primary button is pressed.
+     * @param controller
+     */
+    public getControllerPrimaryButtonDown(controller: ControllerData) {
+        return controller.primaryInputState.isDownOnFrame(this.time.frameCount);
+    }
+
+    /**
+     * Returns true on the frame that the controller's primary button is pressed.
+     * @param controller
+     */
+    public getControllerPrimaryButtonUp(controller: ControllerData) {
+        return controller.primaryInputState.isUpOnFrame(this.time.frameCount);
+    }
+
+    /**
+     * Returns true while the controller's primary button is pressed.
+     * @param controller
+     */
+    public getControllerPrimaryButtonHeld(controller: ControllerData) {
+        return controller.primaryInputState.isHeldOnFrame(this.time.frameCount);
+    }
+
+    private _getButtonInputState(buttonId: MouseButtonId): InputState {
+        if (this._inputType == InputType.Mouse) {
+            let buttonState = this._getMouseButtonState(buttonId);
+            if (buttonState) {
+                return buttonState;
+            }
+        } else if (this._inputType == InputType.Touch) {
+            if (buttonId == MouseButtonId.Left) {
+                return this._lastPrimaryTouchData.state;
+            } else {
+                // TODO: Support right button with touch?
+            }
+        }
+        return null;
     }
 
     /**
@@ -692,9 +746,61 @@ export class Input {
         }
     }
 
-    public update() {
+    public update(xrFrame?: any) {
         this._cullTouchData();
         this._wheelData.removeOldFrames(this.time.frameCount);
+        this._updateControllers(xrFrame);
+    }
+
+    private _updateControllers(xrFrame: XRFrame) {
+        for (let controller of this._controllerData) {
+            this._updateControllerRay(xrFrame, controller);
+            if (controller.mesh) {
+                controller.mesh.update(xrFrame, this._xrReferenceSpace);
+            }
+        }
+    }
+
+    public setXRSession(xrSession: any, referenceSpace: any) {
+        if (this._xrSubscription) {
+            this._xrSubscription.unsubscribe();
+        }
+        this._inputType = InputType.Controller;
+        this._xrSession = xrSession;
+        this._xrReferenceSpace = referenceSpace;
+        this._xrSession.addEventListener(
+            'inputsourceschange',
+            this._handleInputSourcesUpdated
+        );
+        this._xrSession.addEventListener(
+            'selectstart',
+            this._handleXRSelectStart
+        );
+        this._xrSession.addEventListener('selectend', this._handleXRSelectEnd);
+        this._xrSession.addEventListener('end', () => {
+            if (this._xrSubscription) {
+                this._xrSubscription.unsubscribe();
+                this._xrSubscription = null;
+            }
+        });
+        this._xrSubscription = new Subscription(() => {
+            for (let controller of this._controllerData) {
+                this._disposeController(controller);
+            }
+            this._controllerData = [];
+            this._xrSession.removeEventListener(
+                'inputsourceschange',
+                this._handleInputSourcesUpdated
+            );
+            this._xrSession.removeEventListener(
+                'selectstart',
+                this._handleXRSelectStart
+            );
+            this._xrSession.removeEventListener(
+                'selectend',
+                this._handleXRSelectEnd
+            );
+        });
     }
 
     /**
@@ -750,6 +856,14 @@ export class Input {
         this._lastPrimaryTouchData.pagePos = data.pagePos.clone();
         this._lastPrimaryTouchData.screenPos = data.screenPos.clone();
         this._lastPrimaryTouchData.state = data.state.clone();
+    }
+
+    private _copyToPrimaryControllerData(data: ControllerData) {
+        this._lastPrimaryControllerData.identifier = data.identifier;
+        this._lastPrimaryControllerData.inputSource = data.inputSource;
+        this._lastPrimaryControllerData.primaryInputState = data.primaryInputState.clone();
+        this._lastPrimaryControllerData.ray.copy(data.ray, false);
+        this._lastPrimaryControllerData.mesh = data.mesh;
     }
 
     /**
@@ -1315,6 +1429,126 @@ export class Input {
         }
     }
 
+    private _handleInputSourcesUpdated(event: XRInputSourcesChangeEvent) {
+        for (let source of event.added) {
+            let controller = this._controllerData.find(
+                c => c.inputSource === source
+            );
+            if (!controller) {
+                controller = {
+                    primaryInputState: new InputState(),
+                    mesh: null,
+                    ray: new Group(),
+                    inputSource: source,
+                    identifier: uuid(),
+                };
+                this._controllerData.push(controller);
+                this._setupControllerMesh(controller);
+            }
+        }
+        for (let source of event.removed) {
+            const index = this._controllerData.findIndex(
+                c => c.inputSource === source
+            );
+            if (index >= 0) {
+                const removed = this._controllerData.splice(index, 1);
+                for (let r of removed) {
+                    this._disposeController(r);
+                }
+            }
+        }
+    }
+
+    private async _setupControllerMesh(controller: ControllerData) {
+        let mesh: WebXRControllerMesh = null;
+        const motionController = await createMotionController(
+            controller.inputSource
+        );
+        if (motionController) {
+            mesh = new WebXRControllerMesh(motionController);
+            await mesh.init();
+            this._game.getScene().add(mesh.group);
+        }
+        controller.mesh = mesh;
+    }
+
+    private _handleXRSelect(event: XRInputSourceEvent) {}
+
+    private _handleXRSelectStart(event: XRInputSourceEvent) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Controller;
+        if (this._inputType != InputType.Controller) return;
+        const controller = this._controllerData.find(
+            c => c.inputSource === event.inputSource
+        );
+        if (!controller) {
+            return;
+        }
+        this._updateControllerRay(event.frame, controller);
+        controller.primaryInputState.setDownFrame(this.time.frameCount);
+
+        if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
+            this._copyToPrimaryControllerData(controller);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'XR select ' +
+                    controller.identifier +
+                    ' start. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
+
+    private _handleXRSelectEnd(event: XRInputSourceEvent) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Controller;
+        if (this._inputType != InputType.Controller) return;
+        const controller = this._controllerData.find(
+            c => c.inputSource === event.inputSource
+        );
+        if (!controller) {
+            return;
+        }
+        this._updateControllerRay(event.frame, controller);
+        controller.primaryInputState.setUpFrame(this.time.frameCount);
+
+        if (
+            controller.inputSource ===
+            this._lastPrimaryControllerData.inputSource
+        ) {
+            this._copyToPrimaryControllerData(controller);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'XR select ' +
+                    controller.identifier +
+                    ' end. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
+
+    private _updateControllerRay(frame: XRFrame, controller: ControllerData) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Controller;
+        if (this._inputType != InputType.Controller) return;
+        const pose = frame.getPose(
+            controller.inputSource.targetRaySpace,
+            this._xrReferenceSpace
+        );
+        copyPose(pose, controller.ray);
+    }
+
+    private _disposeController(controller: ControllerData) {
+        if (controller.mesh) {
+            this._game.getScene().remove(controller.mesh.group);
+            controller.mesh.unsubscribe();
+        }
+    }
+
     private _handleContextMenu(event: MouseEvent) {
         // Prevent context menu from triggering.
         event.preventDefault();
@@ -1326,6 +1560,7 @@ export enum InputType {
     Undefined = 'undefined',
     Mouse = 'mouse',
     Touch = 'touch',
+    Controller = 'controller',
 }
 
 export enum MouseButtonId {
@@ -1359,6 +1594,10 @@ export class InputState {
 
     setUpFrame(frame: number) {
         this._upFrame = frame;
+    }
+
+    isUp() {
+        return this._upFrame >= this._downFrame;
     }
 
     /**
@@ -1515,6 +1754,52 @@ interface KeyData {
      * The state of the key.
      */
     state: InputState;
+}
+
+/**
+ * Interface for data about a controller.
+ */
+export interface ControllerData {
+    /**
+     * The state that the controller's primary input is in.
+     */
+    primaryInputState: InputState;
+
+    /**
+     * The object representing the controller mesh.
+     */
+    mesh: WebXRControllerMesh;
+
+    /**
+     * The ray that the controller is pointing at.
+     */
+    ray: Group;
+
+    /**
+     * The input source that the controller represents.
+     */
+    inputSource: XRInputSource;
+
+    /**
+     * The identifier for the controller.
+     */
+    identifier: string;
+}
+
+export const MOUSE_INPUT_METHOD_IDENTIFIER =
+    '03df96e8-ebc5-4fce-bf9d-9e77038f9839';
+
+export type InputMethod = ControllerInputMethod | MouseOrTouchInputMethod;
+
+export interface ControllerInputMethod {
+    type: 'controller';
+    identifier: string;
+    controller: ControllerData;
+}
+
+export interface MouseOrTouchInputMethod {
+    type: 'mouse_or_touch';
+    identifier: string;
 }
 
 class WheelData {

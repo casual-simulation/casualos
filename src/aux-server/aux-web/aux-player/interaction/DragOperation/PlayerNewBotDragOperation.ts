@@ -15,7 +15,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
-import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { InputMethod } from '../../../shared/scene/Input';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
     private _botAdded: boolean;
@@ -29,7 +29,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
         interaction: PlayerInteractionManager,
         bot: Bot,
         dimension: string,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
         super(
             playerSimulation,
@@ -37,7 +37,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
             interaction,
             [bot],
             dimension,
-            vrController
+            inputMethod
         );
     }
 

@@ -30,7 +30,7 @@ function setAttribute (geometry, key, data, itemSize, dtype) {
   var attrib = geometry.getAttribute(key)
   var newAttrib = updateAttribute(attrib, data, itemSize, dtype)
   if (newAttrib) {
-    geometry.addAttribute(key, newAttrib)
+    geometry.setAttribute(key, newAttrib)
   }
 }
 
@@ -40,7 +40,7 @@ function updateAttribute (attrib, data, itemSize, dtype) {
     // create a new array with desired type
     data = flatten(data, dtype)
 
-    var needsNewBuffer = attrib && typeof attrib.setArray !== 'function'
+    var needsNewBuffer = true;
     if (!attrib || needsNewBuffer) {
       // We are on an old version of ThreeJS which can't
       // support growing / shrinking buffers, so we need
@@ -64,13 +64,6 @@ function updateAttribute (attrib, data, itemSize, dtype) {
 
     attrib.itemSize = itemSize
     attrib.needsUpdate = true
-
-    // New versions of ThreeJS suggest using setArray
-    // to change the data. It will use bufferData internally,
-    // so you can change the array size without any issues
-    if (typeof attrib.setArray === 'function') {
-      attrib.setArray(data)
-    }
 
     return attrib
   } else {

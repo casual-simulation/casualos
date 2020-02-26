@@ -6,7 +6,7 @@ import {
     Vector3,
     Matrix4,
     Quaternion,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     PerspectiveCamera,
     ArrayCamera,
     AxesHelper,
@@ -33,7 +33,6 @@ import {
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType } from './Input';
-import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
@@ -53,11 +52,12 @@ import find from 'lodash/find';
 import flatMap from 'lodash/flatMap';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
-import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
 import { supportsXR } from '../SharedUtils';
+
+export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -74,7 +74,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
     protected renderer: WebGLRenderer;
     protected time: Time;
     protected input: Input;
-    protected inputVR: InputVR;
     protected interaction: BaseInteractionManager;
     protected gridChecker: GridChecker;
     protected htmlMixerContext: HtmlMixer.Context;
@@ -86,9 +85,8 @@ export abstract class Game implements AuxBotVisualizerFinder {
     mainViewport: Viewport = null;
     showMainCameraHome: boolean;
 
-    xrDisplay: any = null;
     xrSession: any = null;
-    xrSessionInitParameters: any = null;
+    xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -118,11 +116,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.setupRenderer();
         this.setupScenes();
         this.input = new Input(this);
-        this.inputVR = new InputVR(this);
         this.interaction = this.setupInteraction();
 
-        await this.setupWebVR();
-        await this.setupWebXR();
+        // await this.setupWebVR();
+        // await this.setupWebAR();
 
         this.onCenterCamera = this.onCenterCamera.bind(this);
         this.setCameraType = this.setCameraType.bind(this);
@@ -166,9 +163,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
     }
     getInput() {
         return this.input;
-    }
-    getInputVR() {
-        return this.inputVR;
     }
     getInteraction() {
         return this.interaction;
@@ -456,92 +450,10 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
-    protected async setupWebVR() {
-        this.handleVRDisplayConnect = this.handleVRDisplayConnect.bind(this);
-        this.handleVRDisplayDisconnect = this.handleVRDisplayDisconnect.bind(
-            this
-        );
-        this.handleVRDisplayActivate = this.handleVRDisplayActivate.bind(this);
-        this.handleVRDisplayDeactivate = this.handleVRDisplayDeactivate.bind(
-            this
-        );
-        this.handleVRDisplayBlur = this.handleVRDisplayBlur.bind(this);
-        this.handleVRDisplayFocus = this.handleVRDisplayFocus.bind(this);
-        this.handleVRDisplayPresentChange = this.handleVRDisplayPresentChange.bind(
-            this
-        );
-
-        WebVRDisplays.onVRDisplayConnect.addListener(
-            this.handleVRDisplayConnect
-        );
-        WebVRDisplays.onVRDisplayDisconnect.addListener(
-            this.handleVRDisplayDisconnect
-        );
-        WebVRDisplays.onVRDisplayActivate.addListener(
-            this.handleVRDisplayActivate
-        );
-        WebVRDisplays.onVRDisplayDeactivate.addListener(
-            this.handleVRDisplayDeactivate
-        );
-        WebVRDisplays.onVRDisplayBlur.addListener(this.handleVRDisplayBlur);
-        WebVRDisplays.onVRDisplayFocus.addListener(this.handleVRDisplayFocus);
-        WebVRDisplays.onVRDisplayPresentChange.addListener(
-            this.handleVRDisplayPresentChange
-        );
-
-        await WebVRDisplays.init();
-
-        if (WebVRDisplays.mainVRDisplay()) {
-            // When being used on a vr headset, force the normal input module to use touch instead of mouse.
-            // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
-            this.input.currentInputType = InputType.Touch;
-        }
-
-        // We want to control when the frame gets sent to the VRDisplay so we nullify the core WebVRManager.submitFrame
-        // function and will call submitFrame on the VRDisplay manually in order to have better flow control over VR frame rendering.
-        this.renderer.vr.submitFrame = (): void => {
-            // Do absolutely nothing.
-        };
-    }
-
-    // TODO: All this needs to be reworked to use the right WebXR polyfill
-    // - Use this one: https://github.com/immersive-web/webxr-polyfill
-    // - instead of this one: https://github.com/mozilla/webxr-polyfill
-    protected async setupWebXR() {
-        const win = <any>window;
-        const navigator = <any>win.navigator;
-        const xr = navigator.XR;
-
-        if (typeof xr === 'undefined') {
-            console.log('[Game] WebXR Not Supported.');
-            return;
-        }
-
-        const displays = await xr.getDisplays();
-        this.xrSessionInitParameters = {
-            exclusive: false,
-            type: win.XRSession.AUGMENTATION,
-            videoFrames: false, //computer_vision_data
-            alignEUS: true,
-            worldSensing: false,
-        };
-        const matchingDisplay = find(displays, d =>
-            d.supportsSession(this.xrSessionInitParameters)
-        );
-        if (matchingDisplay && supportsXR(matchingDisplay)) {
-            this.xrDisplay = matchingDisplay;
-            this.addSidebarItem('enable_xr', 'Enable AR', () => {
-                this.toggleXR();
-            });
-            console.log('[Game] WebXR Supported!');
-        }
-    }
-
     protected frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
 
-        this.input.update();
-        this.inputVR.update();
+        this.input.update(xrFrame);
         this.interaction.update();
 
         const simulations = this.getSimulations();
@@ -559,8 +471,8 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.time.update();
 
         if (this.xrSession) {
-            this.xrSession.requestFrame((nextXRFrame: any) =>
-                this.frameUpdate(nextXRFrame)
+            this.xrSession.requestAnimationFrame(
+                (time: any, nextXRFrame: any) => this.frameUpdate(nextXRFrame)
             );
         }
 
@@ -569,56 +481,11 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     private renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#000', 0);
-
-            for (const view of xrFrame.views) {
-                // Each XRView has its own projection matrix, so set the main camera to use that
-                const matrix = new Matrix4();
-                matrix.fromArray(view.viewMatrix);
-
-                const position = new Vector3();
-                position.setFromMatrixPosition(matrix);
-                position.multiplyScalar(10);
-
-                // Move the player up about a foot above the world.
-                position.add(new Vector3(0, 2, 3));
-                this.mainCameraRig.mainCamera.position.copy(position);
-
-                const rotation = new Quaternion();
-                rotation.setFromRotationMatrix(matrix);
-                this.mainCameraRig.mainCamera.setRotationFromQuaternion(
-                    rotation
-                );
-
-                this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
-                    view.projectionMatrix
-                );
-
-                this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-                // Set up the _renderer to the XRView's viewport and then render
-                const viewport = view.getViewport(this.xrSession.baseLayer);
-
-                this.renderer.setViewport(
-                    viewport.x,
-                    viewport.y,
-                    viewport.width,
-                    viewport.height
-                );
-
-                this.renderXR();
+            if (this.xrMode === 'immersive-ar') {
+                this.mainScene.background = null;
+                this.renderer.setClearColor('#000', 0);
             }
-        } else if (WebVRDisplays.isPresenting()) {
-            this.renderVR();
-
-            if (this.renderer.vr.enabled) {
-                // Submit the final rendered frame to the active VRDisplay.
-                const vrDisplay = this.renderer.vr.getDevice();
-                if (vrDisplay.isPresenting) {
-                    vrDisplay.submitFrame();
-                }
-            }
+            this.renderXR();
         } else {
             this.renderBrowser();
         }
@@ -717,91 +584,71 @@ export abstract class Game implements AuxBotVisualizerFinder {
         );
     }
 
-    // private _showHomeButtonForCameraRig(cameraRig: CameraRig, distance: number): boolean {
-
-    //     if (rigControls) {
-    //         if (distance > 0) {
-    //             const target = rigControls.controls.target.clone();
-    //             const distSqr = target.distanceToSquared(
-    //                 new Vector3(0, 0, 0)
-    //             );
-
-    //             return distSqr >= distance;
-    //         } else {
-    //             // Always show the button.
-    //             return true;
-    //         }
-    //     } else {
-    //         return false;
-    //     }
-    // }
-
-    private async toggleXR() {
-        console.log('[Game] Toggle XR');
-        if (this.xrDisplay) {
-            if (this.xrSession) {
-                this.removeSidebarItem('disable_xr');
-                this.addSidebarItem('enable_xr', 'Enable AR', () => {
-                    this.toggleXR();
-                });
-
-                await this.stopXR();
-            } else {
-                this.removeSidebarItem('enable_xr');
-                this.addSidebarItem('disable_xr', 'Disable AR', () => {
-                    this.toggleXR();
-                });
-
-                await this.startXR();
-            }
-        }
+    protected async stopAR() {
+        this.stopXR();
     }
 
-    protected async stopXR() {
-        if (!this.xrDisplay) {
-            return;
-        }
-        if (this.xrSession) {
+    protected async startAR() {
+        this.startXR('immersive-ar');
+    }
+
+    protected async stopXR(ending: boolean = false) {
+        if (!this.xrSession) {
             console.log('[Game] XR already stopped!');
             return;
         }
         console.log('[Game] Stop XR');
-        await this.xrSession.end();
+        if (!ending) {
+            await this.xrSession.end();
+        }
         this.xrSession = null;
 
         // Restart the regular animation update loop.
+        this.renderer.xr.enabled = false;
         this.renderer.setAnimationLoop(this.frameUpdate);
         // Go back to the orthographic camera type when exiting XR.
         this.setCameraType('orthographic');
+        this.input.currentInputType = InputType.Undefined;
     }
 
-    protected async startXR() {
-        if (!this.xrDisplay) {
-            return;
-        }
+    protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
+        // if (!this.xrDisplay) {
+        //     return;
+        // }
         if (this.xrSession) {
             console.log('[Game] XR already started!');
             return;
         }
         console.log('[Game] Start XR');
+        const nav: any = navigator;
+        let supportsPreferredReferenceSpace = true;
+        this.xrSession = await nav.xr
+            .requestSession(mode, {
+                requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
+            })
+            .catch((err: any) => {
+                supportsPreferredReferenceSpace = false;
+                return nav.xr.requestSession(mode);
+            });
+        this.xrMode = mode;
+
+        const referenceSpaceType = supportsPreferredReferenceSpace
+            ? PREFERRED_XR_REFERENCE_SPACE
+            : 'local';
+        this.renderer.xr.enabled = true;
+        this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
+        this.renderer.xr.setSession(this.xrSession);
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
         // Remove the camera toggle from the menu while in XR.
         this.removeSidebarItem('toggle_camera_type');
-
         document.documentElement.classList.add('ar-app');
-        this.xrSession = await this.xrDisplay.requestSession(
-            this.xrSessionInitParameters
-        );
-        this.xrSession.near = 0.1;
-        this.xrSession.far = 1000;
 
-        this.xrSession.addEventListener('focus', (ev: any) =>
-            this.handleXRSessionFocus()
+        const referenceSpace = await this.xrSession.requestReferenceSpace(
+            referenceSpaceType
         );
-        this.xrSession.addEventListener('blur', (ev: any) =>
-            this.handleXRSessionBlur()
-        );
+        this.input.setXRSession(this.xrSession, referenceSpace);
+
         this.xrSession.addEventListener('end', (ev: any) =>
             this.handleXRSessionEnded()
         );
@@ -811,134 +658,23 @@ export abstract class Game implements AuxBotVisualizerFinder {
             throw new Error('Cannot start presenting without a xrSession');
         }
 
-        // Set the xrSession's base layer into which the app will render
-        this.xrSession.baseLayer = new win.XRWebGLLayer(
-            this.xrSession,
-            this.renderer.context
-        );
-
-        // Handle layer focus events
-        this.xrSession.baseLayer.addEventListener('focus', (ev: any) => {
-            this.handleXRLayerFocus();
-        });
-        this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
-            this.handleXRLayerBlur();
-        });
-
         // Stop regular animation update loop and use the one from the xr session.
         this.renderer.setAnimationLoop(null);
-        this.xrSession.requestFrame((nextXRFrame: any) =>
+        this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
             this.frameUpdate(nextXRFrame)
         );
     }
 
-    protected handleXRSessionFocus() {
-        console.log('[Game] handleXRSessionFocus');
-    }
-
-    protected handleXRSessionBlur() {
-        console.log('[Game] handleXRSessionBlur');
-    }
-
     protected handleXRSessionEnded() {
         console.log('[Game] handleXRSessionEnded');
-    }
-
-    protected handleXRLayerFocus() {
-        console.log('[Game] handleXRLayerFocus');
-    }
-
-    protected handleXRLayerBlur() {
-        console.log('[Game] handleXRLayerBlur');
-    }
-
-    protected updateVRToggle(): void {
-        this.removeSidebarItem('toggle_vr');
-
-        if (WebVRDisplays.vrCapable && WebVRDisplays.mainVRDisplay()) {
-            const buttonText: string = WebVRDisplays.mainVRDisplay()
-                .isPresenting
-                ? 'Exit VR'
-                : 'Enter VR';
-            const buttonIcon: string = undefined;
-
-            const onClick = () => {
-                this.toggleVR();
-            };
-
-            this.addSidebarItem('toggle_vr', buttonText, onClick, buttonIcon);
-        }
-    }
-
-    private toggleVR() {
-        if (WebVRDisplays.mainVRDisplay().isPresenting) {
-            this.stopVR();
-        } else {
-            this.startVR();
-        }
-    }
-
-    protected isVRRunning() {
-        return WebVRDisplays.mainVRDisplay().isPresenting;
+        this.stopXR(true);
     }
 
     protected stopVR() {
-        if (!this.isVRRunning()) {
-            console.log('[Game] VR already disabled');
-            return;
-        }
-        console.log('[Game] Stop VR');
-        this.renderer.vr.enabled = false;
-        this.renderer.vr.setDevice(null);
-        WebVRDisplays.mainVRDisplay().exitPresent();
+        this.stopXR();
     }
 
     protected startVR() {
-        if (this.isVRRunning()) {
-            console.log('[Game] VR already enabled');
-            return;
-        }
-        console.log('[Game] Start VR');
-        this.setCameraType('perspective'); // Setting camera to perspective allows the VR user to be properly displayed in scene.
-        this.renderer.vr.enabled = true;
-        this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
-        WebVRDisplays.mainVRDisplay().requestPresent([
-            { source: this.renderer.domElement },
-        ]);
-    }
-
-    protected handleVRDisplayConnect(display: VRDisplay): void {
-        this.updateVRToggle();
-    }
-    protected handleVRDisplayDisconnect(display: VRDisplay): void {
-        this.updateVRToggle();
-        this.inputVR.disconnectControllers();
-    }
-    protected handleVRDisplayActivate(display: VRDisplay): void {
-        this.updateVRToggle();
-    }
-    protected handleVRDisplayDeactivate(display: VRDisplay): void {
-        this.updateVRToggle();
-        this.inputVR.disconnectControllers();
-    }
-    protected handleVRDisplayBlur(display: VRDisplay): void {
-        this.updateVRToggle();
-    }
-    protected handleVRDisplayFocus(display: VRDisplay): void {
-        this.updateVRToggle();
-    }
-    protected handleVRDisplayPresentChange(display: VRDisplay): void {
-        this.updateVRToggle();
-
-        if (WebVRDisplays.mainVRDisplay().isPresenting) {
-            this.renderer.vr.enabled = true;
-            this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
-        } else {
-            this.renderer.vr.enabled = false;
-            this.renderer.vr.setDevice(null);
-            this.inputVR.disconnectControllers();
-            // reset camera back to default position.
-            resetCameraRigToDefaultPosition(this.mainCameraRig);
-        }
+        this.startXR('immersive-vr');
     }
 }

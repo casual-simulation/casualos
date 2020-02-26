@@ -19,7 +19,7 @@ import {
     MeshToonMaterial,
     AmbientLight,
     DirectionalLight,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Euler,
     SpriteMaterial,
     Sprite,
@@ -29,6 +29,7 @@ import {
     OrthographicCamera,
     Color,
     MeshStandardMaterial,
+    Ray,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -200,14 +201,14 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 
     // Detach
     if (object3d.parent && object3d.parent !== scene) {
-        object3d.applyMatrix(object3d.parent.matrixWorld);
+        object3d.applyMatrix4(object3d.parent.matrixWorld);
         object3d.parent.remove(object3d);
         scene.add(object3d);
     }
 
     // Attach
     if (parent) {
-        object3d.applyMatrix(new Matrix4().getInverse(parent.matrixWorld));
+        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
         scene.remove(object3d);
         parent.add(object3d);
     }
@@ -615,4 +616,22 @@ export function setColor(mesh: Mesh | Sprite, color: string) {
         shapeMat.visible = true;
         shapeMat.color = new Color(0xffffff);
     }
+}
+
+/**
+ * Creates a ray for the given direction from the given object's perspective.
+ * @param direction The direction.
+ * @param obj The object.
+ */
+export function objectDirectionRay(direction: Vector3, obj: Object3D): Ray {
+    const forward = direction.applyQuaternion(obj.quaternion);
+    return new Ray(obj.position, forward);
+}
+
+/**
+ * Creates a ray for the given object's forward direction.
+ * @param obj The object.
+ */
+export function objectForwardRay(obj: Object3D): Ray {
+    return objectDirectionRay(new Vector3(0, 0, -1), obj);
 }

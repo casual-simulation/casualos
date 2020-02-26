@@ -20,7 +20,7 @@ import { Physics } from '../Physics';
 import { LineHelper } from '../helpers/LineHelper';
 
 export const PointerRay_DefaultColor: Color = new Color('#ffffff');
-export const PointerRay_DefaultStopDistance: number = 10000;
+export const PointerRay_DefaultStopDistance: number = 0.25;
 export const PointerRay_DefaultCursorVisible: boolean = false;
 
 export class PointerRay3D extends Object3D {

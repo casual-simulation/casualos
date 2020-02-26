@@ -4,7 +4,7 @@ import {
     Scene,
     Box3,
     Vector3,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Color,
     Object3D,
     AmbientLight,

@@ -360,9 +360,9 @@ export class PlayerGame extends Game {
                     this.playAudio(e.url);
                 } else if (e.type === 'enable_ar') {
                     if (e.enabled) {
-                        this.startXR();
+                        this.startAR();
                     } else {
-                        this.stopXR();
+                        this.stopAR();
                     }
                 } else if (e.type === 'enable_vr') {
                     if (e.enabled) {

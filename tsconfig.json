@@ -5,7 +5,12 @@
             "node_modules/@types",
             "src/aux-server/typings",
             "src/crypto-node/typings"
-        ]
+        ],
+        "paths": {
+            "three-legacy-gltf-loader": [
+                "src/aux-server/aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
+            ]
+        }
     },
     "files": [],
     "references": [

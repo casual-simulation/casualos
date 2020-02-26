@@ -22,7 +22,7 @@ import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOper
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
@@ -35,9 +35,9 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         interaction: PlayerInteractionManager,
         bot: AuxBot3D,
         faceValue: string,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
-        super(simulation3D, interaction, bot.bot, bot, vrController);
+        super(simulation3D, interaction, bot.bot, bot, inputMethod);
 
         this._argument = { face: faceValue, dimension: null };
     }
@@ -90,7 +90,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 this._interaction,
                 draggedObjects,
                 bot3D.dimension,
-                this._vrController,
+                this._inputMethod,
                 fromCoord,
                 undefined,
                 this._argument.face
