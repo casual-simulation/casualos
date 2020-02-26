@@ -7,9 +7,11 @@ import {
     objectsAtDimensionGridPosition,
     calculateBotDragStackPosition,
     BotTags,
+    BotPositioningMode,
+    getBotPositioningMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { Intersection, Vector2, Ray } from 'three';
+import { Intersection, Vector2, Ray, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
@@ -20,6 +22,7 @@ import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
+import { PlayerGrid3D } from 'aux-web/aux-player/PlayerGrid3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -163,42 +166,51 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
         }
 
-        // Get grid tile from correct simulation grid.
         const grid3D = this._inInventory
             ? this._inventorySimulation3D.grid3D
             : this._simulation3D.grid3D;
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        if (
+            this._controller &&
+            this._getBotsPositioningMode(calc) === 'absolute'
+        ) {
+            this._dragFreeSpace(calc, grid3D, inputRay);
+        } else {
+            // Get grid tile from correct simulation grid.
+            this._dragOnGrid(calc, grid3D, inputRay);
+        }
+    }
 
+    private _dragFreeSpace(calc: BotCalculationContext, grid3D: PlayerGrid3D, inputRay: Ray) {
+        const position = new Vector3();
+        inputRay.at(0.25, position);
+        const gridPosition =  grid3D.getGridPosition(position);
+        this._updateBotsPositions(this._bots, gridPosition, 0, calc);
+    }
+
+    private _dragOnGrid(calc: BotCalculationContext, grid3D: PlayerGrid3D, inputRay: Ray) {
+        const gridTile = grid3D.getTileFromRay(inputRay);
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
-
-            const result = calculateBotDragStackPosition(
-                calc,
-                this._dimension,
-                gridTile.tileCoordinate,
-                ...this._bots
-            );
-
+            const result = calculateBotDragStackPosition(calc, this._dimension, gridTile.tileCoordinate, ...this._bots);
             this._other = result.other;
             this._merge = result.merge;
-
             this._sendDropEnterExitEvents(this._other);
-
             if (result.stackable || result.index === 0) {
-                this._updateBotsPositions(
-                    this._bots,
-                    gridTile.tileCoordinate,
-                    result.index,
-                    calc
-                );
-            } else if (!result.stackable) {
-                this._updateBotsPositions(
-                    this._bots,
-                    gridTile.tileCoordinate,
-                    0,
-                    calc
-                );
+                this._updateBotsPositions(this._bots, gridTile.tileCoordinate, result.index, calc);
             }
+            else if (!result.stackable) {
+                this._updateBotsPositions(this._bots, gridTile.tileCoordinate, 0, calc);
+            }
+        }
+    }
+
+    private _getBotsPositioningMode(
+        calc: BotCalculationContext
+    ): BotPositioningMode {
+        if (this._bots.length === 1) {
+            return getBotPositioningMode(calc, this._bots[0]);
+        } else {
+            return 'stack';
         }
     }
 
