@@ -9,6 +9,7 @@
 -   :bug: Bug Fixes
     -   Fixed a configuration value that enabled the 3D debug mode by default.
     -   Fixed an issue with loading skinned meshes.
+    -   Fixed an issue that prevented VR from working when sprites were in the scene.
 
 ## V1.0.10
 
