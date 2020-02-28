@@ -230,6 +230,8 @@ export function formulaActions(
         const result = context.sandbox.run(script, {}, scriptBot, vars);
         if (result.error && result.error instanceof RanOutOfEnergyError) {
             throw result.error;
+        } else if (result.error) {
+            console.error(result.error);
         }
         results.push(result.result);
     }
