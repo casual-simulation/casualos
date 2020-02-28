@@ -8,6 +8,7 @@
 
 -   :bug: Bug Fixes
     -   Fixed a configuration value that enabled the 3D debug mode by default.
+    -   Fixed an issue with loading skinned meshes.
 
 ## V1.0.10
 
