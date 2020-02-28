@@ -228,7 +228,7 @@ export function formulaActions(
         );
 
         const result = context.sandbox.run(script, {}, scriptBot, vars);
-        if (result.error) {
+        if (result.error && result.error instanceof RanOutOfEnergyError) {
             throw result.error;
         }
         results.push(result.result);
@@ -261,4 +261,10 @@ function transformBotsToScriptBots(
     key: any
 ) {
     result[key] = mapBotsToScriptBots(context, value);
+}
+
+export class RanOutOfEnergyError extends Error {
+    constructor() {
+        super('Ran out of energy');
+    }
 }

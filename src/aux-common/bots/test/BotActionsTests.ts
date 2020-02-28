@@ -1369,6 +1369,37 @@ export function botActionsTests(
             }).toThrow(new Error('Ran out of energy'));
         });
 
+        it('should handle errors on a per-script basis', () => {
+            const state: BotsState = {
+                userBot: {
+                    id: 'userBot',
+                    tags: {},
+                },
+                aBot: {
+                    id: 'aBot',
+                    tags: {
+                        test: `@throw new Error("Error: abc")`,
+                    },
+                },
+                bBot: {
+                    id: 'bBot',
+                    tags: {
+                        test: `@player.toast("hello")`,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', null, 'userBot');
+            const events = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+            expect(events.events).toEqual([toast('hello')]);
+        });
+
         it('should support scripts as formulas that return non-string objects', () => {
             expect.assertions(1);
 
