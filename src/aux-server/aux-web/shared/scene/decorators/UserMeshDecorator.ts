@@ -1,4 +1,10 @@
-import { Group, Mesh, Math as ThreeMath, MeshToonMaterial, Color } from 'three';
+import {
+    Group,
+    Mesh,
+    MathUtils as ThreeMath,
+    MeshToonMaterial,
+    Color,
+} from 'three';
 import {
     BotCalculationContext,
     isUserActive,

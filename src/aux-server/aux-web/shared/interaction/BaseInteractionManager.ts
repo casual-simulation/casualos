@@ -4,6 +4,8 @@ import {
     Intersection,
     Object3D,
     OrthographicCamera,
+    Ray,
+    Color,
 } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
@@ -11,7 +13,14 @@ import { Physics } from '../scene/Physics';
 import flatMap from 'lodash/flatMap';
 import remove from 'lodash/remove';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId, InputType, Input } from '../scene/Input';
+import {
+    MouseButtonId,
+    InputType,
+    Input,
+    ControllerData,
+    InputMethod,
+    MOUSE_INPUT_METHOD_IDENTIFIER,
+} from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxBot3D } from '../scene/AuxBot3D';
@@ -24,16 +33,11 @@ import {
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from './DraggableGroup';
-import { isObjectVisible } from '../scene/SceneUtils';
+import { isObjectVisible, objectForwardRay } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
-import { WebVRDisplays } from '../WebVRDisplays';
-import {
-    VRController3D,
-    VRController_ClickColor,
-    VRController_DefaultColor,
-} from '../scene/vr/VRController3D';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
+import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
 
 interface HoveredBot {
     /**
@@ -63,14 +67,16 @@ export abstract class BaseInteractionManager {
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredBots: HoveredBot[];
-    protected _activeVRControllers: VRController3D[];
 
     protected _draggableGroups: DraggableGroup[];
     protected _draggableGroupsDirty: boolean;
 
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
-    private _pressedBot: AuxBot3D;
+
+    // A map for input methods to the bot that they're directly interacting with.
+    private _inputMethodMap: Map<string, AuxBot3D>;
+
     private _contextMenuOpen: boolean = false;
 
     constructor(game: Game) {
@@ -81,7 +87,7 @@ export abstract class BaseInteractionManager {
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
         this._hoveredBots = [];
-        this._activeVRControllers = [];
+        this._inputMethodMap = new Map();
 
         // Bind event handlers to this instance of the class.
         this._handleBotAdded = this._handleBotAdded.bind(this);
@@ -143,250 +149,229 @@ export abstract class BaseInteractionManager {
             return true;
         });
 
-        if (WebVRDisplays.isPresenting()) {
-            //
-            // VR Mode interaction.
-            //
-            const inputVR = this._game.getInputVR();
+        //
+        // Normal browser interaction.
+        //
+        const input = this._game.getInput();
 
-            // Detect when the an 'active' vr controller is no longer providing primary input.
-            // If primary input is released by this controller, then it is no longer 'active'.
-            remove(this._activeVRControllers, controller3D => {
-                if (!controller3D.getPrimaryButtonHeld()) {
-                    controller3D.setColor(VRController_DefaultColor);
-                    return true;
+        // Detect if we are over any html mixer iframe element.
+        this._overHtmlMixerIFrame = false;
+        const clientPos = input.getMouseClientPos();
+        if (clientPos) {
+            const htmlMixerContext = this._game.getHtmlMixerContext();
+            this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
+                clientPos
+            );
+        }
+
+        const noMouseInput =
+            !input.getMouseButtonHeld(MouseButtonId.Left) &&
+            !input.getMouseButtonHeld(MouseButtonId.Middle) &&
+            !input.getMouseButtonHeld(MouseButtonId.Right);
+
+        if (noMouseInput && input.getTouchCount() === 0) {
+            // Always allow the iframes to recieve input when no inputs are being held.
+            const webglCanvas = this._game.getRenderer().domElement;
+            webglCanvas.style.pointerEvents = 'none';
+        }
+
+        if (!noMouseInput) {
+            this.hideContextMenu();
+        }
+
+        if (this._operations.length === 0) {
+            // Enable camera controls when there are no more operations.
+            this.setCameraControlsEnabled(true);
+        }
+
+        this._cameraRigControllers.forEach(rigControls =>
+            rigControls.controls.update()
+        );
+
+        // Detect left click.
+        this._handleMouseInput(input);
+        this._handleControllerInput(input);
+        this._handleTapCodes(input);
+
+        this._updateAdditionalNormalInputs(input);
+
+        this._updateHoveredBots();
+    }
+
+    private _handleTapCodes(input: Input) {
+        this._tapCodeManager.recordTouches(input.getTouchCount());
+        if (input.getKeyHeld('Alt')) {
+            for (let i = 1; i <= 9; i++) {
+                if (input.getKeyDown(i.toString())) {
+                    this._tapCodeManager.recordTouches(i);
                 }
+            }
+        }
+        if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
+            const code = this._tapCodeManager.code;
+            console.log('[BaseInteractionManager] tap code: ', code);
+            appManager.simulationManager.simulations.forEach(sim => {
+                sim.helper.action('onTapCode', null, code);
             });
+            this._tapCodeManager.trim(this._maxTapCodeLength - 1);
+        }
+    }
 
-            for (let i = 0; i < inputVR.controllerCount; i++) {
-                const controller3D = inputVR.getController3D(i);
-                let isActiveController =
-                    this._activeVRControllers.indexOf(controller3D) !== -1;
-
-                if (!isActiveController) {
-                    // Detect when controller provides primary input.
-                    // It becomes an 'active' vr controller when it does.
-                    if (controller3D.getPrimaryButtonDown()) {
-                        isActiveController = true;
-                        this._activeVRControllers.push(controller3D);
-                        // Change color of controller to indicate that it is active.
-                        controller3D.setColor(VRController_ClickColor);
-                    }
-                }
-
-                const { gameObject, hit } = this.findHoveredGameObjectVR(
-                    controller3D
+    private _handleMouseInput(input: Input) {
+        const inputMethod: InputMethod = {
+            type: 'mouse_or_touch',
+            identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+        };
+        if (input.getMouseButtonDown(MouseButtonId.Left)) {
+            if (!this._overHtmlMixerIFrame) {
+                this._disableIFramePointerEvents();
+            }
+            if (
+                input.isMouseButtonDownOnElement(this._game.gameView.gameView)
+            ) {
+                const { gameObject, hit } = this.findHoveredGameObject(
+                    inputMethod
                 );
-
-                if (hit) {
-                    // Update pointer ray stop distance.
-                    controller3D.pointerRay3D.stopDistance = hit.distance;
-                    controller3D.pointerRay3D.showCursor = true;
-
-                    // Set bot has being hovered on.
-                    this._setHoveredBot(gameObject);
+                if (gameObject) {
+                    // Start game object click operation.
+                    this._startClickingGameObject(gameObject, hit, inputMethod);
                 } else {
-                    controller3D.pointerRay3D.stopDistance = 10;
-                    controller3D.pointerRay3D.showCursor = false;
+                    this._startClickingEmptySpace(inputMethod);
                 }
-
-                if (controller3D.getPrimaryButtonDown()) {
-                    if (gameObject) {
-                        // Start game object click operation.
-                        const gameObjectClickOperation = this.createGameObjectClickOperation(
-                            gameObject,
-                            hit,
-                            controller3D
-                        );
-                        if (gameObjectClickOperation !== null) {
-                            this._operations.push(gameObjectClickOperation);
-                        }
-
-                        if (gameObject instanceof AuxBot3D) {
-                            this._pressedBot = gameObject;
-
-                            this.handlePointerDown(
-                                gameObject,
-                                gameObject.bot,
-                                gameObject.dimensionGroup.simulation3D
-                                    .simulation
-                            );
-                        }
-                    } else {
-                        const emptyClickOperation = this.createEmptyClickOperation(
-                            controller3D
-                        );
-                        if (emptyClickOperation !== null) {
-                            this._operations.push(emptyClickOperation);
-                        }
-                    }
-                }
-            }
-        } else {
-            //
-            // Normal browser interaction.
-            //
-            const input = this._game.getInput();
-
-            // Detect if we are over any html mixer iframe element.
-            this._overHtmlMixerIFrame = false;
-            const clientPos = input.getMouseClientPos();
-            if (clientPos) {
-                const htmlMixerContext = this._game.getHtmlMixerContext();
-                this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
-                    clientPos
+            } else if (
+                input.isMouseButtonDownOnAnyElements(
+                    this._game.getUIHtmlElements()
+                )
+            ) {
+                const element = input.getTargetData().inputDown;
+                const elementClickOperation = this.createHtmlElementClickOperation(
+                    element,
+                    inputMethod
                 );
+                if (elementClickOperation !== null) {
+                    this._operations.push(elementClickOperation);
+                }
             }
-
-            const noMouseInput =
-                !input.getMouseButtonHeld(MouseButtonId.Left) &&
-                !input.getMouseButtonHeld(MouseButtonId.Middle) &&
-                !input.getMouseButtonHeld(MouseButtonId.Right);
-
-            if (noMouseInput && input.getTouchCount() === 0) {
-                // Always allow the iframes to recieve input when no inputs are being held.
-                const webglCanvas = this._game.getRenderer().domElement;
-                webglCanvas.style.pointerEvents = 'none';
+        } else if (input.getMouseButtonUp(MouseButtonId.Left)) {
+            this._stopClickingGameObject(inputMethod);
+        }
+        // Middle click or Right click.
+        if (
+            input.getMouseButtonDown(MouseButtonId.Middle) ||
+            input.getMouseButtonDown(MouseButtonId.Right)
+        ) {
+            if (!this._overHtmlMixerIFrame) {
+                this._disableIFramePointerEvents();
             }
-
-            if (!noMouseInput) {
-                this.hideContextMenu();
-            }
-
-            if (this._operations.length === 0) {
-                // Enable camera controls when there are no more operations.
+            if (
+                input.isMouseButtonDownOnElement(this._game.gameView.gameView)
+            ) {
+                // Always allow camera control with middle clicks.
                 this.setCameraControlsEnabled(true);
             }
+        }
 
-            this._cameraRigControllers.forEach(rigControls =>
-                rigControls.controls.update()
-            );
+        if (input.currentInputType === InputType.Mouse) {
+            const { gameObject } = this.findHoveredGameObject(inputMethod);
+            if (gameObject) {
+                // Set bot as being hovered on.
+                this._setHoveredBot(gameObject);
+            }
+        }
+    }
 
-            // Detect left click.
-            if (input.getMouseButtonDown(MouseButtonId.Left)) {
-                if (!this._overHtmlMixerIFrame) {
-                    this._disableIFramePointerEvents();
+    private _handleControllerInput(input: Input) {
+        for (let controller of input.controllers) {
+            const inputMethod: InputMethod = {
+                type: 'controller',
+                controller: controller,
+                identifier: controller.identifier,
+            };
+            if (input.getControllerPrimaryButtonDown(controller)) {
+                const { gameObject, hit } = this.findHoveredGameObject(
+                    inputMethod
+                );
+                if (gameObject) {
+                    this._startClickingGameObject(gameObject, hit, inputMethod);
+                } else {
+                    this._startClickingEmptySpace(inputMethod);
                 }
-
-                if (
-                    input.isMouseButtonDownOnElement(
-                        this._game.gameView.gameView
-                    )
-                ) {
-                    const { gameObject, hit } = this.findHoveredGameObject();
-
-                    if (gameObject) {
-                        // Start game object click operation.
-                        const gameObjectClickOperation = this.createGameObjectClickOperation(
-                            gameObject,
-                            hit,
-                            null
-                        );
-                        if (gameObjectClickOperation !== null) {
-                            this.setCameraControlsEnabled(false);
-                            this._operations.push(gameObjectClickOperation);
-                        }
-
-                        if (gameObject instanceof AuxBot3D) {
-                            this._pressedBot = gameObject;
-
-                            this.handlePointerDown(
-                                gameObject,
-                                gameObject.bot,
-                                gameObject.dimensionGroup.simulation3D
-                                    .simulation
-                            );
-                        }
-                    } else {
-                        const emptyClickOperation = this.createEmptyClickOperation(
-                            null
-                        );
-                        if (emptyClickOperation !== null) {
-                            this._operations.push(emptyClickOperation);
-                        }
-                        this.setCameraControlsEnabled(true);
-                    }
-                } else if (
-                    input.isMouseButtonDownOnAnyElements(
-                        this._game.getUIHtmlElements()
-                    )
-                ) {
-                    const element = input.getTargetData().inputDown;
-
-                    const elementClickOperation = this.createHtmlElementClickOperation(
-                        element,
-                        null
-                    );
-                    if (elementClickOperation !== null) {
-                        this._operations.push(elementClickOperation);
-                    }
-                }
-            } else if (input.getMouseButtonUp(MouseButtonId.Left)) {
-                if (this._pressedBot != null) {
-                    const { gameObject, hit } = this.findHoveredGameObject();
-
-                    if (
-                        gameObject instanceof AuxBot3D &&
-                        gameObject == this._pressedBot
-                    ) {
-                        this.handlePointerUp(
-                            gameObject,
-                            gameObject.bot,
-                            gameObject.dimensionGroup.simulation3D.simulation
-                        );
-                    }
-                    this._pressedBot = null;
-                }
+            } else if (input.getControllerPrimaryButtonUp(controller)) {
+                this._stopClickingGameObject(inputMethod);
             }
 
-            // Middle click or Right click.
             if (
-                input.getMouseButtonDown(MouseButtonId.Middle) ||
-                input.getMouseButtonDown(MouseButtonId.Right)
+                input.currentInputType === InputType.Controller &&
+                controller.inputSource.targetRayMode !== 'screen'
             ) {
-                if (!this._overHtmlMixerIFrame) {
-                    this._disableIFramePointerEvents();
-                }
-
-                if (
-                    input.isMouseButtonDownOnElement(
-                        this._game.gameView.gameView
-                    )
-                ) {
-                    // Always allow camera control with middle clicks.
-                    this.setCameraControlsEnabled(true);
-                }
-            }
-            this._tapCodeManager.recordTouches(input.getTouchCount());
-            if (input.getKeyHeld('Alt')) {
-                for (let i = 1; i <= 9; i++) {
-                    if (input.getKeyDown(i.toString())) {
-                        this._tapCodeManager.recordTouches(i);
-                    }
-                }
-            }
-
-            if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
-                const code = this._tapCodeManager.code;
-                console.log('[BaseInteractionManager] tap code: ', code);
-                appManager.simulationManager.simulations.forEach(sim => {
-                    sim.helper.action('onTapCode', null, code);
-                });
-                this._tapCodeManager.trim(this._maxTapCodeLength - 1);
-            }
-
-            if (input.currentInputType === InputType.Mouse) {
-                const { gameObject } = this.findHoveredGameObject();
+                const { gameObject } = this.findHoveredGameObject(inputMethod);
                 if (gameObject) {
                     // Set bot as being hovered on.
                     this._setHoveredBot(gameObject);
                 }
             }
-
-            this._updateAdditionalNormalInputs(input);
         }
+    }
 
-        this._updateHoveredBots();
+    private _stopClickingGameObject(method: InputMethod) {
+        const pressedBot = this.getPressedBot(method.identifier);
+        if (pressedBot) {
+            const { gameObject, hit } = this.findHoveredGameObject(method);
+            if (gameObject instanceof AuxBot3D && gameObject == pressedBot) {
+                this.handlePointerUp(
+                    gameObject,
+                    gameObject.bot,
+                    gameObject.dimensionGroup.simulation3D.simulation
+                );
+            }
+            this.clearPressedBot(method.identifier);
+        }
+    }
+
+    getPressedBot(inputMethodIdentifier: string) {
+        return this._inputMethodMap.get(inputMethodIdentifier);
+    }
+
+    setPressedBot(inputMethodIdentifier: string, bot: AuxBot3D) {
+        this._inputMethodMap.set(inputMethodIdentifier, bot);
+    }
+
+    clearPressedBot(inputMethodIdentifier: string) {
+        return this._inputMethodMap.delete(inputMethodIdentifier);
+    }
+
+    private _startClickingEmptySpace(inputMethod: InputMethod) {
+        const emptyClickOperation = this.createEmptyClickOperation(inputMethod);
+        if (emptyClickOperation !== null) {
+            this._operations.push(emptyClickOperation);
+        }
+        if (inputMethod.type !== 'controller') {
+            this.setCameraControlsEnabled(true);
+        }
+    }
+
+    private _startClickingGameObject(
+        gameObject: GameObject,
+        hit: Intersection,
+        method: InputMethod
+    ) {
+        const gameObjectClickOperation = this.createGameObjectClickOperation(
+            gameObject,
+            hit,
+            method
+        );
+        if (gameObjectClickOperation !== null) {
+            this.setCameraControlsEnabled(false);
+            this._operations.push(gameObjectClickOperation);
+        }
+        if (gameObject instanceof AuxBot3D) {
+            this.setPressedBot(method.identifier, gameObject);
+            this.handlePointerDown(
+                gameObject,
+                gameObject.bot,
+                gameObject.dimensionGroup.simulation3D.simulation
+            );
+        }
     }
 
     /**
@@ -488,10 +473,17 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Find the first game object that is underneath the given page position. If page position is not given, the current 'mouse' page position will be used.
-     * @param pagePos [Optional] The page position to test underneath.
+     * Find the first game object that is underneath the current input device.
      */
-    findHoveredGameObject(pagePos?: Vector2) {
+    findHoveredGameObject(method: InputMethod) {
+        if (method.type === 'controller') {
+            return this.findHoveredGameObjectFromController(method.controller);
+        } else {
+            return this.findHoveredGameObjectFromPagePosition();
+        }
+    }
+
+    findHoveredGameObjectFromPagePosition(pagePos?: Vector2) {
         pagePos = !!pagePos ? pagePos : this._game.getInput().getMousePagePos();
 
         const draggableGroups = this.getDraggableGroups();
@@ -544,10 +536,19 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Find the first game object that is being pointed at by the given vr controller.
-     * @param controller The vr controller to test with.
+     * Finds the first game oject that is being pointed at by the given controller.
+     * @param controller The controller.
      */
-    findHoveredGameObjectVR(controller: VRController3D) {
+    findHoveredGameObjectFromController(controller: ControllerData) {
+        const ray = objectForwardRay(controller.ray);
+        return this.findHoveredGameObjectFromRay(ray);
+    }
+
+    /**
+     * Find the first game object that is being pointed at by the given ray.
+     * @param ray The ray.
+     */
+    findHoveredGameObjectFromRay(ray: Ray) {
         const draggableGroups = this.getDraggableGroups();
 
         let hit: Intersection = null;
@@ -557,10 +558,7 @@ export abstract class BaseInteractionManager {
         for (let i = 0; i < draggableGroups.length; i++) {
             const objects = draggableGroups[i].objects;
 
-            const raycastResult = Physics.raycast(
-                controller.pointerRay,
-                objects
-            );
+            const raycastResult = Physics.raycast(ray, objects);
             hit = Physics.firstRaycastHit(raycastResult);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
@@ -612,17 +610,12 @@ export abstract class BaseInteractionManager {
     }
 
     showContextMenu(calc: BotCalculationContext) {
-        if (WebVRDisplays.isPresenting()) {
-            // Context menu does nothing in VR yet...
-            console.log(
-                '[BaseInteractionManager] Context menu is not currently supported while in VR.'
-            );
-            return;
-        }
-
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
-        const { gameObject, hit } = this.findHoveredGameObject();
+        const { gameObject, hit } = this.findHoveredGameObject({
+            type: 'mouse_or_touch',
+            identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+        });
         const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {
@@ -646,11 +639,6 @@ export abstract class BaseInteractionManager {
     async selectBot(bot: AuxBot3D) {}
 
     async clearSelection() {}
-
-    isEmptySpace(screenPos: Vector2): boolean {
-        const { gameObject } = this.findHoveredGameObject(screenPos);
-        return gameObject == null || gameObject == undefined;
-    }
 
     protected _handleBotAdded(bot: Bot): void {
         this._markDirty();
@@ -711,14 +699,12 @@ export abstract class BaseInteractionManager {
     abstract createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection,
-        vrController: VRController3D | null
+        controller: InputMethod
     ): IOperation;
-    abstract createEmptyClickOperation(
-        vrController: VRController3D | null
-    ): IOperation;
+    abstract createEmptyClickOperation(inputMethod: InputMethod): IOperation;
     abstract createHtmlElementClickOperation(
         element: HTMLElement,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ): IOperation;
     abstract handlePointerEnter(
         bot3D: AuxBot3D,

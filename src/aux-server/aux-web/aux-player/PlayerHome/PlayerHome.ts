@@ -12,6 +12,8 @@ import {
     KNOWN_PORTALS,
     BotAction,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
+    calculateStringTagValue,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -102,10 +104,11 @@ export default class PlayerHome extends Vue {
                         if (update.tags.has('auxUniverse')) {
                             // Universe changed - update it
                             const calc = sim.helper.createContext();
-                            const universe = calculateBotValue(
+                            const universe = calculateStringListTagValue(
                                 calc,
                                 update.bot,
-                                'auxUniverse'
+                                'auxUniverse',
+                                null
                             );
                             if (hasValue(universe)) {
                                 this._setUniverse(universe);

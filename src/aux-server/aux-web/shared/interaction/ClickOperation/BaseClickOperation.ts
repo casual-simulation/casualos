@@ -1,5 +1,9 @@
-import { InputType } from '../../../shared/scene/Input';
-import { Vector2 } from 'three';
+import {
+    InputType,
+    ControllerData,
+    InputMethod,
+} from '../../../shared/scene/Input';
+import { Vector2, Object3D, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
@@ -12,7 +16,6 @@ import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,
@@ -26,11 +29,13 @@ export abstract class BaseClickOperation implements IOperation {
     protected _interaction: BaseInteractionManager;
     protected _finished: boolean;
     protected _triedDragging: boolean;
-    protected _vrController: VRController3D;
+    protected _controller: ControllerData;
+    protected _inputMethod: InputMethod;
 
     protected _startScreenPos: Vector2;
-    protected _startVRControllerPose: Pose;
+    protected _startVRControllerPose: Object3D;
     protected _dragOperation: IOperation;
+    protected _hit: Intersection;
 
     protected heldTime: number;
     protected isMobile: boolean;
@@ -46,22 +51,27 @@ export abstract class BaseClickOperation implements IOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        vrController: VRController3D | null
+        inputMethod: InputMethod,
+        hit?: Intersection
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
-        this._vrController = vrController;
+        this._inputMethod = inputMethod;
+        this._controller =
+            inputMethod.type === 'controller' ? inputMethod.controller : null;
+        this._hit = hit;
 
-        if (this._vrController) {
+        if (this._controller) {
             // Store the pose of the vr controller when the click occured.
-            this._startVRControllerPose = this._vrController.worldPose.clone();
+            this._startVRControllerPose = this._controller.ray.clone();
         } else {
             // Store the screen position of the input when the click occured.
             this._startScreenPos = this.game.getInput().getMouseScreenPos();
         }
 
         this.isMobile =
-            !vrController && this.game.getInput().getTouchCount() > 0;
+            inputMethod.type === 'mouse_or_touch' &&
+            this.game.getInput().getTouchCount() > 0;
         this.heldTime = 0;
     }
 
@@ -78,7 +88,7 @@ export abstract class BaseClickOperation implements IOperation {
             }
         }
 
-        if (!this._vrController) {
+        if (!this._controller) {
             // If using touch, need to make sure we are only ever using one finger at a time.
             // If a second finger is detected then we cancel this click operation.
             if (this.game.getInput().currentInputType === InputType.Touch) {
@@ -89,17 +99,18 @@ export abstract class BaseClickOperation implements IOperation {
             }
         }
 
-        const buttonHeld: boolean = this._vrController
-            ? this._vrController.getPrimaryButtonHeld()
-            : this.game.getInput().getMouseButtonHeld(0);
+        const input = this.game.getInput();
+        const buttonHeld: boolean = this._controller
+            ? input.getControllerPrimaryButtonHeld(this._controller)
+            : input.getMouseButtonHeld(0);
 
         if (buttonHeld) {
             this.heldTime++;
             if (!this._dragOperation) {
-                let dragThresholdPassed: boolean = this._vrController
+                let dragThresholdPassed: boolean = this._controller
                     ? VRDragThresholdPassed(
                           this._startVRControllerPose,
-                          this._vrController.worldPose
+                          this._controller.ray
                       )
                     : DragThresholdPassed(
                           this._startScreenPos,

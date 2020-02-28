@@ -142,8 +142,6 @@ Here's a list of the tools and packages that we're using to build AUX.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.
         -   [@sentry/browser](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser) for error reporting.
         -   [mongodb](https://github.com/mongodb/node-mongodb-native) for MongoDB connections.
-        -   [webvr-polyfill](https://github.com/immersive-web/webvr-polyfill) for WebVR 1.0 and 1.1 support.
-        -   [webxr-polyfill](https://github.com/mozilla/webxr-polyfill) for [WebXR Viewer iOS app](https://github.com/mozilla-mobile/webxr-ios) support.
         -   [Dexie.js](https://dexie.org/) for IndexedDB storage.
 
 If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.

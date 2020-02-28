@@ -7,20 +7,35 @@ import {
     objectsAtDimensionGridPosition,
     calculateBotDragStackPosition,
     BotTags,
+    BotPositioningMode,
+    getBotPositioningMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { Intersection, Vector2, Ray } from 'three';
+import {
+    Intersection,
+    Vector2,
+    Ray,
+    Vector3,
+    Quaternion,
+    Euler,
+    Color,
+    Box3,
+    Matrix4,
+    Group,
+} from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Input } from '../../../shared/scene/Input';
+import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import differenceBy from 'lodash/differenceBy';
 import take from 'lodash/take';
 import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
+import { objectForwardRay } from '../../../shared/scene/SceneUtils';
+import { PlayerGrid3D } from '../../PlayerGrid3D';
+import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -47,6 +62,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     protected _botsInStack: Bot[];
 
+    protected _hitBot: AuxBot3D;
+
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
     }
@@ -60,20 +77,22 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         interaction: PlayerInteractionManager,
         bots: Bot[],
         dimension: string,
-        vrController: VRController3D | null,
+        inputMethod: InputMethod,
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
-        clickedFace?: string
+        clickedFace?: string,
+        hit?: Intersection
     ) {
         super(
             playerSimulation3D,
             interaction,
             take(bots, 1),
             dimension,
-            vrController,
+            inputMethod,
             fromCoord,
             skipOnDragEvents,
-            clickedFace
+            clickedFace,
+            hit
         );
 
         this._botsInStack = drop(bots, 1);
@@ -82,6 +101,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._originallyInInventory = this._inInventory =
             dimension &&
             this._inventorySimulation3D.inventoryDimension === dimension;
+
+        if (this._hit) {
+            const obj = this._interaction.findGameObjectForHit(this._hit);
+            if (obj && obj instanceof AuxBot3D) {
+                this._hitBot = obj;
+            }
+        }
     }
 
     protected _createBotDragOperation(bot: Bot): IOperation {
@@ -91,10 +117,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._interaction,
             [bot],
             this._dimension,
-            this._vrController,
+            this._inputMethod,
             this._fromCoord,
             true,
-            this._clickedFace
+            this._clickedFace,
+            this._hit
         );
     }
 
@@ -104,7 +131,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inventorySimulation3D,
             this._interaction,
             mod,
-            this._vrController
+            this._inputMethod
         );
     }
 
@@ -113,7 +140,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         let nextContext = this._simulation3D.dimension;
 
-        if (!this._vrController) {
+        if (!this._controller) {
             // Test to see if we are hovering over the inventory simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
@@ -144,8 +171,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         // Get input ray for grid ray cast.
         let inputRay: Ray;
-        if (this._vrController) {
-            inputRay = this._vrController.pointerRay.clone();
+        if (this._controller) {
+            inputRay = objectForwardRay(this._controller.ray);
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
@@ -164,27 +191,75 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
         }
 
-        // Get grid tile from correct simulation grid.
         const grid3D = this._inInventory
             ? this._inventorySimulation3D.grid3D
             : this._simulation3D.grid3D;
-        const gridTile = grid3D.getTileFromRay(inputRay);
+        if (
+            this._controller &&
+            this._getBotsPositioningMode(calc) === 'absolute'
+        ) {
+            this._dragFreeSpace(calc, grid3D, inputRay);
+        } else {
+            // Get grid tile from correct simulation grid.
+            this._dragOnGrid(calc, grid3D, inputRay);
+        }
+    }
 
+    private _dragFreeSpace(
+        calc: BotCalculationContext,
+        grid3D: PlayerGrid3D,
+        inputRay: Ray
+    ) {
+        const attachPoint = new Group();
+        this._controller.ray.add(attachPoint);
+
+        const size = new Vector3();
+        this._hitBot.boundingBox.getSize(size);
+        attachPoint.position
+            .add(new Vector3(0, 0, -0.25))
+            .add(new Vector3(0, -(size.y / 2), 0));
+        attachPoint.updateMatrixWorld(true);
+        const finalWorldPosition = new Vector3();
+        attachPoint.getWorldPosition(finalWorldPosition);
+        const quaternion = new Quaternion();
+        attachPoint.getWorldQuaternion(quaternion);
+        this._controller.ray.remove(attachPoint);
+
+        const gridPosition = grid3D.getGridPosition(finalWorldPosition);
+        const threeSpaceRotation: Euler = new Euler().setFromQuaternion(
+            quaternion
+        );
+        const auxSpaceRotation = new Euler(
+            threeSpaceRotation.x,
+            threeSpaceRotation.z,
+            threeSpaceRotation.y
+        );
+        this._updateBotsPositions(
+            this._bots,
+            gridPosition,
+            0,
+            calc,
+            auxSpaceRotation
+        );
+    }
+
+    private _dragOnGrid(
+        calc: BotCalculationContext,
+        grid3D: PlayerGrid3D,
+        inputRay: Ray
+    ) {
+        const gridTile = grid3D.getTileFromRay(inputRay);
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
-
             const result = calculateBotDragStackPosition(
                 calc,
                 this._dimension,
                 gridTile.tileCoordinate,
                 ...this._bots
             );
-
             this._other = result.other;
             this._merge = result.merge;
-
             this._sendDropEnterExitEvents(this._other);
-
             if (result.stackable || result.index === 0) {
                 this._updateBotsPositions(
                     this._bots,
@@ -200,6 +275,16 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     calc
                 );
             }
+        }
+    }
+
+    private _getBotsPositioningMode(
+        calc: BotCalculationContext
+    ): BotPositioningMode {
+        if (this._bots.length === 1) {
+            return getBotPositioningMode(calc, this._bots[0]);
+        } else {
+            return 'stack';
         }
     }
 

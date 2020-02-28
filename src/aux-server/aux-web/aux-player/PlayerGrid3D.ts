@@ -8,7 +8,7 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     LineBasicMaterial,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Plane,
     PlaneHelper,
     Quaternion,
@@ -54,6 +54,21 @@ export class PlayerGrid3D extends Object3D {
     constructor(tileScale?: number) {
         super();
         this.tileScale = getOptionalValue(tileScale, 1);
+    }
+
+    /**
+     * Scales the given position by the tile scale and returns the result.
+     * @param position The input position.
+     */
+    getGridPosition(position: Vector3): Vector3 {
+        const result = new Vector3()
+            .copy(position)
+            .divideScalar(this.tileScale);
+        return new Vector3(
+            result.x,
+            this.useAuxCoordinates ? -result.z : result.z,
+            result.y
+        );
     }
 
     /**

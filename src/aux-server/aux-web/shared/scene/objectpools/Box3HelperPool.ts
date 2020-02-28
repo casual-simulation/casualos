@@ -20,8 +20,9 @@ export class Box3HelperPool extends ObjectPool<Box3Helper> {
     }
 
     createPoolObject(): Box3Helper {
-        const boxHelper = new Box3Helper();
-        boxHelper.box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+        const boxHelper = new Box3Helper(
+            new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1))
+        );
         return boxHelper;
     }
 

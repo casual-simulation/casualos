@@ -1,5 +1,28 @@
 # AUX Changelog
 
+## V1.0.10
+
+### Date: 2/27/2020
+
+### Changes:
+
+#### :rocket: Improvements
+
+-   Added Basic WebXR Support
+
+    -   This replaces the original WebVR and WebXR support.
+    -   Supports both the Oculus Quest and Chrome 80+ on Android.
+    -   Supports all pointer events (click, drag, hover).
+    -   The `player.device()` function returns whether AR/VR are supported.
+    -   The `player.enableAR()` and `player.enableVR()` functions are used to jump into AR/VR.
+    -   The world is placed on the ground (if supported by the device) and bots are 1 meter cubed by default.
+    -   When using a controller, dragging a bot with `#auxPositioningMode` set to `absolute` will move it in free space.
+
+-   :bug: Bug Fixes
+    -   Fixed several issues with using numbers for the `auxUniverse` and `auxPagePortal` query parameters.
+    -   Fixed an issue that would cause a service worker to fail to update because an external resource could not be fetched.
+    -   Fixed an issue that would cause a stack overflow error when too many uncommitted atoms are loaded.
+
 ## V1.0.9
 
 ### Date: 2/21/2020

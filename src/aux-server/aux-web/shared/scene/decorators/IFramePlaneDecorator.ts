@@ -1,4 +1,4 @@
-import { Math as ThreeMath, Vector3, Vector2 } from 'three';
+import { MathUtils as ThreeMath, Vector3, Vector2 } from 'three';
 import {
     BotCalculationContext,
     calculateBotValue,

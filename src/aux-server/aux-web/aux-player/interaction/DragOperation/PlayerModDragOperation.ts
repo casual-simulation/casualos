@@ -14,7 +14,6 @@ import {
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
-import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { Vector2, Ray } from 'three';
@@ -22,9 +21,10 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { Input } from '../../../shared/scene/Input';
+import { Input, InputMethod } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
+import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 
 /**
  * Mod drag operation handles dragging mods
@@ -58,9 +58,9 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         mod: BotTags,
-        vrController: VRController3D | null
+        inputMethod: InputMethod
     ) {
-        super(simulation3D, interaction, mod, vrController);
+        super(simulation3D, interaction, mod, inputMethod);
         this._inventorySimulation3D = inventorySimulation3D;
     }
 
@@ -70,7 +70,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
         let nextContext = this._simulation3D.dimension;
 
-        if (!this._vrController) {
+        if (!this._controller) {
             // Test to see if we are hovering over the inventory simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
@@ -110,8 +110,8 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
         // Get input ray for grid ray cast.
         let inputRay: Ray;
-        if (this._vrController) {
-            inputRay = this._vrController.pointerRay.clone();
+        if (this._controller) {
+            inputRay = objectForwardRay(this._controller.ray);
         } else {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();

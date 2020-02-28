@@ -6,6 +6,9 @@ import {
     VertexColors,
     BufferAttribute,
     Vector3,
+    Usage,
+    DynamicDrawUsage,
+    StaticDrawUsage,
 } from 'three';
 
 /**
@@ -53,7 +56,9 @@ export class PointHelper extends LineSegments {
     }
 
     setDynamic(dynamic: boolean): void {
-        this._positionAttribute.setDynamic(dynamic);
+        this._positionAttribute.setUsage(
+            dynamic ? DynamicDrawUsage : StaticDrawUsage
+        );
     }
 
     updateMatrixWorld(force?: boolean): void {

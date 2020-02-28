@@ -6,7 +6,7 @@ import { BaseInteractionManager } from '../../shared/interaction/BaseInteraction
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { PlayerBotClickOperation } from './ClickOperation/PlayerBotClickOperation';
-import { Input } from '../../shared/scene/Input';
+import { Input, ControllerData, InputMethod } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
@@ -21,7 +21,6 @@ import {
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
-import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
@@ -66,7 +65,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection,
-        vrController: VRController3D | null
+        method: InputMethod
     ): IOperation {
         if (gameObject instanceof AuxBot3D) {
             let faceValue: string = 'Unknown Face';
@@ -99,7 +98,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 this,
                 gameObject,
                 faceValue,
-                vrController
+                method,
+                hit
             );
             return botClickOp;
         } else {
@@ -189,8 +189,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         });
     }
 
-    createEmptyClickOperation(vrController: VRController3D | null): IOperation {
-        return new PlayerEmptyClickOperation(this._game, this, vrController);
+    createEmptyClickOperation(inputMethod: InputMethod): IOperation {
+        return new PlayerEmptyClickOperation(this._game, this, inputMethod);
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {

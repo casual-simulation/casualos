@@ -1,5 +1,4 @@
 import {
-    Math as ThreeMath,
     MeshBasicMaterial,
     Texture,
     MeshToonMaterial,

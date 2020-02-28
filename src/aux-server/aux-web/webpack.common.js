@@ -2,6 +2,7 @@ const childProcess = require('child_process');
 const path = require('path');
 const process = require('process');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const OfflinePlugin = require('offline-plugin');
@@ -117,10 +118,6 @@ module.exports = {
     resolve: {
         extensions: ['.vue', '.js', '.ts', '.css'],
         alias: {
-            'webxr-polyfill': path.resolve(
-                __dirname,
-                'shared/public/scripts/webxr-polyfill.js'
-            ),
             'vue-json-tree-view': path.resolve(
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'
@@ -243,9 +240,14 @@ module.exports = {
                     requestTypes: ['navigate'],
                 },
             ],
-            externals: [
-                'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons',
-            ],
+            externals: [],
         }),
+        new CopyPlugin([
+            {
+                from: 'node_modules/@webxr-input-profiles/assets/dist/profiles',
+                to: path.resolve(__dirname, 'dist', 'webxr-profiles'),
+                context: path.resolve(__dirname, '..', '..', '..'),
+            },
+        ]),
     ],
 };

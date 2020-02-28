@@ -5,7 +5,7 @@ import {
     WebGLRenderTarget,
     Box3,
     Vector3,
-    Math as ThreeMath,
+    MathUtils as ThreeMath,
     Color,
     MeshBasicMaterial,
     Vector2,
