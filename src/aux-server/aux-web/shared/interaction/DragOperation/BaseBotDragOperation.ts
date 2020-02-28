@@ -1,6 +1,6 @@
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2, Object3D, Vector3, Euler } from 'three';
+import { Vector2, Object3D, Vector3, Euler, Intersection } from 'three';
 import {
     Bot,
     botUpdated,
@@ -63,6 +63,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _inputMethod: InputMethod;
     protected _childOperation: IOperation;
     protected _clickedFace: string;
+    protected _hit: Intersection;
 
     /**
      * The bot that the onDropEnter event was sent to.
@@ -99,7 +100,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         inputMethod: InputMethod,
         fromCoord?: Vector2,
         skipOnDragEvents?: boolean,
-        clickedFace?: string
+        clickedFace?: string,
+        hit?: Intersection
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -114,6 +116,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
         this._clickedFace = clickedFace;
+        this._hit = hit;
         this._sub = new Subscription();
 
         if (this._controller) {

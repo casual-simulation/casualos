@@ -11,7 +11,18 @@ import {
     getBotPositioningMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { Intersection, Vector2, Ray, Vector3, Quaternion, Euler } from 'three';
+import {
+    Intersection,
+    Vector2,
+    Ray,
+    Vector3,
+    Quaternion,
+    Euler,
+    Color,
+    Box3,
+    Matrix4,
+    Group,
+} from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
@@ -22,7 +33,9 @@ import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { PlayerGrid3D } from 'aux-web/aux-player/PlayerGrid3D';
+import { PlayerGrid3D } from '../../PlayerGrid3D';
+import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -49,6 +62,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      */
     protected _botsInStack: Bot[];
 
+    protected _hitBot: AuxBot3D;
+
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
     }
@@ -65,7 +80,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         inputMethod: InputMethod,
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
-        clickedFace?: string
+        clickedFace?: string,
+        hit?: Intersection
     ) {
         super(
             playerSimulation3D,
@@ -75,7 +91,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             inputMethod,
             fromCoord,
             skipOnDragEvents,
-            clickedFace
+            clickedFace,
+            hit
         );
 
         this._botsInStack = drop(bots, 1);
@@ -84,6 +101,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._originallyInInventory = this._inInventory =
             dimension &&
             this._inventorySimulation3D.inventoryDimension === dimension;
+
+        if (this._hit) {
+            const obj = this._interaction.findGameObjectForHit(this._hit);
+            if (obj && obj instanceof AuxBot3D) {
+                this._hitBot = obj;
+            }
+        }
     }
 
     protected _createBotDragOperation(bot: Bot): IOperation {
@@ -96,7 +120,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             this._inputMethod,
             this._fromCoord,
             true,
-            this._clickedFace
+            this._clickedFace,
+            this._hit
         );
     }
 
@@ -185,16 +210,37 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         grid3D: PlayerGrid3D,
         inputRay: Ray
     ) {
-        const position = new Vector3();
-        inputRay.at(0.25, position);
-        const gridPosition = grid3D.getGridPosition(position);
-        let rotation: Euler = null;
-        const input = this.game.getInput();
-        if (input.getControllerSqueezeButtonHeld(this._controller)) {
-            const temp = this._controller.ray.rotation;
-            rotation = new Euler(temp.x, temp.z, temp.y);
-        }
-        this._updateBotsPositions(this._bots, gridPosition, 0, calc, rotation);
+        const attachPoint = new Group();
+        this._controller.ray.add(attachPoint);
+
+        const size = new Vector3();
+        this._hitBot.boundingBox.getSize(size);
+        attachPoint.position
+            .add(new Vector3(0, 0, -0.25))
+            .add(new Vector3(0, -(size.y / 2), 0));
+        attachPoint.updateMatrixWorld(true);
+        const finalWorldPosition = new Vector3();
+        attachPoint.getWorldPosition(finalWorldPosition);
+        const quaternion = new Quaternion();
+        attachPoint.getWorldQuaternion(quaternion);
+        this._controller.ray.remove(attachPoint);
+
+        const gridPosition = grid3D.getGridPosition(finalWorldPosition);
+        const threeSpaceRotation: Euler = new Euler().setFromQuaternion(
+            quaternion
+        );
+        const auxSpaceRotation = new Euler(
+            threeSpaceRotation.x,
+            threeSpaceRotation.z,
+            threeSpaceRotation.y
+        );
+        this._updateBotsPositions(
+            this._bots,
+            gridPosition,
+            0,
+            calc,
+            auxSpaceRotation
+        );
     }
 
     private _dragOnGrid(

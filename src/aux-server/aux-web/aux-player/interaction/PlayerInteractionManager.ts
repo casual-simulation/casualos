@@ -98,7 +98,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 this,
                 gameObject,
                 faceValue,
-                method
+                method,
+                hit
             );
             return botClickOp;
         } else {

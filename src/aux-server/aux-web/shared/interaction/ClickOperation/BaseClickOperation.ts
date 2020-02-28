@@ -3,7 +3,7 @@ import {
     ControllerData,
     InputMethod,
 } from '../../../shared/scene/Input';
-import { Vector2, Object3D } from 'three';
+import { Vector2, Object3D, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
@@ -35,6 +35,7 @@ export abstract class BaseClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _startVRControllerPose: Object3D;
     protected _dragOperation: IOperation;
+    protected _hit: Intersection;
 
     protected heldTime: number;
     protected isMobile: boolean;
@@ -50,13 +51,15 @@ export abstract class BaseClickOperation implements IOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        hit?: Intersection
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._inputMethod = inputMethod;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
+        this._hit = hit;
 
         if (this._controller) {
             // Store the pose of the vr controller when the click occured.

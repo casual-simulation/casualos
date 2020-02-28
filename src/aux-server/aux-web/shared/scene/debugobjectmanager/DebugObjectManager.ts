@@ -46,7 +46,7 @@ export namespace DebugObjectManager {
     /**
      * Wether or not debug object manager is enabled.
      */
-    export var enabled: boolean = false;
+    export var enabled: boolean = true;
 
     /**
      * Wether or not debug objects are rendered with the depth buffer (objects can occlude debug objects),
