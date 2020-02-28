@@ -9,6 +9,7 @@
 -   :bug: Bug Fixes
     -   Fixed an issue with loading skinned meshes.
     -   Fixed an issue that prevented VR from working when sprites were in the scene.
+    -   Fixed an issue where an error in one script would cause other scripts to be skipped.
 
 ## V1.0.11
 
