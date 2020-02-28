@@ -46,7 +46,7 @@ import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
 import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 
-export class PlayerSimulation3D extends Simulation3D {
+export class PlayerPageSimulation3D extends Simulation3D {
     /**
      * The current dimension group 3d that the AUX Player is rendering.
      */
