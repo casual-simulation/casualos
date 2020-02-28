@@ -1622,35 +1622,35 @@ let LegacyGLTFLoaderExport = ( function () {
 							switch ( attributeId ) {
 
 								case 'POSITION':
-									geometry.addAttribute( 'position', bufferAttribute );
+									geometry.setAttribute( 'position', bufferAttribute );
 									break;
 
 								case 'NORMAL':
-									geometry.addAttribute( 'normal', bufferAttribute );
+									geometry.setAttribute( 'normal', bufferAttribute );
 									break;
 
 								case 'TEXCOORD_0':
 								case 'TEXCOORD0':
 								case 'TEXCOORD':
-									geometry.addAttribute( 'uv', bufferAttribute );
+									geometry.setAttribute( 'uv', bufferAttribute );
 									break;
 
 								case 'TEXCOORD_1':
-									geometry.addAttribute( 'uv2', bufferAttribute );
+									geometry.setAttribute( 'uv2', bufferAttribute );
 									break;
 
 								case 'COLOR_0':
 								case 'COLOR0':
 								case 'COLOR':
-									geometry.addAttribute( 'color', bufferAttribute );
+									geometry.setAttribute( 'color', bufferAttribute );
 									break;
 
 								case 'WEIGHT':
-									geometry.addAttribute( 'skinWeight', bufferAttribute );
+									geometry.setAttribute( 'skinWeight', bufferAttribute );
 									break;
 
 								case 'JOINT':
-									geometry.addAttribute( 'skinIndex', bufferAttribute );
+									geometry.setAttribute( 'skinIndex', bufferAttribute );
 									break;
 
 							}
@@ -1690,13 +1690,13 @@ let LegacyGLTFLoaderExport = ( function () {
 							switch ( attributeId ) {
 
 								case 'POSITION':
-									geometry.addAttribute( 'position', bufferAttribute );
+									geometry.setAttribute( 'position', bufferAttribute );
 									break;
 
 								case 'COLOR_0':
 								case 'COLOR0':
 								case 'COLOR':
-									geometry.addAttribute( 'color', bufferAttribute );
+									geometry.setAttribute( 'color', bufferAttribute );
 									break;
 
 							}

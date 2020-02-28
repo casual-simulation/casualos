@@ -12,7 +12,7 @@ function setIndex (geometry, data, itemSize, dtype) {
   var attrib = isR69 ? geometry.getAttribute('index') : geometry.index
   var newAttrib = updateAttribute(attrib, data, itemSize, dtype)
   if (newAttrib) {
-    if (isR69) geometry.addAttribute('index', newAttrib)
+    if (isR69) geometry.setAttribute('index', newAttrib)
     else geometry.index = newAttrib
   }
 }

@@ -37,7 +37,7 @@ export class PointHelper extends LineSegments {
         const positionArray = new Float32Array(6 * 3); // 3 points, 3 values each (x, y, z);
 
         const positionAttribute = new BufferAttribute(positionArray, 3);
-        geometry.addAttribute('position', positionAttribute);
+        geometry.setAttribute('position', positionAttribute);
 
         const indices = new Uint16Array([0, 1, 2, 3, 4, 5]);
         geometry.setIndex(new BufferAttribute(indices, 1));
