@@ -20,6 +20,8 @@
 
 -   :bug: Bug Fixes
     -   Fixed several issues with using numbers for the `auxUniverse` and `auxPagePortal` query parameters.
+    -   Fixed an issue that would cause a service worker to fail to update because an external resource could not be fetched.
+    -   Fixed an issue that would cause a stack overflow error when too many uncommitted atoms are loaded.
 
 ## V1.0.9
 
