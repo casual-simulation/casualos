@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V1.0.11
+
+### Date: 2/27/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed a configuration value that enabled the 3D debug mode by default.
+
 ## V1.0.10
 
 ### Date: 2/27/2020
