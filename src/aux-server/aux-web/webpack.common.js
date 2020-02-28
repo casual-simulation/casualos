@@ -240,9 +240,7 @@ module.exports = {
                     requestTypes: ['navigate'],
                 },
             ],
-            externals: [
-                'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons',
-            ],
+            externals: [],
         }),
         new CopyPlugin([
             {

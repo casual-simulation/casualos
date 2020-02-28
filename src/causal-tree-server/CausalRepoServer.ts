@@ -457,9 +457,9 @@ export class CausalRepoServer {
                     : null,
             });
             const stage = await this._stage.getStage(branch);
-            repo.add(...stage.additions);
+            repo.addMany(stage.additions);
             const hashes = Object.keys(stage.deletions);
-            repo.remove(...hashes);
+            repo.removeMany(hashes);
 
             this._repos.set(branch, repo);
             this._branchLoaded(branch);

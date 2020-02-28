@@ -3,7 +3,7 @@ import {
     ControllerData,
     InputMethod,
 } from '../../../shared/scene/Input';
-import { Vector2 } from 'three';
+import { Vector2, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
@@ -34,9 +34,10 @@ export abstract class BaseBotClickOperation extends BaseClickOperation {
         interaction: BaseInteractionManager,
         bot: Bot,
         bot3D: AuxBot3D | DimensionGroup3D | null,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        hit?: Intersection
     ) {
-        super(simulation3D, interaction, inputMethod);
+        super(simulation3D, interaction, inputMethod, hit);
         this._bot = bot;
         this._bot3D = bot3D;
     }

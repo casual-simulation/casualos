@@ -374,6 +374,14 @@ export class CausalRepo {
      * @param atoms The atoms to add.
      */
     add(...atoms: Atom<any>[]) {
+        return this.addMany(atoms);
+    }
+
+    /**
+     * Adds the given atoms to the stage.
+     * @param atoms The atoms to add.
+     */
+    addMany(atoms: Atom<any>[]) {
         let added = [] as Atom<any>[];
         for (let atom of atoms) {
             const existing = this._getAtomFromCurrentState(atom.hash);
@@ -392,6 +400,14 @@ export class CausalRepo {
      * @param hashes The list of hashes to remove.
      */
     remove(...hashes: string[]) {
+        return this.removeMany(hashes);
+    }
+
+    /**
+     * Removes the given atoms with the given hashes.
+     * @param hashes The list of hashes to remove.
+     */
+    removeMany(hashes: string[]) {
         let removed = [] as Atom<any>[];
         for (let hash of hashes) {
             const existing = this._getAtomFromCurrentState(hash);

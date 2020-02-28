@@ -30,4 +30,5 @@ export async function createMotionController(inputSource: XRInputSource) {
 export function copyPose(pose: XRPose, obj: Object3D) {
     obj.matrix.fromArray(pose.transform.matrix);
     obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
+    obj.updateMatrixWorld();
 }

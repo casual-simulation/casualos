@@ -57,6 +57,21 @@ export class PlayerGrid3D extends Object3D {
     }
 
     /**
+     * Scales the given position by the tile scale and returns the result.
+     * @param position The input position.
+     */
+    getGridPosition(position: Vector3): Vector3 {
+        const result = new Vector3()
+            .copy(position)
+            .divideScalar(this.tileScale);
+        return new Vector3(
+            result.x,
+            this.useAuxCoordinates ? -result.z : result.z,
+            result.y
+        );
+    }
+
+    /**
      * Retrive the grid tile that contains the given position.
      * @param position The world space position.
      */

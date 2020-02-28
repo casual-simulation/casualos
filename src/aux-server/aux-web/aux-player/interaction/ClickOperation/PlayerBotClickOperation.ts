@@ -35,9 +35,10 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         interaction: PlayerInteractionManager,
         bot: AuxBot3D,
         faceValue: string,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        hit: Intersection
     ) {
-        super(simulation3D, interaction, bot.bot, bot, inputMethod);
+        super(simulation3D, interaction, bot.bot, bot, inputMethod, hit);
 
         this._argument = { face: faceValue, dimension: null };
     }
@@ -93,7 +94,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 this._inputMethod,
                 fromCoord,
                 undefined,
-                this._argument.face
+                this._argument.face,
+                this._hit
             );
         }
 
