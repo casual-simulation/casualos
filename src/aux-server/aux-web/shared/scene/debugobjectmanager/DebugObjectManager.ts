@@ -15,6 +15,7 @@ import {
     PlaneHelper,
     Mesh,
     MeshBasicMaterial,
+    Quaternion,
 } from 'three';
 import { Time } from '../Time';
 import { getOptionalValue } from '../../SharedUtils';
@@ -28,8 +29,10 @@ import { Input } from '../Input';
 import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
 import { drawExamples } from './DebugExamples';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
+import { CubeHelperPool } from '../objectpools/CubeHelperPool';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
+const CUBEHELPER_POOL_ID = 'cubehelper_pool';
 const PLANEHELPER_POOL_ID = 'planehelper_pool';
 const POINTHELPER_POOL_ID = 'pointhelper_pool';
 const LINEHELPER_POOL_ID = 'linehelper_pool';
@@ -97,6 +100,11 @@ export namespace DebugObjectManager {
         _objectPools.set(
             ARROWHELPER_POOL_ID,
             new ArrowHelperPool(ARROWHELPER_POOL_ID).initializePool(startSize)
+        );
+
+        _objectPools.set(
+            CUBEHELPER_POOL_ID,
+            new CubeHelperPool(CUBEHELPER_POOL_ID).initializePool(startSize)
         );
     }
 
@@ -198,6 +206,46 @@ export namespace DebugObjectManager {
         _debugObjects.push({
             object3D: box3Helper,
             poolId: BOX3HELPER_POOL_ID,
+            killTime: _time.timeSinceStart + duration,
+        });
+    }
+
+    /**
+     * Draw a wireframe cube that represents the given position and rotation.
+     * @param box3 The box3 to represent.
+     * @param color The color the debug object should. Default is green.
+     * @param duration How long the debug object should render for. Default is one frame.
+     */
+    export function drawCube(
+        position: Vector3,
+        rotation: Quaternion,
+        color?: Color,
+        duration?: number
+    ) {
+        if (!_initialized) return;
+        if (!enabled) return;
+        if (!position) return;
+        if (!rotation) return;
+        color = getOptionalValue(color, new Color(0, 1, 0));
+        duration = getOptionalValue(duration, 0);
+        const cubeHelper = <LineSegments>(
+            _objectPools.get(CUBEHELPER_POOL_ID).retrieve()
+        );
+
+        const lineMaterial = <LineBasicMaterial>cubeHelper.material;
+        lineMaterial.vertexColors = NoColors;
+        lineMaterial.color = color;
+
+        _scene.add(cubeHelper);
+
+        // Position the box helper using the given box3.
+        cubeHelper.position.copy(position);
+        cubeHelper.quaternion.copy(rotation);
+        cubeHelper.rotation.setFromQuaternion(rotation);
+
+        _debugObjects.push({
+            object3D: cubeHelper,
+            poolId: CUBEHELPER_POOL_ID,
             killTime: _time.timeSinceStart + duration,
         });
     }
