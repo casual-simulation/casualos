@@ -106,9 +106,15 @@ export namespace Physics {
      * Performs a raycast with the given ray against the given objects.
      * @param ray The ray to use.
      * @param objects The objects to raycast against.
+     * @param camera The camera to use when testing against billboarded objects like sprites.
      */
-    export function raycast(ray: Ray, objects: Object3D[]): RaycastResult {
+    export function raycast(
+        ray: Ray,
+        objects: Object3D[],
+        camera: Camera
+    ): RaycastResult {
         const raycaster = new Raycaster(ray.origin, ray.direction);
+        raycaster.camera = camera;
         const intersects = raycaster.intersectObjects(objects, true);
 
         return {

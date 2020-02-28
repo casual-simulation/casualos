@@ -494,9 +494,10 @@ export abstract class BaseInteractionManager {
 
         // Iterate through draggable groups until we hit an object in one of them.
         for (let i = 0; i < draggableGroups.length; i++) {
-            const objects = draggableGroups[i].objects;
-            const camera = draggableGroups[i].camera;
-            const viewport = draggableGroups[i].viewport;
+            const group = draggableGroups[i];
+            const objects = group.objects;
+            const camera = group.camera;
+            const viewport = group.viewport;
 
             if (!Input.pagePositionOnViewport(pagePos, viewport, viewports)) {
                 // Page position is not on or is being obstructed by other viewports.
@@ -556,9 +557,11 @@ export abstract class BaseInteractionManager {
 
         // Iterate through draggable groups until we hit an object in one of them.
         for (let i = 0; i < draggableGroups.length; i++) {
-            const objects = draggableGroups[i].objects;
+            const group = draggableGroups[i];
+            const objects = group.objects;
+            const camera = group.camera;
 
-            const raycastResult = Physics.raycast(ray, objects);
+            const raycastResult = Physics.raycast(ray, objects, camera);
             hit = Physics.firstRaycastHit(raycastResult);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
