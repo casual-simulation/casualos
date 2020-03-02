@@ -455,7 +455,7 @@ export abstract class BaseInteractionManager {
             if (dimensions && dimensions.length > 0) {
                 let colliders = flatMap(dimensions.filter(c => !!c), f =>
                     f instanceof DimensionGroup3D ? f.colliders : []
-                );
+                ).filter(c => !!c);
 
                 this._draggableGroups = [
                     {

@@ -119,10 +119,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (contexts && contexts.length > 0) {
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
-                    const colliders =
-                        dimension instanceof DimensionGroup3D
-                            ? dimension.colliders
-                            : [];
+                    const colliders = (dimension instanceof DimensionGroup3D
+                        ? dimension.colliders
+                        : []
+                    ).filter(c => !!c);
 
                     if (dimension instanceof InventoryContextGroup3D) {
                         inventoryColliders.push(...colliders);
