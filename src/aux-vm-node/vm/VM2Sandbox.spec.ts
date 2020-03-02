@@ -12,6 +12,7 @@ const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
 const dateNowMock = (Date.now = jest.fn());
+console.error = jest.fn();
 
 describe('VM2Sandbox', () => {
     beforeAll(() => {

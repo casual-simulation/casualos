@@ -19,7 +19,7 @@ import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { Vector2, Ray } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
-import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
@@ -33,7 +33,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
     public static readonly FreeDragDistance: number = 6;
 
     protected _interaction: PlayerInteractionManager;
-    protected _simulation3D: PlayerSimulation3D;
+    protected _simulation3D: PlayerPageSimulation3D;
     protected _inventorySimulation3D: InventorySimulation3D;
     // Determines if the bot is in the inventory currently
     protected _inInventory: boolean;
@@ -54,7 +54,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        simulation3D: PlayerSimulation3D,
+        simulation3D: PlayerPageSimulation3D,
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         mod: BotTags,

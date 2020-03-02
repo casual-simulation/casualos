@@ -35,7 +35,7 @@ export class LineHelper extends Line {
         const positionArray = new Float32Array(2 * 3); // 2 points, 3 values each (x, y, z);
 
         const positionAttribute = new BufferAttribute(positionArray, 3);
-        geometry.addAttribute('position', positionAttribute);
+        geometry.setAttribute('position', positionAttribute);
 
         const material = new LineBasicMaterial({
             color: color,

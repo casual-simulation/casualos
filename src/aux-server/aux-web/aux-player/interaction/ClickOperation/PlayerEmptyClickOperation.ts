@@ -3,7 +3,7 @@ import { Ray } from 'three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
-import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
@@ -45,7 +45,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
         const simulation3Ds = this._game.getSimulations();
 
         for (const sim3D of simulation3Ds) {
-            if (sim3D instanceof PlayerSimulation3D) {
+            if (sim3D instanceof PlayerPageSimulation3D) {
                 let inputDimension: string;
                 let inputRay: Ray;
 

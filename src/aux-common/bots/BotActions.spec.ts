@@ -14,6 +14,8 @@ import { breakIntoIndividualEvents } from './BotActions';
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
+console.error = jest.fn();
+
 describe('BotActions', () => {
     botActionsTests(uuidMock);
 

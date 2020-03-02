@@ -12,7 +12,7 @@ import {
     BotDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { InputMethod } from '../../../shared/scene/Input';
@@ -24,7 +24,7 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        playerSimulation: PlayerSimulation3D,
+        playerSimulation: PlayerPageSimulation3D,
         inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         bot: Bot,

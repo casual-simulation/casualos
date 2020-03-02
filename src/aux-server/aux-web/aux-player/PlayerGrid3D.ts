@@ -368,7 +368,7 @@ function constructGridLines(tiles: GridTile[]): LineSegments {
     calcVertices(verticalPoints, 'z');
 
     const geometry = new BufferGeometry();
-    geometry.addAttribute('position', new Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
 
     const material = new LineBasicMaterial({
         transparent: true,

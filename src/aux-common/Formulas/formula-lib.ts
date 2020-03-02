@@ -66,7 +66,10 @@ import {
     requestFullscreen,
     exitFullscreen,
 } from '../bots/BotEvents';
-import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
+import {
+    calculateActionResultsUsingContext,
+    RanOutOfEnergyError,
+} from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
 import every from 'lodash/every';
 import {
@@ -2346,7 +2349,7 @@ function __energyCheck() {
     current -= 1;
     setEnergy(current);
     if (current <= 0) {
-        throw new Error('Ran out of energy');
+        throw new RanOutOfEnergyError();
     }
 }
 
