@@ -132,8 +132,8 @@ export class PlayerModDragOperation extends BaseModDragOperation {
 
         // Get grid tile from correct simulation grid.
         const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
-            : this._simulation3D.grid3D;
+            ? this._inventorySimulation3D.primaryPortal.grid3D
+            : this._simulation3D.primaryPortal.grid3D;
         const gridTile = grid3D.getTileFromRay(inputRay);
 
         if (gridTile) {

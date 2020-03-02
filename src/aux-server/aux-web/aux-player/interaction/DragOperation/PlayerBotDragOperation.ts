@@ -192,8 +192,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
-            : this._simulation3D.grid3D;
+            ? this._inventorySimulation3D.primaryPortal.grid3D
+            : this._simulation3D.primaryPortal.grid3D;
         if (
             this._controller &&
             this._getBotsPositioningMode(calc) === 'absolute'

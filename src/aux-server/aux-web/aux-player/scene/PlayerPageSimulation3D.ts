@@ -55,4 +55,99 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     getMainCameraRig(): CameraRig {
         return this._game.getMainCameraRig();
     }
+
+    get pageConfig() {
+        return this.getPortalConfig('auxPagePortal');
+    }
+
+    /**
+     * Gets the background color that the simulation defines.
+     */
+    get backgroundColor() {
+        return this.pageConfig.backgroundColor || super.backgroundColor;
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get pannable() {
+        return this.pageConfig.pannable;
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the x axis
+     */
+    get panMinX() {
+        return this.pageConfig.panMinX;
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the x axis
+     */
+    get panMaxX() {
+        return this.pageConfig.panMaxX;
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the y axis
+     */
+    get panMinY() {
+        return this.pageConfig.panMinY;
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the y axis
+     */
+    get panMaxY() {
+        return this.pageConfig.panMaxY;
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get rotatable() {
+        return this.pageConfig.rotatable;
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get zoomable() {
+        return this.pageConfig.zoomable;
+    }
+
+    /**
+     * Gets the minimum value the zoom can be set to
+     */
+    get zoomMin() {
+        return this.pageConfig.zoomMin;
+    }
+
+    /**
+     * Gets the maximum value the zoom can be set to
+     */
+    get zoomMax() {
+        return this.pageConfig.zoomMax;
+    }
+
+    /**
+     * Gets the zoom level of the player that the simulation defines.
+     */
+    get playerZoom() {
+        return this.pageConfig.playerZoom;
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationX() {
+        return this.pageConfig.playerRotationX;
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationY() {
+        return this.pageConfig.playerRotationY;
+    }
 }
