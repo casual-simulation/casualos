@@ -747,5 +747,50 @@ describe('BotDimensionManager', () => {
                 },
             ]);
         });
+
+        it('should support the same dimension multiple times but in different dimension tags', () => {
+            let events = [] as BotDimensionsUpdate[];
+
+            dimensions
+                .watchDimensions('auxDimensionConfig1', 'auxDimensionConfig2')
+                .subscribe(e => events.push(e));
+
+            const test = createPrecalculatedBot('test', {
+                auxDimensionConfig1: 'abc',
+                auxDimensionConfig2: 'abc',
+            });
+            index.addBots([test]);
+
+            expect(events).toEqual([
+                {
+                    calc: expect.anything(),
+                    events: [
+                        {
+                            type: 'dimension_added',
+                            dimensionTag: 'auxDimensionConfig1',
+                            dimensionBot: test,
+                            dimension: 'abc',
+                            existingBots: [],
+                        },
+                        {
+                            type: 'dimension_added',
+                            dimensionTag: 'auxDimensionConfig2',
+                            dimensionBot: test,
+                            dimension: 'abc',
+                            existingBots: [],
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: test,
+                            tags: new Set([
+                                'auxDimensionConfig1',
+                                'auxDimensionConfig2',
+                            ]),
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 });

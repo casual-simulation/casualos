@@ -43,14 +43,19 @@ import {
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
-import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
+import {
+    UpdatedBotInfo,
+    BotDimensionEvent,
+    DimensionAddedEvent,
+    DimensionRemovedEvent,
+} from '@casual-simulation/aux-vm';
 import { PortalConfig } from './PortalConfig';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * The current dimension group 3d that the AUX Player is rendering.
+     * The map of portal tags to their related groups.
      */
-    private _dimensionGroup: DimensionGroup3D;
+    private _playerDimensionGroups: Map<string, DimensionGroup3D>;
 
     private _portalTags: string[] = null;
     private _portalConfigs = new Map<string, PortalConfig>();
@@ -67,8 +72,11 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     get dimension(): string {
-        if (this._dimensionGroup) {
-            const dimensions = [...this._dimensionGroup.dimensions.values()];
+        if (this._playerDimensionGroups.size > 0) {
+            let dimensions = [] as string[];
+            for (let [key, group] of this._playerDimensionGroups) {
+                dimensions.push(...group.dimensions.values());
+            }
             return dimensions[0] || null;
         }
         return null;
@@ -95,6 +103,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
         this._portalTags =
             typeof portalTags === 'string' ? [portalTags] : portalTags;
+        this._playerDimensionGroups = new Map();
     }
 
     getPortalConfig(portal: string) {
@@ -133,26 +142,38 @@ export class PlayerSimulation3D extends Simulation3D {
         return super._filterDimensionEvent(calc, event);
     }
 
+    protected _dimensionRemoved(
+        calc: BotCalculationContext,
+        event: DimensionRemovedEvent
+    ) {
+        super._dimensionRemoved(calc, event);
+        this._playerDimensionGroups.delete(event.dimensionTag);
+    }
+
     protected _createDimensionGroup(
         calc: BotCalculationContext,
-        bot: PrecalculatedBot
+        bot: PrecalculatedBot,
+        event: DimensionAddedEvent
     ) {
-        if (this._dimensionGroup) {
+        let group = this._playerDimensionGroups.get(event.dimensionTag);
+        if (group) {
             return null;
         }
 
-        this._dimensionGroup = this._constructDimensionGroup();
+        group = this._constructDimensionGroup(event.dimensionTag);
+        this._playerDimensionGroups.set(event.dimensionTag, group);
 
         // TODO: Update to support locking dimensions
-        return this._dimensionGroup;
+        return group;
     }
 
-    protected _constructDimensionGroup() {
+    protected _constructDimensionGroup(portalTag: string) {
         return new DimensionGroup3D(
             this,
             this.simulation.helper.userBot,
             'player',
-            this.decoratorFactory
+            this.decoratorFactory,
+            portalTag
         );
     }
 
@@ -205,7 +226,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     unsubscribe() {
-        this._dimensionGroup = null;
+        this._playerDimensionGroups.clear();
         super.unsubscribe();
     }
 }

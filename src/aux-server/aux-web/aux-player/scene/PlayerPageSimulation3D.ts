@@ -30,6 +30,7 @@ import {
     map,
     distinctUntilChanged,
     switchMap,
+    take,
 } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { doesBotDefinePlayerDimension } from '../PlayerUtils';
@@ -46,10 +47,19 @@ import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
 import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
+import { portalToHand } from '../../shared/scene/xr/WebXRHelpers';
+import { DimensionGroup } from '../../shared/scene/DimensionGroup';
+import { Subscription } from 'rxjs';
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
+    private _handBindings = new Map<string, Subscription>();
+
     constructor(game: Game, simulation: BrowserSimulation) {
-        super('auxPagePortal', game, simulation);
+        super(
+            ['auxPagePortal', 'auxLeftWristPortal', 'auxRightWristPortal'],
+            game,
+            simulation
+        );
     }
 
     getMainCameraRig(): CameraRig {
@@ -58,6 +68,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
 
     get pageConfig() {
         return this.getPortalConfig('auxPagePortal');
+    }
+
+    get leftWristConfig() {
+        return this.getPortalConfig('auxLeftWristPortal');
+    }
+
+    get rightWristConfig() {
+        return this.getPortalConfig('auxRightWristPortal');
     }
 
     /**
@@ -149,5 +167,74 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
      */
     get playerRotationY() {
         return this.pageConfig.playerRotationY;
+    }
+
+    protected _bindDimensionGroup(group: DimensionGroup) {
+        if (group instanceof DimensionGroup3D) {
+            const hand = portalToHand(group.portalTag);
+            if (hand) {
+                this._bindDimensionGroupToHand(group, hand);
+            } else {
+                super._bindDimensionGroup(group);
+            }
+        }
+    }
+
+    private _bindDimensionGroupToHand(group: DimensionGroup3D, hand: string) {
+        const input = this.game.getInput();
+        const sub = input.controllerAdded
+            .pipe(
+                filter(c => c.inputSource.handedness === hand),
+                tap(controller => {
+                    console.log(
+                        '[PlayerPageSimulation3D] Bind to controller',
+                        controller
+                    );
+                    controller.mesh.group.add(group);
+                    group.updateMatrixWorld(true);
+                }),
+                switchMap(controller => {
+                    return input.controllerRemoved.pipe(
+                        filter(c => c === controller),
+                        take(1),
+                        tap(controller => {
+                            console.log(
+                                '[PlayerPageSimulation3D] Remove from controller',
+                                controller
+                            );
+                            controller.mesh.group.remove(group);
+                        })
+                    );
+                })
+            )
+            .subscribe();
+
+        this._handBindings.set(hand, sub);
+        this._subs.push(sub);
+    }
+
+    protected _unbindDimensionGroup(group: DimensionGroup3D) {
+        if (group instanceof DimensionGroup3D) {
+            const hand = portalToHand(group.portalTag);
+            if (hand) {
+                this._unbindDimensionGroupFromHand(group, hand);
+            } else {
+                super._unbindDimensionGroup(group);
+            }
+        }
+    }
+
+    private _unbindDimensionGroupFromHand(
+        group: DimensionGroup3D,
+        hand: string
+    ) {
+        console.log('[PlayerPageSimulation3D] Unbind from controller', hand);
+        const sub = this._handBindings.get(hand);
+        if (sub) {
+            sub.unsubscribe();
+        }
+        if (group.parent) {
+            group.parent.remove(group);
+        }
     }
 }

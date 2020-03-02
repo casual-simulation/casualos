@@ -189,12 +189,13 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         super.init();
     }
 
-    protected _constructDimensionGroup() {
+    protected _constructDimensionGroup(portalTag: string) {
         return new InventoryContextGroup3D(
             this,
             this.simulation.helper.userBot,
             'player',
-            this.decoratorFactory
+            this.decoratorFactory,
+            portalTag
         );
     }
 

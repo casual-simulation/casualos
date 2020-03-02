@@ -119,7 +119,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
             }
         }
 
-        copyPose(pose, this._root);
+        copyPose(pose, this.group);
     }
 
     private _findNodes() {
