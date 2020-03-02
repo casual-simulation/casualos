@@ -13,7 +13,7 @@ import {
 } from '@casual-simulation/aux-common';
 import remove from 'lodash/remove';
 import sortBy from 'lodash/sortBy';
-import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from './scene/PlayerPageSimulation3D';
 import { Subject, Observable } from 'rxjs';
 
 /**
@@ -21,7 +21,7 @@ import { Subject, Observable } from 'rxjs';
  */
 export default interface SimulationItem {
     bot: Bot;
-    simulation: PlayerSimulation3D;
+    simulation: PlayerPageSimulation3D;
     simulationToLoad: string;
     dimension: string;
 }
@@ -33,7 +33,7 @@ export class SimulationDimension {
     /**
      * The simulation that the dimension is for.
      */
-    simulation: PlayerSimulation3D;
+    simulation: PlayerPageSimulation3D;
 
     /**
      * The dimension that this object represents.
@@ -61,7 +61,7 @@ export class SimulationDimension {
     private _itemsUpdated: Subject<void>;
     private _itemsDirty: boolean;
 
-    constructor(simulation: PlayerSimulation3D, dimension: string) {
+    constructor(simulation: PlayerPageSimulation3D, dimension: string) {
         if (dimension == null || dimension == undefined) {
             throw new Error('Menu dimension cannot be null or undefined.');
         }

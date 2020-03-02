@@ -25,7 +25,7 @@ import {
 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
-import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import take from 'lodash/take';
@@ -41,7 +41,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
     // This overrides the base class Simulation3D
-    protected _simulation3D: PlayerSimulation3D;
+    protected _simulation3D: PlayerPageSimulation3D;
 
     protected _inventorySimulation3D: InventorySimulation3D;
 
@@ -72,7 +72,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        playerSimulation3D: PlayerSimulation3D,
+        playerPageSimulation3D: PlayerPageSimulation3D,
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         bots: Bot[],
@@ -84,7 +84,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         hit?: Intersection
     ) {
         super(
-            playerSimulation3D,
+            playerPageSimulation3D,
             interaction,
             take(bots, 1),
             dimension,

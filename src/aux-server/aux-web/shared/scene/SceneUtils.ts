@@ -47,7 +47,6 @@ import { HtmlMixer } from '../../shared/scene/HtmlMixer';
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
-        reflectivity: 0.0,
         shininess: 2,
     });
 }
@@ -183,7 +182,7 @@ export function createCubeStrokeGeometry(): BufferGeometry {
     ];
     const lines: number[] = flatMap(indicies, i => verticies[i]);
     const array = new Float32Array(lines);
-    geo.addAttribute('position', new BufferAttribute(array, 3));
+    geo.setAttribute('position', new BufferAttribute(array, 3));
 
     return geo;
 }

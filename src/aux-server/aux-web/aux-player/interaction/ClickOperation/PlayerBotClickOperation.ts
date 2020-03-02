@@ -17,7 +17,7 @@ import {
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
 import dropWhile from 'lodash/dropWhile';
-import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
@@ -103,10 +103,10 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     }
 
     private _getSimulationsForDragOp() {
-        let playerSimulation3D: PlayerSimulation3D;
+        let playerSimulation3D: PlayerPageSimulation3D;
         let inventorySimulation3D: InventorySimulation3D;
 
-        if (this._simulation3D instanceof PlayerSimulation3D) {
+        if (this._simulation3D instanceof PlayerPageSimulation3D) {
             playerSimulation3D = this._simulation3D;
             inventorySimulation3D = (<PlayerGame>(
                 this.game

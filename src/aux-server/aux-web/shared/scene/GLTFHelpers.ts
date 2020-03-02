@@ -1,10 +1,13 @@
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { LegacyGLTFLoader } from 'three-legacy-gltf-loader';
-import { Scene, AnimationClip } from 'three';
+import { Scene, AnimationClip, Object3D, SkinnedMesh, Cache } from 'three';
 
 const loader = new GLTFLoader();
 const legacy = new LegacyGLTFLoader();
 const pools = new Map<string, GLTFPool>();
+
+// Enable the Three.js FileLoader cache.
+Cache.enabled = true;
 
 /**
  * Loads a GLTF file from the given URL using the new GLTF loader.
@@ -39,39 +42,14 @@ export function getGLTFPool(name: string): GLTFPool {
  * Defines a class that represents a pool of GLTF meshes that were loaded.
  */
 export class GLTFPool {
-    private _cache = new Map<string, Promise<GLTF>>();
+    // private _cache = new Map<string, Promise<GLTF>>();
 
     async loadGLTF(
         url: string,
         useLegacyLoader: boolean = false
     ): Promise<GLTF> {
-        let promise = this._cache.get(url);
-        if (!promise) {
-            promise = useLegacyLoader ? loadOldGLTF(url) : loadNewGLTF(url);
-            this._cache.set(url, promise);
-        }
-        const gltf = await promise;
-
-        return _cloneGLTF(gltf);
+        return await (useLegacyLoader ? loadOldGLTF(url) : loadNewGLTF(url));
     }
-}
-
-function _cloneGLTF(gltf: GLTF): GLTF {
-    const animations = gltf.animations.map(anim => {
-        const json = (<any>AnimationClip.toJSON)(anim);
-        return AnimationClip.parse(json);
-    });
-    const scene = gltf.scene.clone(true);
-
-    return {
-        asset: gltf.asset,
-        animations,
-        cameras: [],
-        scenes: [scene],
-        scene,
-        parser: null,
-        userData: {},
-    };
 }
 
 function _loadGLTF(

@@ -243,7 +243,7 @@ export class Wall3D extends Object3D {
                 ]);
 
                 // itemSize = 3 because there are 3 values (components) per vertex
-                geometry.addAttribute(
+                geometry.setAttribute(
                     'position',
                     new BufferAttribute(vertices, 3)
                 );
@@ -437,7 +437,7 @@ export class Wall3D extends Object3D {
                 ]);
 
                 // itemSize = 3 because there are 3 values (components) per vertex
-                geometry.addAttribute(
+                geometry.setAttribute(
                     'position',
                     new BufferAttribute(vertices, 3)
                 );

@@ -70,8 +70,11 @@ export class PlayerSimulation3D extends Simulation3D {
     private _playerRotationY: number = null;
     private _playerZoom: number = null;
     private _gridScale: number = null;
+    private _portalTag: string = null;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
+
+    grid3D: PlayerGrid3D;
 
     get dimension(): string {
         if (this._dimensionGroup) {
@@ -80,7 +83,10 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         return null;
     }
-    grid3D: PlayerGrid3D;
+
+    get hasDimension() {
+        return this.dimensions.length > 0;
+    }
 
     /**
      * Gets the background color that the simulation defines.
@@ -225,6 +231,10 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
+    get portalTag() {
+        return this._portalTag;
+    }
+
     get gridScale() {
         return this._gridScale;
     }
@@ -240,8 +250,14 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.useAuxCoordinates = true;
     }
 
-    constructor(game: Game, simulation: BrowserSimulation) {
+    constructor(portalTag: string, game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
+
+        if (!hasValue(portalTag)) {
+            throw new Error('The portal tag must be specified');
+        }
+
+        this._portalTag = portalTag;
 
         const calc = this.simulation.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
@@ -263,7 +279,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     protected _getDimensionTags() {
-        return ['auxPagePortal'];
+        return [this._portalTag];
     }
 
     protected _filterDimensionEvent(
@@ -288,41 +304,33 @@ export class PlayerSimulation3D extends Simulation3D {
             return null;
         }
 
-        this._dimensionGroup = new DimensionGroup3D(
-            this,
-            this.simulation.helper.userBot,
-            'player',
-            this.decoratorFactory
-        );
+        this._dimensionGroup = this._constructDimensionGroup();
 
         // TODO: Update to support locking dimensions
         return this._dimensionGroup;
     }
 
+    protected _constructDimensionGroup() {
+        return new DimensionGroup3D(
+            this,
+            this.simulation.helper.userBot,
+            'player',
+            this.decoratorFactory
+        );
+    }
+
     private _watchDimensionBot() {
         this._subs.push(
-            watchPortalConfigBot(this.simulation, 'auxPagePortal')
+            watchPortalConfigBot(this.simulation, this._portalTag)
                 .pipe(
                     tap(update => {
                         const bot = update;
 
                         if (bot) {
-                            this._updatePortalValues(bot);
+                            const calc = this.simulation.helper.createContext();
+                            this._updatePortalValues(calc, bot);
                         } else {
-                            this._dimensionBackground = null;
-                            this._pannable = null;
-                            this._panMinX = null;
-                            this._panMaxX = null;
-                            this._panMinY = null;
-                            this._panMaxY = null;
-                            this._zoomable = null;
-                            this._zoomMin = null;
-                            this._zoomMax = null;
-                            this._rotatable = null;
-                            this._playerZoom = null;
-                            this._playerRotationX = null;
-                            this._playerRotationY = null;
-                            this.gridScale = calculateGridScale(null, null);
+                            this._clearPortalValues();
                         }
                     })
                 )
@@ -330,8 +338,27 @@ export class PlayerSimulation3D extends Simulation3D {
         );
     }
 
-    private _updatePortalValues(bot: PrecalculatedBot) {
-        const calc = this.simulation.helper.createContext();
+    protected _clearPortalValues() {
+        this._dimensionBackground = null;
+        this._pannable = null;
+        this._panMinX = null;
+        this._panMaxX = null;
+        this._panMinY = null;
+        this._panMaxY = null;
+        this._zoomable = null;
+        this._zoomMin = null;
+        this._zoomMax = null;
+        this._rotatable = null;
+        this._playerZoom = null;
+        this._playerRotationX = null;
+        this._playerRotationY = null;
+        this.gridScale = calculateGridScale(null, null);
+    }
+
+    protected _updatePortalValues(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
         // Update the dimension background color.
         //let dimensionBackgroundColor =
         //bot.tags['auxPortalColor'];

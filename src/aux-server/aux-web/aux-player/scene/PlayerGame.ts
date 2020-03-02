@@ -13,7 +13,7 @@ import {
     Vector3,
     Vector2,
 } from 'three';
-import { PlayerSimulation3D } from './PlayerSimulation3D';
+import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
@@ -45,7 +45,7 @@ import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
 
-    playerSimulations: PlayerSimulation3D[] = [];
+    playerSimulations: PlayerPageSimulation3D[] = [];
     inventorySimulations: InventorySimulation3D[] = [];
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
@@ -286,7 +286,7 @@ export class PlayerGame extends Game {
      * Find Player Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findPlayerSimulation3D(sim: BrowserSimulation): PlayerSimulation3D {
+    findPlayerSimulation3D(sim: BrowserSimulation): PlayerPageSimulation3D {
         return this.playerSimulations.find(s => s.simulation === sim);
     }
 
@@ -327,7 +327,7 @@ export class PlayerGame extends Game {
     }
 
     private simulationAdded(sim: BrowserSimulation) {
-        const playerSim3D = new PlayerSimulation3D(this, sim);
+        const playerSim3D = new PlayerPageSimulation3D(this, sim);
         playerSim3D.init();
         playerSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
