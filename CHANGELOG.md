@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V1.0.13
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue that caused all the input to not work.
+
 ## V1.0.12
 
 ### Date: 3/2/2020
