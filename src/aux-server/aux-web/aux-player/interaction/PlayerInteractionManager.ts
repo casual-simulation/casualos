@@ -113,18 +113,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 this._game.getSimulations(),
                 s => s.dimensions
             );
+            // Sort between inventory colliders and other colliders.
+            let inventoryColliders: Object3D[] = [];
+            let otherColliders: Object3D[] = [];
             if (contexts && contexts.length > 0) {
-                // Sort between inventory colliders and other colliders.
-                let inventoryColliders: Object3D[] = [];
-                let otherColliders: Object3D[] = [];
-
                 for (let i = 0; i < contexts.length; i++) {
                     const dimension = contexts[i];
                     const colliders =
                         dimension instanceof DimensionGroup3D
-                            ? dimension.colliders.filter(c =>
-                                  isObjectVisible(c)
-                              )
+                            ? dimension.colliders
                             : [];
 
                     if (dimension instanceof InventoryContextGroup3D) {
@@ -132,24 +129,22 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     } else {
                         otherColliders.push(...colliders);
                     }
-
-                    // Put inventory colliders in front of other colliders so that they take priority in input testing.
-                    this._draggableGroups = [
-                        {
-                            objects: inventoryColliders,
-                            camera: this._game.getInventoryCameraRig()
-                                .mainCamera,
-                            viewport: this._game.getInventoryCameraRig()
-                                .viewport,
-                        },
-                        {
-                            objects: otherColliders,
-                            camera: this._game.getMainCameraRig().mainCamera,
-                            viewport: this._game.getMainCameraRig().viewport,
-                        },
-                    ];
                 }
             }
+
+            // Put inventory colliders in front of other colliders so that they take priority in input testing.
+            this._draggableGroups = [
+                {
+                    objects: inventoryColliders,
+                    camera: this._game.getInventoryCameraRig().mainCamera,
+                    viewport: this._game.getInventoryCameraRig().viewport,
+                },
+                {
+                    objects: otherColliders,
+                    camera: this._game.getMainCameraRig().mainCamera,
+                    viewport: this._game.getMainCameraRig().viewport,
+                },
+            ];
 
             this._draggableGroupsDirty = false;
         }

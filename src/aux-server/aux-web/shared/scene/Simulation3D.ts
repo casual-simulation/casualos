@@ -556,6 +556,9 @@ export abstract class Simulation3D extends Object3D
                         this._currentContext
                     );
                 }
+                if (bots.length > 0) {
+                    this.onBotUpdated.invoke(bots[0].bot);
+                }
             }
         }
         this._updateList.clear();
