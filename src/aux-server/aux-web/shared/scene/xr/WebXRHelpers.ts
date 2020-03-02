@@ -2,7 +2,7 @@ import {
     fetchProfile,
     MotionController,
 } from '@webxr-input-profiles/motion-controllers';
-import { XRInputSource, XRPose } from './WebXRTypes';
+import { XRInputSource, XRPose, XRHandedness } from './WebXRTypes';
 import { Object3D } from 'three';
 
 const uri = '/webxr-profiles';
@@ -31,4 +31,12 @@ export function copyPose(pose: XRPose, obj: Object3D) {
     obj.matrix.fromArray(pose.transform.matrix);
     obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
     obj.updateMatrixWorld();
+}
+
+export function handToPortal(hand: XRHandedness) {
+    return hand === 'left'
+        ? 'auxLeftWristPortal'
+        : hand === 'right'
+        ? 'auxRightWristPortal'
+        : null;
 }

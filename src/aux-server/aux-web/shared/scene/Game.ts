@@ -32,7 +32,7 @@ import {
     resetCameraRigToDefaultPosition,
 } from './CameraRigFactory';
 import { Time } from './Time';
-import { Input, InputType } from './Input';
+import { Input, InputType, ControllerData } from './Input';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
@@ -116,10 +116,15 @@ export abstract class Game implements AuxBotVisualizerFinder {
         this.setupRenderer();
         this.setupScenes();
         this.input = new Input(this);
+        this.input.controllerAdded.subscribe(
+            controller => this.handleControllerAdded(controller),
+            err => console.error(err)
+        );
+        this.input.controllerRemoved.subscribe(
+            controller => this.handleControllerRemoved(controller),
+            err => console.error(err)
+        );
         this.interaction = this.setupInteraction();
-
-        // await this.setupWebVR();
-        // await this.setupWebAR();
 
         this.onCenterCamera = this.onCenterCamera.bind(this);
         this.setCameraType = this.setCameraType.bind(this);
@@ -676,5 +681,13 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     protected startVR() {
         this.startXR('immersive-vr');
+    }
+
+    protected handleControllerAdded(controller: ControllerData): void {
+        console.log('[Game] Controller added', controller);
+    }
+
+    protected handleControllerRemoved(controller: ControllerData): void {
+        console.log('[Game] Controller removed', controller);
     }
 }
