@@ -20,7 +20,7 @@ import { Dictionary } from 'lodash';
 import groupBy from 'lodash/groupBy';
 import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
-import { GridTile } from './Grid3D';
+import { GridTile, Grid3D } from './Grid3D';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
@@ -31,7 +31,7 @@ export const GRIDLINES_Y_END = 5;
 /**
  * A grid for Aux Player to help position objects in a dimension.
  */
-export class BoundedGrid3D extends Object3D {
+export class BoundedGrid3D extends Object3D implements Grid3D {
     tileScale: number;
     useAuxCoordinates: boolean = false;
 
