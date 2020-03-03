@@ -50,6 +50,7 @@ import {
     DimensionRemovedEvent,
 } from '@casual-simulation/aux-vm';
 import { PortalConfig } from './PortalConfig';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -104,6 +105,12 @@ export class PlayerSimulation3D extends Simulation3D {
         this._portalTags =
             typeof portalTags === 'string' ? [portalTags] : portalTags;
         this._playerDimensionGroups = new Map();
+
+        this._subs.push(
+            this.onDimensionGroupRemoved.subscribe(group => {
+                this._playerDimensionGroups.delete(group.portalTag);
+            })
+        );
     }
 
     getPortalConfig(portal: string) {
@@ -140,14 +147,6 @@ export class PlayerSimulation3D extends Simulation3D {
             return event.dimensionBot.id === this.simulation.helper.userId;
         }
         return super._filterDimensionEvent(calc, event);
-    }
-
-    protected _dimensionRemoved(
-        calc: BotCalculationContext,
-        event: DimensionRemovedEvent
-    ) {
-        super._dimensionRemoved(calc, event);
-        this._playerDimensionGroups.delete(event.dimensionTag);
     }
 
     protected _createDimensionGroup(
