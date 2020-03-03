@@ -5,11 +5,22 @@ import { Ray, Vector3, Vector2 } from 'three';
  */
 export interface Grid3D {
     /**
+     * Whether the grid is enabled.
+     */
+    enabled: boolean;
+
+    /**
      * Calculates the grid tile that intersects with the given ray.
      * Will return null if the ray does not interesect with the grid.
      * @param ray The ray to test.
      */
     getTileFromRay(ray: Ray): GridTile;
+
+    /**
+     * Scales the given position by the tile scale and returns the result.
+     * @param position The input position.
+     */
+    getGridPosition(position: Vector3): Vector3;
 }
 
 /**
@@ -17,12 +28,12 @@ export interface Grid3D {
  */
 export interface GridTile {
     /**
-     * The center of the tile in 3d coordinates.
+     * The center of the tile in 3d world-space coordinates.
      */
     center: Vector3;
 
     /**
-     * The corners of the tile in 3d coordinates.
+     * The corners of the tile in 3d world-space coordinates.
      * [0] topLeft [1] topRight [2] bottomRight [3] bottomLeft
      */
     corners: Vector3[];

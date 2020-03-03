@@ -52,6 +52,7 @@ import {
 import { PortalConfig } from './PortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
+import { CompoundGrid3D } from '../CompoundGrid3D';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -62,11 +63,12 @@ export class PlayerSimulation3D extends Simulation3D {
     private _portalTags: string[] = null;
     private _portalConfigs = new Map<string, PortalConfig>();
     private _primaryPortalConfig: PortalConfig;
+    private _grid: CompoundGrid3D = new CompoundGrid3D();
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    get primaryPortal() {
-        return this._primaryPortalConfig;
+    get grid3D() {
+        return this._grid;
     }
 
     get portals(): PortalConfig[] {
@@ -190,6 +192,7 @@ export class PlayerSimulation3D extends Simulation3D {
             }
             this.add(config.grid3D);
             this._portalConfigs.set(portalTag, config);
+            this._grid.grids.push(config.grid3D);
             this._subs.push(
                 config,
                 config.onGridScaleUpdated.subscribe(() => {

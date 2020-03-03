@@ -33,9 +33,9 @@ import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { BoundedGrid3D } from '../../BoundedGrid3D';
 import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
+import { Grid3D } from '../../Grid3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -192,8 +192,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         const grid3D = this._inInventory
-            ? this._inventorySimulation3D.primaryPortal.grid3D
-            : this._simulation3D.primaryPortal.grid3D;
+            ? this._inventorySimulation3D.grid3D
+            : this._simulation3D.grid3D;
         if (
             this._controller &&
             this._getBotsPositioningMode(calc) === 'absolute'
@@ -207,7 +207,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _dragFreeSpace(
         calc: BotCalculationContext,
-        grid3D: BoundedGrid3D,
+        grid3D: Grid3D,
         inputRay: Ray
     ) {
         const attachPoint = new Group();
@@ -245,7 +245,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _dragOnGrid(
         calc: BotCalculationContext,
-        grid3D: BoundedGrid3D,
+        grid3D: Grid3D,
         inputRay: Ray
     ) {
         const gridTile = grid3D.getTileFromRay(inputRay);

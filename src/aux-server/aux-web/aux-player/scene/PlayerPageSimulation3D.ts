@@ -49,6 +49,7 @@ import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { portalToHand } from '../../shared/scene/xr/WebXRHelpers';
 import { DimensionGroup } from '../../shared/scene/DimensionGroup';
 import { Subscription } from 'rxjs';
+import { WristPortalConfig } from './WristPortalConfig';
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
     private _handBindings = new Map<string, Subscription>();
@@ -166,6 +167,14 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
      */
     get playerRotationY() {
         return this.pageConfig.playerRotationY;
+    }
+
+    protected _createPortalConfig(portalTag: string) {
+        const hand = portalToHand(portalTag);
+        if (hand) {
+            return new WristPortalConfig(portalTag, this.simulation);
+        }
+        return super._createPortalConfig(portalTag);
     }
 
     protected _bindDimensionGroup(group: DimensionGroup) {

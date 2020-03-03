@@ -240,9 +240,12 @@ export class PortalConfig implements SubscriptionLike {
             )
             .subscribe();
 
-        const calc = simulation.helper.createContext();
-        let gridScale = calculateGridScale(calc, null);
+        let gridScale = this._getDefaultGridScale();
         this.gridScale = gridScale;
+    }
+
+    protected _getDefaultGridScale() {
+        return calculateGridScale(null, null);
     }
 
     protected _clearPortalValues() {
@@ -259,7 +262,7 @@ export class PortalConfig implements SubscriptionLike {
         this._playerZoom = null;
         this._playerRotationX = null;
         this._playerRotationY = null;
-        this.gridScale = calculateGridScale(null, null);
+        this.gridScale = this._getDefaultGridScale();
     }
 
     protected _updatePortalValues(

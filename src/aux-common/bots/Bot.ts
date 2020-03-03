@@ -414,6 +414,21 @@ export const DEFAULT_INVENTORY_PORTAL_RESIZABLE = true;
 export const DEFAULT_INVENTORY_PORTAL_HEIGHT = 0;
 
 /**
+ * The default height for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_HEIGHT = 5;
+
+/**
+ * The default width for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_WIDTH = 5;
+
+/**
+ * The default grid scale for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_GRID_SCALE = 0.01;
+
+/**
  * The ID of the global configuration bot.
  */
 export const GLOBALS_BOT_ID = 'config';

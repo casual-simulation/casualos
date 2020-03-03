@@ -35,6 +35,8 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
     tileScale: number;
     useAuxCoordinates: boolean = false;
 
+    enabled = true;
+
     private _gridLines: LineSegments;
 
     minX: number;
@@ -106,8 +108,8 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         let tilePoints = calculateGridTilePoints(tileX, tileY, this.tileScale);
 
         let tile: GridTile = {
-            center: tilePoints.center,
-            corners: tilePoints.corners,
+            center: this.localToWorld(tilePoints.center),
+            corners: tilePoints.corners.map(p => this.localToWorld(p)),
             tileCoordinate: new Vector2(tileX, tileY),
             grid: this,
         };
@@ -124,8 +126,8 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         let tilePoints = calculateGridTilePoints(x, y, this.tileScale);
 
         return {
-            center: tilePoints.center,
-            corners: tilePoints.corners,
+            center: this.localToWorld(tilePoints.center),
+            corners: tilePoints.corners.map(p => this.localToWorld(p)),
             tileCoordinate: new Vector2(x, y),
             grid: this,
         };
