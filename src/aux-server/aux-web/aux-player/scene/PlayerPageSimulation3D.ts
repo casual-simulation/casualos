@@ -44,7 +44,6 @@ import {
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
-import { PlayerGrid3D } from '../PlayerGrid3D';
 import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { portalToHand } from '../../shared/scene/xr/WebXRHelpers';

@@ -29,8 +29,6 @@ import {
 } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
-import { PlayerGame } from './PlayerGame';
-import { PlayerGrid3D } from '../PlayerGrid3D';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { Color, Texture } from 'three';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';

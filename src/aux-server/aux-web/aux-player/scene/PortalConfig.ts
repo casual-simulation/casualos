@@ -18,7 +18,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
-import { PlayerGrid3D } from '../PlayerGrid3D';
+import { BoundedGrid3D } from '../BoundedGrid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -40,7 +40,7 @@ export class PortalConfig implements SubscriptionLike {
     private _playerRotationX: number;
     private _playerRotationY: number;
     private _gridScale: number;
-    private _grid3D: PlayerGrid3D;
+    private _grid3D: BoundedGrid3D;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -223,7 +223,7 @@ export class PortalConfig implements SubscriptionLike {
     constructor(portalTag: string, simulation: BrowserSimulation) {
         this._portalTag = portalTag;
         this._onGridScaleUpdated = new Subject();
-        this._grid3D = new PlayerGrid3D().showGrid(false);
+        this._grid3D = new BoundedGrid3D().showGrid(false);
         this._grid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(

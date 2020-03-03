@@ -20,6 +20,7 @@ import { Dictionary } from 'lodash';
 import groupBy from 'lodash/groupBy';
 import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
+import { GridTile } from './Grid3D';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
@@ -30,7 +31,7 @@ export const GRIDLINES_Y_END = 5;
 /**
  * A grid for Aux Player to help position objects in a dimension.
  */
-export class PlayerGrid3D extends Object3D {
+export class BoundedGrid3D extends Object3D {
     tileScale: number;
     useAuxCoordinates: boolean = false;
 
@@ -179,7 +180,7 @@ export class PlayerGrid3D extends Object3D {
         }
     }
 
-    showGrid(show: boolean): PlayerGrid3D {
+    showGrid(show: boolean): BoundedGrid3D {
         if (show === undefined || show === null) {
             return;
         }
@@ -227,24 +228,6 @@ export class PlayerGrid3D extends Object3D {
         }
         return num;
     }
-}
-
-export interface GridTile {
-    /**
-     * The center of the tile in 3d coordinates.
-     */
-    center: Vector3;
-
-    /**
-     * The corners of the tile in 3d coordinates.
-     * [0] topLeft [1] topRight [2] bottomRight [3] bottomLeft
-     */
-    corners: Vector3[];
-
-    /**
-     * The 2d coordinate of the tile on the grid.
-     */
-    tileCoordinate: Vector2;
 }
 
 /**

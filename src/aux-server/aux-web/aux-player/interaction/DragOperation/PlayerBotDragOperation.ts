@@ -33,7 +33,7 @@ import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { PlayerGrid3D } from '../../PlayerGrid3D';
+import { BoundedGrid3D } from '../../BoundedGrid3D';
 import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 
@@ -207,7 +207,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _dragFreeSpace(
         calc: BotCalculationContext,
-        grid3D: PlayerGrid3D,
+        grid3D: BoundedGrid3D,
         inputRay: Ray
     ) {
         const attachPoint = new Group();
@@ -245,7 +245,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _dragOnGrid(
         calc: BotCalculationContext,
-        grid3D: PlayerGrid3D,
+        grid3D: BoundedGrid3D,
         inputRay: Ray
     ) {
         const gridTile = grid3D.getTileFromRay(inputRay);

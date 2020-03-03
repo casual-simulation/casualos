@@ -1,12 +1,12 @@
 import {
-    PlayerGrid3D,
+    BoundedGrid3D,
     calculateTileCornerPoints,
     calculateGridTilePoints,
     calculateGridTileLocalCenter,
-} from './PlayerGrid3D';
+} from './BoundedGrid3D';
 import { Vector3, Vector2 } from 'three';
 
-describe('PlayerGrid', () => {
+describe('BoundedGrid3D', () => {
     const testScales = [
         1,
         2,
@@ -127,18 +127,18 @@ describe('PlayerGrid', () => {
 
     describe('class instance', () => {
         it('should construct with default parameters', () => {
-            let grid = new PlayerGrid3D();
+            let grid = new BoundedGrid3D();
             expect(grid.tileScale).toEqual(1);
         });
 
         it('should construct with custom parameters', () => {
-            let grid = new PlayerGrid3D(2);
+            let grid = new BoundedGrid3D(2);
             expect(grid.tileScale).toEqual(2);
         });
 
         describe("getTileFromPosition() should return given tile for points generated inside the given tile's boundries:", () => {
             it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
-                let grid = new PlayerGrid3D(scale);
+                let grid = new BoundedGrid3D(scale);
                 let tile = calculateGridTilePoints(x, y, scale);
 
                 for (let i = 0; i < tile.corners.length; i++) {
@@ -158,7 +158,7 @@ describe('PlayerGrid', () => {
 
         describe('getTileFromCoordinate() should return expected tile position given the grid scale and tile coordinate:', () => {
             it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
-                let grid = new PlayerGrid3D(scale);
+                let grid = new BoundedGrid3D(scale);
                 let gridTile = grid.getTileFromCoordinate(x, y);
 
                 expect(gridTile.tileCoordinate).toEqual(new Vector2(x, y));

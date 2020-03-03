@@ -20,7 +20,6 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { PlayerGrid3D } from '../PlayerGrid3D';
 import { PortalConfig } from './PortalConfig';
 
 /**
