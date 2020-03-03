@@ -31,4 +31,9 @@ export interface GridTile {
      * The 2d coordinate of the tile on the grid.
      */
     tileCoordinate: Vector2;
+
+    /**
+     * The grid that the tile is for.
+     */
+    grid: Grid3D;
 }

@@ -37,6 +37,11 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
 
     private _gridLines: LineSegments;
 
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+
     get plane(): Plane {
         const worldQuaternion = this.getWorldQuaternion(new Quaternion());
         const worldUp = this.up.clone().applyQuaternion(worldQuaternion);
@@ -88,12 +93,23 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         // Snap position to a grid center.
         let tileX = this._snapToTileCoord(localPos.x);
         let tileY = this._snapToTileCoord(localPos.z);
+
+        if (
+            tileX < this.minX ||
+            tileX > this.maxX ||
+            tileY < this.minY ||
+            tileY > this.maxY
+        ) {
+            return null;
+        }
+
         let tilePoints = calculateGridTilePoints(tileX, tileY, this.tileScale);
 
         let tile: GridTile = {
             center: tilePoints.center,
             corners: tilePoints.corners,
             tileCoordinate: new Vector2(tileX, tileY),
+            grid: this,
         };
 
         tile.tileCoordinate = new Vector2(tileX, tileY);
@@ -111,6 +127,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
             center: tilePoints.center,
             corners: tilePoints.corners,
             tileCoordinate: new Vector2(x, y),
+            grid: this,
         };
     }
 
