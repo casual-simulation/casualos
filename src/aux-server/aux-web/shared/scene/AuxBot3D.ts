@@ -1,6 +1,10 @@
 import { GameObject } from './GameObject';
 import { Object3D, Box3, Sphere, Group, Color } from 'three';
-import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    BotCalculationContext,
+    calculateGridScale,
+} from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
@@ -60,6 +64,15 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             this._computeBoundingObjects();
         }
         return this._boundingSphere.clone();
+    }
+
+    get gridScale(): number {
+        const group = this.dimensionGroup;
+        const sim = group ? group.simulation3D : null;
+        const gridScale = sim
+            ? sim.getGridScale(this)
+            : calculateGridScale(null, null);
+        return gridScale;
     }
 
     constructor(

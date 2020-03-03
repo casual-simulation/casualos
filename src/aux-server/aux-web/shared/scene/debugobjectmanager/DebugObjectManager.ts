@@ -428,3 +428,18 @@ export namespace DebugObjectManager {
         killTime: number;
     }
 }
+
+if (typeof window !== 'undefined') {
+    const a = <any>window;
+    a.aux = {
+        debug: function(val: boolean) {
+            DebugObjectManager.enabled =
+                typeof val === 'undefined' ? true : val;
+            if (DebugObjectManager.enabled) {
+                console.log('Enabled debug mode');
+            } else {
+                console.log('Disabled debug mode');
+            }
+        },
+    };
+}

@@ -17,7 +17,7 @@ import {
     watchPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { PlayerGrid3D } from '../PlayerGrid3D';
 
 /**
@@ -41,6 +41,8 @@ export class PortalConfig implements SubscriptionLike {
     private _playerRotationY: number;
     private _gridScale: number;
     private _grid3D: PlayerGrid3D;
+
+    private _onGridScaleUpdated: Subject<void>;
 
     /**
      * Gets the background color that the simulation defines.
@@ -195,6 +197,7 @@ export class PortalConfig implements SubscriptionLike {
         }
         this._gridScale = scale;
         this._grid3D.tileScale = scale;
+        this._onGridScaleUpdated.next();
     }
 
     get grid3D() {
@@ -213,8 +216,13 @@ export class PortalConfig implements SubscriptionLike {
         return this._portalTag;
     }
 
+    get onGridScaleUpdated(): Observable<void> {
+        return this._onGridScaleUpdated;
+    }
+
     constructor(portalTag: string, simulation: BrowserSimulation) {
         this._portalTag = portalTag;
+        this._onGridScaleUpdated = new Subject();
         this._grid3D = new PlayerGrid3D().showGrid(false);
         this._grid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)

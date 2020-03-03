@@ -28,6 +28,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
+import { AuxBot3D } from './AuxBot3D';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -603,6 +604,12 @@ export abstract class Simulation3D extends Object3D
      * Gets the camera that is used as the primary rendering camera for this simulation.
      */
     abstract getMainCameraRig(): CameraRig;
+
+    /**
+     * Gets the grid scale that should be used for the given bot.
+     * @param bot The bot.
+     */
+    abstract getGridScale(bot: AuxBot3D): number;
 
     unsubscribe(): void {
         this._subs.forEach(s => s.unsubscribe());

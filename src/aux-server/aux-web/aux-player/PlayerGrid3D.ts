@@ -139,7 +139,7 @@ export class PlayerGrid3D extends Object3D {
         xEnd: number,
         yStart: number,
         yEnd: number,
-        duration: number
+        duration?: number
     ) {
         // Debug all tile corner points.
         for (let x = xStart; x <= xEnd; x++) {

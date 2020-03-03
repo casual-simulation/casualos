@@ -51,6 +51,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { PortalConfig } from './PortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -128,6 +129,11 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
+        if (DebugObjectManager.enabled) {
+            for (let [key, config] of this._portalConfigs) {
+                config.grid3D.debugDrawTilePoints(-5, 5, -5, 5);
+            }
+        }
         // this.grid3D.update();
     }
 
@@ -184,7 +190,12 @@ export class PlayerSimulation3D extends Simulation3D {
             }
             this.add(config.grid3D);
             this._portalConfigs.set(portalTag, config);
-            this._subs.push(config);
+            this._subs.push(
+                config,
+                config.onGridScaleUpdated.subscribe(() => {
+                    this.ensureUpdate(this.bots.map(b => b.bot.id));
+                })
+            );
         }
     }
 
@@ -198,6 +209,12 @@ export class PlayerSimulation3D extends Simulation3D {
             (event.bot.id === this.simulation.helper.userId &&
                 this._isUserDimensionGroupEvent(event))
         );
+    }
+
+    getGridScale(bot: AuxBot3D): number {
+        const portal = bot.dimensionGroup.portalTag;
+        const config = this._portalConfigs.get(portal);
+        return config ? config.gridScale : calculateGridScale(null, null);
     }
 
     private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
