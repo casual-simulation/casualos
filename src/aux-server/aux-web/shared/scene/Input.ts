@@ -1485,7 +1485,7 @@ export class Input {
                 controller = {
                     primaryInputState: new InputState(),
                     squeezeInputState: new InputState(),
-                    mesh: null,
+                    mesh: new WebXRControllerMesh(source),
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
@@ -1510,16 +1510,12 @@ export class Input {
     }
 
     private async _setupControllerMesh(controller: ControllerData) {
-        let mesh: WebXRControllerMesh = null;
+        let mesh: WebXRControllerMesh = controller.mesh;
+        this._game.getScene().add(mesh.group);
         const motionController = await createMotionController(
             controller.inputSource
         );
-        if (motionController) {
-            mesh = new WebXRControllerMesh(motionController);
-            await mesh.init();
-            this._game.getScene().add(mesh.group);
-        }
-        controller.mesh = mesh;
+        await mesh.init(motionController);
     }
 
     private _handleXRSelect(event: XRInputSourceEvent) {}

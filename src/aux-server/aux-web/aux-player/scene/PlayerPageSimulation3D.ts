@@ -40,6 +40,7 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     MathUtils as ThreeMath,
+    Object3D,
 } from 'three';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
@@ -48,9 +49,11 @@ import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { portalToHand, handToPortal } from '../../shared/scene/xr/WebXRHelpers';
 import { DimensionGroup } from '../../shared/scene/DimensionGroup';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { WristPortalConfig } from './WristPortalConfig';
 import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
+import { ControllerData, Input } from 'aux-web/shared/scene/Input';
+import { PortalConfig } from './PortalConfig';
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
     private _handBindings = new Map<string, Subscription>();
@@ -180,6 +183,38 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return super._createPortalConfig(portalTag);
     }
 
+    protected _bindPortalConfig(config: PortalConfig) {
+        if (config instanceof WristPortalConfig) {
+            return this._bindWristPortalConfig(config);
+        } else {
+            return super._bindPortalConfig(config);
+        }
+    }
+
+    protected _bindWristPortalConfig(config: WristPortalConfig) {
+        const hand = portalToHand(config.portalTag);
+        const input = this.game.getInput();
+
+        const controllerAdded = input.controllerAdded.pipe(
+            filter(c => c.inputSource.handedness === hand)
+        );
+        const controllerRemoved = input.controllerRemoved;
+
+        const sub = bindToController(
+            controllerAdded,
+            controllerRemoved,
+            controller => {
+                controller.mesh.group.add(config.grid3D);
+                applyWristControllerOffset(config.grid3D);
+
+                return new Subscription(() => {
+                    controller.mesh.group.remove(config.grid3D);
+                });
+            }
+        );
+        this._subs.push(sub);
+    }
+
     protected _bindDimensionGroup(group: DimensionGroup) {
         if (group instanceof DimensionGroup3D) {
             const hand = portalToHand(group.portalTag);
@@ -198,38 +233,39 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         const input = this.game.getInput();
         const portal = handToPortal(hand);
         const config = this.getPortalConfig(portal);
-        const sub = input.controllerAdded
-            .pipe(
-                filter(c => c.inputSource.handedness === hand),
-                tap(controller => {
+
+        const controllerAdded = input.controllerAdded.pipe(
+            filter(c => c.inputSource.handedness === hand)
+        );
+        const controllerRemoved = input.controllerRemoved;
+
+        const sub = bindToController(
+            controllerAdded,
+            controllerRemoved,
+            controller => {
+                console.log(
+                    '[PlayerPageSimulation3D] Bind to controller',
+                    controller
+                );
+                if (config) {
+                    config.grid3D.enabled = true;
+                }
+                controller.mesh.group.add(group);
+                applyWristControllerOffset(group);
+                group.updateMatrixWorld(true);
+
+                return new Subscription(() => {
                     console.log(
-                        '[PlayerPageSimulation3D] Bind to controller',
+                        '[PlayerPageSimulation3D] Remove from controller',
                         controller
                     );
                     if (config) {
-                        config.grid3D.enabled = true;
+                        config.grid3D.enabled = false;
                     }
-                    controller.mesh.group.add(group);
-                    group.updateMatrixWorld(true);
-                }),
-                switchMap(controller => {
-                    return input.controllerRemoved.pipe(
-                        filter(c => c === controller),
-                        take(1),
-                        tap(controller => {
-                            console.log(
-                                '[PlayerPageSimulation3D] Remove from controller',
-                                controller
-                            );
-                            if (config) {
-                                config.grid3D.enabled = false;
-                            }
-                            controller.mesh.group.remove(group);
-                        })
-                    );
-                })
-            )
-            .subscribe();
+                    controller.mesh.group.remove(group);
+                });
+            }
+        );
 
         this._handBindings.set(hand, sub);
         this._subs.push(sub);
@@ -248,15 +284,46 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
 
     private _unbindDimensionGroupFromHand(
         group: DimensionGroup3D,
-        hand: string
+        hand: XRHandedness
     ) {
         console.log('[PlayerPageSimulation3D] Unbind from controller', hand);
         const sub = this._handBindings.get(hand);
         if (sub) {
             sub.unsubscribe();
         }
+        const portal = handToPortal(hand);
+        const config = this.getPortalConfig(portal);
+        if (config) {
+            config.grid3D.enabled = false;
+        }
         if (group.parent) {
             group.parent.remove(group);
         }
     }
+}
+
+function applyWristControllerOffset(obj: Object3D) {
+    obj.position.set(0, 0.1, 0);
+    obj.rotation.set(0, 180 * ThreeMath.DEG2RAD, 0);
+}
+
+function bindToController(
+    controllerAdded: Observable<ControllerData>,
+    controllerRemoved: Observable<ControllerData>,
+    action: (controller: ControllerData) => Subscription
+): Subscription {
+    const sub = controllerAdded
+        .pipe(
+            map(controller => ({ sub: action(controller), controller })),
+            switchMap(data => {
+                return controllerRemoved.pipe(
+                    filter(c => c === data.controller),
+                    take(1),
+                    tap(c => data.sub.unsubscribe())
+                );
+            })
+        )
+        .subscribe();
+
+    return sub;
 }

@@ -60,12 +60,14 @@ export class WristPortalConfig extends PortalConfig {
     constructor(portalTag: string, simulation: BrowserSimulation) {
         super(portalTag, simulation);
         this.grid3D.showGrid(true);
+        this._updateGridBounds();
     }
 
     protected _clearPortalValues() {
         super._clearPortalValues();
         this._width = null;
         this._height = null;
+        this._updateGridBounds();
     }
 
     protected _getDefaultGridScale() {
@@ -93,5 +95,14 @@ export class WristPortalConfig extends PortalConfig {
             `auxWristPortalHeight`,
             DEFAULT_WRIST_PORTAL_HEIGHT
         );
+        this._updateGridBounds();
+    }
+
+    private _updateGridBounds() {
+        this.grid3D.minX = -(this.width / 2);
+        this.grid3D.maxX = this.width / 2;
+        this.grid3D.minY = -(this.height / 2);
+        this.grid3D.maxY = this.height / 2;
+        this.grid3D.showGrid(true, true);
     }
 }

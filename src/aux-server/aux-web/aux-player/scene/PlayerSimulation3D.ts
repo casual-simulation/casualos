@@ -53,6 +53,7 @@ import { PortalConfig } from './PortalConfig';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { CompoundGrid3D } from '../CompoundGrid3D';
+import { Grid3D } from '../Grid3D';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -124,6 +125,27 @@ export class PlayerSimulation3D extends Simulation3D {
         return this._game.getMainCameraRig();
     }
 
+    getDimensionGroupForGrid(grid: Grid3D): DimensionGroup3D {
+        for (let portal of this.portals) {
+            if (portal.grid3D === grid) {
+                const group = this._playerDimensionGroups.get(portal.portalTag);
+                if (group) {
+                    return group;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    getDimensionForGrid(grid: Grid3D): string {
+        const group = this.getDimensionGroupForGrid(grid);
+        if (group) {
+            return [...group.dimensions.values()][0];
+        }
+        return null;
+    }
+
     init() {
         super.init();
         this._watchDimensionBot();
@@ -190,7 +212,7 @@ export class PlayerSimulation3D extends Simulation3D {
             if (!this._primaryPortalConfig) {
                 this._primaryPortalConfig = config;
             }
-            this.add(config.grid3D);
+            this._bindPortalConfig(config);
             this._portalConfigs.set(portalTag, config);
             this._grid.grids.push(config.grid3D);
             this._subs.push(
@@ -200,6 +222,10 @@ export class PlayerSimulation3D extends Simulation3D {
                 })
             );
         }
+    }
+
+    protected _bindPortalConfig(config: PortalConfig) {
+        this.add(config.grid3D);
     }
 
     protected _createPortalConfig(portalTag: string) {

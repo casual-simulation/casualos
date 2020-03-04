@@ -22,6 +22,7 @@ import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
 import { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from '../shared/scene/SceneUtils';
+import { hasValue } from '@casual-simulation/aux-common';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
@@ -226,7 +227,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         }
     }
 
-    showGrid(show: boolean): BoundedGrid3D {
+    showGrid(show: boolean, recreate: boolean = false): BoundedGrid3D {
         if (show === undefined || show === null) {
             return;
         }
@@ -234,7 +235,9 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
 
         if (this._gridLines) {
             this._gridLines.visible = show && this._enabled;
-        } else {
+        }
+
+        if (!this._gridLines || recreate) {
             if (show) {
                 // Create the grid lines.
                 this._createGridLines();
@@ -246,15 +249,21 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
 
     private _createGridLines() {
         if (this._gridLines) {
+            this.remove(this._gridLines);
             disposeObject3D(this._gridLines);
         }
         let tiles: GridTile[] = [];
-        for (let x = GRIDLINES_X_START; x <= GRIDLINES_X_END; x++) {
-            for (let y = GRIDLINES_Y_START; y <= GRIDLINES_Y_END; y++) {
+        let startX = hasValue(this.minX) ? this.minX : GRIDLINES_X_START;
+        let endX = hasValue(this.maxX) ? this.maxX : GRIDLINES_X_END;
+        let startY = hasValue(this.minY) ? this.minY : GRIDLINES_Y_START;
+        let endY = hasValue(this.maxY) ? this.maxY : GRIDLINES_Y_END;
+        for (let x = startX; x <= endX; x++) {
+            for (let y = startY; y <= endY; y++) {
                 tiles.push(this.getTileFromCoordinate(x, y));
             }
         }
         this._gridLines = constructGridLines(tiles);
+        this._gridLines.visible = this._showGrid && this._enabled;
         this.add(this._gridLines);
     }
 

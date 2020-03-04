@@ -25,6 +25,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
     closed: boolean;
 
     controller: MotionController;
+    inputSource: XRInputSource;
     group: Group;
 
     private _scene: Scene;
@@ -33,8 +34,8 @@ export class WebXRControllerMesh implements SubscriptionLike {
     private _pointer: PointerRay3D;
     private _dummy: Object3D;
 
-    constructor(controller: MotionController) {
-        this.controller = controller;
+    constructor(inputSource: XRInputSource) {
+        this.inputSource = inputSource;
         this._nodes = new Map();
         this.group = new Group();
         this._pointer = new PointerRay3D();
@@ -43,7 +44,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this.group.add(this._pointer);
     }
 
-    async init() {
+    async init(controller: MotionController) {
+        this.controller = controller;
+        if (!this.controller) {
+            return;
+        }
         const gltf = await pool.loadGLTF(this.controller.assetUrl);
         this._scene = gltf.scene;
         this._root = this._scene;
@@ -54,13 +59,14 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     update(frame: XRFrame, referenceSpace: XRSpace) {
-        this.controller.updateFromGamepad();
-        const inputSource = <XRInputSource>this.controller.xrInputSource;
+        const inputSource = this.inputSource;
         const gripPose = frame.getPose(inputSource.gripSpace, referenceSpace);
         const rayPose = frame.getPose(
             inputSource.targetRaySpace,
             referenceSpace
         );
+        copyPose(gripPose, this.group);
+
         this._updateMotionControllerModel(gripPose);
         this._updatePointer(rayPose);
         this.group.updateMatrixWorld();
@@ -74,6 +80,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     private _updateMotionControllerModel(pose: XRPose) {
+        if (!this.controller) {
+            return;
+        }
+
+        this.controller.updateFromGamepad();
         // Update the 3D model to reflect the button, thumbstick, and touchpad state
         for (let component of values(this.controller.components)) {
             // Update node data based on the visual responses' current states
@@ -118,8 +129,6 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 }
             }
         }
-
-        copyPose(pose, this.group);
     }
 
     private _findNodes() {
