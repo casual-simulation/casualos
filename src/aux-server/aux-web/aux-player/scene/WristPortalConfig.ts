@@ -59,6 +59,7 @@ export class WristPortalConfig extends PortalConfig {
 
     constructor(portalTag: string, simulation: BrowserSimulation) {
         super(portalTag, simulation);
+        this.grid3D.showGrid(true);
     }
 
     protected _clearPortalValues() {

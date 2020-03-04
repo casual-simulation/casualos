@@ -21,6 +21,7 @@ import groupBy from 'lodash/groupBy';
 import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
 import { GridTile, Grid3D } from './Grid3D';
+import { disposeObject3D } from '../shared/scene/SceneUtils';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
@@ -32,12 +33,38 @@ export const GRIDLINES_Y_END = 5;
  * A grid for Aux Player to help position objects in a dimension.
  */
 export class BoundedGrid3D extends Object3D implements Grid3D {
-    tileScale: number;
     useAuxCoordinates: boolean = false;
 
-    enabled = true;
+    get tileScale() {
+        return this._tileScale;
+    }
+
+    set tileScale(scale: number) {
+        if (scale === this._tileScale) {
+            return;
+        }
+        this._tileScale = scale;
+        this.showGrid(this._showGrid);
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value: boolean) {
+        if (value === this._enabled) {
+            return;
+        }
+        this._enabled = value;
+        if (this._gridLines) {
+            this._gridLines.visible = this._enabled && this._showGrid;
+        }
+    }
 
     private _gridLines: LineSegments;
+    private _tileScale: number;
+    private _enabled: boolean = true;
+    private _showGrid: boolean = false;
 
     minX: number;
     minY: number;
@@ -203,25 +230,32 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         if (show === undefined || show === null) {
             return;
         }
+        this._showGrid = show;
 
         if (this._gridLines) {
-            this._gridLines.visible = show;
+            this._gridLines.visible = show && this._enabled;
         } else {
             if (show) {
                 // Create the grid lines.
-                let tiles: GridTile[] = [];
-                for (let x = GRIDLINES_X_START; x <= GRIDLINES_X_END; x++) {
-                    for (let y = GRIDLINES_Y_START; y <= GRIDLINES_Y_END; y++) {
-                        tiles.push(this.getTileFromCoordinate(x, y));
-                    }
-                }
-
-                this._gridLines = constructGridLines(tiles);
-                this.add(this._gridLines);
+                this._createGridLines();
             }
         }
 
         return this;
+    }
+
+    private _createGridLines() {
+        if (this._gridLines) {
+            disposeObject3D(this._gridLines);
+        }
+        let tiles: GridTile[] = [];
+        for (let x = GRIDLINES_X_START; x <= GRIDLINES_X_END; x++) {
+            for (let y = GRIDLINES_Y_START; y <= GRIDLINES_Y_END; y++) {
+                tiles.push(this.getTileFromCoordinate(x, y));
+            }
+        }
+        this._gridLines = constructGridLines(tiles);
+        this.add(this._gridLines);
     }
 
     private _snapToTileCoord(num: number): number {

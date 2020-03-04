@@ -46,10 +46,11 @@ import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
-import { portalToHand } from '../../shared/scene/xr/WebXRHelpers';
+import { portalToHand, handToPortal } from '../../shared/scene/xr/WebXRHelpers';
 import { DimensionGroup } from '../../shared/scene/DimensionGroup';
 import { Subscription } from 'rxjs';
 import { WristPortalConfig } from './WristPortalConfig';
+import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
     private _handBindings = new Map<string, Subscription>();
@@ -172,7 +173,9 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     protected _createPortalConfig(portalTag: string) {
         const hand = portalToHand(portalTag);
         if (hand) {
-            return new WristPortalConfig(portalTag, this.simulation);
+            const config = new WristPortalConfig(portalTag, this.simulation);
+            config.grid3D.enabled = false;
+            return config;
         }
         return super._createPortalConfig(portalTag);
     }
@@ -188,8 +191,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         }
     }
 
-    private _bindDimensionGroupToHand(group: DimensionGroup3D, hand: string) {
+    private _bindDimensionGroupToHand(
+        group: DimensionGroup3D,
+        hand: XRHandedness
+    ) {
         const input = this.game.getInput();
+        const portal = handToPortal(hand);
+        const config = this.getPortalConfig(portal);
         const sub = input.controllerAdded
             .pipe(
                 filter(c => c.inputSource.handedness === hand),
@@ -198,6 +206,9 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                         '[PlayerPageSimulation3D] Bind to controller',
                         controller
                     );
+                    if (config) {
+                        config.grid3D.enabled = true;
+                    }
                     controller.mesh.group.add(group);
                     group.updateMatrixWorld(true);
                 }),
@@ -210,6 +221,9 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                                 '[PlayerPageSimulation3D] Remove from controller',
                                 controller
                             );
+                            if (config) {
+                                config.grid3D.enabled = false;
+                            }
                             controller.mesh.group.remove(group);
                         })
                     );
