@@ -30,6 +30,7 @@ import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
 import { drawExamples } from './DebugExamples';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 import { CubeHelperPool } from '../objectpools/CubeHelperPool';
+import merge from 'lodash/merge';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
 const CUBEHELPER_POOL_ID = 'cubehelper_pool';
@@ -431,15 +432,17 @@ export namespace DebugObjectManager {
 
 if (typeof window !== 'undefined') {
     const a = <any>window;
-    a.aux = {
-        debug: function(val: boolean) {
-            DebugObjectManager.enabled =
-                typeof val === 'undefined' ? true : val;
-            if (DebugObjectManager.enabled) {
-                console.log('Enabled debug mode');
-            } else {
-                console.log('Disabled debug mode');
-            }
+    merge(window, {
+        aux: {
+            debug: function(val: boolean) {
+                DebugObjectManager.enabled =
+                    typeof val === 'undefined' ? true : val;
+                if (DebugObjectManager.enabled) {
+                    console.log('Enabled debug mode');
+                } else {
+                    console.log('Disabled debug mode');
+                }
+            },
         },
-    };
+    });
 }
