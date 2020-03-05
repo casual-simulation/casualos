@@ -150,12 +150,22 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
      * Retrieve the grid tile that matches the given coordinate.
      * @param tileCoordinate The tile coordinate.
      */
-    getTileFromCoordinate(x: number, y: number): GridTile {
+    getTileFromCoordinate(
+        x: number,
+        y: number,
+        worldSpace: boolean = true
+    ): GridTile {
         let tilePoints = calculateGridTilePoints(x, y, this.tileScale);
 
+        const center = worldSpace
+            ? this.localToWorld(tilePoints.center)
+            : tilePoints.center;
+        const corners = worldSpace
+            ? tilePoints.corners.map(p => this.localToWorld(p))
+            : tilePoints.corners;
         return {
-            center: this.localToWorld(tilePoints.center),
-            corners: tilePoints.corners.map(p => this.localToWorld(p)),
+            center: center,
+            corners: corners,
             tileCoordinate: new Vector2(x, y),
             grid: this,
         };
@@ -259,7 +269,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         let endY = hasValue(this.maxY) ? this.maxY : GRIDLINES_Y_END;
         for (let x = startX; x <= endX; x++) {
             for (let y = startY; y <= endY; y++) {
-                tiles.push(this.getTileFromCoordinate(x, y));
+                tiles.push(this.getTileFromCoordinate(x, y, false));
             }
         }
         this._gridLines = constructGridLines(tiles);
