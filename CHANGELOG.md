@@ -1,5 +1,26 @@
 # AUX Changelog
 
+## V1.0.14
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Features
+
+    -   Added wrist portals for WebXR
+        -   `#auxLeftWristPortal` is attached to the left controller and `#auxRightWristPortal` is attached to the right controller.
+        -   You can configure these portals using the `#auxLeftWristPortalConfigBot` and `#auxRightWristPortalConfigBot` tags.
+        -   The portals are hidden until you look at them. They are placed underneath your wrist like a wristwatch.
+        -   The following tags are available for configuration:
+            -   `#auxPortalGridScale` - Changes the size of the grid for the portal. (Defaults to `0.025` for wrist portals)
+            -   `#auxWristPortalHeight` - The height of the portal in grid elements. (Defaults to `6`)
+            -   `#auxWristPortalWidth` - The width of the portal in grid elements. (Defaults to `6`)
+
+-   :bug: Bug Fixes
+    -   Fixed an issue that caused the inventory to not appear if it was changed multiple times during the same frame.
+    -   Fixed an issue that caused the `#auxPortalGridScale` tag to function improperly.
+
 ## V1.0.13
 
 ### Date: 3/2/2020
