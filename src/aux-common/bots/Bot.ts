@@ -152,10 +152,14 @@ export interface BotTags {
     ['auxUniverse']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
+    ['auxLeftWristPortal']?: string;
+    ['auxRightWristPortal']?: string;
     ['auxPagePortalConfigBot']?: string;
     ['auxSheetPortalConfigBot']?: string;
     ['auxInventoryPortalConfigBot']?: string;
     ['auxMenuPortalConfigBot']?: string;
+    ['auxLeftWristPortalConfigBot']?: string;
+    ['auxRightWristPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
 
     // Admin channel bot-channel tags
@@ -195,6 +199,8 @@ export interface BotTags {
     ['auxPortalRotatable']?: number | null;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
+    ['auxWristPortalHeight']?: number;
+    ['auxWristPortalWidth']?: number;
 
     // Stripe tags
     ['stripeCharges']?: boolean;
@@ -714,6 +720,8 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationY`,
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
+    'auxWristPortalHeight',
+    'auxWristPortalWidth',
 
     'auxUniverseColor',
     'auxUniverseUserPlayerColor',
