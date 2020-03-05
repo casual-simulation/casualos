@@ -215,21 +215,11 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 new Vector3(0, 1, 0),
                 config.grid3D
             );
-            DebugObjectManager.drawArrow(
-                gridRay.origin.clone(),
-                gridRay.direction.clone(),
-                new Color(255, 0, 0)
-            );
 
             const cameraRig = this.getMainCameraRig();
             const cameraRay = objectWorldDirectionRay(
                 new Vector3(0, 0, -1),
                 cameraRig.mainCamera
-            );
-            DebugObjectManager.drawArrow(
-                cameraRay.origin.clone(),
-                cameraRay.direction.clone(),
-                new Color(0, 255, 0)
             );
 
             const dot = cameraRay.direction.dot(gridRay.direction);

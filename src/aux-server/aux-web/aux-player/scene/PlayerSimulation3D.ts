@@ -155,16 +155,6 @@ export class PlayerSimulation3D extends Simulation3D {
         this._watchDimensionBot();
     }
 
-    protected _frameUpdateCore(calc: BotCalculationContext) {
-        super._frameUpdateCore(calc);
-        if (DebugObjectManager.enabled) {
-            for (let [key, config] of this._portalConfigs) {
-                config.grid3D.debugDrawTilePoints(-5, 5, -5, 5);
-            }
-        }
-        // this.grid3D.update();
-    }
-
     protected _getDimensionTags() {
         return this._portalTags;
     }
