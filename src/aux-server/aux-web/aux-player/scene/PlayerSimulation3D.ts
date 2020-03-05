@@ -128,7 +128,7 @@ export class PlayerSimulation3D extends Simulation3D {
     getDimensionGroupForGrid(grid: Grid3D): DimensionGroup3D {
         for (let portal of this.portals) {
             if (portal.grid3D === grid) {
-                const group = this._playerDimensionGroups.get(portal.portalTag);
+                const group = this.getDimensionGroupForPortal(portal.portalTag);
                 if (group) {
                     return group;
                 }
@@ -136,6 +136,10 @@ export class PlayerSimulation3D extends Simulation3D {
         }
 
         return null;
+    }
+
+    getDimensionGroupForPortal(portal: string): DimensionGroup3D {
+        return this._playerDimensionGroups.get(portal);
     }
 
     getDimensionForGrid(grid: Grid3D): string {

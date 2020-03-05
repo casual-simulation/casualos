@@ -57,6 +57,31 @@ import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
 import { ControllerData, Input } from 'aux-web/shared/scene/Input';
 import { PortalConfig } from './PortalConfig';
 import merge from 'lodash/merge';
+import {
+    objectForwardRay,
+    objectDirectionRay,
+    objectWorldDirectionRay,
+} from '../../shared/scene/SceneUtils';
+import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
+
+const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(-0.025, 0.1, 0.1);
+const DEFAULT_RIGHT_WRIST_ROTATION_OFFSET = new Euler(
+    60 * ThreeMath.DEG2RAD,
+    0,
+    90 * ThreeMath.DEG2RAD
+);
+const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(0.025, 0.1, 0.1);
+const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
+    -60 * ThreeMath.DEG2RAD,
+    0,
+    -90 * ThreeMath.DEG2RAD
+);
+
+/**
+ * The value that the dot product between the camera
+ * and the controller grid should be less than in order to show the portal.
+ */
+const WRIST_ACTIVE_DOT_PRODUCT_RANGE = -0.35;
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
     private _handBindings = new Map<string, Subscription>();
@@ -176,6 +201,50 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.playerRotationY;
     }
 
+    protected _frameUpdateCore(calc: BotCalculationContext) {
+        super._frameUpdateCore(calc);
+        const input = this.game.getInput();
+        const controllers = input.controllers;
+        for (let controller of controllers) {
+            const portal = handToPortal(controller.inputSource.handedness);
+            const config = this.getPortalConfig(portal);
+            if (!config) {
+                continue;
+            }
+            const gridRay = objectWorldDirectionRay(
+                new Vector3(0, 1, 0),
+                config.grid3D
+            );
+            DebugObjectManager.drawArrow(
+                gridRay.origin.clone(),
+                gridRay.direction.clone(),
+                new Color(255, 0, 0)
+            );
+
+            const cameraRig = this.getMainCameraRig();
+            const cameraRay = objectWorldDirectionRay(
+                new Vector3(0, 0, -1),
+                cameraRig.mainCamera
+            );
+            DebugObjectManager.drawArrow(
+                cameraRay.origin.clone(),
+                cameraRay.direction.clone(),
+                new Color(0, 255, 0)
+            );
+
+            const dot = cameraRay.direction.dot(gridRay.direction);
+            // If the grid's up direction is pointing towards the camera's forward direction
+            const facingCamera = dot < WRIST_ACTIVE_DOT_PRODUCT_RANGE;
+            const group = this.getDimensionGroupForPortal(portal);
+            const hasPortal = !!group && group.dimensions.size > 0;
+            config.grid3D.enabled = hasPortal && facingCamera;
+
+            if (group) {
+                group.visible = facingCamera;
+            }
+        }
+    }
+
     protected _createPortalConfig(portalTag: string) {
         const hand = portalToHand(portalTag);
         if (hand) {
@@ -250,9 +319,9 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                     '[PlayerPageSimulation3D] Bind to controller',
                     controller
                 );
-                if (config) {
-                    config.grid3D.enabled = true;
-                }
+                // if (config) {
+                //     config.grid3D.enabled = true;
+                // }
                 controller.mesh.group.add(group);
                 applyWristControllerOffset(hand, group);
                 group.updateMatrixWorld(true);
@@ -307,20 +376,12 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
 
 const offsets = {
     right: {
-        positionOffset: new Vector3(-0.025, 0.1, 0.1),
-        rotationOffset: new Euler(
-            60 * ThreeMath.DEG2RAD,
-            0,
-            90 * ThreeMath.DEG2RAD
-        ),
+        positionOffset: DEFAULT_RIGHT_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_RIGHT_WRIST_ROTATION_OFFSET,
     },
     left: {
-        positionOffset: new Vector3(0.025, 0.1, 0.1),
-        rotationOffset: new Euler(
-            -60 * ThreeMath.DEG2RAD,
-            0,
-            -90 * ThreeMath.DEG2RAD
-        ),
+        positionOffset: DEFAULT_LEFT_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_LEFT_WRIST_ROTATION_OFFSET,
     },
     none: {
         positionOffset: new Vector3(),

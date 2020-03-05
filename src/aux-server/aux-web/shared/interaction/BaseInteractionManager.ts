@@ -589,6 +589,10 @@ export abstract class BaseInteractionManager {
             return null;
         }
 
+        if (!isObjectVisible(hit.object)) {
+            return null;
+        }
+
         return this.findGameObjectUpHierarchy(hit.object);
     }
 
