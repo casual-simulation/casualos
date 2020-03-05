@@ -41,6 +41,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
