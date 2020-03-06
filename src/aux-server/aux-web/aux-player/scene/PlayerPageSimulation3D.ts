@@ -66,13 +66,13 @@ import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugO
 
 const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(-0.025, 0.1, 0.1);
 const DEFAULT_RIGHT_WRIST_ROTATION_OFFSET = new Euler(
-    60 * ThreeMath.DEG2RAD,
+    30 * ThreeMath.DEG2RAD,
     0,
     90 * ThreeMath.DEG2RAD
 );
 const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(0.025, 0.1, 0.1);
 const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
-    -60 * ThreeMath.DEG2RAD,
+    30 * ThreeMath.DEG2RAD,
     0,
     -90 * ThreeMath.DEG2RAD
 );
@@ -81,7 +81,7 @@ const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
  * The value that the dot product between the camera
  * and the controller grid should be less than in order to show the portal.
  */
-const WRIST_ACTIVE_DOT_PRODUCT_RANGE = -0.35;
+const WRIST_ACTIVE_DOT_PRODUCT_RANGE = -0.57;
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
     private _handBindings = new Map<string, Subscription>();
