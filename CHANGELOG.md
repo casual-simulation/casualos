@@ -16,6 +16,9 @@
             -   `#auxPortalGridScale` - Changes the size of the grid for the portal. (Defaults to `0.025` for wrist portals)
             -   `#auxWristPortalHeight` - The height of the portal in grid elements. (Defaults to `6`)
             -   `#auxWristPortalWidth` - The width of the portal in grid elements. (Defaults to `6`)
+        -   There are a couple of known issues with wrist portals:
+            -   3D Text is sometimes improperly aligned.
+            -   Lines/Arrows/Walls also have alignment issues.
 
 -   :bug: Bug Fixes
     -   Fixed an issue that caused the inventory to not appear if it was changed multiple times during the same frame.
