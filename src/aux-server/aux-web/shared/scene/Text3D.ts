@@ -45,8 +45,8 @@ export class Text3D extends Object3D {
     } = {};
 
     public static readonly defaultWidth: number = 200;
-    public static readonly extraSpace: number = 0.01;
-    public static readonly floatingExtraSpace: number = 0.12;
+    public static readonly extraSpace: number = 0.001;
+    public static readonly floatingExtraSpace: number = 0.3;
     public static readonly defaultScale: number = 0.01;
 
     public currentWidth: number = 200;
@@ -61,7 +61,7 @@ export class Text3D extends Object3D {
     // the text that was last set on this text3d.
     private _unprocessedText: string;
 
-    // The bounding box for the text 3d.
+    // The bounding box for the text 3d in world space.
     private _boundingBox: Box3;
 
     // The anchor position for the text 3d.
@@ -155,32 +155,28 @@ export class Text3D extends Object3D {
 
         this.updateBoundingBox();
 
-        // const thisLocalBounds = this._boundingBox.clone();
-        // const worldToLocal = new Matrix4();
-        // worldToLocal.getInverse(this._mesh.matrixWorld);
-        // thisLocalBounds.applyMatrix4(worldToLocal);
+        const thisLocalBounds = this._boundingBox.clone();
+        const worldToLocal = new Matrix4();
+        worldToLocal.getInverse(this.parent.matrixWorld);
+        thisLocalBounds.applyMatrix4(worldToLocal);
 
-        // const targetLocalBounds = bounds.clone();
-        // thisLocalBounds.applyMatrix4(worldToLocal);
+        const targetLocalBounds = bounds.clone();
+        targetLocalBounds.applyMatrix4(worldToLocal);
 
         const [pos, rotation] = calculateAnchorPosition(
-            bounds,
+            targetLocalBounds,
             this._anchor,
             this,
-            this._boundingBox,
+            thisLocalBounds,
             Text3D.defaultScale,
             this._anchor === 'floating'
                 ? Text3D.floatingExtraSpace
                 : Text3D.extraSpace
         );
-        // pos.multiplyScalar(0.1);
 
-        DebugObjectManager.drawPoint(
-            pos.clone(),
-            0.25,
-            new Color(0, 0, 255),
-            0.25
-        );
+        const worldPos = pos.clone();
+        this.parent.localToWorld(worldPos);
+
         this.position.copy(pos);
         this._mesh.rotation.copy(
             new Euler(
@@ -191,13 +187,6 @@ export class Text3D extends Object3D {
         );
 
         this.updateBoundingBox();
-
-        DebugObjectManager.drawBox3(bounds, new Color(0, 255, 0), 0.25);
-        DebugObjectManager.drawBox3(
-            this._boundingBox,
-            new Color(255, 0, 0),
-            0.25
-        );
     }
 
     public setWorldPosition(worldPos: Vector3) {
@@ -230,12 +219,6 @@ export class Text3D extends Object3D {
         let box = this._geometry.boundingBox.clone();
         box.min.z = -1;
         box.max.z = 1;
-
-        let anchorWorldScale = new Vector3();
-        this.getWorldScale(anchorWorldScale);
-
-        let position = new Vector3();
-        this._mesh.getWorldPosition(position);
 
         // Apply the matrix to the bounding box.
         let matrix = this._mesh.matrixWorld;

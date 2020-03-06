@@ -417,10 +417,10 @@ export function disposeScene(scene: Scene) {
 
 /**
  * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
- * @param anchorBounds The bounds being anchored to.
+ * @param anchorBounds The bounds being anchored to. Should be in local space relative to the given obj.
  * @param anchorType The anchor type that will be calculated.
  * @param obj The object to anchor.
- * @param objBoundingBox The bounding box of the object to anchor.
+ * @param objBoundingBox The bounding box of the object to anchor. Should be in local space relative to the given obj.
  * @param defaultScale The default scale of the object.
  * @param extraSpace The extra spacing to use as padding away from the anchor position.
  */
