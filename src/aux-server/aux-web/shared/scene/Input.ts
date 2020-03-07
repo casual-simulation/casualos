@@ -4,7 +4,7 @@ import find from 'lodash/find';
 import some from 'lodash/some';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable, Subject } from 'rxjs';
 import uuid from 'uuid/v4';
 import {
     XRInputSource,
@@ -17,6 +17,7 @@ import {
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
+import { startWith } from 'rxjs/operators';
 
 export class Input {
     /**
@@ -51,6 +52,9 @@ export class Input {
     private _lastPrimaryTouchData: TouchData;
     private _lastPrimaryControllerData: ControllerData;
 
+    private _controllerAdded = new Subject<ControllerData>();
+    private _controllerRemoved = new Subject<ControllerData>();
+
     private _htmlElements: () => HTMLElement[];
 
     get time() {
@@ -80,6 +84,21 @@ export class Input {
      */
     get controllers(): ControllerData[] {
         return this._controllerData;
+    }
+
+    /**
+     * Gets an observable that resolves whenever a controller gets added.
+     * On subscription, the observable resolves with every currently connected controller.
+     */
+    get controllerAdded(): Observable<ControllerData> {
+        return this._controllerAdded.pipe(startWith(...this.controllers));
+    }
+
+    /**
+     * Gets an observable that resolves whenever a controller gets removed.
+     */
+    get controllerRemoved(): Observable<ControllerData> {
+        return this._controllerRemoved;
     }
 
     /**
@@ -804,6 +823,7 @@ export class Input {
         });
         this._xrSubscription = new Subscription(() => {
             for (let controller of this._controllerData) {
+                this._controllerRemoved.next(controller);
                 this._disposeController(controller);
             }
             this._controllerData = [];
@@ -1465,13 +1485,14 @@ export class Input {
                 controller = {
                     primaryInputState: new InputState(),
                     squeezeInputState: new InputState(),
-                    mesh: null,
+                    mesh: new WebXRControllerMesh(source),
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
                 };
                 this._controllerData.push(controller);
                 this._setupControllerMesh(controller);
+                this._controllerAdded.next(controller);
             }
         }
         for (let source of event.removed) {
@@ -1481,6 +1502,7 @@ export class Input {
             if (index >= 0) {
                 const removed = this._controllerData.splice(index, 1);
                 for (let r of removed) {
+                    this._controllerRemoved.next(r);
                     this._disposeController(r);
                 }
             }
@@ -1488,16 +1510,12 @@ export class Input {
     }
 
     private async _setupControllerMesh(controller: ControllerData) {
-        let mesh: WebXRControllerMesh = null;
+        let mesh: WebXRControllerMesh = controller.mesh;
+        this._game.getScene().add(mesh.group);
         const motionController = await createMotionController(
             controller.inputSource
         );
-        if (motionController) {
-            mesh = new WebXRControllerMesh(motionController);
-            await mesh.init();
-            this._game.getScene().add(mesh.group);
-        }
-        controller.mesh = mesh;
+        await mesh.init(motionController);
     }
 
     private _handleXRSelect(event: XRInputSourceEvent) {}

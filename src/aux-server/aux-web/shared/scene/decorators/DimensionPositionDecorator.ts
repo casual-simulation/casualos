@@ -53,10 +53,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     botUpdated(calc: BotCalculationContext): void {
         const userDimension = this.bot3D.dimension;
         if (userDimension) {
-            const scale = calculateGridScale(
-                calc,
-                this.bot3D.dimensionGroup.bot
-            );
+            const scale = this.bot3D.gridScale;
             const currentGridPos = getBotPosition(
                 calc,
                 this.bot3D.bot,

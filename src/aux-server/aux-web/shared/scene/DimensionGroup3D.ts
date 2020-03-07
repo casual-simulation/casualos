@@ -53,6 +53,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
     protected _childColliders: Object3D[];
     protected _decoratorFactory: AuxBot3DDecoratorFactory;
     protected _colliders: Object3D[];
+    protected _portalTag: string;
 
     /**
      * Gets the colliders that should be used for this dimension group.
@@ -80,6 +81,10 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         this._childColliders = value;
     }
 
+    get portalTag() {
+        return this._portalTag;
+    }
+
     /**
      * Creates a new Builder dimension 3D Object.
      * @param The bot that this builder represents.
@@ -88,7 +93,8 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         simulation3D: Simulation3D,
         bot: Bot,
         domain: AuxDomain,
-        decoratorFactory: AuxBot3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory,
+        portalTag: string
     ) {
         super();
         this.simulation3D = simulation3D;
@@ -96,6 +102,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         this.domain = domain;
         this.display = new Group();
         this._decoratorFactory = decoratorFactory;
+        this._portalTag = portalTag;
 
         this.add(this.display);
     }

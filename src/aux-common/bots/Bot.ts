@@ -152,10 +152,14 @@ export interface BotTags {
     ['auxUniverse']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
+    ['auxLeftWristPortal']?: string;
+    ['auxRightWristPortal']?: string;
     ['auxPagePortalConfigBot']?: string;
     ['auxSheetPortalConfigBot']?: string;
     ['auxInventoryPortalConfigBot']?: string;
     ['auxMenuPortalConfigBot']?: string;
+    ['auxLeftWristPortalConfigBot']?: string;
+    ['auxRightWristPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
 
     // Admin channel bot-channel tags
@@ -195,6 +199,8 @@ export interface BotTags {
     ['auxPortalRotatable']?: number | null;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
+    ['auxWristPortalHeight']?: number;
+    ['auxWristPortalWidth']?: number;
 
     // Stripe tags
     ['stripeCharges']?: boolean;
@@ -412,6 +418,21 @@ export const DEFAULT_INVENTORY_PORTAL_RESIZABLE = true;
  * The default height for inventory portals.
  */
 export const DEFAULT_INVENTORY_PORTAL_HEIGHT = 0;
+
+/**
+ * The default height for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_HEIGHT = 6;
+
+/**
+ * The default width for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_WIDTH = 6;
+
+/**
+ * The default grid scale for wrist portals.
+ */
+export const DEFAULT_WRIST_PORTAL_GRID_SCALE = 0.025;
 
 /**
  * The ID of the global configuration bot.
@@ -670,10 +691,14 @@ export const KNOWN_TAGS: string[] = [
     'auxUniverse',
     'auxInventoryPortal',
     'auxMenuPortal',
+    'auxLeftWristPortal',
+    'auxRightWristPortal',
     'auxPagePortalConfigBot',
     'auxSheetPortalConfigBot',
     'auxInventoryPortalConfigBot',
     'auxMenuPortalConfigBot',
+    'auxLeftWristPortalConfigBot',
+    'auxRightWristPortalConfigBot',
     '_auxEditingBot',
     'auxConnectedSessions',
 
@@ -695,6 +720,8 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationY`,
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
+    'auxWristPortalHeight',
+    'auxWristPortalWidth',
 
     'auxUniverseColor',
     'auxUniverseUserPlayerColor',

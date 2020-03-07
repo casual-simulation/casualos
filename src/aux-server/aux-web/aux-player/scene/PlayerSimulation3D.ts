@@ -43,42 +43,45 @@ import {
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
-import { PlayerGrid3D } from '../PlayerGrid3D';
-import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
+import {
+    UpdatedBotInfo,
+    BotDimensionEvent,
+    DimensionAddedEvent,
+    DimensionRemovedEvent,
+} from '@casual-simulation/aux-vm';
+import { PortalConfig } from './PortalConfig';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
+import { CompoundGrid3D } from '../CompoundGrid3D';
+import { Grid3D } from '../Grid3D';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * The current dimension group 3d that the AUX Player is rendering.
+     * The map of portal tags to their related groups.
      */
-    private _dimensionGroup: DimensionGroup3D;
+    private _playerDimensionGroups: Map<string, DimensionGroup3D>;
 
-    private _dimensionBackground: Color | Texture = null;
-
-    private _pannable: boolean = null;
-    private _panMinX: number = null;
-    private _panMaxX: number = null;
-    private _panMinY: number = null;
-    private _panMaxY: number = null;
-
-    private _rotatable: boolean = null;
-
-    private _zoomable: boolean = null;
-    private _zoomMin: number = null;
-    private _zoomMax: number = null;
-
-    private _playerRotationX: number = null;
-    private _playerRotationY: number = null;
-    private _playerZoom: number = null;
-    private _gridScale: number = null;
-    private _portalTag: string = null;
+    private _portalTags: string[] = null;
+    private _portalConfigs = new Map<string, PortalConfig>();
+    private _primaryPortalConfig: PortalConfig;
+    private _grid: CompoundGrid3D = new CompoundGrid3D();
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    grid3D: PlayerGrid3D;
+    get grid3D() {
+        return this._grid;
+    }
+
+    get portals(): PortalConfig[] {
+        return [...this._portalConfigs.values()];
+    }
 
     get dimension(): string {
-        if (this._dimensionGroup) {
-            const dimensions = [...this._dimensionGroup.dimensions.values()];
+        if (this._playerDimensionGroups.size > 0) {
+            let dimensions = [] as string[];
+            for (let [key, group] of this._playerDimensionGroups) {
+                dimensions.push(...group.dimensions.values());
+            }
             return dimensions[0] || null;
         }
         return null;
@@ -88,184 +91,63 @@ export class PlayerSimulation3D extends Simulation3D {
         return this.dimensions.length > 0;
     }
 
-    /**
-     * Gets the background color that the simulation defines.
-     */
-    get backgroundColor() {
-        if (this._dimensionBackground) {
-            return this._dimensionBackground;
-        } else {
-            return super.backgroundColor;
-        }
-    }
-
-    /**
-     * Gets the pannability of the inventory camera that the simulation defines.
-     */
-    get pannable() {
-        if (this._pannable != null) {
-            return this._pannable;
-        } else {
-            return DEFAULT_PORTAL_PANNABLE;
-        }
-    }
-
-    /**
-     * Gets the minimum value the pan can be set to on the x axis
-     */
-    get panMinX() {
-        if (this._panMinX != null) {
-            return this._panMinX;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the maximum value the pan can be set to on the x axis
-     */
-    get panMaxX() {
-        if (this._panMaxX != null) {
-            return this._panMaxX;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the minimum value the pan can be set to on the y axis
-     */
-    get panMinY() {
-        if (this._panMinY != null) {
-            return this._panMinY;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the maximum value the pan can be set to on the y axis
-     */
-    get panMaxY() {
-        if (this._panMaxY != null) {
-            return this._panMaxY;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets if rotation is allowed in the inventory that the simulation defines.
-     */
-    get rotatable() {
-        if (this._rotatable != null) {
-            return this._rotatable;
-        } else {
-            return DEFAULT_PORTAL_ROTATABLE;
-        }
-    }
-
-    /**
-     * Gets if zooming is allowed in the inventory that the simulation defines.
-     */
-    get zoomable() {
-        if (this._zoomable != null) {
-            return this._zoomable;
-        } else {
-            return DEFAULT_PORTAL_ZOOMABLE;
-        }
-    }
-
-    /**
-     * Gets the minimum value the zoom can be set to
-     */
-    get zoomMin() {
-        if (this._zoomMin != null) {
-            return this._zoomMin;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the maximum value the zoom can be set to
-     */
-    get zoomMax() {
-        if (this._zoomMax != null) {
-            return this._zoomMax;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the zoom level of the player that the simulation defines.
-     */
-    get playerZoom() {
-        if (this._playerZoom != null) {
-            return this._playerZoom;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the x-axis rotation of the player that the simulation defines.
-     */
-    get playerRotationX() {
-        if (this._playerRotationX != null) {
-            return this._playerRotationX;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the x-axis rotation of the player that the simulation defines.
-     */
-    get playerRotationY() {
-        if (this._playerRotationY != null) {
-            return this._playerRotationY;
-        } else {
-            return null;
-        }
-    }
-
     get portalTag() {
-        return this._portalTag;
+        return this._portalTags;
     }
 
-    get gridScale() {
-        return this._gridScale;
-    }
-
-    set gridScale(scale: number) {
-        if (this._gridScale === scale) {
-            return;
-        }
-        if (this.grid3D) {
-            this.remove(this.grid3D);
-        }
-        this.grid3D = new PlayerGrid3D(scale).showGrid(false);
-        this.grid3D.useAuxCoordinates = true;
-    }
-
-    constructor(portalTag: string, game: Game, simulation: BrowserSimulation) {
+    constructor(
+        portalTags: string | string[],
+        game: Game,
+        simulation: BrowserSimulation
+    ) {
         super(game, simulation);
 
-        if (!hasValue(portalTag)) {
+        if (!hasValue(portalTags)) {
             throw new Error('The portal tag must be specified');
         }
 
-        this._portalTag = portalTag;
+        this._portalTags =
+            typeof portalTags === 'string' ? [portalTags] : portalTags;
+        this._playerDimensionGroups = new Map();
 
-        const calc = this.simulation.helper.createContext();
-        let gridScale = calculateGridScale(calc, null);
-        this.gridScale = gridScale;
+        this._subs.push(
+            this.onDimensionGroupRemoved.subscribe(group => {
+                this._playerDimensionGroups.delete(group.portalTag);
+            })
+        );
+    }
+
+    getPortalConfig(portal: string) {
+        return this._portalConfigs.get(portal);
     }
 
     getMainCameraRig(): CameraRig {
         return this._game.getMainCameraRig();
+    }
+
+    getDimensionGroupForGrid(grid: Grid3D): DimensionGroup3D {
+        for (let portal of this.portals) {
+            if (portal.grid3D === grid) {
+                const group = this.getDimensionGroupForPortal(portal.portalTag);
+                if (group) {
+                    return group;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    getDimensionGroupForPortal(portal: string): DimensionGroup3D {
+        return this._playerDimensionGroups.get(portal);
+    }
+
+    getDimensionForGrid(grid: Grid3D): string {
+        const group = this.getDimensionGroupForGrid(grid);
+        if (group) {
+            return [...group.dimensions.values()][0];
+        }
+        return null;
     }
 
     init() {
@@ -273,13 +155,8 @@ export class PlayerSimulation3D extends Simulation3D {
         this._watchDimensionBot();
     }
 
-    protected _frameUpdateCore(calc: BotCalculationContext) {
-        super._frameUpdateCore(calc);
-        this.grid3D.update();
-    }
-
     protected _getDimensionTags() {
-        return [this._portalTag];
+        return this._portalTags;
     }
 
     protected _filterDimensionEvent(
@@ -298,158 +175,55 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _createDimensionGroup(
         calc: BotCalculationContext,
-        bot: PrecalculatedBot
+        bot: PrecalculatedBot,
+        event: DimensionAddedEvent
     ) {
-        if (this._dimensionGroup) {
+        let group = this._playerDimensionGroups.get(event.dimensionTag);
+        if (group) {
             return null;
         }
 
-        this._dimensionGroup = this._constructDimensionGroup();
+        group = this._constructDimensionGroup(event.dimensionTag);
+        this._playerDimensionGroups.set(event.dimensionTag, group);
 
         // TODO: Update to support locking dimensions
-        return this._dimensionGroup;
+        return group;
     }
 
-    protected _constructDimensionGroup() {
+    protected _constructDimensionGroup(portalTag: string) {
         return new DimensionGroup3D(
             this,
             this.simulation.helper.userBot,
             'player',
-            this.decoratorFactory
+            this.decoratorFactory,
+            portalTag
         );
     }
 
     private _watchDimensionBot() {
-        this._subs.push(
-            watchPortalConfigBot(this.simulation, this._portalTag)
-                .pipe(
-                    tap(update => {
-                        const bot = update;
-
-                        if (bot) {
-                            const calc = this.simulation.helper.createContext();
-                            this._updatePortalValues(calc, bot);
-                        } else {
-                            this._clearPortalValues();
-                        }
-                    })
-                )
-                .subscribe()
-        );
-    }
-
-    protected _clearPortalValues() {
-        this._dimensionBackground = null;
-        this._pannable = null;
-        this._panMinX = null;
-        this._panMaxX = null;
-        this._panMinY = null;
-        this._panMaxY = null;
-        this._zoomable = null;
-        this._zoomMin = null;
-        this._zoomMax = null;
-        this._rotatable = null;
-        this._playerZoom = null;
-        this._playerRotationX = null;
-        this._playerRotationY = null;
-        this.gridScale = calculateGridScale(null, null);
-    }
-
-    protected _updatePortalValues(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        // Update the dimension background color.
-        //let dimensionBackgroundColor =
-        //bot.tags['auxPortalColor'];
-        let dimensionBackgroundColor = calculateBotValue(
-            calc,
-            bot,
-            `auxPortalColor`
-        );
-        this._dimensionBackground = hasValue(dimensionBackgroundColor)
-            ? new Color(dimensionBackgroundColor)
-            : undefined;
-        this._pannable = calculateBooleanTagValue(
-            calc,
-            bot,
-            `auxPortalPannable`,
-            DEFAULT_PORTAL_PANNABLE
-        );
-        this._panMinX = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMinX`,
-            null
-        );
-        this._panMaxX = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMaxX`,
-            null
-        );
-        this._panMinY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMinY`,
-            null
-        );
-        this._panMaxY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMaxY`,
-            null
-        );
-        this._zoomable = calculateBooleanTagValue(
-            calc,
-            bot,
-            `auxPortalZoomable`,
-            DEFAULT_PORTAL_ZOOMABLE
-        );
-        this._zoomMin = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalZoomableMin`,
-            null
-        );
-        this._zoomMax = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalZoomableMax`,
-            null
-        );
-        this._rotatable = calculateBooleanTagValue(
-            calc,
-            bot,
-            `auxPortalRotatable`,
-            DEFAULT_PORTAL_ROTATABLE
-        );
-        this._playerZoom = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPlayerZoom`,
-            null
-        );
-        this._playerRotationX = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPlayerRotationX`,
-            null
-        );
-        this._playerRotationY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPlayerRotationY`,
-            null
-        );
-        this.gridScale = calculateGridScale(calc, bot);
-        const dimensionLocked = isDimensionLocked(calc, bot);
-        if (dimensionLocked) {
-            let message: string =
-                'The ' + this.dimension + ' dimension is locked.';
-            this.simulation.helper.transaction(toast(message));
-            this.unsubscribe();
+        for (let portalTag of this._portalTags) {
+            const config = this._createPortalConfig(portalTag);
+            if (!this._primaryPortalConfig) {
+                this._primaryPortalConfig = config;
+            }
+            this._bindPortalConfig(config);
+            this._portalConfigs.set(portalTag, config);
+            this._grid.grids.push(config.grid3D);
+            this._subs.push(
+                config,
+                config.onGridScaleUpdated.subscribe(() => {
+                    this.ensureUpdate(this.bots.map(b => b.bot.id));
+                })
+            );
         }
+    }
+
+    protected _bindPortalConfig(config: PortalConfig) {
+        this.add(config.grid3D);
+    }
+
+    protected _createPortalConfig(portalTag: string) {
+        return new PortalConfig(portalTag, this.simulation);
     }
 
     protected _isDimensionGroupEvent(event: BotIndexEvent) {
@@ -458,6 +232,12 @@ export class PlayerSimulation3D extends Simulation3D {
             (event.bot.id === this.simulation.helper.userId &&
                 this._isUserDimensionGroupEvent(event))
         );
+    }
+
+    getGridScale(bot: AuxBot3D): number {
+        const portal = bot.dimensionGroup.portalTag;
+        const config = this._portalConfigs.get(portal);
+        return config ? config.gridScale : calculateGridScale(null, null);
     }
 
     private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
@@ -485,7 +265,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     unsubscribe() {
-        this._dimensionGroup = null;
+        this._playerDimensionGroups.clear();
         super.unsubscribe();
     }
 }

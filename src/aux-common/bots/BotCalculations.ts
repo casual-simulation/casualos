@@ -985,10 +985,25 @@ export function calculateGridScale(
             `auxPortalGridScale`,
             DEFAULT_WORKSPACE_GRID_SCALE
         );
-        return scale * gridScale;
+        return calculateGridScaleFromConstants(scale, gridScale);
     } else {
-        return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
+        return calculateGridScaleFromConstants(
+            DEFAULT_WORKSPACE_SCALE,
+            DEFAULT_WORKSPACE_GRID_SCALE
+        );
     }
+}
+
+/**
+ * Calculates the grid scale from the given constants.
+ * @param surfaceScale
+ * @param gridScale
+ */
+export function calculateGridScaleFromConstants(
+    surfaceScale: number,
+    gridScale: number
+) {
+    return surfaceScale * gridScale;
 }
 
 /**

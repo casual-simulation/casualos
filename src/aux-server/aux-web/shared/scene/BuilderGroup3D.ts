@@ -55,9 +55,10 @@ export class BuilderGroup3D extends DimensionGroup3D {
     constructor(
         simulation3D: Simulation3D,
         bot: Bot,
-        decoratorFactory: AuxBot3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory,
+        portalTag: string
     ) {
-        super(simulation3D, bot, 'builder', decoratorFactory);
+        super(simulation3D, bot, 'builder', decoratorFactory, portalTag);
     }
 
     protected _updateThis(
