@@ -22,6 +22,7 @@ import createBMFont, {
 } from 'three-bmfont-text';
 import { calculateAnchorPosition } from './SceneUtils';
 import { BotLabelAnchor } from '@casual-simulation/aux-common';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -44,9 +45,9 @@ export class Text3D extends Object3D {
     } = {};
 
     public static readonly defaultWidth: number = 200;
-    public static readonly extraSpace: number = 0.01;
-    public static readonly floatingExtraSpace: number = 0.12;
-    public static readonly defaultScale: number = 0.004;
+    public static readonly extraSpace: number = 0.001;
+    public static readonly floatingExtraSpace: number = 0.3;
+    public static readonly defaultScale: number = 0.01;
 
     public currentWidth: number = 200;
 
@@ -60,7 +61,7 @@ export class Text3D extends Object3D {
     // the text that was last set on this text3d.
     private _unprocessedText: string;
 
-    // The bounding box for the text 3d.
+    // The bounding box for the text 3d in world space.
     private _boundingBox: Box3;
 
     // The anchor position for the text 3d.
@@ -154,16 +155,28 @@ export class Text3D extends Object3D {
 
         this.updateBoundingBox();
 
+        const thisLocalBounds = this._boundingBox.clone();
+        const worldToLocal = new Matrix4();
+        worldToLocal.getInverse(this.parent.matrixWorld);
+        thisLocalBounds.applyMatrix4(worldToLocal);
+
+        const targetLocalBounds = bounds.clone();
+        targetLocalBounds.applyMatrix4(worldToLocal);
+
         const [pos, rotation] = calculateAnchorPosition(
-            bounds,
+            targetLocalBounds,
             this._anchor,
             this,
-            this._boundingBox,
+            thisLocalBounds,
             Text3D.defaultScale,
             this._anchor === 'floating'
                 ? Text3D.floatingExtraSpace
                 : Text3D.extraSpace
         );
+
+        const worldPos = pos.clone();
+        this.parent.localToWorld(worldPos);
+
         this.position.copy(pos);
         this._mesh.rotation.copy(
             new Euler(
@@ -207,19 +220,8 @@ export class Text3D extends Object3D {
         box.min.z = -1;
         box.max.z = 1;
 
-        let anchorWorldScale = new Vector3();
-        this.getWorldScale(anchorWorldScale);
-
-        let position = new Vector3();
-        this._mesh.getWorldPosition(position);
-
         // Apply the matrix to the bounding box.
-        let matrix = new Matrix4();
-        matrix.compose(
-            position,
-            this._mesh.quaternion.clone(),
-            anchorWorldScale
-        );
+        let matrix = this._mesh.matrixWorld;
         box.applyMatrix4(matrix);
 
         if (!this._boundingBox) {

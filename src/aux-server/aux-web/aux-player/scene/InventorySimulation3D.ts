@@ -29,12 +29,11 @@ import {
 } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
-import { PlayerGame } from './PlayerGame';
-import { PlayerGrid3D } from '../PlayerGrid3D';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { Color, Texture } from 'three';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
+import { InventoryPortalConfig } from './InventoryPortalConfig';
 
 export class InventorySimulation3D extends PlayerSimulation3D {
     /**
@@ -42,37 +41,119 @@ export class InventorySimulation3D extends PlayerSimulation3D {
      */
     inventoryDimension: string;
 
-    private _resizable: boolean;
-    private _height: number;
+    get inventoryConfig() {
+        return <InventoryPortalConfig>(
+            this.getPortalConfig('auxInventoryPortal')
+        );
+    }
+
+    /**
+     * Gets the background color that the simulation defines.
+     */
+    get backgroundColor() {
+        return this.inventoryConfig.backgroundColor || super.backgroundColor;
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get pannable() {
+        return this.inventoryConfig.pannable;
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the x axis
+     */
+    get panMinX() {
+        return this.inventoryConfig.panMinX;
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the x axis
+     */
+    get panMaxX() {
+        return this.inventoryConfig.panMaxX;
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the y axis
+     */
+    get panMinY() {
+        return this.inventoryConfig.panMinY;
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the y axis
+     */
+    get panMaxY() {
+        return this.inventoryConfig.panMaxY;
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get rotatable() {
+        return this.inventoryConfig.rotatable;
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get zoomable() {
+        return this.inventoryConfig.zoomable;
+    }
+
+    /**
+     * Gets the minimum value the zoom can be set to
+     */
+    get zoomMin() {
+        return this.inventoryConfig.zoomMin;
+    }
+
+    /**
+     * Gets the maximum value the zoom can be set to
+     */
+    get zoomMax() {
+        return this.inventoryConfig.zoomMax;
+    }
+
+    /**
+     * Gets the zoom level of the player that the simulation defines.
+     */
+    get playerZoom() {
+        return this.inventoryConfig.playerZoom;
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationX() {
+        return this.inventoryConfig.playerRotationX;
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationY() {
+        return this.inventoryConfig.playerRotationY;
+    }
 
     /**
      * Gets whether the portal is resizable.
      */
     get resizable() {
-        if (this._resizable != null) {
-            return this._resizable;
-        } else {
-            return DEFAULT_INVENTORY_PORTAL_RESIZABLE;
-        }
+        return this.inventoryConfig.resizable;
     }
 
     /**
      * Gets the height of the portal.
      */
     get height() {
-        if (this._height != null) {
-            return this._height;
-        } else {
-            return DEFAULT_INVENTORY_PORTAL_HEIGHT;
-        }
+        return this.inventoryConfig.height;
     }
 
     constructor(game: Game, simulation: BrowserSimulation) {
         super('auxInventoryPortal', game, simulation);
-
-        const calc = this.simulation.helper.createContext();
-        let gridScale = calculateGridScale(calc, null);
-        this.gridScale = gridScale;
     }
 
     getMainCameraRig(): CameraRig {
@@ -106,36 +187,21 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         super.init();
     }
 
-    protected _constructDimensionGroup() {
+    protected _constructDimensionGroup(portalTag: string) {
         return new InventoryContextGroup3D(
             this,
             this.simulation.helper.userBot,
             'player',
-            this.decoratorFactory
+            this.decoratorFactory,
+            portalTag
         );
     }
 
-    protected _clearPortalValues() {
-        this._resizable = null;
-        this._height = null;
-    }
-
-    protected _updatePortalValues(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        super._updatePortalValues(calc, bot);
-        this._resizable = calculateBooleanTagValue(
-            calc,
-            bot,
-            `auxInventoryPortalResizable`,
-            DEFAULT_INVENTORY_PORTAL_RESIZABLE
-        );
-        this._height = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxInventoryPortalHeight`,
-            DEFAULT_INVENTORY_PORTAL_HEIGHT
-        );
+    protected _createPortalConfig(portalTag: string) {
+        if (portalTag === 'auxInventoryPortal') {
+            return new InventoryPortalConfig(portalTag, this.simulation);
+        } else {
+            return super._createPortalConfig(portalTag);
+        }
     }
 }

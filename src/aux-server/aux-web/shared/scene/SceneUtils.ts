@@ -30,6 +30,7 @@ import {
     Color,
     MeshStandardMaterial,
     Ray,
+    Quaternion,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -40,6 +41,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -415,10 +417,10 @@ export function disposeScene(scene: Scene) {
 
 /**
  * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
- * @param anchorBounds The bounds being anchored to.
+ * @param anchorBounds The bounds being anchored to. Should be in local space relative to the given obj.
  * @param anchorType The anchor type that will be calculated.
  * @param obj The object to anchor.
- * @param objBoundingBox The bounding box of the object to anchor.
+ * @param objBoundingBox The bounding box of the object to anchor. Should be in local space relative to the given obj.
  * @param defaultScale The default scale of the object.
  * @param extraSpace The extra spacing to use as padding away from the anchor position.
  */
@@ -615,6 +617,25 @@ export function setColor(mesh: Mesh | Sprite, color: string) {
         shapeMat.visible = true;
         shapeMat.color = new Color(0xffffff);
     }
+}
+
+/**
+ * Creates a ray for the given direction from the given object's perspective in world space.
+ * @param direction The direction.
+ * @param obj The object.
+ */
+export function objectWorldDirectionRay(
+    direction: Vector3,
+    obj: Object3D
+): Ray {
+    const worldRotation = new Quaternion();
+    worldRotation.setFromRotationMatrix(obj.matrixWorld);
+    // obj.getWorldQuaternion(worldRotation);
+    const forward = direction.applyQuaternion(worldRotation);
+    const worldPosition = new Vector3();
+    worldPosition.setFromMatrixPosition(obj.matrixWorld);
+    // obj.getWorldPosition(worldPosition);
+    return new Ray(worldPosition, forward);
 }
 
 /**

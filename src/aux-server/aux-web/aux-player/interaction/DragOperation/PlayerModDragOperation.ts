@@ -25,6 +25,7 @@ import { Input, InputMethod } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
+import { GridTile } from 'aux-web/aux-player/Grid3D';
 
 /**
  * Mod drag operation handles dragging mods
@@ -35,6 +36,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
     protected _interaction: PlayerInteractionManager;
     protected _simulation3D: PlayerPageSimulation3D;
     protected _inventorySimulation3D: InventorySimulation3D;
+
     // Determines if the bot is in the inventory currently
     protected _inInventory: boolean;
 
@@ -68,47 +70,67 @@ export class PlayerModDragOperation extends BaseModDragOperation {
         // TODO: This needs a refactor to share more code with
         //       PlayerBotDragOperation.
 
-        let nextContext = this._simulation3D.dimension;
+        this._updateCurrentViewport();
 
-        if (!this._controller) {
-            // Test to see if we are hovering over the inventory simulation view.
-            const pagePos = this.game.getInput().getMousePagePos();
-            const inventoryViewport = this.game.getInventoryViewport();
-            if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
-                nextContext = this._inventorySimulation3D.inventoryDimension;
-            }
-        }
+        // Get input ray for grid ray cast.
+        let inputRay: Ray = this._getInputRay();
 
-        let canDrag = true;
+        // Get grid tile from correct simulation grid.
+        const grid3D = this._inInventory
+            ? this._inventorySimulation3D.grid3D
+            : this._simulation3D.grid3D;
+        const gridTile = grid3D.getTileFromRay(inputRay);
 
-        if (!canDrag) {
+        if (!gridTile) {
             return;
         }
 
+        const nextDimensionGroup = this._calculateNextDimensionGroup(gridTile);
+        this.dimensionGroup = nextDimensionGroup;
+        const nextContext = [...this.dimensionGroup.dimensions.values()][0];
+
+        this._updateCurrentDimension(nextContext);
+
+        this._toCoord = gridTile.tileCoordinate;
+
+        const result = calculateBotDragStackPosition(
+            calc,
+            this._dimension,
+            gridTile.tileCoordinate,
+            this._mod
+        );
+
+        this._other = result.other;
+        this._merge = result.merge;
+
+        this._sendDropEnterExitEvents(this._merge ? this._other : null);
+
+        if (result.merge || result.index === 0) {
+            this._updateModPosition(
+                calc,
+                gridTile.tileCoordinate,
+                result.index
+            );
+        }
+    }
+
+    private _updateCurrentDimension(nextContext: string) {
         if (nextContext !== this._dimension) {
             this._previousDimension = this._dimension;
             this._dimension = nextContext;
             this._inInventory =
                 nextContext === this._inventorySimulation3D.inventoryDimension;
         }
+    }
 
-        if (this._inInventory) {
-            const dimension = this._inventorySimulation3D.inventoryDimension;
-            this.dimensionGroup = <DimensionGroup3D>(
-                this._inventorySimulation3D.dimensions.find(c =>
-                    c.dimensions.has(dimension)
-                )
-            );
-        } else {
-            const dimension = this._simulation3D.dimension;
-            this.dimensionGroup = <DimensionGroup3D>(
-                this._simulation3D.dimensions.find(c =>
-                    c.dimensions.has(dimension)
-                )
-            );
-        }
+    private _calculateNextDimensionGroup(tile: GridTile) {
+        const dimension =
+            this._simulation3D.getDimensionGroupForGrid(tile.grid) ||
+            this._inventorySimulation3D.getDimensionGroupForGrid(tile.grid);
+        return dimension;
+    }
 
-        // Get input ray for grid ray cast.
+    private _getInputRay() {
         let inputRay: Ray;
         if (this._controller) {
             inputRay = objectForwardRay(this._controller.ray);
@@ -116,7 +138,6 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
-
             if (this._inInventory) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, inventoryViewport),
@@ -129,35 +150,20 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 );
             }
         }
+        return inputRay;
+    }
 
-        // Get grid tile from correct simulation grid.
-        const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
-            : this._simulation3D.grid3D;
-        const gridTile = grid3D.getTileFromRay(inputRay);
-
-        if (gridTile) {
-            this._toCoord = gridTile.tileCoordinate;
-
-            const result = calculateBotDragStackPosition(
-                calc,
-                this._dimension,
-                gridTile.tileCoordinate,
-                this._mod
+    private _updateCurrentViewport() {
+        if (!this._controller) {
+            // Test to see if we are hovering over the inventory simulation view.
+            const pagePos = this.game.getInput().getMousePagePos();
+            const inventoryViewport = this.game.getInventoryViewport();
+            this._inInventory = Input.pagePositionOnViewport(
+                pagePos,
+                inventoryViewport
             );
-
-            this._other = result.other;
-            this._merge = result.merge;
-
-            this._sendDropEnterExitEvents(this._merge ? this._other : null);
-
-            if (result.merge || result.index === 0) {
-                this._updateModPosition(
-                    calc,
-                    gridTile.tileCoordinate,
-                    result.index
-                );
-            }
+        } else {
+            this._inInventory = false;
         }
     }
 }

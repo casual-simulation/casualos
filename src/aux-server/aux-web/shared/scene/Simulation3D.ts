@@ -28,6 +28,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
+import { AuxBot3D } from './AuxBot3D';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -82,6 +83,11 @@ export abstract class Simulation3D extends Object3D
     private _dimensionGroups: Map<string, DimensionGroup>;
 
     /**
+     * A map of "{botId}-{dimensionTag}" to their dimension group 3D object.
+     */
+    private _dimensionTagsMap: Map<string, DimensionGroup>;
+
+    /**
      * A map of bot Ids to their bots.
      */
     private _botMap: Map<string, AuxBotVisualizer[]>;
@@ -134,6 +140,7 @@ export abstract class Simulation3D extends Object3D
         this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
         this._dimensionMap = new Map();
         this._dimensionGroups = new Map();
+        this._dimensionTagsMap = new Map();
         this._botMap = new Map();
     }
 
@@ -210,6 +217,17 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
+    /**
+     * Gets the dimension group for the given bot ID and portal tag.
+     * @param botId The ID of the bot that is defining the portal.
+     * @param portalTag The tag that is defining the portal.
+     */
+    dimensionGroupForBotAndTag(botId: string, portalTag: string) {
+        return this._dimensionTagsMap.get(
+            keyForBotIDAndPortalTag(botId, portalTag)
+        );
+    }
+
     private _dimensionsUpdated(update: BotDimensionsUpdate): void {
         this._currentContext = update.calc;
         const calc = update.calc;
@@ -255,13 +273,15 @@ export abstract class Simulation3D extends Object3D
         calc: BotCalculationContext,
         event: DimensionAddedEvent
     ) {
-        let group = this._dimensionGroups.get(event.dimensionBot.id);
+        const key = keyForEvent(event);
+        let group = this._dimensionTagsMap.get(key);
         if (!group) {
-            group = this._createDimensionGroup(calc, event.dimensionBot);
+            group = this._createDimensionGroup(calc, event.dimensionBot, event);
             if (!group) {
                 return;
             }
             this._dimensionGroups.set(event.dimensionBot.id, group);
+            this._dimensionTagsMap.set(key, group);
             this.dimensions.push(group);
         }
 
@@ -274,18 +294,33 @@ export abstract class Simulation3D extends Object3D
             event.existingBots
         );
 
-        if (group instanceof DimensionGroup3D) {
-            this.add(group);
-        }
+        this._bindDimensionGroup(group);
 
         this._onDimensionGroupAdded.next(group);
     }
 
-    private _dimensionRemoved(
+    /**
+     * Adds the given dimension group to the 3D scene.
+     * @param group The group.
+     */
+    protected _bindDimensionGroup(group: DimensionGroup) {
+        if (group instanceof DimensionGroup3D) {
+            this.add(group);
+        }
+    }
+
+    protected _unbindDimensionGroup(group: DimensionGroup) {
+        if (group instanceof DimensionGroup3D) {
+            this.remove(group);
+        }
+    }
+
+    protected _dimensionRemoved(
         calc: BotCalculationContext,
         event: DimensionRemovedEvent
     ) {
-        let group = this._dimensionGroups.get(event.dimensionBot.id);
+        const key = keyForEvent(event);
+        let group = this._dimensionTagsMap.get(key);
         if (!group) {
             return;
         }
@@ -300,9 +335,8 @@ export abstract class Simulation3D extends Object3D
         if (group.dimensions.size === 0) {
             removeFromList(group, this.dimensions);
             this._dimensionGroups.delete(event.dimensionBot.id);
-            if (group instanceof DimensionGroup3D) {
-                this.remove(group);
-            }
+            this._dimensionTagsMap.delete(key);
+            this._unbindDimensionGroup(group);
 
             this._onDimensionGroupRemoved.next(group);
         }
@@ -418,7 +452,8 @@ export abstract class Simulation3D extends Object3D
      */
     protected abstract _createDimensionGroup(
         calc: BotCalculationContext,
-        bot: Bot
+        bot: Bot,
+        event: DimensionAddedEvent
     ): DimensionGroup;
 
     /**
@@ -570,6 +605,12 @@ export abstract class Simulation3D extends Object3D
      */
     abstract getMainCameraRig(): CameraRig;
 
+    /**
+     * Gets the grid scale that should be used for the given bot.
+     * @param bot The bot.
+     */
+    abstract getGridScale(bot: AuxBot3D): number;
+
     unsubscribe(): void {
         this._subs.forEach(s => s.unsubscribe());
         this.remove(...this.children);
@@ -580,6 +621,16 @@ export abstract class Simulation3D extends Object3D
         this._dimensionMap = new Map();
         this._dimensionGroups = new Map();
     }
+}
+
+function keyForEvent(
+    event: DimensionAddedEvent | DimensionRemovedEvent
+): string {
+    return keyForBotIDAndPortalTag(event.dimensionBot.id, event.dimensionTag);
+}
+
+function keyForBotIDAndPortalTag(botId: string, portalTag: string): string {
+    return `${botId}-${portalTag}`;
 }
 
 export function removeFromList<T>(item: T, arr: T[]) {

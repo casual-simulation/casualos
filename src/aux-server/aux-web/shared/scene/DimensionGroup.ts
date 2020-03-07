@@ -16,6 +16,11 @@ export interface DimensionGroup {
     dimensions: Set<string>;
 
     /**
+     * The tag of the portal that this dimension group represents.
+     */
+    portalTag: string;
+
+    /**
      * Gets the list of bots
      */
     getBots(): AuxBotVisualizer[];

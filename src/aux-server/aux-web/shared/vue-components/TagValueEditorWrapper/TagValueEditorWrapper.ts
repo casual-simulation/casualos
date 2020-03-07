@@ -45,7 +45,6 @@ export default class TagValueEditorWrapper extends Vue {
         document.addEventListener('mousemove', moveHandler);
 
         const upHandler = () => {
-            console.log('Mouse up');
             document.removeEventListener('mousemove', moveHandler);
             document.removeEventListener('mouseup', upHandler);
         };
@@ -56,6 +55,5 @@ export default class TagValueEditorWrapper extends Vue {
         const currentY = event.pageY;
         const delta = this._startMouseY - currentY;
         this.finalHeight = this._startHeight + delta;
-        console.log('Mouse move ' + this.finalHeight + ' ' + delta);
     }
 }

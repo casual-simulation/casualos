@@ -33,9 +33,9 @@ import drop from 'lodash/drop';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { PlayerGrid3D } from '../../PlayerGrid3D';
 import { DebugObjectManager } from '../../../shared/scene/debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
+import { Grid3D, GridTile } from '../../Grid3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -136,19 +136,74 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     protected _onDrag(calc: BotCalculationContext): void {
-        const mode = getBotDragMode(calc, this._bots[0]);
+        this._updateCurrentViewport();
 
-        let nextContext = this._simulation3D.dimension;
+        // Get input ray for grid ray cast.
+        let inputRay: Ray = this._getInputRay();
 
+        const grid3D = this._inInventory
+            ? this._inventorySimulation3D.grid3D
+            : this._simulation3D.grid3D;
+
+        if (
+            this._controller &&
+            this._getBotsPositioningMode(calc) === 'absolute'
+        ) {
+            // Drag in free space
+            this._dragFreeSpace(calc, grid3D, inputRay);
+            return;
+        }
+
+        const gridTile = grid3D.getTileFromRay(inputRay);
+
+        if (!gridTile) {
+            return;
+        }
+
+        // Update the next context
+        const nextContext = this._calculateNextDimension(gridTile);
+
+        const canDragIntoDimension = this._canDragInDimension(
+            calc,
+            nextContext
+        );
+
+        if (!canDragIntoDimension) {
+            return;
+        }
+
+        this._updateCurrentDimension(nextContext);
+
+        // Drag on the grid
+        this._dragOnGrid(calc, grid3D, gridTile);
+    }
+
+    private _updateCurrentViewport() {
         if (!this._controller) {
             // Test to see if we are hovering over the inventory simulation view.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
-            if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
-                nextContext = this._inventorySimulation3D.inventoryDimension;
-            }
+            this._inInventory = Input.pagePositionOnViewport(
+                pagePos,
+                inventoryViewport
+            );
+        } else {
+            this._inInventory = false;
         }
+    }
 
+    private _updateCurrentDimension(nextContext: string) {
+        if (nextContext !== this._dimension) {
+            this._previousDimension = this._dimension;
+            this._dimension = nextContext;
+        }
+    }
+
+    private _canDragInDimension(
+        calc: BotCalculationContext,
+        nextContext: string
+    ) {
+        const mode = getBotDragMode(calc, this._bots[0]);
         const changingContexts = this._originalDimension !== nextContext;
         let canDrag = false;
 
@@ -158,18 +213,17 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             canDrag = true;
         }
 
-        if (!canDrag) {
-            return;
-        }
+        return canDrag;
+    }
 
-        if (nextContext !== this._dimension) {
-            this._previousDimension = this._dimension;
-            this._dimension = nextContext;
-            this._inInventory =
-                nextContext === this._inventorySimulation3D.inventoryDimension;
-        }
+    private _calculateNextDimension(tile: GridTile) {
+        const dimension =
+            this._simulation3D.getDimensionForGrid(tile.grid) ||
+            this._inventorySimulation3D.getDimensionForGrid(tile.grid);
+        return dimension;
+    }
 
-        // Get input ray for grid ray cast.
+    private _getInputRay() {
         let inputRay: Ray;
         if (this._controller) {
             inputRay = objectForwardRay(this._controller.ray);
@@ -177,7 +231,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // Get input ray from correct camera based on which dimension we are in.
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
-
             if (this._inInventory) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, inventoryViewport),
@@ -190,24 +243,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 );
             }
         }
-
-        const grid3D = this._inInventory
-            ? this._inventorySimulation3D.grid3D
-            : this._simulation3D.grid3D;
-        if (
-            this._controller &&
-            this._getBotsPositioningMode(calc) === 'absolute'
-        ) {
-            this._dragFreeSpace(calc, grid3D, inputRay);
-        } else {
-            // Get grid tile from correct simulation grid.
-            this._dragOnGrid(calc, grid3D, inputRay);
-        }
+        return inputRay;
     }
 
     private _dragFreeSpace(
         calc: BotCalculationContext,
-        grid3D: PlayerGrid3D,
+        grid3D: Grid3D,
         inputRay: Ray
     ) {
         const attachPoint = new Group();
@@ -245,10 +286,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _dragOnGrid(
         calc: BotCalculationContext,
-        grid3D: PlayerGrid3D,
-        inputRay: Ray
+        grid3D: Grid3D,
+        gridTile: GridTile
     ) {
-        const gridTile = grid3D.getTileFromRay(inputRay);
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
             const result = calculateBotDragStackPosition(

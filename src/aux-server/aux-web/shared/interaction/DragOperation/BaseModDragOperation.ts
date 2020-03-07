@@ -145,7 +145,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
             if (this._controller) {
                 const curPose = this._controller.ray.clone();
-                shouldUpdateDrag = posesEqual(
+                shouldUpdateDrag = !posesEqual(
                     curPose,
                     this._lastVRControllerPose
                 );

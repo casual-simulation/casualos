@@ -20,6 +20,9 @@ import { Dictionary } from 'lodash';
 import groupBy from 'lodash/groupBy';
 import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
+import { GridTile, Grid3D } from './Grid3D';
+import { disposeObject3D } from '../shared/scene/SceneUtils';
+import { hasValue } from '@casual-simulation/aux-common';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
@@ -30,11 +33,44 @@ export const GRIDLINES_Y_END = 5;
 /**
  * A grid for Aux Player to help position objects in a dimension.
  */
-export class PlayerGrid3D extends Object3D {
-    tileScale: number;
+export class BoundedGrid3D extends Object3D implements Grid3D {
     useAuxCoordinates: boolean = false;
 
+    get tileScale() {
+        return this._tileScale;
+    }
+
+    set tileScale(scale: number) {
+        if (scale === this._tileScale) {
+            return;
+        }
+        this._tileScale = scale;
+        this.showGrid(this._showGrid);
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value: boolean) {
+        if (value === this._enabled) {
+            return;
+        }
+        this._enabled = value;
+        if (this._gridLines) {
+            this._gridLines.visible = this._enabled && this._showGrid;
+        }
+    }
+
     private _gridLines: LineSegments;
+    private _tileScale: number;
+    private _enabled: boolean = true;
+    private _showGrid: boolean = false;
+
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
 
     get plane(): Plane {
         const worldQuaternion = this.getWorldQuaternion(new Quaternion());
@@ -87,12 +123,23 @@ export class PlayerGrid3D extends Object3D {
         // Snap position to a grid center.
         let tileX = this._snapToTileCoord(localPos.x);
         let tileY = this._snapToTileCoord(localPos.z);
+
+        if (
+            tileX < this.minX ||
+            tileX > this.maxX ||
+            tileY < this.minY ||
+            tileY > this.maxY
+        ) {
+            return null;
+        }
+
         let tilePoints = calculateGridTilePoints(tileX, tileY, this.tileScale);
 
         let tile: GridTile = {
-            center: tilePoints.center,
-            corners: tilePoints.corners,
+            center: this.localToWorld(tilePoints.center),
+            corners: tilePoints.corners.map(p => this.localToWorld(p)),
             tileCoordinate: new Vector2(tileX, tileY),
+            grid: this,
         };
 
         tile.tileCoordinate = new Vector2(tileX, tileY);
@@ -103,13 +150,24 @@ export class PlayerGrid3D extends Object3D {
      * Retrieve the grid tile that matches the given coordinate.
      * @param tileCoordinate The tile coordinate.
      */
-    getTileFromCoordinate(x: number, y: number): GridTile {
+    getTileFromCoordinate(
+        x: number,
+        y: number,
+        worldSpace: boolean = true
+    ): GridTile {
         let tilePoints = calculateGridTilePoints(x, y, this.tileScale);
 
+        const center = worldSpace
+            ? this.localToWorld(tilePoints.center)
+            : tilePoints.center;
+        const corners = worldSpace
+            ? tilePoints.corners.map(p => this.localToWorld(p))
+            : tilePoints.corners;
         return {
-            center: tilePoints.center,
-            corners: tilePoints.corners,
+            center: center,
+            corners: corners,
             tileCoordinate: new Vector2(x, y),
+            grid: this,
         };
     }
 
@@ -139,7 +197,7 @@ export class PlayerGrid3D extends Object3D {
         xEnd: number,
         yStart: number,
         yEnd: number,
-        duration: number
+        duration?: number
     ) {
         // Debug all tile corner points.
         for (let x = xStart; x <= xEnd; x++) {
@@ -179,29 +237,44 @@ export class PlayerGrid3D extends Object3D {
         }
     }
 
-    showGrid(show: boolean): PlayerGrid3D {
+    showGrid(show: boolean, recreate: boolean = false): BoundedGrid3D {
         if (show === undefined || show === null) {
             return;
         }
+        this._showGrid = show;
 
         if (this._gridLines) {
-            this._gridLines.visible = show;
-        } else {
+            this._gridLines.visible = show && this._enabled;
+        }
+
+        if (!this._gridLines || recreate) {
             if (show) {
                 // Create the grid lines.
-                let tiles: GridTile[] = [];
-                for (let x = GRIDLINES_X_START; x <= GRIDLINES_X_END; x++) {
-                    for (let y = GRIDLINES_Y_START; y <= GRIDLINES_Y_END; y++) {
-                        tiles.push(this.getTileFromCoordinate(x, y));
-                    }
-                }
-
-                this._gridLines = constructGridLines(tiles);
-                this.add(this._gridLines);
+                this._createGridLines();
             }
         }
 
         return this;
+    }
+
+    private _createGridLines() {
+        if (this._gridLines) {
+            this.remove(this._gridLines);
+            disposeObject3D(this._gridLines);
+        }
+        let tiles: GridTile[] = [];
+        let startX = hasValue(this.minX) ? this.minX : GRIDLINES_X_START;
+        let endX = hasValue(this.maxX) ? this.maxX : GRIDLINES_X_END;
+        let startY = hasValue(this.minY) ? this.minY : GRIDLINES_Y_START;
+        let endY = hasValue(this.maxY) ? this.maxY : GRIDLINES_Y_END;
+        for (let x = startX; x <= endX; x++) {
+            for (let y = startY; y <= endY; y++) {
+                tiles.push(this.getTileFromCoordinate(x, y, false));
+            }
+        }
+        this._gridLines = constructGridLines(tiles);
+        this._gridLines.visible = this._showGrid && this._enabled;
+        this.add(this._gridLines);
     }
 
     private _snapToTileCoord(num: number): number {
@@ -227,24 +300,6 @@ export class PlayerGrid3D extends Object3D {
         }
         return num;
     }
-}
-
-export interface GridTile {
-    /**
-     * The center of the tile in 3d coordinates.
-     */
-    center: Vector3;
-
-    /**
-     * The corners of the tile in 3d coordinates.
-     * [0] topLeft [1] topRight [2] bottomRight [3] bottomLeft
-     */
-    corners: Vector3[];
-
-    /**
-     * The 2d coordinate of the tile on the grid.
-     */
-    tileCoordinate: Vector2;
 }
 
 /**

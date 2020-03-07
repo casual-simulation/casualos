@@ -8,12 +8,14 @@ import {
     calculateNumericalTagValue,
     getBotLabelAnchor,
     BotLabelAnchor,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
+import { calculateScale } from '../SceneUtils';
 
 export class LabelDecorator extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
@@ -157,13 +159,16 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateLabelSize(calc: BotCalculationContext) {
+        let gridScale = this.bot3D.gridScale;
         let labelSize =
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
                 'auxLabelSize',
                 1
-            ) * Text3D.defaultScale;
+            ) *
+            gridScale *
+            Text3D.defaultScale;
 
         if (this._autoSizeMode) {
             let labelWorldPos = new Vector3();
