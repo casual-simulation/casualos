@@ -55,7 +55,7 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
             'auxFormAddress'
         );
 
-        if (this._targetMeshDecorator.mesh && hasValue(imageValue)) {
+        if (this._canSetTexture() && hasValue(imageValue)) {
             if (this.image !== imageValue) {
                 this.image = imageValue;
                 imageValueChanged = true;
@@ -94,6 +94,13 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
         }
     }
 
+    private _canSetTexture() {
+        return (
+            this._targetMeshDecorator.mesh &&
+            this._targetMeshDecorator.allowMaterialModifications
+        );
+    }
+
     dispose() {
         if (this._targetMeshDecorator) {
             this._targetMeshDecorator.onMeshUpdated.removeListener(
@@ -111,7 +118,7 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
     private _updateTargetMeshTexture(): void {
         if (
             !this._targetMeshDecorator.allowModifications ||
-            !this._targetMeshDecorator.mesh
+            !this._canSetTexture()
         ) {
             return;
         }

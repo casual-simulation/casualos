@@ -67,6 +67,10 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         return this._subShape === null && this._shape !== 'iframe';
     }
 
+    get allowMaterialModifications() {
+        return this._subShape === null && this._shape !== 'iframe';
+    }
+
     /**
      * The optional stroke outline for the bot.
      */
@@ -123,7 +127,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateStroke(calc: BotCalculationContext) {
-        if (!this._canHaveStroke) {
+        if (!this._canHaveStroke || !this.mesh) {
             return;
         }
 
@@ -141,11 +145,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const hasStroke = typeof strokeColorValue !== 'undefined';
         if (hasStroke && !this.stroke) {
             this.stroke = createStroke();
-            this.container.add(this.stroke);
+            this.mesh.add(this.stroke);
         } else if (!hasStroke) {
             if (this.stroke) {
                 disposeMesh(this.stroke);
-                this.container.remove(this.stroke);
+                this.mesh.remove(this.stroke);
 
                 this.stroke = null;
             }
@@ -170,9 +174,17 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateAddress(calc: BotCalculationContext, address: string) {
-        if (this._iframe) {
-            HtmlMixerHelpers.setIframeSrc(this._iframe, address);
+        if (this._address === address) {
+            return;
         }
+        this._address = address;
+        if (this._iframe) {
+            this._updateIframeSrc();
+        }
+    }
+
+    private _updateIframeSrc() {
+        HtmlMixerHelpers.setIframeSrc(this._iframe, this._address);
     }
 
     dispose(): void {
@@ -261,10 +273,16 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._iframe = new HtmlMixer.Plane(mixerContext, domElement, {
             elementW: 768,
             planeW: 1,
-            planeH: 3 / 4,
+            planeH: 1,
         });
 
         this.container.add(this._iframe.object3d);
+
+        this._createCube();
+        this.mesh.scale.set(1, 0.01, 0.05);
+        this.mesh.position.set(0, -0.5, 0);
+
+        this._updateIframeSrc();
     }
 
     private _createGltf() {
