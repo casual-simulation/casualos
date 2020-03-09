@@ -127,17 +127,6 @@ export interface BotTags {
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
     ['auxFormAddress']?: string;
-    ['auxIframe']?: string;
-    ['auxIframeX']?: number;
-    ['auxIframeY']?: number;
-    ['auxIframeZ']?: number;
-    ['auxIframeSizeX']?: number;
-    ['auxIframeSizeY']?: number;
-    ['auxIframeRotationX']?: number;
-    ['auxIframeRotationY']?: number;
-    ['auxIframeRotationZ']?: number;
-    ['auxIframeElementWidth']?: number;
-    ['auxIframeScale']?: number;
     ['auxCreator']?: string;
     ['auxConfigBot']?: string;
     ['auxProgressBar']?: unknown;
@@ -762,17 +751,6 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarBackgroundColor',
     'auxProgressBarPosition',
     'auxUniverseConnectedSessions',
-    'auxIframe',
-    'auxIframeX',
-    'auxIframeY',
-    'auxIframeZ',
-    'auxIframeSizeX',
-    'auxIframeSizeY',
-    'auxIframeRotationX',
-    'auxIframeRotationY',
-    'auxIframeRotationZ',
-    'auxIframeElementWidth',
-    'auxIframeScale',
 
     'auxTaskOutput',
     'auxTaskError',

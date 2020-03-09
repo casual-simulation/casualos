@@ -12,7 +12,6 @@ import { WordBubbleDecorator } from './WordBubbleDecorator';
 import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { TextureDecorator } from './TextureDecorator';
-import { IFramePlaneDecorator } from './IFramePlaneDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 import { Simulation3D } from '../Simulation3D';
 import { Game } from '../Game';
@@ -76,8 +75,7 @@ export class AuxBot3DDecoratorFactory {
                 new UpdateMaxtrixDecorator(bot3d),
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(bot3d, this.simulation),
-                new IFramePlaneDecorator(bot3d, this.game)
+                new LineToDecorator(bot3d, this.simulation)
             );
         }
 
