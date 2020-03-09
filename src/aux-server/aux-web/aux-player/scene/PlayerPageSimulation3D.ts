@@ -64,17 +64,17 @@ import {
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
-const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(-0.025, 0.1, 0.1);
+const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(0.05, 0.1, 0.1);
 const DEFAULT_RIGHT_WRIST_ROTATION_OFFSET = new Euler(
-    30 * ThreeMath.DEG2RAD,
-    0,
-    90 * ThreeMath.DEG2RAD
-);
-const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(0.025, 0.1, 0.1);
-const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
-    30 * ThreeMath.DEG2RAD,
+    -120 * ThreeMath.DEG2RAD,
     0,
     -90 * ThreeMath.DEG2RAD
+);
+const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(-0.05, 0.1, 0.1);
+const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
+    -120 * ThreeMath.DEG2RAD,
+    0,
+    90 * ThreeMath.DEG2RAD
 );
 
 /**

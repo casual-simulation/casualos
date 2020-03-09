@@ -341,10 +341,20 @@ function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
     };
 
     Object.defineProperty(script, 'toJSON', {
-        value: () => ({
-            id: bot.id,
-            tags: tagsProxy,
-        }),
+        value: () => {
+            if ('space' in bot) {
+                return {
+                    id: bot.id,
+                    space: bot.space,
+                    tags: tagsProxy,
+                };
+            } else {
+                return {
+                    id: bot.id,
+                    tags: tagsProxy,
+                };
+            }
+        },
         writable: false,
         enumerable: false,
 

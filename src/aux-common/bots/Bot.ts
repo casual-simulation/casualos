@@ -674,6 +674,8 @@ export const KNOWN_PORTALS: string[] = [
     'auxSheetPortal',
     'auxInventoryPortal',
     'auxMenuPortal',
+    'auxLeftWristPortal',
+    'auxRightWristPortal',
 ];
 
 /**
