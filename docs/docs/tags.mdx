@@ -764,7 +764,7 @@ The size of bots in the portal.
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number > 0'>
-    The size of bots in the portal. (Default is 0.2)
+    The size of bots in the portal. (Default is 0.025 for wrist portals and 0.2 for all other portals)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -802,6 +802,28 @@ Whether the player will be able to resize the viewport for the inventory portal.
   <PossibleValueCode value='false'>
     The inventory is not resizable.
   </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxWristPortalHeight`
+
+The number of grid spaces that the wrist portal should have in the Y direction.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1'>
+    The number of of grid spaces that the portal should have in the Y direction. (Default is 6)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxWristPortalWidth`
+
+The number of grid spaces that the wrist portal should have in the X direction.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1'>
+    The number of of grid spaces that the portal should have in the X direction. (Default is 6)
+  </PossibleValue>
 </PossibleValuesTable>
 
 ## Channel Config Tags
@@ -1072,6 +1094,24 @@ Only available on the player bot.
 </Badges>
 
 The dimension that is loaded into the "menu" portal in auxPlayer.
+Only available on the player bot.
+
+### `auxLeftWristPortal`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension that is loaded onto the left controller near the wrist when in VR.
+Only available on the player bot.
+
+### `auxRightWristPortal`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The dimension that is loaded onto the right controller near the wrist when in VR.
 Only available on the player bot.
 
 ## Hidden Tags
