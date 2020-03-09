@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V1.0.15
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved `@onPlayerPortalChanged` to support `auxLeftWristPortal` and `auxRightWristPortal`.
+    -   Moved the left and right wrist portals to the top of the wrist instead of the bottom.
+
+-   :book: Documentation
+    -   Added documentation for the wrist portals and their related config bot tags.
+
 ## V1.0.14
 
 ### Date: 3/6/2020
