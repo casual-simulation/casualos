@@ -6,10 +6,30 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   Replaced all of the experimental iframe tags with the `iframe` `#auxForm`.
+        -   `auxIframe`
+        -   `auxIframeX`
+        -   `auxIframeY`
+        -   `auxIframeZ`
+        -   `auxIframeSizeX`
+        -   `auxIframeSizeY`
+        -   `auxIframeRotationX`
+        -   `auxIframeRotationY`
+        -   `auxIframeRotationZ`
+        -   `auxIframeElementWidth`
+        -   `auxIframeScale`
+
 -   :rocket: Improvements
 
     -   Improved `@onPlayerPortalChanged` to support `auxLeftWristPortal` and `auxRightWristPortal`.
     -   Moved the left and right wrist portals to the top of the wrist instead of the bottom.
+    -   Added the `iframe` option for `#auxForm`.
+        -   `iframe` has two subtypes:
+            -   `html` - This `#auxFormSubtype` displays the HTML in `#auxFormAddress` in the iframe. (Default)
+            -   `src` - This `#auxFormSubtype` displays the URL in `#auxFormAddress` in the iframe.
+        -   In order to enable interactivity with the loaded website, the bot will only be draggable at the very bottom of the panel.
 
 -   :book: Documentation
 
