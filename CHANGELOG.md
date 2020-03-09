@@ -12,7 +12,11 @@
     -   Moved the left and right wrist portals to the top of the wrist instead of the bottom.
 
 -   :book: Documentation
+
     -   Added documentation for the wrist portals and their related config bot tags.
+
+-   :bug: Bug Fixes
+    -   Fixed `player.downloadUniverse()` to only include bots from the shared space.
 
 ## V1.0.14
 
