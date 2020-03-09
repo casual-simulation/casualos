@@ -381,6 +381,9 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='mesh'>
     A mesh loaded from the web. See <TagLink tag="#auxFormSubtype"/> for additional options.
   </PossibleValueCode>
+  <PossibleValueCode value='iframe'>
+    A website loaded into an iframe.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxFormSubtype`
@@ -405,6 +408,8 @@ The address that the bot should represent data from.
 When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+
+When <TagLink tag='auxForm'/> is set to `iframe`, the address should be the URL of the website that should be displayed.
 
 ### `auxGLTFVersion`
 

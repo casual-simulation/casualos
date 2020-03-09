@@ -42,7 +42,7 @@ export class AuxBot3DDecoratorFactory {
                 decorators.push(new UserMeshDecorator(bot3d));
             }
         } else {
-            let botShapeDecorator = new BotShapeDecorator(bot3d);
+            let botShapeDecorator = new BotShapeDecorator(bot3d, this.game);
             let textureDecorator = new TextureDecorator(
                 bot3d,
                 botShapeDecorator

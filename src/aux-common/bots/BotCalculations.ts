@@ -1213,7 +1213,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'cube' ||
         shape === 'sphere' ||
         shape === 'sprite' ||
-        shape === 'mesh'
+        shape === 'mesh' ||
+        shape === 'iframe'
     ) {
         return shape;
     }
