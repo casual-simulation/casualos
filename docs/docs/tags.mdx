@@ -379,10 +379,10 @@ The shape that the bot should be displayed as.
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
   <PossibleValueCode value='mesh'>
-    A mesh loaded from the web. See <TagLink tag="#auxFormSubtype"/> for additional options.
+    A mesh loaded from the web. See <TagLink tag="auxFormSubtype"/> for additional options.
   </PossibleValueCode>
   <PossibleValueCode value='iframe'>
-    A website loaded into an iframe.
+    A webpage loaded into a 3D iframe. See <TagLink tag="auxFormSubtype"/> for additional options.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -399,6 +399,12 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   <PossibleValueCode value='gltf'>
     A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
+  <PossibleValueCode value='html'>
+    The HTML code that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe. (Default when <TagLink tag="auxForm"/> is set to iframe)
+  </PossibleValueCode>
+  <PossibleValueCode value='src'>
+    The URL that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxFormAddress`
@@ -409,7 +415,9 @@ When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the addre
 
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe`, the address should be the URL of the website that should be displayed.
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 ### `auxGLTFVersion`
 
