@@ -15,11 +15,10 @@ import {
     Quaternion,
     Vector2,
 } from 'three';
-import * as THREE from 'three';
-
-// Need this include so that the CSS3DRenderer.js gets loaded for its side effects (being included in the THREE namespace).
-// CSS3DREnderer is required by the THREEx.HtmlMixer
-require('three/examples/js/renderers/CSS3DRenderer');
+import {
+    CSS3DRenderer,
+    CSS3DObject,
+} from 'three/examples/jsm/renderers/CSS3DRenderer';
 
 /**
  * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript bot along with
@@ -47,7 +46,7 @@ export namespace HtmlMixer {
         ) {
             this.setupCssCamera(camera);
 
-            this.rendererCss = new (<any>THREE).CSS3DRenderer();
+            this.rendererCss = new CSS3DRenderer();
             this.rendererWebgl = rendererWebgl;
 
             this.cssScene = new Scene();
@@ -189,7 +188,7 @@ export namespace HtmlMixer {
             this.updateDomElementSize();
 
             // Create a css3dobject to display element.
-            this.cssObject = new (<any>THREE).CSS3DObject(this.domElement);
+            this.cssObject = new CSS3DObject(this.domElement);
             this.cssObject.scale
                 .set(1, 1, 1)
                 .multiplyScalar(1.0 / (this.elementW / this.planeW));
