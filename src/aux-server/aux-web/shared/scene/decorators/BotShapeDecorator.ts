@@ -179,8 +179,18 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
         this._address = address;
         if (this._iframe) {
-            this._updateIframeSrc();
+            if (this._subShape === 'src') {
+                this._updateIframeSrc();
+            } else if (this._subShape === 'html') {
+                this._updateIframeHtml();
+            } else {
+                this._updateIframeHtml();
+            }
         }
+    }
+
+    private _updateIframeHtml() {
+        HtmlMixerHelpers.setIframeHtml(this._iframe, this._address);
     }
 
     private _updateIframeSrc() {
@@ -198,6 +208,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         disposeMesh(this.stroke);
         disposeObject3D(this.collider);
         if (this._iframe) {
+            this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
         }
         disposeScene(this.scene);
@@ -255,15 +266,33 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
                 this._createCube();
             }
         } else if (this._shape === 'iframe') {
-            this._createIframe();
+            if (this._subShape === 'src') {
+                this._createSrcIframe();
+            } else if (this._subShape === 'html') {
+                this._createHtmlIframe();
+            } else {
+                this._createHtmlIframe();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
     }
 
+    private _createSrcIframe() {
+        if (this._createIframe()) {
+            this._updateIframeSrc();
+        }
+    }
+
+    private _createHtmlIframe() {
+        if (this._createIframe()) {
+            this._updateIframeHtml();
+        }
+    }
+
     private _createIframe() {
         if (!this._game) {
-            return;
+            return false;
         }
         const mixerContext = this._game.getHtmlMixerContext();
         const domElement = HtmlMixerHelpers.createIframeDomElement(
@@ -282,7 +311,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.mesh.scale.set(1, 0.01, 0.05);
         this.mesh.position.set(0, -0.5, 0);
 
-        this._updateIframeSrc();
+        return true;
     }
 
     private _createGltf() {

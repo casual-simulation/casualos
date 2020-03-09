@@ -19,6 +19,7 @@ import {
     CSS3DRenderer,
     CSS3DObject,
 } from 'three/examples/jsm/renderers/CSS3DRenderer';
+import { wrapHtmlWithSandboxContentSecurityPolicy } from '../SharedUtils';
 
 /**
  * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript bot along with
@@ -294,6 +295,8 @@ export namespace HtmlMixerHelpers {
     ): HTMLIFrameElement | HTMLDivElement {
         // create the iframe element
         let domElement = document.createElement('iframe');
+        domElement.sandbox.value =
+            'allow-scripts allow-same-origin allow-presentation allow-popups';
         domElement.src = url;
         domElement.style.border = 'none';
         domElement.style.maxWidth = 'unset';
@@ -333,7 +336,30 @@ export namespace HtmlMixerHelpers {
         }
 
         // actually set the iframe.src
+        domElement.removeAttribute('srcdoc');
         domElement.src = url;
+    }
+
+    /**
+     * set the iframe.src in a mixerPlane.
+     * - Usefull as it handle IOS specificite
+     */
+    export function setIframeHtml(
+        mixerPlane: HtmlMixer.Plane,
+        html: string
+    ): void {
+        // get the domElement
+        let domElement: any = mixerPlane.domElement;
+        // handle IOS special case
+        let onIos =
+            navigator.platform.match(/iP(hone|od|ad)/) !== null ? true : false;
+        if (onIos) {
+            domElement = mixerPlane.domElement.firstChild;
+        }
+
+        // actually set the iframe.src
+        domElement.removeAttribute('src');
+        domElement.srcdoc = wrapHtmlWithSandboxContentSecurityPolicy(html);
     }
 
     /**
