@@ -55,6 +55,8 @@ import {
     convertToCopiableValue,
     getPortalConfigBotID,
     getBotSubShape,
+    getBotOrientationMode,
+    getBotAnchorPoint,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3494,6 +3496,50 @@ export function botCalculationContextTests(
             const shape = getBotSubShape(calc, bot);
 
             expect(shape).toBe(null);
+        });
+    });
+
+    describe('getBotOrientationMode()', () => {
+        const cases = [['absolute'], ['billboard']];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxOrientationMode: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotOrientationMode(calc, bot)).toBe(mode);
+        });
+
+        it('should default to absolute', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = getBotOrientationMode(calc, bot);
+
+            expect(shape).toBe('absolute');
+        });
+    });
+
+    describe('getBotAnchorPoint()', () => {
+        const cases = [['center'], ['bottom']];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxAnchorPoint: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotAnchorPoint(calc, bot)).toBe(mode);
+        });
+
+        it('should default to center', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = getBotAnchorPoint(calc, bot);
+
+            expect(shape).toBe('center');
         });
     });
 

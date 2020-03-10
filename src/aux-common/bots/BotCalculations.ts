@@ -27,6 +27,10 @@ import {
     BOT_SPACE_TAG,
     PortalType,
     BotSubShape,
+    BotOrientationMode,
+    DEFAULT_ORIENTATION_MODE,
+    BotAnchorPoint,
+    DEFAULT_ANCHOR_POINT,
 } from './Bot';
 
 import {
@@ -1266,6 +1270,52 @@ export function getBotTagAnchor(
         return anchor;
     }
     return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
+ * Gets the orientation mode for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotOrientationMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotOrientationMode {
+    const mode = <BotOrientationMode>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxOrientationMode',
+            DEFAULT_ORIENTATION_MODE
+        )
+    );
+    if (mode === 'absolute' || mode === 'billboard') {
+        return mode;
+    }
+    return DEFAULT_ORIENTATION_MODE;
+}
+
+/**
+ * Gets the orientation mode for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotAnchorPoint {
+    const mode = <BotAnchorPoint>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxAnchorPoint',
+            DEFAULT_ANCHOR_POINT
+        )
+    );
+    if (mode === 'center' || mode === 'bottom') {
+        return mode;
+    }
+    return DEFAULT_ANCHOR_POINT;
 }
 
 /**

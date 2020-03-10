@@ -127,6 +127,8 @@ export interface BotTags {
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
     ['auxFormAddress']?: string;
+    ['auxOrientationMode']?: string;
+    ['auxAnchorPoint']?: string;
     ['auxCreator']?: string;
     ['auxConfigBot']?: string;
     ['auxProgressBar']?: unknown;
@@ -288,6 +290,16 @@ export type BotLabelAnchor =
     | 'floating';
 
 /**
+ * Defines the possible bot orientation modes.
+ */
+export type BotOrientationMode = 'absolute' | 'billboard';
+
+/**
+ * Defines the possible bot anchor points.
+ */
+export type BotAnchorPoint = 'center' | 'bottom';
+
+/**
  * Defines the possible backup types.
  */
 export type BackupType = 'github' | 'download';
@@ -310,6 +322,16 @@ export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
  * The default bot label anchor.
  */
 export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
+
+/**
+ * The default bot orientation mode.
+ */
+export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
+
+/**
+ * The default bot orientation mode.
+ */
+export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'center';
 
 /**
  * The default height for workspaces.
@@ -745,6 +767,8 @@ export const KNOWN_TAGS: string[] = [
     'auxFormAddress',
     'auxFormSubtype',
     'auxForm',
+    'auxOrientationMode',
+    'auxAnchorPoint',
     'auxGLTFVersion',
     'auxProgressBar',
     'auxProgressBarColor',
