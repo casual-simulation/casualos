@@ -8,6 +8,10 @@ import {
     getBotSubShape,
     BotSubShape,
     calculateNumericalTagValue,
+    getBotOrientationMode,
+    getBotAnchorPoint,
+    BotOrientationMode,
+    BotAnchorPoint,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -22,6 +26,9 @@ import {
     Box3,
     Scene,
     Object3D,
+    Vector2,
+    Matrix4,
+    Euler,
 } from 'three';
 import {
     createCube,
@@ -38,6 +45,8 @@ import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
+import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
+import { Game } from '../Game';
 
 const gltfPool = getGLTFPool('main');
 
@@ -48,14 +57,27 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _gltfVersion: number = null;
     private _address: string = null;
     private _canHaveStroke = false;
+    private _orientationMode: BotOrientationMode;
+    private _anchorPoint: BotAnchorPoint;
+
+    /**
+     * The 3d plane object used to display an iframe.
+     */
+    private _iframe: HtmlMixer.Plane;
+
+    private _game: Game;
 
     container: Group;
-    mesh: Mesh | Sprite;
+    mesh: Mesh;
     collider: Object3D;
     scene: Scene;
 
     get allowModifications() {
-        return this._subShape === null;
+        return this._subShape === null && this._shape !== 'iframe';
+    }
+
+    get allowMaterialModifications() {
+        return this._subShape === null && this._shape !== 'iframe';
     }
 
     /**
@@ -65,15 +87,12 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(bot3D: AuxBot3D) {
+    constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
 
+        this._game = game;
         this._rebuildShape('cube', null, null, null);
     }
-
-    // frameUpdate?(calc: BotCalculationContext): void {
-
-    // }
 
     botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.bot3D.bot);
@@ -95,6 +114,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
         this._updateColor(calc);
         this._updateStroke(calc);
+        this._updateAddress(calc, address);
     }
 
     private _needsUpdate(
@@ -112,7 +132,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateStroke(calc: BotCalculationContext) {
-        if (!this._canHaveStroke) {
+        if (!this._canHaveStroke || !this.mesh) {
             return;
         }
 
@@ -130,11 +150,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const hasStroke = typeof strokeColorValue !== 'undefined';
         if (hasStroke && !this.stroke) {
             this.stroke = createStroke();
-            this.container.add(this.stroke);
+            this.mesh.add(this.stroke);
         } else if (!hasStroke) {
             if (this.stroke) {
                 disposeMesh(this.stroke);
-                this.container.remove(this.stroke);
+                this.mesh.remove(this.stroke);
 
                 this.stroke = null;
             }
@@ -158,6 +178,30 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
     }
 
+    private _updateAddress(calc: BotCalculationContext, address: string) {
+        if (this._address === address) {
+            return;
+        }
+        this._address = address;
+        if (this._iframe) {
+            if (this._subShape === 'src') {
+                this._updateIframeSrc();
+            } else if (this._subShape === 'html') {
+                this._updateIframeHtml();
+            } else {
+                this._updateIframeHtml();
+            }
+        }
+    }
+
+    private _updateIframeHtml() {
+        HtmlMixerHelpers.setIframeHtml(this._iframe, this._address);
+    }
+
+    private _updateIframeSrc() {
+        HtmlMixerHelpers.setIframeSrc(this._iframe, this._address);
+    }
+
     dispose(): void {
         const index = this.bot3D.colliders.indexOf(this.collider);
         if (index >= 0) {
@@ -168,6 +212,10 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         disposeMesh(this.mesh);
         disposeMesh(this.stroke);
         disposeObject3D(this.collider);
+        if (this._iframe) {
+            this.container.remove(this._iframe.object3d);
+            disposeObject3D(this._iframe.object3d);
+        }
         disposeScene(this.scene);
 
         this.mesh = null;
@@ -175,6 +223,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this.container = null;
         this.scene = null;
         this.stroke = null;
+        this._iframe = null;
     }
 
     private _updateColor(calc: BotCalculationContext) {
@@ -206,7 +255,6 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
         // Container
         this.container = new Group();
-        this.container.position.set(0, 0.5, 0);
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {
@@ -221,9 +269,53 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             } else {
                 this._createCube();
             }
+        } else if (this._shape === 'iframe') {
+            if (this._subShape === 'src') {
+                this._createSrcIframe();
+            } else if (this._subShape === 'html') {
+                this._createHtmlIframe();
+            } else {
+                this._createHtmlIframe();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
+    }
+
+    private _createSrcIframe() {
+        if (this._createIframe()) {
+            this._updateIframeSrc();
+        }
+    }
+
+    private _createHtmlIframe() {
+        if (this._createIframe()) {
+            this._updateIframeHtml();
+        }
+    }
+
+    private _createIframe() {
+        if (!this._game) {
+            return false;
+        }
+        const mixerContext = this._game.getHtmlMixerContext();
+        const domElement = HtmlMixerHelpers.createIframeDomElement(
+            'about:blank'
+        );
+
+        this._iframe = new HtmlMixer.Plane(mixerContext, domElement, {
+            elementW: 768,
+            planeW: 1,
+            planeH: 1,
+        });
+
+        this.container.add(this._iframe.object3d);
+
+        this._createCube();
+        this.mesh.scale.set(1, 0.01, 0.05);
+        this.mesh.position.set(0, -0.5, 0);
+
+        return true;
     }
 
     private _createGltf() {

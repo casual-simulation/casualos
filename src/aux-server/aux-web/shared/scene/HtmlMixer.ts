@@ -15,11 +15,11 @@ import {
     Quaternion,
     Vector2,
 } from 'three';
-import * as THREE from 'three';
-
-// Need this include so that the CSS3DRenderer.js gets loaded for its side effects (being included in the THREE namespace).
-// CSS3DREnderer is required by the THREEx.HtmlMixer
-require('three/examples/js/renderers/CSS3DRenderer');
+import {
+    CSS3DRenderer,
+    CSS3DObject,
+} from 'three/examples/jsm/renderers/CSS3DRenderer';
+import { wrapHtmlWithSandboxContentSecurityPolicy } from '../SharedUtils';
 
 /**
  * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript bot along with
@@ -47,7 +47,7 @@ export namespace HtmlMixer {
         ) {
             this.setupCssCamera(camera);
 
-            this.rendererCss = new (<any>THREE).CSS3DRenderer();
+            this.rendererCss = new CSS3DRenderer();
             this.rendererWebgl = rendererWebgl;
 
             this.cssScene = new Scene();
@@ -189,7 +189,7 @@ export namespace HtmlMixer {
             this.updateDomElementSize();
 
             // Create a css3dobject to display element.
-            this.cssObject = new (<any>THREE).CSS3DObject(this.domElement);
+            this.cssObject = new CSS3DObject(this.domElement);
             this.cssObject.scale
                 .set(1, 1, 1)
                 .multiplyScalar(1.0 / (this.elementW / this.planeW));
@@ -295,6 +295,8 @@ export namespace HtmlMixerHelpers {
     ): HTMLIFrameElement | HTMLDivElement {
         // create the iframe element
         let domElement = document.createElement('iframe');
+        domElement.sandbox.value =
+            'allow-scripts allow-same-origin allow-presentation allow-popups';
         domElement.src = url;
         domElement.style.border = 'none';
         domElement.style.maxWidth = 'unset';
@@ -334,7 +336,30 @@ export namespace HtmlMixerHelpers {
         }
 
         // actually set the iframe.src
+        domElement.removeAttribute('srcdoc');
         domElement.src = url;
+    }
+
+    /**
+     * set the iframe.src in a mixerPlane.
+     * - Usefull as it handle IOS specificite
+     */
+    export function setIframeHtml(
+        mixerPlane: HtmlMixer.Plane,
+        html: string
+    ): void {
+        // get the domElement
+        let domElement: any = mixerPlane.domElement;
+        // handle IOS special case
+        let onIos =
+            navigator.platform.match(/iP(hone|od|ad)/) !== null ? true : false;
+        if (onIos) {
+            domElement = mixerPlane.domElement.firstChild;
+        }
+
+        // actually set the iframe.src
+        domElement.removeAttribute('src');
+        domElement.srcdoc = wrapHtmlWithSandboxContentSecurityPolicy(html);
     }
 
     /**

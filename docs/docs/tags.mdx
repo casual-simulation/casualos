@@ -379,7 +379,10 @@ The shape that the bot should be displayed as.
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
   <PossibleValueCode value='mesh'>
-    A mesh loaded from the web. See <TagLink tag="#auxFormSubtype"/> for additional options.
+    A mesh loaded from the web. See <TagLink tag="auxFormSubtype"/> for additional options.
+  </PossibleValueCode>
+  <PossibleValueCode value='iframe'>
+    A webpage loaded into a 3D iframe. See <TagLink tag="auxFormSubtype"/> for additional options.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -396,6 +399,12 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   <PossibleValueCode value='gltf'>
     A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
+  <PossibleValueCode value='html'>
+    The HTML code that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe. (Default when <TagLink tag="auxForm"/> is set to iframe)
+  </PossibleValueCode>
+  <PossibleValueCode value='src'>
+    The URL that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxFormAddress`
@@ -405,6 +414,10 @@ The address that the bot should represent data from.
 When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
 When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 ### `auxGLTFVersion`
 
@@ -477,6 +490,42 @@ The anchor position for the progress bar.
 
 <PossibleValuesTable>
   <LabelAnchorValues/>
+</PossibleValuesTable>
+
+### `auxAnchorPoint`
+
+The position that the bot should rotate and scale around.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='bottom'>
+    The bot rotates and scales around its bottom point. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='center'>
+    The bot rotates and scales around its center point.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxOrientationMode`
+
+The mode that determines how the bot automatically rotates.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='absolute'>
+    The bot does not rotate automatically. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='billboard'>
+    The bot rotates left, right, up, and down automatically to face the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardX'>
+    The bot rotates left and right automatically to face the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardZ'>
+    The bot rotates up and down automatically to face the player.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ## Dimension Tags
@@ -877,135 +926,6 @@ This value is overridden by <TagLink tag='auxDimensionInventoryHeight'/>.
 <PossibleValuesTable>
   <PossibleValue value='Numbers >= 1 and <= 10'>
     The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
-  </PossibleValue>
-</PossibleValuesTable>
-
-## Experimental Tags
-
-### `auxIframe`
-
-The URL of the page to embed in a 3D iframe.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value={
-    <>Any <a href='https://en.wikipedia.org/wiki/URL' target='_blank'>HTTP URL</a></>
-  }>
-    Specifies the webpage that should be loaded into the iframe.
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeX`
-
-The X position offset for the iframe.
-The offset is calculated from the Bot's position.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the X offset of the iframe. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeY`
-
-The Y position offset for the iframe.
-The offset is calculated from the Bot's position.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the Y offset of the iframe. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeZ`
-
-The Z position offset for the iframe.
-The offset is calculated from the Bot's position.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the Z offset of the iframe. (Default is 1)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeRotationX`
-
-The X (pitch) rotation offset for the iframe in radians.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the X rotation offset of the iframe. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeRotationY`
-
-The Y (roll) rotation offset for the iframe in radians.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the Y rotation offset of the iframe. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeRotationZ`
-
-The Z (yaw) rotation offset for the iframe in radians.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Specifies the Z rotation offset of the iframe. (Default is 0)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeSizeX`
-
-The width of the iframe.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number > 0'>
-    Specifies the width of the iframe. (Default is 1)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeSizeY`
-
-The height of the iframe.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number > 0'>
-    Specifies the height of the iframe. (Default is 0.75)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeElementWidth`
-
-The pixel width of the iframe DOM element.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Whole Number > 0'>
-    Specifies the width of the iframe. (Default is 768)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `auxIframeScale`
-
-The uniform scale of the iframe.
-Combines with <TagLink tag='auxIframeSizeX'/> and <TagLink tag='auxIframeSizeY'/> to produce the final size.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number > 0'>
-    Specifies the scale of the iframe. (Default is 1)
   </PossibleValue>
 </PossibleValuesTable>
 

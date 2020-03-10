@@ -6,10 +6,43 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   Replaced all of the experimental iframe tags with the `iframe` `#auxForm`.
+        -   `auxIframe`
+        -   `auxIframeX`
+        -   `auxIframeY`
+        -   `auxIframeZ`
+        -   `auxIframeSizeX`
+        -   `auxIframeSizeY`
+        -   `auxIframeRotationX`
+        -   `auxIframeRotationY`
+        -   `auxIframeRotationZ`
+        -   `auxIframeElementWidth`
+        -   `auxIframeScale`
+    -   Sprites no longer automatically rotate to face the player. You instead have to set `#auxOrientationMode` to `billboard`.
+
 -   :rocket: Improvements
 
     -   Improved `@onPlayerPortalChanged` to support `auxLeftWristPortal` and `auxRightWristPortal`.
     -   Moved the left and right wrist portals to the top of the wrist instead of the bottom.
+    -   Added the `iframe` option for `#auxForm`.
+        -   `iframe` has two subtypes:
+            -   `html` - This `#auxFormSubtype` displays the HTML in `#auxFormAddress` in the iframe. (Default)
+            -   `src` - This `#auxFormSubtype` displays the URL in `#auxFormAddress` in the iframe.
+        -   In order to enable interactivity with the loaded website, the bot will only be draggable at the very bottom of the panel.
+    -   Added the `#auxAnchorPoint` and `#auxOrientationMode` tags.
+        -   Works on all bot forms.
+        -   `#auxAnchorPoint` determines the point that the bot scales and rotates around.
+            -   Possible values are:
+                -   `bottom` - The bot rotates and scales around its bottom point. (Default)
+                -   `center` - The bot rotates and scales around its center point.
+        -   `#auxOrientationMode` determines how the bot rotates.
+            -   Possible values are:
+                -   `absolute` - Rotation is taken from the dimension rotation values. (Default)
+                -   `billboard` - The bot rotates automatically to face the player.
+                -   `billboardX` - The bot rotates left and right automatically to face the player.
+                -   `billboardZ` - The bot rotates up and down automatically to face the player.
 
 -   :book: Documentation
 

@@ -55,6 +55,10 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         return true;
     }
 
+    get allowMaterialModifications() {
+        return true;
+    }
+
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     private _targetMeshDecorator: IMeshDecorator;

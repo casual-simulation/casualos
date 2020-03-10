@@ -35,6 +35,10 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
         return true;
     }
 
+    get allowMaterialModifications() {
+        return true;
+    }
+
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     constructor(bot3D: AuxBot3D) {

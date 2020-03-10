@@ -48,6 +48,10 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         return true;
     }
 
+    get allowMaterialModifications() {
+        return true;
+    }
+
     private _anchor: BotLabelAnchor = 'top';
     private _targetMeshDecorator: IMeshDecorator;
 

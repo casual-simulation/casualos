@@ -42,12 +42,8 @@ import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
-import {
-    baseAuxAmbientLight,
-    baseAuxDirectionalLight,
-    createHtmlMixerContext,
-    disposeHtmlMixerContext,
-} from './SceneUtils';
+import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
+import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import find from 'lodash/find';
 import flatMap from 'lodash/flatMap';
 import { EventBus } from '../EventBus';

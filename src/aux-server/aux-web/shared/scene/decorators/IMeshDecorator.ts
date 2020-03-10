@@ -14,6 +14,11 @@ export interface IMeshDecorator {
     allowModifications: boolean;
 
     /**
+     * Whether to allow modifications to the mesh material.
+     */
+    allowMaterialModifications: boolean;
+
+    /**
      * Event that gets fired when the mesh is updated.
      */
     onMeshUpdated: ArgEvent<IMeshDecorator>;
