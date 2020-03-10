@@ -492,6 +492,42 @@ The anchor position for the progress bar.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
+### `auxAnchorPoint`
+
+The position that the bot should rotate and scale around.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='bottom'>
+    The bot rotates and scales around its bottom point. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='center'>
+    The bot rotates and scales around its center point.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxOrientationMode`
+
+The mode that determines how the bot automatically rotates.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='absolute'>
+    The bot does not rotate automatically. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='billboard'>
+    The bot rotates left, right, up, and down automatically to face the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardX'>
+    The bot rotates left and right automatically to face the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardZ'>
+    The bot rotates up and down automatically to face the player.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ## Dimension Tags
 
 ### `[dimension]`
