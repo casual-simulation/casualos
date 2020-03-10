@@ -68,7 +68,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _game: Game;
 
     container: Group;
-    mesh: Mesh | Sprite;
+    mesh: Mesh;
     collider: Object3D;
     scene: Scene;
 

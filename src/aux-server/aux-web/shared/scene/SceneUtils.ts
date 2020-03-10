@@ -28,6 +28,7 @@ import {
     MeshStandardMaterial,
     Ray,
     Quaternion,
+    MeshBasicMaterial,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -81,13 +82,14 @@ export function createSphere(
     return sphere;
 }
 
-export function createSprite(): Sprite {
-    let material = new SpriteMaterial({
-        color: 0x00ff00,
+export function createSprite(): Mesh {
+    let material = new MeshBasicMaterial({
         transparent: true,
+        side: DoubleSide,
     });
 
-    let sprite = new Sprite(material);
+    const geometry = new PlaneBufferGeometry(1, 1, 16, 16);
+    let sprite = new Mesh(geometry, material.clone());
     return sprite;
 }
 
