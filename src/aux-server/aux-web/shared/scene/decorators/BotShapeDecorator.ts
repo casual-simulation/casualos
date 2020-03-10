@@ -255,7 +255,6 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
         // Container
         this.container = new Group();
-        // this.container.position.set(0, 0.5, 0);
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {
