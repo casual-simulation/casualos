@@ -8,6 +8,10 @@ import {
     getBotSubShape,
     BotSubShape,
     calculateNumericalTagValue,
+    getBotOrientationMode,
+    getBotAnchorPoint,
+    BotOrientationMode,
+    BotAnchorPoint,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -22,6 +26,9 @@ import {
     Box3,
     Scene,
     Object3D,
+    Vector2,
+    Matrix4,
+    Euler,
 } from 'three';
 import {
     createCube,
@@ -50,6 +57,8 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _gltfVersion: number = null;
     private _address: string = null;
     private _canHaveStroke = false;
+    private _orientationMode: BotOrientationMode;
+    private _anchorPoint: BotAnchorPoint;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -84,10 +93,6 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._game = game;
         this._rebuildShape('cube', null, null, null);
     }
-
-    // frameUpdate?(calc: BotCalculationContext): void {
-
-    // }
 
     botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.bot3D.bot);
@@ -250,7 +255,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
         // Container
         this.container = new Group();
-        this.container.position.set(0, 0.5, 0);
+        // this.container.position.set(0, 0.5, 0);
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {

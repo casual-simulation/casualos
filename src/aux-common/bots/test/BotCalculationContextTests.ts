@@ -3500,7 +3500,12 @@ export function botCalculationContextTests(
     });
 
     describe('getBotOrientationMode()', () => {
-        const cases = [['absolute'], ['billboard']];
+        const cases = [
+            ['absolute'],
+            ['billboard'],
+            ['billboardX'],
+            ['billboardZ'],
+        ];
         it.each(cases)('should return %s', (mode: string) => {
             const bot = createBot('test', {
                 auxOrientationMode: <any>mode,

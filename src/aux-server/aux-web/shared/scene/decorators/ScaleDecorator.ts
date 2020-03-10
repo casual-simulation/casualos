@@ -17,7 +17,7 @@ export class ScaleDecorator extends AuxBot3DDecoratorBase {
     botUpdated(calc: BotCalculationContext): void {
         const gridScale = this.bot3D.gridScale;
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
-        this.bot3D.display.scale.set(scale.x, scale.y, scale.z);
+        this.bot3D.container.scale.set(scale.x, scale.y, scale.z);
     }
 
     dispose(): void {}

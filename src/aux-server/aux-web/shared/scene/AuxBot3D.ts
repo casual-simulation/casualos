@@ -31,6 +31,11 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     bot: Bot;
 
     /**
+     * The container for the bot.
+     */
+    container: Group;
+
+    /**
      * The things that are displayed by this bot.
      */
     display: Group;
@@ -87,8 +92,10 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.dimensionGroup = dimensionGroup;
         this.colliders = colliders;
         this.dimension = dimension;
+        this.container = new Group();
         this.display = new Group();
-        this.add(this.display);
+        this.add(this.container);
+        this.container.add(this.display);
 
         this.decorators = decoratorFactory.loadDecorators(this);
         this.updateFrameUpdateList();
