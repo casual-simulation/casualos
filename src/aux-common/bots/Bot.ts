@@ -335,7 +335,7 @@ export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
 /**
  * The default bot orientation mode.
  */
-export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'center';
+export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
 
 /**
  * The default height for workspaces.

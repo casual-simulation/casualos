@@ -67,6 +67,23 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         this._orientationMode = nextOrientationMode;
         this._anchorPoint = nextAnchorPoint;
 
+        // Update the offsets for the center vs bottom
+        // anchor positions so that the bot is above the grid and
+        // not in it
+        if (this._anchorPoint === 'center') {
+            this.bot3D.display.position.set(0, 0, 0);
+            if (this._rotationObj) {
+                this._rotationObj.rotation.set(0, 0, 0);
+            }
+            this._rotationObj = this.bot3D.display;
+        } else {
+            this.bot3D.display.position.set(0, 0.5, 0);
+            if (this._rotationObj) {
+                this._rotationObj.rotation.set(0, 0, 0);
+            }
+            this._rotationObj = this.bot3D.container;
+        }
+
         const userDimension = this.bot3D.dimension;
         if (userDimension) {
             const scale = this.bot3D.gridScale;
@@ -87,23 +104,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 scale
             );
 
+            // Offset the container so that the bot still
+            // is above the grid
             if (this._anchorPoint === 'center') {
                 this._nextPos.add(
                     new Vector3(0, 0.5, 0).multiplyScalar(
                         this.bot3D.container.scale.x
                     )
                 );
-                this.bot3D.display.position.set(0, 0, 0);
-                if (this._rotationObj) {
-                    this._rotationObj.rotation.set(0, 0, 0);
-                }
-                this._rotationObj = this.bot3D.display;
-            } else {
-                this.bot3D.display.position.set(0, 0.5, 0);
-                if (this._rotationObj) {
-                    this._rotationObj.rotation.set(0, 0, 0);
-                }
-                this._rotationObj = this.bot3D.container;
             }
 
             if (

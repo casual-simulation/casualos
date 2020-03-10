@@ -3538,13 +3538,13 @@ export function botCalculationContextTests(
             expect(getBotAnchorPoint(calc, bot)).toBe(mode);
         });
 
-        it('should default to center', () => {
+        it('should default to bottom', () => {
             const bot = createBot();
 
             const calc = createCalculationContext([bot]);
             const shape = getBotAnchorPoint(calc, bot);
 
-            expect(shape).toBe('center');
+            expect(shape).toBe('bottom');
         });
     });
 
