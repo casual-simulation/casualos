@@ -56,6 +56,7 @@
 
 -   :bug: Bug Fixes
     -   Fixed `player.downloadUniverse()` to only include bots from the shared space.
+    -   Fixed an issue where sprites were not clickable or draggable in VR.
 
 ## V1.0.14
 
