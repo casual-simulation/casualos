@@ -150,6 +150,16 @@ export class PlayerSimulation3D extends Simulation3D {
         return null;
     }
 
+    getPortalConfigForGrid(grid: Grid3D): PortalConfig {
+        for (let portal of this.portals) {
+            if (portal.grid3D === grid) {
+                return portal;
+            }
+        }
+
+        return null;
+    }
+
     init() {
         super.init();
         this._watchDimensionBot();

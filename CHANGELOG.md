@@ -43,6 +43,12 @@
                 -   `billboard` - The bot rotates automatically to face the player.
                 -   `billboardX` - The bot rotates left and right automatically to face the player.
                 -   `billboardZ` - The bot rotates up and down automatically to face the player.
+    -   Improved drag and drop interactions to calculate intersections with other bots instead of just using grid positioning.
+        -   This makes it easier drop a bot onto another specific bot.
+        -   Can be controlled with the `#auxPortalPointerCollisionMode` tag on a portal config.
+            -   Possible values are:
+                -   `world` - The mouse pointer collides with other bots in the world when being dragged. (Default)
+                -   `grid` - The mouse pointer ignores other bots in the world when being dragged.
 
 -   :book: Documentation
 

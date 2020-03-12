@@ -188,6 +188,7 @@ export interface BotTags {
     [`auxPortalZoomableMin`]?: number | null;
     [`auxPortalZoomableMax`]?: number | null;
     ['auxPortalRotatable']?: number | null;
+    ['auxPortalPointerDragMode']?: PortalPointerDragMode;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -304,6 +305,11 @@ export type BotOrientationMode =
 export type BotAnchorPoint = 'center' | 'bottom';
 
 /**
+ * Defines the possible portal raycast modes.
+ */
+export type PortalPointerDragMode = 'grid' | 'world';
+
+/**
  * Defines the possible backup types.
  */
 export type BackupType = 'github' | 'download';
@@ -336,6 +342,11 @@ export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
  * The default bot orientation mode.
  */
 export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
+
+/**
+ * The default portal raycast mode.
+ */
+export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
 
 /**
  * The default height for workspaces.
@@ -735,6 +746,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerZoom`,
     `auxPortalPlayerRotationX`,
     `auxPortalPlayerRotationY`,
+    'auxPortalPointerDragMode',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',

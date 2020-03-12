@@ -57,6 +57,7 @@ import {
     getBotSubShape,
     getBotOrientationMode,
     getBotAnchorPoint,
+    calculatePortalPointerDragMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3545,6 +3546,28 @@ export function botCalculationContextTests(
             const shape = getBotAnchorPoint(calc, bot);
 
             expect(shape).toBe('bottom');
+        });
+    });
+
+    describe('calculatePortalPointerDragMode()', () => {
+        const cases = [['grid'], ['world']];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxPortalPointerDragMode: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
+        });
+
+        it('should default to world', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = calculatePortalPointerDragMode(calc, bot);
+
+            expect(shape).toBe('world');
         });
     });
 

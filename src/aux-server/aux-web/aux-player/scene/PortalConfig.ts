@@ -10,6 +10,9 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
+    PortalPointerDragMode,
+    DEFAULT_PORTAL_POINTER_DRAG_MODE,
+    calculatePortalPointerDragMode,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -26,20 +29,21 @@ import { BoundedGrid3D } from '../BoundedGrid3D';
 export class PortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
-    private _dimensionBackground: Color;
-    private _pannable: boolean;
-    private _panMinX: number;
-    private _panMaxX: number;
-    private _panMaxY: number;
-    private _panMinY: number;
-    private _zoomable: boolean;
-    private _zoomMin: number;
-    private _zoomMax: number;
-    private _rotatable: boolean;
-    private _playerZoom: number;
-    private _playerRotationX: number;
-    private _playerRotationY: number;
+    private _dimensionBackground: Color = null;
+    private _pannable: boolean = null;
+    private _panMinX: number = null;
+    private _panMaxX: number = null;
+    private _panMaxY: number = null;
+    private _panMinY: number = null;
+    private _zoomable: boolean = null;
+    private _zoomMin: number = null;
+    private _zoomMax: number = null;
+    private _rotatable: boolean = null;
+    private _playerZoom: number = null;
+    private _playerRotationX: number = null;
+    private _playerRotationY: number = null;
     private _gridScale: number;
+    private _raycastMode: PortalPointerDragMode = null;
     private _grid3D: BoundedGrid3D;
 
     private _onGridScaleUpdated: Subject<void>;
@@ -200,6 +204,14 @@ export class PortalConfig implements SubscriptionLike {
         this._onGridScaleUpdated.next();
     }
 
+    get raycastMode() {
+        if (this._raycastMode != null) {
+            return this._raycastMode;
+        } else {
+            return DEFAULT_PORTAL_POINTER_DRAG_MODE;
+        }
+    }
+
     get grid3D() {
         return this._grid3D;
     }
@@ -262,6 +274,7 @@ export class PortalConfig implements SubscriptionLike {
         this._playerZoom = null;
         this._playerRotationX = null;
         this._playerRotationY = null;
+        this._raycastMode = null;
         this.gridScale = this._getDefaultGridScale();
     }
 
@@ -353,6 +366,7 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalPlayerRotationY`,
             null
         );
+        this._raycastMode = calculatePortalPointerDragMode(calc, bot);
         this.gridScale = calculateGridScale(calc, bot);
 
         // TODO:
