@@ -38,6 +38,7 @@ import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
+import { Viewport } from '../scene/Viewport';
 
 interface HoveredBot {
     /**
@@ -549,7 +550,11 @@ export abstract class BaseInteractionManager {
      * Find the first game object that is being pointed at by the given ray.
      * @param ray The ray.
      */
-    findHoveredGameObjectFromRay(ray: Ray) {
+    findHoveredGameObjectFromRay(
+        ray: Ray,
+        hitFilter: (hit: Intersection) => boolean = null,
+        viewport: Viewport = null
+    ) {
         const draggableGroups = this.getDraggableGroups();
 
         let hit: Intersection = null;
@@ -561,8 +566,12 @@ export abstract class BaseInteractionManager {
             const objects = group.objects;
             const camera = group.camera;
 
+            if (viewport && group.viewport !== viewport) {
+                continue;
+            }
+
             const raycastResult = Physics.raycast(ray, objects, camera);
-            hit = Physics.firstRaycastHit(raycastResult);
+            hit = Physics.firstRaycastHit(raycastResult, hitFilter);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
             if (hitObject) {

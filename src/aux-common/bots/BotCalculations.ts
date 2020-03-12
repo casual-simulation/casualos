@@ -31,6 +31,8 @@ import {
     DEFAULT_ORIENTATION_MODE,
     BotAnchorPoint,
     DEFAULT_ANCHOR_POINT,
+    PortalRaycastMode,
+    DEFAULT_PORTAL_RAYCAST_MODE,
 } from './Bot';
 
 import {
@@ -1324,6 +1326,29 @@ export function getBotAnchorPoint(
 }
 
 /**
+ * Calculates the portal raycast mode that the given bot has set.
+ * @param calc The calculation context.
+ * @param bot The portal config bot.
+ */
+export function calculatePortalRaycastMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): PortalRaycastMode {
+    const mode = <PortalRaycastMode>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxPortalRaycastMode',
+            DEFAULT_PORTAL_RAYCAST_MODE
+        )
+    );
+    if (mode === 'grid' || mode === 'world') {
+        return mode;
+    }
+    return DEFAULT_PORTAL_RAYCAST_MODE;
+}
+
+/**
  * Determines if the given bot is a config bot for the given dimension.
  * @param calc The calculation context.
  * @param bot The bot to check.
@@ -1725,11 +1750,7 @@ export function calculateBotDragStackPosition(
         f => f.id
     );
 
-    const canMerge =
-        objs.length >= 1 &&
-        bots.length === 1 &&
-        isBotTags(bots[0]) &&
-        isMergeable(calc, objs[0]);
+    const canMerge = canMergeBots(calc, objs, bots);
 
     const firstBot = bots[0];
 
@@ -1749,6 +1770,19 @@ export function calculateBotDragStackPosition(
         other: objs[0],
         index: index,
     };
+}
+
+function canMergeBots(
+    calc: BotCalculationContext,
+    objs: Bot[],
+    bots: (Bot | BotTags)[]
+) {
+    return (
+        objs.length >= 1 &&
+        bots.length === 1 &&
+        isBotTags(bots[0]) &&
+        isMergeable(calc, objs[0])
+    );
 }
 
 /**

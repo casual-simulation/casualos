@@ -126,8 +126,16 @@ export namespace Physics {
 
     /**
      * Returns the first intersection from the raycast test. If none exist, then null is returned.
+     * @param result The raycast result.
+     * @param hitFilter The filter that should be used for intersections. Should return true for the hit that should be returned.
      */
-    export function firstRaycastHit(result: RaycastResult) {
+    export function firstRaycastHit(
+        result: RaycastResult,
+        hitFilter: (hit: Intersection) => boolean = null
+    ) {
+        if (hitFilter) {
+            return result.intersects.find(i => hitFilter(i)) || null;
+        }
         return result.intersects.length > 0 ? result.intersects[0] : null;
     }
 }

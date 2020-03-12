@@ -54,7 +54,6 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _lastGridPos: Vector2;
     protected _lastIndex: number;
     protected _lastVRControllerPose: Object3D;
-    protected _merge: boolean;
     protected _other: Bot;
     protected _dimension: string;
     protected _previousDimension: string;
