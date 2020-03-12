@@ -237,7 +237,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             ) {
                 const cameraRig = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
                 const cameraWorld = new Vector3();
-                cameraRig.mainCamera.getWorldPosition(cameraWorld);
+                cameraWorld.setFromMatrixPosition(
+                    cameraRig.mainCamera.matrixWorld
+                );
                 this._rotationObj.lookAt(cameraWorld);
                 update = true;
                 if (this._orientationMode === 'billboardZ') {
