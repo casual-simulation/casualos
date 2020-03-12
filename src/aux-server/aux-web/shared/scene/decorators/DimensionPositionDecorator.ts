@@ -17,6 +17,7 @@ import {
     getBotAnchorPoint,
     BotAnchorPoint,
     BotOrientationMode,
+    getBotIndex,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2, Object3D } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
@@ -42,6 +43,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _atPosition: boolean;
     private _atRotation: boolean;
     private _lastPos: { x: number; y: number; z: number };
+    private _lastSortOrder: number;
     private _nextPos: Vector3;
     private _nextRot: { x: number; y: number; z: number };
     private _lastHeight: number;
@@ -98,6 +100,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this.bot3D.dimension,
                 scale
             );
+            const currentSortOrder = getBotIndex(
+                calc,
+                this.bot3D.bot,
+                this.bot3D.dimension
+            );
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
                 this.bot3D,
@@ -115,19 +122,31 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             }
 
             if (
-                this._positionUpdated(currentGridPos) ||
+                this._positionUpdated(currentGridPos, currentSortOrder) ||
                 this._heightUpdated(currentHeight)
             ) {
-                const objectsAtPosition = objectsAtDimensionGridPosition(
-                    calc,
-                    this.bot3D.dimension,
-                    this._lastPos || currentGridPos
-                );
-                this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
-                    objectsAtPosition.map(f => f.id)
-                );
+                let ids = [] as string[];
+                if (this._lastPos) {
+                    const objectsAtLastPosition = objectsAtDimensionGridPosition(
+                        calc,
+                        this.bot3D.dimension,
+                        this._lastPos
+                    );
+                    ids.push(...objectsAtLastPosition.map(b => b.id));
+                }
+                if (currentGridPos) {
+                    const objectsAtCurrentPosition = objectsAtDimensionGridPosition(
+                        calc,
+                        this.bot3D.dimension,
+                        currentGridPos
+                    );
+                    ids.push(...objectsAtCurrentPosition.map(b => b.id));
+                }
+
+                this.bot3D.dimensionGroup.simulation3D.ensureUpdate(ids);
             }
             this._lastPos = currentGridPos;
+            this._lastSortOrder = currentSortOrder;
             this._lastHeight = currentHeight;
             this._nextRot = getBotRotation(
                 calc,
@@ -165,16 +184,20 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         return Math.abs(this._lastHeight - currentHeight) > 0.01;
     }
 
-    private _positionUpdated(currentGridPos: {
-        x: number;
-        y: number;
-        z: number;
-    }): boolean {
+    private _positionUpdated(
+        currentGridPos: {
+            x: number;
+            y: number;
+            z: number;
+        },
+        currentSortOrder: number
+    ): boolean {
         return (
             !this._lastPos ||
             (currentGridPos.x !== this._lastPos.x ||
                 currentGridPos.y !== this._lastPos.y ||
-                currentGridPos.z !== this._lastPos.z)
+                currentGridPos.z !== this._lastPos.z) ||
+            this._lastSortOrder !== currentSortOrder
         );
     }
 
