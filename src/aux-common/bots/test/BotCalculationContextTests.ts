@@ -57,7 +57,7 @@ import {
     getBotSubShape,
     getBotOrientationMode,
     getBotAnchorPoint,
-    calculatePortalRaycastMode,
+    calculatePortalPointerDragMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3549,23 +3549,23 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('calculatePortalRaycastMode()', () => {
+    describe('calculatePortalPointerDragMode()', () => {
         const cases = [['grid'], ['world']];
         it.each(cases)('should return %s', (mode: string) => {
             const bot = createBot('test', {
-                auxPortalRaycastMode: <any>mode,
+                auxPortalPointerDragMode: <any>mode,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(calculatePortalRaycastMode(calc, bot)).toBe(mode);
+            expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
         });
 
         it('should default to world', () => {
             const bot = createBot();
 
             const calc = createCalculationContext([bot]);
-            const shape = calculatePortalRaycastMode(calc, bot);
+            const shape = calculatePortalPointerDragMode(calc, bot);
 
             expect(shape).toBe('world');
         });

@@ -10,9 +10,9 @@ import {
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
-    PortalRaycastMode,
-    DEFAULT_PORTAL_RAYCAST_MODE,
-    calculatePortalRaycastMode,
+    PortalPointerDragMode,
+    DEFAULT_PORTAL_POINTER_DRAG_MODE,
+    calculatePortalPointerDragMode,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -43,7 +43,7 @@ export class PortalConfig implements SubscriptionLike {
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
     private _gridScale: number;
-    private _raycastMode: PortalRaycastMode = null;
+    private _raycastMode: PortalPointerDragMode = null;
     private _grid3D: BoundedGrid3D;
 
     private _onGridScaleUpdated: Subject<void>;
@@ -208,7 +208,7 @@ export class PortalConfig implements SubscriptionLike {
         if (this._raycastMode != null) {
             return this._raycastMode;
         } else {
-            return DEFAULT_PORTAL_RAYCAST_MODE;
+            return DEFAULT_PORTAL_POINTER_DRAG_MODE;
         }
     }
 
@@ -366,7 +366,7 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalPlayerRotationY`,
             null
         );
-        this._raycastMode = calculatePortalRaycastMode(calc, bot);
+        this._raycastMode = calculatePortalPointerDragMode(calc, bot);
         this.gridScale = calculateGridScale(calc, bot);
 
         // TODO:
