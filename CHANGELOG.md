@@ -1,5 +1,77 @@
 # AUX Changelog
 
+## V1.0.15
+
+### Date: 3/13/2020
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   Replaced all of the experimental iframe tags with the `iframe` `#auxForm`.
+        -   `auxIframe`
+        -   `auxIframeX`
+        -   `auxIframeY`
+        -   `auxIframeZ`
+        -   `auxIframeSizeX`
+        -   `auxIframeSizeY`
+        -   `auxIframeRotationX`
+        -   `auxIframeRotationY`
+        -   `auxIframeRotationZ`
+        -   `auxIframeElementWidth`
+        -   `auxIframeScale`
+    -   Sprites no longer automatically rotate to face the player. You instead have to set `#auxOrientationMode` to `billboard`.
+
+-   :rocket: Improvements
+
+    -   Improved `@onPlayerPortalChanged` to support `auxLeftWristPortal` and `auxRightWristPortal`.
+    -   Moved the left and right wrist portals to the top of the wrist instead of the bottom.
+    -   Added the `iframe` option for `#auxForm`.
+        -   `iframe` has two subtypes:
+            -   `html` - This `#auxFormSubtype` displays the HTML in `#auxFormAddress` in the iframe. (Default)
+            -   `src` - This `#auxFormSubtype` displays the URL in `#auxFormAddress` in the iframe.
+        -   In order to enable interactivity with the loaded website, the bot will only be draggable at the very bottom of the panel.
+    -   Added the `#auxAnchorPoint` and `#auxOrientationMode` tags.
+        -   Works on all bot forms.
+        -   `#auxAnchorPoint` determines the point that the bot scales and rotates around.
+            -   Possible values are:
+                -   `bottom` - The bot rotates and scales around its bottom point. (Default)
+                -   `center` - The bot rotates and scales around its center point.
+        -   `#auxOrientationMode` determines how the bot rotates.
+            -   Possible values are:
+                -   `absolute` - Rotation is taken from the dimension rotation values. (Default)
+                -   `billboard` - The bot rotates automatically to face the player.
+                -   `billboardX` - The bot rotates left and right automatically to face the player.
+                -   `billboardZ` - The bot rotates up and down automatically to face the player.
+    -   Improved drag and drop interactions to calculate intersections with other bots instead of just using grid positioning.
+        -   This makes it easier drop a bot onto another specific bot.
+        -   Can be controlled with the `#auxPortalPointerCollisionMode` tag on a portal config.
+            -   Possible values are:
+                -   `world` - The mouse pointer collides with other bots in the world when being dragged. (Default)
+                -   `grid` - The mouse pointer ignores other bots in the world when being dragged.
+    -   Added the ability to animate meshes.
+        -   By default the first animation will play if available.
+        -   You can control which animation is played using the `#auxFormAnimation` tag.
+            -   Set to a string to play an animation by name. (Case sensitive)
+            -   Set to a number to play an animation by index.
+            -   Set to `false` to stop animating.
+
+-   :robot: Builder Improvements
+
+    -   Added a "Scan" menu item to the builder menu that opens the QR Code scanner to let you import an AUX or mod.
+        -   Scanning a URL that ends with `.aux` will try to download the file at the URL and import it as an AUX file.
+        -   Scanning some JSON will put Builder into clone mode with the JSON as a mod.
+    -   Added a hover state to Builder that changes its label to "menu".
+    -   Changed the label of the Builder Egg to "ab-1 config".
+
+-   :book: Documentation
+
+    -   Added documentation for the wrist portals and their related config bot tags.
+
+-   :bug: Bug Fixes
+    -   Fixed `player.downloadUniverse()` to only include bots from the shared space.
+    -   Fixed an issue where sprites were not clickable or draggable in VR.
+
 ## V1.0.14
 
 ### Date: 3/6/2020

@@ -126,18 +126,10 @@ export interface BotTags {
     ['auxLabelPosition']?: BotLabelAnchor | null | string;
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
+    ['auxFormAnimation']?: string;
     ['auxFormAddress']?: string;
-    ['auxIframe']?: string;
-    ['auxIframeX']?: number;
-    ['auxIframeY']?: number;
-    ['auxIframeZ']?: number;
-    ['auxIframeSizeX']?: number;
-    ['auxIframeSizeY']?: number;
-    ['auxIframeRotationX']?: number;
-    ['auxIframeRotationY']?: number;
-    ['auxIframeRotationZ']?: number;
-    ['auxIframeElementWidth']?: number;
-    ['auxIframeScale']?: number;
+    ['auxOrientationMode']?: string;
+    ['auxAnchorPoint']?: string;
     ['auxCreator']?: string;
     ['auxConfigBot']?: string;
     ['auxProgressBar']?: unknown;
@@ -197,6 +189,7 @@ export interface BotTags {
     [`auxPortalZoomableMin`]?: number | null;
     [`auxPortalZoomableMax`]?: number | null;
     ['auxPortalRotatable']?: number | null;
+    ['auxPortalPointerDragMode']?: PortalPointerDragMode;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -262,12 +255,12 @@ export interface WorkspaceHex {
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh';
+export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh' | 'iframe';
 
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | null;
+export type BotSubShape = 'gltf' | 'src' | 'html' | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -299,6 +292,25 @@ export type BotLabelAnchor =
     | 'floating';
 
 /**
+ * Defines the possible bot orientation modes.
+ */
+export type BotOrientationMode =
+    | 'absolute'
+    | 'billboard'
+    | 'billboardX'
+    | 'billboardZ';
+
+/**
+ * Defines the possible bot anchor points.
+ */
+export type BotAnchorPoint = 'center' | 'bottom';
+
+/**
+ * Defines the possible portal raycast modes.
+ */
+export type PortalPointerDragMode = 'grid' | 'world';
+
+/**
  * Defines the possible backup types.
  */
 export type BackupType = 'github' | 'download';
@@ -321,6 +333,21 @@ export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
  * The default bot label anchor.
  */
 export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
+
+/**
+ * The default bot orientation mode.
+ */
+export const DEFAULT_ORIENTATION_MODE: BotOrientationMode = 'absolute';
+
+/**
+ * The default bot orientation mode.
+ */
+export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
+
+/**
+ * The default portal raycast mode.
+ */
+export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
 
 /**
  * The default height for workspaces.
@@ -674,6 +701,8 @@ export const KNOWN_PORTALS: string[] = [
     'auxSheetPortal',
     'auxInventoryPortal',
     'auxMenuPortal',
+    'auxLeftWristPortal',
+    'auxRightWristPortal',
 ];
 
 /**
@@ -718,6 +747,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerZoom`,
     `auxPortalPlayerRotationX`,
     `auxPortalPlayerRotationY`,
+    'auxPortalPointerDragMode',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',
@@ -754,23 +784,15 @@ export const KNOWN_TAGS: string[] = [
     'auxFormAddress',
     'auxFormSubtype',
     'auxForm',
+    'auxFormAnimation',
+    'auxOrientationMode',
+    'auxAnchorPoint',
     'auxGLTFVersion',
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarPosition',
     'auxUniverseConnectedSessions',
-    'auxIframe',
-    'auxIframeX',
-    'auxIframeY',
-    'auxIframeZ',
-    'auxIframeSizeX',
-    'auxIframeSizeY',
-    'auxIframeRotationX',
-    'auxIframeRotationY',
-    'auxIframeRotationZ',
-    'auxIframeElementWidth',
-    'auxIframeScale',
 
     'auxTaskOutput',
     'auxTaskError',

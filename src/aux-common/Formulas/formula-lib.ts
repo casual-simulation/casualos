@@ -2136,13 +2136,9 @@ function formatAuxFilename(filename: string): string {
 }
 
 function downloadUniverse() {
-    const state = getBotState();
-    return addAction(
-        download(
-            JSON.stringify(getDownloadState(state)),
-            `${getCurrentUniverse()}.aux`,
-            'application/json'
-        )
+    return downloadBots(
+        getBots(bySpace('shared')),
+        `${getCurrentUniverse()}.aux`
     );
 }
 

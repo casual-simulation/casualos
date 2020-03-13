@@ -4273,7 +4273,7 @@ export function botActionsTests(
             });
         });
 
-        describe('toast()', () => {
+        describe('player.toast()', () => {
             it('should emit a ShowToastAction', () => {
                 const state: BotsState = {
                     thisBot: {
@@ -5124,6 +5124,70 @@ export function botActionsTests(
                         JSON.stringify({
                             version: 1,
                             state: state,
+                        }),
+                        'channel.aux',
+                        'application/json'
+                    ),
+                ]);
+            });
+
+            it('should only include bots in the shared space', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: '@player.downloadUniverse()',
+                        },
+                    },
+                    thatBot: {
+                        id: 'thatBot',
+                        space: 'shared',
+                        tags: {
+                            name: 'that',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        space: 'tempLocal',
+                        tags: {
+                            auxUniverse: 'channel',
+                        },
+                    },
+                    otherBot: {
+                        id: 'otherBot',
+                        space: 'local',
+                        tags: {
+                            name: 'other',
+                        },
+                    },
+                    historyBot: {
+                        id: 'historyBot',
+                        space: 'history',
+                        tags: {
+                            name: 'history',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    download(
+                        JSON.stringify({
+                            version: 1,
+                            state: {
+                                thatBot: state.thatBot,
+                                thisBot: state.thisBot,
+                            },
                         }),
                         'channel.aux',
                         'application/json'

@@ -55,6 +55,9 @@ import {
     convertToCopiableValue,
     getPortalConfigBotID,
     getBotSubShape,
+    getBotOrientationMode,
+    getBotAnchorPoint,
+    calculatePortalPointerDragMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3444,7 +3447,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotShape()', () => {
-        const cases = [['cube'], ['sphere'], ['sprite'], ['mesh']];
+        const cases = [['cube'], ['sphere'], ['sprite'], ['mesh'], ['iframe']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxForm: <any>shape,
@@ -3476,7 +3479,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotSubShape()', () => {
-        const cases = [['gltf']];
+        const cases = [['gltf'], ['src'], ['html']];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxFormSubtype: <any>shape,
@@ -3494,6 +3497,77 @@ export function botCalculationContextTests(
             const shape = getBotSubShape(calc, bot);
 
             expect(shape).toBe(null);
+        });
+    });
+
+    describe('getBotOrientationMode()', () => {
+        const cases = [
+            ['absolute'],
+            ['billboard'],
+            ['billboardX'],
+            ['billboardZ'],
+        ];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxOrientationMode: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotOrientationMode(calc, bot)).toBe(mode);
+        });
+
+        it('should default to absolute', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = getBotOrientationMode(calc, bot);
+
+            expect(shape).toBe('absolute');
+        });
+    });
+
+    describe('getBotAnchorPoint()', () => {
+        const cases = [['center'], ['bottom']];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxAnchorPoint: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotAnchorPoint(calc, bot)).toBe(mode);
+        });
+
+        it('should default to bottom', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = getBotAnchorPoint(calc, bot);
+
+            expect(shape).toBe('bottom');
+        });
+    });
+
+    describe('calculatePortalPointerDragMode()', () => {
+        const cases = [['grid'], ['world']];
+        it.each(cases)('should return %s', (mode: string) => {
+            const bot = createBot('test', {
+                auxPortalPointerDragMode: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
+        });
+
+        it('should default to world', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const shape = calculatePortalPointerDragMode(calc, bot);
+
+            expect(shape).toBe('world');
         });
     });
 

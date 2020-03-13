@@ -27,6 +27,12 @@ import {
     BOT_SPACE_TAG,
     PortalType,
     BotSubShape,
+    BotOrientationMode,
+    DEFAULT_ORIENTATION_MODE,
+    BotAnchorPoint,
+    DEFAULT_ANCHOR_POINT,
+    PortalPointerDragMode,
+    DEFAULT_PORTAL_POINTER_DRAG_MODE,
 } from './Bot';
 
 import {
@@ -1213,7 +1219,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'cube' ||
         shape === 'sphere' ||
         shape === 'sprite' ||
-        shape === 'mesh'
+        shape === 'mesh' ||
+        shape === 'iframe'
     ) {
         return shape;
     }
@@ -1230,7 +1237,7 @@ export function getBotSubShape(
     bot: Bot
 ): BotSubShape {
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
-    if (shape === 'gltf') {
+    if (shape === 'gltf' || shape === 'html' || shape === 'src') {
         return shape;
     }
     return null;
@@ -1265,6 +1272,80 @@ export function getBotTagAnchor(
         return anchor;
     }
     return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
+ * Gets the orientation mode for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotOrientationMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotOrientationMode {
+    const mode = <BotOrientationMode>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxOrientationMode',
+            DEFAULT_ORIENTATION_MODE
+        )
+    );
+    if (
+        mode === 'absolute' ||
+        mode === 'billboard' ||
+        mode === 'billboardX' ||
+        mode === 'billboardZ'
+    ) {
+        return mode;
+    }
+    return DEFAULT_ORIENTATION_MODE;
+}
+
+/**
+ * Gets the orientation mode for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotAnchorPoint {
+    const mode = <BotAnchorPoint>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxAnchorPoint',
+            DEFAULT_ANCHOR_POINT
+        )
+    );
+    if (mode === 'center' || mode === 'bottom') {
+        return mode;
+    }
+    return DEFAULT_ANCHOR_POINT;
+}
+
+/**
+ * Calculates the portal raycast mode that the given bot has set.
+ * @param calc The calculation context.
+ * @param bot The portal config bot.
+ */
+export function calculatePortalPointerDragMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): PortalPointerDragMode {
+    const mode = <PortalPointerDragMode>(
+        calculateStringTagValue(
+            calc,
+            bot,
+            'auxPortalPointerDragMode',
+            DEFAULT_PORTAL_POINTER_DRAG_MODE
+        )
+    );
+    if (mode === 'grid' || mode === 'world') {
+        return mode;
+    }
+    return DEFAULT_PORTAL_POINTER_DRAG_MODE;
 }
 
 /**
@@ -1669,11 +1750,7 @@ export function calculateBotDragStackPosition(
         f => f.id
     );
 
-    const canMerge =
-        objs.length >= 1 &&
-        bots.length === 1 &&
-        isBotTags(bots[0]) &&
-        isMergeable(calc, objs[0]);
+    const canMerge = canMergeBots(calc, objs, bots);
 
     const firstBot = bots[0];
 
@@ -1693,6 +1770,19 @@ export function calculateBotDragStackPosition(
         other: objs[0],
         index: index,
     };
+}
+
+function canMergeBots(
+    calc: BotCalculationContext,
+    objs: Bot[],
+    bots: (Bot | BotTags)[]
+) {
+    return (
+        objs.length >= 1 &&
+        bots.length === 1 &&
+        isBotTags(bots[0]) &&
+        isMergeable(calc, objs[0])
+    );
 }
 
 /**

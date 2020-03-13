@@ -12,6 +12,8 @@ import {
     createBot,
     BotCalculationContext,
     CREATE_ACTION_NAME,
+    getBotPosition,
+    getBotIndex,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
@@ -25,7 +27,8 @@ import { Input, InputMethod } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { GridTile } from 'aux-web/aux-player/Grid3D';
+import { GridTile } from '../../Grid3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 
 /**
  * Mod drag operation handles dragging mods
@@ -85,26 +88,68 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             return;
         }
 
+        const raycastMode = this._calculateRaycastMode(gridTile);
+
+        if (raycastMode === 'grid') {
+            this._dragOnGrid(calc, gridTile);
+        } else {
+            const viewport = (this._inInventory
+                ? this._inventorySimulation3D.getMainCameraRig()
+                : this._simulation3D.getMainCameraRig()
+            ).viewport;
+            const {
+                gameObject,
+                hit,
+            } = this._interaction.findHoveredGameObjectFromRay(
+                inputRay,
+                null,
+                viewport
+            );
+            if (gameObject instanceof AuxBot3D) {
+                const nextContext = gameObject.dimension;
+
+                this._updateCurrentDimension(nextContext);
+
+                // Drag on the grid
+                const botPosition = getBotPosition(
+                    calc,
+                    gameObject.bot,
+                    nextContext
+                );
+                const botIndex = getBotIndex(calc, gameObject.bot, nextContext);
+                const coord = (this._toCoord = new Vector2(
+                    botPosition.x,
+                    botPosition.y
+                ));
+                this._other = gameObject.bot;
+
+                // Bots are always mergable
+                // if they want to prevent merging then
+                // they have to override onModDrop.
+                this._merge = true;
+                this._sendDropEnterExitEvents(this._merge ? this._other : null);
+                this._updateModPosition(calc, coord, botIndex + 1);
+            } else {
+                this._dragOnGrid(calc, gridTile);
+            }
+        }
+    }
+
+    private _dragOnGrid(calc: BotCalculationContext, gridTile: GridTile) {
         const nextDimensionGroup = this._calculateNextDimensionGroup(gridTile);
         this.dimensionGroup = nextDimensionGroup;
         const nextContext = [...this.dimensionGroup.dimensions.values()][0];
-
         this._updateCurrentDimension(nextContext);
-
         this._toCoord = gridTile.tileCoordinate;
-
         const result = calculateBotDragStackPosition(
             calc,
             this._dimension,
             gridTile.tileCoordinate,
             this._mod
         );
-
         this._other = result.other;
         this._merge = result.merge;
-
         this._sendDropEnterExitEvents(this._merge ? this._other : null);
-
         if (result.merge || result.index === 0) {
             this._updateModPosition(
                 calc,
@@ -121,6 +166,17 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             this._inInventory =
                 nextContext === this._inventorySimulation3D.inventoryDimension;
         }
+    }
+
+    /**
+     * Calculates the raycast mode for the portal that contains the given grid tile.
+     * @param tile
+     */
+    private _calculateRaycastMode(tile: GridTile) {
+        const config =
+            this._simulation3D.getPortalConfigForGrid(tile.grid) ||
+            this._inventorySimulation3D.getPortalConfigForGrid(tile.grid);
+        return config.raycastMode;
     }
 
     private _calculateNextDimensionGroup(tile: GridTile) {
