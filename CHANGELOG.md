@@ -56,6 +56,14 @@
             -   Set to a number to play an animation by index.
             -   Set to `false` to stop animating.
 
+-   :robot: Builder Improvements
+
+    -   Added a "Scan" menu item to the builder menu that opens the QR Code scanner to let you import an AUX or mod.
+        -   Scanning a URL that ends with `.aux` will try to download the file at the URL and import it as an AUX file.
+        -   Scanning some JSON will put Builder into clone mode with the JSON as a mod.
+    -   Added a hover state to Builder that changes its label to "menu".
+    -   Changed the label of the Builder Egg to "ab-1 config".
+
 -   :book: Documentation
 
     -   Added documentation for the wrist portals and their related config bot tags.
