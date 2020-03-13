@@ -49,6 +49,20 @@
             -   Possible values are:
                 -   `world` - The mouse pointer collides with other bots in the world when being dragged. (Default)
                 -   `grid` - The mouse pointer ignores other bots in the world when being dragged.
+    -   Added the ability to animate meshes.
+        -   By default the first animation will play if available.
+        -   You can control which animation is played using the `#auxFormAnimation` tag.
+            -   Set to a string to play an animation by name. (Case sensitive)
+            -   Set to a number to play an animation by index.
+            -   Set to `false` to stop animating.
+
+-   :robot: Builder Improvements
+
+    -   Added a "Scan" menu item to the builder menu that opens the QR Code scanner to let you import an AUX or mod.
+        -   Scanning a URL that ends with `.aux` will try to download the file at the URL and import it as an AUX file.
+        -   Scanning some JSON will put Builder into clone mode with the JSON as a mod.
+    -   Added a hover state to Builder that changes its label to "menu".
+    -   Changed the label of the Builder Egg to "ab-1 config".
 
 -   :book: Documentation
 
@@ -56,6 +70,7 @@
 
 -   :bug: Bug Fixes
     -   Fixed `player.downloadUniverse()` to only include bots from the shared space.
+    -   Fixed an issue where sprites were not clickable or draggable in VR.
 
 ## V1.0.14
 

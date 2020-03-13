@@ -419,6 +419,27 @@ When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtyp
 
 When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
+### `auxFormAnimation`
+
+The name of the animation that the mesh should play.
+Only works for mesh forms.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='Nothing'>
+    Play the first animation.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Stops animating the mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='Any String'>
+    Play the animation with the given name.
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Integer >= 0'>
+    Play the animation at the given index.
+    Useful for exploring possible animations if you don't have the name.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `auxGLTFVersion`
 
 The GLTF specification version that should be used to load a GLTF model.

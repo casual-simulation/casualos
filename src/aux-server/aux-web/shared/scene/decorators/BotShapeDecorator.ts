@@ -12,6 +12,8 @@ import {
     getBotAnchorPoint,
     BotOrientationMode,
     BotAnchorPoint,
+    calculateStringTagValue,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -29,6 +31,9 @@ import {
     Vector2,
     Matrix4,
     Euler,
+    AnimationMixer,
+    SkinnedMesh,
+    AnimationAction,
 } from 'three';
 import {
     createCube,
@@ -56,9 +61,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _subShape: BotSubShape = null;
     private _gltfVersion: number = null;
     private _address: string = null;
+    private _animation: any = null;
     private _canHaveStroke = false;
-    private _orientationMode: BotOrientationMode;
-    private _anchorPoint: BotAnchorPoint;
+    private _animationMixer: AnimationMixer;
+    private _animClips: AnimationAction[];
+    private _animClipMap: Map<string, AnimationAction>;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -94,6 +101,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._rebuildShape('cube', null, null, null);
     }
 
+    frameUpdate() {
+        if (this._game && this._animationMixer) {
+            this._animationMixer.update(this._game.getTime().deltaTime);
+            this.scene.updateMatrixWorld(true);
+        }
+    }
+
     botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.bot3D.bot);
         const subShape = getBotSubShape(calc, this.bot3D.bot);
@@ -108,6 +122,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             'auxGLTFVersion',
             2
         );
+        const animation = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormAnimation'
+        );
         if (this._needsUpdate(shape, subShape, address, version)) {
             this._rebuildShape(shape, subShape, address, version);
         }
@@ -115,6 +134,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._updateColor(calc);
         this._updateStroke(calc);
         this._updateAddress(calc, address);
+        this._updateAnimation(animation);
     }
 
     private _needsUpdate(
@@ -194,6 +214,41 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
     }
 
+    private _updateAnimation(animation: any, forceUpdate: boolean = false) {
+        if (this._animation === animation && !forceUpdate) {
+            return;
+        }
+        if (!this._animationMixer) {
+            return;
+        }
+        this._animation = animation;
+        this._animationMixer.stopAllAction();
+
+        const noAnimation = animation === false;
+        if (noAnimation) {
+        } else if (hasValue(this._animation)) {
+            let playing = false;
+            if (typeof this._animation === 'number') {
+                const index = Math.floor(this._animation);
+                if (index >= 0 && index < this._animClips.length) {
+                    this._animClips[index].play();
+                    playing = true;
+                }
+            }
+
+            if (!playing) {
+                const name = this._animation.toString();
+                const clip = this._animClipMap.get(name);
+                if (clip) {
+                    clip.play();
+                    playing = true;
+                }
+            }
+        } else {
+            this._animClips[0].play();
+        }
+    }
+
     private _updateIframeHtml() {
         HtmlMixerHelpers.setIframeHtml(this._iframe, this._address);
     }
@@ -218,6 +273,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
         disposeScene(this.scene);
 
+        this._animationMixer = null;
         this.mesh = null;
         this.collider = null;
         this.container = null;
@@ -362,6 +418,22 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         setColor(collider, 'clear');
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
+
+        // Animations
+        if (gltf.animations.length > 0) {
+            this._animationMixer = new AnimationMixer(this.scene);
+            let clipMap = new Map<string, AnimationAction>();
+            let clips = [] as AnimationAction[];
+            for (let anim of gltf.animations) {
+                const action = this._animationMixer.clipAction(anim);
+                clips.push(action);
+                clipMap.set(anim.name, action);
+            }
+
+            this._animClips = clips;
+            this._animClipMap = clipMap;
+            this._updateAnimation(null, true);
+        }
 
         this.bot3D.updateMatrixWorld(true);
     }
