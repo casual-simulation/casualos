@@ -49,6 +49,12 @@
             -   Possible values are:
                 -   `world` - The mouse pointer collides with other bots in the world when being dragged. (Default)
                 -   `grid` - The mouse pointer ignores other bots in the world when being dragged.
+    -   Added the ability to animate meshes.
+        -   By default the first animation will play if available.
+        -   You can control which animation is played using the `#auxFormAnimation` tag.
+            -   Set to a string to play an animation by name. (Case sensitive)
+            -   Set to a number to play an animation by index.
+            -   Set to `false` to stop animating.
 
 -   :book: Documentation
 
