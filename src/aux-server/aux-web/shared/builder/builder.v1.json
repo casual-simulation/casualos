@@ -51,9 +51,9 @@
             "commandRestoreMark": "@const b = that;\r\nif (b) {\r\n    server.restoreHistoryMark(b);\r\n}",
             "commandShowChat": "@let example = [`Say`, `\"..\"`, `to wake ${tags.builderName}`];\r\nif (tags.builderState === \"Enabled\") {\r\n    const examples = [].concat.apply([], tags.chatCommands.map(c => c.examples).filter(e => e));\r\n    const index = math.randomInt(0, examples.length);\r\n    example = [`Try`, ...examples[index].slice(0, 1)];\r\n}\r\nplayer.showChat(`tip: ${example.join(' ')}`);",
             "commandDownloadBuilder": "@const bots = getBots(\r\n    bySpace(\"shared\"),\r\n    byTag(\"#builderName\", tags.builderName),\r\n);\r\n\r\nconst badTags = [\r\n    'builderState',\r\n    'builderColor',\r\n    'auxBuilderX',\r\n    'auxBuilderY',\r\n    'auxBuilderSortOrder',\r\n];\r\nconst filtered = bots.map(b => {\r\n    const mod = { ...b.raw };\r\n    for (let tag of badTags) {\r\n        delete mod[tag];\r\n    }\r\n    return {\r\n        id: b.id,\r\n        tags: mod\r\n    };\r\n});\r\n\r\nplayer.downloadBots(filtered, `${tags.builderName}.aux`);",
-            "builderVersion": "30",
+            "builderVersion": "31",
             "auxLabel": "=tags.builderName + ' config'",
-            "commandScan": "@player.openQRCodeScanner();"
+            "commandScan": "@shout('builderBeginScanning');\nplayer.openQRCodeScanner();"
         }
     },
     "882f7922-e122-4957-bb2d-67004b483432": {
@@ -136,7 +136,7 @@
             "helperCommands": "=[\r\n    {\r\n        label: \"Open Sheet\",\r\n        shout: \"commandShowSheet\"\r\n    },\r\n    {\r\n        label: \"New Bot\",\r\n        shout: \"commandNewBot\"\r\n    },\r\n    {\r\n        label: \"Show Join Code\",\r\n        shout: \"commandShowJoinCode\"\r\n    },\r\n    {\r\n        label: \"Scan\",\r\n        shout: \"commandScan\"\r\n    },\r\n    {\r\n        label: \"Go to Builder Dimension\",\r\n        shout: \"commandGoToBuilder\"\r\n    },\r\n    {\r\n        label: \"Sleep\",\r\n        shout: \"commandSleep\"\r\n    }\r\n]",
             "onQRCodeScannerClosed": "@tags.builderScanning = false;",
             "builderBeginScanning": "@tags.builderScanning = true;",
-            "onQRCodeScanned": "@if (!tags.builderScanning) {\r\n    return;\r\n}\r\n\r\ntry {\r\n    const scannedTags = JSON.parse(that);\r\n    if (typeof scannedTags === 'object' && !Array.isArray(scannedTags)) {\r\n        const mod = getMod(scannedTags);\r\n        shout(\"builderCommand\", { command: \"commandNewBot\", argument: getMod(b) });\r\n    }\r\n} catch(err) {\r\n    console.log('[BuilderHelper] Could not parse QR Code to JSON, trying AUX import.');\r\n    try {\r\n        const url = new URL(that);\r\n        if (url && that.endsWith('.aux')) {\r\n            player.toast(`Importing AUX from ${that}`);\r\n            player.importAUX(that);\r\n        }\r\n    } catch(e) {\r\n        console.log('[BuilderHelper] Could not parse URL. Unable to import QR Code.');\r\n    }\r\n}"
+            "onQRCodeScanned": "@if (!tags.builderScanning) {\r\n    return;\r\n}\r\n\r\ntry {\r\n    const scannedTags = JSON.parse(that);\r\n    if (typeof scannedTags === 'object' && !Array.isArray(scannedTags)) {\r\n        player.closeQRCodeScanner();\r\n        const mod = getMod(scannedTags);\r\n        shout(\"builderCommand\", { command: \"commandNewBot\", argument: mod });\r\n    }\r\n} catch(err) {\r\n    console.log('[BuilderHelper] Could not parse QR Code to JSON, trying AUX import.', that, err);\r\n    try {\r\n        const url = new URL(that);\r\n        if (url && that.endsWith('.aux')) {\r\n            player.closeQRCodeScanner();\r\n            player.toast(`Importing AUX from ${that}`);\r\n            player.importAUX(that);\r\n        }\r\n    } catch(e) {\r\n        console.log('[BuilderHelper] Could not parse URL. Unable to import QR Code.', e);\r\n    }\r\n}"
         }
     },
     "c1cf7e69-da7c-4cf0-b454-0139e5d48d95": {
