@@ -231,7 +231,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         } else {
             let update = false;
             if (
-                ['billboard', 'billboardX'].indexOf(this._orientationMode) >= 0
+                ['billboard', 'billboardZ'].indexOf(this._orientationMode) >= 0
             ) {
                 const cameraRig = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
                 const cameraWorld = new Vector3();
@@ -242,13 +242,12 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     cameraRig.mainCamera.matrixWorld
                 );
                 const cameraUp = new Vector3(0, 1, 0);
-                const cameraRight = new Vector3(0, 1, 0);
                 cameraUp.applyQuaternion(cameraRotation);
 
                 this._rotationObj.up = cameraUp;
                 this._rotationObj.lookAt(cameraWorld);
                 update = true;
-                if (this._orientationMode === 'billboardX') {
+                if (this._orientationMode === 'billboardZ') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
                         'YXZ'
