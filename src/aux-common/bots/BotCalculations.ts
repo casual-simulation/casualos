@@ -1297,6 +1297,18 @@ export function getBotOrientationMode(
     return DEFAULT_ORIENTATION_MODE;
 }
 
+const possibleAnchorPoints = new Set([
+    'center',
+    'centerFront',
+    'centerRear',
+    'bottom',
+    'bottomFront',
+    'bottomRear',
+    'top',
+    'topFront',
+    'topRear',
+] as const);
+
 /**
  * Gets the orientation mode for the given bot.
  * @param calc The calculation context.
@@ -1314,7 +1326,8 @@ export function getBotAnchorPoint(
             DEFAULT_ANCHOR_POINT
         )
     );
-    if (mode === 'center' || mode === 'bottom') {
+
+    if (possibleAnchorPoints.has(mode)) {
         return mode;
     }
     return DEFAULT_ANCHOR_POINT;

@@ -34,6 +34,7 @@ import {
     AnimationMixer,
     SkinnedMesh,
     AnimationAction,
+    MathUtils as ThreeMath,
 } from 'three';
 import {
     createCube,
@@ -440,6 +441,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     private _createSprite() {
         this.mesh = this.collider = createSprite();
+        this.mesh.rotation.set(ThreeMath.degToRad(-90), 0, 0);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;

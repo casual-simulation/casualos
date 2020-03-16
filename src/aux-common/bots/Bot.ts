@@ -299,7 +299,16 @@ export type BotOrientationMode = 'absolute' | 'billboard' | 'billboardZ';
 /**
  * Defines the possible bot anchor points.
  */
-export type BotAnchorPoint = 'center' | 'bottom';
+export type BotAnchorPoint =
+    | 'center'
+    | 'centerFront'
+    | 'centerRear'
+    | 'bottom'
+    | 'bottomFront'
+    | 'bottomRear'
+    | 'top'
+    | 'topFront'
+    | 'topRear';
 
 /**
  * Defines the possible portal raycast modes.
