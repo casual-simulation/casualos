@@ -23,7 +23,7 @@ import { Vector3, Quaternion, Euler, Vector2, Object3D } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
-import { calculateScale } from '../SceneUtils';
+import { calculateScale, objectForwardRay } from '../SceneUtils';
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -238,6 +238,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 cameraWorld.setFromMatrixPosition(
                     cameraRig.mainCamera.matrixWorld
                 );
+                const cameraRotation = new Quaternion().setFromRotationMatrix(
+                    cameraRig.mainCamera.matrixWorld
+                );
+                const cameraUp = new Vector3(0, 1, 0);
+                const cameraRight = new Vector3(0, 1, 0);
+                cameraUp.applyQuaternion(cameraRotation);
+
+                this._rotationObj.up = cameraUp;
                 this._rotationObj.lookAt(cameraWorld);
                 update = true;
                 if (this._orientationMode === 'billboardX') {
