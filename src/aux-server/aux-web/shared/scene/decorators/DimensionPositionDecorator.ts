@@ -18,6 +18,7 @@ import {
     BotAnchorPoint,
     BotOrientationMode,
     getBotIndex,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -71,19 +72,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         const nextOrientationMode = getBotOrientationMode(calc, this.bot3D.bot);
         const nextAnchorPoint = getBotAnchorPoint(calc, this.bot3D.bot);
         const gridScale = this.bot3D.gridScale;
-        const botScale = calculateScale(calc, this.bot3D.bot, gridScale);
 
-        if (nextOrientationMode !== this._orientationMode) {
-            this.bot3D.display.rotation.set(0, 0, 0);
-        }
         this._orientationMode = nextOrientationMode;
         this._anchorPoint = nextAnchorPoint;
         this._rotationObj = this.bot3D.container;
 
-        // Update the offsets for the center vs bottom
-        // anchor positions so that the bot is above the grid and
-        // not in it
-
+        // Update the offset for the display container
+        // so that it rotates around the specified
+        // point
         let displayOffset = new Vector3();
 
         if (this._anchorPoint.startsWith('center')) {
