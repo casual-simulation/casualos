@@ -367,6 +367,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         });
 
         this.container.add(this._iframe.object3d);
+        this.container.rotation.set(ThreeMath.degToRad(-90), 0, 0);
 
         this._createCube();
         this.mesh.scale.set(1, 0.01, 0.05);
