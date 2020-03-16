@@ -1,5 +1,36 @@
 # AUX Changelog
 
+## V1.0.16
+
+### Date: TBD
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   Both sprites and iframes now face upwards by default.
+    -   `#auxAnchorPoint` has been changed to move the bot form inside of its virtual spacing box.
+        -   Previously, both the virtual box and the bot form was moved to try and preserve the absolute positioning of the bot form when changing anchor points.
+        -   Now, only the bot form is moved to ensure the correctness of the resulting scale and rotation calculations.
+    -   `#auxOrientationMode`
+        -   Renamed the `billboardX` option to `billboardZ`.
+
+-   :rocket: Improvements
+
+    -   Added the following options for `#auxAnchorPoint`
+        -   `centerFront` - Positions the bot form such that the center of the form's front face is at the center of the virtual bot.
+        -   `centerBack` - Positions the bot form such that the center of the form's back face is at the center of the virtual bot.
+        -   `bottomFront` - Positions the bot form such that the bottom of the form's front face is at the center of the virtual bot.
+        -   `bottomBack` - Positions the bot form such that the bottom of the form's back face is at the center of the virtual bot.
+        -   `top` - Positions the bot form such that the top of the form is at the center of the virtual bot.
+        -   `topFront` - Positions the bot form such that the top of the form's front face is at the center of the virtual bot.
+        -   `topBack` - Positions the bot form such that the top of the form's back face is at the center of the virtual bot.
+
+-   :bug: Bug Fixes
+    -   Fixed issues with scale and rotation when `#auxAnchorPoint` is set to `center`.
+    -   Fixed sprite billboarding issues when looking straight down at them.
+    -   Fixed an issue where the wrong Z position tag of a bot was used for calculating how bots stack.
+
 ## V1.0.15
 
 ### Date: 3/13/2020
