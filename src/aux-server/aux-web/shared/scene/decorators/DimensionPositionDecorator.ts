@@ -33,6 +33,7 @@ import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale, objectForwardRay } from '../SceneUtils';
+import { Game } from '../Game';
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -59,12 +60,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _orientationMode: BotOrientationMode;
     private _anchorPoint: BotAnchorPoint;
     private _rotationObj: Object3D;
+    private _game: Game;
 
     constructor(
         bot3D: AuxBot3D,
+        game: Game,
         options: DimensionPositionDecoratorOptions = {}
     ) {
         super(bot3D);
+        this._game = game;
         this._lerp = !!options.lerp;
     }
 
@@ -238,13 +242,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 cameraWorld.setFromMatrixPosition(
                     cameraRig.mainCamera.matrixWorld
                 );
-                const cameraRotation = new Quaternion().setFromRotationMatrix(
-                    cameraRig.mainCamera.matrixWorld
-                );
-                const cameraUp = new Vector3(0, 1, 0);
-                cameraUp.applyQuaternion(cameraRotation);
 
-                this._rotationObj.up = cameraUp;
+                if (this._game && !!this._game.xrSession) {
+                    this._rotationObj.up = new Vector3(0, 1, 0);
+                } else {
+                    const cameraRotation = new Quaternion().setFromRotationMatrix(
+                        cameraRig.mainCamera.matrixWorld
+                    );
+                    const cameraUp = new Vector3(0, 1, 0);
+                    cameraUp.applyQuaternion(cameraRotation);
+
+                    this._rotationObj.up = cameraUp;
+                }
+
                 this._rotationObj.lookAt(cameraWorld);
 
                 // Rotate the object 90 degrees around its X axis
