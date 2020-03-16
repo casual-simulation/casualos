@@ -171,11 +171,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const hasStroke = typeof strokeColorValue !== 'undefined';
         if (hasStroke && !this.stroke) {
             this.stroke = createStroke();
-            this.mesh.add(this.stroke);
+            this.container.add(this.stroke);
         } else if (!hasStroke) {
             if (this.stroke) {
                 disposeMesh(this.stroke);
-                this.mesh.remove(this.stroke);
+                this.container.remove(this.stroke);
 
                 this.stroke = null;
             }
@@ -372,6 +372,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._createCube();
         this.mesh.scale.set(1, 0.01, 0.05);
         this.mesh.position.set(0, -0.5, 0);
+        this._canHaveStroke = false;
 
         return true;
     }

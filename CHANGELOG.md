@@ -14,6 +14,7 @@
         -   Now, only the bot form is moved to ensure the correctness of the resulting scale and rotation calculations.
     -   `#auxOrientationMode`
         -   Renamed the `billboardX` option to `billboardZ`.
+    -   Changed iframes forms to not support strokes.
 
 -   :rocket: Improvements
 
@@ -30,6 +31,7 @@
     -   Fixed issues with scale and rotation when `#auxAnchorPoint` is set to `center`.
     -   Fixed sprite billboarding issues when looking straight down at them.
     -   Fixed an issue where the wrong Z position tag of a bot was used for calculating how bots stack.
+    -   Fixed an issue where the bot stroke was being considered for collision detection. This caused bots with strokes to have a much larger hit box than they should have had.
 
 ## V1.0.15
 
