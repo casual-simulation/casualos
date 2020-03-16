@@ -74,6 +74,7 @@ export abstract class BaseInteractionManager {
 
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
+    private _cameraControlsEnabled: boolean;
 
     // A map for input methods to the bot that they're directly interacting with.
     private _inputMethodMap: Map<string, AuxBot3D>;
@@ -89,6 +90,7 @@ export abstract class BaseInteractionManager {
         this._maxTapCodeLength = 4;
         this._hoveredBots = [];
         this._inputMethodMap = new Map();
+        this._cameraControlsEnabled = true;
 
         // Bind event handlers to this instance of the class.
         this._handleBotAdded = this._handleBotAdded.bind(this);
@@ -116,6 +118,20 @@ export abstract class BaseInteractionManager {
 
     get overHtmlMixerIFrame() {
         return this._overHtmlMixerIFrame;
+    }
+
+    /**
+     * Gets whether the camera controls should be enabled.
+     */
+    get cameraControlsEnabled() {
+        return this._cameraControlsEnabled;
+    }
+
+    /**
+     * Sets whether the camera controls should be enabled.
+     */
+    set cameraControlsEnabled(value: boolean) {
+        this._cameraControlsEnabled = value;
     }
 
     /**
@@ -182,7 +198,7 @@ export abstract class BaseInteractionManager {
 
         if (this._operations.length === 0) {
             // Enable camera controls when there are no more operations.
-            this.setCameraControlsEnabled(true);
+            this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
         this._cameraRigControllers.forEach(rigControls =>
@@ -268,7 +284,7 @@ export abstract class BaseInteractionManager {
                 input.isMouseButtonDownOnElement(this._game.gameView.gameView)
             ) {
                 // Always allow camera control with middle clicks.
-                this.setCameraControlsEnabled(true);
+                this.setCameraControlsEnabled(this._cameraControlsEnabled);
             }
         }
 
@@ -347,7 +363,7 @@ export abstract class BaseInteractionManager {
             this._operations.push(emptyClickOperation);
         }
         if (inputMethod.type !== 'controller') {
-            this.setCameraControlsEnabled(true);
+            this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
     }
 
