@@ -92,7 +92,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         }
         if (this._anchorPoint.endsWith('Front')) {
             displayOffset.z = -0.5;
-        } else if (this._anchorPoint.endsWith('Rear')) {
+        } else if (this._anchorPoint.endsWith('Back')) {
             displayOffset.z = 0.5;
         } else {
             displayOffset.z = 0;

@@ -302,13 +302,13 @@ export type BotOrientationMode = 'absolute' | 'billboard' | 'billboardZ';
 export type BotAnchorPoint =
     | 'center'
     | 'centerFront'
-    | 'centerRear'
+    | 'centerBack'
     | 'bottom'
     | 'bottomFront'
-    | 'bottomRear'
+    | 'bottomBack'
     | 'top'
     | 'topFront'
-    | 'topRear';
+    | 'topBack';
 
 /**
  * Defines the possible portal raycast modes.

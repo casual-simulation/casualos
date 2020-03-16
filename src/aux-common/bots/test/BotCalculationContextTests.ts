@@ -3526,13 +3526,13 @@ export function botCalculationContextTests(
         const cases = [
             ['center'],
             ['centerFront'],
-            ['centerRear'],
+            ['centerBack'],
             ['bottom'],
             ['bottomFront'],
-            ['bottomRear'],
+            ['bottomBack'],
             ['top'],
             ['topFront'],
-            ['topRear'],
+            ['topBack'],
         ];
 
         it.each(cases)('should return %s', (mode: string) => {
