@@ -36,6 +36,11 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     container: Group;
 
     /**
+     * The container that applies scales to the bot.
+     */
+    scaleContainer: Group;
+
+    /**
      * The things that are displayed by this bot.
      */
     display: Group;
@@ -94,8 +99,10 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.dimension = dimension;
         this.container = new Group();
         this.display = new Group();
+        this.scaleContainer = new Group();
         this.add(this.container);
-        this.container.add(this.display);
+        this.container.add(this.scaleContainer);
+        this.scaleContainer.add(this.display);
 
         this.decorators = decoratorFactory.loadDecorators(this);
         this.updateFrameUpdateList();

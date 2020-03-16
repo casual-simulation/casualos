@@ -23,6 +23,7 @@ import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -52,6 +53,7 @@ import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 import { AuxBot3D } from './AuxBot3D';
 import { supportsXR } from '../SharedUtils';
+import merge from 'lodash/merge';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -93,6 +95,12 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
     constructor(gameView: IGameView) {
         this.gameView = gameView;
+
+        if (hasValue(window)) {
+            merge((<any>window).aux || {}, {
+                getGame: () => this,
+            });
+        }
     }
 
     async setup() {

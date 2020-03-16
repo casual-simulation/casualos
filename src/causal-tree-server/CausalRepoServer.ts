@@ -403,6 +403,11 @@ export class CausalRepoServer {
         device: DeviceConnection<Connection>,
         branch: string
     ) {
+        console.log(
+            `[CausalRepoServer] Device ${
+                device.id
+            } connected to branch: ${branch}`
+        );
         const info = devicesInfo();
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
@@ -415,6 +420,11 @@ export class CausalRepoServer {
         device: DeviceConnection<Connection>,
         branch: string
     ) {
+        console.log(
+            `[CausalRepoServer] Device ${
+                device.id
+            } disconnected from branch: ${branch}`
+        );
         const info = devicesInfo();
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
@@ -431,6 +441,7 @@ export class CausalRepoServer {
     }
 
     private async _unloadBranch(branch: string) {
+        console.log(`[CausalRepoServer] Unloading branch: ${branch}`);
         const repo = this._repos.get(branch);
         if (repo && repo.hasChanges()) {
             console.log(
@@ -448,6 +459,7 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
+            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
             repo = new CausalRepo(this._store);
             await repo.checkout(branch, {
                 createIfDoesntExist: createBranch
