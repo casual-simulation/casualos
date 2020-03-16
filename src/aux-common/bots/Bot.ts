@@ -294,11 +294,7 @@ export type BotLabelAnchor =
 /**
  * Defines the possible bot orientation modes.
  */
-export type BotOrientationMode =
-    | 'absolute'
-    | 'billboard'
-    | 'billboardX'
-    | 'billboardZ';
+export type BotOrientationMode = 'absolute' | 'billboard' | 'billboardX';
 
 /**
  * Defines the possible bot anchor points.
