@@ -1291,16 +1291,23 @@ export function getBotOrientationMode(
             DEFAULT_ORIENTATION_MODE
         )
     );
-    if (
-        mode === 'absolute' ||
-        mode === 'billboard' ||
-        mode === 'billboardX' ||
-        mode === 'billboardZ'
-    ) {
+    if (mode === 'absolute' || mode === 'billboard' || mode === 'billboardZ') {
         return mode;
     }
     return DEFAULT_ORIENTATION_MODE;
 }
+
+const possibleAnchorPoints = new Set([
+    'center',
+    'centerFront',
+    'centerBack',
+    'bottom',
+    'bottomFront',
+    'bottomBack',
+    'top',
+    'topFront',
+    'topBack',
+] as const);
 
 /**
  * Gets the orientation mode for the given bot.
@@ -1319,7 +1326,8 @@ export function getBotAnchorPoint(
             DEFAULT_ANCHOR_POINT
         )
     );
-    if (mode === 'center' || mode === 'bottom') {
+
+    if (possibleAnchorPoints.has(mode)) {
         return mode;
     }
     return DEFAULT_ANCHOR_POINT;

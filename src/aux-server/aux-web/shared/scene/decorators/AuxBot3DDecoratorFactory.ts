@@ -61,7 +61,7 @@ export class AuxBot3DDecoratorFactory {
 
         decorators.push(
             new ScaleDecorator(bot3d),
-            new DimensionPositionDecorator(bot3d, { lerp: isUser })
+            new DimensionPositionDecorator(bot3d, this.game, { lerp: isUser })
         );
 
         if (!!this.game) {

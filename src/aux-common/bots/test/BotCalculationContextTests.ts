@@ -3501,12 +3501,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotOrientationMode()', () => {
-        const cases = [
-            ['absolute'],
-            ['billboard'],
-            ['billboardX'],
-            ['billboardZ'],
-        ];
+        const cases = [['absolute'], ['billboard'], ['billboardZ']];
         it.each(cases)('should return %s', (mode: string) => {
             const bot = createBot('test', {
                 auxOrientationMode: <any>mode,
@@ -3528,7 +3523,18 @@ export function botCalculationContextTests(
     });
 
     describe('getBotAnchorPoint()', () => {
-        const cases = [['center'], ['bottom']];
+        const cases = [
+            ['center'],
+            ['centerFront'],
+            ['centerBack'],
+            ['bottom'],
+            ['bottomFront'],
+            ['bottomBack'],
+            ['top'],
+            ['topFront'],
+            ['topBack'],
+        ];
+
         it.each(cases)('should return %s', (mode: string) => {
             const bot = createBot('test', {
                 auxAnchorPoint: <any>mode,

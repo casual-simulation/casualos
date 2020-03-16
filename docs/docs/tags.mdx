@@ -425,19 +425,19 @@ The name of the animation that the mesh should play.
 Only works for mesh forms.
 
 <PossibleValuesTable>
-  <PossibleValueCode value='Nothing'>
+  <PossibleValueCode value='null'>
     Play the first animation.
   </PossibleValueCode>
   <PossibleValueCode value='false'>
     Stops animating the mesh.
   </PossibleValueCode>
-  <PossibleValueCode value='Any String'>
+  <PossibleValue value='Any String'>
     Play the animation with the given name.
-  </PossibleValueCode>
-  <PossibleValueCode value='Any Integer >= 0'>
+  </PossibleValue>
+  <PossibleValue value='Any Integer >= 0'>
     Play the animation at the given index.
     Useful for exploring possible animations if you don't have the name.
-  </PossibleValueCode>
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `auxGLTFVersion`
@@ -450,10 +450,10 @@ The GLTF specification version that should be used to load a GLTF model.
   <PossibleValueCode value='2'>
     Load the GLTF model with version 2 of the specification. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='Numbers < 2'>
+  <PossibleValue value='Numbers < 2'>
     Load the GLTF Model with version 1 of the specification.
     This is useful for loading meshes from <a href="https://poly.google.com">poly.google.com</a>.
-  </PossibleValueCode>
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `auxProgressBar`
@@ -523,8 +523,29 @@ The position that the bot should rotate and scale around.
   <PossibleValueCode value='bottom'>
     The bot rotates and scales around its bottom point. (default)
   </PossibleValueCode>
+  <PossibleValueCode value='bottomFront'>
+    The bot rotates and scales around the point at the bottom of the Bot's front face.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomBack'>
+    The bot rotates and scales around the point at the bottom of the Bot's back face.
+  </PossibleValueCode>
   <PossibleValueCode value='center'>
     The bot rotates and scales around its center point.
+  </PossibleValueCode>
+  <PossibleValueCode value='centerFront'>
+    The bot rotates and scales around the point at the center of the Bot's front face.
+  </PossibleValueCode>
+  <PossibleValueCode value='centerBack'>
+    The bot rotates and scales around the point at the center of the Bot's back face.
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The bot rotates and scales around its top point.
+  </PossibleValueCode>
+  <PossibleValueCode value='topFront'>
+    The bot rotates and scales around the point at the top of the Bot's front face.
+  </PossibleValueCode>
+  <PossibleValueCode value='topBack'>
+    The bot rotates and scales around the point at the top of the Bot's back face.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -541,11 +562,8 @@ The mode that determines how the bot automatically rotates.
   <PossibleValueCode value='billboard'>
     The bot rotates left, right, up, and down automatically to face the player.
   </PossibleValueCode>
-  <PossibleValueCode value='billboardX'>
-    The bot rotates left and right automatically to face the player.
-  </PossibleValueCode>
   <PossibleValueCode value='billboardZ'>
-    The bot rotates up and down automatically to face the player.
+    The bot rotates left and right automatically to face the player.
   </PossibleValueCode>
 </PossibleValuesTable>
 

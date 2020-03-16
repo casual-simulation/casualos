@@ -74,7 +74,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
-                this.bot3D.add(this.text3D);
+                this.bot3D.container.add(this.text3D);
             }
 
             // Update label text content.
@@ -140,7 +140,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     disposeText3D(): void {
         if (this.text3D) {
             this.text3D.dispose();
-            this.bot3D.remove(this.text3D);
+            this.bot3D.container.remove(this.text3D);
             this.text3D = null;
         }
     }
