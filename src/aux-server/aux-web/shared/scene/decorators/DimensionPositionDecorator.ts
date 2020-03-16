@@ -366,7 +366,7 @@ export function calculateVerticalHeight(
             const offset = calculateNumericalTagValue(
                 calc,
                 bot,
-                `${dimension}.z`,
+                `${dimension}Z`,
                 0
             );
 
