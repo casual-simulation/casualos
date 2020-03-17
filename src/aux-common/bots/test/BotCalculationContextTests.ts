@@ -3525,8 +3525,8 @@ export function botCalculationContextTests(
     describe('getBotAnchorPoint()', () => {
         const cases = [
             ['center'],
-            ['centerFront'],
-            ['centerBack'],
+            ['front'],
+            ['back'],
             ['bottom'],
             ['bottomFront'],
             ['bottomBack'],

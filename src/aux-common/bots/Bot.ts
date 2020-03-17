@@ -301,8 +301,8 @@ export type BotOrientationMode = 'absolute' | 'billboard' | 'billboardZ';
  */
 export type BotAnchorPoint =
     | 'center'
-    | 'centerFront'
-    | 'centerBack'
+    | 'front'
+    | 'back'
     | 'bottom'
     | 'bottomFront'
     | 'bottomBack'

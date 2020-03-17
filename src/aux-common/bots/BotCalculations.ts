@@ -1299,8 +1299,8 @@ export function getBotOrientationMode(
 
 const possibleAnchorPoints = new Set([
     'center',
-    'centerFront',
-    'centerBack',
+    'front',
+    'back',
     'bottom',
     'bottomFront',
     'bottomBack',
