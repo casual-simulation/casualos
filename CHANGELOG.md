@@ -1,5 +1,25 @@
 # AUX Changelog
 
+## V1.0.17
+
+### Date: 3/17/2020
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   Renamed and removed several `auxAnchorPoint` values.
+        -   Renamed `centerFront` to `front`.
+        -   Renamed `centerBack` to `back`.
+        -   Removed `bottomFront`, `bottomBack`, `topFront`, and `topBack`.
+
+-   :rocket: Improvements
+
+    -   Added the ability to specify an array of 3 numbers as the `#auxAnchorPoint` to use a custom offset.
+
+-   :bug: Bug Fixes
+    -   Fixed `billboardZ` to rotate with the Y axis of the bot facing upwards.
+
 ## V1.0.16
 
 ### Date: 3/16/2020
