@@ -6,6 +6,12 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   Renamed and removed several `auxAnchorPoint` values.
+        -   Renamed `centerFront` to `front`.
+        -   Renamed `centerBack` to `back`.
+
 -   :bug: Bug Fixes
     -   Fixed `billboardZ` to rotate with the Y axis of the bot facing upwards.
 
