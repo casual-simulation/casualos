@@ -58,6 +58,7 @@ import {
     getBotOrientationMode,
     getBotAnchorPoint,
     calculatePortalPointerDragMode,
+    getAnchorPointOffset,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3523,16 +3524,25 @@ export function botCalculationContextTests(
     });
 
     describe('getBotAnchorPoint()', () => {
-        const cases = [['center'], ['front'], ['back'], ['bottom'], ['top']];
+        const cases = [
+            ['center', 'center'],
+            ['front', 'front'],
+            ['back', 'back'],
+            ['bottom', 'bottom'],
+            ['top', 'top'],
+            ['left', 'left'],
+            ['right', 'right'],
+            ['[1, 2, 3]', [1, 2, 3]],
+        ];
 
-        it.each(cases)('should return %s', (mode: string) => {
+        it.each(cases)('should support %s', (mode: string, expected: any) => {
             const bot = createBot('test', {
                 auxAnchorPoint: <any>mode,
             });
 
             const calc = createCalculationContext([bot]);
 
-            expect(getBotAnchorPoint(calc, bot)).toBe(mode);
+            expect(getBotAnchorPoint(calc, bot)).toEqual(expected);
         });
 
         it('should default to bottom', () => {
@@ -3542,6 +3552,44 @@ export function botCalculationContextTests(
             const shape = getBotAnchorPoint(calc, bot);
 
             expect(shape).toBe('bottom');
+        });
+    });
+
+    describe('getAnchorPointOffset()', () => {
+        const cases = [
+            ['center', { x: 0, y: 0, z: 0 }],
+            ['front', { x: 0, y: -0.5, z: 0 }],
+            ['back', { x: 0, y: 0.5, z: 0 }],
+            ['bottom', { x: 0, y: 0, z: 0.5 }],
+            ['top', { x: 0, y: 0, z: -0.5 }],
+            ['left', { x: 0.5, y: 0, z: 0 }],
+            ['right', { x: -0.5, y: 0, z: 0 }],
+
+            // Should mirror the coordinates when using literals
+            ['[1, 2, 3]', { x: -1, y: -2, z: -3 }],
+        ];
+
+        it.each(cases)('should support %s', (mode: string, expected: any) => {
+            const bot = createBot('test', {
+                auxAnchorPoint: <any>mode,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+        });
+
+        it('should default to bottom', () => {
+            const bot = createBot();
+
+            const calc = createCalculationContext([bot]);
+            const offset = getAnchorPointOffset(calc, bot);
+
+            expect(offset).toEqual({
+                x: 0,
+                y: 0,
+                z: 0.5,
+            });
         });
     });
 

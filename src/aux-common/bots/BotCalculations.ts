@@ -1303,10 +1303,12 @@ const possibleAnchorPoints = new Set([
     'back',
     'bottom',
     'top',
+    'left',
+    'right',
 ] as const);
 
 /**
- * Gets the orientation mode for the given bot.
+ * Gets the anchor point for the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1314,19 +1316,65 @@ export function getBotAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): BotAnchorPoint {
-    const mode = <BotAnchorPoint>(
-        calculateStringTagValue(
-            calc,
-            bot,
-            'auxAnchorPoint',
-            DEFAULT_ANCHOR_POINT
-        )
-    );
+    const mode = <BotAnchorPoint>calculateBotValue(calc, bot, 'auxAnchorPoint');
 
-    if (possibleAnchorPoints.has(mode)) {
+    if (Array.isArray(mode)) {
+        if (mode.length >= 3 && mode.every(v => typeof v === 'number')) {
+            return mode;
+        }
+    } else if (possibleAnchorPoints.has(mode)) {
         return mode;
     }
     return DEFAULT_ANCHOR_POINT;
+}
+
+/**
+ * Gets the anchor point offset for the bot in AUX coordinates.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getAnchorPointOffset(
+    calc: BotCalculationContext,
+    bot: Bot
+): {
+    x: number;
+    y: number;
+    z: number;
+} {
+    const point = getBotAnchorPoint(calc, bot);
+    if (typeof point === 'string') {
+        let offset = {
+            x: 0,
+            y: 0,
+            z: 0,
+        };
+        if (point === 'center') {
+            offset.z = 0;
+        } else if (point === 'top') {
+            offset.z = -0.5;
+        } else if (point === 'bottom') {
+            offset.z = 0.5;
+        } else if (point === 'front') {
+            offset.y = -0.5;
+        } else if (point === 'back') {
+            offset.y = 0.5;
+        } else if (point === 'left') {
+            offset.x = 0.5;
+        } else if (point === 'right') {
+            offset.x = -0.5;
+        } else {
+            offset.z = 0.5;
+        }
+
+        return offset;
+    } else {
+        const [x, y, z] = point;
+        return {
+            x: -x,
+            y: -y,
+            z: -z,
+        };
+    }
 }
 
 /**

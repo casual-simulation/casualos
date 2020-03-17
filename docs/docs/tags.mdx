@@ -515,7 +515,7 @@ The anchor position for the progress bar.
 
 ### `auxAnchorPoint`
 
-The position that the bot should rotate and scale around.
+The position that the bot form should rotate and scale around.
 
 #### Possible values are:
 
@@ -534,6 +534,17 @@ The position that the bot should rotate and scale around.
   </PossibleValueCode>
   <PossibleValueCode value='top'>
     The bot rotates and scales around its top point.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The bot rotates and scales around the point at the center of the Bot's left face.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The bot rotates and scales around the point at the center of the Bot's right face.
+  </PossibleValueCode>
+  <PossibleValueCode value='[x,y,z]'>
+    The bot rotates and scales around the specified point.
+    Should be an array of 3 numbers representing X, Y, and Z respectively.
+    Numbers between 0.5 and -0.5 map to the edges of the bot.
   </PossibleValueCode>
 </PossibleValuesTable>
 

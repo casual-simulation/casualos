@@ -19,6 +19,7 @@ import {
     BotOrientationMode,
     getBotIndex,
     getBotScale,
+    getAnchorPointOffset,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -58,7 +59,6 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _nextRot: { x: number; y: number; z: number };
     private _lastHeight: number;
     private _orientationMode: BotOrientationMode;
-    private _anchorPoint: BotAnchorPoint;
     private _rotationObj: Object3D;
     private _game: Game;
 
@@ -74,34 +74,20 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
     botUpdated(calc: BotCalculationContext): void {
         const nextOrientationMode = getBotOrientationMode(calc, this.bot3D.bot);
-        const nextAnchorPoint = getBotAnchorPoint(calc, this.bot3D.bot);
+        const anchorPointOffset = getAnchorPointOffset(calc, this.bot3D.bot);
         const gridScale = this.bot3D.gridScale;
 
         this._orientationMode = nextOrientationMode;
-        this._anchorPoint = nextAnchorPoint;
         this._rotationObj = this.bot3D.container;
 
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        let displayOffset = new Vector3();
-
-        if (this._anchorPoint.startsWith('center')) {
-        } else if (this._anchorPoint.startsWith('top')) {
-            displayOffset.y = -0.5;
-        } else if (this._anchorPoint.startsWith('bottom')) {
-            displayOffset.y = 0.5;
-        } else {
-            displayOffset.y = 0.5;
-        }
-        if (this._anchorPoint.endsWith('Front')) {
-            displayOffset.z = -0.5;
-        } else if (this._anchorPoint.endsWith('Back')) {
-            displayOffset.z = 0.5;
-        } else {
-            displayOffset.z = 0;
-        }
-        this.bot3D.display.position.copy(displayOffset);
+        this.bot3D.display.position.set(
+            anchorPointOffset.x,
+            anchorPointOffset.z,
+            anchorPointOffset.y
+        );
 
         const userDimension = this.bot3D.dimension;
         if (userDimension) {
