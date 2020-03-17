@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V1.0.17
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed `billboardZ` to rotate with the Y axis of the bot facing upwards.
+
 ## V1.0.16
 
 ### Date: 3/16/2020
