@@ -3523,14 +3523,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotAnchorPoint()', () => {
-        const cases = [
-            ['center'],
-            ['front'],
-            ['back'],
-            ['bottom'],
-            ['top'],
-            ['topBack'],
-        ];
+        const cases = [['center'], ['front'], ['back'], ['bottom'], ['top']];
 
         it.each(cases)('should return %s', (mode: string) => {
             const bot = createBot('test', {

@@ -1303,7 +1303,6 @@ const possibleAnchorPoints = new Set([
     'back',
     'bottom',
     'top',
-    'topBack',
 ] as const);
 
 /**
