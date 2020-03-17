@@ -3528,7 +3528,6 @@ export function botCalculationContextTests(
             ['front'],
             ['back'],
             ['bottom'],
-            ['bottomFront'],
             ['bottomBack'],
             ['top'],
             ['topFront'],

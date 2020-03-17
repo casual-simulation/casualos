@@ -304,7 +304,6 @@ export type BotAnchorPoint =
     | 'front'
     | 'back'
     | 'bottom'
-    | 'bottomFront'
     | 'bottomBack'
     | 'top'
     | 'topFront'
