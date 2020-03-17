@@ -271,7 +271,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this._rotationObj.quaternion,
                         'YXZ'
                     );
-                    euler.x = 0;
+                    euler.x = ThreeMath.degToRad(90);
                     euler.z = 0;
                     this._rotationObj.setRotationFromEuler(euler);
                 }
