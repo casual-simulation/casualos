@@ -11,6 +11,7 @@
     -   Renamed and removed several `auxAnchorPoint` values.
         -   Renamed `centerFront` to `front`.
         -   Renamed `centerBack` to `back`.
+        -   Removed `bottomFront`, `bottomBack`, `topFront`, and `topBack`.
 
 -   :bug: Bug Fixes
     -   Fixed `billboardZ` to rotate with the Y axis of the bot facing upwards.
