@@ -515,7 +515,7 @@ The anchor position for the progress bar.
 
 ### `auxAnchorPoint`
 
-The position that the bot should rotate and scale around.
+The position that the bot form should rotate and scale around.
 
 #### Possible values are:
 
@@ -523,29 +523,28 @@ The position that the bot should rotate and scale around.
   <PossibleValueCode value='bottom'>
     The bot rotates and scales around its bottom point. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='bottomFront'>
-    The bot rotates and scales around the point at the bottom of the Bot's front face.
-  </PossibleValueCode>
-  <PossibleValueCode value='bottomBack'>
-    The bot rotates and scales around the point at the bottom of the Bot's back face.
-  </PossibleValueCode>
   <PossibleValueCode value='center'>
     The bot rotates and scales around its center point.
   </PossibleValueCode>
-  <PossibleValueCode value='centerFront'>
+  <PossibleValueCode value='front'>
     The bot rotates and scales around the point at the center of the Bot's front face.
   </PossibleValueCode>
-  <PossibleValueCode value='centerBack'>
+  <PossibleValueCode value='back'>
     The bot rotates and scales around the point at the center of the Bot's back face.
   </PossibleValueCode>
   <PossibleValueCode value='top'>
     The bot rotates and scales around its top point.
   </PossibleValueCode>
-  <PossibleValueCode value='topFront'>
-    The bot rotates and scales around the point at the top of the Bot's front face.
+  <PossibleValueCode value='left'>
+    The bot rotates and scales around the point at the center of the Bot's left face.
   </PossibleValueCode>
-  <PossibleValueCode value='topBack'>
-    The bot rotates and scales around the point at the top of the Bot's back face.
+  <PossibleValueCode value='right'>
+    The bot rotates and scales around the point at the center of the Bot's right face.
+  </PossibleValueCode>
+  <PossibleValueCode value='[x,y,z]'>
+    The bot rotates and scales around the specified point.
+    Should be an array of 3 numbers representing X, Y, and Z respectively.
+    Numbers between 0.5 and -0.5 map to the edges of the bot.
   </PossibleValueCode>
 </PossibleValuesTable>
 
