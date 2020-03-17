@@ -305,7 +305,6 @@ export type BotAnchorPoint =
     | 'back'
     | 'bottom'
     | 'top'
-    | 'topFront'
     | 'topBack';
 
 /**
