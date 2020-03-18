@@ -1329,6 +1329,78 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should finish the commit operation before allowing new atoms', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const makeCommit = new Subject<CommitEvent>();
+            const joinBranch = new Subject<string>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(COMMIT, makeCommit);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+            const a6 = atom(atomId('a', 6), a2, {});
+            // const a7 = atom(atomId('a', 7), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            makeCommit.next({
+                branch: 'testBranch',
+                message: 'newCommit',
+            });
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a4, a5, a6],
+            });
+
+            await waitAsync();
+
+            const [testBranch] = await store.getBranches('testBranch');
+            const data = await loadBranch(store, testBranch);
+
+            expect(data.commit.message).toBe('newCommit');
+            expect(data.commit.previousCommit).toBe(c.hash);
+            expect(data.atoms).toEqual(
+                new Map([[a1.hash, a1], [a2.hash, a2], [a3.hash, a3]])
+            );
+
+            joinBranch.next('testBranch');
+
+            await waitAsync();
+
+            // Should have the newly added atoms in the stage
+            expect(device.messages.slice(2)).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3, a4, a5, a6],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(WATCH_COMMITS, () => {
