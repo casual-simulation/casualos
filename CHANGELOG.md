@@ -17,6 +17,7 @@
             -   They are numbers between 0 and 1 representing the percentage of the screen that the bot needs to occupy.
             -   The Max LOD is entered when the bot occupies a larger percentage of the screen than the max threshold value.
             -   The Min LOD is entered when the bot occupies a smaller percentage of the screen than the min threshold value.
+        -   Only active on bots that specify a listener or threshold value for LODs.
 
 ## V1.0.17
 
