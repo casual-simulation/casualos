@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@casual-simulation/aux-common": "0.11.20",
-    "@docusaurus/core": "^2.0.0-alpha.25",
-    "@docusaurus/preset-classic": "^2.0.0-alpha.25",
+    "@docusaurus/core": "2.0.0-alpha.48",
+    "@docusaurus/preset-classic": "2.0.0-alpha.48",
     "classnames": "^2.2.6",
-    "raw-loader": "^3.1.0",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4",
-    "ts-morph": "^4.3.2",
-    "typescript": "^3.6.4"
+    "raw-loader": "^4.0.0",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "ts-morph": "^7.0.0",
+    "typescript": "^3.8.3"
   },
   "browserslist": {
     "production": [
