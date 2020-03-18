@@ -29,6 +29,8 @@ import {
     Ray,
     Quaternion,
     MeshBasicMaterial,
+    Camera,
+    Sphere,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -605,4 +607,30 @@ export function objectDirectionRay(direction: Vector3, obj: Object3D): Ray {
  */
 export function objectForwardRay(obj: Object3D): Ray {
     return objectDirectionRay(new Vector3(0, 0, -1), obj);
+}
+
+// The width and height of clip space
+// See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
+const clipWidth = 2;
+const clipHeight = 2;
+const clipArea = clipWidth * clipHeight;
+const clipAreaRatio = 1 / clipArea;
+const clipBox = new Box3().set(new Vector3(-1, -1, -1), new Vector3(1, 1, 1));
+
+let _boxSize = new Vector3();
+/**
+ * Calculates the percentage of the screen that the given sphere takes up.
+ * @param camera The camera to use.
+ * @param boundingSphere The sphere to use. Should be in world space.
+ */
+export function percentOfScreen(camera: Camera, boundingBox: Box3): number {
+    const box = boundingBox.clone();
+    box.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(
+        camera.projectionMatrix
+    );
+
+    box.intersect(clipBox);
+    box.getSize(_boxSize);
+
+    return _boxSize.x * _boxSize.y * clipAreaRatio;
 }
