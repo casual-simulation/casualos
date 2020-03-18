@@ -33,6 +33,7 @@ import {
     DEFAULT_ANCHOR_POINT,
     PortalPointerDragMode,
     DEFAULT_PORTAL_POINTER_DRAG_MODE,
+    BotLOD,
 } from './Bot';
 
 import {
@@ -1375,6 +1376,48 @@ export function getAnchorPointOffset(
             z: -z,
         };
     }
+}
+
+const lodTags = new Set([
+    'onMaxLODEnter',
+    'onMaxLODExit',
+    'onMinLODEnter',
+    'onMinLODExit',
+    'auxMaxLODThreshold',
+    'auxMinLODThreshold',
+] as const);
+
+/**
+ * Gets whether the bot has a tag to enable LODs.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function botHasLOD(calc: BotCalculationContext, bot: Bot): boolean {
+    for (let tag of lodTags.values()) {
+        const val = calculateBotValue(calc, bot, tag);
+        if (isScript(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Calcualtes the LOD that a bot should be in based on the virtual distance, minimum threshold, and maximum threshold.
+ * @param virtualDistance The percentage of the screen that the bot takes up.
+ * @param minThreshold The minimum LOD threshold.
+ * @param maxThreshold The maximum LOD threshold.
+ */
+export function calculateBotLOD(
+    virtualDistance: number,
+    minThreshold: number,
+    maxThreshold: number
+): BotLOD {
+    return virtualDistance < minThreshold
+        ? 'min'
+        : virtualDistance > maxThreshold
+        ? 'max'
+        : 'normal';
 }
 
 /**

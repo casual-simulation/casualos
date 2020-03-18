@@ -27,6 +27,8 @@ import {
     getBotTag,
     getPortalTag,
     getUploadState,
+    botHasLOD,
+    calculateBotLOD,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import { createCalculationContext } from './BotCalculationContextFactories';
@@ -195,6 +197,55 @@ describe('BotCalculations', () => {
                 expect(tag).toBe(expected);
             }
         );
+    });
+
+    describe('botHasLOD()', () => {
+        const lodListeners = [
+            ['onMaxLODEnter'],
+            ['onMaxLODExit'],
+            ['onMinLODEnter'],
+            ['onMinLODExit'],
+            ['auxMaxLODThreshold'],
+            ['auxMinLODThreshold'],
+        ];
+
+        describe.each(lodListeners)('%s', (tag: string) => {
+            it('should return true if the bot has a script', () => {
+                const bot = createBot('test', {
+                    [tag]: '@abc',
+                });
+
+                const calc = createCalculationContext([bot]);
+                const hasLod = botHasLOD(calc, bot);
+
+                expect(hasLod).toBe(true);
+            });
+
+            it('should return false if it does not have a script', () => {
+                const bot = createBot('test', {
+                    [tag]: 'abc',
+                });
+
+                const calc = createCalculationContext([bot]);
+                const hasLod = botHasLOD(calc, bot);
+
+                expect(hasLod).toBe(false);
+            });
+        });
+    });
+
+    describe('calculateBotLOD()', () => {
+        it('should return normal when the virtual distance is between the min and max', () => {
+            expect(calculateBotLOD(0.5, 0.1, 0.9)).toBe('normal');
+        });
+
+        it('should return max when the virtual distance is above the max', () => {
+            expect(calculateBotLOD(1, 0.1, 0.9)).toBe('max');
+        });
+
+        it('should return min when the virtual distance is below the min', () => {
+            expect(calculateBotLOD(0, 0.1, 0.9)).toBe('min');
+        });
     });
 
     describe('calculateStateDiff()', () => {
