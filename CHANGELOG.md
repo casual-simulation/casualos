@@ -1,5 +1,24 @@
 # AUX Changelog
 
+## V1.0.18
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added LOD triggers based on virtual distance.
+        -   `@onMaxLODEnter`, `@onMinLODEnter`, `@onMaxLODExit`, `@onMinLODExit` are new listeners that are called when the Max and Min Level-Of-Detail states are entered and exited. There are also "any" versions of these listeners.
+            -   `that` is an object with the following properties:
+                -   `bot` - The bot that entered/exited the LOD.
+                -   `dimension` - The dimension that the LOD was entered/exited in.
+        -   The `#auxMaxLODThreshold` and `#auxMinLODThreshold` tags can be used to control when the LODs are entered/exited.
+            -   They are numbers between 0 and 1 representing the percentage of the screen that the bot needs to occupy.
+            -   The Max LOD is entered when the bot occupies a larger percentage of the screen than the max threshold value.
+            -   The Min LOD is entered when the bot occupies a smaller percentage of the screen than the min threshold value.
+        -   Only active on bots that specify a listener or threshold value for LODs.
+
 ## V1.0.17
 
 ### Date: 3/17/2020
