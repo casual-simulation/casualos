@@ -60,16 +60,32 @@ export interface RemoteAction extends Action, DeviceSelector {
      * The event that should be sent to the device.
      */
     event: Action;
+
+    /**
+     * Whether this action is allowed to be batched with other remote actions.
+     * Batching will preserve ordering between remote actions but may
+     * break ordering with respect to bot actions. Defaults to true.
+     */
+    allowBatching?: boolean;
 }
 
 /**
  * Creates a new remote event.
  * @param event The event.
+ * @param selector The selector that should be used to determine which devices this event should be sent to.
+ * @param allowBatching Whether this action is allowed to be batched with other remote actions.
+ *                      Batching will preserve ordering between remote actions but may
+ *                      break ordering with respect to bot actions. Defaults to true.
  */
-export function remote(event: Action, selector?: DeviceSelector): RemoteAction {
+export function remote(
+    event: Action,
+    selector?: DeviceSelector,
+    allowBatching?: boolean
+): RemoteAction {
     return {
         type: 'remote',
         event: event,
+        allowBatching,
         ...selector,
     };
 }

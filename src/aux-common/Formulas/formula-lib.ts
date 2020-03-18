@@ -991,17 +991,27 @@ function whisper(
  * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
  *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
  *                 If a selector is not specified, then the event is sent to the server.
+ * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
+ *                      with respect to other events. Defaults to true.
  *
  * @example
  * // Send a toast to all sessions for the username "bob"
  * remote(player.toast("Hello, Bob!"), { username: "bob" });
  */
-function remote(event: BotAction, selector?: SessionSelector) {
+function remote(
+    event: BotAction,
+    selector?: SessionSelector,
+    allowBatching?: boolean
+) {
     if (!event) {
         return;
     }
     let actions = getActions();
-    const r = calcRemote(event, convertSessionSelector(selector));
+    const r = calcRemote(
+        event,
+        convertSessionSelector(selector),
+        allowBatching
+    );
     const index = actions.indexOf(event);
     if (index >= 0) {
         actions[index] = r;
@@ -1170,7 +1180,7 @@ function finishCheckout(options: FinishCheckoutOptions) {
  * });
  */
 function markHistory(options: MarkHistoryOptions) {
-    return remote(calcMarkHistory(options));
+    return remote(calcMarkHistory(options), undefined, false);
 }
 
 /**

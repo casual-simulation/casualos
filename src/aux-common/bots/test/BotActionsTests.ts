@@ -6840,7 +6840,9 @@ export function botActionsTests(
                     remote(
                         markHistory({
                             message: 'testMark',
-                        })
+                        }),
+                        undefined,
+                        false
                     ),
                 ]);
             });

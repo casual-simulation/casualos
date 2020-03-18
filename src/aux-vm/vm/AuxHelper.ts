@@ -530,6 +530,13 @@ export class AuxHelper extends BaseHelper<Bot> {
             if (typeof partition === 'undefined') {
                 console.warn('[AuxHelper] No partition for event', event);
                 continue;
+            } else if (
+                partition === null &&
+                event.type === 'remote' &&
+                event.allowBatching === false
+            ) {
+                this._sendOtherEvents([event]);
+                continue;
             }
             let batch = map.get(partition);
             if (!batch) {

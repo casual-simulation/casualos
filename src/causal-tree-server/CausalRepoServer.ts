@@ -48,9 +48,16 @@ import {
     CausalRepoCommit,
     CommitData,
     CheckoutEvent,
+    GenericSession,
+    CausalRepoMessageHandlerMethods,
+    UNWATCH_BRANCHES,
+    UNWATCH_DEVICES,
+    UNWATCH_COMMITS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
+import { map, concatMap } from 'rxjs/operators';
+import { Observable, merge } from 'rxjs';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -94,254 +101,266 @@ export class CausalRepoServer {
                     conn
                 );
 
-                conn.event(WATCH_BRANCH).subscribe(async branch => {
-                    const info = infoForBranch(branch);
-                    await this._deviceManager.joinChannel(device, info);
-                    const repo = await this._getOrLoadRepo(branch, true);
-                    const atoms = repo.getAtoms();
+                handleEvents(conn, {
+                    [WATCH_BRANCH]: async branch => {
+                        const info = infoForBranch(branch);
+                        await this._deviceManager.joinChannel(device, info);
+                        const repo = await this._getOrLoadRepo(branch, true);
+                        const atoms = repo.getAtoms();
 
-                    this._sendConnectedToBranch(device, branch);
-                    conn.send(ADD_ATOMS, {
-                        branch: branch,
-                        atoms: atoms,
-                    });
-                });
+                        this._sendConnectedToBranch(device, branch);
+                        conn.send(ADD_ATOMS, {
+                            branch: branch,
+                            atoms: atoms,
+                        });
+                    },
+                    [ADD_ATOMS]: async event => {
+                        const repo = await this._getOrLoadRepo(
+                            event.branch,
+                            false
+                        );
 
-                conn.event(ADD_ATOMS).subscribe(async event => {
-                    const repo = await this._getOrLoadRepo(event.branch, false);
+                        let added: Atom<any>[];
+                        let removed: Atom<any>[];
 
-                    let added: Atom<any>[];
-                    let removed: Atom<any>[];
+                        if (event.atoms) {
+                            added = repo.add(...event.atoms);
+                            await this._stage.addAtoms(event.branch, added);
+                            await storeData(this._store, added);
+                        }
+                        if (event.removedAtoms) {
+                            removed = repo.remove(...event.removedAtoms);
+                            await this._stage.removeAtoms(
+                                event.branch,
+                                removed
+                            );
+                        }
+                        const hasAdded = added && added.length > 0;
+                        const hasRemoved = removed && removed.length > 0;
+                        if (hasAdded || hasRemoved) {
+                            const info = infoForBranch(event.branch);
+                            const devices = this._deviceManager.getConnectedDevices(
+                                info
+                            );
 
-                    if (event.atoms) {
-                        added = repo.add(...event.atoms);
-                        await this._stage.addAtoms(event.branch, added);
-                        await storeData(this._store, added);
-                    }
-                    if (event.removedAtoms) {
-                        removed = repo.remove(...event.removedAtoms);
-                        await this._stage.removeAtoms(event.branch, removed);
-                    }
-                    const hasAdded = added && added.length > 0;
-                    const hasRemoved = removed && removed.length > 0;
-                    if (hasAdded || hasRemoved) {
+                            let ret: AddAtomsEvent = {
+                                branch: event.branch,
+                            };
+
+                            if (hasAdded) {
+                                ret.atoms = added;
+                            }
+                            if (hasRemoved) {
+                                ret.removedAtoms = removed.map(r => r.hash);
+                            }
+
+                            sendToDevices(devices, ADD_ATOMS, ret, device);
+                        }
+
+                        const addedAtomHashes = (event.atoms || []).map(
+                            a => a.hash
+                        );
+                        const removedAtomHashes = event.removedAtoms || [];
+                        sendToDevices([device], ATOMS_RECEIVED, {
+                            branch: event.branch,
+                            hashes: [...addedAtomHashes, ...removedAtomHashes],
+                        });
+                    },
+                    [COMMIT]: async event => {
+                        const repo = await this._getOrLoadRepo(
+                            event.branch,
+                            false
+                        );
+                        if (!repo) {
+                            return;
+                        }
+
+                        if (repo.hasChanges()) {
+                            await this._commitToRepo(event, repo);
+                        }
+                    },
+                    [WATCH_COMMITS]: async branch => {
+                        const info = infoForBranchCommits(branch);
+                        await this._deviceManager.joinChannel(device, info);
+
+                        const repo = await this._getOrLoadRepo(branch, false);
+                        if (!repo) {
+                            return;
+                        }
+
+                        if (!repo.currentCommit) {
+                            return;
+                        }
+
+                        const commits = await listCommits(
+                            this._store,
+                            repo.currentCommit.commit.hash
+                        );
+                        let e: AddCommitsEvent = {
+                            branch: branch,
+                            commits: commits,
+                        };
+
+                        conn.send(ADD_COMMITS, e);
+                    },
+                    [CHECKOUT]: async event => {
+                        const repo = await this._getOrLoadRepo(
+                            event.branch,
+                            true
+                        );
+
+                        console.log(
+                            `[CausalRepoServer] Checking out ${
+                                event.commit
+                            } on ${event.branch}`
+                        );
+                        const current = repo.currentCommit;
+                        await repo.reset(event.commit);
+                        await this._stage.clearStage(event.branch);
+                        const after = repo.currentCommit;
+
+                        this._sendDiff(current, after, event.branch);
+                    },
+                    [RESTORE]: async event => {
+                        const repo = await this._getOrLoadRepo(
+                            event.branch,
+                            true
+                        );
+
+                        console.log(
+                            `[CausalRepoServer] Restoring ${event.commit} on ${
+                                event.branch
+                            }`
+                        );
+
+                        if (repo.hasChanges()) {
+                            await this._commitToRepo(
+                                {
+                                    branch: event.branch,
+                                    message: 'Save before restore',
+                                },
+                                repo
+                            );
+                        }
+
+                        const current = repo.currentCommit;
+                        const [oldCommit] = await this._store.getObjects([
+                            event.commit,
+                        ]);
+                        if (!oldCommit || oldCommit.type !== 'commit') {
+                            console.log(
+                                `[CausalRepoServer] Could not restore to ${
+                                    event.commit
+                                } because it does not exist!`
+                            );
+                            return;
+                        }
+                        const newCommit = commit(
+                            `Restore to ${event.commit}`,
+                            new Date(),
+                            oldCommit.index,
+                            current ? current.commit : null
+                        );
+                        await storeData(this._store, [newCommit]);
+                        await repo.reset(newCommit);
+                        const after = repo.currentCommit;
+
+                        this._sendCommits(event.branch, [newCommit]);
+                        this._sendDiff(current, after, event.branch);
+                    },
+                    [SEND_EVENT]: async event => {
                         const info = infoForBranch(event.branch);
-                        const devices = this._deviceManager.getConnectedDevices(
+                        const connectedDevices = this._deviceManager.getConnectedDevices(
                             info
                         );
+                        const devices = connectedDevices.map(
+                            d => [d, d.extra.device as DeviceInfo] as const
+                        );
 
-                        let ret: AddAtomsEvent = {
+                        let finalAction: RemoteAction;
+                        if (
+                            event.action.deviceId ||
+                            event.action.sessionId ||
+                            event.action.username
+                        ) {
+                            finalAction = event.action;
+                        } else if (this.defaultDeviceSelector) {
+                            finalAction = {
+                                ...event.action,
+                                ...this.defaultDeviceSelector,
+                            };
+                        }
+
+                        if (!finalAction) {
+                            return;
+                        }
+                        const targetedDevices = devicesForEvent(
+                            finalAction,
+                            devices
+                        );
+                        const dEvent = deviceEvent(
+                            conn.device,
+                            finalAction.event
+                        );
+                        sendToDevices(targetedDevices, RECEIVE_EVENT, {
                             branch: event.branch,
-                        };
+                            action: dEvent,
+                        });
+                    },
+                    [UNWATCH_BRANCH]: async branch => {
+                        const info = infoForBranch(branch);
+                        await this._deviceManager.leaveChannel(device, info);
 
-                        if (hasAdded) {
-                            ret.atoms = added;
+                        this._sendDisconnectedFromBranch(device, branch);
+                        await this._tryUnloadBranch(info);
+                    },
+                    [WATCH_BRANCHES]: async () => {
+                        const info = branchesInfo();
+                        await this._deviceManager.joinChannel(device, info);
+
+                        for (let branch of this._repos.keys()) {
+                            conn.send(LOAD_BRANCH, loadBranchEvent(branch));
                         }
-                        if (hasRemoved) {
-                            ret.removedAtoms = removed.map(r => r.hash);
+                    },
+                    [WATCH_DEVICES]: async () => {
+                        console.log(`[CausalRepoServer] Watch Devices`);
+                        const info = devicesInfo();
+                        await this._deviceManager.joinChannel(device, info);
+
+                        const branches = this._repos.keys();
+                        for (let branch of branches) {
+                            const branchInfo = infoForBranch(branch);
+                            const devices = this._deviceManager.getConnectedDevices(
+                                branchInfo
+                            );
+                            for (let device of devices) {
+                                conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                    branch: branch,
+                                    device: device.extra.device,
+                                });
+                            }
                         }
+                    },
+                    [BRANCH_INFO]: async branch => {
+                        const branches = await this._store.getBranches(branch);
+                        const exists = branches.some(b => b.name === branch);
 
-                        sendToDevices(devices, ADD_ATOMS, ret, device);
-                    }
+                        conn.send(BRANCH_INFO, {
+                            branch: branch,
+                            exists: exists,
+                        });
+                    },
+                    [BRANCHES]: async () => {
+                        const branches = await this._store.getBranches(null);
 
-                    const addedAtomHashes = (event.atoms || []).map(
-                        a => a.hash
-                    );
-                    const removedAtomHashes = event.removedAtoms || [];
-                    sendToDevices([device], ATOMS_RECEIVED, {
-                        branch: event.branch,
-                        hashes: [...addedAtomHashes, ...removedAtomHashes],
-                    });
-                });
-
-                conn.event(COMMIT).subscribe(async event => {
-                    const repo = await this._getOrLoadRepo(event.branch, false);
-                    if (!repo) {
-                        return;
-                    }
-
-                    if (repo.hasChanges()) {
-                        await this._commitToRepo(event, repo);
-                    }
-                });
-
-                conn.event(WATCH_COMMITS).subscribe(async branch => {
-                    const info = infoForBranchCommits(branch);
-                    await this._deviceManager.joinChannel(device, info);
-
-                    const repo = await this._getOrLoadRepo(branch, false);
-                    if (!repo) {
-                        return;
-                    }
-
-                    if (!repo.currentCommit) {
-                        return;
-                    }
-
-                    const commits = await listCommits(
-                        this._store,
-                        repo.currentCommit.commit.hash
-                    );
-                    let e: AddCommitsEvent = {
-                        branch: branch,
-                        commits: commits,
-                    };
-
-                    conn.send(ADD_COMMITS, e);
-                });
-
-                conn.event(CHECKOUT).subscribe(async event => {
-                    const repo = await this._getOrLoadRepo(event.branch, true);
-
-                    console.log(
-                        `[CausalRepoServer] Checking out ${event.commit} on ${
-                            event.branch
-                        }`
-                    );
-                    const current = repo.currentCommit;
-                    await repo.reset(event.commit);
-                    await this._stage.clearStage(event.branch);
-                    const after = repo.currentCommit;
-
-                    this._sendDiff(current, after, event.branch);
-                });
-
-                conn.event(RESTORE).subscribe(async event => {
-                    const repo = await this._getOrLoadRepo(event.branch, true);
-
-                    console.log(
-                        `[CausalRepoServer] Restoring ${event.commit} on ${
-                            event.branch
-                        }`
-                    );
-
-                    if (repo.hasChanges()) {
-                        await this._commitToRepo(
-                            {
-                                branch: event.branch,
-                                message: 'Save before restore',
-                            },
-                            repo
-                        );
-                    }
-
-                    const current = repo.currentCommit;
-                    const [oldCommit] = await this._store.getObjects([
-                        event.commit,
-                    ]);
-                    if (!oldCommit || oldCommit.type !== 'commit') {
-                        console.log(
-                            `[CausalRepoServer] Could not restore to ${
-                                event.commit
-                            } because it does not exist!`
-                        );
-                        return;
-                    }
-                    const newCommit = commit(
-                        `Restore to ${event.commit}`,
-                        new Date(),
-                        oldCommit.index,
-                        current ? current.commit : null
-                    );
-                    await storeData(this._store, [newCommit]);
-                    await repo.reset(newCommit);
-                    const after = repo.currentCommit;
-
-                    this._sendCommits(event.branch, [newCommit]);
-                    this._sendDiff(current, after, event.branch);
-                });
-
-                conn.event(SEND_EVENT).subscribe(async event => {
-                    const info = infoForBranch(event.branch);
-                    const connectedDevices = this._deviceManager.getConnectedDevices(
-                        info
-                    );
-                    const devices = connectedDevices.map(
-                        d => [d, d.extra.device as DeviceInfo] as const
-                    );
-
-                    let finalAction: RemoteAction;
-                    if (
-                        event.action.deviceId ||
-                        event.action.sessionId ||
-                        event.action.username
-                    ) {
-                        finalAction = event.action;
-                    } else if (this.defaultDeviceSelector) {
-                        finalAction = {
-                            ...event.action,
-                            ...this.defaultDeviceSelector,
-                        };
-                    }
-
-                    if (!finalAction) {
-                        return;
-                    }
-                    const targetedDevices = devicesForEvent(
-                        finalAction,
-                        devices
-                    );
-                    const dEvent = deviceEvent(conn.device, finalAction.event);
-                    sendToDevices(targetedDevices, RECEIVE_EVENT, {
-                        branch: event.branch,
-                        action: dEvent,
-                    });
-                });
-
-                conn.event(UNWATCH_BRANCH).subscribe(async branch => {
-                    const info = infoForBranch(branch);
-                    await this._deviceManager.leaveChannel(device, info);
-
-                    this._sendDisconnectedFromBranch(device, branch);
-                    await this._tryUnloadBranch(info);
-                });
-
-                conn.event(WATCH_BRANCHES).subscribe(async () => {
-                    const info = branchesInfo();
-                    await this._deviceManager.joinChannel(device, info);
-
-                    for (let branch of this._repos.keys()) {
-                        conn.send(LOAD_BRANCH, loadBranchEvent(branch));
-                    }
-                });
-
-                conn.event(WATCH_DEVICES).subscribe(async () => {
-                    console.log(`[CausalRepoServer] Watch Devices`);
-                    const info = devicesInfo();
-                    await this._deviceManager.joinChannel(device, info);
-
-                    const branches = this._repos.keys();
-                    for (let branch of branches) {
-                        const branchInfo = infoForBranch(branch);
-                        const devices = this._deviceManager.getConnectedDevices(
-                            branchInfo
-                        );
-                        for (let device of devices) {
-                            conn.send(DEVICE_CONNECTED_TO_BRANCH, {
-                                branch: branch,
-                                device: device.extra.device,
-                            });
-                        }
-                    }
-                });
-
-                conn.event(BRANCH_INFO).subscribe(async branch => {
-                    const branches = await this._store.getBranches(branch);
-                    const exists = branches.some(b => b.name === branch);
-
-                    conn.send(BRANCH_INFO, {
-                        branch: branch,
-                        exists: exists,
-                    });
-                });
-
-                conn.event(BRANCHES).subscribe(async () => {
-                    const branches = await this._store.getBranches(null);
-
-                    conn.send(BRANCHES, {
-                        branches: branches.map(b => b.name),
-                    });
-                });
+                        conn.send(BRANCHES, {
+                            branches: branches.map(b => b.name),
+                        });
+                    },
+                    [UNWATCH_BRANCHES]: async () => {},
+                    [UNWATCH_DEVICES]: async () => {},
+                    [UNWATCH_COMMITS]: async () => {},
+                }).subscribe();
 
                 conn.disconnect.subscribe(async () => {
                     var channels = this._deviceManager.getConnectedChannels(
@@ -545,4 +564,24 @@ function devicesInfo(): RealtimeChannelInfo {
         id: 'devices',
         type: 'aux-devices',
     };
+}
+
+function handleEvents(
+    conn: GenericSession,
+    handlers: CausalRepoMessageHandlerMethods
+): Observable<any> {
+    let observables = [] as Observable<readonly [string, any]>[];
+    for (let key of Object.keys(handlers)) {
+        const obs = conn
+            .event<any>(key)
+            .pipe(map(value => [key, value] as const));
+        observables.push(obs);
+    }
+
+    return merge(...observables).pipe(
+        concatMap(([event, value]) => {
+            const callback = (<any>handlers)[event];
+            return callback(value);
+        })
+    );
 }

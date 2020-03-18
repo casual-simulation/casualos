@@ -39,6 +39,30 @@ export interface GenericSession {
     disconnect: Observable<any>;
 }
 
+export interface CausalRepoMessageHandlerTypes {
+    'repo/watch_branches': void;
+    'repo/unwatch_branches': void;
+    'repo/watch_branch': string;
+    'repo/unwatch_branch': string;
+    'repo/add_atoms': AddAtomsEvent;
+    'repo/send_event': SendRemoteActionEvent;
+    'repo/watch_devices': void;
+    'repo/unwatch_devices': void;
+    'repo/branch_info': string;
+    'repo/branches': void;
+    'repo/commit': CommitEvent;
+    'repo/watch_commits': string;
+    'repo/unwatch_commits': string;
+    'repo/checkout': CheckoutEvent;
+    'repo/restore': RestoreEvent;
+}
+
+export type CausalRepoMessageHandlerMethods = {
+    [K in keyof CausalRepoMessageHandlerTypes]: (
+        value: CausalRepoMessageHandlerTypes[K]
+    ) => Promise<any>
+};
+
 /**
  * Defines a connection to a session that is for a causal repo.
  */
