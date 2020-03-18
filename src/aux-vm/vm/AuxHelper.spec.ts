@@ -587,6 +587,27 @@ describe('AuxHelper', () => {
             expect(events).toEqual([remote(toast('test'))]);
         });
 
+        it('should not batch remote events that have allowBatching set to false', async () => {
+            let events: RemoteAction[][] = [];
+            helper.remoteEvents.subscribe(e => events.push(e));
+
+            await helper.transaction(
+                remote(toast('test'), {}, false),
+                remote(toast('batched1'), {}, true),
+                remote(toast('abc'), {}, false),
+                remote(toast('batched2'), {}, true)
+            );
+
+            expect(events).toEqual([
+                [remote(toast('test'), {}, false)],
+                [remote(toast('abc'), {}, false)],
+                [
+                    remote(toast('batched1'), {}, true),
+                    remote(toast('batched2'), {}, true),
+                ],
+            ]);
+        });
+
         it('should emit device events that are sent via transaction()', async () => {
             let events: DeviceAction[] = [];
             helper.deviceEvents.subscribe(e => events.push(...e));
