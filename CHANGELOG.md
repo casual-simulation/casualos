@@ -2,7 +2,7 @@
 
 ## V1.0.18
 
-### Date: TBD
+### Date: 3/18/2020
 
 ### Changes:
 
