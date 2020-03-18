@@ -19,9 +19,18 @@
             -   The Min LOD is entered when the bot occupies a smaller percentage of the screen than the min threshold value.
         -   Only active on bots that specify a listener or threshold value for LODs.
 
+-   :robot: Builder Improvements
+
+    -   Changed the labeling and ordering of several menu items in the menus.
+    -   Removed tips from the chat bar.
+    -   Removed the "Apply Hover Mod" and "Apply Click Mod" menu items.
+    -   Changed Builder to not move when clicking the grid to clear the menu.
+    -   Added a "Clear Universe" option to the Builder Egg. Selecting this will create a history mark and then delete every bot in the universe. (it will even delete bots that are marked as not destroyable)
+
 -   :bug: Bug Fixes
 
     -   Fixed an issue with hovering billboarded bots where their rotation would sometimes be reset which would cause the hover exit and enter events to be continually triggered.
+    -   Fixed an issue where creating a history mark would clear changes that were made during the history mark creation.
 
 ## V1.0.17
 
