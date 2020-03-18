@@ -19,6 +19,10 @@
             -   The Min LOD is entered when the bot occupies a smaller percentage of the screen than the min threshold value.
         -   Only active on bots that specify a listener or threshold value for LODs.
 
+-   :bug: Bug Fixes
+
+    -   Fixed an issue with hovering billboarded bots where their rotation would sometimes be reset which would cause the hover exit and enter events to be continually triggered.
+
 ## V1.0.17
 
 ### Date: 3/17/2020
