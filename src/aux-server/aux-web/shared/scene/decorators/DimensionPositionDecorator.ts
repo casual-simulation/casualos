@@ -150,11 +150,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             this._atRotation = false;
             if (!this._lerp) {
                 this.bot3D.position.copy(this._nextPos);
-                this._rotationObj.rotation.set(
-                    this._nextRot.x,
-                    this._nextRot.z,
-                    this._nextRot.y
-                );
+
+                if (this._orientationMode === 'absolute') {
+                    this._rotationObj.rotation.set(
+                        this._nextRot.x,
+                        this._nextRot.z,
+                        this._nextRot.y
+                    );
+                }
             }
         }
     }
