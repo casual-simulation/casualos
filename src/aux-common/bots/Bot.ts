@@ -329,6 +329,11 @@ export type BackupType = 'github' | 'download';
 export type DimensionVisualizeMode = true | false | 'surface';
 
 /**
+ * The possible LODs for a bot.
+ */
+export type BotLOD = 'normal' | 'min' | 'max';
+
+/**
  * The default bot shape.
  */
 export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
@@ -464,6 +469,21 @@ export const DEFAULT_WRIST_PORTAL_WIDTH = 6;
  * The default grid scale for wrist portals.
  */
 export const DEFAULT_WRIST_PORTAL_GRID_SCALE = 0.025;
+
+/**
+ * The default bot LOD.
+ */
+export const DEFAULT_BOT_LOD: BotLOD = 'normal';
+
+/**
+ * The default minimum LOD threshold.
+ */
+export const DEFAULT_BOT_LOD_MIN_THRESHOLD = 0.0005;
+
+/**
+ * The default maximum LOD threshold.
+ */
+export const DEFAULT_BOT_LOD_MAX_THRESHOLD = 0.03;
 
 /**
  * The ID of the global configuration bot.
@@ -690,6 +710,46 @@ export const ON_CHAT_ACTION_NAME: string = 'onChat';
 export const ON_PASTE_ACTION_NAME: string = 'onPaste';
 
 /**
+ * The name of the event that is triggered when the maximum LOD is entered.
+ */
+export const ON_MAX_LOD_ENTER_ACTION_NAME: string = 'onMaxLODEnter';
+
+/**
+ * The name of the event that is triggered when the minimum LOD is entered.
+ */
+export const ON_MIN_LOD_ENTER_ACTION_NAME: string = 'onMinLODEnter';
+
+/**
+ * The name of the event that is triggered when the maximum LOD is exited.
+ */
+export const ON_MAX_LOD_EXIT_ACTION_NAME: string = 'onMaxLODExit';
+
+/**
+ * The name of the event that is triggered when the minimum LOD is exited.
+ */
+export const ON_MIN_LOD_EXIT_ACTION_NAME: string = 'onMinLODExit';
+
+/**
+ * The name of the event that is triggered when the maximum LOD is entered.
+ */
+export const ON_ANY_MAX_LOD_ENTER_ACTION_NAME: string = 'onAnyMaxLODEnter';
+
+/**
+ * The name of the event that is triggered when the minimum LOD is entered.
+ */
+export const ON_ANY_MIN_LOD_ENTER_ACTION_NAME: string = 'onAnyMinLODEnter';
+
+/**
+ * The name of the event that is triggered when the maximum LOD is exited.
+ */
+export const ON_ANY_MAX_LOD_EXIT_ACTION_NAME: string = 'onAnyMaxLODExit';
+
+/**
+ * The name of the event that is triggered when the minimum LOD is exited.
+ */
+export const ON_ANY_MIN_LOD_EXIT_ACTION_NAME: string = 'onAnyMinLODExit';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -796,6 +856,8 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarPosition',
+    'auxMaxLODThreshold',
+    'auxMinLODThreshold',
     'auxUniverseConnectedSessions',
 
     'auxTaskOutput',
@@ -870,6 +932,14 @@ export const KNOWN_TAGS: string[] = [
     ON_CHAT_TYPING_ACTION_NAME,
     ON_CHAT_ACTION_NAME,
     ON_PASTE_ACTION_NAME,
+    ON_MAX_LOD_ENTER_ACTION_NAME,
+    ON_MIN_LOD_ENTER_ACTION_NAME,
+    ON_MAX_LOD_EXIT_ACTION_NAME,
+    ON_MIN_LOD_EXIT_ACTION_NAME,
+    ON_ANY_MAX_LOD_ENTER_ACTION_NAME,
+    ON_ANY_MIN_LOD_ENTER_ACTION_NAME,
+    ON_ANY_MAX_LOD_EXIT_ACTION_NAME,
+    ON_ANY_MIN_LOD_EXIT_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {
@@ -945,6 +1015,13 @@ export function onChatArg(message: string) {
 export function onPasteArg(text: string) {
     return {
         text,
+    };
+}
+
+export function onLODArg(bot: Bot, dimension: string) {
+    return {
+        bot,
+        dimension,
     };
 }
 

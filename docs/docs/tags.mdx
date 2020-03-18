@@ -566,6 +566,36 @@ The mode that determines how the bot automatically rotates.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `auxMaxLODThreshold`
+
+The minimum percentage of the screen that the bot form should take up in order to enter the maximum Level-Of-Detail.
+When the maximum LOD is entered the <ActionLink tag='onMaxLODEnter'/> listener is triggered.
+When the maximum LOD is exited the <ActionLink tag='onMaxLODExit'/> listener is triggered.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0.03'>
+    The bot enters the maximum LOD when it takes up 3% of the screen space. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers > 0 and < 1'>
+    The bot enters the maximum LOD when it takes up more screen space than the value.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxMinLODThreshold`
+
+The maximum percentage of the screen that the bot form should take up in order to enter the minimum Level-Of-Detail.
+When the minimum LOD is entered the <ActionLink tag='onMinLODEnter'/> listener is triggered.
+When the minimum LOD is exited the <ActionLink tag='onMinLODExit'/> listener is triggered.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0.0005'>
+    The bot enters the minimum LOD when it takes up 0.05% of the screen space. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers > 0 and < 1'>
+    The bot enters the minimum LOD when it takes up less screen space than the value.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## Dimension Tags
 
 ### `[dimension]`

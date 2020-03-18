@@ -256,6 +256,54 @@ let that: {
 };
 ```
 
+### `@onMaxLODEnter`
+
+A whisper that is sent whenever a bot enters its maximum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMinLODEnter`
+
+A whisper that is sent whenever a bot enters its minimum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMaxLODExit`
+
+A whisper that is sent whenever a bot exits its maximum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMinLODExit`
+
+A whisper that is sent whenever a bot exits its minimum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
 ### `@[groupName][stateName]OnEnter`
 
 A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
@@ -598,6 +646,66 @@ let that: {
   targets: Bot[],
   listeners: Bot[],
   responses: any[]
+};
+```
+
+### `@onAnyMaxLODEnter`
+
+A shout that is sent whenever a bot enters its maximum Level-Of-Detail.
+Only sent for bots that have one of <ActionLink action='onMaxLODEnter'/>, 
+<ActionLink action='onMaxLODExit'/>, <ActionLink action='onMinLODEnter'/>,  <ActionLink action='onMinLODExit'/> 
+<TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMinLODEnter`
+
+A shout that is sent whenever a bot enters its minimum Level-Of-Detail.
+Only sent for bots that have one of <ActionLink action='onMaxLODEnter'/>, 
+<ActionLink action='onMaxLODExit'/>, <ActionLink action='onMinLODEnter'/>,  <ActionLink action='onMinLODExit'/> 
+<TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMaxLODExit`
+
+A shout that is sent whenever a bot exits its maximum Level-Of-Detail.
+Only sent for bots that have one of <ActionLink action='onMaxLODEnter'/>, 
+<ActionLink action='onMaxLODExit'/>, <ActionLink action='onMinLODEnter'/>,  <ActionLink action='onMinLODExit'/> 
+<TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMinLODExit`
+
+A shout that is sent whenever a bot exits its minimum Level-Of-Detail.
+Only sent for bots that have one of <ActionLink action='onMaxLODEnter'/>, 
+<ActionLink action='onMaxLODExit'/>, <ActionLink action='onMinLODEnter'/>,  <ActionLink action='onMinLODExit'/> 
+<TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
 };
 ```
 

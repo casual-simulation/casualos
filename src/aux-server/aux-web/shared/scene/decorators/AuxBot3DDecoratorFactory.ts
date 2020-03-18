@@ -15,6 +15,7 @@ import { TextureDecorator } from './TextureDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 import { Simulation3D } from '../Simulation3D';
 import { Game } from '../Game';
+import { BotLODDecorator } from './BotLODDecorator';
 
 export class AuxBot3DDecoratorFactory {
     public game: Game;
@@ -75,7 +76,8 @@ export class AuxBot3DDecoratorFactory {
                 new UpdateMaxtrixDecorator(bot3d),
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(bot3d, this.simulation)
+                new LineToDecorator(bot3d, this.simulation),
+                new BotLODDecorator(bot3d)
             );
         }
 
