@@ -65,6 +65,7 @@ import {
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
+    addState,
 } from '../bots/BotEvents';
 import {
     calculateActionResultsUsingContext,
@@ -87,6 +88,8 @@ import {
     isScriptBot,
     getBotSpace,
     getPortalTag,
+    getOriginalObject,
+    getUploadState,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -860,7 +863,7 @@ function perform(action: any) {
  * @param action The action to reject.
  */
 function reject(action: any) {
-    const event = calcReject(action);
+    const event = calcReject(getOriginalObject(action));
     return addAction(event);
 }
 
@@ -2185,12 +2188,21 @@ function unloadUniverse(id: string) {
 }
 
 /**
- * Imports the AUX at the given URL.
- * @param url The URL to load.
+ * Imports the AUX from the given URL or JSON
+ * @param urlOrJSON The URL or JSON to load.
+ *                  If given JSON, then it will be imported as if it was a .aux file.
+ *                  If given a URL, then it will be downloaded and then imported.
  */
-function importAUX(url: string) {
-    const event = calcImportAUX(url);
-    return addAction(event);
+function importAUX(urlOrJSON: string) {
+    try {
+        const data = JSON.parse(urlOrJSON);
+        const state = getUploadState(data);
+        const event = addState(state);
+        return addAction(event);
+    } catch {
+        const event = calcImportAUX(urlOrJSON);
+        return addAction(event);
+    }
 }
 
 function unwrapBotOrMod(botOrMod: Mod) {

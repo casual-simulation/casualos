@@ -394,9 +394,71 @@ let that: {
 };
 ```
 
+### `@onFileUpload`
+
+A shout that is sent to all bots when the user drags a file into the window.
+
+#### Arguments:
+```typescript
+let that: {
+  file: {
+    // The name of the file. Includes the file extension.
+    name: string;
+
+    // The size of the file in bytes.
+    size: number;
+
+    // The data in the file.
+    // If the file is a text file, the data will be a string.
+    // If the file is not a text file, then the data will be an ArrayBuffer.
+    //
+    // Text files have one of the following extensions:
+    // .txt
+    // .json
+    // .md
+    // .aux
+    // .html
+    // .js
+    // .ts
+    // All the other file extensions map to an ArrayBuffer
+    data: string | ArrayBuffer;
+  }
+};
+```
+
 ### `@onGridClick`
 
 A shout that is sent to all bots when the user clicks on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onGridDown`
+
+A shout that is sent to all bots when the user starts clicking on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onGridUp`
+
+A shout that is sent to all bots when the user stops clicking on empty space.
 
 #### Arguments:
 ```typescript

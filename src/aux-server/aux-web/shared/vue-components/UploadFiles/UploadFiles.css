@@ -1,0 +1,25 @@
+.upload-files {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    z-index: 4;
+}
+
+.upload-files-content {
+    text-align: center;
+}
+
+.upload-files-text {
+    font-size: 22px;
+}
+
+.icon-white {
+    color: #fff !important;
+}

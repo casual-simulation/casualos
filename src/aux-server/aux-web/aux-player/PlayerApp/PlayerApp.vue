@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <load-app>
+            <upload-files></upload-files>
             <md-toolbar v-if="showChatBar">
                 <div class="md-toolbar-section-start">
                     <bot-chat
@@ -10,7 +11,6 @@
                     ></bot-chat>
                 </div>
             </md-toolbar>
-
             <checkout></checkout>
             <bot-sheet></bot-sheet>
 

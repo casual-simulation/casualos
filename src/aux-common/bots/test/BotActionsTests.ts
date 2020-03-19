@@ -49,12 +49,15 @@ import {
     showJoinCode,
     requestFullscreen,
     exitFullscreen,
+    RejectAction,
+    addState,
 } from '../BotEvents';
 import {
     createBot,
     getActiveObjects,
     isBot,
     hasValue,
+    ORIGINAL_OBJECT,
 } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
@@ -1573,9 +1576,9 @@ export function botActionsTests(
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
-                            that: {
+                            that: expect.objectContaining({
                                 abc: 'def',
-                            },
+                            }),
                             targets: ['bot2', 'bot3', 'bot4'],
                             listeners: ['bot2', 'bot3'],
                             responses: [1, 2],
@@ -1634,9 +1637,9 @@ export function botActionsTests(
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
-                            that: {
+                            that: expect.objectContaining({
                                 abc: 'def',
-                            },
+                            }),
                             targets: ['bot2', 'bot3', 'bot4'],
                             listeners: [],
                             responses: [],
@@ -1953,9 +1956,9 @@ export function botActionsTests(
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
-                            that: {
+                            that: expect.objectContaining({
                                 abc: 'def',
-                            },
+                            }),
                             targets: ['bot1', 'bot3', 'bot4'],
                             listeners: ['bot1', 'bot3'],
                             responses: [1, 2],
@@ -2019,7 +2022,7 @@ export function botActionsTests(
         });
 
         describe('arguments', () => {
-            it('should not convert the argument to a script bot if it is a bot', () => {
+            it('should convert the argument to a script bot if it is a bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2050,20 +2053,61 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
-
-                // expect(result.hasUserDefinedEvents).toBe(true);
-                // expect(result.events).toEqual([
-                //     botUpdated('otherBot', {
-                //         tags: {
-                //             hi: 'changed',
-                //         },
-                //     }),
-                // ]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
-            it('should not convert the argument to a list of script bots if it is a list of bots', () => {
+            const ignoreCases = [
+                ['null', null],
+                ['0', 0],
+                ['1', 1],
+                ['false', false],
+                ['true', true],
+                ['undefined', undefined],
+                ['*empty string*', ''],
+                ['*filled string*', 'a'],
+                ['*array buffer*', new ArrayBuffer(255)],
+                // ['*typed array*', new Int8Array([1, 2, 3])],
+            ];
+            it.each(ignoreCases)(
+                'should not convert the argument if it is %s',
+                (desc, value) => {
+                    const state: BotsState = {
+                        thisBot: {
+                            id: 'thisBot',
+                            tags: {
+                                test: '@tags.value = that',
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const botAction = action('test', ['thisBot'], null, value);
+                    const result = calculateActionEvents(
+                        state,
+                        botAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+                    expect(result.events).toEqual([
+                        botUpdated('thisBot', {
+                            tags: {
+                                value: value,
+                            },
+                        }),
+                    ]);
+                }
+            );
+
+            it('should convert the argument to a list of script bots if it is a list of bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2092,31 +2136,31 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            l: 1,
-                        },
-                    }),
-                ]);
-
                 // expect(result.hasUserDefinedEvents).toBe(true);
                 // expect(result.events).toEqual([
-                //     botUpdated('otherBot', {
-                //         tags: {
-                //             hi: 'changed',
-                //         },
-                //     }),
                 //     botUpdated('thisBot', {
                 //         tags: {
                 //             l: 1,
                 //         },
                 //     }),
                 // ]);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                    botUpdated('thisBot', {
+                        tags: {
+                            l: 1,
+                        },
+                    }),
+                ]);
             });
 
-            it.skip('should convert the argument fields to script bots if they are bots', () => {
+            it('should convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2155,7 +2199,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should not convert bots in arrays to script bots', () => {
+            it('should convert bots in arrays to script bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2183,17 +2227,17 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                // expect(result.hasUserDefinedEvents).toBe(false);
+                // expect(result.events).toEqual([]);
 
-                // expect(result.hasUserDefinedEvents).toBe(true);
-                // expect(result.events).toEqual([
-                //     botUpdated('otherBot', {
-                //         tags: {
-                //             hi: 'changed',
-                //         },
-                //     }),
-                // ]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
             it('should handle null arguments', () => {
@@ -2398,6 +2442,37 @@ export function botActionsTests(
                         message: 'abc',
                     }),
                 ]);
+            });
+
+            it('should resolve the original action', () => {
+                const original = toast('abc');
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            transformed: {
+                                type: 'show_toast',
+                                message: 'def',
+                                [ORIGINAL_OBJECT]: original,
+                            },
+                            abcdef: `@action.reject(tags.transformed)`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([reject(toast('abc'))]);
+                expect((<RejectAction>result.events[0]).action).toBe(original);
             });
         });
 
@@ -5535,7 +5610,7 @@ export function botActionsTests(
         });
 
         describe('loadAUX()', () => {
-            it('should emit a ImportdAUXEvent', () => {
+            it('should emit a ImportAUXEvent', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5557,6 +5632,42 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([importAUX('abc')]);
+            });
+
+            it('should emit a AddStateEvent if given JSON', () => {
+                const uploadState: BotsState = {
+                    uploadBot: {
+                        id: 'uploadBot',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+                const json = JSON.stringify({
+                    version: 1,
+                    state: uploadState,
+                });
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@player.importAUX('${json}')`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([addState(uploadState)]);
             });
         });
 

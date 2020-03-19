@@ -24,7 +24,7 @@ jobs:
               env:
                   CI: true
     build:
-        name: Build
+        name: Build AUX
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest]
@@ -41,5 +41,25 @@ jobs:
                   npm ci
                   npm run bootstrap
                   npm run build
+              env:
+                  CI: true
+    docs:
+        name: Build Docs
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macOS-latest]
+                node-version: [12.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: yarn install and build docs
+              run: |
+                  cd docs
+                  yarn
+                  yarn build
               env:
                   CI: true

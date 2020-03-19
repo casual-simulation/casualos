@@ -925,6 +925,8 @@ export class CameraControls {
             lastQuaternion.copy(this._camera.quaternion);
             this.zoomChanged = false;
         }
+
+        this._camera.updateMatrixWorld(true);
     }
 }
 
