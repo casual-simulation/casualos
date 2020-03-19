@@ -19,6 +19,7 @@ import {
     parseScript,
     getConfigVariable,
     getConfigTagVariable,
+    ORIGINAL_OBJECT,
 } from './BotCalculations';
 import {
     getActions,
@@ -208,9 +209,7 @@ export function formulaActions(
 
     let results: any[] = [];
     if ((scriptBot && thisObject) || (!scriptBot && !thisObject)) {
-        // BUG: This causes issues with onUniverseAction() and action.reject() because the
-        // input action is cloned and it causes resolveRejectedActions() to fail the SameValueZero check in Set.has().
-        // arg = mapBotsToScriptBots(context, arg);
+        arg = mapBotsToScriptBots(context, arg);
 
         vars['that'] = arg;
         vars['data'] = arg;
@@ -242,14 +241,35 @@ export function formulaActions(
     return [actions, results];
 }
 
+/**
+ * Maps the given value to a new value where bots are replaced with script bots.
+ * This makes it easy to modify other bot values in listeners. If the value is not convertable,
+ * then it is returned unaffected. Only objects and arrays are convertable.
+ *
+ * Works by making a copy of the value where every bot value is replaced with a reference
+ * to a script bot instance for the bot. The copy has a reference to the original value in the ORIGINAL_OBJECT symbol property.
+ * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onUniverseAction works properly.
+ *
+ * @param context The sandbox context.
+ * @param value The value that should be converted.
+ */
 function mapBotsToScriptBots(context: BotSandboxContext, value: any): any {
     if (isBot(value)) {
         return getScriptBot(context, value);
     } else if (Array.isArray(value) && value.some(isBot)) {
-        return value.map(b => (isBot(b) ? getScriptBot(context, b) : b));
-    } else if (!Array.isArray(value) && typeof value === 'object') {
-        return transform(value, (result, value, key) =>
-            transformBotsToScriptBots(context, result, value, key)
+        let arr = value.map(b => (isBot(b) ? getScriptBot(context, b) : b));
+        (<any>arr)[ORIGINAL_OBJECT] = value;
+        return arr;
+    } else if (
+        hasValue(value) &&
+        !Array.isArray(value) &&
+        typeof value === 'object'
+    ) {
+        return transform(
+            value,
+            (result, value, key) =>
+                transformBotsToScriptBots(context, result, value, key),
+            { [ORIGINAL_OBJECT]: value }
         );
     }
 

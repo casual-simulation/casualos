@@ -87,6 +87,7 @@ import {
     isScriptBot,
     getBotSpace,
     getPortalTag,
+    getOriginalObject,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -860,7 +861,7 @@ function perform(action: any) {
  * @param action The action to reject.
  */
 function reject(action: any) {
-    const event = calcReject(action);
+    const event = calcReject(getOriginalObject(action));
     return addAction(event);
 }
 

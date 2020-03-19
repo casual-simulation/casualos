@@ -99,9 +99,9 @@ describe('WebhooksModule2', () => {
 
                 expect(simulation.helper.botsState['test'].tags).toEqual({
                     onResponse: '@setTag(this, "data", that.response.data)',
-                    data: {
+                    data: expect.objectContaining({
                         test: true,
-                    },
+                    }),
                 });
             });
 
@@ -140,9 +140,9 @@ describe('WebhooksModule2', () => {
 
                 expect(simulation.helper.botsState['test'].tags).toEqual({
                     onResponse: '@setTag(this, "data", that.response.data)',
-                    data: {
+                    data: expect.objectContaining({
                         test: true,
-                    },
+                    }),
                 });
             });
         });

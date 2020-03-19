@@ -2655,6 +2655,24 @@ export function getScriptBot(context: BotSandboxContext, bot: Bot) {
     return context.sandbox.interface.getBot(bot.id);
 }
 
+/**
+ * Defines a symbol for a property that contains the original object that
+ * a value was transformed from.
+ */
+export const ORIGINAL_OBJECT = Symbol('ORIGINAL_OBJECT');
+
+/**
+ * Gets the original object that the given object was constructed from.
+ * Returns the object if there is no original object.
+ * @param obj The object.
+ */
+export function getOriginalObject(obj: any): any {
+    if (ORIGINAL_OBJECT in obj) {
+        return obj[ORIGINAL_OBJECT];
+    }
+    return obj;
+}
+
 function _calculateFormulaValue(
     context: BotSandboxContext,
     object: Bot,
