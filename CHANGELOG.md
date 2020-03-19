@@ -1,5 +1,36 @@
 # AUX Changelog
 
+## V1.0.19
+
+### Date: 3/19/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the ability to modify tags directly on bots in `that`/`data` values in listeners.
+        -   Allows doing `that.bot.tags.abc = 123` instead of `setTag(that.bot, "abc", 123)`.
+    -   Added the `@onGridUp` and `@onGridDown` listeners.
+        -   `that` is an object with the following properties:
+            -   `dimension` - The dimension that the grid was clicked in.
+            -   `position` - The X and Y position that was clicked.
+    -   Changed the Level-Of-Detail calculations to use the apparent size of a bot instead of its on-screen size.
+        -   Apparent size is the size the bot would appear if it was fully on screen.
+        -   Under the new system, the LOD of a that is on screen bot will only change due to zooming the camera. Bots that are fully off screen will always have the minimum LOD.
+    -   Added the `@onFileUpload` listener.
+        -   `that` is an object with the following properties:
+            -   `file` is an object with the following properties:
+                -   `name` - The name of the file.
+                -   `size` - The size of the file in bytes.
+                -   `data` - The data contained in the file.
+        -   See the documentation for more information.
+    -   Improved the `player.importAux()` function to support importing directly from JSON.
+        -   If given a URL, then `player.importAux()` will behave the same as before (download and import).
+        -   If given JSON, then `player.importAux()` will simply import it directly.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where the camera matrix was being used before it was updated.
+
 ## V1.0.18
 
 ### Date: 3/18/2020

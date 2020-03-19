@@ -79,6 +79,7 @@ import BotChat from '../../shared/vue-components/BotChat/BotChat';
 import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
 import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
+import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 
 @Component({
     components: {
@@ -95,6 +96,7 @@ import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         'bot-sheet': BotSheet,
+        'upload-files': UploadFiles,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -187,6 +189,11 @@ export default class PlayerApp extends Vue {
      * Whether to show the authorize account popup.
      */
     showAuthorize: boolean = false;
+
+    /**
+     * Whether to show the "Upload file" indicator when a file is being dropped into the application.
+     */
+    showUploadIndicator: boolean = false;
 
     authorized: boolean = false;
 

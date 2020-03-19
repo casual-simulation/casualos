@@ -4,7 +4,7 @@ import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
 import { map, scan } from 'rxjs/operators';
-import { downloadAuxState, readFileJson } from './DownloadHelpers';
+import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
     ProgressMessage,
     remapProgressPercent,
@@ -157,7 +157,7 @@ export class AppManager {
      * @param file The file to upload.
      */
     async uploadState(file: File): Promise<void> {
-        const json = await readFileJson(file);
+        const json = await readFileText(file);
         const stored: StoredAux = JSON.parse(json);
         const value = await getBotsStateFromStoredAux(stored);
         await this.simulationManager.primary.helper.addState(value);

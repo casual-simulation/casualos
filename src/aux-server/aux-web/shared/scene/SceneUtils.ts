@@ -617,20 +617,29 @@ const clipArea = clipWidth * clipHeight;
 const clipAreaRatio = 1 / clipArea;
 const clipBox = new Box3().set(new Vector3(-1, -1, -1), new Vector3(1, 1, 1));
 
-let _boxSize = new Vector3();
 /**
- * Calculates the percentage of the screen that the given sphere takes up.
+ * Calculates the apparent size of the given sphere viewed by the camera.
+ * If the sphere is off screen, 0 is returned. Otherwise it is the percentage that the sphere takes on the screen.
+ *
  * @param camera The camera to use.
  * @param boundingSphere The sphere to use. Should be in world space.
  */
-export function percentOfScreen(camera: Camera, boundingBox: Box3): number {
-    const box = boundingBox.clone();
-    box.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(
-        camera.projectionMatrix
-    );
+export function percentOfScreen(
+    camera: Camera,
+    boundingSphere: Sphere
+): number {
+    const sphere = boundingSphere.clone();
+    sphere
+        .applyMatrix4(camera.matrixWorldInverse)
+        .applyMatrix4(camera.projectionMatrix);
 
-    box.intersect(clipBox);
-    box.getSize(_boxSize);
-
-    return _boxSize.x * _boxSize.y * clipAreaRatio;
+    if (sphere.intersectsBox(clipBox)) {
+        // Spheres are uniform so we can ignore the Z axis
+        // and only consider the area of a circle when comparing to
+        // the screen area.
+        const circleArea = Math.PI * sphere.radius * sphere.radius;
+        return circleArea * clipAreaRatio;
+    } else {
+        return 0;
+    }
 }

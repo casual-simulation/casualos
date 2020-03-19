@@ -24,6 +24,7 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     protected _interaction: BaseInteractionManager;
     protected _game: Game;
     protected _finished: boolean;
+    protected _sentDownEvent: boolean;
     protected _controller: ControllerData;
 
     protected _startScreenPos: Vector2;
@@ -57,6 +58,11 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     public update(calc: BotCalculationContext): void {
         if (this._finished) return;
 
+        if (!this._sentDownEvent) {
+            this._performDown(calc);
+            this._sentDownEvent = true;
+        }
+
         const input = this._game.getInput();
         const buttonHeld: boolean = this._controller
             ? input.getControllerPrimaryButtonHeld(this._controller)
@@ -77,6 +83,8 @@ export abstract class BaseEmptyClickOperation implements IOperation {
                 this._performClick(calc);
             }
 
+            this._performUp(calc);
+
             // Button has been released. This click operation is finished.
             this._finished = true;
         }
@@ -88,5 +96,21 @@ export abstract class BaseEmptyClickOperation implements IOperation {
 
     public dispose(): void {}
 
+    /**
+     * Sends the empty click event. (onGridClick)
+     * @param calc
+     */
     protected abstract _performClick(calc: BotCalculationContext): void;
+
+    /**
+     * Sends the empty up event. (onGridUp)
+     * @param calc
+     */
+    protected abstract _performUp(calc: BotCalculationContext): void;
+
+    /**
+     * Sends the empty down event. (onGridDown)
+     * @param calc
+     */
+    protected abstract _performDown(calc: BotCalculationContext): void;
 }
