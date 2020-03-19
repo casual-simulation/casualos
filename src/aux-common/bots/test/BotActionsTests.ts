@@ -50,6 +50,7 @@ import {
     requestFullscreen,
     exitFullscreen,
     RejectAction,
+    addState,
 } from '../BotEvents';
 import {
     createBot,
@@ -5609,7 +5610,7 @@ export function botActionsTests(
         });
 
         describe('loadAUX()', () => {
-            it('should emit a ImportdAUXEvent', () => {
+            it('should emit a ImportAUXEvent', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5631,6 +5632,42 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([importAUX('abc')]);
+            });
+
+            it('should emit a AddStateEvent if given JSON', () => {
+                const uploadState: BotsState = {
+                    uploadBot: {
+                        id: 'uploadBot',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+                const json = JSON.stringify({
+                    version: 1,
+                    state: uploadState,
+                });
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@player.importAUX('${json}')`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([addState(uploadState)]);
             });
         });
 

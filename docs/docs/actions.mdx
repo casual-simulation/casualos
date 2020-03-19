@@ -1801,15 +1801,18 @@ if (player.inSheet()) {
 }
 ```
 
-### `player.importAUX(url)`
+### `player.importAUX(urlOrJSON)`
 
 <FunctionCode name='importAUX' />
 
-Downloads and imports the AUX file from the given [URL](https://en.wikipedia.org/wiki/URL).
+Imports an AUX file from the given string.
+
+If the string contains JSON, then the JSON will be imported as if it was a .aux file.
+If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
 
 This is useful to quickly download a AUX file and load it into the current universe from a site such as https://gist.github.com/.
 
-The **first parameter** is the URL that the AUX file should be downloaded from.
+The **first parameter** is the JSON or URL that the AUX file should be imported from.
 
 #### Examples:
 
@@ -1817,6 +1820,21 @@ The **first parameter** is the URL that the AUX file should be downloaded from.
 ```typescript
 const path = '/drives/myFile.aux';
 player.importAUX(path);
+```
+
+2. Import an AUX file from JSON.
+```typescript
+player.importAUX(`{
+    "version": 1,
+    "state": {
+        "079847e4-6a58-423d-9a86-8d4ef8be5970": {
+            "id": "079847e4-6a58-423d-9a86-8d4ef8be5970",
+            "tags": {
+                "auxColor": "red"
+            }
+        }
+    }
+}`);
 ```
 
 ### `player.version()`
