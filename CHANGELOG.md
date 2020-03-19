@@ -10,6 +10,10 @@
 
     -   Added the ability to modify tags directly on bots in `that`/`data` values in listeners.
         -   Allows doing `that.bot.tags.abc = 123` instead of `setTag(that.bot, "abc", 123)`.
+    -   Added the `@onGridUp` and `@onGridDown` listeners.
+        -   `that` is an object with the following properties:
+            -   `dimension` - The dimension that the grid was clicked in.
+            -   `position` - The X and Y position that was clicked.
 
 ## V1.0.18
 
