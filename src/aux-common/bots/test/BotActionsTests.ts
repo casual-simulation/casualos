@@ -2071,6 +2071,8 @@ export function botActionsTests(
                 ['undefined', undefined],
                 ['*empty string*', ''],
                 ['*filled string*', 'a'],
+                ['*array buffer*', new ArrayBuffer(255)],
+                // ['*typed array*', new Int8Array([1, 2, 3])],
             ];
             it.each(ignoreCases)(
                 'should not convert the argument if it is %s',

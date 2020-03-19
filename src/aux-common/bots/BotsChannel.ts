@@ -263,6 +263,7 @@ function mapBotsToScriptBots(context: BotSandboxContext, value: any): any {
     } else if (
         hasValue(value) &&
         !Array.isArray(value) &&
+        !(value instanceof ArrayBuffer) &&
         typeof value === 'object'
     ) {
         return transform(

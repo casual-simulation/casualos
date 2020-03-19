@@ -765,6 +765,11 @@ export const ON_GRID_UP_ACTION_NAME: string = 'onGridUp';
 export const ON_GRID_DOWN_ACTION_NAME: string = 'onGridDown';
 
 /**
+ * The name of the event that is triggered when a file is uploaded.
+ */
+export const ON_FILE_UPLOAD_ACTION_NAME: string = 'onFileUpload';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -957,6 +962,7 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_MIN_LOD_ENTER_ACTION_NAME,
     ON_ANY_MAX_LOD_EXIT_ACTION_NAME,
     ON_ANY_MIN_LOD_EXIT_ACTION_NAME,
+    ON_FILE_UPLOAD_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {
