@@ -48,7 +48,18 @@ describe('SceneUtils', () => {
             const depth = far - near;
             const areaOfScreen = width * height;
 
-            const boxArea2D = cubeSize * cubeSize;
+            // Diameter of smallest sphere containing cube is the length of the diagonal
+            // between the cube's corners which is just the pythagorean theorem.
+            const cubeSizeSquared = cubeSize * cubeSize;
+            const sphereDiameter = Math.sqrt(
+                cubeSizeSquared + cubeSizeSquared + cubeSizeSquared
+            );
+            const sphereRadius = sphereDiameter * 0.5;
+
+            // Spheres are uniform so we're able to flatten it to a circle for area calculation
+            // because they look the same from every angle.
+            const circleArea = Math.PI * sphereRadius * sphereRadius;
+
             const cameraPosition = new Vector3(0, 0, 0);
 
             beforeEach(() => {
@@ -64,19 +75,21 @@ describe('SceneUtils', () => {
                 camera.position.copy(cameraPosition);
             });
 
-            it('should return the approximate size of the given bounding box on the screen', () => {
+            it('should return the approximate size of the given bounding sphere if it was on the screen', () => {
                 const box = new Box3().setFromObject(cube);
+                const sphere = new Sphere();
+                box.getBoundingSphere(sphere);
 
-                const percent = percentOfScreen(camera, box);
+                const percent = percentOfScreen(camera, sphere);
 
-                expect(percent).toBeCloseTo(boxArea2D / areaOfScreen, 6);
+                expect(percent).toBeCloseTo(circleArea / areaOfScreen, 6);
             });
 
             describe('clipping', () => {
-                const leftEdge = new Vector3(left, 0, 0);
-                const rightEdge = new Vector3(right, 0, 0);
-                const topEdge = new Vector3(0, top, 0);
-                const bottomEdge = new Vector3(0, bottom, 0);
+                const leftEdge = new Vector3(left - cubeSize, 0, 0);
+                const rightEdge = new Vector3(right + cubeSize, 0, 0);
+                const topEdge = new Vector3(0, top + cubeSize, 0);
+                const bottomEdge = new Vector3(0, bottom - cubeSize, 0);
 
                 const namedEdges = [
                     ['left', leftEdge],
@@ -88,7 +101,6 @@ describe('SceneUtils', () => {
                 const singleEdgeCases = namedEdges.map(([name, pos]) => [
                     `${name} edge`,
                     pos,
-                    boxArea2D / 2,
                 ]);
 
                 const edgePairs = [
@@ -101,20 +113,21 @@ describe('SceneUtils', () => {
                 const twoEdgeCases = edgePairs.map(([name, p1, p2]) => [
                     `${name} edges`,
                     p1.clone().add(p2),
-                    boxArea2D / 4,
                 ]);
 
                 const clippingCases = [...singleEdgeCases, ...twoEdgeCases];
 
                 it.each(clippingCases)(
-                    'should handle clipping the %s of the projection',
-                    (desc: string, pos: Vector3, area: number) => {
+                    'should return 0 when off the %s of the projection',
+                    (desc: string, pos: Vector3) => {
                         cube.position.copy(pos);
                         const box = new Box3().setFromObject(cube);
+                        const sphere = new Sphere();
+                        box.getBoundingSphere(sphere);
 
-                        const percent = percentOfScreen(camera, box);
+                        const percent = percentOfScreen(camera, sphere);
 
-                        expect(percent).toBeCloseTo(area / areaOfScreen, 6);
+                        expect(percent).toBe(0);
                     }
                 );
             });

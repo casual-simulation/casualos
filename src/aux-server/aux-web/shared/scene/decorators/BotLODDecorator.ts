@@ -27,6 +27,7 @@ import { Text3D } from '../Text3D';
 import { calculateScale, percentOfScreen } from '../SceneUtils';
 import { Camera } from 'three';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 export class BotLODDecorator extends AuxBot3DDecoratorBase {
     private _currentLOD: BotLOD = DEFAULT_BOT_LOD;
@@ -83,7 +84,10 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _updateLOD(calc: BotCalculationContext) {
-        const percent = percentOfScreen(this._camera, this.bot3D.boundingBox);
+        const percent = percentOfScreen(
+            this._camera,
+            this.bot3D.boundingSphere
+        );
         const nextLOD = calculateBotLOD(
             percent,
             this._minThreshold,
