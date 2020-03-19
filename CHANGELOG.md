@@ -17,6 +17,12 @@
     -   Changed the Level-Of-Detail calculations to use the apparent size of a bot instead of its on-screen size.
         -   Apparent size is the size the bot would appear if it was fully on screen.
         -   Under the new system, the LOD of a that is on screen bot will only change due to zooming the camera. Bots that are fully off screen will always have the minimum LOD.
+    -   Added the `@onFileUpload` listener.
+        -   `that` is an object with the following properties:
+            -   `file` is an object with the following properties:
+                -   `name` - The name of the file.
+                -   `size` - The size of the file in bytes.
+                -   `data` - The data contained in the file.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where the camera matrix was being used before it was updated.
