@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V1.0.19
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the ability to modify tags directly on bots in `that`/`data` values in listeners.
+        -   Allows doing `that.bot.tags.abc = 123` instead of `setTag(that.bot, "abc", 123)`.
+
 ## V1.0.18
 
 ### Date: 3/18/2020
