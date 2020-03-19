@@ -7,8 +7,14 @@ import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
-import { BotCalculationContext } from '@casual-simulation/aux-common';
+import {
+    BotCalculationContext,
+    ON_GRID_CLICK_ACTION_NAME,
+    ON_GRID_DOWN_ACTION_NAME,
+    ON_GRID_UP_ACTION_NAME,
+} from '@casual-simulation/aux-common';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -41,7 +47,28 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
         this._sendOnGridClickEvent(calc);
     }
 
+    protected _performUp(calc: BotCalculationContext): void {
+        this._sendGridEvent(calc, (simulation, arg) => {
+            simulation.helper.action(ON_GRID_UP_ACTION_NAME, null, arg);
+        });
+    }
+
+    protected _performDown(calc: BotCalculationContext): void {
+        this._sendGridEvent(calc, (simulation, arg) => {
+            simulation.helper.action(ON_GRID_DOWN_ACTION_NAME, null, arg);
+        });
+    }
+
     private _sendOnGridClickEvent(calc: BotCalculationContext) {
+        this._sendGridEvent(calc, (simulation, arg) => {
+            simulation.helper.action(ON_GRID_CLICK_ACTION_NAME, null, arg);
+        });
+    }
+
+    private _sendGridEvent(
+        calc: BotCalculationContext,
+        sendAction: (simulation: Simulation, arg: any) => void
+    ) {
         const simulation3Ds = this._game.getSimulations();
 
         for (const sim3D of simulation3Ds) {
@@ -85,15 +112,20 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                 // Get grid tile that intersects with input ray.
                 const gridTile = sim3D.grid3D.getTileFromRay(inputRay);
 
+                let position: any = {
+                    x: Infinity,
+                    Y: Infinity,
+                };
                 if (gridTile) {
-                    sim3D.simulation.helper.action('onGridClick', null, {
-                        dimension: inputDimension,
-                        position: {
-                            x: gridTile.tileCoordinate.x,
-                            y: gridTile.tileCoordinate.y,
-                        },
-                    });
+                    position = {
+                        x: gridTile.tileCoordinate.x,
+                        y: gridTile.tileCoordinate.y,
+                    };
                 }
+                sendAction(sim3D.simulation, {
+                    dimension: inputDimension,
+                    position: position,
+                });
             }
         }
     }

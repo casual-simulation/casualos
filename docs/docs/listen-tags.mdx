@@ -409,6 +409,36 @@ let that: {
 };
 ```
 
+### `@onGridDown`
+
+A shout that is sent to all bots when the user starts clicking on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onGridUp`
+
+A shout that is sent to all bots when the user stops clicking on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
 ### `@onPlayerPortalChanged`
 
 A shout that is sent to all bots when a portal changes on the player.

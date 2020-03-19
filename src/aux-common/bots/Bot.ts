@@ -750,6 +750,21 @@ export const ON_ANY_MAX_LOD_EXIT_ACTION_NAME: string = 'onAnyMaxLODExit';
 export const ON_ANY_MIN_LOD_EXIT_ACTION_NAME: string = 'onAnyMinLODExit';
 
 /**
+ * The name of the event that is triggered when the grid is clicked.
+ */
+export const ON_GRID_CLICK_ACTION_NAME: string = 'onGridClick';
+
+/**
+ * The name of the event that is triggered when the grid starts getting pressed.
+ */
+export const ON_GRID_UP_ACTION_NAME: string = 'onGridUp';
+
+/**
+ * The name of the event that is triggered when the grid stops getting pressed.
+ */
+export const ON_GRID_DOWN_ACTION_NAME: string = 'onGridDown';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -920,7 +935,9 @@ export const KNOWN_TAGS: string[] = [
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
-    'onGridClick',
+    ON_GRID_CLICK_ACTION_NAME,
+    ON_GRID_UP_ACTION_NAME,
+    ON_GRID_DOWN_ACTION_NAME,
     'onCheckout',
     'onPaymentSuccessful',
     'onPaymentFailed',
