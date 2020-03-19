@@ -14,6 +14,12 @@
         -   `that` is an object with the following properties:
             -   `dimension` - The dimension that the grid was clicked in.
             -   `position` - The X and Y position that was clicked.
+    -   Changed the Level-Of-Detail calculations to use the apparent size of a bot instead of its on-screen size.
+        -   Apparent size is the size the bot would appear if it was fully on screen.
+        -   Under the new system, the LOD of a that is on screen bot will only change due to zooming the camera. Bots that are fully off screen will always have the minimum LOD.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where the camera matrix was being used before it was updated.
 
 ## V1.0.18
 
