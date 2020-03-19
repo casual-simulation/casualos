@@ -56,10 +56,10 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: ${{ matrix.node-version }}
-            - name: npm install and build docs
+            - name: yarn install and build docs
               run: |
-                  npm ci
-                  npm run bootstrap
-                  npm run build:docs
+                  cd docs
+                  yarn
+                  yarn build
               env:
                   CI: true
