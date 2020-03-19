@@ -23,6 +23,10 @@
                 -   `name` - The name of the file.
                 -   `size` - The size of the file in bytes.
                 -   `data` - The data contained in the file.
+        -   See the documentation for more information.
+    -   Improved the `player.importAux()` function to support importing directly from JSON.
+        -   If given a URL, then `player.importAux()` will behave the same as before (download and import).
+        -   If given JSON, then `player.importAux()` will simply import it directly.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where the camera matrix was being used before it was updated.
