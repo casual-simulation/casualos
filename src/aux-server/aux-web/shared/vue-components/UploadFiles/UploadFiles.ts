@@ -165,9 +165,15 @@ export default class UploadFiles extends Vue {
     }
 }
 
-const jsonFileExtensions = new Set(['.aux', '.json']);
-
-const textFileExtensions = new Set([...jsonFileExtensions.values(), '.txt']);
+const textFileExtensions = new Set([
+    '.aux',
+    '.json',
+    '.txt',
+    '.md',
+    '.html',
+    '.js',
+    '.ts',
+]);
 
 async function getFileData(file: File): Promise<string | ArrayBuffer | object> {
     try {
@@ -180,17 +186,6 @@ async function getFileData(file: File): Promise<string | ArrayBuffer | object> {
         }
 
         if (textData !== null) {
-            try {
-                for (let jsonExt of jsonFileExtensions) {
-                    if (file.name.endsWith(jsonExt)) {
-                        return JSON.parse(textData);
-                    }
-                }
-            } catch (err) {
-                // JSON parsing failed, return just the string data
-                return textData;
-            }
-
             return textData;
         }
     } catch {
