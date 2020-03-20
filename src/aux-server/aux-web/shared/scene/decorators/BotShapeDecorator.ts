@@ -337,6 +337,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             } else {
                 this._createHtmlIframe();
             }
+        } else if (this._shape === 'nothing') {
+            this.stroke = null;
+            this._canHaveStroke = false;
         }
 
         this.onMeshUpdated.invoke(this);

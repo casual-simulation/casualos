@@ -257,7 +257,13 @@ export interface WorkspaceHex {
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh' | 'iframe';
+export type BotShape =
+    | 'cube'
+    | 'sphere'
+    | 'sprite'
+    | 'mesh'
+    | 'iframe'
+    | 'nothing';
 
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.

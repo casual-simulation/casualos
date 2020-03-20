@@ -151,7 +151,9 @@ export class Text3D extends Object3D {
      * Sets the position of the text based on the size of the given bounding box.
      */
     public setPositionForBounds(bounds: Box3) {
-        if (!bounds || bounds.isEmpty()) return;
+        if (!bounds || bounds.isEmpty()) {
+            return;
+        }
 
         this.updateBoundingBox();
 

@@ -3450,7 +3450,14 @@ export function botCalculationContextTests(
     });
 
     describe('getBotShape()', () => {
-        const cases = [['cube'], ['sphere'], ['sprite'], ['mesh'], ['iframe']];
+        const cases = [
+            ['cube'],
+            ['sphere'],
+            ['sprite'],
+            ['mesh'],
+            ['iframe'],
+            ['nothing'],
+        ];
         it.each(cases)('should return %s', (shape: string) => {
             const bot = createBot('test', {
                 auxForm: <any>shape,

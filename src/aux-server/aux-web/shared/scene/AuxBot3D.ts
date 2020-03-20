@@ -1,5 +1,5 @@
 import { GameObject } from './GameObject';
-import { Object3D, Box3, Sphere, Group, Color } from 'three';
+import { Object3D, Box3, Sphere, Group, Color, Vector3 } from 'three';
 import {
     Bot,
     BotCalculationContext,
@@ -127,6 +127,18 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         }
 
         this._boundingBox.setFromObject(this.display);
+
+        if (this._boundingBox.isEmpty()) {
+            // Set to the virtual box.
+            const worldPosition = new Vector3();
+            this.display.getWorldPosition(worldPosition);
+            const worldScale = new Vector3();
+            this.display.getWorldScale(worldScale);
+            this._boundingBox = new Box3().setFromCenterAndSize(
+                worldPosition,
+                worldScale
+            );
+        }
 
         // Calculate Bounding Sphere
         if (this._boundingSphere === null) {
