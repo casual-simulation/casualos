@@ -202,6 +202,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.playerRotationY;
     }
 
+    /**
+     * Gets whether to show the camera focus point.
+     */
+    get showFocusPoint() {
+        return this.pageConfig.showFocusPoint;
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         const input = this.game.getInput();

@@ -192,6 +192,7 @@ export interface BotTags {
     [`auxPortalZoomableMax`]?: number | null;
     ['auxPortalRotatable']?: number | null;
     ['auxPortalPointerDragMode']?: PortalPointerDragMode;
+    ['auxPortalShowFocusPoint']?: boolean | null;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -452,6 +453,11 @@ export const DEFAULT_PORTAL_ROTATABLE = true;
  * Whether portals are zoomable by default.
  */
 export const DEFAULT_PORTAL_ZOOMABLE = true;
+
+/**
+ * Whether portals should show their focus point.
+ */
+export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
  * Whether inventory portals are resizable by default.
@@ -860,6 +866,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationX`,
     `auxPortalPlayerRotationY`,
     'auxPortalPointerDragMode',
+    'auxPortalShowFocusPoint',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',

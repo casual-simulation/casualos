@@ -207,9 +207,7 @@ export abstract class BaseInteractionManager {
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
-        this._cameraRigControllers.forEach(rigControls =>
-            rigControls.controls.update()
-        );
+        this._updateCameraControls();
 
         // Detect left click.
         this._handleMouseInput(input);
@@ -221,6 +219,16 @@ export abstract class BaseInteractionManager {
 
         this._updateHoveredBots();
         this._updateFocusedBots();
+    }
+
+    protected _updateCameraControls() {
+        for (let controller of this._cameraRigControllers) {
+            this._updateCameraController(controller);
+        }
+    }
+
+    protected _updateCameraController(controller: CameraRigControls) {
+        controller.controls.update();
     }
 
     private _handleCameraInput() {
