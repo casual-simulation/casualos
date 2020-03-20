@@ -29,6 +29,7 @@ import {
 import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
+import { PortalConfig } from 'aux-web/aux-player/scene/PortalConfig';
 
 /**
  * Defines a class that is able to render a simulation.

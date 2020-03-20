@@ -33,7 +33,11 @@ import {
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from './DraggableGroup';
-import { isObjectVisible, objectForwardRay } from '../scene/SceneUtils';
+import {
+    isObjectVisible,
+    objectForwardRay,
+    cameraForwardRay,
+} from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
@@ -68,6 +72,7 @@ export abstract class BaseInteractionManager {
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredBots: HoveredBot[];
+    protected _focusedBots: HoveredBot[];
 
     protected _draggableGroups: DraggableGroup[];
     protected _draggableGroupsDirty: boolean;
@@ -89,6 +94,7 @@ export abstract class BaseInteractionManager {
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
         this._hoveredBots = [];
+        this._focusedBots = [];
         this._inputMethodMap = new Map();
         this._cameraControlsEnabled = true;
 
@@ -201,18 +207,43 @@ export abstract class BaseInteractionManager {
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
-        this._cameraRigControllers.forEach(rigControls =>
-            rigControls.controls.update()
-        );
+        this._updateCameraControls();
 
         // Detect left click.
         this._handleMouseInput(input);
         this._handleControllerInput(input);
         this._handleTapCodes(input);
+        this._handleCameraInput();
 
         this._updateAdditionalNormalInputs(input);
 
         this._updateHoveredBots();
+        this._updateFocusedBots();
+    }
+
+    protected _updateCameraControls() {
+        for (let controller of this._cameraRigControllers) {
+            this._updateCameraController(controller);
+        }
+    }
+
+    protected _updateCameraController(controller: CameraRigControls) {
+        controller.controls.update();
+    }
+
+    private _handleCameraInput() {
+        for (let controller of this._cameraRigControllers) {
+            const ray = cameraForwardRay(controller.rig.mainCamera);
+            const { hit, gameObject } = this.findHoveredGameObjectFromRay(
+                ray,
+                obj => obj.focusable,
+                controller.rig.viewport
+            );
+
+            if (gameObject) {
+                this._setFocusedBot(gameObject);
+            }
+        }
     }
 
     private _handleTapCodes(input: Input) {
@@ -247,7 +278,8 @@ export abstract class BaseInteractionManager {
                 input.isMouseButtonDownOnElement(this._game.gameView.gameView)
             ) {
                 const { gameObject, hit } = this.findHoveredGameObject(
-                    inputMethod
+                    inputMethod,
+                    obj => obj.pointable
                 );
                 if (gameObject) {
                     // Start game object click operation.
@@ -289,7 +321,10 @@ export abstract class BaseInteractionManager {
         }
 
         if (input.currentInputType === InputType.Mouse) {
-            const { gameObject } = this.findHoveredGameObject(inputMethod);
+            const { gameObject } = this.findHoveredGameObject(
+                inputMethod,
+                obj => obj.pointable
+            );
             if (gameObject) {
                 // Set bot as being hovered on.
                 this._setHoveredBot(gameObject);
@@ -306,7 +341,8 @@ export abstract class BaseInteractionManager {
             };
             if (input.getControllerPrimaryButtonDown(controller)) {
                 const { gameObject, hit } = this.findHoveredGameObject(
-                    inputMethod
+                    inputMethod,
+                    obj => obj.pointable
                 );
                 if (gameObject) {
                     this._startClickingGameObject(gameObject, hit, inputMethod);
@@ -321,7 +357,10 @@ export abstract class BaseInteractionManager {
                 input.currentInputType === InputType.Controller &&
                 controller.inputSource.targetRayMode !== 'screen'
             ) {
-                const { gameObject } = this.findHoveredGameObject(inputMethod);
+                const { gameObject } = this.findHoveredGameObject(
+                    inputMethod,
+                    obj => obj.pointable
+                );
                 if (gameObject) {
                     // Set bot as being hovered on.
                     this._setHoveredBot(gameObject);
@@ -333,7 +372,10 @@ export abstract class BaseInteractionManager {
     private _stopClickingGameObject(method: InputMethod) {
         const pressedBot = this.getPressedBot(method.identifier);
         if (pressedBot) {
-            const { gameObject, hit } = this.findHoveredGameObject(method);
+            const { gameObject, hit } = this.findHoveredGameObject(
+                method,
+                obj => obj.pointable
+            );
             if (gameObject instanceof AuxBot3D && gameObject == pressedBot) {
                 this.handlePointerUp(
                     gameObject,
@@ -427,15 +469,72 @@ export abstract class BaseInteractionManager {
     }
 
     /**
+     * Focus on the given game object if it represents an AuxBot3D.
+     * @param gameObject GameObject for bot to start hover on.
+     */
+    protected _setFocusedBot(gameObject: GameObject): void {
+        if (gameObject instanceof AuxBot3D) {
+            const bot: Bot = gameObject.bot;
+            const simulation: Simulation =
+                gameObject.dimensionGroup.simulation3D.simulation;
+
+            let focusedBot: HoveredBot = this._focusedBots.find(focusedBot => {
+                return (
+                    focusedBot.bot.id === bot.id &&
+                    focusedBot.simulation.id === simulation.id
+                );
+            });
+
+            if (focusedBot) {
+                // Update the frame of the hovered bot to the current frame.
+                focusedBot.frame = this._game.getTime().frameCount;
+            } else {
+                // Create a new hovered bot object and add it to the list.
+                focusedBot = {
+                    bot3D: gameObject,
+                    bot,
+                    simulation,
+                    frame: this._game.getTime().frameCount,
+                };
+                this._focusedBots.push(focusedBot);
+                this._updateFocusedBots();
+                this.handleFocusEnter(gameObject, bot, simulation);
+            }
+        }
+    }
+
+    /**
      * Check all hovered bots and release any that are no longer being hovered on.
      */
     protected _updateHoveredBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._hoveredBots = this._hoveredBots.filter(hoveredBot => {
-            if (hoveredBot.frame < curFrame) {
+        this._hoveredBots = this._hoveredBots.filter(focusedBot => {
+            if (focusedBot.frame < curFrame) {
                 // No longer hovering on this bot.
                 this.handlePointerExit(
+                    focusedBot.bot3D,
+                    focusedBot.bot,
+                    focusedBot.simulation
+                );
+                return false;
+            }
+
+            // Still hovering on this bot.
+            return true;
+        });
+    }
+
+    /**
+     * Check all hovered bots and release any that are no longer being hovered on.
+     */
+    protected _updateFocusedBots(): void {
+        const curFrame = this._game.getTime().frameCount;
+
+        this._focusedBots = this._focusedBots.filter(hoveredBot => {
+            if (hoveredBot.frame < curFrame) {
+                // No longer hovering on this bot.
+                this.handleFocusExit(
                     hoveredBot.bot3D,
                     hoveredBot.bot,
                     hoveredBot.simulation
@@ -492,15 +591,27 @@ export abstract class BaseInteractionManager {
     /**
      * Find the first game object that is underneath the current input device.
      */
-    findHoveredGameObject(method: InputMethod) {
+    findHoveredGameObject(
+        method: InputMethod,
+        gameObjectFilter: (obj: GameObject) => boolean
+    ) {
         if (method.type === 'controller') {
-            return this.findHoveredGameObjectFromController(method.controller);
+            return this.findHoveredGameObjectFromController(
+                method.controller,
+                gameObjectFilter
+            );
         } else {
-            return this.findHoveredGameObjectFromPagePosition();
+            return this.findHoveredGameObjectFromPagePosition(
+                undefined,
+                gameObjectFilter
+            );
         }
     }
 
-    findHoveredGameObjectFromPagePosition(pagePos?: Vector2) {
+    findHoveredGameObjectFromPagePosition(
+        pagePos?: Vector2,
+        gameObjectFilter: (obj: GameObject) => boolean = null
+    ) {
         pagePos = !!pagePos ? pagePos : this._game.getInput().getMousePagePos();
 
         const draggableGroups = this.getDraggableGroups();
@@ -531,8 +642,13 @@ export abstract class BaseInteractionManager {
                 objects,
                 camera
             );
-            hit = Physics.firstRaycastHit(raycastResult);
-            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
 
             if (hitObject) {
                 // We hit a game object in this simulation, stop searching through simulations.
@@ -557,9 +673,12 @@ export abstract class BaseInteractionManager {
      * Finds the first game oject that is being pointed at by the given controller.
      * @param controller The controller.
      */
-    findHoveredGameObjectFromController(controller: ControllerData) {
+    findHoveredGameObjectFromController(
+        controller: ControllerData,
+        gameObjectFilter: (obj: GameObject) => boolean
+    ) {
         const ray = objectForwardRay(controller.ray);
-        return this.findHoveredGameObjectFromRay(ray);
+        return this.findHoveredGameObjectFromRay(ray, gameObjectFilter);
     }
 
     /**
@@ -568,7 +687,7 @@ export abstract class BaseInteractionManager {
      */
     findHoveredGameObjectFromRay(
         ray: Ray,
-        hitFilter: (hit: Intersection) => boolean = null,
+        gameObjectFilter: (obj: GameObject) => boolean,
         viewport: Viewport = null
     ) {
         const draggableGroups = this.getDraggableGroups();
@@ -587,8 +706,13 @@ export abstract class BaseInteractionManager {
             }
 
             const raycastResult = Physics.raycast(ray, objects, camera);
-            hit = Physics.firstRaycastHit(raycastResult, hitFilter);
-            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
 
             if (hitObject) {
                 // We hit a game object in this simulation, stop searching through simulations.
@@ -607,6 +731,26 @@ export abstract class BaseInteractionManager {
                 hit: null,
             };
         }
+    }
+
+    /**
+     * Finds the first pointable game object that is included in the given raycast result.
+     * @param result
+     */
+    findFirstGameObject(
+        result: Physics.RaycastResult,
+        filter?: (obj: GameObject) => boolean
+    ): [Intersection, GameObject] {
+        for (let hit of result.intersects) {
+            let found = this.findGameObjectForHit(hit);
+            if (found) {
+                if (!filter || filter(found)) {
+                    return [hit, found];
+                }
+            }
+        }
+
+        return null;
     }
 
     findGameObjectForHit(hit: Intersection): GameObject {
@@ -644,10 +788,13 @@ export abstract class BaseInteractionManager {
     showContextMenu(calc: BotCalculationContext) {
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
-        const { gameObject, hit } = this.findHoveredGameObject({
-            type: 'mouse_or_touch',
-            identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
-        });
+        const { gameObject, hit } = this.findHoveredGameObject(
+            {
+                type: 'mouse_or_touch',
+                identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+            },
+            obj => obj.pointable
+        );
         const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {
@@ -754,6 +901,16 @@ export abstract class BaseInteractionManager {
         simulation: Simulation
     ): void;
     abstract handlePointerUp(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handleFocusEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handleFocusExit(
         bot3D: AuxBot3D,
         bot: Bot,
         simulation: Simulation

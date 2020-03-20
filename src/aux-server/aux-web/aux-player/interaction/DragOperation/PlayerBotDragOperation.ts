@@ -190,10 +190,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 hit,
             } = this._interaction.findHoveredGameObjectFromRay(
                 inputRay,
-                hit => {
-                    const obj = this._interaction.findGameObjectForHit(hit);
+                obj => {
                     return (
-                        obj &&
+                        obj.pointable &&
                         obj instanceof AuxBot3D &&
                         !this._bots.find(b => b.id === obj.bot.id)
                     );

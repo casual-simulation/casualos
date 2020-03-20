@@ -136,6 +136,8 @@ export interface BotTags {
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
     ['auxProgressBarPosition']?: unknown;
+    ['auxPointable']?: unknown;
+    ['auxFocusable']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
@@ -190,6 +192,7 @@ export interface BotTags {
     [`auxPortalZoomableMax`]?: number | null;
     ['auxPortalRotatable']?: number | null;
     ['auxPortalPointerDragMode']?: PortalPointerDragMode;
+    ['auxPortalShowFocusPoint']?: boolean | null;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -255,7 +258,13 @@ export interface WorkspaceHex {
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type BotShape = 'cube' | 'sphere' | 'sprite' | 'mesh' | 'iframe';
+export type BotShape =
+    | 'cube'
+    | 'sphere'
+    | 'sprite'
+    | 'mesh'
+    | 'iframe'
+    | 'nothing';
 
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
@@ -444,6 +453,11 @@ export const DEFAULT_PORTAL_ROTATABLE = true;
  * Whether portals are zoomable by default.
  */
 export const DEFAULT_PORTAL_ZOOMABLE = true;
+
+/**
+ * Whether portals should show their focus point.
+ */
+export const DEFAULT_PORTAL_SHOW_FOCUS_POINT = false;
 
 /**
  * Whether inventory portals are resizable by default.
@@ -770,6 +784,26 @@ export const ON_GRID_DOWN_ACTION_NAME: string = 'onGridDown';
 export const ON_FILE_UPLOAD_ACTION_NAME: string = 'onFileUpload';
 
 /**
+ * The name of the event that is triggerd when a bot gains camera focus.
+ */
+export const ON_FOCUS_ENTER_ACTION_NAME: string = 'onFocusEnter';
+
+/**
+ * The name of the event that is triggerd when a bot loses camera focus.
+ */
+export const ON_FOCUS_EXIT_ACTION_NAME: string = 'onFocusExit';
+
+/**
+ * The name of the event that is triggerd when a bot gains camera focus.
+ */
+export const ON_ANY_FOCUS_ENTER_ACTION_NAME: string = 'onAnyFocusEnter';
+
+/**
+ * The name of the event that is triggerd when a bot loses camera focus.
+ */
+export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -832,6 +866,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationX`,
     `auxPortalPlayerRotationY`,
     'auxPortalPointerDragMode',
+    'auxPortalShowFocusPoint',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',
@@ -879,6 +914,8 @@ export const KNOWN_TAGS: string[] = [
     'auxMaxLODThreshold',
     'auxMinLODThreshold',
     'auxUniverseConnectedSessions',
+    'auxPointable',
+    'auxFocusable',
 
     'auxTaskOutput',
     'auxTaskError',
@@ -963,6 +1000,11 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_MAX_LOD_EXIT_ACTION_NAME,
     ON_ANY_MIN_LOD_EXIT_ACTION_NAME,
     ON_FILE_UPLOAD_ACTION_NAME,
+
+    ON_FOCUS_ENTER_ACTION_NAME,
+    ON_FOCUS_EXIT_ACTION_NAME,
+    ON_ANY_FOCUS_ENTER_ACTION_NAME,
+    ON_ANY_FOCUS_EXIT_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {

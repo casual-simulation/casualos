@@ -592,6 +592,14 @@ export function objectWorldDirectionRay(
 }
 
 /**
+ * Creates a ray for the forward facing direction for the given camera.
+ * @param camera The camera.
+ */
+export function cameraForwardRay(camera: Camera): Ray {
+    return objectWorldDirectionRay(new Vector3(0, 0, -1), camera);
+}
+
+/**
  * Creates a ray for the given direction from the given object's perspective.
  * @param direction The direction.
  * @param obj The object.

@@ -152,6 +152,13 @@ export class InventorySimulation3D extends PlayerSimulation3D {
         return this.inventoryConfig.height;
     }
 
+    /**
+     * Gets whether to show the camera focus point.
+     */
+    get showFocusPoint() {
+        return this.inventoryConfig.showFocusPoint;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super('auxInventoryPortal', game, simulation);
     }

@@ -86,7 +86,7 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     private _updateLOD(calc: BotCalculationContext) {
         const percent = percentOfScreen(
             this._camera,
-            this.bot3D.boundingSphere
+            this.bot3D.unitBoundingSphere
         );
         const nextLOD = calculateBotLOD(
             percent,

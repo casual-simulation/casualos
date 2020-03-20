@@ -1,5 +1,34 @@
 # AUX Changelog
 
+## V1.0.20
+
+### Date: 3/20/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `#auxPointable` tag to determine whether a bot can interact with pointers.
+        -   Defaults to `true`.
+        -   When `false`, the bot won't be clickable or hoverable and will not receive drop events.
+        -   Depending on the `#auxPositioningMode` it is still possible to stack bots on top of it though.
+    -   Added the `@onFocusEnter`, `@onFocusExit`, `@onAnyFocusEnter` and `@onAnyFocusExit` listen tags.
+        -   These are triggered when a bot is directly in the center of the screen.
+        -   Uses the `#auxFocusable` tag to determine whether a bot is focusable.
+        -   `that` is an object with the following properties:
+            -   `dimension` - The dimension that the the bot was (un)focused in.
+            -   `bot` - The bot that was (un)focused.
+    -   Added the `nothing` aux form.
+        -   Does exactly what it seems. A bot with the `nothing` form has no shape and is unable to be clicked, hovered, or focused.
+        -   Labels still work though which makes it convienent for adding extra labels around the dimension.
+    -   Added the `#auxPortalShowFocusPoint` tag.
+        -   Shows a small sphere in the portal where the portal camera will orbit around.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where LODs would flicker upon changing the bot form by ensuring consistent sizing for the related bounding boxes.
+    -   Fixed an issue with panning that would cause the camera orbiting position to be moved off the ground.
+
 ## V1.0.19
 
 ### Date: 3/19/2020

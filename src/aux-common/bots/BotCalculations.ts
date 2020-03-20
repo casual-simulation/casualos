@@ -225,6 +225,24 @@ export function getUploadState(data: any): BotsState {
 }
 
 /**
+ * Gets whether the bot is pointable.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function isBotPointable(calc: BotCalculationContext, bot: Bot): boolean {
+    return calculateBooleanTagValue(calc, bot, 'auxPointable', true);
+}
+
+/**
+ * Gets whether the bot is focusable.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function isBotFocusable(calc: BotCalculationContext, bot: Bot): boolean {
+    return calculateBooleanTagValue(calc, bot, 'auxFocusable', true);
+}
+
+/**
  * Gets a list of tags that the given bots contain.
  *
  * @param bots The array of bots that the list of tags should be retrieved
@@ -1221,7 +1239,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'sphere' ||
         shape === 'sprite' ||
         shape === 'mesh' ||
-        shape === 'iframe'
+        shape === 'iframe' ||
+        shape === 'nothing'
     ) {
         return shape;
     }

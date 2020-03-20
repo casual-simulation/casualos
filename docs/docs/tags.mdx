@@ -135,6 +135,40 @@ The positioning mode that the bot uses.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `auxPointable`
+
+Whether the bot interacts with the pointer.
+
+Bots that are pointable can receive clicks, pointer enter/exit, and drop events.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot interacts with the pointer. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot does not interact with the pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `auxFocusable`
+
+Whether the bot is able to be focused.
+
+Bots that are focusable can receive focus events like <TagLink tag='@onFocusEnter'/>.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot is focusable. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot is not focusable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `auxDestroyable`
 
 Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
@@ -907,6 +941,24 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
   </PossibleValue>
   <PossibleValue value='grid'>
     Specifies that the pointer should ignore other bots in the portal for positioning the dragged bot(s).
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `auxPortalShowFocusPoint`
+
+Whether the focus point of the portal camera should be shown as a small sphere.
+
+The focus point is the position that the camera orbits (rotates) around and is always facing.
+
+When a bot is between the focus point and the camera, then focus events will trigger.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='false'>
+    Don't show an indicator for the focus point. (Default)
+  </PossibleValue>
+  <PossibleValue value='true'>
+    Show an indicator for the focus point.
   </PossibleValue>
 </PossibleValuesTable>
 
