@@ -102,7 +102,7 @@ export class PlayerModDragOperation extends BaseModDragOperation {
                 hit,
             } = this._interaction.findHoveredGameObjectFromRay(
                 inputRay,
-                null,
+                obj => obj.pointable,
                 viewport
             );
             if (gameObject instanceof AuxBot3D) {

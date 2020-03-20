@@ -24,9 +24,21 @@ export class GameObject extends Object3D implements IGameObject {
      */
     colliders: Object3D[];
 
+    /**
+     * Whether the object can receive pointer events.
+     */
+    pointable: boolean;
+
+    /**
+     * Whether the object can receive focus events.
+     */
+    focusable: boolean;
+
     constructor() {
         super();
         this.colliders = [];
+        this.pointable = true;
+        this.focusable = true;
     }
 
     /**

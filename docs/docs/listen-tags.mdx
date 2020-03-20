@@ -304,6 +304,36 @@ let that: {
 };
 ```
 
+### `@onFocusEnter`
+
+A whisper that is sent whenever a bot starts being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+Only sent if <TagLink tag='auxFocusable'/> is true.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onFocusExit`
+
+A whisper that is sent whenever a bot stops being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
 ### `@[groupName][stateName]OnEnter`
 
 A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
@@ -758,6 +788,36 @@ let that: {
 A shout that is sent whenever a bot exits its minimum Level-Of-Detail.
 
 Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyFocusEnter`
+
+A shout that is sent whenever a bot starts being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+Only sent if <TagLink tag='auxFocusable'/> is true.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyFocusExit`
+
+A shout that is sent whenever a bot stops being focused by the player.
+
+Focus is when the bot is in the center of the screen.
 
 #### Arguments:
 ```typescript

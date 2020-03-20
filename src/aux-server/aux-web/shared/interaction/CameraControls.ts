@@ -7,11 +7,14 @@ import {
     Matrix4,
     MathUtils as ThreeMath,
     OrthographicCamera,
+    Plane,
+    Camera,
 } from 'three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
 import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 import { Game } from '../scene/Game';
+import { cameraForwardRay } from '../scene/SceneUtils';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -138,6 +141,7 @@ export class CameraControls {
     private zoomSetValue: number = 10;
     private zoomSetValueOrtho: number = 10;
     private zooming: boolean = false;
+    private groundPlane = new Plane(new Vector3(0, 1, 0));
 
     currentDistX: number = 0;
     currentDistY: number = 0;
@@ -229,13 +233,20 @@ export class CameraControls {
             }
         }
 
-        let v = new Vector3();
-        v.setFromMatrixColumn(objectMatrix, 0); // get X column of objectMatrix
-        v.multiplyScalar(-distance);
+        // Get X axis direction for the object
+        let xDirection = new Vector3();
+        xDirection.setFromMatrixColumn(objectMatrix, 0);
+        xDirection.multiplyScalar(-distance);
+
+        const delta = calculatePlaneDelta(
+            this._camera,
+            this.groundPlane,
+            xDirection
+        );
 
         this.currentDistX += distance;
 
-        this.panOffset.add(v);
+        this.panOffset.add(delta);
     }
 
     public panUp(distance: number, objectMatrix: Matrix4) {
@@ -265,19 +276,26 @@ export class CameraControls {
             }
         }
 
-        let v = new Vector3();
+        // Get Y axis direction for the object
+        let yDirection = new Vector3();
         if (this.screenSpacePanning === true) {
-            v.setFromMatrixColumn(objectMatrix, 1);
+            yDirection.setFromMatrixColumn(objectMatrix, 1);
         } else {
-            v.setFromMatrixColumn(objectMatrix, 0);
-            v.crossVectors(this._camera.up, v);
+            yDirection.setFromMatrixColumn(objectMatrix, 0);
+            yDirection.crossVectors(this._camera.up, yDirection);
         }
 
-        v.multiplyScalar(distance);
+        yDirection.multiplyScalar(distance);
+
+        const delta = calculatePlaneDelta(
+            this._camera,
+            this.groundPlane,
+            yDirection
+        );
 
         this.currentDistY += distance;
 
-        this.panOffset.add(v);
+        this.panOffset.add(delta);
     }
 
     public pan(deltaX: number, deltaY: number) {
@@ -942,4 +960,34 @@ enum STATE {
 interface TouchRotate {
     finger0: Vector2;
     finger1: Vector2;
+}
+
+/**
+ * Projects the given delta onto a plane from the perspective of the given camera
+ * and returns a new delta that is attached to the plane.
+ * This is useful when you have an offset that is in camera coordinates but you want the Y axis to be attached to the plane.
+ *
+ * Note that this function only works properly orthographic cameras although it could be
+ * improved to work with perspective cameras.
+ *
+ * @param camera The camera.
+ * @param plane The plane that the delta should be projected on.
+ * @param worldDelta The delta that should be projected.
+ */
+function calculatePlaneDelta(
+    camera: Camera,
+    plane: Plane,
+    worldDelta: Vector3
+): Vector3 {
+    const cameraForward = cameraForwardRay(camera);
+    const nextCameraForward = cameraForward.clone();
+    cameraForward.origin.add(worldDelta);
+
+    const originalPlanePoint = new Vector3();
+    const nextPlanePoint = new Vector3();
+    cameraForward.intersectPlane(plane, originalPlanePoint);
+    nextCameraForward.intersectPlane(plane, nextPlanePoint);
+    originalPlanePoint.sub(nextPlanePoint);
+
+    return originalPlanePoint;
 }

@@ -1,9 +1,11 @@
 import { GameObject } from './GameObject';
-import { Object3D, Box3, Sphere, Group, Color } from 'three';
+import { Object3D, Box3, Sphere, Group, Color, Vector3 } from 'three';
 import {
     Bot,
     BotCalculationContext,
     calculateGridScale,
+    isBotPointable,
+    isBotFocusable,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
@@ -53,6 +55,8 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     private _frameUpdateList: AuxBot3DDecorator[];
     private _boundingBox: Box3 = null;
     private _boundingSphere: Sphere = null;
+    private _unitBoundingBox: Box3 = null;
+    private _unitBoundingSphere: Sphere = null;
     private _updatesInFrame: number = 0;
 
     /**
@@ -74,6 +78,30 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             this._computeBoundingObjects();
         }
         return this._boundingSphere.clone();
+    }
+
+    /**
+     * Returns a copy of the bot 3d's bounding box which simply represents the
+     * virtual bounding box that the bot uses.
+     */
+    get unitBoundingBox(): Box3 {
+        if (!this._unitBoundingBox) {
+            this._computeBoundingObjects();
+        }
+
+        return this._unitBoundingBox.clone();
+    }
+
+    /**
+     * Returns a copy of the bot 3d's bounding sphere which simply represents the
+     * virtual bounding box that the bot uses.
+     */
+    get unitBoundingSphere(): Sphere {
+        if (!this._unitBoundingSphere) {
+            this._computeBoundingObjects();
+        }
+
+        return this._unitBoundingSphere.clone();
     }
 
     get gridScale(): number {
@@ -119,12 +147,33 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      * Update the internally cached representation of this aux bot 3d's bounding box and sphere.
      */
     private _computeBoundingObjects(): void {
+        if (this._unitBoundingBox === null) {
+            this._unitBoundingBox = new Box3();
+        }
+
+        // Set to the virtual box.
+        const worldPosition = new Vector3();
+        this.display.getWorldPosition(worldPosition);
+        const worldScale = new Vector3();
+        this.scaleContainer.getWorldScale(worldScale);
+        this._unitBoundingBox.setFromCenterAndSize(worldPosition, worldScale);
+
+        if (this._unitBoundingSphere === null) {
+            this._unitBoundingSphere = new Sphere();
+        }
+
+        this._unitBoundingBox.getBoundingSphere(this._unitBoundingSphere);
+
         // Calculate Bounding Box
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
         }
 
         this._boundingBox.setFromObject(this.display);
+
+        if (this._boundingBox.isEmpty()) {
+            this._boundingBox.copy(this._unitBoundingBox);
+        }
 
         // Calculate Bounding Sphere
         if (this._boundingSphere === null) {
@@ -153,6 +202,9 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
                 this.bot = bot;
                 this._boundingBox = null;
                 this._boundingSphere = null;
+
+                this.pointable = isBotPointable(calc, this.bot);
+                this.focusable = isBotFocusable(calc, this.bot);
             }
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].botUpdated(calc);

@@ -61,6 +61,7 @@ import {
     objectForwardRay,
     objectDirectionRay,
     objectWorldDirectionRay,
+    cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
@@ -201,6 +202,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.playerRotationY;
     }
 
+    /**
+     * Gets whether to show the camera focus point.
+     */
+    get showFocusPoint() {
+        return this.pageConfig.showFocusPoint;
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         const input = this.game.getInput();
@@ -217,10 +225,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             );
 
             const cameraRig = this.getMainCameraRig();
-            const cameraRay = objectWorldDirectionRay(
-                new Vector3(0, 0, -1),
-                cameraRig.mainCamera
-            );
+            const cameraRay = cameraForwardRay(cameraRig.mainCamera);
 
             const dot = cameraRay.direction.dot(gridRay.direction);
             // If the grid's up direction is pointing towards the camera's forward direction

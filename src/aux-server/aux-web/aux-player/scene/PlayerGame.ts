@@ -12,6 +12,7 @@ import {
     OrthographicCamera,
     Vector3,
     Vector2,
+    Mesh,
 } from 'three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
@@ -27,10 +28,12 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     clamp,
     DEFAULT_INVENTORY_VISIBLE,
+    DEFAULT_PORTAL_SHOW_FOCUS_POINT,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
+    createSphere,
 } from '../../shared/scene/SceneUtils';
 import {
     Orthographic_MinZoom,
@@ -84,6 +87,9 @@ export class PlayerGame extends Game {
     mediaElement: HTMLAudioElement;
     audioAdded: boolean = false;
     currentAudio: string;
+
+    inventoryFocusPoint: Mesh;
+    mainFocusPoint: Mesh;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -202,10 +208,26 @@ export class PlayerGame extends Game {
         );
     }
 
+    getPlayerShowFocusPoint(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'showFocusPoint',
+            DEFAULT_PORTAL_SHOW_FOCUS_POINT
+        );
+    }
+
     getInventoryColor(): Color | Texture {
         return this._getSimulationValue(
             this.inventorySimulations,
             'backgroundColor'
+        );
+    }
+
+    getInventoryShowFocusPoint(): boolean {
+        return this._getSimulationValue(
+            this.inventorySimulations,
+            'showFocusPoint',
+            DEFAULT_PORTAL_SHOW_FOCUS_POINT
         );
     }
 
@@ -905,6 +927,24 @@ export class PlayerGame extends Game {
             } else {
                 this.invController.controls.maxPanY = null;
             }
+
+            const showFocus = this.getInventoryShowFocusPoint();
+            if (showFocus && !this.xrSession) {
+                if (!this.inventoryFocusPoint) {
+                    this.inventoryFocusPoint = createFocusPointSphere();
+                    this.inventoryScene.add(this.inventoryFocusPoint);
+                }
+                this.inventoryFocusPoint.visible = true;
+                this.inventoryFocusPoint.position.copy(
+                    this.invController.controls.target
+                );
+                this.inventoryFocusPoint.updateMatrixWorld(true);
+            } else {
+                if (this.inventoryFocusPoint) {
+                    this.inventoryFocusPoint.visible = false;
+                    this.inventoryFocusPoint.updateMatrixWorld(true);
+                }
+            }
         }
 
         const mainControls = this.interaction.cameraRigControllers.find(
@@ -934,6 +974,24 @@ export class PlayerGame extends Game {
                 mainControls.controls.maxPanY = this.getPanMaxY() * -1;
             } else {
                 mainControls.controls.maxPanY = null;
+            }
+
+            const showFocus = this.getPlayerShowFocusPoint();
+            if (showFocus && !this.xrSession) {
+                if (!this.mainFocusPoint) {
+                    this.mainFocusPoint = createFocusPointSphere();
+                    this.mainScene.add(this.mainFocusPoint);
+                }
+                this.mainFocusPoint.visible = true;
+                // TODO: Support focus point in VR
+                let target: Vector3 = mainControls.controls.target;
+                this.mainFocusPoint.position.copy(target);
+                this.mainFocusPoint.updateMatrixWorld(true);
+            } else {
+                if (this.mainFocusPoint) {
+                    this.mainFocusPoint.visible = false;
+                    this.mainFocusPoint.updateMatrixWorld(true);
+                }
             }
         }
 
@@ -1073,4 +1131,7 @@ export class PlayerGame extends Game {
             }
         }
     }
+}
+function createFocusPointSphere(): Mesh {
+    return createSphere(new Vector3(), 0x4ebdbf, 0.05);
 }

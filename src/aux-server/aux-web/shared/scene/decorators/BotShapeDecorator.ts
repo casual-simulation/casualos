@@ -14,6 +14,7 @@ import {
     BotAnchorPoint,
     calculateStringTagValue,
     hasValue,
+    isBotPointable,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -53,6 +54,7 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
+import { GameObject } from '../GameObject';
 
 const gltfPool = getGLTFPool('main');
 
@@ -77,6 +79,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     container: Group;
     mesh: Mesh;
+
     collider: Object3D;
     scene: Scene;
 
@@ -334,6 +337,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             } else {
                 this._createHtmlIframe();
             }
+        } else if (this._shape === 'nothing') {
+            this.stroke = null;
+            this._canHaveStroke = false;
         }
 
         this.onMeshUpdated.invoke(this);
