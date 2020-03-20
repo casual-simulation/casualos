@@ -24,9 +24,15 @@ export class GameObject extends Object3D implements IGameObject {
      */
     colliders: Object3D[];
 
+    /**
+     * Whether the object can receive pointer events.
+     */
+    pointable: boolean;
+
     constructor() {
         super();
         this.colliders = [];
+        this.pointable = true;
     }
 
     /**

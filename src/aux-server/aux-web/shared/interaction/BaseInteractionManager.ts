@@ -247,7 +247,8 @@ export abstract class BaseInteractionManager {
                 input.isMouseButtonDownOnElement(this._game.gameView.gameView)
             ) {
                 const { gameObject, hit } = this.findHoveredGameObject(
-                    inputMethod
+                    inputMethod,
+                    obj => obj.pointable
                 );
                 if (gameObject) {
                     // Start game object click operation.
@@ -289,7 +290,10 @@ export abstract class BaseInteractionManager {
         }
 
         if (input.currentInputType === InputType.Mouse) {
-            const { gameObject } = this.findHoveredGameObject(inputMethod);
+            const { gameObject } = this.findHoveredGameObject(
+                inputMethod,
+                obj => obj.pointable
+            );
             if (gameObject) {
                 // Set bot as being hovered on.
                 this._setHoveredBot(gameObject);
@@ -306,7 +310,8 @@ export abstract class BaseInteractionManager {
             };
             if (input.getControllerPrimaryButtonDown(controller)) {
                 const { gameObject, hit } = this.findHoveredGameObject(
-                    inputMethod
+                    inputMethod,
+                    obj => obj.pointable
                 );
                 if (gameObject) {
                     this._startClickingGameObject(gameObject, hit, inputMethod);
@@ -321,7 +326,10 @@ export abstract class BaseInteractionManager {
                 input.currentInputType === InputType.Controller &&
                 controller.inputSource.targetRayMode !== 'screen'
             ) {
-                const { gameObject } = this.findHoveredGameObject(inputMethod);
+                const { gameObject } = this.findHoveredGameObject(
+                    inputMethod,
+                    obj => obj.pointable
+                );
                 if (gameObject) {
                     // Set bot as being hovered on.
                     this._setHoveredBot(gameObject);
@@ -333,7 +341,10 @@ export abstract class BaseInteractionManager {
     private _stopClickingGameObject(method: InputMethod) {
         const pressedBot = this.getPressedBot(method.identifier);
         if (pressedBot) {
-            const { gameObject, hit } = this.findHoveredGameObject(method);
+            const { gameObject, hit } = this.findHoveredGameObject(
+                method,
+                obj => obj.pointable
+            );
             if (gameObject instanceof AuxBot3D && gameObject == pressedBot) {
                 this.handlePointerUp(
                     gameObject,
@@ -492,15 +503,27 @@ export abstract class BaseInteractionManager {
     /**
      * Find the first game object that is underneath the current input device.
      */
-    findHoveredGameObject(method: InputMethod) {
+    findHoveredGameObject(
+        method: InputMethod,
+        gameObjectFilter: (obj: GameObject) => boolean
+    ) {
         if (method.type === 'controller') {
-            return this.findHoveredGameObjectFromController(method.controller);
+            return this.findHoveredGameObjectFromController(
+                method.controller,
+                gameObjectFilter
+            );
         } else {
-            return this.findHoveredGameObjectFromPagePosition();
+            return this.findHoveredGameObjectFromPagePosition(
+                undefined,
+                gameObjectFilter
+            );
         }
     }
 
-    findHoveredGameObjectFromPagePosition(pagePos?: Vector2) {
+    findHoveredGameObjectFromPagePosition(
+        pagePos?: Vector2,
+        gameObjectFilter: (obj: GameObject) => boolean = null
+    ) {
         pagePos = !!pagePos ? pagePos : this._game.getInput().getMousePagePos();
 
         const draggableGroups = this.getDraggableGroups();
@@ -531,8 +554,13 @@ export abstract class BaseInteractionManager {
                 objects,
                 camera
             );
-            hit = Physics.firstRaycastHit(raycastResult);
-            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
 
             if (hitObject) {
                 // We hit a game object in this simulation, stop searching through simulations.
@@ -557,9 +585,12 @@ export abstract class BaseInteractionManager {
      * Finds the first game oject that is being pointed at by the given controller.
      * @param controller The controller.
      */
-    findHoveredGameObjectFromController(controller: ControllerData) {
+    findHoveredGameObjectFromController(
+        controller: ControllerData,
+        gameObjectFilter: (obj: GameObject) => boolean
+    ) {
         const ray = objectForwardRay(controller.ray);
-        return this.findHoveredGameObjectFromRay(ray);
+        return this.findHoveredGameObjectFromRay(ray, gameObjectFilter);
     }
 
     /**
@@ -568,7 +599,7 @@ export abstract class BaseInteractionManager {
      */
     findHoveredGameObjectFromRay(
         ray: Ray,
-        hitFilter: (hit: Intersection) => boolean = null,
+        gameObjectFilter: (obj: GameObject) => boolean,
         viewport: Viewport = null
     ) {
         const draggableGroups = this.getDraggableGroups();
@@ -587,8 +618,13 @@ export abstract class BaseInteractionManager {
             }
 
             const raycastResult = Physics.raycast(ray, objects, camera);
-            hit = Physics.firstRaycastHit(raycastResult, hitFilter);
-            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
 
             if (hitObject) {
                 // We hit a game object in this simulation, stop searching through simulations.
@@ -607,6 +643,26 @@ export abstract class BaseInteractionManager {
                 hit: null,
             };
         }
+    }
+
+    /**
+     * Finds the first pointable game object that is included in the given raycast result.
+     * @param result
+     */
+    findFirstGameObject(
+        result: Physics.RaycastResult,
+        filter?: (obj: GameObject) => boolean
+    ): [Intersection, GameObject] {
+        for (let hit of result.intersects) {
+            let found = this.findGameObjectForHit(hit);
+            if (found) {
+                if (!filter || filter(found)) {
+                    return [hit, found];
+                }
+            }
+        }
+
+        return null;
     }
 
     findGameObjectForHit(hit: Intersection): GameObject {
@@ -644,10 +700,13 @@ export abstract class BaseInteractionManager {
     showContextMenu(calc: BotCalculationContext) {
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
-        const { gameObject, hit } = this.findHoveredGameObject({
-            type: 'mouse_or_touch',
-            identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
-        });
+        const { gameObject, hit } = this.findHoveredGameObject(
+            {
+                type: 'mouse_or_touch',
+                identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+            },
+            obj => obj.pointable
+        );
         const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {

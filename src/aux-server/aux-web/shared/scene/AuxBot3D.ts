@@ -4,6 +4,7 @@ import {
     Bot,
     BotCalculationContext,
     calculateGridScale,
+    isBotPointable,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
@@ -153,6 +154,8 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
                 this.bot = bot;
                 this._boundingBox = null;
                 this._boundingSphere = null;
+
+                this.pointable = isBotPointable(calc, this.bot);
             }
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].botUpdated(calc);
