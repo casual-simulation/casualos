@@ -14,6 +14,7 @@ import {
     BotAnchorPoint,
     calculateStringTagValue,
     hasValue,
+    isBotPointable,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -53,6 +54,7 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { getGLTFPool } from '../GLTFHelpers';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
+import { GameObject } from '../GameObject';
 
 const gltfPool = getGLTFPool('main');
 
@@ -64,9 +66,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _address: string = null;
     private _animation: any = null;
     private _canHaveStroke = false;
+    private _pointable = false;
     private _animationMixer: AnimationMixer;
     private _animClips: AnimationAction[];
     private _animClipMap: Map<string, AnimationAction>;
+    private _collider: Object3D;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -77,7 +81,15 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     container: Group;
     mesh: Mesh;
-    collider: Object3D;
+
+    get collider(): Object3D {
+        return this._collider;
+    }
+
+    set collider(value: Object3D) {
+        this._collider = this._pointable ? value : null;
+    }
+
     scene: Scene;
 
     get allowModifications() {
@@ -99,7 +111,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         super(bot3D);
 
         this._game = game;
-        this._rebuildShape('cube', null, null, null);
+        this._rebuildShape('cube', null, null, null, true);
     }
 
     frameUpdate() {
@@ -128,8 +140,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.bot3D.bot,
             'auxFormAnimation'
         );
-        if (this._needsUpdate(shape, subShape, address, version)) {
-            this._rebuildShape(shape, subShape, address, version);
+        const pointable = isBotPointable(calc, this.bot3D.bot);
+        if (this._needsUpdate(shape, subShape, address, version, pointable)) {
+            this._rebuildShape(shape, subShape, address, version, pointable);
         }
 
         this._updateColor(calc);
@@ -142,11 +155,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         shape: string,
         subShape: string,
         address: string,
-        version: number
+        version: number,
+        pointable: boolean
     ) {
         return (
             this._shape !== shape ||
             this._subShape !== subShape ||
+            this._pointable !== pointable ||
             (shape === 'mesh' &&
                 (this._address !== address || this._gltfVersion !== version))
         );
@@ -300,12 +315,14 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         shape: BotShape,
         subShape: BotSubShape,
         address: string,
-        version: number
+        version: number,
+        pointable: boolean
     ) {
         this._shape = shape;
         this._subShape = subShape;
         this._address = address;
         this._gltfVersion = version;
+        this._pointable = pointable;
         if (this.mesh || this.scene) {
             this.dispose();
         }

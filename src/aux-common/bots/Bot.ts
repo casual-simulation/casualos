@@ -136,6 +136,7 @@ export interface BotTags {
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
     ['auxProgressBarPosition']?: unknown;
+    ['auxPointable']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
@@ -879,6 +880,7 @@ export const KNOWN_TAGS: string[] = [
     'auxMaxLODThreshold',
     'auxMinLODThreshold',
     'auxUniverseConnectedSessions',
+    'auxPointable',
 
     'auxTaskOutput',
     'auxTaskError',

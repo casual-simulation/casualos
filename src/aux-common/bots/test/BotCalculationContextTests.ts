@@ -59,6 +59,7 @@ import {
     getBotAnchorPoint,
     calculatePortalPointerDragMode,
     getAnchorPointOffset,
+    isBotPointable,
 } from '../BotCalculations';
 import {
     Bot,
@@ -4581,6 +4582,19 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([thisBot]);
             const result = isBotInDimension(calc, thisBot, 'dimension');
+
+            expect(result).toBe(expected);
+        });
+    });
+
+    describe('isBotPointable()', () => {
+        booleanTagValueTests(true, (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                auxPointable: given,
+            });
+
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotPointable(calc, thisBot);
 
             expect(result).toBe(expected);
         });

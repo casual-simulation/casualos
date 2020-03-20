@@ -225,6 +225,15 @@ export function getUploadState(data: any): BotsState {
 }
 
 /**
+ * Gets whether the bot is pointable.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function isBotPointable(calc: BotCalculationContext, bot: Bot): boolean {
+    return calculateBooleanTagValue(calc, bot, 'auxPointable', true);
+}
+
+/**
  * Gets a list of tags that the given bots contain.
  *
  * @param bots The array of bots that the list of tags should be retrieved
