@@ -944,6 +944,24 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
   </PossibleValue>
 </PossibleValuesTable>
 
+### `auxPortalShowFocusPoint`
+
+Whether the focus point of the portal camera should be shown as a small sphere.
+
+The focus point is the position that the camera orbits (rotates) around and is always facing.
+
+When a bot is between the focus point and the camera, then focus events will trigger.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='false'>
+    Don't show an indicator for the focus point. (Default)
+  </PossibleValue>
+  <PossibleValue value='true'>
+    Show an indicator for the focus point.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `auxInventoryPortalHeight`
 
 Sets the initial height of the inventory viewport for the portal.

@@ -21,6 +21,8 @@
     -   Added the `nothing` aux form.
         -   Does exactly what it seems. A bot with the `nothing` form has no shape and is unable to be clicked, hovered, or focused.
         -   Labels still work though which makes it convienent for adding extra labels around the dimension.
+    -   Added the `#auxPortalShowFocusPoint` tag.
+        -   Shows a small sphere in the portal where the portal camera will orbit around.
 
 -   :bug: Bug Fixes
 
