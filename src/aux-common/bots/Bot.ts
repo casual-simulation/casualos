@@ -137,6 +137,7 @@ export interface BotTags {
     ['auxProgressBarBackgroundColor']?: unknown;
     ['auxProgressBarPosition']?: unknown;
     ['auxPointable']?: unknown;
+    ['auxFocusable']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
@@ -771,6 +772,26 @@ export const ON_GRID_DOWN_ACTION_NAME: string = 'onGridDown';
 export const ON_FILE_UPLOAD_ACTION_NAME: string = 'onFileUpload';
 
 /**
+ * The name of the event that is triggerd when a bot gains camera focus.
+ */
+export const ON_FOCUS_ENTER_ACTION_NAME: string = 'onFocusEnter';
+
+/**
+ * The name of the event that is triggerd when a bot loses camera focus.
+ */
+export const ON_FOCUS_EXIT_ACTION_NAME: string = 'onFocusExit';
+
+/**
+ * The name of the event that is triggerd when a bot gains camera focus.
+ */
+export const ON_ANY_FOCUS_ENTER_ACTION_NAME: string = 'onAnyFocusEnter';
+
+/**
+ * The name of the event that is triggerd when a bot loses camera focus.
+ */
+export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -881,6 +902,7 @@ export const KNOWN_TAGS: string[] = [
     'auxMinLODThreshold',
     'auxUniverseConnectedSessions',
     'auxPointable',
+    'auxFocusable',
 
     'auxTaskOutput',
     'auxTaskError',
@@ -965,6 +987,11 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_MAX_LOD_EXIT_ACTION_NAME,
     ON_ANY_MIN_LOD_EXIT_ACTION_NAME,
     ON_FILE_UPLOAD_ACTION_NAME,
+
+    ON_FOCUS_ENTER_ACTION_NAME,
+    ON_FOCUS_EXIT_ACTION_NAME,
+    ON_ANY_FOCUS_ENTER_ACTION_NAME,
+    ON_ANY_FOCUS_EXIT_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {

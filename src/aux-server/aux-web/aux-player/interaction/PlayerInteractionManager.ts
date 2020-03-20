@@ -1,6 +1,13 @@
 import { Vector3, Intersection, Object3D, OrthographicCamera } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
-import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    BotCalculationContext,
+    ON_FOCUS_EXIT_ACTION_NAME,
+    ON_FOCUS_ENTER_ACTION_NAME,
+    ON_ANY_FOCUS_ENTER_ACTION_NAME,
+    ON_ANY_FOCUS_EXIT_ACTION_NAME,
+} from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
@@ -182,6 +189,30 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
             bot: bot,
         });
+    }
+
+    handleFocusEnter(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
+        const arg = {
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
+            bot: bot,
+        };
+        const actions = simulation.helper.actions([
+            { eventName: ON_FOCUS_ENTER_ACTION_NAME, bots: [bot], arg },
+            { eventName: ON_ANY_FOCUS_ENTER_ACTION_NAME, bots: null, arg },
+        ]);
+        simulation.helper.transaction(...actions);
+    }
+
+    handleFocusExit(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
+        const arg = {
+            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
+            bot: bot,
+        };
+        const actions = simulation.helper.actions([
+            { eventName: ON_FOCUS_EXIT_ACTION_NAME, bots: [bot], arg },
+            { eventName: ON_ANY_FOCUS_EXIT_ACTION_NAME, bots: null, arg },
+        ]);
+        simulation.helper.transaction(...actions);
     }
 
     createEmptyClickOperation(inputMethod: InputMethod): IOperation {

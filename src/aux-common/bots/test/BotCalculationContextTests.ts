@@ -4600,6 +4600,19 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('isBotFocusable()', () => {
+        booleanTagValueTests(true, (given, expected) => {
+            const thisBot = createBot('thisBot', {
+                auxFocusable: given,
+            });
+
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotPointable(calc, thisBot);
+
+            expect(result).toBe(expected);
+        });
+    });
+
     describe('getUserBotColor()', () => {
         const defaultCases = [
             [DEFAULT_BUILDER_USER_COLOR, 'builder'],

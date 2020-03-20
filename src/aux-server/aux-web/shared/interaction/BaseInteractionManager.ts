@@ -33,7 +33,11 @@ import {
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from './DraggableGroup';
-import { isObjectVisible, objectForwardRay } from '../scene/SceneUtils';
+import {
+    isObjectVisible,
+    objectForwardRay,
+    cameraForwardRay,
+} from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
@@ -68,6 +72,7 @@ export abstract class BaseInteractionManager {
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredBots: HoveredBot[];
+    protected _focusedBots: HoveredBot[];
 
     protected _draggableGroups: DraggableGroup[];
     protected _draggableGroupsDirty: boolean;
@@ -89,6 +94,7 @@ export abstract class BaseInteractionManager {
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
         this._hoveredBots = [];
+        this._focusedBots = [];
         this._inputMethodMap = new Map();
         this._cameraControlsEnabled = true;
 
@@ -209,10 +215,27 @@ export abstract class BaseInteractionManager {
         this._handleMouseInput(input);
         this._handleControllerInput(input);
         this._handleTapCodes(input);
+        this._handleCameraInput();
 
         this._updateAdditionalNormalInputs(input);
 
         this._updateHoveredBots();
+        this._updateFocusedBots();
+    }
+
+    private _handleCameraInput() {
+        for (let controller of this._cameraRigControllers) {
+            const ray = cameraForwardRay(controller.rig.mainCamera);
+            const { hit, gameObject } = this.findHoveredGameObjectFromRay(
+                ray,
+                obj => obj.focusable,
+                controller.rig.viewport
+            );
+
+            if (gameObject) {
+                this._setFocusedBot(gameObject);
+            }
+        }
     }
 
     private _handleTapCodes(input: Input) {
@@ -438,15 +461,72 @@ export abstract class BaseInteractionManager {
     }
 
     /**
+     * Focus on the given game object if it represents an AuxBot3D.
+     * @param gameObject GameObject for bot to start hover on.
+     */
+    protected _setFocusedBot(gameObject: GameObject): void {
+        if (gameObject instanceof AuxBot3D) {
+            const bot: Bot = gameObject.bot;
+            const simulation: Simulation =
+                gameObject.dimensionGroup.simulation3D.simulation;
+
+            let focusedBot: HoveredBot = this._focusedBots.find(focusedBot => {
+                return (
+                    focusedBot.bot.id === bot.id &&
+                    focusedBot.simulation.id === simulation.id
+                );
+            });
+
+            if (focusedBot) {
+                // Update the frame of the hovered bot to the current frame.
+                focusedBot.frame = this._game.getTime().frameCount;
+            } else {
+                // Create a new hovered bot object and add it to the list.
+                focusedBot = {
+                    bot3D: gameObject,
+                    bot,
+                    simulation,
+                    frame: this._game.getTime().frameCount,
+                };
+                this._focusedBots.push(focusedBot);
+                this._updateFocusedBots();
+                this.handleFocusEnter(gameObject, bot, simulation);
+            }
+        }
+    }
+
+    /**
      * Check all hovered bots and release any that are no longer being hovered on.
      */
     protected _updateHoveredBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._hoveredBots = this._hoveredBots.filter(hoveredBot => {
-            if (hoveredBot.frame < curFrame) {
+        this._hoveredBots = this._hoveredBots.filter(focusedBot => {
+            if (focusedBot.frame < curFrame) {
                 // No longer hovering on this bot.
                 this.handlePointerExit(
+                    focusedBot.bot3D,
+                    focusedBot.bot,
+                    focusedBot.simulation
+                );
+                return false;
+            }
+
+            // Still hovering on this bot.
+            return true;
+        });
+    }
+
+    /**
+     * Check all hovered bots and release any that are no longer being hovered on.
+     */
+    protected _updateFocusedBots(): void {
+        const curFrame = this._game.getTime().frameCount;
+
+        this._focusedBots = this._focusedBots.filter(hoveredBot => {
+            if (hoveredBot.frame < curFrame) {
+                // No longer hovering on this bot.
+                this.handleFocusExit(
                     hoveredBot.bot3D,
                     hoveredBot.bot,
                     hoveredBot.simulation
@@ -813,6 +893,16 @@ export abstract class BaseInteractionManager {
         simulation: Simulation
     ): void;
     abstract handlePointerUp(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handleFocusEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation
+    ): void;
+    abstract handleFocusExit(
         bot3D: AuxBot3D,
         bot: Bot,
         simulation: Simulation

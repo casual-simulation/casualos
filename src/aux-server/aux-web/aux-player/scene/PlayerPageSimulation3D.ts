@@ -61,6 +61,7 @@ import {
     objectForwardRay,
     objectDirectionRay,
     objectWorldDirectionRay,
+    cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
@@ -217,10 +218,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             );
 
             const cameraRig = this.getMainCameraRig();
-            const cameraRay = objectWorldDirectionRay(
-                new Vector3(0, 0, -1),
-                cameraRig.mainCamera
-            );
+            const cameraRay = cameraForwardRay(cameraRig.mainCamera);
 
             const dot = cameraRay.direction.dot(gridRay.direction);
             // If the grid's up direction is pointing towards the camera's forward direction
