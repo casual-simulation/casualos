@@ -60,6 +60,7 @@ import {
     calculatePortalPointerDragMode,
     getAnchorPointOffset,
     isBotPointable,
+    isBotFocusable,
 } from '../BotCalculations';
 import {
     Bot,
@@ -4607,7 +4608,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createCalculationContext([thisBot]);
-            const result = isBotPointable(calc, thisBot);
+            const result = isBotFocusable(calc, thisBot);
 
             expect(result).toBe(expected);
         });
