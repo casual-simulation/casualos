@@ -22,6 +22,10 @@
         -   Does exactly what it seems. A bot with the `nothing` form has no shape and is unable to be clicked, hovered, or focused.
         -   Labels still work though which makes it convienent for adding extra labels around the dimension.
 
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where LODs would flicker upon changing the bot form by ensuring consistent sizing for the related bounding boxes.
+
 ## V1.0.19
 
 ### Date: 3/19/2020
