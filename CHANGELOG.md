@@ -25,6 +25,7 @@
 -   :bug: Bug Fixes
 
     -   Fixed an issue where LODs would flicker upon changing the bot form by ensuring consistent sizing for the related bounding boxes.
+    -   Fixed an issue with panning that would cause the camera orbiting position to be moved off the ground.
 
 ## V1.0.19
 
