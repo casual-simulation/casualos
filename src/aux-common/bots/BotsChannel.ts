@@ -88,7 +88,7 @@ export function calculateBotActionEvents(
 ): ActionResult {
     let events: BotAction[] = [];
     let results: any[] = [];
-    let errors: Error[] = [];
+    let errors: ScriptError[] = [];
     let listeners: Bot[] = [];
 
     for (let bot of bots) {
@@ -151,7 +151,7 @@ function eventActions(
     bot: Bot,
     eventName: string,
     argument: any
-): FormulaResult {
+): ScriptResult {
     if (bot === undefined) {
         return;
     }
@@ -172,7 +172,7 @@ export function formulaActions(
     arg: any,
     script: string,
     tag?: string
-): FormulaResult {
+): ScriptResult {
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
@@ -192,7 +192,7 @@ export function formulaActions(
     setCurrentBot(scriptBot);
 
     let result: any = undefined;
-    let error: Error = null;
+    let error: ScriptError = null;
     if ((scriptBot && thisObject) || (!scriptBot && !thisObject)) {
         arg = mapBotsToScriptBots(context, arg);
 
@@ -213,7 +213,13 @@ export function formulaActions(
 
         const sandboxResult = context.sandbox.run(script, {}, scriptBot, vars);
         result = sandboxResult.result;
-        error = sandboxResult.error;
+        if (sandboxResult.error) {
+            error = {
+                error: sandboxResult.error,
+                bot: thisObject,
+                tag: tag,
+            };
+        }
 
         if (
             sandboxResult.error &&
@@ -286,15 +292,68 @@ export class RanOutOfEnergyError extends Error {
     }
 }
 
-export interface FormulaResult {
+/**
+ * Defines the result of a script.
+ */
+export interface ScriptResult {
+    /**
+     * The actions that the script queued.
+     */
     actions: BotAction[];
+    /**
+     * The value that the script returned.
+     */
     result: any;
-    error: Error;
+
+    /**
+     * The error that the script ran into.
+     */
+    error: ScriptError;
 }
 
+/**
+ * Defines an error that a script ran into,
+ */
+export interface ScriptError {
+    /**
+     * The error.
+     */
+    error: Error;
+
+    /**
+     * The bot that ran into the error.
+     * Null if the script was not attached to a bot.
+     */
+    bot: Bot;
+
+    /**
+     * The tag that ran into the error.
+     * Null if the script was not attached to a bot.
+     */
+    tag: string;
+}
+
+/**
+ * Defines the result of running an action.
+ */
 export interface ActionResult {
+    /**
+     * The actions that were queued.
+     */
     actions: BotAction[];
+
+    /**
+     * The results from the scripts that were run.
+     */
     results: any[];
-    errors: Error[];
+
+    /**
+     * The errors that occurred.
+     */
+    errors: ScriptError[];
+
+    /**
+     * The bots that ran a script for the action.
+     */
     listeners: Bot[];
 }

@@ -516,6 +516,68 @@ export function botActionsTests(
             ]);
         });
 
+        describe('errors', () => {
+            it('should return the error that the script threw', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@throw new Error("abc")`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionResults(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.errors).toEqual([
+                    {
+                        error: expect.any(Error),
+                        bot: state['thisBot'],
+                        tag: 'test',
+                        // line: 0,
+                        // column: 0,
+                    },
+                ]);
+            });
+
+            it.skip('should include the line and column number that the error occurred at in the script', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@player.toast("abc")\nthrow new Error("abc")`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionResults(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.errors).toEqual([
+                    {
+                        error: expect.any(Error),
+                        bot: state['thisBot'],
+                        tag: 'test',
+                        line: 1,
+                        column: 0,
+                    },
+                ]);
+            });
+        });
+
         describe('creator', () => {
             it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
                 const state: BotsState = {
