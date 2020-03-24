@@ -30,6 +30,7 @@ import {
     calculateBotActionEvents,
     getBotsForAction,
     formulaActions,
+    ActionResult,
 } from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import values from 'lodash/values';
@@ -64,7 +65,7 @@ export function calculateActionResults(
     sandboxFactory?: SandboxFactory,
     calc?: BotSandboxContext,
     executeOnShout?: boolean
-): [BotAction[], any[]] {
+): ActionResult {
     const allObjects = values(state);
     calc =
         calc ||
@@ -82,16 +83,24 @@ export function calculateActionResults(
         sandboxFactory
     );
 
-    const [botEvents, results] = calculateBotActionEvents(
+    const result = calculateBotActionEvents(
         state,
         action,
         context,
         bots,
         executeOnShout
     );
-    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
+    let events = [
+        ...result.actions,
+        ...context.sandbox.interface.getBotUpdates(),
+    ];
 
-    return [events, results];
+    return {
+        actions: events,
+        errors: result.errors,
+        results: result.results,
+        listeners: result.listeners,
+    };
 }
 
 /**
@@ -100,6 +109,7 @@ export function calculateActionResults(
  * @param action The action to process.
  * @param context The calculation context to use.
  * @param sandboxFactory The sandbox factory to use.
+ * @deprecated Use calculateActionResults() instead.
  */
 export function calculateActionEvents(
     state: BotsState,
@@ -122,8 +132,11 @@ export function calculateActionEvents(
         sandboxFactory
     );
 
-    const [botEvents] = calculateBotActionEvents(state, action, context, bots);
-    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
+    const result = calculateBotActionEvents(state, action, context, bots);
+    let events = [
+        ...result.results,
+        ...context.sandbox.interface.getBotUpdates(),
+    ];
 
     return {
         events,
@@ -147,7 +160,7 @@ export function calculateFormulaEvents(
     argument: any = null,
     sandboxFactory?: SandboxFactory,
     library?: SandboxLibrary
-) {
+): BotAction[] {
     const objects = getActiveObjects(state);
     const context = createCalculationContext(
         objects,
@@ -156,9 +169,9 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [botEvents] = formulaActions(context, null, null, formula);
+    let result = formulaActions(context, null, null, formula);
 
-    return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
+    return [...result.actions, ...context.sandbox.interface.getBotUpdates()];
 }
 
 /**
