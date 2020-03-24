@@ -61,7 +61,6 @@ import {
 } from '../BotCalculations';
 import { getBotsForAction } from '../BotsChannel';
 import {
-    calculateActionEvents,
     calculateActionResults,
     calculateDestroyBotEvents,
     calculateFormulaEvents,
@@ -84,7 +83,7 @@ export function botActionsTests(
     uuidMock: jest.Mock,
     createSandbox?: SandboxFactory
 ) {
-    describe('calculateActionEvents()', () => {
+    describe('calculateActionResults()', () => {
         it('should run scripts on the this bot and return the resulting actions', () => {
             const state: BotsState = {
                 thisBot: {
@@ -108,15 +107,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botAdded({
                     id: 'uuid-0',
                     tags: {
@@ -154,15 +151,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         equal: true,
@@ -185,15 +180,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         val: 123,
@@ -217,15 +210,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         val: 'tempLocal',
@@ -248,15 +239,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         num: 10,
@@ -285,15 +274,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         equal: true,
@@ -325,15 +312,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         other: 'red',
@@ -365,15 +350,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         auxColor: 'blue',
@@ -403,15 +386,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         equal: true,
@@ -443,15 +424,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         calculated: 10,
@@ -483,15 +462,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         calculated: 10,
@@ -523,15 +500,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         calculated: 10,
@@ -566,15 +541,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             creatorId: 'thatBot',
@@ -603,15 +576,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hasCreator: false,
@@ -641,15 +612,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hasCreator: false,
@@ -680,15 +649,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             configId: 'thatBot',
@@ -716,15 +683,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hasConfig: false,
@@ -753,15 +718,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hasConfig: false,
@@ -785,15 +748,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             runningTag: 'test',
@@ -816,15 +777,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             runningTag: 'test',
@@ -856,15 +815,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             parentScript: 'player.toast("hello")',
@@ -894,15 +851,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thatBot', {
                         tags: {
                             test: 'abc',
@@ -940,14 +895,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(false);
-            expect(result.events).toEqual([]);
+            expect(result.actions).toEqual([]);
         });
 
         it('should not allow changing the space', () => {
@@ -973,14 +927,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(false);
-            expect(result.events).toEqual([]);
+            expect(result.actions).toEqual([]);
         });
 
         it('should preserve formulas when copying', () => {
@@ -1014,15 +967,13 @@ export function botActionsTests(
                 undefined,
                 state['thatBot']
             );
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botAdded({
                     id: 'uuid-0',
                     tags: {
@@ -1065,15 +1016,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('abcdef', ['thisBot', 'thatBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botAdded({
                     id: 'uuid-0',
                     tags: {
@@ -1109,15 +1058,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('abcdef', ['thisBot', 'thatBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botAdded({
                     id: 'uuid-0',
                     tags: {
@@ -1146,15 +1093,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('abcdef', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         val: 10,
@@ -1183,15 +1128,13 @@ export function botActionsTests(
 
             // specify the UUID to use next
             const botAction = action('abcdef', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('editBot', {
                     tags: {
                         abc: 'def',
@@ -1220,15 +1163,13 @@ export function botActionsTests(
 
             // specify the UUID to use next
             const botAction = action('abcdef', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('editBot', {
                     tags: {
                         abc: 'def',
@@ -1258,15 +1199,13 @@ export function botActionsTests(
 
             // specify the UUID to use next
             const botAction = action('abcdef', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('editBot', {
                     tags: {
                         num: 3,
@@ -1296,15 +1235,13 @@ export function botActionsTests(
 
             // specify the UUID to use next
             const botAction = action('abcdef', ['thisBot']);
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('editBot', {
                     tags: {
                         num: 3,
@@ -1332,15 +1269,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('abcdef', ['thisBot'], 'userBot');
-            const result = calculateActionEvents(
+            const result = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(result.hasUserDefinedEvents).toBe(true);
-
-            expect(result.events).toEqual([
+            expect(result.actions).toEqual([
                 botUpdated('thisBot', {
                     tags: {
                         userId: 'userBot',
@@ -1368,7 +1303,7 @@ export function botActionsTests(
             const botAction = action('test', ['thisBot'], 'userBot');
 
             expect(() => {
-                calculateActionEvents(state, botAction, createSandbox);
+                calculateActionResults(state, botAction, createSandbox);
             }).toThrow(new Error('Ran out of energy'));
         });
 
@@ -1395,12 +1330,12 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', null, 'userBot');
-            const events = calculateActionEvents(
+            const events = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
-            expect(events.events).toEqual([toast('hello')]);
+            expect(events.actions).toEqual([toast('hello')]);
         });
 
         it('should handle syntax errors on a per-script basis', () => {
@@ -1426,12 +1361,12 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', null, 'userBot');
-            const events = calculateActionEvents(
+            const events = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
-            expect(events.events).toEqual([toast('hello')]);
+            expect(events.actions).toEqual([toast('hello')]);
         });
 
         it('should support scripts as formulas that return non-string objects', () => {
@@ -1453,13 +1388,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot'], 'userBot');
-            const events = calculateActionEvents(
+            const events = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(events.events).toEqual([]);
+            expect(events.actions).toEqual([]);
         });
 
         it('should support single-line scripts with a comment at the end', () => {
@@ -1481,13 +1416,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot'], 'userBot');
-            const events = calculateActionEvents(
+            const events = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(events.events).toEqual([toast('test')]);
+            expect(events.actions).toEqual([toast('test')]);
         });
 
         it('should support multi-line scripts with a comment at the end', () => {
@@ -1510,13 +1445,13 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot'], 'userBot');
-            const events = calculateActionEvents(
+            const events = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
-            expect(events.events).toEqual([toast('test')]);
+            expect(events.actions).toEqual([toast('test')]);
         });
 
         // describe('')
@@ -1566,13 +1501,13 @@ export function botActionsTests(
                         abc: 'def',
                     }
                 );
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
@@ -1627,13 +1562,13 @@ export function botActionsTests(
                         abc: 'def',
                     }
                 );
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
@@ -1690,13 +1625,13 @@ export function botActionsTests(
                 const botAction = action('test', ['bot4'], null, {
                     abc: 'def',
                 });
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot1', {
                         tags: {
                             name: 'whisper',
@@ -1729,13 +1664,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot2']);
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([toast('Hi!')]);
+                expect(events.actions).toEqual([toast('Hi!')]);
             });
 
             it('should allow changing responses', () => {
@@ -1780,13 +1715,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot4']);
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot4', {
                         tags: {
                             responses: [2, 4],
@@ -1835,13 +1770,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot4']);
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot4', {
                         tags: {
                             responses: [],
@@ -1890,13 +1825,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot4']);
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot4', {
                         tags: {
                             responses: [0, 1, 2],
@@ -1946,13 +1881,13 @@ export function botActionsTests(
                         abc: 'def',
                     }
                 );
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([
+                expect(events.actions).toEqual([
                     botUpdated('bot1', {
                         tags: {
                             name: 'test',
@@ -2011,13 +1946,13 @@ export function botActionsTests(
                         abc: 'def',
                     }
                 );
-                const events = calculateActionEvents(
+                const events = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events.events).toEqual([]);
+                expect(events.actions).toEqual([]);
             });
         });
 
@@ -2047,14 +1982,12 @@ export function botActionsTests(
                     null,
                     state.otherBot
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hi: 'changed',
@@ -2090,14 +2023,12 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('test', ['thisBot'], null, value);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 value: value,
@@ -2130,23 +2061,20 @@ export function botActionsTests(
                 const botAction = action('test', ['thisBot'], null, [
                     state.otherBot,
                 ]);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                // expect(result.hasUserDefinedEvents).toBe(true);
-                // expect(result.events).toEqual([
+                // expect(result.actions).toEqual([
                 //     botUpdated('thisBot', {
                 //         tags: {
                 //             l: 1,
                 //         },
                 //     }),
                 // ]);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hi: 'changed',
@@ -2183,14 +2111,12 @@ export function botActionsTests(
                     bot: state.otherBot,
                     num: 100,
                 });
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hi: 'changed',
@@ -2221,17 +2147,13 @@ export function botActionsTests(
                 const botAction = action('test', ['thisBot'], null, {
                     bots: [state.otherBot],
                 });
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                // expect(result.hasUserDefinedEvents).toBe(false);
-                // expect(result.events).toEqual([]);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hi: 'changed',
@@ -2253,15 +2175,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], null, null);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hi: 'test',
@@ -2295,15 +2215,13 @@ export function botActionsTests(
                     null,
                     state.otherBot
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             equal: true,
@@ -2332,15 +2250,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     {
                         type: 'test',
                         message: 'abc',
@@ -2363,15 +2279,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([toast('abc'), toast('abc')]);
+                expect(result.actions).toEqual([toast('abc'), toast('abc')]);
             });
 
             it('should should add the action if it has been rejected', () => {
@@ -2393,15 +2307,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     toast('abc'),
                     reject(toast('abc')),
                     toast('abc'),
@@ -2428,15 +2340,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     reject(<any>{
                         type: 'test',
                         message: 'abc',
@@ -2463,16 +2373,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([reject(toast('abc'))]);
-                expect((<RejectAction>result.events[0]).action).toBe(original);
+                expect(result.actions).toEqual([reject(toast('abc'))]);
+                expect((<RejectAction>result.actions[0]).action).toBe(original);
             });
         });
 
@@ -2507,15 +2415,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hello: true,
@@ -2546,15 +2452,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hello: 'test',
@@ -2588,15 +2492,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hello: 'test',
@@ -2628,15 +2530,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
@@ -2668,15 +2568,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
@@ -2701,15 +2599,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hello: true,
@@ -2741,15 +2637,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
@@ -2786,15 +2680,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['bBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('bBot', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
@@ -2822,15 +2714,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([botRemoved('bBot')]);
+                expect(result.actions).toEqual([botRemoved('bBot')]);
             });
 
             it.each(trimEventCases)(
@@ -2851,15 +2741,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('abcdef', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 hello: true,
@@ -2886,15 +2774,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([superShout('sayHello')]);
+                expect(result.actions).toEqual([superShout('sayHello')]);
             });
 
             it.each(trimEventCases)(
@@ -2914,15 +2800,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('abcdef', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([superShout('sayHello')]);
+                    expect(result.actions).toEqual([superShout('sayHello')]);
                 }
             );
         });
@@ -2950,15 +2834,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             hello: true,
@@ -2996,15 +2878,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('otherBot', {
                         tags: {
                             saidHello: true,
@@ -3041,15 +2921,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('abcdef', ['aBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('aBot', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
@@ -3076,15 +2954,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('abcdef', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 hello: true,
@@ -3116,15 +2992,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     webhook({
                         method: 'POST',
                         url: 'https://example.com',
@@ -3153,15 +3027,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['bot1']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     webhook({
                         method: 'POST',
                         url: 'https://example.com',
@@ -3189,13 +3061,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('create', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botAdded({
                         id: 'uuid-0',
                         tags: {
@@ -3246,13 +3118,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('create', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('bot1', {
                         tags: {
                             abc: null,
@@ -3292,15 +3164,13 @@ export function botActionsTests(
                 };
 
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botRemoved('thisBot'),
                     botRemoved('childBot'),
                 ]);
@@ -3341,15 +3211,13 @@ export function botActionsTests(
                 };
 
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botRemoved('thisBot'),
                     botRemoved('childBot'),
                     botRemoved('childChildBot'),
@@ -3384,15 +3252,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botRemoved('bot1'),
                     botRemoved('bot2'),
                 ]);
@@ -3417,15 +3283,13 @@ export function botActionsTests(
                 };
 
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     // This is weird because it means that an update for a bot could happen
                     // after it gets removed but I currently don't have a great solution for it at the moment.
                     botRemoved('thisBot'),
@@ -3463,14 +3327,12 @@ export function botActionsTests(
                 };
 
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                expect(result.actions).toEqual([]);
             });
 
             it('should short-circut destroying child bots', () => {
@@ -3497,14 +3359,12 @@ export function botActionsTests(
                 };
 
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([botRemoved('thisBot')]);
+                expect(result.actions).toEqual([botRemoved('thisBot')]);
             });
 
             it('should be able to destroy a bot that was just created', () => {
@@ -3519,14 +3379,13 @@ export function botActionsTests(
 
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botAdded(
                         createBot('uuid-0', {
                             auxCreator: 'thisBot',
@@ -3550,15 +3409,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botRemoved('thisBot'),
                     toast(undefined),
                 ]);
@@ -3578,15 +3435,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             state: 'abc',
@@ -3610,15 +3465,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             state: 'Abc',
@@ -3643,15 +3496,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             state: 'Abc',
@@ -3678,15 +3529,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             fun: 'Abc',
@@ -3714,14 +3563,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                expect(result.actions).toEqual([]);
             });
 
             it('should set the state tag on a bot from an argument to the given value', () => {
@@ -3745,15 +3593,13 @@ export function botActionsTests(
                     null,
                     state['thatBot']
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thatBot', {
                         tags: {
                             state: 'abc',
@@ -3775,15 +3621,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('newBot');
                 const botAction = action('test', ['thisBot'], null);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botAdded(
                         createBot('newBot', {
                             auxCreator: 'thisBot',
@@ -3824,15 +3668,13 @@ export function botActionsTests(
                     ['thisBot', 'userBot'],
                     'userBot'
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             depth: 0,
@@ -3869,15 +3711,13 @@ export function botActionsTests(
                         ['thisBot', 'userBot'],
                         'userBot'
                     );
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 depth: 1,
@@ -3909,15 +3749,13 @@ export function botActionsTests(
                     ['thisBot', 'userBot'],
                     'userBot'
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             depth: -1,
@@ -3949,15 +3787,13 @@ export function botActionsTests(
                     ['thisBot', 'userBot'],
                     'userBot'
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('userBot', {
                         tags: {
                             name: 'Test',
@@ -3981,15 +3817,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     replaceDragBot(state['thisBot']),
                 ]);
             });
@@ -4007,15 +3841,13 @@ export function botActionsTests(
 
                 // specify the UUID to use next
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                const dragAction = result.events[0] as ReplaceDragBotAction;
+                const dragAction = result.actions[0] as ReplaceDragBotAction;
                 const bot = dragAction.bot as any;
                 for (let key in bot) {
                     expect(types.isProxy(bot[key])).toBe(false);
@@ -4038,15 +3870,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             abc: 'def',
@@ -4071,15 +3901,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             abc: 'xyz',
@@ -4105,15 +3933,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             abc: 'def',
@@ -4140,15 +3966,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             abc: 'def',
@@ -4172,15 +3996,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             abc: true,
@@ -4206,15 +4028,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(
                         loadFile({
                             path: 'path',
@@ -4245,15 +4065,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             value1: null,
@@ -4285,15 +4103,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             value1: null,
@@ -4330,15 +4146,13 @@ export function botActionsTests(
                     ['thisBot', 'userBot'],
                     'userBot'
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             dimension: 'abc',
@@ -4362,15 +4176,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([toast('hello, world!')]);
+                expect(result.actions).toEqual([toast('hello, world!')]);
             });
         });
 
@@ -4388,15 +4200,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showJoinCode()]);
+                expect(result.actions).toEqual([showJoinCode()]);
             });
 
             it('should allow linking to a specific universe and dimension', () => {
@@ -4413,15 +4223,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showJoinCode('universe', 'dimension'),
                 ]);
             });
@@ -4441,15 +4249,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([requestFullscreen()]);
+                expect(result.actions).toEqual([requestFullscreen()]);
             });
         });
 
@@ -4467,15 +4273,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([exitFullscreen()]);
+                expect(result.actions).toEqual([exitFullscreen()]);
             });
         });
 
@@ -4493,15 +4297,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([html('hello, world!')]);
+                expect(result.actions).toEqual([html('hello, world!')]);
             });
         });
 
@@ -4519,15 +4321,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([hideHtml()]);
+                expect(result.actions).toEqual([hideHtml()]);
             });
         });
 
@@ -4545,15 +4345,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([setClipboard('test')]);
+                expect(result.actions).toEqual([setClipboard('test')]);
             });
         });
 
@@ -4571,15 +4369,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([tweenTo('test')]);
+                expect(result.actions).toEqual([tweenTo('test')]);
             });
 
             it('should handle bots', () => {
@@ -4595,15 +4391,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([tweenTo('thisBot')]);
+                expect(result.actions).toEqual([tweenTo('thisBot')]);
             });
 
             it('should support specifying a duration', () => {
@@ -4620,15 +4414,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     tweenTo('test', undefined, undefined, undefined, 10),
                 ]);
             });
@@ -4648,15 +4440,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     {
                         type: 'tween_to',
                         botId: 'test',
@@ -4682,15 +4472,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showChat()]);
+                expect(result.actions).toEqual([showChat()]);
             });
 
             it('should emit a ShowChatBarAction with the given prefill', () => {
@@ -4706,15 +4494,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showChat({
                         placeholder: 'test',
                     }),
@@ -4737,15 +4523,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showChat({
                         placeholder: 'abc',
                         prefill: 'def',
@@ -4768,15 +4552,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([hideChat()]);
+                expect(result.actions).toEqual([hideChat()]);
             });
         });
 
@@ -4794,15 +4576,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([runScript('abc')]);
+                expect(result.actions).toEqual([runScript('abc')]);
             });
         });
 
@@ -4820,7 +4600,7 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
@@ -4835,9 +4615,7 @@ export function botActionsTests(
                     })
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             version: {
@@ -4867,7 +4645,7 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
@@ -4879,9 +4657,7 @@ export function botActionsTests(
                     })
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             device: {
@@ -4906,16 +4682,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
                     createFormulaLibrary({})
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             device: {
@@ -4942,16 +4716,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
                     createFormulaLibrary({})
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([enableAR()]);
+                expect(result.actions).toEqual([enableAR()]);
             });
         });
 
@@ -4969,16 +4741,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
                     createFormulaLibrary({})
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([disableAR()]);
+                expect(result.actions).toEqual([disableAR()]);
             });
         });
 
@@ -4996,16 +4766,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
                     createFormulaLibrary({})
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([enableVR()]);
+                expect(result.actions).toEqual([enableVR()]);
             });
         });
 
@@ -5023,16 +4791,14 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox,
                     createFormulaLibrary({})
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([disableVR()]);
+                expect(result.actions).toEqual([disableVR()]);
             });
         });
 
@@ -5065,15 +4831,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     download(
                         JSON.stringify({
                             version: 1,
@@ -5116,15 +4880,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     download(
                         JSON.stringify({
                             version: 1,
@@ -5154,15 +4916,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showUploadAuxFile()]);
+                expect(result.actions).toEqual([showUploadAuxFile()]);
             });
         });
 
@@ -5186,15 +4946,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     download(
                         JSON.stringify({
                             version: 1,
@@ -5247,15 +5005,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     download(
                         JSON.stringify({
                             version: 1,
@@ -5285,15 +5041,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([openQRCodeScanner(true)]);
+                expect(result.actions).toEqual([openQRCodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
@@ -5309,15 +5063,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     openQRCodeScanner(true, 'front'),
                 ]);
             });
@@ -5337,15 +5089,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([openQRCodeScanner(false)]);
+                expect(result.actions).toEqual([openQRCodeScanner(false)]);
             });
         });
 
@@ -5363,15 +5113,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showQRCode(true, 'hello')]);
+                expect(result.actions).toEqual([showQRCode(true, 'hello')]);
             });
         });
 
@@ -5389,15 +5137,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showQRCode(false)]);
+                expect(result.actions).toEqual([showQRCode(false)]);
             });
         });
 
@@ -5415,15 +5161,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([openBarcodeScanner(true)]);
+                expect(result.actions).toEqual([openBarcodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
@@ -5439,15 +5183,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     openBarcodeScanner(true, 'front'),
                 ]);
             });
@@ -5467,15 +5209,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([openBarcodeScanner(false)]);
+                expect(result.actions).toEqual([openBarcodeScanner(false)]);
             });
         });
 
@@ -5493,15 +5233,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showBarcode(true, 'hello')]);
+                expect(result.actions).toEqual([showBarcode(true, 'hello')]);
             });
 
             it('should include the given format', () => {
@@ -5517,15 +5255,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showBarcode(true, 'hello', <any>'format'),
                 ]);
             });
@@ -5545,15 +5281,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showBarcode(false)]);
+                expect(result.actions).toEqual([showBarcode(false)]);
             });
         });
 
@@ -5571,15 +5305,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([loadUniverse('abc')]);
+                expect(result.actions).toEqual([loadUniverse('abc')]);
             });
         });
 
@@ -5597,15 +5329,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([unloadUniverse('abc')]);
+                expect(result.actions).toEqual([unloadUniverse('abc')]);
             });
         });
 
@@ -5623,15 +5353,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([importAUX('abc')]);
+                expect(result.actions).toEqual([importAUX('abc')]);
             });
 
             it('should emit a AddStateEvent if given JSON', () => {
@@ -5659,15 +5387,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([addState(uploadState)]);
+                expect(result.actions).toEqual([addState(uploadState)]);
             });
         });
 
@@ -5692,15 +5418,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             inDimension: true,
@@ -5729,15 +5453,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             inDimension: false,
@@ -5764,15 +5486,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             inDimension: false,
@@ -5803,15 +5523,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             dimension: 'dimension',
@@ -5838,15 +5556,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             dimension: undefined,
@@ -5877,15 +5593,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             dimension: 'dimension',
@@ -5912,15 +5626,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             dimension: undefined,
@@ -5954,15 +5666,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('test', ['thisBot'], 'userBot');
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 dimension: expected,
@@ -6013,15 +5723,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('test', ['thisBot'], 'userBot');
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([
+                    expect(result.actions).toEqual([
                         botUpdated('thisBot', {
                             tags: {
                                 fun: expectedDimension,
@@ -6046,15 +5754,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showInputForTag('thisBot', 'abc'),
                 ]);
             });
@@ -6072,15 +5778,15 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([showInputForTag('test', 'abc')]);
+                expect(result.actions).toEqual([
+                    showInputForTag('test', 'abc'),
+                ]);
             });
 
             it('should trim the first hash from the tag', () => {
@@ -6097,15 +5803,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showInputForTag('test', '#abc'),
                     showInputForTag('test', 'abc'),
                 ]);
@@ -6125,15 +5829,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     showInputForTag('test', 'abc', {
                         backgroundColor: 'red',
                         foregroundColor: 'green',
@@ -6156,15 +5858,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([goToDimension('abc')]);
+                expect(result.actions).toEqual([goToDimension('abc')]);
             });
 
             it('should ignore extra parameters', () => {
@@ -6180,15 +5880,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([goToDimension('sim')]);
+                expect(result.actions).toEqual([goToDimension('sim')]);
             });
         });
 
@@ -6206,15 +5904,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([goToURL('abc')]);
+                expect(result.actions).toEqual([goToURL('abc')]);
             });
         });
 
@@ -6232,15 +5928,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([openURL('abc')]);
+                expect(result.actions).toEqual([openURL('abc')]);
             });
         });
 
@@ -6258,14 +5952,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([openConsole()]);
+                expect(result.actions).toEqual([openConsole()]);
             });
         });
 
@@ -6295,15 +5988,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             val: 123,
@@ -6340,15 +6031,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
@@ -6376,15 +6065,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             val: 123,
@@ -6406,15 +6093,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             val: 123,
@@ -6438,15 +6123,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
@@ -6475,15 +6158,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thatBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thatBot', {
                         tags: {
                             name: 'bob',
@@ -6512,15 +6193,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
@@ -6543,14 +6222,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                expect(result.actions).toEqual([]);
             });
 
             it('should not allow setting the space', () => {
@@ -6566,14 +6244,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                expect(result.actions).toEqual([]);
             });
 
             it('should not allow setting the space on another mod', () => {
@@ -6593,14 +6270,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             equal: false,
@@ -6626,14 +6302,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thisBot', {
                         tags: {
                             equal: false,
@@ -6666,15 +6341,13 @@ export function botActionsTests(
                     null,
                     state['thatBot']
                 );
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     botUpdated('thatBot', {
                         tags: {
                             name: 'bob',
@@ -6704,15 +6377,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(
                         setupUniverse(
                             'channel',
@@ -6739,15 +6410,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([remote(shell('abc'))]);
+                expect(result.actions).toEqual([remote(shell('abc'))]);
             });
         });
 
@@ -6765,15 +6434,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([remote(backupToGithub('abc'))]);
+                expect(result.actions).toEqual([remote(backupToGithub('abc'))]);
             });
         });
 
@@ -6792,15 +6459,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(
                         backupAsDownload({
                             username: 'abc',
@@ -6832,15 +6497,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     checkout({
                         publishableKey: 'key',
                         productId: 'ID1',
@@ -6872,15 +6535,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     finishCheckout('key', 'token1', 100, 'usd', 'Test'),
                 ]);
             });
@@ -6907,15 +6568,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     finishCheckout('key', 'token1', 100, 'usd', 'Test', {
                         abc: 'def',
                     }),
@@ -6939,15 +6598,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(
                         markHistory({
                             message: 'testMark',
@@ -6973,15 +6630,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([remote(browseHistory())]);
+                expect(result.actions).toEqual([remote(browseHistory())]);
             });
         });
 
@@ -6999,15 +6654,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(restoreHistoryMark('mark')),
                 ]);
             });
@@ -7027,15 +6680,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(<RestoreHistoryMarkAction>{
                         type: 'restore_history_mark',
                         mark: 'mark',
@@ -7105,15 +6756,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const botAction = action('test', ['thisBot'], 'userBot');
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
 
-                    expect(result.hasUserDefinedEvents).toBe(true);
-
-                    expect(result.events).toEqual([remote(event)]);
+                    expect(result.actions).toEqual([remote(event)]);
                 }
             );
 
@@ -7134,15 +6783,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
+                expect(result.actions).toEqual([
                     remote(toast('Hi!'), {
                         sessionId: 's',
                         username: 'u',
@@ -7151,9 +6798,7 @@ export function botActionsTests(
                 ]);
             });
         });
-    });
 
-    describe('calculateActionResults()', () => {
         const nonStringScriptCases = [
             ['true', true],
             ['false', false],
@@ -7179,13 +6824,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const [events, results] = calculateActionResults(
+                const { actions, results } = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events).toEqual([]);
+                expect(actions).toEqual([]);
                 expect(results).toEqual([expected]);
             }
         );
@@ -7213,13 +6858,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const botAction = action('test', ['thisBot'], 'userBot');
-                const [events, results] = calculateActionResults(
+                const { actions, results } = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
 
-                expect(events).toEqual([]);
+                expect(actions).toEqual([]);
                 expect(results).toEqual([]);
             }
         );
@@ -7241,14 +6886,14 @@ export function botActionsTests(
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const botAction = action('test', ['thisBot'], 'userBot');
-            const [events, results] = calculateActionResults(
+            const { actions, results } = calculateActionResults(
                 state,
                 botAction,
                 createSandbox
             );
 
             expect(results).toEqual([10]);
-            expect(events).toEqual([]);
+            expect(actions).toEqual([]);
         });
     });
 
@@ -7551,13 +7196,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7579,13 +7224,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7607,13 +7252,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7644,13 +7289,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7674,13 +7319,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7707,13 +7352,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7741,13 +7386,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7774,13 +7419,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7809,13 +7454,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7838,13 +7483,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7880,13 +7525,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -7914,13 +7559,13 @@ export function botActionsTests(
                 let num = 0;
                 uuidMock.mockImplementation(() => `${id}-${num++}`);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
@@ -7955,13 +7600,13 @@ export function botActionsTests(
                 let num = 0;
                 uuidMock.mockImplementation(() => `${id}-${num++}`);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
@@ -8044,13 +7689,13 @@ export function botActionsTests(
                 let num = 0;
                 uuidMock.mockImplementation(() => `${id}-${num++}`);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
@@ -8089,13 +7734,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         space: 'tempLocal',
@@ -8127,13 +7772,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -8175,13 +7820,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -8225,13 +7870,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -8276,13 +7921,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         space: <any>'custom',
@@ -8329,13 +7974,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -8380,13 +8025,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         tags: {
@@ -8441,13 +8086,13 @@ export function botActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue(id);
                 const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     state,
                     botAction,
                     createSandbox
                 );
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
+
+                expect(result.actions).toEqual([
                     botAdded({
                         id: expectedId,
                         space: <any>'custom',
@@ -8480,13 +8125,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             space: 'local',
@@ -8509,13 +8154,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             space: 'local',
@@ -8538,13 +8183,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             tags: {
@@ -8574,13 +8219,13 @@ export function botActionsTests(
                         // specify the UUID to use next
                         uuidMock.mockReturnValue(id);
                         const botAction = action('test', ['thisBot']);
-                        const result = calculateActionEvents(
+                        const result = calculateActionResults(
                             state,
                             botAction,
                             createSandbox
                         );
-                        expect(result.hasUserDefinedEvents).toBe(true);
-                        expect(result.events).toEqual([
+
+                        expect(result.actions).toEqual([
                             botAdded({
                                 id: expectedId,
                                 tags: {
@@ -8611,13 +8256,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             tags: {
@@ -8646,13 +8291,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             tags: {
@@ -8682,13 +8327,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             space: <any>'def',
@@ -8711,13 +8356,13 @@ export function botActionsTests(
                     // specify the UUID to use next
                     uuidMock.mockReturnValue(id);
                     const botAction = action('test', ['thisBot']);
-                    const result = calculateActionEvents(
+                    const result = calculateActionResults(
                         state,
                         botAction,
                         createSandbox
                     );
-                    expect(result.hasUserDefinedEvents).toBe(true);
-                    expect(result.events).toEqual([
+
+                    expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
                             tags: {

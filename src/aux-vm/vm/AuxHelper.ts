@@ -13,7 +13,6 @@ import {
     merge,
     AUX_BOT_VERSION,
     calculateFormulaEvents,
-    calculateActionEvents,
     BotSandboxContext,
     PasteStateAction,
     getBotConfigDimensions,
@@ -429,13 +428,13 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         for (let event of filteredEvents) {
             if (event.type === 'action') {
-                const result = calculateActionEvents(
+                const result = calculateActionResults(
                     this.botsState,
                     event,
                     this._sandboxFactory,
                     this._lib
                 );
-                resultEvents.push(...this._flattenEvents(result.events));
+                resultEvents.push(...this._flattenEvents(result.actions));
             } else if (event.type === 'run_script') {
                 const events = [
                     ...calculateFormulaEvents(
@@ -490,17 +489,18 @@ export class AuxHelper extends BaseHelper<Bot> {
         event: BotAction
     ): BotAction[] {
         try {
-            const [actions, results] = calculateActionResults(
+            const results = calculateActionResults(
                 this.botsState,
                 action(ON_ACTION_ACTION_NAME, null, this.userId, {
                     action: event,
                 }),
                 undefined,
+                undefined,
                 context,
                 false
             );
 
-            return actions;
+            return results.actions;
         } catch (err) {
             console.error(
                 '[AuxHelper] The onUniverseAction() handler errored:',

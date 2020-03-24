@@ -59,10 +59,20 @@ export function searchBotState(
     return convertToCopiableValue(result);
 }
 
+/**
+ * Calculates the results for the given action run with the given state.
+ * @param state The state.
+ * @param action The action.
+ * @param sandboxFactory The factory that should be used to create a script sandbox.
+ * @param library The library that should be used for sandbox scripts.
+ * @param calc The calculation context.
+ * @param executeOnShout Whether to run the onListen actions.
+ */
 export function calculateActionResults(
     state: BotsState,
     action: ShoutAction,
     sandboxFactory?: SandboxFactory,
+    library?: SandboxLibrary,
     calc?: BotSandboxContext,
     executeOnShout?: boolean
 ): ActionResult {
@@ -72,14 +82,14 @@ export function calculateActionResults(
         createCalculationContext(
             allObjects,
             action.userId,
-            undefined,
+            library,
             sandboxFactory
         );
     const { bots, objects } = getBotsForAction(action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
-        undefined,
+        library,
         sandboxFactory
     );
 
@@ -100,47 +110,6 @@ export function calculateActionResults(
         errors: result.errors,
         results: result.results,
         listeners: result.listeners,
-    };
-}
-
-/**
- * Calculates the set of events that should be run for the given action.
- * @param state The current bot state.
- * @param action The action to process.
- * @param context The calculation context to use.
- * @param sandboxFactory The sandbox factory to use.
- * @deprecated Use calculateActionResults() instead.
- */
-export function calculateActionEvents(
-    state: BotsState,
-    action: ShoutAction,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary
-) {
-    const allObjects = values(state);
-    const calc = createCalculationContext(
-        allObjects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-    const { bots, objects } = getBotsForAction(action, calc);
-    const context = createCalculationContext(
-        objects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-
-    const result = calculateBotActionEvents(state, action, context, bots);
-    let events = [
-        ...result.results,
-        ...context.sandbox.interface.getBotUpdates(),
-    ];
-
-    return {
-        events,
-        hasUserDefinedEvents: events.length > 0,
     };
 }
 
