@@ -45,6 +45,7 @@ import {
     hasValue,
     addState,
     calculateBotValue,
+    AddBotAction,
 } from '@casual-simulation/aux-common';
 import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
@@ -435,6 +436,24 @@ export class AuxHelper extends BaseHelper<Bot> {
                     this._lib
                 );
                 resultEvents.push(...this._flattenEvents(result.actions));
+                resultEvents.push(
+                    ...result.errors.map(e => {
+                        return botAdded(
+                            createBot(
+                                undefined,
+                                {
+                                    auxError: true,
+                                    auxErrorName: e.error.name,
+                                    auxErrorMessage: e.error.message,
+                                    auxErrorStack: e.error.stack,
+                                    auxErrorBot: e.bot ? e.bot.id : null,
+                                    auxErrorTag: e.tag || null,
+                                },
+                                'error'
+                            )
+                        );
+                    })
+                );
             } else if (event.type === 'run_script') {
                 const events = [
                     ...calculateFormulaEvents(

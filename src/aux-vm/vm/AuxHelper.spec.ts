@@ -25,6 +25,7 @@ import { createMemoryPartition } from '../partitions/MemoryPartition';
 import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
 import { MemoryPartition } from '../partitions/AuxPartition';
+import { values } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -36,6 +37,7 @@ console.error = jest.fn();
 describe('AuxHelper', () => {
     let userId: string = 'user';
     let memory: MemoryPartition;
+    let error: MemoryPartition;
     let helper: AuxHelper;
 
     beforeEach(async () => {
@@ -44,8 +46,13 @@ describe('AuxHelper', () => {
             type: 'memory',
             initialState: {},
         });
+        error = createMemoryPartition({
+            type: 'memory',
+            initialState: {},
+        });
         helper = new AuxHelper({
             shared: memory,
+            error: error,
         });
         helper.userId = userId;
 
@@ -625,6 +632,30 @@ describe('AuxHelper', () => {
                     event: toast('test'),
                 },
             ]);
+        });
+
+        it('should store errors in the error space', async () => {
+            await helper.createBot('test', {
+                action: '@throw new Error("abc")',
+            });
+
+            uuidMock.mockReturnValue('error');
+            await helper.transaction(action('action', ['test'], 'user'));
+
+            expect(error.state).toEqual({
+                error: {
+                    id: 'error',
+                    space: 'error',
+                    tags: {
+                        auxError: true,
+                        auxErrorName: 'Error',
+                        auxErrorMessage: 'abc',
+                        auxErrorStack: expect.any(String),
+                        auxErrorBot: 'test',
+                        auxErrorTag: 'action',
+                    },
+                },
+            });
         });
 
         describe('paste_state', () => {

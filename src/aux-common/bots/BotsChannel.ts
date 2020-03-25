@@ -101,8 +101,10 @@ export function calculateBotActionEvents(
         if (result) {
             events.push(...result.actions);
             results.push(result.result);
-            errors.push(result.error);
             listeners.push(bot);
+            if (result.error) {
+                errors.push(result.error);
+            }
         }
     }
 

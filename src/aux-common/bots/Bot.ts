@@ -59,8 +59,9 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
+ * - "error" means that the bot represents an error.
  */
-export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
+export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error';
 
 /**
  * The possible portal types.
