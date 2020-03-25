@@ -9,11 +9,15 @@ import {
     RemoteCausalRepoPartitionConfig,
     CausalRepoClientPartitionConfig,
     RemoteCausalRepoPartitionImpl,
+    BotPartition,
+    createBotClientPartition,
+    BotPartitionImpl,
 } from '@casual-simulation/aux-vm/partitions';
 import {
     SocketManager,
     SocketIOConnectionClient,
 } from '@casual-simulation/causal-tree-client-socketio';
+import { BotHttpClient } from './BotHttpClient';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.
@@ -34,6 +38,17 @@ export async function createRemoteCausalRepoPartition(
             config
         );
         await partition.init();
+        return partition;
+    }
+    return undefined;
+}
+
+export async function createBotPartition(
+    config: PartitionConfig
+): Promise<BotPartition> {
+    if (config.type === 'bot') {
+        const client = new BotHttpClient(config.host);
+        const partition = new BotPartitionImpl(client, config);
         return partition;
     }
     return undefined;

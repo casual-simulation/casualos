@@ -531,6 +531,11 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
+ * The partition ID for error bots.
+ */
+export const ERROR_BOT_PARTITION_ID = 'error';
+
+/**
  * The dimension ID that all users should be placed in.
  */
 export const USERS_DIMENSION = 'aux-users';

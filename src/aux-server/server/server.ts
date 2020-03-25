@@ -63,6 +63,8 @@ import {
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
 import { pickBy } from 'lodash';
+import { BotHttpServer } from './servers/BotHttpServer';
+import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
 
 const connect = pify(MongoClient.connect);
 
@@ -378,6 +380,7 @@ export class Server {
     private _directoryStore: DirectoryStore;
     private _directoryClient: DirectoryClient;
     private _webhooksClient: CausalRepoClient;
+    private _botServer: BotHttpServer;
 
     constructor(config: Config) {
         this._config = config;
@@ -426,6 +429,8 @@ export class Server {
         );
         this._client.configure();
 
+        this._configureBotHttpServer();
+
         this._app.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -466,12 +471,26 @@ export class Server {
 
         this._app.use(this._client.app);
 
+        if (this._botServer) {
+            this._app.use(this._botServer.app);
+        }
+
         this._app.all(
             '/webhook/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
+    }
+
+    private _configureBotHttpServer() {
+        if (!this._config.bots) {
+            return;
+        }
+        const db = this._mongoClient.db(this._config.bots.dbName);
+        const botStore = new MongoDBBotStore(this._config.bots, db);
+        this._botServer = new BotHttpServer(botStore);
+        this._botServer.configure();
     }
 
     private async _handleWebhook(req: Request, res: Response) {

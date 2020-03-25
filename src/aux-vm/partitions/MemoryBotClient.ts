@@ -1,8 +1,8 @@
-import { SearchClient, TagSearch } from './SearchClient';
-import { Bot, BotsState } from '@casual-simulation/aux-common';
+import { BotClient } from './BotClient';
+import { Bot, BotsState, TagFilter } from '@casual-simulation/aux-common';
 import values from 'lodash/values';
 
-export class MemorySearchClient implements SearchClient {
+export class MemoryBotClient implements BotClient {
     universes: {
         [universe: string]: BotsState;
     } = {};
@@ -18,7 +18,7 @@ export class MemorySearchClient implements SearchClient {
         }
     }
 
-    async lookupBots(universe: string, tags: TagSearch[]): Promise<Bot[]> {
+    async lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]> {
         let uni = this.universes[universe];
         if (!uni) {
             return [];

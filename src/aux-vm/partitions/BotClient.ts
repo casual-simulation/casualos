@@ -1,6 +1,9 @@
-import { Bot } from '@casual-simulation/aux-common';
+import { Bot, TagFilter } from '@casual-simulation/aux-common';
 
-export interface SearchClient {
+/**
+ * Defines an interface for an object that is able to act as a client to store and query bots in a remote system.
+ */
+export interface BotClient {
     /**
      * Adds the given bots to the given universe.
      * @param universe The universe the bots should be accociated with.
@@ -13,10 +16,5 @@ export interface SearchClient {
      * @param universe The universe.
      * @param tags The tags to search for.
      */
-    lookupBots(universe: string, tags: TagSearch[]): Promise<Bot[]>;
-}
-
-export interface TagSearch {
-    tag: string;
-    value?: any;
+    lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]>;
 }

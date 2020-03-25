@@ -27,8 +27,8 @@ import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
 import { MemoryPartition } from '../partitions/AuxPartition';
 import { values } from 'lodash';
-import { createSearchPartition } from '../partitions/SearchPartition';
-import { MemorySearchClient } from '../partitions/MemorySearchClient';
+import { createBotClientPartition } from '../partitions/BotPartition';
+import { MemoryBotClient } from '../partitions/MemoryBotClient';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -663,9 +663,9 @@ describe('AuxHelper', () => {
 
         describe('load_bots', () => {
             it('should be able to load bots from the error space', async () => {
-                let searchClient = new MemorySearchClient();
-                let error = createSearchPartition({
-                    type: 'search_client',
+                let searchClient = new MemoryBotClient();
+                let error = createBotClientPartition({
+                    type: 'bot_client',
                     universe: 'universe',
                     client: searchClient,
                 });

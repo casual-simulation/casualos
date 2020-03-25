@@ -1,6 +1,6 @@
-import { SearchPartition } from './AuxPartition';
-import { createSearchPartition } from './SearchPartition';
-import { MemorySearchClient } from './MemorySearchClient';
+import { BotPartition } from './AuxPartition';
+import { createBotClientPartition } from './BotPartition';
+import { MemoryBotClient } from './MemoryBotClient';
 import {
     botAdded,
     createBot,
@@ -11,14 +11,14 @@ import {
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '../test/TestHelpers';
 
-describe('SearchPartition', () => {
-    let client: MemorySearchClient;
-    let subject: SearchPartition;
+describe('BotPartition', () => {
+    let client: MemoryBotClient;
+    let subject: BotPartition;
 
     beforeEach(() => {
-        client = new MemorySearchClient();
-        subject = createSearchPartition({
-            type: 'search_client',
+        client = new MemoryBotClient();
+        subject = createBotClientPartition({
+            type: 'bot_client',
             universe: 'universe',
             client: client,
         });

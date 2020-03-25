@@ -1,10 +1,10 @@
-import { MemoryPartition, SearchPartition } from './AuxPartition';
+import { MemoryPartition, BotPartition } from './AuxPartition';
 import {
     MemoryPartitionConfig,
     PartitionConfig,
     MemoryPartitionInstanceConfig,
     MemoryPartitionStateConfig,
-    SearchPartitionConfig,
+    BotPartitionConfig,
     SearchPartitionClientConfig,
 } from './AuxPartitionConfig';
 import {
@@ -35,23 +35,23 @@ import {
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
-import { SearchClient } from './SearchClient';
+import { BotClient } from './BotClient';
 import sortBy from 'lodash/sortBy';
 
 /**
- * Attempts to create a SearchPartition from the given config.
+ * Attempts to create a BotPartition from the given config.
  * @param config The config.
  */
-export function createSearchPartition(
+export function createBotClientPartition(
     config: PartitionConfig
-): SearchPartition {
-    if (config.type === 'search_client') {
-        return new SearchPartitionImpl(config.client, config);
+): BotPartition {
+    if (config.type === 'bot_client') {
+        return new BotPartitionImpl(config.client, config);
     }
     return undefined;
 }
 
-class SearchPartitionImpl implements SearchPartition {
+export class BotPartitionImpl implements BotPartition {
     private _onBotsAdded = new Subject<Bot[]>();
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
@@ -59,10 +59,10 @@ class SearchPartitionImpl implements SearchPartition {
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
 
-    type = 'search' as const;
+    type = 'bot' as const;
     state: BotsState;
     private: boolean;
-    _client: SearchClient;
+    _client: BotClient;
     _universe: string;
 
     get onBotsAdded(): Observable<Bot[]> {
@@ -90,8 +90,8 @@ class SearchPartitionImpl implements SearchPartition {
     }
 
     constructor(
-        client: SearchClient,
-        config: SearchPartitionConfig | SearchPartitionClientConfig
+        client: BotClient,
+        config: BotPartitionConfig | SearchPartitionClientConfig
     ) {
         this.private = hasValue(config.private) ? config.private : true;
         this._universe = config.universe;
