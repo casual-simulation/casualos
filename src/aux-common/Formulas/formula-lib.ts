@@ -389,7 +389,7 @@ interface Bot {
 /**
  * The possible bot spaces.
  */
-type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
+type BotType = 'shared' | 'local' | 'tempLocal' | 'history' | 'error';
 
 /**
  * The possible portal types.
