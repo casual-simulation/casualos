@@ -5,6 +5,7 @@ import {
     ProxyBridgePartition,
     MemoryPartition,
 } from './AuxPartition';
+import { SearchClient } from './SearchClient';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -28,7 +29,9 @@ export type PartitionConfig =
     | MemoryPartitionInstanceConfig
     | ProxyPartitionConfig
     | ProxyClientPartitionConfig
-    | LocalStoragePartitionConfig;
+    | LocalStoragePartitionConfig
+    | SearchPartitionConfig
+    | SearchPartitionClientConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -173,4 +176,38 @@ export interface CausalRepoHistoryClientPartitionConfig
      * The client that should be used to load the history.
      */
     client: CausalRepoClient;
+}
+
+/**
+ * Defines a partition that allows storing immutable bots and querying them later.
+ */
+export interface SearchPartitionConfig extends PartitionConfigBase {
+    type: 'search';
+
+    /**
+     * The host that should be queried.
+     */
+    host: string;
+
+    /**
+     * The universe that should be used from the host.
+     */
+    universe: string;
+}
+
+/**
+ * Defines a partition that allows storing immutable bots and querying them later.
+ */
+export interface SearchPartitionClientConfig extends PartitionConfigBase {
+    type: 'search_client';
+
+    /**
+     * The universe that should be used.
+     */
+    universe: string;
+
+    /**
+     * The client that the partition should connect with.
+     */
+    client: SearchClient;
 }

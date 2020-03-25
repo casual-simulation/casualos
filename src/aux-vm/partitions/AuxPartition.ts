@@ -29,7 +29,8 @@ export type AuxPartition =
     | CausalRepoPartition
     | RemoteCausalRepoPartition
     | LocalStoragePartition
-    | ProxyClientPartition;
+    | ProxyClientPartition
+    | SearchPartition;
 
 /**
  * Base interface for partitions.
@@ -175,6 +176,19 @@ export interface LocalStoragePartition extends AuxPartitionBase {
      * The namespace that bots should be stored under.
      */
     namespace: string;
+
+    /**
+     * The current state of the partition.
+     */
+    state: BotsState;
+}
+
+/**
+ * Defines a search partition.
+ * That is, a partition which can store bots for later retrieval via a query.
+ */
+export interface SearchPartition extends AuxPartitionBase {
+    type: 'search';
 
     /**
      * The current state of the partition.
