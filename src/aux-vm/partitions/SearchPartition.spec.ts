@@ -6,7 +6,10 @@ import {
     createBot,
     botUpdated,
     botRemoved,
+    loadBots,
+    Bot,
 } from '@casual-simulation/aux-common';
+import { waitAsync } from '../test/TestHelpers';
 
 describe('SearchPartition', () => {
     let client: MemorySearchClient;
@@ -90,6 +93,61 @@ describe('SearchPartition', () => {
                     abc: 'def',
                 }),
             },
+        });
+    });
+
+    describe('load_bots', () => {
+        it('should load the matching bots and emit a bot added event', async () => {
+            await client.addBots('universe', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let bots = [] as Bot[];
+            subject.onBotsAdded.subscribe(b => bots.push(...b));
+
+            await subject.applyEvents([
+                loadBots(<any>'space', [
+                    {
+                        tag: 'test',
+                        value: true,
+                    },
+                ]),
+            ]);
+
+            await waitAsync();
+
+            // Should emit them in order of ID
+            expect(bots).toEqual([
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+            ]);
+            expect(subject.state).toEqual({
+                test1: createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                test2: createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+            });
         });
     });
 });

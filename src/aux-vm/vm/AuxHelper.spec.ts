@@ -13,6 +13,7 @@ import {
     USERS_DIMENSION,
     runScript,
     ON_RUN_ACTION_NAME,
+    loadBots,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -26,6 +27,8 @@ import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
 import { MemoryPartition } from '../partitions/AuxPartition';
 import { values } from 'lodash';
+import { createSearchPartition } from '../partitions/SearchPartition';
+import { MemorySearchClient } from '../partitions/MemorySearchClient';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -655,6 +658,52 @@ describe('AuxHelper', () => {
                         auxErrorTag: 'action',
                     },
                 },
+            });
+        });
+
+        describe('load_bots', () => {
+            it('should be able to load bots from the error space', async () => {
+                let searchClient = new MemorySearchClient();
+                let error = createSearchPartition({
+                    type: 'search_client',
+                    universe: 'universe',
+                    client: searchClient,
+                });
+                helper = new AuxHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    error: error,
+                });
+                helper.userId = userId;
+
+                await searchClient.addBots('universe', [
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                ]);
+
+                await helper.transaction(
+                    loadBots('error', [
+                        {
+                            tag: 'abc',
+                            value: 'def',
+                        },
+                    ])
+                );
+
+                await waitAsync();
+
+                expect(helper.botsState).toEqual({
+                    test1: createBot(
+                        'test1',
+                        {
+                            abc: 'def',
+                        },
+                        'error'
+                    ),
+                });
             });
         });
 

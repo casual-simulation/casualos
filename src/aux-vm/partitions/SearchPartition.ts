@@ -20,6 +20,7 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
+    LoadBotsAction,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -35,6 +36,7 @@ import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
 import { SearchClient } from './SearchClient';
+import sortBy from 'lodash/sortBy';
 
 /**
  * Attempts to create a SearchPartition from the given config.
@@ -110,6 +112,12 @@ class SearchPartitionImpl implements SearchPartition {
 
         this._applyEvents(finalEvents);
 
+        for (let e of events) {
+            if (e.type === 'load_bots') {
+                this._loadBots(e);
+            }
+        }
+
         return events;
     }
 
@@ -152,6 +160,19 @@ class SearchPartitionImpl implements SearchPartition {
 
         if (added.length > 0) {
             this._client.addBots(this._universe, added);
+        }
+    }
+
+    private async _loadBots(event: LoadBotsAction) {
+        const bots = await this._client.lookupBots(this._universe, event.tags);
+
+        if (bots.length > 0) {
+            const sorted = sortBy(bots, b => b.id);
+            this.state = Object.assign({}, this.state);
+            for (let bot of sorted) {
+                this.state[bot.id] = bot;
+            }
+            this._onBotsAdded.next(sorted);
         }
     }
 }
