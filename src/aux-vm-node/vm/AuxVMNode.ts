@@ -1,12 +1,15 @@
 import {
     AuxVM,
-    StateUpdatedEvent,
     AuxChannelErrorType,
-    BotDependentInfo,
     StoredAux,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    BotAction,
+    StateUpdatedEvent,
+    BotDependentInfo,
+} from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
     StatusUpdate,

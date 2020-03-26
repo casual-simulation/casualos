@@ -21,12 +21,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import { remote } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../test/TestHelpers';
-import {
-    createBot,
-    Bot,
-    UpdatedBot,
-    restoreHistoryMark,
-} from '@casual-simulation/aux-common';
+import { createBot, Bot, UpdatedBot, restoreHistoryMark } from '../bots';
 import { CausalRepoHistoryClientPartitionConfig } from './AuxPartitionConfig';
 import uuid from 'uuid/v5';
 

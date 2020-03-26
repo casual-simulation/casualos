@@ -1,4 +1,4 @@
-import { Bot, TagFilter } from '@casual-simulation/aux-common';
+import { Bot, TagFilter } from '../bots';
 
 /**
  * Defines an interface for an object that is able to act as a client to store and query bots in a remote system.

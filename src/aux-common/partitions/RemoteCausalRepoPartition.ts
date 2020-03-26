@@ -16,7 +16,7 @@ import {
     applyEvents,
     BotStateUpdates,
     applyAtoms,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '../aux-format-2';
 import { Observable, Subscription, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import {
@@ -30,8 +30,7 @@ import {
     breakIntoIndividualEvents,
     MarkHistoryAction,
     loadSpace,
-    BrowseHistoryAction,
-} from '@casual-simulation/aux-common';
+} from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
     PartitionConfig,

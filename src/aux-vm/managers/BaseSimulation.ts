@@ -4,6 +4,7 @@ import {
     SimulationIdParseSuccess,
     GLOBALS_BOT_ID,
     BotIndex,
+    AuxPartitionConfig,
 } from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -21,10 +22,6 @@ import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { StoredAux } from '../StoredAux';
-import {
-    PartitionConfig,
-    AuxPartitionConfig,
-} from '../partitions/AuxPartitionConfig';
 import { BotDimensionManager } from './BotDimensionManager';
 
 /**

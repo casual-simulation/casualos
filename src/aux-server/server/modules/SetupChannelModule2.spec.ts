@@ -4,7 +4,6 @@ import { deviceInfo } from '@casual-simulation/causal-trees';
 import { SetupChannelModule2 } from './SetupChannelModule2';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import {
     CausalRepoClient,
     MemoryCausalRepoStore,
@@ -15,6 +14,7 @@ import {
     ConnectionBridge,
     FixedConnectionServer,
 } from '@casual-simulation/causal-tree-server';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 console.log = jest.fn();
 
 describe('SetupChannelModule2', () => {

@@ -8,7 +8,7 @@ import {
     botRemoved,
     loadBots,
     Bot,
-} from '@casual-simulation/aux-common';
+} from '../bots';
 import { waitAsync } from '../test/TestHelpers';
 
 describe('BotPartition', () => {

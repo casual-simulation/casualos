@@ -7,21 +7,6 @@ import {
     BotPartitionConfig,
     SearchPartitionClientConfig,
 } from './AuxPartitionConfig';
-import {
-    BotsState,
-    BotAction,
-    Bot,
-    UpdatedBot,
-    merge,
-    tagsOnBot,
-    hasValue,
-    getActiveObjects,
-    AddBotAction,
-    RemoveBotAction,
-    UpdateBotAction,
-    breakIntoIndividualEvents,
-    LoadBotsAction,
-} from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import {
     DeviceAction,
@@ -37,6 +22,19 @@ import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';
 import { BotClient } from './BotClient';
 import sortBy from 'lodash/sortBy';
+import {
+    breakIntoIndividualEvents,
+    UpdatedBot,
+    getActiveObjects,
+    hasValue,
+    BotAction,
+    LoadBotsAction,
+    RemoveBotAction,
+    AddBotAction,
+    UpdateBotAction,
+    Bot,
+    BotsState,
+} from '../bots';
 
 /**
  * Attempts to create a BotPartition from the given config.

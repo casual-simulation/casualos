@@ -1,20 +1,20 @@
 import { DependencyManager, BotDependentInfo } from './DependencyManager';
-import {
-    BotsState,
-    PrecalculatedBotsState,
-    PrecalculatedBot,
-    Bot,
-    UpdatedBot,
-    calculateCopiableValue,
-    calculateValue,
-    BotSandboxContext,
-    hasValue,
-    merge,
-    convertToCopiableValue,
-} from '@casual-simulation/aux-common';
-import { StateUpdatedEvent } from './StateUpdatedEvent';
 import mapValues from 'lodash/mapValues';
 import omitBy from 'lodash/omitBy';
+import {
+    PrecalculatedBotsState,
+    BotsState,
+    BotSandboxContext,
+    StateUpdatedEvent,
+    calculateCopiableValue,
+    Bot,
+    PrecalculatedBot,
+    UpdatedBot,
+    hasValue,
+    calculateValue,
+    convertToCopiableValue,
+} from '../bots';
+import { merge } from '../utils';
 
 /**
  * Defines a class that manages precalculating bot state.

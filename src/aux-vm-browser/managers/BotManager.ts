@@ -13,6 +13,7 @@ import {
     isBotTags,
     isBot,
     ERROR_BOT_PARTITION_ID,
+    AuxPartitionConfig,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -31,7 +32,6 @@ import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import pickBy from 'lodash/pickBy';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';

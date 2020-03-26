@@ -1,14 +1,14 @@
-import {
-    createBot,
-    createCalculationContext,
-    createPrecalculatedBot,
-    botAdded,
-    botRemoved,
-    botUpdated,
-} from '@casual-simulation/aux-common';
 import { PrecalculationManager } from './PrecalculationManager';
 import values from 'lodash/values';
 import { MemoryPartition, createMemoryPartition } from '../partitions';
+import {
+    createCalculationContext,
+    botAdded,
+    createBot,
+    createPrecalculatedBot,
+    botRemoved,
+    botUpdated,
+} from '../bots';
 
 const errorMock = (console.error = jest.fn());
 

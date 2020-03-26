@@ -1,17 +1,7 @@
 import { DependencyManager } from './DependencyManager';
-import { createBot } from '@casual-simulation/aux-common';
-import { MemoryPartition, createMemoryPartition } from '../partitions';
-import merge = require('lodash/merge');
+import { createBot } from '../bots/BotCalculations';
 
 describe('DependencyManager', () => {
-    let partition: MemoryPartition;
-    beforeEach(() => {
-        partition = createMemoryPartition({
-            type: 'memory',
-            initialState: {},
-        });
-    });
-
     const nullOrUndefinedCases = [['null', null], ['undefined', undefined]];
 
     describe('addBot()', () => {

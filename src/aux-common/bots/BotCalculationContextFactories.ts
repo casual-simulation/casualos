@@ -163,7 +163,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
      * @param bot The bot to remove.
      */
     removeBot(id: string): void {
-        const index = sortedIndexBy(this.objects, { id }, f => f.id);
+        const index = sortedIndexBy(this.objects, <any>{ id }, f => f.id);
         this.objects.splice(index, 1);
     }
 

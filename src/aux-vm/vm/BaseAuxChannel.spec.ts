@@ -12,17 +12,16 @@ import {
     createBot,
     botAdded,
     browseHistory,
+    MemoryPartition,
+    createMemoryPartition,
+    MemoryPartitionConfig,
+    PartitionConfig,
+    AuxPartition,
+    createAuxPartition,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
-import { AuxPartition, MemoryPartition } from '../partitions/AuxPartition';
-import {
-    PartitionConfig,
-    MemoryPartitionConfig,
-} from '../partitions/AuxPartitionConfig';
-import { createAuxPartition } from '../partitions/AuxPartitionFactories';
 import uuid from 'uuid/v4';
-import { createMemoryPartition } from '../partitions';
 import merge from 'lodash/merge';
 
 const uuidMock: jest.Mock = <any>uuid;

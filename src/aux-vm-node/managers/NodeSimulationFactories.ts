@@ -7,7 +7,7 @@ import {
 import { AuxVMNode } from '../vm/AuxVMNode';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { AuxConfig } from '@casual-simulation/aux-vm/vm';
-import { CausalRepoClientPartitionConfig } from '@casual-simulation/aux-vm/partitions';
+import { CausalRepoClientPartitionConfig } from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
     user: AuxUser,

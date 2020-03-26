@@ -1,8 +1,6 @@
 import { MemoryPartition } from './AuxPartition';
 import {
-    MemoryPartitionConfig,
     PartitionConfig,
-    MemoryPartitionInstanceConfig,
     MemoryPartitionStateConfig,
 } from './AuxPartitionConfig';
 import {
@@ -10,7 +8,6 @@ import {
     BotAction,
     Bot,
     UpdatedBot,
-    merge,
     tagsOnBot,
     hasValue,
     getActiveObjects,
@@ -18,17 +15,9 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
-} from '@casual-simulation/aux-common';
+} from '../bots';
 import { Observable, Subject } from 'rxjs';
-import {
-    DeviceAction,
-    StatusUpdate,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    USER_ROLE,
-    Action,
-} from '@casual-simulation/causal-trees';
+import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
 import union from 'lodash/union';

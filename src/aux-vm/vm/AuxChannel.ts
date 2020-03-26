@@ -1,11 +1,14 @@
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    BotAction,
+    StateUpdatedEvent,
+    BotDependentInfo,
+} from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable } from 'rxjs';
-import { BotDependentInfo } from '../managers/DependencyManager';
 import { StoredAux } from '../StoredAux';
 
 /**

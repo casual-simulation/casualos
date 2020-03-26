@@ -6,9 +6,9 @@ import {
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import {
-    createMemoryPartition,
     MemoryPartition,
-} from '@casual-simulation/aux-vm';
+    createMemoryPartition,
+} from '@casual-simulation/aux-common';
 
 let logMock = (console.log = jest.fn());
 console.warn = jest.fn();

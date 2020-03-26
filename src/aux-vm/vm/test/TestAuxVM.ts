@@ -1,6 +1,5 @@
 import { AuxVM } from '../AuxVM';
 import { Observable, Subject } from 'rxjs';
-import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
@@ -13,13 +12,14 @@ import {
     searchBotState,
     getActiveObjects,
     tagsOnBot,
+    StateUpdatedEvent,
+    PrecalculationManager,
+    BotDependentInfo,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
-import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import values from 'lodash/values';
 import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
-import { BotDependentInfo } from '../../managers/DependencyManager';
 import { StoredAux } from '../../StoredAux';
 
 export class TestAuxVM implements AuxVM {

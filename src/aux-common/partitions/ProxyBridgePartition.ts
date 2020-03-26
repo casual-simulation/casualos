@@ -6,7 +6,7 @@ import {
     StatusUpdate,
     Action,
 } from '@casual-simulation/causal-trees';
-import { Bot, UpdatedBot, BotAction } from '@casual-simulation/aux-common';
+import { Bot, UpdatedBot, BotAction } from '../bots';
 import { Observable, Subscription } from 'rxjs';
 
 export class ProxyBridgePartitionImpl implements ProxyBridgePartition {

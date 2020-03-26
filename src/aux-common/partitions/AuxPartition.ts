@@ -1,10 +1,4 @@
-import {
-    BotsState,
-    BotAction,
-    merge,
-    Bot,
-    UpdatedBot,
-} from '@casual-simulation/aux-common';
+import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
 import {
     StatusUpdate,
     RemoteAction,

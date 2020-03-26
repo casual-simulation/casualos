@@ -1,11 +1,6 @@
 import { PartitionConfig } from './AuxPartitionConfig';
 import { AuxPartition, MemoryPartition } from './AuxPartition';
-import {
-    BotsState,
-    BotAction,
-    Bot,
-    UpdatedBot,
-} from '@casual-simulation/aux-common';
+import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
 import { Observable, Subject } from 'rxjs';
 
 export type AuxPartitionFactory = (

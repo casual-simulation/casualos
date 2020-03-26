@@ -14,6 +14,10 @@ import {
     runScript,
     ON_RUN_ACTION_NAME,
     loadBots,
+    MemoryPartition,
+    createMemoryPartition,
+    MemoryBotClient,
+    createBotClientPartition,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -22,13 +26,8 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import { createMemoryPartition } from '../partitions/MemoryPartition';
-import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
-import { MemoryPartition } from '../partitions/AuxPartition';
-import { values } from 'lodash';
-import { createBotClientPartition } from '../partitions/BotPartition';
-import { MemoryBotClient } from '../partitions/MemoryBotClient';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

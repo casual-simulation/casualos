@@ -1,7 +1,6 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { createMemoryPartition } from './MemoryPartition';
-import { StatusUpdate } from '@casual-simulation/causal-trees';
-import { Bot, createBot } from '@casual-simulation/aux-common';
+import { Bot, createBot } from '../bots';
 
 describe('MemoryPartition', () => {
     testPartitionImplementation(async () => {

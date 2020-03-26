@@ -18,7 +18,7 @@ import {
     getActiveObjects,
     createBot,
     RestoreHistoryMarkAction,
-} from '@casual-simulation/aux-common';
+} from '../bots';
 import {
     PartitionConfig,
     CausalRepoHistoryClientPartitionConfig,

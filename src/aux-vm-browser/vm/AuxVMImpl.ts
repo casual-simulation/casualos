@@ -1,14 +1,13 @@
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer } from 'comlink';
 import {
-    AuxConfig,
-    AuxVM,
-    AuxUser,
+    LocalActions,
+    BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
     ProxyBridgePartitionImpl,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-common';
+import { Observable, Subject } from 'rxjs';
+import { wrap, proxy, Remote, expose, transfer } from 'comlink';
+import { AuxConfig, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
     AuxStatic,

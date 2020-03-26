@@ -1,15 +1,12 @@
+import mergeWith from 'lodash/mergeWith';
+import reduce from 'lodash/reduce';
+import { Bot, UpdatedBot } from '../bots/Bot';
 import {
-    Bot,
-    tagsOnBot,
-    UpdatedBot,
-    hasValue,
-    isFormula,
     Dependencies,
     AuxScriptExternalDependency,
     tagNameSymbol,
-} from '@casual-simulation/aux-common';
-import mergeWith from 'lodash/mergeWith';
-import reduce from 'lodash/reduce';
+} from '../Formulas/Dependencies';
+import { tagsOnBot, isFormula, hasValue } from '../bots/BotCalculations';
 
 /**
  * Defines an interface that represents the list of dependencies a bot has.

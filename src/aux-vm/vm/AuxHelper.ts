@@ -46,6 +46,9 @@ import {
     addState,
     calculateBotValue,
     AddBotAction,
+    AuxPartitions,
+    AuxPartition,
+    getPartitionState,
 } from '@casual-simulation/aux-common';
 import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
@@ -56,11 +59,6 @@ import sortBy from 'lodash/sortBy';
 import pick from 'lodash/pick';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
-import {
-    AuxPartitions,
-    getPartitionState,
-    AuxPartition,
-} from '../partitions/AuxPartition';
 import { StoredAux } from '../StoredAux';
 import transform from 'lodash/transform';
 

@@ -15,7 +15,6 @@ import {
 import { Subscription } from 'rxjs';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { BackupModule2 } from './BackupModule2';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import { take } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 import {
@@ -28,6 +27,7 @@ import {
     FixedConnectionServer,
     CausalRepoServer,
 } from '@casual-simulation/causal-tree-server';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 let dateNowMock = (Date.now = jest.fn());
 

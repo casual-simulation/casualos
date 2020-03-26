@@ -1,4 +1,4 @@
-import { BotsState } from '@casual-simulation/aux-common';
+import { BotsState } from '../bots';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
     AuxPartition,

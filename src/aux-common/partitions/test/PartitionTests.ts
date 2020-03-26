@@ -6,7 +6,7 @@ import {
     UpdatedBot,
     botRemoved,
     botUpdated,
-} from '@casual-simulation/aux-common';
+} from '../../bots';
 import { Subscription, never } from 'rxjs';
 import { StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';

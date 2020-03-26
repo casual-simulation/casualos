@@ -11,11 +11,16 @@ import {
     Sandbox,
     BotsState,
     BOT_SPACE_TAG,
+    StateUpdatedEvent,
+    PrecalculationManager,
+    AuxPartitions,
+    AuxPartition,
+    PartitionConfig,
+    iteratePartitions,
+    BotDependentInfo,
 } from '@casual-simulation/aux-common';
-import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildFormulaLibraryOptions } from './AuxConfig';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -25,13 +30,6 @@ import {
     Action,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { BotDependentInfo } from '../managers/DependencyManager';
-import {
-    AuxPartitions,
-    AuxPartition,
-    iteratePartitions,
-} from '../partitions/AuxPartition';
-import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';

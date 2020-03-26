@@ -1,18 +1,20 @@
-import { LocalActions } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    PartitionConfig,
+    AuxPartition,
+    createAuxPartition,
+    createMemoryPartition,
+    createCausalRepoPartition,
+    createCausalRepoClientPartition,
+    createCausalRepoHistoryClientPartition,
+    createBotClientPartition,
+    iteratePartitions,
+} from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     BaseAuxChannel,
     AuxUser,
     AuxChannelOptions,
-    createMemoryPartition,
-    createAuxPartition,
-    createCausalRepoPartition,
-    PartitionConfig,
-    AuxPartition,
-    iteratePartitions,
-    createCausalRepoClientPartition,
-    createCausalRepoHistoryClientPartition,
-    createBotClientPartition,
 } from '@casual-simulation/aux-vm';
 import {
     createBotPartition,

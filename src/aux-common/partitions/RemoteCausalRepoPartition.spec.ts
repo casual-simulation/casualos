@@ -24,20 +24,8 @@ import {
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
-import {
-    botAdded,
-    createBot,
-    botUpdated,
-    Bot,
-    UpdatedBot,
-} from '@casual-simulation/aux-common';
-import {
-    AuxOpType,
-    addAuxResults,
-    bot,
-    tag,
-    value,
-} from '@casual-simulation/aux-common/aux-format-2';
+import { botAdded, createBot, botUpdated, Bot, UpdatedBot } from '../bots';
+import { AuxOpType, bot, tag, value } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
 
 console.log = jest.fn();

@@ -1,23 +1,17 @@
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
-    PartitionConfig,
-    AuxPartitionBase,
-    RemoteCausalRepoPartition,
-} from '@casual-simulation/aux-vm';
-import {
-    RemoteCausalRepoPartitionConfig,
-    CausalRepoClientPartitionConfig,
-    RemoteCausalRepoPartitionImpl,
-    BotPartition,
-    createBotClientPartition,
-    BotPartitionImpl,
-} from '@casual-simulation/aux-vm/partitions';
-import {
     SocketManager,
     SocketIOConnectionClient,
 } from '@casual-simulation/causal-tree-client-socketio';
 import { BotHttpClient } from './BotHttpClient';
+import {
+    PartitionConfig,
+    RemoteCausalRepoPartition,
+    RemoteCausalRepoPartitionImpl,
+    BotPartition,
+    BotPartitionImpl,
+} from '@casual-simulation/aux-common';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.

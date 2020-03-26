@@ -1,9 +1,5 @@
 import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
-import {
-    AuxCausalTree,
-    auxTree,
-    applyEvents,
-} from '@casual-simulation/aux-common/aux-format-2';
+import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
 import { Observable, Subscription, Subject } from 'rxjs';
 import { CausalRepoPartition } from './AuxPartition';
 import { startWith } from 'rxjs/operators';
@@ -16,7 +12,7 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
-} from '@casual-simulation/aux-common';
+} from '../bots';
 import {
     PartitionConfig,
     CausalRepoPartitionConfig,

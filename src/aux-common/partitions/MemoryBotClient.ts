@@ -1,5 +1,5 @@
 import { BotClient } from './BotClient';
-import { Bot, BotsState, TagFilter } from '@casual-simulation/aux-common';
+import { Bot, BotsState, TagFilter } from '../bots';
 import values from 'lodash/values';
 
 export class MemoryBotClient implements BotClient {

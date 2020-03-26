@@ -4,18 +4,16 @@ import {
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import {
-    AuxConfig,
-    PrecalculationManager,
-    BaseAuxChannel,
-    AuxUser,
-    createAuxPartition,
-    createMemoryPartition,
     PartitionConfig,
     AuxPartition,
-} from '@casual-simulation/aux-vm';
+    createAuxPartition,
+    createMemoryPartition,
+    createCausalRepoPartition,
+    PrecalculationManager,
+} from '@casual-simulation/aux-common';
+import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
-import { createCausalRepoPartition } from '@casual-simulation/aux-vm/partitions';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;
