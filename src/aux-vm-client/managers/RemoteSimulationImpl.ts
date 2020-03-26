@@ -4,9 +4,9 @@ import {
     BaseSimulation,
     LoginManager,
     AuxConfig,
-    AuxPartitionConfig,
 } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from './RemoteSimulation';
+import { AuxPartitionConfig } from '@casual-simulation/aux-common';
 
 /**
  * Defines a class that provides an implementation of RemoteSimulation.

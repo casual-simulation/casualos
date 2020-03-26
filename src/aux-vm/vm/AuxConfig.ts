@@ -1,5 +1,7 @@
-import { AuxPartitionConfig } from '../partitions/AuxPartitionConfig';
-import { FormulaLibraryOptions } from '@casual-simulation/aux-common';
+import {
+    FormulaLibraryOptions,
+    AuxPartitionConfig,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines the possible configuration options for a simulation.

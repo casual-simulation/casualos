@@ -1,5 +1,4 @@
-import { BotClient } from '@casual-simulation/aux-vm';
-import { Bot, TagFilter } from '@casual-simulation/aux-common';
+import { Bot, TagFilter, BotClient } from '@casual-simulation/aux-common';
 import axios from 'axios';
 
 export class BotHttpClient implements BotClient {
