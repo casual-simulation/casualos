@@ -13,12 +13,10 @@ import {
     getActiveObjects,
     tagsOnBot,
     hasValue,
-} from '@casual-simulation/aux-common';
-import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
-import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-common';
+import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
