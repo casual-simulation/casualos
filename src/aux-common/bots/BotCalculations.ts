@@ -902,13 +902,23 @@ export function createBot(
 export function createPrecalculatedBot(
     id = uuid(),
     values: PrecalculatedTags = {},
-    tags?: Object['tags']
+    tags?: Object['tags'],
+    space?: BotSpace
 ): PrecalculatedBot {
+    if (hasValue(space)) {
+        return {
+            id,
+            space,
+            precalculated: true,
+            tags: tags || values,
+            values,
+        };
+    }
     return {
-        id: id,
+        id,
         precalculated: true,
         tags: tags || values,
-        values: values,
+        values,
     };
 }
 

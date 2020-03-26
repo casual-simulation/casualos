@@ -6,7 +6,16 @@
 // 4. Partitions - These are services which manage the persistence and realtime sync of the AUX data model.
 // 5. Runtimes - These are services which manage script execution and formula precalculation.
 
-import { BotAction, StateUpdatedEvent } from '../bots';
+import {
+    BotAction,
+    StateUpdatedEvent,
+    Bot,
+    UpdatedBot,
+    PrecalculatedBot,
+    BotsState,
+    PrecalculatedBotsState,
+    hasValue,
+} from '../bots';
 import { Observable } from 'rxjs';
 
 /**
@@ -16,6 +25,10 @@ import { Observable } from 'rxjs';
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime {
+    private _originalState: BotsState = {};
+    private _compiledState: CompiledBotsState = {};
+    private _precalculatedState: PrecalculatedBotsState = {};
+
     /**
      * An observable that resolves whenever the runtime issues an action.
      */
@@ -36,8 +49,66 @@ export class AuxRuntime {
     execute(script: string): void {}
 
     /**
-     * Updates the internal state of the runtime.
-     * @param update The update that should be integrated.
+     * Signals to the runtime that the given bots were added.
+     * @param bots The bots.
      */
-    update(update: StateUpdatedEvent): void {}
+    botsAdded(bots: Bot[]): StateUpdatedEvent {
+        let update = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+
+        let nextOriginalState = Object.assign({}, this._originalState);
+        let nextPrecalculatedState = Object.assign(
+            {},
+            this._precalculatedState
+        );
+
+        for (let bot of bots) {
+            let newBot: PrecalculatedBot = {
+                id: bot.id,
+                precalculated: true,
+                tags: bot.tags,
+                values: bot.tags,
+            };
+            if (hasValue(bot.space)) {
+                newBot.space = bot.space;
+            }
+            nextOriginalState[bot.id] = bot;
+            nextPrecalculatedState[bot.id] = update.state[bot.id] = newBot;
+            update.addedBots.push(bot.id);
+        }
+
+        this._originalState = nextOriginalState;
+        this._precalculatedState = nextPrecalculatedState;
+
+        return update;
+    }
+
+    /**
+     * Signals to the runtime that the given bots were removed.
+     * @param botIds The IDs of the bots that were removed.
+     */
+    botsRemoved(botIds: string[]): StateUpdatedEvent {
+        return null;
+    }
+
+    /**
+     * Signals to the runtime that the given bots were updated.
+     * @param updates The bot updates.
+     */
+    botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
+        return null;
+    }
 }
+
+// Types of bots
+// 1. Raw bot - original data
+// 2. Script bot - data + compiled scripts
+// 3. Precalculated bot - derived data
+
+// Raw bot -> runtime bot -> precalculated bot
+
+interface CompiledBotsState {}
