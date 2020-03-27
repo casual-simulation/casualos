@@ -45,6 +45,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         api: {
             getBots,
             getID,
+            getJSON,
 
             byTag,
             byMod,
@@ -328,5 +329,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return null;
+    }
+
+    /**
+     * Gets JSON for the given data.
+     * @param data The data.
+     */
+    function getJSON(data: any): string {
+        return JSON.stringify(data);
     }
 }

@@ -703,4 +703,31 @@ describe('AuxLibrary', () => {
             expect(id).toEqual(null);
         });
     });
+
+    describe('getJSON()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should convert objects to JSON', () => {
+            const json = library.api.getJSON({ abc: 'def' });
+
+            expect(json).toEqual(
+                JSON.stringify({
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should convert bots to JSON', () => {
+            bot1.tags.abc = 'def';
+
+            const json = library.api.getJSON(bot1);
+            expect(json).toEqual(JSON.stringify(bot1));
+        });
+    });
 });
