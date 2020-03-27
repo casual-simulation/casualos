@@ -30,6 +30,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     return {
         api: {
             getBots,
+
             byTag,
         },
     };
@@ -73,6 +74,48 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         } else {
             return context.bots.filter(b => hasValue(b.tags[tag]));
+        }
+    }
+
+    /**
+     * Creates a filter function that checks whether bots have the given tag and value.
+     * @param tag The tag to check.
+     * @param filter The value or filter that the tag should match.
+     *
+     * @example
+     * // Find all the bots with a "name" of "bob".
+     * let bobs = getBots(byTag("name", "bob"));
+     *
+     * @example
+     * // Find all bots with a height larger than 2.
+     * let bots = getBots(byTag("height", height => height > 2));
+     *
+     * @example
+     * // Find all the bots with the "test" tag.
+     * let bots = getBots(byTag("test"));
+     */
+    function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
+        tag = trimTag(tag);
+        if (filter && typeof filter === 'function') {
+            return bot => {
+                let val = bot.tags[tag];
+                return hasValue(val) && filter(val);
+            };
+        } else if (hasValue(filter)) {
+            return bot => {
+                let val = bot.tags[tag];
+                return hasValue(val) && filter === val;
+            };
+        } else if (filter === null) {
+            return bot => {
+                let val = bot.tags[tag];
+                return !hasValue(val);
+            };
+        } else {
+            return bot => {
+                let val = bot.tags[tag];
+                return hasValue(val);
+            };
         }
     }
 }

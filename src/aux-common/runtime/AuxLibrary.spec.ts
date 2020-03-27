@@ -145,57 +145,138 @@ describe('AuxLibrary', () => {
             expect(bots).toEqual([bot3, bot2]);
         });
 
-        
+        it.each(falsyCases)(
+            'should return only the bots that match %s',
+            (desc, val) => {
+                bot1.tags.tag = val;
+                bot2.tags.tag = val;
 
-                it.each(falsyCases)(
-                    'should return only the bots that match %s',
-                    (desc, val) => {
-                        bot1.tags.tag = val;
-                        bot2.tags.tag = val;
+                const bots = library.api.getBots('tag', val);
 
-                        const bots = library.api.getBots('tag', val);
+                expect(bots).toEqual([bot1, bot2]);
+            }
+        );
 
-                        expect(bots).toEqual([bot1, bot2]);
-                    }
+        it.each(emptyCases)(
+            'should return an empty array if a %s tag is provided',
+            (desc, val) => {
+                const bots = library.api.getBots(val);
+                expect(bots).toEqual([]);
+            }
+        );
+
+        it.each(falsyCases)(
+            'should return only the bots that match %s when using byTag()',
+            (desc, val) => {
+                bot1.tags.tag = 2;
+                bot2.tags.tag = val;
+
+                const bots = library.api.getBots(library.api.byTag('tag', val));
+
+                expect(bots).toEqual([bot2]);
+            }
+        );
+    });
+
+    describe('byTag()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        describe('just tag', () => {
+            const cases = [
+                [true, 'a bot has the given tag', 0],
+                [false, 'a bot has null for the given tag', null],
+                [false, 'a bot has undefined for the given tag', undefined],
+            ];
+
+            it.each(cases)(
+                'should return a function that returns %s if %s',
+                (expected, desc, val) => {
+                    const filter = library.api.byTag('red');
+
+                    bot1.tags.red = val;
+
+                    expect(filter(bot1)).toEqual(expected);
+                }
+            );
+
+            it('should support using a hashtag at the beginning of a tag', () => {
+                const filter = library.api.byTag('#red');
+                bot1.tags.red = 'abc';
+
+                expect(filter(bot1)).toBe(true);
+            });
+
+            it('should support using a @ symbol at the beginning of a tag', () => {
+                const filter = library.api.byTag('@red');
+                bot1.tags.red = 'abc';
+
+                expect(filter(bot1)).toBe(true);
+            });
+        });
+
+        describe('tag + value', () => {
+            it('should return a function that returns true when the value matches the tag', () => {
+                const filter = library.api.byTag('red', 'abc');
+                bot1.tags.red = 'abc';
+
+                expect(filter(bot1)).toBe(true);
+            });
+
+            it('should return a function that returns false when the value does not match the tag', () => {
+                const filter = library.api.byTag('red', 'abc');
+                bot1.tags.red = 123;
+
+                expect(filter(bot1)).toBe(false);
+            });
+
+            it.each(falsyCases)('should work with %s', (desc, val) => {
+                const filter = library.api.byTag('red', val);
+                bot1.tags.red = val;
+
+                expect(filter(bot1)).toBe(true);
+
+                bot1.tags.red = 5;
+                expect(filter(bot1)).toBe(false);
+            });
+
+            it('should be able to match bots without the given tag using null', () => {
+                const filter = library.api.byTag('red', null);
+                bot1.tags.red = 'abc';
+
+                expect(filter(bot1)).toBe(false);
+
+                delete bot1.tags.red;
+                expect(filter(bot1)).toBe(true);
+            });
+        });
+
+        describe('tag + filter', () => {
+            it('should return a function that returns true when the function returns true', () => {
+                const filter = library.api.byTag(
+                    'red',
+                    tag => typeof tag === 'number'
                 );
 
-                it.each(emptyCases)(
-                    'should return an empty array if a %s tag is provided',
-                    (desc, val) => {
-                        const bots = library.api.getBots(val);
-                        expect(bots).toEqual([]);;
-                    }
+                bot1.tags.red = 123;
+                expect(filter(bot1)).toBe(true);
+            });
+
+            it('should return a function that returns false when the function returns false', () => {
+                const filter = library.api.byTag(
+                    'red',
+                    tag => typeof tag === 'number'
                 );
 
-                // it.each(falsyCases)(
-                //     'should return only the bots that match %s when using byTag()',
-                //     (desc, val) => {
-                //         const bot = createBot('test', {
-                //             formula: `=getBots(byTag("tag", ${val}))`,
-                //         });
-
-                //         const bot2 = createBot('test2', {
-                //             tag: 2,
-                //         });
-
-                //         const bot3 = createBot('test3', {
-                //             tag: val,
-                //         });
-
-                //         const context = createCalculationContext([
-                //             bot,
-                //             bot2,
-                //             bot3,
-                //         ]);
-                //         const value = calculateBotValue(
-                //             context,
-                //             bot,
-                //             'formula'
-                //         );
-
-                //         expect(value).toMatchObject([bot3]);
-                //     }
-                // );
+                bot1.tags.red = 'abc';
+                expect(filter(bot1)).toBe(false);
+            });
+        });
     });
 
 
