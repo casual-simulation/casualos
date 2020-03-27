@@ -429,4 +429,85 @@ describe('AuxLibrary', () => {
             expect(filter.sort(bot1)).toBe(100);
         });
     });
+
+    describe('inStack()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return a function that returns true if the bot is in the same stack as another bot', () => {
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            const filter = library.api.inStack(bot1, 'red');
+
+            bot2.tags.red = true;
+            bot2.tags.redX = 1;
+            bot2.tags.redY = 2;
+
+            expect(filter(bot2)).toEqual(true);
+        });
+
+        it('should return a function that returns false if the bot is not in the same stack as another bot', () => {
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            const filter = library.api.inStack(bot1, 'red');
+
+            bot2.tags.red = true;
+            bot2.tags.redX = 1;
+            bot2.tags.redY = 3;
+
+            expect(filter(bot2)).toEqual(false);
+        });
+
+        it('should return a function that returns false if the bot is not in the same dimension as another bot', () => {
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            const filter = library.api.inStack(bot1, 'red');
+
+            bot2.tags.red = false;
+            bot2.tags.redX = 1;
+            bot2.tags.redY = 2;
+
+            expect(filter(bot2)).toEqual(false);
+        });
+
+        it('should return a function with a sort function that sorts the bots by their sort order', () => {
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            const filter = library.api.inStack(bot1, 'red');
+
+            bot2.tags.red = true;
+            bot2.tags.redX = 1;
+            bot2.tags.redY = 2;
+            bot2.tags.redSortOrder = 100;
+
+            expect(typeof filter.sort).toBe('function');
+            expect(filter.sort(bot2)).toEqual(100);
+        });
+
+        it('should support sorting when the dimension tag starts with a hashtag', () => {
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            const filter = library.api.inStack(bot1, '#red');
+
+            bot2.tags.red = true;
+            bot2.tags.redX = 1;
+            bot2.tags.redY = 2;
+            bot2.tags.redSortOrder = 100;
+
+            expect(typeof filter.sort).toBe('function');
+            expect(filter.sort(bot2)).toEqual(100);
+        });
+    });
 });
