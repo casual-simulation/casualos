@@ -2,6 +2,7 @@ import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import { AuxGlobalContext, addToContext } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
 import { ScriptBot } from '../bots';
+import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -728,6 +729,43 @@ describe('AuxLibrary', () => {
 
             const json = library.api.getJSON(bot1);
             expect(json).toEqual(JSON.stringify(bot1));
+        });
+    });
+
+    describe('getTag()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+        let bot3: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+        });
+
+        it('should get the specified tag value', () => {
+            bot1.tags.name = 'bob';
+            const value = library.api.getTag(bot1, '#name');
+
+            expect(value).toEqual('bob');
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            bot1.tags.name = 'bob';
+            const value = library.api.getTag(bot1, '@name');
+
+            expect(value).toEqual('bob');
+        });
+
+        it('should be able to get a chain of tags', () => {
+            bot1.tags.bot = bot2;
+            bot2.tags.bot = bot3;
+            bot3.tags.name = 'bob';
+            const value = library.api.getTag(bot1, '#bot', '#bot', '#name');
+
+            expect(value).toEqual('bob');
         });
     });
 });

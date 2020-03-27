@@ -46,6 +46,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBots,
             getID,
             getJSON,
+            getTag,
 
             byTag,
             byMod,
