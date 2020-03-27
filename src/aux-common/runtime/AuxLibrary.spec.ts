@@ -768,4 +768,65 @@ describe('AuxLibrary', () => {
             expect(value).toEqual('bob');
         });
     });
+
+    describe('getBotTagValues()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+        let bot3: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+        });
+
+        it('should get the list of values with the given tag', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+            const values = library.api.getBotTagValues('#name');
+
+            expect(values).toEqual(['bob', 'alice', 'bob']);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+            const values = library.api.getBotTagValues('@name');
+
+            expect(values).toEqual(['bob', 'alice', 'bob']);
+        });
+
+        it('should get the list of bots with the given tag matching the given value', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+            const values = library.api.getBotTagValues('#name', 'bob');
+
+            expect(values).toEqual(['bob', 'bob']);
+        });
+
+        it('should get the list of bots with the given tag matching the given predicate', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+            const values = library.api.getBotTagValues(
+                '#name',
+                b => b === 'bob'
+            );
+
+            expect(values).toEqual(['bob', 'bob']);
+        });
+
+        it('should ignore bots that dont have the given tag', () => {
+            bot1.tags.name = 'bob';
+            bot3.tags.name = 'bob';
+            const values = library.api.getBotTagValues('#name');
+
+            expect(values).toEqual(['bob', 'bob']);
+        });
+    });
 });

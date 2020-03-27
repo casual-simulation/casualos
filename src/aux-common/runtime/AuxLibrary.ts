@@ -44,6 +44,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     return {
         api: {
             getBots,
+            getBotTagValues,
             getID,
             getJSON,
             getTag,
@@ -100,6 +101,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         } else {
             return context.bots.filter(b => hasValue(b.tags[tag]));
+        }
+    }
+
+    /**
+     * Gets the list of tag values from bots that have the given tag.
+     * @param tag The tag.
+     * @param filter THe optional filter to use for the values.
+     */
+    function getBotTagValues(tag: string, filter?: TagFilter): any[] {
+        const values = context.bots
+            .map(b => getTag(b, tag))
+            .filter(t => hasValue(t));
+        if (hasValue(filter)) {
+            if (typeof filter === 'function') {
+                return values.filter(val => filter(val));
+            } else {
+                return values.filter(val => val === filter);
+            }
+        } else {
+            return values;
         }
     }
 
