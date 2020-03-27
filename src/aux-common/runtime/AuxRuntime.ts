@@ -31,7 +31,7 @@ import {
 } from '../bots';
 import { Observable } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
-import { AuxGlobalContext } from './AuxGlobalContext';
+import { AuxGlobalContext, addToContext } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 
@@ -164,13 +164,7 @@ export class AuxRuntime {
             compiledBot.space = bot.space;
         }
         compiledBot.script = this._createScriptBot(compiledBot);
-
-        const index = sortedIndexBy(
-            this._globalContext.bots,
-            compiledBot.script,
-            sb => sb.id
-        );
-        this._globalContext.bots.splice(index, 0, compiledBot.script);
+        addToContext(this._globalContext, compiledBot.script);
 
         return compiledBot;
     }
