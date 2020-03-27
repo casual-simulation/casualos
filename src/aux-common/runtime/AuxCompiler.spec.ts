@@ -1,18 +1,20 @@
 import { AuxCompiler } from './AuxCompiler';
 
 describe('AuxCompiler', () => {
+    let compiler: AuxCompiler;
+
+    beforeEach(() => {
+        compiler = new AuxCompiler();
+    });
+
     describe('compile()', () => {
         it('should return a function that executes the given code', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return 1 + 2');
 
             expect(func()).toEqual(3);
         });
 
         it('should make the given variables available to the script', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return num1 + num2', {
                 variables: {
                     num1: () => 10,
@@ -24,8 +26,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should bind the given "this" variable to the script', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return this + num', {
                 variables: {
                     num: () => 10,
@@ -37,8 +37,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should support using a context object to derive variables', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return this + num', {
                 variables: {
                     num: (ctx: any) => ctx.num,
@@ -53,8 +51,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should support running arbitrary code before execution', () => {
-            const compiler = new AuxCompiler();
-
             const context = {
                 num: 0,
             };
@@ -76,8 +72,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should support running arbitrary code after execution', () => {
-            const compiler = new AuxCompiler();
-
             const context = {
                 num: 0,
             };
@@ -99,8 +93,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should allow redefining variables in the script', () => {
-            const compiler = new AuxCompiler();
-
             const context = {
                 num: 5,
             };
@@ -116,8 +108,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should not allow reassigning a constant value', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('num = 1; return num;', {
                 constants: {
                     num: -5,
@@ -130,8 +120,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should not allow reassigning a variable', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('num = 1; return num;', {
                 variables: {
                     num: () => -5,
@@ -144,8 +132,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should support constant values compiled into the script', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return num;', {
                 constants: {
                     num: -5,
@@ -156,8 +142,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should support constant values compiled into the script', () => {
-            const compiler = new AuxCompiler();
-
             const func = compiler.compile('return num;', {
                 constants: {
                     num: -5,
@@ -168,8 +152,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should return metadata for the compiled script', () => {
-            const compiler = new AuxCompiler();
-
             const script = 'return str + num + abc;';
             const func = compiler.compile(script, {
                 constants: {
@@ -191,8 +173,6 @@ describe('AuxCompiler', () => {
         });
 
         it('should transpile the user code to include energy checks', () => {
-            const compiler = new AuxCompiler();
-
             function __energyCheck() {
                 throw new Error('Energy Check Hit!');
             }
