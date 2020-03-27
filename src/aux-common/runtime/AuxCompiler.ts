@@ -59,6 +59,11 @@ export class AuxCompiler {
         func: Function;
         scriptLineOffset: number;
     } {
+        // Yes this code is super ugly.
+        // Some day we will engineer this into a real
+        // compiler, but for now this ad-hoc method
+        // seems to work.
+
         let formula = false;
         if (isFormula(script)) {
             script = script.substring(1);

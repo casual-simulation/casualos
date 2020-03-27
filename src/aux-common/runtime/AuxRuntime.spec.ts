@@ -25,8 +25,6 @@ describe('AuxRuntime', () => {
         // runtime.onActions.subscribe(a => events.push(a));
     });
 
-    it('should pass', () => {});
-
     describe('botsAdded()', () => {
         it('should return a state update for the new bot', () => {
             const update = runtime.botsAdded([
@@ -78,6 +76,31 @@ describe('AuxRuntime', () => {
             });
         });
 
+        it('should overwrite bots with the same ID', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test', {
+                    abc: 'def',
+                }),
+            ]);
+
+            const update2 = runtime.botsAdded([
+                createBot('test', {
+                    abc: 123,
+                }),
+            ]);
+
+            expect(update2).toEqual({
+                state: {
+                    test: createPrecalculatedBot('test', {
+                        abc: 123,
+                    }),
+                },
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
         it('should include the space the bot was in', () => {
             const update = runtime.botsAdded([
                 createBot(
@@ -106,7 +129,7 @@ describe('AuxRuntime', () => {
             });
         });
 
-        it.skip('should pre-calculate formulas', () => {
+        it('should pre-calculate simple formulas', () => {
             const update = runtime.botsAdded([
                 createBot('test', {
                     abc: '=123',

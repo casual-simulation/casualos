@@ -15,8 +15,12 @@ import {
     BotsState,
     PrecalculatedBotsState,
     hasValue,
+    tagsOnBot,
+    isFormula,
+    isScript,
 } from '../bots';
 import { Observable } from 'rxjs';
+import { AuxCompiler } from './AuxCompiler';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -27,7 +31,7 @@ import { Observable } from 'rxjs';
 export class AuxRuntime {
     private _originalState: BotsState = {};
     private _compiledState: CompiledBotsState = {};
-    private _precalculatedState: PrecalculatedBotsState = {};
+    private _compiler = new AuxCompiler();
 
     /**
      * An observable that resolves whenever the runtime issues an action.
@@ -61,28 +65,47 @@ export class AuxRuntime {
         } as StateUpdatedEvent;
 
         let nextOriginalState = Object.assign({}, this._originalState);
-        let nextPrecalculatedState = Object.assign(
-            {},
-            this._precalculatedState
-        );
 
         for (let bot of bots) {
-            let newBot: PrecalculatedBot = {
+            // TODO: Make the compiled bot have a script variant
+            //       for supporting writing to tags and such.
+            let newBot: CompiledBot = {
                 id: bot.id,
                 precalculated: true,
                 tags: bot.tags,
-                values: bot.tags,
+                listeners: {},
+                formulas: {},
+                values: {},
             };
+            let precalculated: PrecalculatedBot = {
+                id: bot.id,
+                precalculated: true,
+                tags: bot.tags,
+                values: newBot.values,
+            };
+
+            for (let tag of tagsOnBot(bot)) {
+                let value = bot.tags[tag];
+                if (isFormula(value)) {
+                    newBot.formulas[tag] = this.compile(newBot, tag, value);
+                    value = newBot.formulas[tag]();
+                } else if (isScript(value)) {
+                    newBot.listeners[tag] = this.compile(newBot, tag, value);
+                }
+
+                newBot.values[tag] = value;
+            }
+
             if (hasValue(bot.space)) {
                 newBot.space = bot.space;
+                precalculated.space = bot.space;
             }
             nextOriginalState[bot.id] = bot;
-            nextPrecalculatedState[bot.id] = update.state[bot.id] = newBot;
+            update.state[bot.id] = precalculated;
             update.addedBots.push(bot.id);
         }
 
         this._originalState = nextOriginalState;
-        this._precalculatedState = nextPrecalculatedState;
 
         return update;
     }
@@ -102,6 +125,20 @@ export class AuxRuntime {
     botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
         return null;
     }
+
+    compile(bot: CompiledBot, tag: string, script: string) {
+        return this._compiler.compile(script, {
+            // TODO: Support all the weird features
+            context: {
+                bot,
+                tag,
+            },
+            variables: {
+                this: ctx => ctx.bot,
+                bot: ctx => ctx.bot,
+            },
+        });
+    }
 }
 
 // Types of bots
@@ -111,4 +148,15 @@ export class AuxRuntime {
 
 // Raw bot -> runtime bot -> precalculated bot
 
-interface CompiledBotsState {}
+interface CompiledBotsState {
+    [id: string]: CompiledBot;
+}
+
+interface CompiledBot extends PrecalculatedBot {
+    listeners: {
+        [tag: string]: () => any;
+    };
+    formulas: {
+        [tag: string]: () => any;
+    };
+}
