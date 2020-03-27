@@ -634,4 +634,29 @@ describe('AuxLibrary', () => {
             expect(filter(bot2)).toEqual(false);
         });
     });
+
+    describe('either()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return a function that returns true when any of the given functions return true', () => {
+            const filter = library.api.either(b => false, b => true);
+            expect(filter(bot1)).toEqual(true);
+        });
+
+        it('should return a function that returns false when all of the given functions return false', () => {
+            const filter = library.api.either(b => false, b => false);
+            expect(filter(bot1)).toEqual(false);
+        });
+
+        it('should return a function that doesnt have a sort function', () => {
+            const filter = library.api.either(b => false, b => true);
+            expect(typeof filter.sort).toEqual('undefined');
+        });
+    });
 });

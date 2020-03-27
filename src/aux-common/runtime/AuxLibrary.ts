@@ -53,6 +53,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             neighboring,
             bySpace,
             byCreator,
+            either,
         },
     };
 
@@ -259,6 +260,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function byCreator(bot: Bot | string) {
         return byTag('auxCreator', getID(bot));
+    }
+
+    /**
+     * Creates a function that filters bots by whether they match any of the given filters.
+     * @param filters The filter functions that a bot should be tested against.
+     *
+     * @example
+     * // Find all bots with the name "bob" or height 2.
+     * let bots = getBots(
+     *   either(
+     *     byTag("name", "bob"),
+     *     byTag("height", height => height === 2)
+     *   )
+     * );
+     */
+    function either(...filters: BotFilterFunction[]): BotFilterFunction {
+        return bot => filters.some(f => f(bot));
     }
 
     /**
