@@ -365,4 +365,68 @@ describe('AuxLibrary', () => {
             expect(filter(bot1)).toEqual(false);
         });
     });
+
+    describe('atPosition()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return a function that returns true if the bot is at the given position', () => {
+            const filter = library.api.atPosition('red', 1, 2);
+
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+
+            expect(filter(bot1)).toEqual(true);
+        });
+
+        it('should return a function that returns false if the bot is not at the given position', () => {
+            const filter = library.api.atPosition('red', 1, 2);
+
+            bot1.tags.red = true;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 3;
+
+            expect(filter(bot1)).toEqual(false);
+        });
+
+        it('should return a function that returns false if the bot is not in the given dimension', () => {
+            const filter = library.api.atPosition('red', 1, 2);
+
+            bot1.tags.red = false;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+
+            expect(filter(bot1)).toEqual(false);
+        });
+
+        it('should return a function with a sort function that sorts the bots by their sort order', () => {
+            const filter = library.api.atPosition('red', 1, 2);
+
+            bot1.tags.red = false;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            bot1.tags.redSortOrder = 100;
+
+            expect(typeof filter.sort).toBe('function');
+            expect(filter.sort(bot1)).toBe(100);
+        });
+
+        it('should support sorting when the dimension tag starts with a hashtag', () => {
+            const filter = library.api.atPosition('#red', 1, 2);
+
+            bot1.tags.red = false;
+            bot1.tags.redX = 1;
+            bot1.tags.redY = 2;
+            bot1.tags.redSortOrder = 100;
+
+            expect(typeof filter.sort).toBe('function');
+            expect(filter.sort(bot1)).toBe(100);
+        });
+    });
 });

@@ -40,6 +40,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byTag,
             byMod,
             inDimension,
+            atPosition,
         },
     };
 
@@ -155,5 +156,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function inDimension(dimension: string): BotFilterFunction {
         return byTag(dimension, true);
+    }
+
+    /**
+     * Creates a filter function that checks whether bots are at the given position in the given dimension.
+     * @param dimension The dimension that the bots should be in.
+     * @param x The X position in the dimension that the bots should be at.
+     * @param y The Y position in the dimension that the bots should be at.
+     * @returns A function that returns true if the given bot is at the given position and false if it is not.
+     *
+     * @example
+     * // Find all the bots at (1, 2) in the "test" dimension.
+     * let bots = getBots(atPosition("test", 1, 2));
+     */
+    function atPosition(
+        dimension: string,
+        x: number,
+        y: number
+    ): BotFilterFunction {
+        const inCtx = inDimension(dimension);
+        const atX = byTag(`${dimension}X`, x);
+        const atY = byTag(`${dimension}Y`, y);
+        const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
+        filter.sort = b => b.tags[trimTag(`${dimension}SortOrder`)] || 0;
+        return filter;
     }
 }
