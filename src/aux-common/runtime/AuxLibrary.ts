@@ -51,6 +51,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             atPosition,
             inStack,
             bySpace,
+            byCreator,
         },
     };
 
@@ -220,6 +221,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a filter function that checks whether bots were created by the given bot.
+     * @param bot The bot to determine weather the bots have been created by it or not.
+     * @returns A function that returns true if the bot was created by the given bot.
+     *
+     * @example
+     * // Find all the bots created by the yellow bot.
+     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     */
+    function byCreator(bot: Bot | string) {
+        return byTag('auxCreator', getID(bot));
+    }
+
+    /**
      * Gets the value of the given tag stored in the given bot.
      * @param bot The bot.
      * @param tag The tag.
@@ -240,5 +254,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return current;
+    }
+
+    /**
+     * Gets the ID from the given bot.
+     * @param bot The bot or string.
+     */
+    function getID(bot: Bot | string): string {
+        if (typeof bot === 'string') {
+            return bot || null;
+        } else if (bot) {
+            return bot.id || null;
+        }
+
+        return null;
     }
 }

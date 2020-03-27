@@ -528,4 +528,48 @@ describe('AuxLibrary', () => {
             expect(filter(bot1)).toEqual(true);
         });
     });
+
+    describe('byCreator()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return a function that returns true if the bot is created by the given bot', () => {
+            const filter = library.api.byCreator(bot1);
+
+            bot2.tags.auxCreator = bot1.id;
+
+            expect(filter(bot2)).toEqual(true);
+        });
+
+        it('should return a function that returns true if the bot is created by the given bot ID', () => {
+            const filter = library.api.byCreator(bot1.id);
+
+            bot2.tags.auxCreator = bot1.id;
+
+            expect(filter(bot2)).toEqual(true);
+        });
+
+        it('should return a function that returns false if the bot not is created by the given bot ID', () => {
+            const filter = library.api.byCreator(bot1.id);
+
+            bot2.tags.auxCreator = 'other';
+
+            expect(filter(bot2)).toEqual(false);
+        });
+
+        it('should return a function that returns false if the bot not is created by the given bot', () => {
+            const filter = library.api.byCreator(bot1);
+
+            bot2.tags.auxCreator = 'other';
+
+            expect(filter(bot2)).toEqual(false);
+        });
+    });
 });
