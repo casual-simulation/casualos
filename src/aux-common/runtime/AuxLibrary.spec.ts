@@ -678,4 +678,29 @@ describe('AuxLibrary', () => {
             expect(filter(bot2)).toEqual(true);
         });
     });
+
+    describe('getID()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should get the ID of the given bot', () => {
+            const id = library.api.getID(bot1);
+            expect(id).toEqual(bot1.id);
+        });
+
+        it('should return the given ID', () => {
+            const id = library.api.getID('haha');
+            expect(id).toEqual('haha');
+        });
+
+        it('should handle null values', () => {
+            const id = library.api.getID(null);
+            expect(id).toEqual(null);
+        });
+    });
 });
