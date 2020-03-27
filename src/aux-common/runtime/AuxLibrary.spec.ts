@@ -511,6 +511,68 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('neighboring()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        const directionCases = [
+            ['front', 0, -1],
+            ['back', 0, 1],
+            ['left', 1, 0],
+            ['right', -1, 0],
+        ];
+
+        describe.each(directionCases)('%s', (direction, x, y) => {
+            it('should return a function that returns true if the given bot is at the correct position', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 0;
+                bot1.tags.redY = 0;
+                const filter = library.api.neighboring(bot1, 'red', direction);
+
+                bot2.tags.red = true;
+                bot2.tags.redX = x;
+                bot2.tags.redY = y;
+
+                expect(filter(bot2)).toEqual(true);
+            });
+
+            it('should return a function that returns false if the given bot is not at the correct position', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 0;
+                bot1.tags.redY = 0;
+                const filter = library.api.neighboring(bot1, 'red', direction);
+
+                bot2.tags.red = true;
+                bot2.tags.redX = -x;
+                bot2.tags.redY = -y;
+
+                expect(filter(bot2)).toEqual(false);
+            });
+
+            it('should return a function with a sort function that sorts the bots by their sort order', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 0;
+                bot1.tags.redY = 0;
+                const filter = library.api.neighboring(bot1, 'red', direction);
+
+                bot2.tags.red = true;
+                bot2.tags.redX = x;
+                bot2.tags.redY = y;
+                bot2.tags.redSortOrder = 100;
+
+                expect(typeof filter.sort).toEqual('function');
+                expect(filter.sort(bot2)).toEqual(100);
+            });
+        });
+    });
+
     describe('bySpace()', () => {
         let bot1: ScriptBot;
 

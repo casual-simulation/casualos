@@ -50,6 +50,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             inDimension,
             atPosition,
             inStack,
+            neighboring,
             bySpace,
             byCreator,
         },
@@ -210,6 +211,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag(bot, `${dimension}X`),
             getTag(bot, `${dimension}Y`)
         );
+    }
+
+    /**
+     * Creates a function that filters bots by whether they are neighboring the given bot.
+     * @param bot The bot that other bots should be checked against.
+     * @param dimension The dimension that other bots should be checked in.
+     * @param direction The neighboring direction to check.
+     * @returns A function that returns true if the given bot is next to the original bot.
+     *
+     * @example
+     * // Find all bots in front of `this` bot in the "test" dimension.
+     * let bots = getBots(neighboring(this, "test", "front"));
+     */
+    function neighboring(
+        bot: Bot,
+        dimension: string,
+        direction: 'front' | 'left' | 'right' | 'back'
+    ): BotFilterFunction {
+        const offsetX =
+            direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
+        const offsetY =
+            direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
+
+        const x = getTag(bot, `${dimension}X`);
+        const y = getTag(bot, `${dimension}Y`);
+
+        return atPosition(dimension, x + offsetX, y + offsetY);
     }
 
     /**
