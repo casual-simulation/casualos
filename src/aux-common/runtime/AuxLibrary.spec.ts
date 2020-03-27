@@ -92,6 +92,40 @@ describe('AuxLibrary', () => {
             expect(bots).toEqual([bot3]);
         });
 
+        it('should support emoji tag names', () => {
+            bot1.tags['🎶🎉🦊'] = 1;
+            bot2.tags['🎶🎉🦊'] = '=2';
+            bot3.tags['🎶🎉🦊'] = 3;
+
+            const bots = library.api.getBots('🎶🎉🦊');
+
+            expect(bots).toEqual([bot1, bot2, bot3]);
+        });
+
+        it('should support emoji tag names with predicates', () => {
+            bot1.tags['🎶🎉🦊'] = 1;
+            bot2.tags['🎶🎉🦊'] = 2;
+            bot3.tags['🎶🎉🦊'] = 3;
+
+            const bots = library.api.getBots(
+                '🎶🎉🦊',
+                (num: number) => num >= 2
+            );
+
+            expect(bots).toEqual([bot2, bot3]);
+        });
+
+        it('should support filtering on values that contain arrays with elements that dont exist', () => {
+            bot1.tags.arr = [1];
+
+            const bots = library.api.getBots(
+                'arr',
+                (x: number[]) => x && x[0] === 1 && x[1] === 2
+            );
+
+            expect(bots).toEqual([]);
+        });
+
         it('should include zeroes in results', () => {
             bot1.tags.num = 0;
             bot2.tags.num = 1;
