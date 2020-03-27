@@ -13,7 +13,10 @@ export class AuxCompiler {
      * @param script The script to compile.
      * @param options The options that should be used to compile the script.
      */
-    compile(script: string, options?: AuxCompileOptions): AuxCompiledScript {
+    compile<T>(
+        script: string,
+        options?: AuxCompileOptions<T>
+    ): AuxCompiledScript {
         let { func, scriptLineOffset } = this._compileFunction(
             script,
             options || {}
@@ -52,9 +55,9 @@ export class AuxCompiler {
         return script;
     }
 
-    private _compileFunction(
+    private _compileFunction<T>(
         script: string,
-        options: AuxCompileOptions
+        options: AuxCompileOptions<T>
     ): {
         func: Function;
         scriptLineOffset: number;
@@ -102,11 +105,17 @@ export class AuxCompiler {
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         const functionCode = `function _() { ${variablesCode}${scriptCode}\n }`;
-        const transpiled = this._transpiler.transpile(functionCode);
+        const transpiled = formula
+            ? functionCode
+            : this._transpiler.transpile(functionCode);
 
         const finalCode = `${constantsCode}return ${transpiled};`;
 
-        let func = _buildFunction(finalCode, options, formula ? script : null);
+        let func = _buildFunction(
+            finalCode,
+            options,
+            formula ? this._transpiler.transpile(script) : null
+        );
 
         if (options.variables) {
             if ('this' in options.variables) {
@@ -118,9 +127,9 @@ export class AuxCompiler {
     }
 }
 
-function _buildFunction(
+function _buildFunction<T>(
     finalCode: string,
-    options: AuxCompileOptions,
+    options: AuxCompileOptions<T>,
     script?: string
 ) {
     if (script) {
@@ -170,17 +179,17 @@ export interface AuxScriptMetadata {
 /**
  * The set of options that a script should be compiled with.
  */
-export interface AuxCompileOptions {
+export interface AuxCompileOptions<T> {
     /**
      * The context that should be used.
      */
-    context?: any;
+    context?: T;
 
     /**
      * The variables that should be made available to the script.
      */
     variables?: {
-        [name: string]: (context?: any) => any;
+        [name: string]: (context?: T) => any;
     };
 
     /**
@@ -193,10 +202,10 @@ export interface AuxCompileOptions {
     /**
      * A function that should be called before the compiled function is executed.
      */
-    before?: Function;
+    before?: (context?: T) => void;
 
     /**
      * A function that should be called after the compiled function is executed.
      */
-    after?: Function;
+    after?: (context?: T) => void;
 }
