@@ -510,4 +510,22 @@ describe('AuxLibrary', () => {
             expect(filter.sort(bot2)).toEqual(100);
         });
     });
+
+    describe('bySpace()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return a function that returns true if the bot is in given space', () => {
+            const filter = library.api.bySpace(<any>'test');
+
+            bot1.tags.space = 'test';
+
+            expect(filter(bot1)).toEqual(true);
+        });
+    });
 });

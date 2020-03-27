@@ -1,6 +1,14 @@
 import { AuxRuntime } from './AuxRuntime';
 import { AuxGlobalContext } from './AuxGlobalContext';
-import { ScriptBot, hasValue, trimTag, isBot, BotTags, Bot } from '../bots';
+import {
+    ScriptBot,
+    hasValue,
+    trimTag,
+    isBot,
+    BotTags,
+    Bot,
+    BOT_SPACE_TAG,
+} from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
 
@@ -42,6 +50,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             inDimension,
             atPosition,
             inStack,
+            bySpace,
         },
     };
 
@@ -200,6 +209,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag(bot, `${dimension}X`),
             getTag(bot, `${dimension}Y`)
         );
+    }
+
+    /**
+     * Creates a function that filters bots by whether they are in the given space.
+     * @param space The space that the bots should be in.
+     */
+    function bySpace(space: string): BotFilterFunction {
+        return byTag(BOT_SPACE_TAG, space);
     }
 
     /**
