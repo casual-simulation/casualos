@@ -1,8 +1,12 @@
+import { Transpiler } from '../Formulas/Transpiler';
+
 /**
  * Defines a class that can compile scripts and formulas
  * into functions.
  */
 export class AuxCompiler {
+    private _transpiler = new Transpiler();
+
     /**
      * Compiles the given script into a function.
      * @param script The script to compile.
@@ -54,8 +58,7 @@ export class AuxCompiler {
                 const lines = Object.keys(options.constants)
                     .filter(v => v !== 'this')
                     .map(v => `const ${v} = constants["${v}"];`);
-                constantsCode = '\n' + lines.join('\n');
-                scriptLineOffset += 1 + lines.length;
+                constantsCode = lines.join('\n') + '\n';
             }
 
             let variablesCode = '';
@@ -64,14 +67,18 @@ export class AuxCompiler {
                     .filter(v => v !== 'this')
                     .map(v => `const ${v} = variables["${v}"](context);`);
                 variablesCode = '\n' + lines.join('\n');
-                scriptLineOffset += 1 + lines.length;
+                scriptLineOffset += 1 + (lines.length - 1);
             }
 
             const scriptCode = `\n { \n${script}\n }`;
-            scriptLineOffset += 1;
-            const functionCode = `function() { ${constantsCode}${variablesCode}${scriptCode}\n }`;
+            scriptLineOffset += 2;
 
-            const finalCode = `return ${functionCode};`;
+            // Function needs a name because acorn doesn't understand
+            // that this function is allowed to be anonymous.
+            const functionCode = `function _() { ${variablesCode}${scriptCode}\n }`;
+            const transpiled = this._transpiler.transpile(functionCode);
+
+            const finalCode = `${constantsCode}return ${transpiled};`;
 
             let func = Function('constants', 'variables', 'context', finalCode)(
                 options.constants,

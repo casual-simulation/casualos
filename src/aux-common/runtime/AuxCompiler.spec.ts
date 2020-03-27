@@ -170,11 +170,14 @@ describe('AuxCompiler', () => {
         it('should return metadata for the compiled script', () => {
             const compiler = new AuxCompiler();
 
-            const script = 'return str + num;';
+            const script = 'return str + num + abc;';
             const func = compiler.compile(script, {
                 constants: {
                     num: -5,
                     str: 'abc',
+                },
+                variables: {
+                    abc: () => 'def',
                 },
                 before: () => {},
                 after: () => {},
@@ -182,9 +185,28 @@ describe('AuxCompiler', () => {
 
             const source = func.metadata.scriptFunction.toString();
             const lines = source.split('\n');
-            const scriptLine = lines[func.metadata.scriptLineOffset];
+            const scriptLine = lines[func.metadata.scriptLineOffset].trim();
 
             expect(scriptLine).toEqual(script);
+        });
+
+        it('should transpile the user code to include energy checks', () => {
+            const compiler = new AuxCompiler();
+
+            function __energyCheck() {
+                throw new Error('Energy Check Hit!');
+            }
+
+            const script = 'let num = 0; while(num === 0) { num += 1; }';
+            const func = compiler.compile(script, {
+                constants: {
+                    __energyCheck,
+                },
+            });
+
+            expect(() => {
+                func();
+            }).toThrow(new Error('Energy Check Hit!'));
         });
     });
 });
