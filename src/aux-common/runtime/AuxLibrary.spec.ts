@@ -279,5 +279,68 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('byMod()', () => {
+        let bot1: ScriptBot;
 
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should match bots with all of the same tags and values', () => {
+            const filter = library.api.byMod({
+                auxColor: 'red',
+                number: 123,
+            });
+
+            bot1.tags.auxColor = 'red';
+            bot1.tags.number = 123;
+            bot1.tags.other = true;
+
+            expect(filter(bot1)).toEqual(true);
+        });
+
+        it('should not match bots with wrong tag values', () => {
+            const filter = library.api.byMod({
+                auxColor: 'red',
+                number: 123,
+            });
+
+            bot1.tags.auxColor = 'red';
+            bot1.tags.number = 999;
+            bot1.tags.other = true;
+
+            expect(filter(bot1)).toEqual(false);
+        });
+
+        it('should match tags using the given filter', () => {
+            const filter = library.api.byMod({
+                auxColor: (x: string) => x.startsWith('r'),
+                number: 123,
+            });
+
+            bot1.tags.auxColor = 'rubble';
+            bot1.tags.number = 123;
+            bot1.tags.other = true;
+
+            expect(filter(bot1)).toEqual(true);
+        });
+
+        it('should match tags with null', () => {
+            const filter = library.api.byMod({
+                auxColor: null,
+                number: 123,
+            });
+
+            bot1.tags.number = 123;
+            bot1.tags.other = true;
+
+            expect(filter(bot1)).toEqual(true);
+
+            bot1.tags.auxColor = 'red';
+
+            expect(filter(bot1)).toEqual(false);
+        });
+    });
 });

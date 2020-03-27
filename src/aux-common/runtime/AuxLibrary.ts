@@ -1,6 +1,6 @@
 import { AuxRuntime } from './AuxRuntime';
 import { AuxGlobalContext } from './AuxGlobalContext';
-import { ScriptBot, hasValue, trimTag } from '../bots';
+import { ScriptBot, hasValue, trimTag, isBot, BotTags, Bot } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
 
@@ -23,6 +23,12 @@ type TagFilter =
     | undefined;
 
 /**
+ * Defines a type that represents a mod.
+ * That is, a set of tags that can be applied to another bot.
+ */
+type Mod = BotTags | Bot;
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -32,6 +38,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBots,
 
             byTag,
+            byMod,
         },
     };
 
@@ -117,5 +124,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return hasValue(val);
             };
         }
+    }
+
+    /**
+     * Creates a filter function that checks whether bots match the given mod.
+     * @param mod The mod that bots should be checked against.
+     *
+     * @example
+     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * let bots = getBots(byMod({
+     *      "auxColor": "red",
+     *      height: 1
+     * }));
+     */
+    function byMod(mod: Mod): BotFilterFunction {
+        let tags = isBot(mod) ? mod.tags : mod;
+        let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
+        return bot => filters.every(f => f(bot));
     }
 }
