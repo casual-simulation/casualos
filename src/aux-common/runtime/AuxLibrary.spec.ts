@@ -343,4 +343,26 @@ describe('AuxLibrary', () => {
             expect(filter(bot1)).toEqual(false);
         });
     });
+
+    describe('inDimension()', () => {
+        let bot1: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return a function that returns true if the bot is in the given dimension', () => {
+            const filter = library.api.inDimension('red');
+
+            bot1.tags.red = true;
+            expect(filter(bot1)).toEqual(true);
+        });
+
+        it('should return a function that returns false if the bot is not in the given dimension', () => {
+            const filter = library.api.inDimension('red');
+            expect(filter(bot1)).toEqual(false);
+        });
+    });
 });

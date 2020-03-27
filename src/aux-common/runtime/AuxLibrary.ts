@@ -39,6 +39,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             byTag,
             byMod,
+            inDimension,
         },
     };
 
@@ -141,5 +142,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let tags = isBot(mod) ? mod.tags : mod;
         let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
         return bot => filters.every(f => f(bot));
+    }
+
+    /**
+     * Creates a filter function that checks whether bots are in the given dimension.
+     * @param dimension The dimension to check.
+     * @returns A function that returns true if the given bot is in the dimension and false if it is not.
+     *
+     * @example
+     * // Find all the bots in the "test" dimension.
+     * let bots = getBots(inDimension("test"));
+     */
+    function inDimension(dimension: string): BotFilterFunction {
+        return byTag(dimension, true);
     }
 }
