@@ -427,7 +427,7 @@ export function calculateFormattedBotValue(
 /**
  * Determines if the given value represents a formula.
  */
-export function isFormula(value: unknown): boolean {
+export function isFormula(value: unknown): value is string {
     return typeof value === 'string' && value.indexOf('=') === 0;
 }
 
