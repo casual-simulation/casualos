@@ -659,4 +659,23 @@ describe('AuxLibrary', () => {
             expect(typeof filter.sort).toEqual('undefined');
         });
     });
+
+    describe('not()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return a function which negates the given function results', () => {
+            const filter = library.api.not(b => b.id === 'test1');
+
+            expect(filter(bot1)).toEqual(false);
+            expect(filter(bot2)).toEqual(true);
+        });
+    });
 });

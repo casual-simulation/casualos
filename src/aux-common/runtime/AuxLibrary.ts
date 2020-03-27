@@ -54,6 +54,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bySpace,
             byCreator,
             either,
+            not,
         },
     };
 
@@ -277,6 +278,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function either(...filters: BotFilterFunction[]): BotFilterFunction {
         return bot => filters.some(f => f(bot));
+    }
+
+    /**
+     * Creates a function that negates the result of the given function.
+     * @param filter The function whose results should be negated.
+     *
+     * @example
+     * // Find all bots that are not in the "test" dimension.
+     * let bots = getBots(not(inDimension("test")));
+     */
+    function not(filter: BotFilterFunction): BotFilterFunction {
+        return bot => !filter(bot);
     }
 
     /**
