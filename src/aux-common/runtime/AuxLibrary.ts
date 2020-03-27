@@ -1,6 +1,8 @@
 import { AuxRuntime } from './AuxRuntime';
 import { AuxGlobalContext } from './AuxGlobalContext';
 import { ScriptBot, hasValue, trimTag } from '../bots';
+import sortBy from 'lodash/sortBy';
+import { BotFilterFunction } from '../Formulas/SandboxInterface';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -12,14 +14,23 @@ export interface AuxLibrary {
     typeDefinitions?: string;
 }
 
+type TagFilter =
+    | ((value: any) => boolean)
+    | string
+    | number
+    | boolean
+    | null
+    | undefined;
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
-export function createDefaultLibrary(context: AuxGlobalContext): AuxLibrary {
+export function createDefaultLibrary(context: AuxGlobalContext) {
     return {
         api: {
             getBots,
+            byTag,
         },
     };
 
@@ -31,6 +42,20 @@ export function createDefaultLibrary(context: AuxGlobalContext): AuxLibrary {
      * let bots = getBots();
      */
     function getBots(...args: any[]): ScriptBot[] {
+        if (args.length > 0 && typeof args[0] === 'function') {
+            const filtered = context.bots.filter(b => args.every(f => f(b)));
+
+            const sortFuncs = args
+                .filter(f => typeof f.sort === 'function')
+                .map(f => f.sort);
+            const sorted =
+                sortFuncs.length > 0
+                    ? sortBy(filtered, ...sortFuncs)
+                    : filtered;
+
+            return sorted;
+        }
+
         let tag: string = args[0];
         if (typeof tag === 'undefined') {
             return context.bots.slice();
@@ -41,7 +66,11 @@ export function createDefaultLibrary(context: AuxGlobalContext): AuxLibrary {
         const filter = arguments[1];
 
         if (hasValue(filter)) {
-            return [];
+            if (typeof filter === 'function') {
+                return context.bots.filter(b => filter(b.tags[tag]));
+            } else {
+                return context.bots.filter(b => b.tags[tag] === filter);
+            }
         } else {
             return context.bots.filter(b => hasValue(b.tags[tag]));
         }
