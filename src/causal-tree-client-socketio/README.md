@@ -2,7 +2,7 @@
 
 [![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/causal-tree-client-socketio.svg)](https://www.npmjs.com/package/@casual-simulation/causal-tree-client-socketio)
 
-A set of services that can be used to network with `@casual-simulation/causal-tree-server-socketio`.
+A connection transport for a CausalRepoClient that uses socket.io to communicate with a SocketIOConnectionServer from `@casual-simulation/causal-tree-server-socketio`.
 
 ## Usage
 
@@ -11,34 +11,22 @@ A set of services that can be used to network with `@casual-simulation/causal-tr
 ```typescript
 import {
     SocketManager,
-    CausalTreeManager,
+    SocketIOConnectionClient,
 } from '@casual-simulation/causal-tree-client-socketio';
-import {
-    CausalTreeFactory,
-    NullCausalTreeStore,
-} from '@casual-simulation/causal-trees';
 
 demo();
 
 async function demo() {
-    const socket = new SocketManager('https://example.com');
-    const manager = new CausalTreeManager(
-        socket,
-        new CausalTreeFactory({
-            test: (stored, options) =>
-                new CausalTree<any, any, any>(stored, new MyReducer(), options),
-        }),
-        new NullCausalTreeStore()
-    );
-
-    socket.init();
-    await manager.init();
-
-    const syncedTree = await manager.getTree<CausalTree<any, any, any>>({
-        id: 'example',
-        type: 'test',
+    const manager = new SocketManager('https://example.com');
+    const connection = new SocketIOConnectionClient(manager.socket, {
+        id: 'device-id',
+        username: 'username',
+        token: 'token',
     });
 
-    // TODO: Do things with the SyncedRealtimeCausalTree
+    manager.init();
+    connection.connect();
+
+    // TODO: Do things with the connection
 }
 ```
