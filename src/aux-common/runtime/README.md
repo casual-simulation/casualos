@@ -138,7 +138,7 @@ These rules are pretty simple but predicting the result of an operation can be d
 
 If we change bullet point 2 to be more restrictive, then we can support the synchronous model. So instead of allowing dropped edits for any reason, we should change it to allow dropped edits for a _specific set of reasons_. In particular, a partition must support a particular realtime edit strategy. Here are the three strategies:
 
--   `all` - Realtime edits are supported and will produce update events once processed.
--   `nonLocal` - Realtime edits are not supported. Edits may be used to update some non-local state. Update events may be produced at some point in the future. (supports history and error partitions)
+-   `immediate` - Realtime edits are supported and will produce update events once processed.
+-   `delayed` - Realtime edits are not supported. Edits may be used to update some non-local state. Update events may be produced at some point in the future. (supports history and error partitions)
 
 Using these rules, we can decide whether an edit should update the bot's runtime data or if it should simply send the events to the partition.

@@ -94,6 +94,10 @@ describe('RemoteCausalRepoPartition', () => {
             sub.unsubscribe();
         });
 
+        it('should return immediate for the editStrategy', () => {
+            expect(partition.realtimeStrategy).toEqual('immediate');
+        });
+
         describe('remote events', () => {
             it('should send the remote event to the server', async () => {
                 await partition.sendRemoteEvents([

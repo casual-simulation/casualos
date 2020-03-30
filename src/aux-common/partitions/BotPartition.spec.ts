@@ -24,6 +24,10 @@ describe('BotPartition', () => {
         });
     });
 
+    it('should return delayed for editStrategy', () => {
+        expect(subject.realtimeStrategy).toEqual('delayed');
+    });
+
     it('should not add new bots to the partition state', async () => {
         await subject.applyEvents([
             botAdded(

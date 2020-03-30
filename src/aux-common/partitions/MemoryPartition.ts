@@ -1,4 +1,4 @@
-import { MemoryPartition } from './AuxPartition';
+import { MemoryPartition, AuxPartitionRealtimeStrategy } from './AuxPartition';
 import {
     PartitionConfig,
     MemoryPartitionStateConfig,
@@ -50,6 +50,10 @@ class MemoryPartitionImpl implements MemoryPartition {
     type = 'memory' as const;
     state: BotsState;
     private: boolean;
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'immediate';
+    }
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));

@@ -1,4 +1,8 @@
-import { MemoryPartition, BotPartition } from './AuxPartition';
+import {
+    MemoryPartition,
+    BotPartition,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
 import {
     MemoryPartitionConfig,
     PartitionConfig,
@@ -60,6 +64,11 @@ export class BotPartitionImpl implements BotPartition {
     type = 'bot' as const;
     state: BotsState;
     private: boolean;
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'delayed';
+    }
+
     _client: BotClient;
     _universe: string;
 

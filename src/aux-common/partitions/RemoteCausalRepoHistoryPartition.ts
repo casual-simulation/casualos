@@ -23,7 +23,10 @@ import {
     PartitionConfig,
     CausalRepoHistoryClientPartitionConfig,
 } from './AuxPartitionConfig';
-import { RemoteCausalRepoPartition } from './AuxPartition';
+import {
+    RemoteCausalRepoPartition,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
 import uuid from 'uuid/v5';
 import reverse from 'lodash/reverse';
 
@@ -66,6 +69,10 @@ export class RemoteCausalRepoHistoryPartitionImpl
     private _synced: boolean;
 
     private: boolean;
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'delayed';
+    }
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this._state)));

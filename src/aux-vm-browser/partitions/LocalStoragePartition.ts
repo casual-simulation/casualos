@@ -15,6 +15,7 @@ import {
     hasValue,
     LocalStoragePartition,
     LocalStoragePartitionConfig,
+    AuxPartitionRealtimeStrategy,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
@@ -34,6 +35,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _hasRegisteredSubs = false;
     private _state: BotsState = {};
     private _sub = new Subscription();
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'immediate';
+    }
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));

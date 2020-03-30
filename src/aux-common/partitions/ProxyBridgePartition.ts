@@ -14,6 +14,10 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         return this._partition.private;
     }
 
+    get realtimeStrategy() {
+        return this._partition.realtimeStrategy;
+    }
+
     get onBotsAdded(): Observable<any[]> {
         return this._partition.onBotsAdded;
     }

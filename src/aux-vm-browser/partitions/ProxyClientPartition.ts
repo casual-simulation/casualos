@@ -6,6 +6,7 @@ import {
     ProxyClientPartitionConfig,
     ProxyClientPartition,
     ProxyBridgePartition,
+    AuxPartitionRealtimeStrategy,
 } from '@casual-simulation/aux-common';
 import {
     DeviceAction,
@@ -47,6 +48,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     type: 'proxy_client';
     state: BotsState;
     private: boolean;
+    realtimeStrategy: AuxPartitionRealtimeStrategy;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(values(this.state)));
@@ -70,6 +72,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     constructor(config: ProxyClientPartitionConfig) {
         this._bridge = wrap<ProxyBridgePartition>(config.port);
         this.private = config.private;
+        this.realtimeStrategy = config.editStrategy;
 
         console.log('Got Bridge: ', this._bridge);
 

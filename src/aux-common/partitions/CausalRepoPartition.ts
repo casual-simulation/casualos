@@ -1,7 +1,10 @@
 import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import { AuxCausalTree, auxTree, applyEvents } from '../aux-format-2';
 import { Observable, Subscription, Subject } from 'rxjs';
-import { CausalRepoPartition } from './AuxPartition';
+import {
+    CausalRepoPartition,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
 import { startWith } from 'rxjs/operators';
 import {
     BotAction,
@@ -89,6 +92,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     type = 'causal_repo' as const;
     private: boolean;
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'immediate';
+    }
 
     constructor(user: User, config: CausalRepoPartitionConfig) {
         this.private = config.private || false;

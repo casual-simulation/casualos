@@ -38,7 +38,10 @@ import {
     CausalRepoClientPartitionConfig,
     CausalRepoHistoryClientPartitionConfig,
 } from './AuxPartitionConfig';
-import { RemoteCausalRepoPartition } from './AuxPartition';
+import {
+    RemoteCausalRepoPartition,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
 
 export async function createCausalRepoClientPartition(
     config: PartitionConfig,
@@ -76,6 +79,10 @@ export class RemoteCausalRepoPartitionImpl
     private _synced: boolean;
 
     private: boolean;
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'immediate';
+    }
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(

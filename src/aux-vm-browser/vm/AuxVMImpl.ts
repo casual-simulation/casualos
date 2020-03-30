@@ -232,6 +232,7 @@ function processPartitions(config: AuxConfig): AuxConfig {
             transferrables.push(channel.port2);
             config.partitions[key] = {
                 type: 'proxy_client',
+                editStrategy: partition.partition.realtimeStrategy,
                 private: partition.partition.private,
                 port: channel.port2,
             };

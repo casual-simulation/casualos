@@ -64,6 +64,10 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             sub.unsubscribe();
         });
 
+        it('should return delayed for the editStrategy', () => {
+            expect(partition.realtimeStrategy).toEqual('delayed');
+        });
+
         describe('remote events', () => {
             it('should not send the remote event to the server', async () => {
                 await partition.sendRemoteEvents([

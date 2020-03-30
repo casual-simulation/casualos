@@ -4,6 +4,7 @@ import {
     AuxPartition,
     ProxyBridgePartition,
     MemoryPartition,
+    AuxPartitionRealtimeStrategy,
 } from './AuxPartition';
 import { BotClient } from './BotClient';
 
@@ -84,6 +85,11 @@ export interface ProxyPartitionConfig extends PartitionConfigBase {
  */
 export interface ProxyClientPartitionConfig extends PartitionConfigBase {
     type: 'proxy_client';
+
+    /**
+     * The edit strategy that the partition uses.
+     */
+    editStrategy: AuxPartitionRealtimeStrategy;
 
     /**
      * The port that should be used for messages.

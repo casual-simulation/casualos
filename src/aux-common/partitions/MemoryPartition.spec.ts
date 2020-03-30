@@ -25,5 +25,17 @@ describe('MemoryPartition', () => {
 
             expect(added).toEqual([createBot('test'), createBot('test2')]);
         });
+
+        it('should return immediate for the editStrategy', () => {
+            const mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    test: createBot('test'),
+                    test2: createBot('test2'),
+                },
+            });
+
+            expect(mem.realtimeStrategy).toEqual('immediate');
+        });
     });
 });

@@ -27,6 +27,15 @@ export type AuxPartition =
     | BotPartition;
 
 /**
+ * The list of edit stategies that a partition can use.
+ *
+ * "immediate" means that valid edits will be immediately by the partition and therefore can have an immediate affect on the bot(s).
+ * "delayed" means that valid edits will have a delayed affect on the bot(s). This means that the bots should act like they have not been edited until the partition indicates a
+ *           change occurred.
+ */
+export type AuxPartitionRealtimeStrategy = 'immediate' | 'delayed';
+
+/**
  * Base interface for partitions.
  *
  * Partitions are basically a backing store for Aux State.
@@ -39,6 +48,13 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * If false, then the partition will be included when exporting state.
      */
     private: boolean;
+
+    /**
+     * The realtime edit strategy that the partition supports.
+     * This is used to hint to the AUX Runtime how it should handle in-memory changes
+     * for bots in this partition.
+     */
+    realtimeStrategy: AuxPartitionRealtimeStrategy;
 
     /**
      * Applies the given events to the partition.
