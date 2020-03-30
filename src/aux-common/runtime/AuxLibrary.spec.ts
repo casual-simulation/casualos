@@ -1,19 +1,19 @@
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
-import { AuxGlobalContext, addToContext } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    addToContext,
+    MemoryGlobalContext,
+} from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
 import { ScriptBot } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
-    let context: AuxGlobalContext;
+    let context: MemoryGlobalContext;
 
     beforeEach(() => {
-        context = {
-            allowsEditing: true,
-            bots: [],
-        };
-
+        context = new MemoryGlobalContext();
         library = createDefaultLibrary(context);
     });
 

@@ -31,7 +31,11 @@ import {
 } from '../bots';
 import { Observable } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
-import { AuxGlobalContext, addToContext } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    addToContext,
+    MemoryGlobalContext,
+} from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 
@@ -46,10 +50,7 @@ export class AuxRuntime {
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
 
-    private _globalContext: AuxGlobalContext = {
-        allowsEditing: true,
-        bots: [],
-    };
+    private _globalContext: AuxGlobalContext = new MemoryGlobalContext();
 
     private _library: AuxLibrary;
 

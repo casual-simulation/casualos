@@ -1,14 +1,15 @@
-import { AuxGlobalContext, addToContext } from './AuxGlobalContext';
+import {
+    AuxGlobalContext,
+    addToContext,
+    MemoryGlobalContext,
+} from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
 
     beforeEach(() => {
-        context = {
-            allowsEditing: true,
-            bots: [],
-        };
+        context = new MemoryGlobalContext();
     });
 
     describe('addToContext()', () => {
