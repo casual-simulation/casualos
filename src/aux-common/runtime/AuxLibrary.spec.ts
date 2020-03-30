@@ -5,7 +5,7 @@ import {
     MemoryGlobalContext,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
-import { ScriptBot } from '../bots';
+import { ScriptBot, toast } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
@@ -982,6 +982,27 @@ describe('AuxLibrary', () => {
             const values = library.api.getBotTagValues('#name');
 
             expect(values).toEqual(['bob', 'bob']);
+        });
+    });
+
+    describe('actions', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        describe('player.toast()', () => {
+            it('should emit a ShowToastAction', () => {
+                let action = library.api.player.toast('hello, world!');
+
+                expect(action).toEqual(toast('hello, world!'));
+                expect(context.actions).toEqual([toast('hello, world!')]);
+            });
         });
     });
 });

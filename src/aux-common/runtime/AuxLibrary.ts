@@ -8,6 +8,7 @@ import {
     BotTags,
     Bot,
     BOT_SPACE_TAG,
+    toast as toastMessage,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -60,6 +61,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
+
+            player: {
+                toast,
+            },
         },
     };
 
@@ -372,5 +377,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getJSON(data: any): string {
         return JSON.stringify(data);
+    }
+
+    // Actions
+
+    /**
+     * Shows a toast message to the user.
+     * @param message The message to show.
+     * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
+     */
+    function toast(message: string, duration: number = 2) {
+        const event = toastMessage(message, duration);
+        context.enqueueAction(event);
+        return event;
     }
 }
