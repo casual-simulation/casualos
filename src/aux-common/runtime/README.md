@@ -37,4 +37,4 @@ In the old system, sending a shout involves building the correct state, finding 
 
 ### 5. Great developer experience
 
-The runtime should enable a great developer experience by exposing metadata to assist with common operations like error handling and logging. Error stack traces should be walkable and traceable back to the original source.
+The runtime should enable a great developer experience by exposing metadata to assist with common operations like error handling and logging. Error stack traces should be walkable and traceable back to the original source. APIs should have type definitions so that code editing is a breeze.

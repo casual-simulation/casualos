@@ -213,6 +213,127 @@ describe('AuxLibrary', () => {
         );
     });
 
+    describe('getBot()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+        let bot3: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+        });
+
+        it('should get the first bot with the given tag', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+
+            const bot = library.api.getBot('#name');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should get the first bot matching the given value', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+
+            const bot = library.api.getBot('#name', 'bob');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should remove the first hashtag but not the second', () => {
+            bot1.tags['#name'] = 'bob';
+            bot2.tags['#name'] = 'bob';
+
+            const bot = library.api.getBot('##name', 'bob');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should allow using @ symbols when getting bots by tags', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'bob';
+
+            const bot = library.api.getBot('@name', 'bob');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should remove the first @ symbol but not the second', () => {
+            bot1.tags['@name'] = 'bob';
+            bot2.tags['@name'] = 'bob';
+
+            const bot = library.api.getBot('@@name', 'bob');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should get the first bot matching the given filter function', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+
+            const bot = library.api.getBot('#name', (x: string) => x === 'bob');
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should return the first bot matching the given filter function', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+
+            const bot = library.api.getBot(
+                (b: ScriptBot) => b.tags.name === 'bob'
+            );
+
+            expect(bot).toEqual(bot1);
+        });
+
+        it('should return the first bot bot matching all the given filter functions', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+            bot3.tags.abc = true;
+
+            const bot = library.api.getBot(
+                (b: ScriptBot) => b.tags.name === 'bob',
+                (b: ScriptBot) => b.tags.abc === true
+            );
+
+            expect(bot).toEqual(bot3);
+        });
+
+        it('should return the first bot if no arguments are provdided', () => {
+            bot1.tags.name = 'bob';
+            bot2.tags.name = 'alice';
+            bot3.tags.name = 'bob';
+
+            const bot = library.api.getBot();
+
+            expect(bot).toEqual(bot1);
+        });
+
+        const emptyCases = [['null', null], ['empty string', '']];
+
+        it.each(emptyCases)(
+            'should return undefined if a %s tag is provided',
+            (desc, val) => {
+                bot1.tags.name = 'bob';
+                bot2.tags.name = 'alice';
+                bot3.tags.name = 'bob';
+
+                const bot = library.api.getBot(val);
+
+                expect(bot).toEqual(undefined);
+            }
+        );
+    });
+
     describe('byTag()', () => {
         let bot1: ScriptBot;
 

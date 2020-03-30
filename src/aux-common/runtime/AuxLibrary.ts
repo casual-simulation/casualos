@@ -44,6 +44,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     return {
         api: {
             getBots,
+            getBot,
             getBotTagValues,
             getID,
             getJSON,
@@ -102,6 +103,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return context.bots.filter(b => hasValue(b.tags[tag]));
         }
+    }
+
+    /**
+     * Gets the first bot ordered by ID.
+     * @returns The bot with the first ID when sorted alphebetically.
+     *
+     * @example
+     * let firstBot = getBot();
+     */
+    function getBot(...args: any[]): Bot {
+        const bots = getBots(...args);
+        return bots.first();
     }
 
     /**
