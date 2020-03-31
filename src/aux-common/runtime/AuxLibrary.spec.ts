@@ -39,6 +39,7 @@ import {
     KNOWN_PORTALS,
     replaceDragBot,
     createBot,
+    goToDimension,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1813,6 +1814,23 @@ describe('AuxLibrary', () => {
                         foregroundColor: 'green',
                     }),
                 ]);
+            });
+        });
+
+        describe('player.goToDimension()', () => {
+            it('should issue a GoToDimension event', () => {
+                const action = library.api.player.goToDimension('abc');
+                expect(action).toEqual(goToDimension('abc'));
+                expect(context.actions).toEqual([goToDimension('abc')]);
+            });
+
+            it('should ignore extra parameters', () => {
+                const action = (<any>library.api.player.goToDimension)(
+                    'abc',
+                    'def'
+                );
+                expect(action).toEqual(goToDimension('abc'));
+                expect(context.actions).toEqual([goToDimension('abc')]);
             });
         });
     });

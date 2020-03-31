@@ -32,6 +32,7 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     replaceDragBot as calcReplaceDragBot,
+    goToDimension as calcGoToDimension,
     BotAction,
     download,
     BotsState,
@@ -142,6 +143,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
+                goToDimension,
             },
         },
     };
@@ -909,6 +911,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ) {
         const id = typeof bot === 'string' ? bot : bot.id;
         const event = calcShowInputForTag(id, trimTag(tag), options);
+        return addAction(event);
+    }
+
+    /**
+     * Redirects the user to the given dimension.
+     * @param dimension The dimension to go to.
+     *
+     * @example
+     * // Send the player to the "welcome" dimension.
+     * player.goToDimension("welcome");
+     */
+    function goToDimension(dimension: string) {
+        const event = calcGoToDimension(dimension);
         return addAction(event);
     }
 
