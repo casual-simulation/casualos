@@ -5,7 +5,7 @@ import {
     MemoryGlobalContext,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
-import { ScriptBot, toast, showJoinCode } from '../bots';
+import { ScriptBot, toast, showJoinCode, requestFullscreen } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
@@ -1021,6 +1021,14 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([
                     showJoinCode('universe', 'dimension'),
                 ]);
+            });
+        });
+
+        describe('player.requestFullscreenMode()', () => {
+            it('should issue a request_fullscreen action', () => {
+                const action = library.api.player.requestFullscreenMode();
+                expect(action).toEqual(requestFullscreen());
+                expect(context.actions).toEqual([requestFullscreen()]);
             });
         });
     });

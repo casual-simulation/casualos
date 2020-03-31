@@ -10,6 +10,7 @@ import {
     BOT_SPACE_TAG,
     toast as toastMessage,
     showJoinCode as calcShowJoinCode,
+    requestFullscreen,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -66,6 +67,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             player: {
                 toast,
                 showJoinCode,
+                requestFullscreenMode,
             },
         },
     };
@@ -401,6 +403,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showJoinCode(universe?: string, dimension?: string) {
         const event = calcShowJoinCode(universe, dimension);
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Requests that AUX enters fullscreen mode.
+     * Depending on the web browser, this may ask the player for permission.
+     */
+    function requestFullscreenMode() {
+        const event = requestFullscreen();
         context.enqueueAction(event);
         return event;
     }
