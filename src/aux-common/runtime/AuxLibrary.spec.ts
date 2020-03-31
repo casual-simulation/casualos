@@ -20,6 +20,7 @@ import {
     showChat,
     hideChat,
     runScript,
+    enableAR,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1221,6 +1222,14 @@ describe('AuxLibrary', () => {
                     supportsAR: null,
                     supportsVR: null,
                 });
+            });
+        });
+
+        describe('player.enableAR()', () => {
+            it('should issue an EnableARAction', () => {
+                const action = library.api.player.enableAR();
+                expect(action).toEqual(enableAR());
+                expect(context.actions).toEqual([enableAR()]);
             });
         });
     });

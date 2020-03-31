@@ -20,6 +20,8 @@ import {
     hideChat as calcHideChat,
     ShowChatOptions,
     runScript,
+    enableAR as calcEnableAR,
+    BotAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -88,6 +90,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 run,
                 version,
                 device,
+                enableAR,
             },
         },
     };
@@ -560,5 +563,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
         };
+    }
+
+    /**
+     * Enables Augmented Reality features.
+     */
+    function enableAR() {
+        return addAction(calcEnableAR());
+    }
+
+    function addAction(action: BotAction) {
+        context.enqueueAction(action);
+        return action;
     }
 }
