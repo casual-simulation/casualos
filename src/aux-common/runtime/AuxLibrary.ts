@@ -112,6 +112,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showQRCode,
                 hideQRCode,
                 openBarcodeScanner,
+                closeBarcodeScanner,
             },
         },
     };
@@ -668,6 +669,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openBarcodeScanner(camera?: CameraType) {
         const event = calcOpenBarcodeScanner(true, camera);
+        return addAction(event);
+    }
+
+    /**
+     * Closes the barcode scanner.
+     */
+    function closeBarcodeScanner() {
+        const event = calcOpenBarcodeScanner(false);
         return addAction(event);
     }
 

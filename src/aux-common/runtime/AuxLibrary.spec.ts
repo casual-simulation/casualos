@@ -1428,5 +1428,13 @@ describe('AuxLibrary', () => {
                 ]);
             });
         });
+
+        describe('player.closeBarcodeScanner()', () => {
+            it('should emit a OpenBarcodeScannerAction', () => {
+                const action = library.api.player.closeBarcodeScanner();
+                expect(action).toEqual(openBarcodeScanner(false));
+                expect(context.actions).toEqual([openBarcodeScanner(false)]);
+            });
+        });
     });
 });
