@@ -30,6 +30,7 @@ import {
     showQRCode,
     openBarcodeScanner,
     showBarcode,
+    loadSimulation,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1463,6 +1464,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.hideBarcode();
                 expect(action).toEqual(showBarcode(false));
                 expect(context.actions).toEqual([showBarcode(false)]);
+            });
+        });
+
+        describe('player.loadUniverse()', () => {
+            it('should emit a LoadUniverseAction', () => {
+                const action = library.api.player.loadUniverse('abc');
+                expect(action).toEqual(loadSimulation('abc'));
+                expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
     });
