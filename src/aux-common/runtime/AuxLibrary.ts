@@ -35,6 +35,7 @@ import {
     CameraType,
     BarcodeFormat,
     loadSimulation,
+    unloadSimulation,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -119,6 +120,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showBarcode,
                 hideBarcode,
                 loadUniverse,
+                unloadUniverse,
             },
         },
     };
@@ -710,6 +712,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function loadUniverse(id: string) {
         const event = loadSimulation(id);
+        return addAction(event);
+    }
+
+    /**
+     * Unloads the universe with the given ID.
+     * @param id The ID of the universe to unload.
+     */
+    function unloadUniverse(id: string) {
+        const event = unloadSimulation(id);
         return addAction(event);
     }
 

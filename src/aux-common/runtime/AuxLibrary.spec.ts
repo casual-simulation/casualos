@@ -31,6 +31,7 @@ import {
     openBarcodeScanner,
     showBarcode,
     loadSimulation,
+    unloadSimulation,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1472,6 +1473,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.loadUniverse('abc');
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
+            });
+        });
+
+        describe('player.unloadUniverse()', () => {
+            it('should emit a UnloadUniverseAction', () => {
+                const action = library.api.player.unloadUniverse('abc');
+                expect(action).toEqual(unloadSimulation('abc'));
+                expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
         });
     });
