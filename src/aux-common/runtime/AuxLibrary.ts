@@ -31,6 +31,7 @@ import {
     showBarcode as calcShowBarcode,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
+    replaceDragBot as calcReplaceDragBot,
     BotAction,
     download,
     BotsState,
@@ -130,6 +131,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadUniverse,
                 unloadUniverse,
                 importAUX,
+                replaceDragBot,
 
                 getBot: getPlayerBot,
                 isInDimension,
@@ -762,6 +764,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Replaces the bot that the user is beginning to drag.
+     * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
+     * @param bot The bot or mod that should be dragged instead of the original.
+     */
+    function replaceDragBot(bot: Mod) {
+        const event = calcReplaceDragBot(context.unwrapBot(bot));
+        return addAction(event);
+    }
+
+    /**
      * Get's the current player's bot.
      */
     function getPlayerBot() {
@@ -901,7 +913,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     // Helpers
-    function addAction(action: BotAction) {
+    function addAction<T extends BotAction>(action: T) {
         context.enqueueAction(action);
         return action;
     }

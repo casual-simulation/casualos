@@ -1,4 +1,4 @@
-import { ScriptBot, BotAction } from '../bots';
+import { ScriptBot, BotAction, Bot, BotTags, isBot } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 
 /**
@@ -35,6 +35,12 @@ export interface AuxGlobalContext {
      * @param action The action to enqueue.
      */
     enqueueAction(action: BotAction): void;
+
+    /**
+     * Converts the given bot into a non-script enabled version.
+     * @param bot The bot.
+     */
+    unwrapBot(bot: Bot | BotTags): Bot | BotTags;
 }
 
 /**
@@ -144,5 +150,22 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     enqueueAction(action: BotAction): void {
         this.actions.push(action);
+    }
+
+    /**
+     * Converts the given bot into a non-script enabled version.
+     * @param bot The bot.
+     */
+    unwrapBot(bot: Bot | BotTags): Bot | BotTags {
+        if (isBot(bot)) {
+            return {
+                id: bot.id,
+                space: bot.space,
+
+                // TODO: Fix for proxy objects
+                tags: bot.tags,
+            };
+        }
+        return bot;
     }
 }

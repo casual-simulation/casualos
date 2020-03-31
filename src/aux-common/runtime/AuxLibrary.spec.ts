@@ -37,7 +37,10 @@ import {
     BotsState,
     showInputForTag,
     KNOWN_PORTALS,
+    replaceDragBot,
+    createBot,
 } from '../bots';
+import { types } from 'util';
 import {
     possibleTagNameCases,
     possibleTagValueCases,
@@ -1515,6 +1518,35 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.importAUX(json);
                 expect(action).toEqual(addState(uploadState));
                 expect(context.actions).toEqual([addState(uploadState)]);
+            });
+        });
+
+        describe('player.replaceDragBot()', () => {
+            it('should send a replace_drag_bot event', () => {
+                const action = library.api.player.replaceDragBot(bot1);
+                expect(action).toEqual(
+                    replaceDragBot({
+                        id: bot1.id,
+                        tags: bot1.tags,
+                        space: bot1.space,
+                    })
+                );
+                expect(context.actions).toEqual([
+                    replaceDragBot({
+                        id: bot1.id,
+                        tags: bot1.tags,
+                        space: bot1.space,
+                    }),
+                ]);
+            });
+
+            it('should return a copiable bot', () => {
+                const action = library.api.player.replaceDragBot(bot1);
+                const bot = action.bot as any;
+                expect(bot).not.toBe(bot1);
+                for (let key in bot) {
+                    expect(types.isProxy(bot[key])).toBe(false);
+                }
             });
         });
 
