@@ -39,6 +39,8 @@ import {
     unloadSimulation,
     getUploadState,
     addState,
+    PortalType,
+    getPortalTag,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -128,6 +130,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 isInDimension,
                 getCurrentDimension,
                 getCurrentUniverse,
+                getPortalDimension,
             },
         },
     };
@@ -782,6 +785,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return universe || undefined;
         }
         return undefined;
+    }
+
+    /**
+     * Gets the dimension that is loaded into the given portal for the player.
+     * If no dimension is loaded, then null is returned.
+     * @param portal The portal type.
+     */
+    function getPortalDimension(portal: PortalType) {
+        const user = context.playerBot;
+        if (!user) {
+            return null;
+        }
+
+        const portalTag = getPortalTag(portal);
+        const dimension = getTag(user, portalTag);
+
+        if (!hasValue(dimension)) {
+            return null;
+        }
+
+        return dimension;
     }
 
     // Helpers

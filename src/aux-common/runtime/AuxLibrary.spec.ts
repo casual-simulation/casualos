@@ -1596,5 +1596,44 @@ describe('AuxLibrary', () => {
                 expect(result).toBeUndefined();
             });
         });
+
+        describe('player.getPortalDimension()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            const cases = [
+                ['page', 'pageDimension'],
+                ['auxPagePortal', 'pageDimension'],
+                ['inventory', 'inventoryDimension'],
+                ['auxInventoryPortal', 'inventoryDimension'],
+                ['menu', 'menuDimension'],
+                ['auxMenuPortal', 'menuDimension'],
+                ['sheet', 'sheetDimension'],
+                ['auxSheetPortal', 'sheetDimension'],
+                ['missing', null],
+                ['falsy', null],
+            ];
+
+            it.each(cases)(
+                'should get the dimension for the %s portal',
+                (portal, expectedDimension) => {
+                    player.tags.auxPagePortal = 'pageDimension';
+                    player.tags.auxInventoryPortal = 'inventoryDimension';
+                    player.tags.auxMenuPortal = 'menuDimension';
+                    player.tags.auxSheetPortal = 'sheetDimension';
+                    player.tags.falsy = false;
+                    player.tags.number = 0;
+                    const result = library.api.player.getPortalDimension(
+                        portal
+                    );
+                    expect(result).toEqual(expectedDimension);
+                }
+            );
+        });
     });
 });
