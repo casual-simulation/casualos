@@ -116,6 +116,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openBarcodeScanner,
                 closeBarcodeScanner,
                 showBarcode,
+                hideBarcode,
             },
         },
     };
@@ -690,6 +691,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showBarcode(code: string, format?: BarcodeFormat) {
         const event = calcShowBarcode(true, code, format);
+        return addAction(event);
+    }
+
+    /**
+     * Hides the barcode.
+     */
+    function hideBarcode() {
+        const event = calcShowBarcode(false);
         return addAction(event);
     }
 

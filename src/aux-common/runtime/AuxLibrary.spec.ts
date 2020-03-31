@@ -1457,5 +1457,13 @@ describe('AuxLibrary', () => {
                 ]);
             });
         });
+
+        describe('player.hideBarcode()', () => {
+            it('should emit a ShowBarcodeAction', () => {
+                const action = library.api.player.hideBarcode();
+                expect(action).toEqual(showBarcode(false));
+                expect(context.actions).toEqual([showBarcode(false)]);
+            });
+        });
     });
 });
