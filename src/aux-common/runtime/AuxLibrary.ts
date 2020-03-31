@@ -30,6 +30,7 @@ import {
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
     importAUX as calcImportAUX,
+    showInputForTag as calcShowInputForTag,
     BotAction,
     download,
     BotsState,
@@ -41,6 +42,7 @@ import {
     addState,
     PortalType,
     getPortalTag,
+    ShowInputOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -131,6 +133,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentDimension,
                 getCurrentUniverse,
                 getPortalDimension,
+                showInputForTag,
             },
         },
     };
@@ -806,6 +809,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return dimension;
+    }
+
+    /**
+     * Shows an input box to edit the given bot and tag.
+     *
+     * @param bot The bot or bot ID that should be edited.
+     * @param tag The tag which should be edited on the bot.
+     * @param options The options that indicate how the input box should be customized.
+     *
+     * @example
+     * // Show an input box for `this` bot's label.
+     * player.showInputForTag(this, "auxLabel", {
+     *            title: "Change the label",
+     *            type: "text"
+     * });
+     *
+     * @example
+     * // Show a color picker for the bot's color.
+     * player.showInputForTag(this, "auxColor", {
+     *            title: "Change the color",
+     *            type: "color",
+     *            subtype: "advanced"
+     * });
+     */
+    function showInputForTag(
+        bot: Bot | string,
+        tag: string,
+        options?: Partial<ShowInputOptions>
+    ) {
+        const id = typeof bot === 'string' ? bot : bot.id;
+        const event = calcShowInputForTag(id, trimTag(tag), options);
+        return addAction(event);
     }
 
     // Helpers

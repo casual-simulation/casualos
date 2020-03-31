@@ -35,6 +35,7 @@ import {
     importAUX,
     addState,
     BotsState,
+    showInputForTag,
 } from '../bots';
 import {
     possibleTagNameCases,
@@ -1634,6 +1635,67 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual(expectedDimension);
                 }
             );
+        });
+
+        describe('player.showInputForTag()', () => {
+            it('should emit a ShowInputForTagAction', () => {
+                const action = library.api.player.showInputForTag(bot1, 'abc');
+                expect(action).toEqual(showInputForTag(bot1.id, 'abc'));
+                expect(context.actions).toEqual([
+                    showInputForTag(bot1.id, 'abc'),
+                ]);
+            });
+
+            it('should support passing a bot ID', () => {
+                const action = library.api.player.showInputForTag(
+                    'test',
+                    'abc'
+                );
+                expect(action).toEqual(showInputForTag('test', 'abc'));
+                expect(context.actions).toEqual([
+                    showInputForTag('test', 'abc'),
+                ]);
+            });
+
+            it('should trim the first hash from the tag', () => {
+                const first = library.api.player.showInputForTag(
+                    'test',
+                    '##abc'
+                );
+                expect(first).toEqual(showInputForTag('test', '#abc'));
+                const second = library.api.player.showInputForTag(
+                    'test',
+                    '#abc'
+                );
+                expect(second).toEqual(showInputForTag('test', 'abc'));
+                expect(context.actions).toEqual([
+                    showInputForTag('test', '#abc'),
+                    showInputForTag('test', 'abc'),
+                ]);
+            });
+
+            it('should support extra options', () => {
+                const action = library.api.player.showInputForTag(
+                    'test',
+                    'abc',
+                    {
+                        backgroundColor: 'red',
+                        foregroundColor: 'green',
+                    }
+                );
+                expect(action).toEqual(
+                    showInputForTag('test', 'abc', {
+                        backgroundColor: 'red',
+                        foregroundColor: 'green',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    showInputForTag('test', 'abc', {
+                        backgroundColor: 'red',
+                        foregroundColor: 'green',
+                    }),
+                ]);
+            });
         });
     });
 });
