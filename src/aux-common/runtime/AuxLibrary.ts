@@ -130,6 +130,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadUniverse,
                 unloadUniverse,
                 importAUX,
+
+                getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
                 getCurrentUniverse,
@@ -757,6 +759,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             const event = calcImportAUX(urlOrJSON);
             return addAction(event);
         }
+    }
+
+    /**
+     * Get's the current player's bot.
+     */
+    function getPlayerBot() {
+        return context.playerBot;
     }
 
     /**

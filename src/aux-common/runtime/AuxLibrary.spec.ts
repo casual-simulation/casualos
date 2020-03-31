@@ -1518,6 +1518,21 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('player.getBot()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should get the current users bot', () => {
+                const bot = library.api.player.getBot();
+                expect(bot).toBe(player);
+            });
+        });
+
         describe('player.isInDimension()', () => {
             let player: ScriptBot;
 
