@@ -25,9 +25,11 @@ import {
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
     showUploadAuxFile as calcShowUploadAuxFile,
+    openQRCodeScanner as calcOpenQRCodeScanner,
     BotAction,
     download,
     BotsState,
+    CameraType,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -103,6 +105,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 downloadBots,
                 downloadUniverse,
                 showUploadAuxFile,
+                openQRCodeScanner,
             },
         },
     };
@@ -619,6 +622,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(calcShowUploadAuxFile());
     }
 
+    /**
+     * Opens the QR Code Scanner.
+     * @param camera The camera that should be used.
+     */
+    function openQRCodeScanner(camera?: CameraType) {
+        const event = calcOpenQRCodeScanner(true, camera);
+        return addAction(event);
+    }
+
+    // Helpers
     function addAction(action: BotAction) {
         context.enqueueAction(action);
         return action;

@@ -26,6 +26,7 @@ import {
     disableVR,
     download,
     showUploadAuxFile,
+    openQRCodeScanner,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1367,6 +1368,22 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.showUploadAuxFile();
                 expect(action).toEqual(showUploadAuxFile());
                 expect(context.actions).toEqual([showUploadAuxFile()]);
+            });
+        });
+
+        describe('player.openQRCodeScanner()', () => {
+            it('should emit a OpenQRCodeScannerAction', () => {
+                const action = library.api.player.openQRCodeScanner();
+                expect(action).toEqual(openQRCodeScanner(true));
+                expect(context.actions).toEqual([openQRCodeScanner(true)]);
+            });
+
+            it('should use the given camera type', () => {
+                const action = library.api.player.openQRCodeScanner('front');
+                expect(action).toEqual(openQRCodeScanner(true, 'front'));
+                expect(context.actions).toEqual([
+                    openQRCodeScanner(true, 'front'),
+                ]);
             });
         });
     });
