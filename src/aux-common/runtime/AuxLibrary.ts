@@ -16,6 +16,8 @@ import {
     hideHtml as hideHtmlMessage,
     setClipboard as calcSetClipboard,
     tweenTo as calcTweenTo,
+    showChat as calcShowChat,
+    ShowChatOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -79,6 +81,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setClipboard,
                 tweenTo,
                 moveTo,
+                showChat,
             },
         },
     };
@@ -497,5 +500,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotY?: number
     ) {
         return tweenTo(bot, zoomValue, rotX, rotY, 0);
+    }
+
+    /**
+     * Shows the chat bar.
+     * @param placeholderOrOptions The placeholder text or options. (optional)
+     */
+    function showChat(placeholderOrOptions?: string | ShowChatOptions) {
+        const action =
+            typeof placeholderOrOptions === 'string'
+                ? calcShowChat({
+                      placeholder: placeholderOrOptions,
+                  })
+                : calcShowChat(placeholderOrOptions);
+        context.enqueueAction(action);
+        return action;
     }
 }

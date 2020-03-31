@@ -15,6 +15,7 @@ import {
     hideHtml,
     setClipboard,
     tweenTo,
+    showChat,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1122,6 +1123,47 @@ describe('AuxLibrary', () => {
                         rotationValue: null,
                         duration: 0,
                     },
+                ]);
+            });
+        });
+
+        describe('player.showChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
+                const action = library.api.player.showChat();
+                expect(action).toEqual(showChat());
+                expect(context.actions).toEqual([showChat()]);
+            });
+
+            it('should emit a ShowChatBarAction with the given prefill', () => {
+                const action = library.api.player.showChat('test');
+                expect(action).toEqual(
+                    showChat({
+                        placeholder: 'test',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    showChat({
+                        placeholder: 'test',
+                    }),
+                ]);
+            });
+
+            it('should emit a ShowChatBarAction with the given options', () => {
+                const action = library.api.player.showChat({
+                    placeholder: 'abc',
+                    prefill: 'def',
+                });
+                expect(action).toEqual(
+                    showChat({
+                        placeholder: 'abc',
+                        prefill: 'def',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    showChat({
+                        placeholder: 'abc',
+                        prefill: 'def',
+                    }),
                 ]);
             });
         });
