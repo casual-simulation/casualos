@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V1.0.21
+
+### Date: 3/30/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where the proxy system would interfere with requests that specified custom HTTP headers.
+
 ## V1.0.20
 
 ### Date: 3/20/2020
