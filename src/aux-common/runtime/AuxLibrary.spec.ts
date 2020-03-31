@@ -24,6 +24,7 @@ import {
     disableAR,
     enableVR,
     disableVR,
+    download,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1257,6 +1258,46 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.disableVR();
                 expect(action).toEqual(disableVR());
                 expect(context.actions).toEqual([disableVR()]);
+            });
+        });
+
+        describe('player.downloadBots()', () => {
+            it('should emit a DownloadAction with the given bots formatted as JSON', () => {
+                const action = library.api.player.downloadBots(
+                    [bot1, bot2],
+                    'test'
+                );
+                const expected = download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            [bot1.id]: bot1,
+                            [bot2.id]: bot2,
+                        },
+                    }),
+                    'test.aux',
+                    'application/json'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying the .aux extension manually', () => {
+                const action = library.api.player.downloadBots(
+                    [bot1, bot2],
+                    'test.aux'
+                );
+                const expected = download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            [bot1.id]: bot1,
+                            [bot2.id]: bot2,
+                        },
+                    }),
+                    'test.aux',
+                    'application/json'
+                );
             });
         });
     });

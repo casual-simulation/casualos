@@ -25,6 +25,8 @@ import {
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
     BotAction,
+    download,
+    BotsState,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -97,6 +99,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                downloadBots,
             },
         },
     };
@@ -580,8 +583,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(calcDisableVR());
     }
 
+    /**
+     * Downloads the given list of bots.
+     * @param bots The bots that should be downloaded.
+     * @param filename The name of the file that the bots should be downloaded as.
+     */
+    function downloadBots(bots: Bot[], filename: string) {
+        let state: BotsState = {};
+        for (let bot of bots) {
+            state[bot.id] = bot;
+        }
+        return addAction(
+            download(
+                JSON.stringify(getDownloadState(state)),
+                formatAuxFilename(filename),
+                'application/json'
+            )
+        );
+    }
+
     function addAction(action: BotAction) {
         context.enqueueAction(action);
         return action;
+    }
+
+    function getDownloadState(state: BotsState) {
+        return {
+            version: 1,
+            state,
+        };
+    }
+
+    function formatAuxFilename(filename: string): string {
+        if (filename.endsWith('.aux')) {
+            return filename;
+        }
+        return filename + '.aux';
     }
 }
