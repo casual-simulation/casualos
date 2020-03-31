@@ -11,6 +11,7 @@ import {
     toast as toastMessage,
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
+    exitFullscreen,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -68,6 +69,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 toast,
                 showJoinCode,
                 requestFullscreenMode,
+                exitFullscreenMode,
             },
         },
     };
@@ -413,6 +415,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function requestFullscreenMode() {
         const event = requestFullscreen();
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Exits fullscreen mode.
+     */
+    function exitFullscreenMode() {
+        const event = exitFullscreen();
         context.enqueueAction(event);
         return event;
     }

@@ -5,7 +5,13 @@ import {
     MemoryGlobalContext,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
-import { ScriptBot, toast, showJoinCode, requestFullscreen } from '../bots';
+import {
+    ScriptBot,
+    toast,
+    showJoinCode,
+    requestFullscreen,
+    exitFullscreen,
+} from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
@@ -1029,6 +1035,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.requestFullscreenMode();
                 expect(action).toEqual(requestFullscreen());
                 expect(context.actions).toEqual([requestFullscreen()]);
+            });
+        });
+
+        describe('player.exitFullscreenMode()', () => {
+            it('should issue a exit_fullscreen_mode action', () => {
+                const action = library.api.player.exitFullscreenMode();
+                expect(action).toEqual(exitFullscreen());
+                expect(context.actions).toEqual([exitFullscreen()]);
             });
         });
     });
