@@ -12,6 +12,7 @@ import {
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
+    html as htmlMessage,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -70,6 +71,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
+                showHtml,
             },
         },
     };
@@ -424,6 +426,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function exitFullscreenMode() {
         const event = exitFullscreen();
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Shows some HTML to the user.
+     * @param html The HTML to show.
+     */
+    function showHtml(html: string) {
+        const event = htmlMessage(html);
         context.enqueueAction(event);
         return event;
     }

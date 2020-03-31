@@ -11,6 +11,7 @@ import {
     showJoinCode,
     requestFullscreen,
     exitFullscreen,
+    html,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1043,6 +1044,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.exitFullscreenMode();
                 expect(action).toEqual(exitFullscreen());
                 expect(context.actions).toEqual([exitFullscreen()]);
+            });
+        });
+
+        describe('player.showHtml()', () => {
+            it('should issue a show_html action', () => {
+                const action = library.api.player.showHtml('hello, world!');
+                expect(action).toEqual(html('hello, world!'));
+                expect(context.actions).toEqual([html('hello, world!')]);
             });
         });
     });
