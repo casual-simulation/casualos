@@ -26,6 +26,7 @@ import {
     disableVR as calcDisableVR,
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
+    showQRCode as calcShowQRCode,
     BotAction,
     download,
     BotsState,
@@ -107,6 +108,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showUploadAuxFile,
                 openQRCodeScanner,
                 closeQRCodeScanner,
+                showQRCode,
             },
         },
     };
@@ -637,6 +639,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function closeQRCodeScanner() {
         const event = calcOpenQRCodeScanner(false);
+        return addAction(event);
+    }
+
+    /**
+     * Shows the given QR Code.
+     * @param code The code to show.
+     */
+    function showQRCode(code: string) {
+        const event = calcShowQRCode(true, code);
         return addAction(event);
     }
 

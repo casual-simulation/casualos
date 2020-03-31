@@ -27,6 +27,7 @@ import {
     download,
     showUploadAuxFile,
     openQRCodeScanner,
+    showQRCode,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1392,6 +1393,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.closeQRCodeScanner();
                 expect(action).toEqual(openQRCodeScanner(false));
                 expect(context.actions).toEqual([openQRCodeScanner(false)]);
+            });
+        });
+
+        describe('player.showQRCode()', () => {
+            it('should emit a ShowQRCodeAction', () => {
+                const action = library.api.player.showQRCode('abc');
+                expect(action).toEqual(showQRCode(true, 'abc'));
+                expect(context.actions).toEqual([showQRCode(true, 'abc')]);
             });
         });
     });
