@@ -21,6 +21,7 @@ import {
     hideChat,
     runScript,
     enableAR,
+    disableAR,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1230,6 +1231,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.enableAR();
                 expect(action).toEqual(enableAR());
                 expect(context.actions).toEqual([enableAR()]);
+            });
+        });
+
+        describe('player.disableAR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const action = library.api.player.disableAR();
+                expect(action).toEqual(disableAR());
+                expect(context.actions).toEqual([disableAR()]);
             });
         });
     });

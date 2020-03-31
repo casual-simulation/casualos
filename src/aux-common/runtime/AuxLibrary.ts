@@ -21,6 +21,7 @@ import {
     ShowChatOptions,
     runScript,
     enableAR as calcEnableAR,
+    disableAR as calcDisableAR,
     BotAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
@@ -91,6 +92,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 version,
                 device,
                 enableAR,
+                disableAR,
             },
         },
     };
@@ -551,6 +553,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function enableAR() {
         return addAction(calcEnableAR());
+    }
+
+    /**
+     * Disables Augmented Reality features.
+     */
+    function disableAR() {
+        return addAction(calcDisableAR());
     }
 
     function addAction(action: BotAction) {
