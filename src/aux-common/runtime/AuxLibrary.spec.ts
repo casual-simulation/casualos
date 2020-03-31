@@ -22,6 +22,7 @@ import {
     runScript,
     enableAR,
     disableAR,
+    enableVR,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1239,6 +1240,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.disableAR();
                 expect(action).toEqual(disableAR());
                 expect(context.actions).toEqual([disableAR()]);
+            });
+        });
+
+        describe('player.enableVR()', () => {
+            it('should issue an EnableVRAction', () => {
+                const action = library.api.player.enableVR();
+                expect(action).toEqual(enableVR());
+                expect(context.actions).toEqual([enableVR()]);
             });
         });
     });

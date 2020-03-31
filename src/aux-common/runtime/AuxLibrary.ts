@@ -22,6 +22,7 @@ import {
     runScript,
     enableAR as calcEnableAR,
     disableAR as calcDisableAR,
+    enableVR as calcEnableVR,
     BotAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
@@ -93,6 +94,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 enableAR,
                 disableAR,
+                enableVR,
             },
         },
     };
@@ -560,6 +562,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableAR() {
         return addAction(calcDisableAR());
+    }
+
+    /**
+     * Enables Virtual Reality features.
+     */
+    function enableVR() {
+        return addAction(calcEnableVR());
     }
 
     function addAction(action: BotAction) {
