@@ -1545,5 +1545,32 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual(false);
             });
         });
+
+        describe('player.getCurrentDimension()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot(
+                    'player',
+                    {
+                        auxUniverse: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return auxPagePortal', () => {
+                player.tags.auxPagePortal = 'dimension';
+                const result = library.api.player.getCurrentDimension();
+                expect(result).toEqual('dimension');
+            });
+
+            it('should return undefined when auxPagePortal is not set', () => {
+                const result = library.api.player.getCurrentDimension();
+                expect(result).toBeUndefined();
+            });
+        });
     });
 });
