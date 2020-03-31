@@ -32,6 +32,9 @@ import {
     showBarcode,
     loadSimulation,
     unloadSimulation,
+    importAUX,
+    addState,
+    BotsState,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1481,6 +1484,32 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.unloadUniverse('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
+            });
+        });
+
+        describe('player.importAUX()', () => {
+            it('should emit a ImportAUXEvent', () => {
+                const action = library.api.player.importAUX('abc');
+                expect(action).toEqual(importAUX('abc'));
+                expect(context.actions).toEqual([importAUX('abc')]);
+            });
+
+            it('should emit a AddStateEvent if given JSON', () => {
+                const uploadState: BotsState = {
+                    uploadBot: {
+                        id: 'uploadBot',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+                const json = JSON.stringify({
+                    version: 1,
+                    state: uploadState,
+                });
+                const action = library.api.player.importAUX(json);
+                expect(action).toEqual(addState(uploadState));
+                expect(context.actions).toEqual([addState(uploadState)]);
             });
         });
     });

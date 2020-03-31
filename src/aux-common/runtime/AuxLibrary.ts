@@ -29,6 +29,7 @@ import {
     showQRCode as calcShowQRCode,
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
+    importAUX as calcImportAUX,
     BotAction,
     download,
     BotsState,
@@ -36,6 +37,8 @@ import {
     BarcodeFormat,
     loadSimulation,
     unloadSimulation,
+    getUploadState,
+    addState,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -121,6 +124,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hideBarcode,
                 loadUniverse,
                 unloadUniverse,
+                importAUX,
             },
         },
     };
@@ -722,6 +726,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function unloadUniverse(id: string) {
         const event = unloadSimulation(id);
         return addAction(event);
+    }
+
+    /**
+     * Imports the AUX from the given URL or JSON
+     * @param urlOrJSON The URL or JSON to load.
+     *                  If given JSON, then it will be imported as if it was a .aux file.
+     *                  If given a URL, then it will be downloaded and then imported.
+     */
+    function importAUX(urlOrJSON: string) {
+        try {
+            const data = JSON.parse(urlOrJSON);
+            const state = getUploadState(data);
+            const event = addState(state);
+            return addAction(event);
+        } catch {
+            const event = calcImportAUX(urlOrJSON);
+            return addAction(event);
+        }
     }
 
     // Helpers
