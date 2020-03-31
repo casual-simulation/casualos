@@ -1598,6 +1598,38 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('player.getInventoryDimension()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return the auxInventoryPortal tag from the user bot', () => {
+                player.tags.auxInventoryPortal = 'abc';
+                const result = library.api.player.getInventoryDimension();
+                expect(result).toEqual('abc');
+            });
+        });
+
+        describe('player.getMenuDimension()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return the auxMenuPortal tag from the user bot', () => {
+                player.tags.auxMenuPortal = 'abc';
+                const result = library.api.player.getMenuDimension();
+                expect(result).toEqual('abc');
+            });
+        });
+
         describe('player.getPortalDimension()', () => {
             let player: ScriptBot;
 

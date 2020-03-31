@@ -134,6 +134,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentUniverse,
                 getPortalDimension,
                 showInputForTag,
+                getMenuDimension,
+                getInventoryDimension,
             },
         },
     };
@@ -788,6 +790,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return universe || undefined;
         }
         return undefined;
+    }
+
+    /**
+     * Gets the name of the dimension that is used for the current user's inventory.
+     */
+    function getInventoryDimension(): string {
+        const user = context.playerBot;
+        if (user) {
+            return getTag(user, 'auxInventoryPortal');
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the name of the dimension that is used for the current user's menu.
+     */
+    function getMenuDimension(): string {
+        const user = context.playerBot;
+        if (user) {
+            return getTag(user, 'auxMenuPortal');
+        } else {
+            return null;
+        }
     }
 
     /**
