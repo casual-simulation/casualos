@@ -51,13 +51,17 @@ export class AuxRuntime {
     private _compiler = new AuxCompiler();
 
     // TODO: Update version number
-    private _globalContext: AuxGlobalContext = new MemoryGlobalContext({
-        hash: 'hash',
-        version: 'v1.2.3',
-        major: 1,
-        minor: 2,
-        patch: 3,
-    });
+    // TODO: Update device
+    private _globalContext: AuxGlobalContext = new MemoryGlobalContext(
+        {
+            hash: 'hash',
+            version: 'v1.2.3',
+            major: 1,
+            minor: 2,
+            patch: 3,
+        },
+        null
+    );
 
     private _library: AuxLibrary;
 

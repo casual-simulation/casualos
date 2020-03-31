@@ -4,6 +4,7 @@ import {
     addToContext,
     MemoryGlobalContext,
     AuxVersion,
+    AuxDevice,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
 import {
@@ -26,6 +27,7 @@ describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
     let context: MemoryGlobalContext;
     let version: AuxVersion;
+    let device: AuxDevice;
 
     beforeEach(() => {
         version = {
@@ -35,7 +37,11 @@ describe('AuxLibrary', () => {
             minor: 2,
             patch: 3,
         };
-        context = new MemoryGlobalContext(version);
+        device = {
+            supportsAR: true,
+            supportsVR: false,
+        };
+        context = new MemoryGlobalContext(version, device);
         library = createDefaultLibrary(context);
     });
 
@@ -1199,6 +1205,22 @@ describe('AuxLibrary', () => {
             it('should return an object with version information', () => {
                 const v = library.api.player.version();
                 expect(v).toEqual(version);
+            });
+        });
+
+        describe('player.device()', () => {
+            it('should return an object with device information', () => {
+                const d = library.api.player.device();
+                expect(d).toEqual(device);
+            });
+
+            it('should return info with null values if not specified', () => {
+                context.device = null;
+                const d = library.api.player.device();
+                expect(d).toEqual({
+                    supportsAR: null,
+                    supportsVR: null,
+                });
             });
         });
     });

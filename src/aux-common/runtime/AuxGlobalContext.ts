@@ -21,6 +21,11 @@ export interface AuxGlobalContext {
     version: AuxVersion;
 
     /**
+     * The device.
+     */
+    device: AuxDevice;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -55,6 +60,21 @@ export interface AuxVersion {
      * The patch portion of the version.
      */
     patch: number;
+}
+
+/**
+ * Contains information about the device that AUX is running on.
+ */
+export interface AuxDevice {
+    /**
+     * Whether the device supports augmented reality features.
+     */
+    supportsAR: boolean;
+
+    /**
+     * Whether the device supports virtual reality features.
+     */
+    supportsVR: boolean;
 }
 
 /**
@@ -94,11 +114,18 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     version: AuxVersion;
 
     /**
+     * The device.
+     */
+    device: AuxDevice;
+
+    /**
      * Creates a new global context.
      * @param version The version number.
+     * @param device The device that we're running on.
      */
-    constructor(version: AuxVersion) {
+    constructor(version: AuxVersion, device: AuxDevice) {
         this.version = version;
+        this.device = device;
     }
 
     /**

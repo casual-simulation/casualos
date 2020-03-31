@@ -9,13 +9,19 @@ describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
 
     beforeEach(() => {
-        context = new MemoryGlobalContext({
-            hash: 'hash',
-            version: 'v1.2.3',
-            major: 1,
-            minor: 2,
-            patch: 3,
-        });
+        context = new MemoryGlobalContext(
+            {
+                hash: 'hash',
+                version: 'v1.2.3',
+                major: 1,
+                minor: 2,
+                patch: 3,
+            },
+            {
+                supportsAR: false,
+                supportsVR: false,
+            }
+        );
     });
 
     describe('addToContext()', () => {

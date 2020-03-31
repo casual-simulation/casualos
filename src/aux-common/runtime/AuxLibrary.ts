@@ -87,6 +87,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hideChat,
                 run,
                 version,
+                device,
             },
         },
     };
@@ -546,5 +547,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function version() {
         return context.version;
+    }
+
+    /**
+     * Gets information about the device that the player is using.
+     */
+    function device() {
+        if (context.device) {
+            return context.device;
+        }
+        return {
+            supportsAR: null as boolean,
+            supportsVR: null as boolean,
+        };
     }
 }
