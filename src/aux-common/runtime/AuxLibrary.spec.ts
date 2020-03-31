@@ -45,12 +45,14 @@ import {
     openConsole,
     checkout,
     playSound,
+    setupUniverse,
 } from '../bots';
 import { types } from 'util';
 import {
     possibleTagNameCases,
     possibleTagValueCases,
 } from '../bots/test/BotTestHelpers';
+import { remote } from '@casual-simulation/causal-trees';
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -2005,6 +2007,56 @@ describe('AuxLibrary', () => {
                     bot2,
                 ]);
                 expect(result).toEqual(false);
+            });
+        });
+
+        describe('server.setupUniverse()', () => {
+            it('should send a SetupChannelAction in a RemoteAction', () => {
+                bot1.tags.abc = true;
+                const action = library.api.server.setupUniverse(
+                    'channel',
+                    bot1
+                );
+                const expected = remote(
+                    setupUniverse(
+                        'channel',
+                        createBot(bot1.id, bot1.tags, 'shared')
+                    )
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('remote()', () => {
+            it('should replace the original event in the queue', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc')
+                );
+                library.api.player.showChat();
+                expect(action).toEqual(remote(toast('abc')));
+                expect(context.actions).toEqual([
+                    remote(toast('abc')),
+                    showChat(),
+                ]);
+            });
+
+            it('should send the right selector', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    {
+                        session: 's',
+                        username: 'u',
+                        device: 'd',
+                    }
+                );
+                const expected = remote(toast('abc'), {
+                    sessionId: 's',
+                    username: 'u',
+                    deviceId: 'd',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
     });

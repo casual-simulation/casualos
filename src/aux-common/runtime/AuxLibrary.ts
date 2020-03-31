@@ -37,6 +37,7 @@ import {
     openURL as calcOpenURL,
     checkout as calcCheckout,
     playSound as calcPlaySound,
+    setupUniverse as calcSetupUniverse,
     BotAction,
     download,
     BotsState,
@@ -57,6 +58,10 @@ import {
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
 import every from 'lodash/every';
+import {
+    remote as calcRemote,
+    DeviceSelector,
+} from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -83,6 +88,15 @@ type TagFilter =
 type Mod = BotTags | Bot;
 
 /**
+ * An interface that is used to say which user/device/session an event should be sent to.
+ */
+export interface SessionSelector {
+    username?: string;
+    device?: string;
+    session?: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -107,6 +121,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
+
+            remote,
 
             player: {
                 toast,
@@ -159,6 +175,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 checkout,
                 playSound,
                 hasBotInInventory,
+            },
+
+            server: {
+                setupUniverse,
             },
         },
     };
@@ -1066,6 +1086,48 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return every(bots, f => getTag(f, inventoryDimension) === true);
     }
 
+    /**
+     * Sends an event to the server to setup a new universe if it does not exist.
+     * @param universe The universe.
+     * @param botOrMod The bot or mod that should be cloned into the new universe.
+     */
+    function setupUniverse(universe: string, botOrMod?: Mod) {
+        return remote(calcSetupUniverse(universe, context.unwrapBot(botOrMod)));
+    }
+
+    /**
+     * Sends the given operation to all the devices that matches the given selector.
+     * In effect, this allows users to send each other events directly without having to edit tags.
+     *
+     * Note that currently, devices will only accept events sent from the server.
+     *
+     * @param event The event that should be executed in the remote session(s).
+     * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+     *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+     *                 If a selector is not specified, then the event is sent to the server.
+     * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
+     *                      with respect to other events. Defaults to true.
+     *
+     * @example
+     * // Send a toast to all sessions for the username "bob"
+     * remote(player.toast("Hello, Bob!"), { username: "bob" });
+     */
+    function remote(
+        event: BotAction,
+        selector?: SessionSelector,
+        allowBatching?: boolean
+    ) {
+        if (!event) {
+            return;
+        }
+        const r = calcRemote(
+            event,
+            convertSessionSelector(selector),
+            allowBatching
+        );
+        return addAction(r);
+    }
+
     // Helpers
     function addAction<T extends BotAction>(action: T) {
         context.enqueueAction(action);
@@ -1084,5 +1146,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return filename;
         }
         return filename + '.aux';
+    }
+
+    function convertSessionSelector(selector: SessionSelector): DeviceSelector {
+        return selector
+            ? {
+                  sessionId: selector.session,
+                  username: selector.username,
+                  deviceId: selector.device,
+              }
+            : undefined;
     }
 }

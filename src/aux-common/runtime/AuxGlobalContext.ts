@@ -149,7 +149,16 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * @param action The action to enqueue.
      */
     enqueueAction(action: BotAction): void {
-        this.actions.push(action);
+        if (action.type === 'remote') {
+            const index = this.actions.indexOf(<BotAction>action.event);
+            if (index >= 0) {
+                this.actions[index] = action;
+            } else {
+                this.actions.push(action);
+            }
+        } else {
+            this.actions.push(action);
+        }
     }
 
     /**
@@ -163,7 +172,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 space: bot.space,
 
                 // TODO: Fix for proxy objects
-                tags: bot.tags,
+                tags: {
+                    ...bot.tags,
+                },
             };
         }
         return bot;
