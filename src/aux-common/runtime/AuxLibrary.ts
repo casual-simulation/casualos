@@ -15,6 +15,7 @@ import {
     html as htmlMessage,
     hideHtml as hideHtmlMessage,
     setClipboard as calcSetClipboard,
+    tweenTo as calcTweenTo,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -76,6 +77,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showHtml,
                 hideHtml,
                 setClipboard,
+                tweenTo,
             },
         },
     };
@@ -459,6 +461,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function setClipboard(text: string) {
         const event = calcSetClipboard(text);
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Tweens the user's camera to view the given bot.
+     * @param bot The bot to view.
+     * @param zoomValue The zoom value to use.
+     */
+    function tweenTo(
+        bot: Bot | string,
+        zoomValue?: number,
+        rotX?: number,
+        rotY?: number,
+        duration?: number
+    ) {
+        const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
         context.enqueueAction(event);
         return event;
     }

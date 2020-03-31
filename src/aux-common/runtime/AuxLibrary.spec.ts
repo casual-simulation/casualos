@@ -14,6 +14,7 @@ import {
     html,
     hideHtml,
     setClipboard,
+    tweenTo,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1070,6 +1071,36 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.setClipboard('test');
                 expect(action).toEqual(setClipboard('test'));
                 expect(context.actions).toEqual([setClipboard('test')]);
+            });
+        });
+
+        describe('player.tweenTo()', () => {
+            it('should emit a TweenToAction', () => {
+                const action = library.api.player.tweenTo('test');
+                expect(action).toEqual(tweenTo('test'));
+                expect(context.actions).toEqual([tweenTo('test')]);
+            });
+
+            it('should handle bots', () => {
+                const action = library.api.player.tweenTo(bot1);
+                expect(action).toEqual(tweenTo(bot1.id));
+                expect(context.actions).toEqual([tweenTo(bot1.id)]);
+            });
+
+            it('should support specifying a duration', () => {
+                const action = library.api.player.tweenTo(
+                    'test',
+                    undefined,
+                    undefined,
+                    undefined,
+                    10
+                );
+                expect(action).toEqual(
+                    tweenTo('test', undefined, undefined, undefined, 10)
+                );
+                expect(context.actions).toEqual([
+                    tweenTo('test', undefined, undefined, undefined, 10),
+                ]);
             });
         });
     });
