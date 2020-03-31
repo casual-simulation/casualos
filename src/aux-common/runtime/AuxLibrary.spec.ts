@@ -1042,6 +1042,73 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('getMod()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should create a diff that applies the given tags from the given bot', () => {
+            bot1.tags.val = true;
+            bot1.tags.testA = 'abc';
+            bot1.tags.testB = 123;
+            bot1.tags.missing = false;
+
+            const mod = library.api.getMod(bot1, 'val', /test.+/);
+            expect(mod).toEqual({
+                val: true,
+                testA: 'abc',
+                testB: 123,
+            });
+        });
+
+        it('should create a diff with all tags if no filters are given', () => {
+            bot1.tags.val = true;
+            bot1.tags.testA = 'abc';
+            bot1.tags.testB = 123;
+            bot1.tags.missing = false;
+
+            const mod = library.api.getMod(bot1);
+            expect(mod).toEqual({
+                val: true,
+                testA: 'abc',
+                testB: 123,
+                missing: false,
+            });
+        });
+
+        it('should create a diff from another diff', () => {
+            const mod = library.api.getMod(
+                {
+                    abc: true,
+                    val: 123,
+                },
+                'val'
+            );
+            expect(mod).toEqual({
+                val: 123,
+            });
+        });
+
+        it('should create a diff from JSON', () => {
+            const mod = library.api.getMod(
+                JSON.stringify({
+                    abc: true,
+                    val: 123,
+                }),
+                'val'
+            );
+            expect(mod).toEqual({
+                val: 123,
+            });
+        });
+    });
+
     describe('actions', () => {
         let bot1: ScriptBot;
         let bot2: ScriptBot;

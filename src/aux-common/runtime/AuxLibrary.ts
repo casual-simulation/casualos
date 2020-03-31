@@ -52,6 +52,7 @@ import {
     KNOWN_PORTALS,
     openConsole,
     StartCheckoutOptions,
+    tagsOnBot,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -91,6 +92,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBots,
             getBot,
             getBotTagValues,
+            getMod,
             getID,
             getJSON,
             getTag,
@@ -233,6 +235,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return values;
         }
+    }
+
+    /**
+     * Creates a mod from exported mod data.
+     * @param bot The mod data that should be loaded.
+     * @param tags The tags that should be included in the output mod.
+     * @returns The mod that was loaded from the data.
+     */
+    function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
+        if (typeof bot === 'string') {
+            bot = JSON.parse(bot);
+        }
+
+        let diff: BotTags = {};
+
+        let tagsObj = isBot(bot) ? bot.tags : bot;
+        let botTags = isBot(bot) ? tagsOnBot(bot) : Object.keys(bot);
+        for (let botTag of botTags) {
+            let add = false;
+            if (tags.length > 0) {
+                for (let tag of tags) {
+                    if (tag instanceof RegExp) {
+                        if (tag.test(botTag)) {
+                            add = true;
+                            break;
+                        }
+                    } else {
+                        if (tag === botTag) {
+                            add = true;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                add = true;
+            }
+
+            if (add) {
+                diff[botTag] = tagsObj[botTag];
+            }
+        }
+
+        return diff;
     }
 
     /**

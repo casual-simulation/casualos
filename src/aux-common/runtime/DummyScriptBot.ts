@@ -14,9 +14,16 @@ export function createDummyScriptBot(
 ): ScriptBot {
     space = space || 'shared';
     tags = {
-        space: space,
         ...tags,
     };
+
+    Object.defineProperty(tags, 'space', {
+        get: () => space,
+        set: (val: any) => (space = val),
+        enumerable: false,
+        configurable: true,
+    });
+
     return {
         id,
         tags: <any>tags,
