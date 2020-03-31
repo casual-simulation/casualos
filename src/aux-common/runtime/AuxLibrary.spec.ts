@@ -12,6 +12,7 @@ import {
     requestFullscreen,
     exitFullscreen,
     html,
+    hideHtml,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1052,6 +1053,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.showHtml('hello, world!');
                 expect(action).toEqual(html('hello, world!'));
                 expect(context.actions).toEqual([html('hello, world!')]);
+            });
+        });
+
+        describe('player.hideHtml()', () => {
+            it('should issue a hide_html action', () => {
+                const action = library.api.player.hideHtml();
+                expect(action).toEqual(hideHtml());
+                expect(context.actions).toEqual([hideHtml()]);
             });
         });
     });

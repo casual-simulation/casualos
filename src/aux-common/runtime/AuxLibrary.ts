@@ -13,6 +13,7 @@ import {
     requestFullscreen,
     exitFullscreen,
     html as htmlMessage,
+    hideHtml as hideHtmlMessage,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -72,6 +73,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestFullscreenMode,
                 exitFullscreenMode,
                 showHtml,
+                hideHtml,
             },
         },
     };
@@ -436,6 +438,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showHtml(html: string) {
         const event = htmlMessage(html);
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Hides the HTML from the user.
+     */
+    function hideHtml() {
+        const event = hideHtmlMessage();
         context.enqueueAction(event);
         return event;
     }
