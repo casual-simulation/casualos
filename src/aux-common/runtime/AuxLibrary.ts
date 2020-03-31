@@ -33,6 +33,7 @@ import {
     showInputForTag as calcShowInputForTag,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
+    goToURL as calcGoToURL,
     BotAction,
     download,
     BotsState,
@@ -144,6 +145,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getDimensionalDepth,
                 showInputForTag,
                 goToDimension,
+                goToURL,
             },
         },
     };
@@ -924,6 +926,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function goToDimension(dimension: string) {
         const event = calcGoToDimension(dimension);
+        return addAction(event);
+    }
+
+    /**
+     * Redirects the user to the given URL.
+     * @param url The URL to go to.
+     *
+     * @example
+     * // Send the player to wikipedia.
+     * player.goToURL("https://wikipedia.org");
+     */
+    function goToURL(url: string) {
+        const event = calcGoToURL(url);
         return addAction(event);
     }
 

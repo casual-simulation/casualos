@@ -40,6 +40,7 @@ import {
     replaceDragBot,
     createBot,
     goToDimension,
+    goToURL,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1831,6 +1832,14 @@ describe('AuxLibrary', () => {
                 );
                 expect(action).toEqual(goToDimension('abc'));
                 expect(context.actions).toEqual([goToDimension('abc')]);
+            });
+        });
+
+        describe('player.goToURL()', () => {
+            it('should issue a GoToURL event', () => {
+                const action = library.api.player.goToURL('abc');
+                expect(action).toEqual(goToURL('abc'));
+                expect(context.actions).toEqual([goToURL('abc')]);
             });
         });
     });
