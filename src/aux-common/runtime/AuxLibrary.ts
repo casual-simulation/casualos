@@ -24,6 +24,7 @@ import {
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
+    showUploadAuxFile as calcShowUploadAuxFile,
     BotAction,
     download,
     BotsState,
@@ -100,6 +101,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
+                showUploadAuxFile,
             },
         },
     };
@@ -600,6 +602,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 'application/json'
             )
         );
+    }
+
+    /**
+     * Shows the "Upload Universe" dialog.
+     */
+    function showUploadAuxFile() {
+        return addAction(calcShowUploadAuxFile());
     }
 
     function addAction(action: BotAction) {

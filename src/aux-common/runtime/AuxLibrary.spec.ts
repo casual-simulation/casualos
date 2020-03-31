@@ -25,6 +25,7 @@ import {
     enableVR,
     disableVR,
     download,
+    showUploadAuxFile,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1298,6 +1299,14 @@ describe('AuxLibrary', () => {
                     'test.aux',
                     'application/json'
                 );
+            });
+        });
+
+        describe('player.showUploadAuxFile()', () => {
+            it('should emit a showUploadAuxFileAction', () => {
+                const action = library.api.player.showUploadAuxFile();
+                expect(action).toEqual(showUploadAuxFile());
+                expect(context.actions).toEqual([showUploadAuxFile()]);
             });
         });
     });
