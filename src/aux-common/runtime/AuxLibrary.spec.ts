@@ -1386,5 +1386,13 @@ describe('AuxLibrary', () => {
                 ]);
             });
         });
+
+        describe('player.closeQRCodeScanner()', () => {
+            it('should emit a OpenQRCodeScannerAction', () => {
+                const action = library.api.player.closeQRCodeScanner();
+                expect(action).toEqual(openQRCodeScanner(false));
+                expect(context.actions).toEqual([openQRCodeScanner(false)]);
+            });
+        });
     });
 });

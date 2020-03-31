@@ -106,6 +106,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 downloadUniverse,
                 showUploadAuxFile,
                 openQRCodeScanner,
+                closeQRCodeScanner,
             },
         },
     };
@@ -628,6 +629,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openQRCodeScanner(camera?: CameraType) {
         const event = calcOpenQRCodeScanner(true, camera);
+        return addAction(event);
+    }
+
+    /**
+     * Closes the QR Code Scanner.
+     */
+    function closeQRCodeScanner() {
+        const event = calcOpenQRCodeScanner(false);
         return addAction(event);
     }
 
