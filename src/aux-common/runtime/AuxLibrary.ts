@@ -19,6 +19,7 @@ import {
     showChat as calcShowChat,
     hideChat as calcHideChat,
     ShowChatOptions,
+    runScript,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -84,6 +85,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 moveTo,
                 showChat,
                 hideChat,
+                run,
             },
         },
     };
@@ -524,6 +526,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function hideChat() {
         const action = calcHideChat();
+        context.enqueueAction(action);
+        return action;
+    }
+
+    /**
+     * Enqueues the given script to execute after this script is done running.
+     * @param script The script that should be executed.
+     */
+    function run(script: string) {
+        const action = runScript(script);
         context.enqueueAction(action);
         return action;
     }

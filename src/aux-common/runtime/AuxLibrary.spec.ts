@@ -17,6 +17,7 @@ import {
     tweenTo,
     showChat,
     hideChat,
+    runScript,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1174,6 +1175,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.hideChat();
                 expect(action).toEqual(hideChat());
                 expect(context.actions).toEqual([hideChat()]);
+            });
+        });
+
+        describe('player.run()', () => {
+            it('should emit a RunScriptAction', () => {
+                const action = library.api.player.run('abc');
+                expect(action).toEqual(runScript('abc'));
+                expect(context.actions).toEqual([runScript('abc')]);
             });
         });
     });
