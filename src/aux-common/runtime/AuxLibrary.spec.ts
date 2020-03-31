@@ -42,6 +42,7 @@ import {
     goToDimension,
     goToURL,
     openURL,
+    openConsole,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1849,6 +1850,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.openURL('abc');
                 expect(action).toEqual(openURL('abc'));
                 expect(context.actions).toEqual([openURL('abc')]);
+            });
+        });
+
+        describe('player.openDevConsole()', () => {
+            it('should issue a OpenConsole event', () => {
+                const action = library.api.player.openDevConsole();
+                expect(action).toEqual(openConsole());
+                expect(context.actions).toEqual([openConsole()]);
             });
         });
     });

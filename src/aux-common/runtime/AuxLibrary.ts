@@ -48,6 +48,7 @@ import {
     getPortalTag,
     ShowInputOptions,
     KNOWN_PORTALS,
+    openConsole,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -148,6 +149,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 goToDimension,
                 goToURL,
                 openURL,
+                openDevConsole,
             },
         },
     };
@@ -954,6 +956,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openURL(url: string) {
         const event = calcOpenURL(url);
+        return addAction(event);
+    }
+
+    /**
+     * Instructs auxPlayer to open the built-in developer console.
+     * The dev console provides easy access to error messages and debug logs for formulas and actions.
+     */
+    function openDevConsole() {
+        const event = openConsole();
         return addAction(event);
     }
 
