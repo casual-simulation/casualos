@@ -125,6 +125,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadUniverse,
                 unloadUniverse,
                 importAUX,
+                isInDimension,
             },
         },
     };
@@ -746,6 +747,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
+    /**
+     * Derermines whether the player is in the given dimension.
+     * @param dimension The dimension.
+     */
+    function isInDimension(dimension: string) {
+        return (
+            getCurrentDimension() === dimension &&
+            getCurrentDimension() != undefined
+        );
+    }
+
     // Helpers
     function addAction(action: BotAction) {
         context.enqueueAction(action);
@@ -774,6 +786,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (user) {
             let universe = getTag(user, 'auxUniverse');
             return universe || undefined;
+        }
+        return undefined;
+    }
+
+    /**
+     * Gets the dimension that the player is currently viewing.
+     */
+    function getCurrentDimension(): string {
+        const user = context.playerBot;
+        if (user) {
+            const dimension = getTag(user, 'auxPagePortal');
+            return dimension || undefined;
         }
         return undefined;
     }
