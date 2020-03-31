@@ -5,7 +5,7 @@ import {
     MemoryGlobalContext,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
-import { ScriptBot, toast } from '../bots';
+import { ScriptBot, toast, showJoinCode } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
@@ -1002,6 +1002,25 @@ describe('AuxLibrary', () => {
 
                 expect(action).toEqual(toast('hello, world!'));
                 expect(context.actions).toEqual([toast('hello, world!')]);
+            });
+        });
+
+        describe('player.showJoinCode()', () => {
+            it('should emit a ShowJoinCodeEvent', () => {
+                const action = library.api.player.showJoinCode();
+                expect(action).toEqual(showJoinCode());
+                expect(context.actions).toEqual([showJoinCode()]);
+            });
+
+            it('should allow linking to a specific universe and dimension', () => {
+                const action = library.api.player.showJoinCode(
+                    'universe',
+                    'dimension'
+                );
+                expect(action).toEqual(showJoinCode('universe', 'dimension'));
+                expect(context.actions).toEqual([
+                    showJoinCode('universe', 'dimension'),
+                ]);
             });
         });
     });

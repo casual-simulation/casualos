@@ -9,6 +9,7 @@ import {
     Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
+    showJoinCode as calcShowJoinCode,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -64,6 +65,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             player: {
                 toast,
+                showJoinCode,
             },
         },
     };
@@ -388,6 +390,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function toast(message: string, duration: number = 2) {
         const event = toastMessage(message, duration);
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Shows a QR Code that contains a link to a universe and dimension.
+     * @param universe The universe that should be joined. Defaults to the current universe.
+     * @param dimension The dimension that should be joined. Defaults to the current dimension.
+     */
+    function showJoinCode(universe?: string, dimension?: string) {
+        const event = calcShowJoinCode(universe, dimension);
         context.enqueueAction(event);
         return event;
     }
