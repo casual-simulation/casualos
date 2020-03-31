@@ -43,6 +43,7 @@ import {
     PortalType,
     getPortalTag,
     ShowInputOptions,
+    KNOWN_PORTALS,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -132,10 +133,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 isInDimension,
                 getCurrentDimension,
                 getCurrentUniverse,
-                getPortalDimension,
-                showInputForTag,
                 getMenuDimension,
                 getInventoryDimension,
+                getPortalDimension,
+                getDimensionalDepth,
+                showInputForTag,
             },
         },
     };
@@ -835,6 +837,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return dimension;
+    }
+
+    /**
+     * Gets the distance that the player bot is from the given dimension.
+     *
+     * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+     *
+     * @param dimension The dimension to check for.
+     */
+    function getDimensionalDepth(dimension: string): number {
+        const bot = context.playerBot;
+
+        if (getTag(bot, dimension) === true) {
+            return 0;
+        } else if (
+            KNOWN_PORTALS.some(portal => getTag(bot, portal) === dimension)
+        ) {
+            return 1;
+        }
+        return -1;
     }
 
     /**

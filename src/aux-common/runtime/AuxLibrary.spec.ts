@@ -36,6 +36,7 @@ import {
     addState,
     BotsState,
     showInputForTag,
+    KNOWN_PORTALS,
 } from '../bots';
 import {
     possibleTagNameCases,
@@ -1667,6 +1668,44 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual(expectedDimension);
                 }
             );
+        });
+
+        describe('player.getDimensionalDepth()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return 0 when the bot is in the given dimension', () => {
+                player.tags.dimension = true;
+                const result = library.api.player.getDimensionalDepth(
+                    'dimension'
+                );
+                expect(result).toEqual(0);
+            });
+
+            const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+
+            it.each(portalCases)(
+                'should return 1 when the dimension is in the %s portal',
+                portal => {
+                    player.tags[portal] = 'dimension';
+                    const result = library.api.player.getDimensionalDepth(
+                        'dimension'
+                    );
+                    expect(result).toEqual(1);
+                }
+            );
+
+            it('should return -1 otherwise', () => {
+                const result = library.api.player.getDimensionalDepth(
+                    'dimension'
+                );
+                expect(result).toEqual(-1);
+            });
         });
 
         describe('player.showInputForTag()', () => {
