@@ -36,7 +36,10 @@ import {
     addState,
     BotsState,
 } from '../bots';
-import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
+import {
+    possibleTagNameCases,
+    possibleTagValueCases,
+} from '../bots/test/BotTestHelpers';
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -1569,6 +1572,27 @@ describe('AuxLibrary', () => {
 
             it('should return undefined when auxPagePortal is not set', () => {
                 const result = library.api.player.getCurrentDimension();
+                expect(result).toBeUndefined();
+            });
+        });
+
+        describe('player.getCurrentUniverse()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return auxUniverse', () => {
+                player.tags.auxUniverse = 'universe';
+                const result = library.api.player.getCurrentUniverse();
+                expect(result).toEqual('universe');
+            });
+
+            it('should return undefined when auxUniverse is not set', () => {
+                const result = library.api.player.getCurrentUniverse();
                 expect(result).toBeUndefined();
             });
         });

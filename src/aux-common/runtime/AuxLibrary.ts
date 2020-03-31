@@ -127,6 +127,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 importAUX,
                 isInDimension,
                 getCurrentDimension,
+                getCurrentUniverse,
             },
         },
     };
@@ -771,6 +772,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return undefined;
     }
 
+    /**
+     * Gets the universe that the player is currently in.
+     */
+    function getCurrentUniverse(): string {
+        const user = context.playerBot;
+        if (user) {
+            let universe = getTag(user, 'auxUniverse');
+            return universe || undefined;
+        }
+        return undefined;
+    }
+
     // Helpers
     function addAction(action: BotAction) {
         context.enqueueAction(action);
@@ -789,17 +802,5 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return filename;
         }
         return filename + '.aux';
-    }
-
-    /**
-     * Gets the universe that the player is currently in.
-     */
-    function getCurrentUniverse(): string {
-        const user = context.playerBot;
-        if (user) {
-            let universe = getTag(user, 'auxUniverse');
-            return universe || undefined;
-        }
-        return undefined;
     }
 }
