@@ -16,10 +16,45 @@ export interface AuxGlobalContext {
     bots: ScriptBot[];
 
     /**
+     * The version.
+     */
+    version: AuxVersion;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
     enqueueAction(action: BotAction): void;
+}
+
+/**
+ * Contains information about the version of AUX that is running.
+ */
+export interface AuxVersion {
+    /**
+     * The commit of the hash that AUX was built from.
+     */
+    hash: string;
+
+    /**
+     * The full version number.
+     */
+    version: string;
+
+    /**
+     * The major portion of the version.
+     */
+    major: number;
+
+    /**
+     * The minor portion of the version.
+     */
+    minor: number;
+
+    /**
+     * The patch portion of the version.
+     */
+    patch: number;
 }
 
 /**
@@ -52,6 +87,19 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The list of actions that have been queued.
      */
     actions: BotAction[] = [];
+
+    /**
+     * The version.
+     */
+    version: AuxVersion;
+
+    /**
+     * Creates a new global context.
+     * @param version The version number.
+     */
+    constructor(version: AuxVersion) {
+        this.version = version;
+    }
 
     /**
      * Enqueues the given action.

@@ -86,6 +86,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showChat,
                 hideChat,
                 run,
+                version,
             },
         },
     };
@@ -538,5 +539,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const action = runScript(script);
         context.enqueueAction(action);
         return action;
+    }
+
+    /**
+     * Gets information about the version of AUX that is running.
+     */
+    function version() {
+        return context.version;
     }
 }

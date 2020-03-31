@@ -3,6 +3,7 @@ import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
+    AuxVersion,
 } from './AuxGlobalContext';
 import { createDummyScriptBot } from './DummyScriptBot';
 import {
@@ -24,9 +25,17 @@ import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
     let context: MemoryGlobalContext;
+    let version: AuxVersion;
 
     beforeEach(() => {
-        context = new MemoryGlobalContext();
+        version = {
+            hash: 'hash',
+            version: 'v1.2.3',
+            major: 1,
+            minor: 2,
+            patch: 3,
+        };
+        context = new MemoryGlobalContext(version);
         library = createDefaultLibrary(context);
     });
 
@@ -1183,6 +1192,13 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.run('abc');
                 expect(action).toEqual(runScript('abc'));
                 expect(context.actions).toEqual([runScript('abc')]);
+            });
+        });
+
+        describe('player.version()', () => {
+            it('should return an object with version information', () => {
+                const v = library.api.player.version();
+                expect(v).toEqual(version);
             });
         });
     });
