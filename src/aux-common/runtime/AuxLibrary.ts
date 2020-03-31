@@ -35,6 +35,7 @@ import {
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
     openURL as calcOpenURL,
+    checkout as calcCheckout,
     BotAction,
     download,
     BotsState,
@@ -49,6 +50,7 @@ import {
     ShowInputOptions,
     KNOWN_PORTALS,
     openConsole,
+    StartCheckoutOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -150,6 +152,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 goToURL,
                 openURL,
                 openDevConsole,
+                checkout,
             },
         },
     };
@@ -965,6 +968,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openDevConsole() {
         const event = openConsole();
+        return addAction(event);
+    }
+
+    /**
+     * Shows a checkout screen that lets the user purchase something.
+     *
+     * @param options The options for the payment box.
+     *
+     * @example
+     * // Show a checkout box for 10 cookies
+     * player.checkout({
+     *   productId: '10_cookies',
+     *   title: '10 Cookies',
+     *   description: '$5.00',
+     *   processingUniverse: 'cookies_checkout'
+     * });
+     *
+     */
+    function checkout(options: StartCheckoutOptions) {
+        const event = calcCheckout(options);
         return addAction(event);
     }
 

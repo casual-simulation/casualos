@@ -43,6 +43,7 @@ import {
     goToURL,
     openURL,
     openConsole,
+    checkout,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1858,6 +1859,27 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.openDevConsole();
                 expect(action).toEqual(openConsole());
                 expect(context.actions).toEqual([openConsole()]);
+            });
+        });
+
+        describe('player.checkout()', () => {
+            it('should emit a start checkout event', () => {
+                const action = library.api.player.checkout({
+                    publishableKey: 'key',
+                    productId: 'ID1',
+                    title: 'Product 1',
+                    description: '$50.43',
+                    processingUniverse: 'channel2',
+                });
+                const expected = checkout({
+                    publishableKey: 'key',
+                    productId: 'ID1',
+                    title: 'Product 1',
+                    description: '$50.43',
+                    processingUniverse: 'channel2',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
     });
