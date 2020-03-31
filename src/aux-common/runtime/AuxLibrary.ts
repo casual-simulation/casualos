@@ -14,6 +14,7 @@ import {
     exitFullscreen,
     html as htmlMessage,
     hideHtml as hideHtmlMessage,
+    setClipboard as calcSetClipboard,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -74,6 +75,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 exitFullscreenMode,
                 showHtml,
                 hideHtml,
+                setClipboard,
             },
         },
     };
@@ -447,6 +449,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function hideHtml() {
         const event = hideHtmlMessage();
+        context.enqueueAction(event);
+        return event;
+    }
+
+    /**
+     * Sets the text stored in the player's clipboard.
+     * @param text The text to set to the clipboard.
+     */
+    function setClipboard(text: string) {
+        const event = calcSetClipboard(text);
         context.enqueueAction(event);
         return event;
     }

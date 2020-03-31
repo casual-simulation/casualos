@@ -13,6 +13,7 @@ import {
     exitFullscreen,
     html,
     hideHtml,
+    setClipboard,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1061,6 +1062,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.hideHtml();
                 expect(action).toEqual(hideHtml());
                 expect(context.actions).toEqual([hideHtml()]);
+            });
+        });
+
+        describe('player.setClipboard()', () => {
+            it('should emit a SetClipboardEvent', () => {
+                const action = library.api.player.setClipboard('test');
+                expect(action).toEqual(setClipboard('test'));
+                expect(context.actions).toEqual([setClipboard('test')]);
             });
         });
     });
