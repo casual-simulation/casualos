@@ -28,10 +28,12 @@ import {
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
     openBarcodeScanner as calcOpenBarcodeScanner,
+    showBarcode as calcShowBarcode,
     BotAction,
     download,
     BotsState,
     CameraType,
+    BarcodeFormat,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -113,6 +115,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hideQRCode,
                 openBarcodeScanner,
                 closeBarcodeScanner,
+                showBarcode,
             },
         },
     };
@@ -677,6 +680,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function closeBarcodeScanner() {
         const event = calcOpenBarcodeScanner(false);
+        return addAction(event);
+    }
+
+    /**
+     * Shows the given barcode.
+     * @param code The code that should be shown.
+     * @param format The format that the barcode should be shown in.
+     */
+    function showBarcode(code: string, format?: BarcodeFormat) {
+        const event = calcShowBarcode(true, code, format);
         return addAction(event);
     }
 
