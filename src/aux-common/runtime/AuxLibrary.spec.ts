@@ -28,6 +28,7 @@ import {
     showUploadAuxFile,
     openQRCodeScanner,
     showQRCode,
+    openBarcodeScanner,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1409,6 +1410,22 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.hideQRCode();
                 expect(action).toEqual(showQRCode(false));
                 expect(context.actions).toEqual([showQRCode(false)]);
+            });
+        });
+
+        describe('player.openBarcodeScanner()', () => {
+            it('should emit a OpenBarcodeScannerAction', () => {
+                const action = library.api.player.openBarcodeScanner();
+                expect(action).toEqual(openBarcodeScanner(true));
+                expect(context.actions).toEqual([openBarcodeScanner(true)]);
+            });
+
+            it('should use the given camera type', () => {
+                const action = library.api.player.openBarcodeScanner('front');
+                expect(action).toEqual(openBarcodeScanner(true, 'front'));
+                expect(context.actions).toEqual([
+                    openBarcodeScanner(true, 'front'),
+                ]);
             });
         });
     });

@@ -27,6 +27,7 @@ import {
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
+    openBarcodeScanner as calcOpenBarcodeScanner,
     BotAction,
     download,
     BotsState,
@@ -110,6 +111,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeQRCodeScanner,
                 showQRCode,
                 hideQRCode,
+                openBarcodeScanner,
             },
         },
     };
@@ -657,6 +659,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function hideQRCode() {
         const event = calcShowQRCode(false);
+        return addAction(event);
+    }
+
+    /**
+     * Opens the barcode scanner.
+     * @param camera The camera that should be used.
+     */
+    function openBarcodeScanner(camera?: CameraType) {
+        const event = calcOpenBarcodeScanner(true, camera);
         return addAction(event);
     }
 
