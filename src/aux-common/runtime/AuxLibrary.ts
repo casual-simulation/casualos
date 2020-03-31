@@ -414,9 +414,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
      */
     function toast(message: string, duration: number = 2) {
-        const event = toastMessage(message, duration);
-        context.enqueueAction(event);
-        return event;
+        return addAction(toastMessage(message, duration));
     }
 
     /**
@@ -425,9 +423,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
     function showJoinCode(universe?: string, dimension?: string) {
-        const event = calcShowJoinCode(universe, dimension);
-        context.enqueueAction(event);
-        return event;
+        return addAction(calcShowJoinCode(universe, dimension));
     }
 
     /**
@@ -435,18 +431,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Depending on the web browser, this may ask the player for permission.
      */
     function requestFullscreenMode() {
-        const event = requestFullscreen();
-        context.enqueueAction(event);
-        return event;
+        return addAction(requestFullscreen());
     }
 
     /**
      * Exits fullscreen mode.
      */
     function exitFullscreenMode() {
-        const event = exitFullscreen();
-        context.enqueueAction(event);
-        return event;
+        return addAction(exitFullscreen());
     }
 
     /**
@@ -454,18 +446,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param html The HTML to show.
      */
     function showHtml(html: string) {
-        const event = htmlMessage(html);
-        context.enqueueAction(event);
-        return event;
+        return addAction(htmlMessage(html));
     }
 
     /**
      * Hides the HTML from the user.
      */
     function hideHtml() {
-        const event = hideHtmlMessage();
-        context.enqueueAction(event);
-        return event;
+        return addAction(hideHtmlMessage());
     }
 
     /**
@@ -473,9 +461,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param text The text to set to the clipboard.
      */
     function setClipboard(text: string) {
-        const event = calcSetClipboard(text);
-        context.enqueueAction(event);
-        return event;
+        return addAction(calcSetClipboard(text));
     }
 
     /**
@@ -490,9 +476,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         rotY?: number,
         duration?: number
     ) {
-        const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
-        context.enqueueAction(event);
-        return event;
+        return addAction(
+            calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration)
+        );
     }
 
     /**
@@ -522,17 +508,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                       placeholder: placeholderOrOptions,
                   })
                 : calcShowChat(placeholderOrOptions);
-        context.enqueueAction(action);
-        return action;
+        return addAction(action);
     }
 
     /**
      * Hides the run bar.
      */
     function hideChat() {
-        const action = calcHideChat();
-        context.enqueueAction(action);
-        return action;
+        return addAction(calcHideChat());
     }
 
     /**
@@ -540,9 +523,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param script The script that should be executed.
      */
     function run(script: string) {
-        const action = runScript(script);
-        context.enqueueAction(action);
-        return action;
+        return addAction(runScript(script));
     }
 
     /**
