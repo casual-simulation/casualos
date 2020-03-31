@@ -78,6 +78,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hideHtml,
                 setClipboard,
                 tweenTo,
+                moveTo,
             },
         },
     };
@@ -480,5 +481,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
         context.enqueueAction(event);
         return event;
+    }
+
+    /**
+     * Instantly moves the user's camera to view the given bot.
+     * @param bot The bot to view.
+     * @param zoomValue The zoom value to use.
+     * @param rotX The X rotation.
+     * @param rotY The Y rotation.
+     */
+    function moveTo(
+        bot: Bot | string,
+        zoomValue?: number,
+        rotX?: number,
+        rotY?: number
+    ) {
+        return tweenTo(bot, zoomValue, rotX, rotY, 0);
     }
 }

@@ -1103,5 +1103,27 @@ describe('AuxLibrary', () => {
                 ]);
             });
         });
+
+        describe('player.moveTo()', () => {
+            it('should emit a TweenToAction with the duration set to 0', () => {
+                const action = library.api.player.moveTo('test');
+                expect(action).toEqual({
+                    type: 'tween_to',
+                    botId: 'test',
+                    zoomValue: null,
+                    rotationValue: null,
+                    duration: 0,
+                });
+                expect(context.actions).toEqual([
+                    {
+                        type: 'tween_to',
+                        botId: 'test',
+                        zoomValue: null,
+                        rotationValue: null,
+                        duration: 0,
+                    },
+                ]);
+            });
+        });
     });
 });
