@@ -34,6 +34,7 @@ import {
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
+    openURL as calcOpenURL,
     BotAction,
     download,
     BotsState,
@@ -146,6 +147,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showInputForTag,
                 goToDimension,
                 goToURL,
+                openURL,
             },
         },
     };
@@ -939,6 +941,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function goToURL(url: string) {
         const event = calcGoToURL(url);
+        return addAction(event);
+    }
+
+    /**
+     * Redirects the user to the given URL.
+     * @param url The URL to go to.
+     *
+     * @example
+     * // Open wikipedia in a new tab.
+     * player.openURL("https://wikipedia.org");
+     */
+    function openURL(url: string) {
+        const event = calcOpenURL(url);
         return addAction(event);
     }
 

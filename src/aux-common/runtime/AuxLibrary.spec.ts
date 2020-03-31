@@ -41,6 +41,7 @@ import {
     createBot,
     goToDimension,
     goToURL,
+    openURL,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1840,6 +1841,14 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.goToURL('abc');
                 expect(action).toEqual(goToURL('abc'));
                 expect(context.actions).toEqual([goToURL('abc')]);
+            });
+        });
+
+        describe('player.openURL()', () => {
+            it('should issue a OpenURL event', () => {
+                const action = library.api.player.openURL('abc');
+                expect(action).toEqual(openURL('abc'));
+                expect(context.actions).toEqual([openURL('abc')]);
             });
         });
     });
