@@ -12,6 +12,11 @@ export function createDummyScriptBot(
     tags: BotTags = {},
     space?: BotSpace
 ): ScriptBot {
+    space = space || 'shared';
+    tags = {
+        space: space,
+        ...tags,
+    };
     return {
         id,
         tags: <any>tags,

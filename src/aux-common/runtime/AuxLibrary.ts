@@ -101,6 +101,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
+                downloadUniverse,
                 showUploadAuxFile,
             },
         },
@@ -604,6 +605,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
+    function downloadUniverse() {
+        return downloadBots(
+            getBots(bySpace('shared')),
+            `${getCurrentUniverse()}.aux`
+        );
+    }
+
     /**
      * Shows the "Upload Universe" dialog.
      */
@@ -628,5 +636,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return filename;
         }
         return filename + '.aux';
+    }
+
+    /**
+     * Gets the universe that the player is currently in.
+     */
+    function getCurrentUniverse(): string {
+        const user = context.playerBot;
+        if (user) {
+            let universe = getTag(user, 'auxUniverse');
+            return universe || undefined;
+        }
+        return undefined;
     }
 }

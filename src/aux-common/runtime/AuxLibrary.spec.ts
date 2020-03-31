@@ -1302,6 +1302,66 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('player.downloadUniverse()', () => {
+            let bot3: ScriptBot;
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                bot3 = createDummyScriptBot('test3');
+                player = createDummyScriptBot(
+                    'player',
+                    {
+                        auxUniverse: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, bot3, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a DownloadAction with the current state and universe name', () => {
+                const action = library.api.player.downloadUniverse();
+                const expected = download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            [bot1.id]: bot1,
+                            [bot2.id]: bot2,
+                            [bot3.id]: bot3,
+                        },
+                    }),
+                    'channel.aux',
+                    'application/json'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should only include bots in the shared space', () => {
+                const bot4 = createDummyScriptBot('test4', {}, 'history');
+                const bot5 = createDummyScriptBot('test5', {}, 'local');
+                const bot6 = createDummyScriptBot('test6', {}, 'tempLocal');
+                const bot7 = createDummyScriptBot('test7', {}, 'error');
+                addToContext(context, bot4, bot5, bot6, bot7);
+
+                const action = library.api.player.downloadUniverse();
+                const expected = download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            [bot1.id]: bot1,
+                            [bot2.id]: bot2,
+                            [bot3.id]: bot3,
+                        },
+                    }),
+                    'channel.aux',
+                    'application/json'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('player.showUploadAuxFile()', () => {
             it('should emit a showUploadAuxFileAction', () => {
                 const action = library.api.player.showUploadAuxFile();

@@ -26,6 +26,11 @@ export interface AuxGlobalContext {
     device: AuxDevice;
 
     /**
+     * The player bot.
+     */
+    playerBot: ScriptBot;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -117,6 +122,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The device.
      */
     device: AuxDevice;
+
+    /**
+     * The player bot.
+     */
+    playerBot: ScriptBot = null;
 
     /**
      * Creates a new global context.
