@@ -1403,5 +1403,13 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showQRCode(true, 'abc')]);
             });
         });
+
+        describe('player.hideQRCode()', () => {
+            it('should emit a ShowQRCodeAction', () => {
+                const action = library.api.player.hideQRCode();
+                expect(action).toEqual(showQRCode(false));
+                expect(context.actions).toEqual([showQRCode(false)]);
+            });
+        });
     });
 });

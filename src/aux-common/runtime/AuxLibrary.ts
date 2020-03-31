@@ -109,6 +109,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openQRCodeScanner,
                 closeQRCodeScanner,
                 showQRCode,
+                hideQRCode,
             },
         },
     };
@@ -648,6 +649,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function showQRCode(code: string) {
         const event = calcShowQRCode(true, code);
+        return addAction(event);
+    }
+
+    /**
+     * Hides the QR Code.
+     */
+    function hideQRCode() {
+        const event = calcShowQRCode(false);
         return addAction(event);
     }
 
