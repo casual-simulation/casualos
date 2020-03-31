@@ -1891,5 +1891,54 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([playSound('abc')]);
             });
         });
+
+        describe('player.hasBotInInventory()', () => {
+            let player: ScriptBot;
+
+            beforeEach(() => {
+                player = createDummyScriptBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return true if the given bot is in the users inventory dimension', () => {
+                player.tags.auxInventoryPortal = 'abc';
+                bot1.tags.abc = true;
+                const result = library.api.player.hasBotInInventory(bot1);
+                expect(result).toEqual(true);
+            });
+
+            it('should return true if all the given bots are in the users inventory dimension', () => {
+                player.tags.auxInventoryPortal = 'abc';
+                bot1.tags.abc = true;
+                bot2.tags.abc = true;
+                const result = library.api.player.hasBotInInventory([
+                    bot1,
+                    bot2,
+                ]);
+                expect(result).toEqual(true);
+            });
+
+            it('should return false if one of the given bots are not in the users inventory dimension', () => {
+                player.tags.auxInventoryPortal = 'abc';
+                bot1.tags.abc = false;
+                bot2.tags.abc = true;
+                const result = library.api.player.hasBotInInventory([
+                    bot1,
+                    bot2,
+                ]);
+                expect(result).toEqual(false);
+            });
+
+            it('should return false if the player does not have an inventory', () => {
+                bot1.tags.abc = true;
+                bot2.tags.abc = true;
+                const result = library.api.player.hasBotInInventory([
+                    bot1,
+                    bot2,
+                ]);
+                expect(result).toEqual(false);
+            });
+        });
     });
 });

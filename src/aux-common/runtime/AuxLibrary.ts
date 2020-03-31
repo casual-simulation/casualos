@@ -55,6 +55,7 @@ import {
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
+import every from 'lodash/every';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -155,6 +156,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openDevConsole,
                 checkout,
                 playSound,
+                hasBotInInventory,
             },
         },
     };
@@ -1002,6 +1004,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function playSound(url: string) {
         const event = calcPlaySound(url);
         return addAction(event);
+    }
+
+    /**
+     * Determines whether the player has the given bot in their inventory.
+     * @param bots The bot or bots to check.
+     */
+    function hasBotInInventory(bots: Bot | Bot[]): boolean {
+        if (!Array.isArray(bots)) {
+            bots = [bots];
+        }
+        let inventoryDimension = getInventoryDimension();
+        if (!hasValue(inventoryDimension)) {
+            return false;
+        }
+        return every(bots, f => getTag(f, inventoryDimension) === true);
     }
 
     // Helpers
