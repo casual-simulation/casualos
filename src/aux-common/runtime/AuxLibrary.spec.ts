@@ -44,6 +44,7 @@ import {
     openURL,
     openConsole,
     checkout,
+    playSound,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1880,6 +1881,14 @@ describe('AuxLibrary', () => {
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.playSound()', () => {
+            it('should emit a PlaySoundEvent', () => {
+                const action = library.api.player.playSound('abc');
+                expect(action).toEqual(playSound('abc'));
+                expect(context.actions).toEqual([playSound('abc')]);
             });
         });
     });

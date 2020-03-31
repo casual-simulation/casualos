@@ -36,6 +36,7 @@ import {
     goToURL as calcGoToURL,
     openURL as calcOpenURL,
     checkout as calcCheckout,
+    playSound as calcPlaySound,
     BotAction,
     download,
     BotsState,
@@ -153,6 +154,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openURL,
                 openDevConsole,
                 checkout,
+                playSound,
             },
         },
     };
@@ -988,6 +990,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function checkout(options: StartCheckoutOptions) {
         const event = calcCheckout(options);
+        return addAction(event);
+    }
+
+    /**
+     *   Play given url's audio
+     * @example
+     * // Send the player to the "welcome" dimension.
+     * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     */
+    function playSound(url: string) {
+        const event = calcPlaySound(url);
         return addAction(event);
     }
 
