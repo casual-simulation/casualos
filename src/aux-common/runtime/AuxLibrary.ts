@@ -17,6 +17,7 @@ import {
     setClipboard as calcSetClipboard,
     tweenTo as calcTweenTo,
     showChat as calcShowChat,
+    hideChat as calcHideChat,
     ShowChatOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
@@ -82,6 +83,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 tweenTo,
                 moveTo,
                 showChat,
+                hideChat,
             },
         },
     };
@@ -513,6 +515,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                       placeholder: placeholderOrOptions,
                   })
                 : calcShowChat(placeholderOrOptions);
+        context.enqueueAction(action);
+        return action;
+    }
+
+    /**
+     * Hides the run bar.
+     */
+    function hideChat() {
+        const action = calcHideChat();
         context.enqueueAction(action);
         return action;
     }

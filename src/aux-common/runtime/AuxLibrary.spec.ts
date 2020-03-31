@@ -16,6 +16,7 @@ import {
     setClipboard,
     tweenTo,
     showChat,
+    hideChat,
 } from '../bots';
 import { possibleTagNameCases } from '../bots/test/BotTestHelpers';
 
@@ -1165,6 +1166,14 @@ describe('AuxLibrary', () => {
                         prefill: 'def',
                     }),
                 ]);
+            });
+        });
+
+        describe('player.hideChat()', () => {
+            it('should emit a ShowChatBarAction', () => {
+                const action = library.api.player.hideChat();
+                expect(action).toEqual(hideChat());
+                expect(context.actions).toEqual([hideChat()]);
             });
         });
     });
