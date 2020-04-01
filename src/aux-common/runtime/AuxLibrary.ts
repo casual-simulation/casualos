@@ -241,6 +241,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTag,
             removeTags,
             applyMod,
+            subtractMods,
 
             create,
 
@@ -1673,6 +1674,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             appliedDiffs.push(tags);
             for (let key in tags) {
                 setTag(bot, key, tags[key]);
+            }
+        }
+    }
+
+    /**
+     * subrtacts the given diff from the given bot.
+     * @param bot The bot.
+     * @param diff The diff to apply.
+     */
+    function subtractMods(bot: any, ...diffs: Mod[]) {
+        let subtractedDiffs: BotTags[] = [];
+        for (let diff of diffs) {
+            if (!diff) {
+                continue;
+            }
+            let tags: BotTags;
+            if (isBot(diff)) {
+                tags = diff.tags;
+            } else {
+                tags = diff;
+            }
+            subtractedDiffs.push(tags);
+            for (let key in tags) {
+                setTag(bot, key, null);
             }
         }
     }

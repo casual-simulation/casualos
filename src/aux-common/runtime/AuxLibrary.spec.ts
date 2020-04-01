@@ -2565,6 +2565,29 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('subtractMods()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot(context, 'test1');
+            bot2 = createDummyScriptBot(context, 'test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should set the tags from the given mod to null', () => {
+            bot1.tags.abc = 'def';
+            bot1.tags.num = 123;
+            library.api.subtractMods(bot1, {
+                abc: 'different',
+            });
+
+            expect(bot1.tags.abc).toEqual(null);
+            expect(bot1.tags.num).toEqual(123);
+        });
+    });
+
     describe('create()', () => {
         it('should return the created bot', () => {
             uuidMock.mockReturnValue('uuid');
