@@ -1,5 +1,6 @@
 import { ScriptBot, BotAction, Bot, BotTags, isBot } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
+import { createDummyScriptBot } from './ScriptBot';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -197,6 +198,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): ScriptBot {
-        throw new Error('Method not implemented.');
+        const script = createDummyScriptBot(bot.id, bot.tags, bot.space);
+        addToContext(this, script);
+        return script;
     }
 }

@@ -68,6 +68,7 @@ import {
     getOriginalObject,
     botAdded,
     isScriptBot,
+    getBotSpace,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -240,6 +241,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             setTag,
             removeTags,
             applyMod,
+
+            create,
 
             byTag,
             byMod,
@@ -1674,135 +1677,135 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
-    // /**
-    //  * Creates a new bot and returns it.
-    //  * @param parent The bot that should be the parent of the new bot.
-    //  * @param mods The mods which specify the new bot's tag values.
-    //  * @returns The bot(s) that were created.
-    //  *
-    //  * @example
-    //  * // Create a red bot without a parent.
-    //  * let redBot = create(null, { "auxColor": "red" });
-    //  *
-    //  * @example
-    //  * // Create a red bot and a blue bot with `this` as the parent.
-    //  * let [redBot, blueBot] = create(this, [
-    //  *    { "auxColor": "red" },
-    //  *    { "auxColor": "blue" }
-    //  * ]);
-    //  *
-    //  */
-    // function create(...mods: Mod[]) {
-    //     return createBase(() => uuid(), ...mods);
-    // }
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values.
+     * @returns The bot(s) that were created.
+     *
+     * @example
+     * // Create a red bot without a parent.
+     * let redBot = create(null, { "auxColor": "red" });
+     *
+     * @example
+     * // Create a red bot and a blue bot with `this` as the parent.
+     * let [redBot, blueBot] = create(this, [
+     *    { "auxColor": "red" },
+     *    { "auxColor": "blue" }
+     * ]);
+     *
+     */
+    function create(...mods: Mod[]) {
+        return createBase(() => uuid(), ...mods);
+    }
 
-    // function createBase(idFactory: () => string, ...datas: Mod[]) {
-    //     let parent = context.currentBot;
-    //     let parentDiff = parent ? { auxCreator: getID(parent) } : {};
-    //     return createFromMods(idFactory, parentDiff, ...datas);
-    // }
+    function createBase(idFactory: () => string, ...datas: Mod[]) {
+        let parent = context.currentBot;
+        let parentDiff = parent ? { auxCreator: getID(parent) } : {};
+        return createFromMods(idFactory, parentDiff, ...datas);
+    }
 
-    // /**
-    //  * Creates a new bot that contains the given tags.
-    //  * @param mods The mods that specify what tags to set on the bot.
-    //  */
-    // function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
-    //     let variants: Mod[][] = new Array<Mod[]>(1);
-    //     variants[0] = [];
+    /**
+     * Creates a new bot that contains the given tags.
+     * @param mods The mods that specify what tags to set on the bot.
+     */
+    function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
+        let variants: Mod[][] = new Array<Mod[]>(1);
+        variants[0] = [];
 
-    //     for (let i = 0; i < mods.length; i++) {
-    //         let diff = mods[i];
-    //         if (Array.isArray(diff)) {
-    //             let newVariants: Mod[][] = new Array<Mod[]>(
-    //                 variants.length * diff.length
-    //             );
+        for (let i = 0; i < mods.length; i++) {
+            let diff = mods[i];
+            if (Array.isArray(diff)) {
+                let newVariants: Mod[][] = new Array<Mod[]>(
+                    variants.length * diff.length
+                );
 
-    //             for (let b = 0; b < newVariants.length; b++) {
-    //                 let diffIdx = Math.floor(b / variants.length);
-    //                 let d = diff[diffIdx];
-    //                 let variantIdx = b % variants.length;
-    //                 let newVariant = variants[variantIdx].slice();
-    //                 newVariant.push(d);
-    //                 newVariants[b] = newVariant;
-    //             }
+                for (let b = 0; b < newVariants.length; b++) {
+                    let diffIdx = Math.floor(b / variants.length);
+                    let d = diff[diffIdx];
+                    let variantIdx = b % variants.length;
+                    let newVariant = variants[variantIdx].slice();
+                    newVariant.push(d);
+                    newVariants[b] = newVariant;
+                }
 
-    //             variants = newVariants;
-    //         } else if (typeof diff === 'object') {
-    //             for (let b = 0; b < variants.length; b++) {
-    //                 variants[b].push(diff);
-    //             }
-    //         }
-    //     }
+                variants = newVariants;
+            } else if (typeof diff === 'object') {
+                for (let b = 0; b < variants.length; b++) {
+                    variants[b].push(diff);
+                }
+            }
+        }
 
-    //     let bots: Bot[] = variants.map(v => {
-    //         let bot: Bot = {
-    //             id: idFactory(),
-    //             tags: {},
-    //         };
-    //         for (let i = v.length - 1; i >= 0; i--) {
-    //             const mod = v[i];
-    //             if (mod && BOT_SPACE_TAG in mod) {
-    //                 const space = mod[BOT_SPACE_TAG];
-    //                 if (hasValue(space)) {
-    //                     bot.space = space;
-    //                 }
-    //                 break;
-    //             }
-    //         }
-    //         applyMod(bot.tags, ...v);
+        let bots: Bot[] = variants.map(v => {
+            let bot: Bot = {
+                id: idFactory(),
+                tags: {},
+            };
+            for (let i = v.length - 1; i >= 0; i--) {
+                const mod = v[i];
+                if (mod && BOT_SPACE_TAG in mod) {
+                    const space = mod[BOT_SPACE_TAG];
+                    if (hasValue(space)) {
+                        bot.space = space;
+                    }
+                    break;
+                }
+            }
+            applyMod(bot.tags, ...v);
 
-    //         if ('auxCreator' in bot.tags) {
-    //             const creatorId = bot.tags['auxCreator'];
-    //             const creator = getBot('id', creatorId);
-    //             let clearCreator = false;
-    //             if (!creator) {
-    //                 clearCreator = true;
-    //             } else {
-    //                 const creatorSpace = getBotSpace(creator);
-    //                 const currentSpace = getBotSpace(bot);
-    //                 if (creatorSpace !== currentSpace) {
-    //                     clearCreator = true;
-    //                 }
-    //             }
+            if ('auxCreator' in bot.tags) {
+                const creatorId = bot.tags['auxCreator'];
+                const creator = getBot('id', creatorId);
+                let clearCreator = false;
+                if (!creator) {
+                    clearCreator = true;
+                } else {
+                    const creatorSpace = getBotSpace(creator);
+                    const currentSpace = getBotSpace(bot);
+                    if (creatorSpace !== currentSpace) {
+                        clearCreator = true;
+                    }
+                }
 
-    //             if (clearCreator) {
-    //                 applyMod(bot.tags, { auxCreator: null });
-    //             }
-    //         }
+                if (clearCreator) {
+                    applyMod(bot.tags, { auxCreator: null });
+                }
+            }
 
-    //         return bot;
-    //     });
+            return bot;
+        });
 
-    //     let ret = new Array<ScriptBot>(bots.length);
-    //     for (let i = 0; i < bots.length; i++) {
-    //         ret[i] = context.createBot(bots[i]);
-    //     }
+        let ret = new Array<ScriptBot>(bots.length);
+        for (let i = 0; i < bots.length; i++) {
+            ret[i] = context.createBot(bots[i]);
+        }
 
-    //     // let actions = getActions();
-    //     // for(let b of bots) {
-    //     //     addAction(botAdded(b));
-    //     // }
-    //     // actions.push(...bots.map(f => botAdded(f)));
+        // let actions = getActions();
+        // for(let b of bots) {
+        //     addAction(botAdded(b));
+        // }
+        // actions.push(...bots.map(f => botAdded(f)));
 
-    //     // let ret = new Array<ScriptBot>(bots.length);
-    //     // const calc = getCalculationContext();
-    //     // for (let i = 0; i < bots.length; i++) {
-    //     //     ret[i] = calc.sandbox.interface.addBot(bots[i]);
-    //     // }
+        // let ret = new Array<ScriptBot>(bots.length);
+        // const calc = getCalculationContext();
+        // for (let i = 0; i < bots.length; i++) {
+        //     ret[i] = calc.sandbox.interface.addBot(bots[i]);
+        // }
 
-    //     // event(CREATE_ACTION_NAME, ret);
-    //     // for (let bot of ret) {
-    //     //     event(CREATE_ANY_ACTION_NAME, null, {
-    //     //         bot: bot,
-    //     //     });
-    //     // }
+        // event(CREATE_ACTION_NAME, ret);
+        // for (let bot of ret) {
+        //     event(CREATE_ANY_ACTION_NAME, null, {
+        //         bot: bot,
+        //     });
+        // }
 
-    //     if (ret.length === 1) {
-    //         return ret[0];
-    //     } else {
-    //         return ret;
-    //     }
-    // }
+        if (ret.length === 1) {
+            return ret[0];
+        } else {
+            return ret;
+        }
+    }
 
     // Helpers
     function addAction<T extends BotAction>(action: T) {
