@@ -46,6 +46,7 @@ import {
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
     loadFile as calcLoadFile,
+    saveFile as calcSaveFile,
     BotAction,
     download,
     BotsState,
@@ -160,6 +161,21 @@ interface LoadFileOptions {
 }
 
 /**
+ * Options for saving a file.
+ */
+interface SaveFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite an existing file.
+     */
+    overwriteExistingFile?: boolean;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -251,6 +267,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMark,
                 restoreHistoryMarkToUniverse,
                 loadFile,
+                saveFile,
             },
         },
     };
@@ -1271,6 +1288,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return remote(
             calcLoadFile({
                 path: path,
+                ...(options || {}),
+            })
+        );
+    }
+
+    /**
+     * Saves a file at the given path.
+     * @param path The path.
+     * @param data The data to save.
+     * @param options The options to use.
+     */
+    function saveFile(path: string, data: string, options?: SaveFileOptions) {
+        return remote(
+            calcSaveFile({
+                path: path,
+                data: data,
                 ...(options || {}),
             })
         );

@@ -54,6 +54,7 @@ import {
     browseHistory,
     restoreHistoryMark,
     loadFile,
+    saveFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2172,6 +2173,20 @@ describe('AuxLibrary', () => {
                 const expected = remote(
                     loadFile({
                         path: 'path',
+                    })
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.saveFile()', () => {
+            it('should issue a SaveFileAction in a remote event', () => {
+                const action = library.api.server.saveFile('path', 'data');
+                const expected = remote(
+                    saveFile({
+                        path: 'path',
+                        data: 'data',
                     })
                 );
                 expect(action).toEqual(expected);
