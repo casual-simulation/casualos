@@ -2225,5 +2225,57 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
         });
+
+        describe('action.perform()', () => {
+            it('should add the given event to the list', () => {
+                const action = library.api.action.perform({
+                    type: 'test',
+                    message: 'abc',
+                });
+                const expected = {
+                    type: 'test',
+                    message: 'abc',
+                };
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should add the action even if it is already going to be performed', () => {
+                const action = library.api.action.perform(
+                    library.api.player.toast('abc')
+                );
+                const expected = toast('abc');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected, expected]);
+            });
+
+            // it('should should add the action if it has been rejected', () => {
+            //     const state: BotsState = {
+            //         thisBot: {
+            //             id: 'thisBot',
+            //             tags: {
+            //                 _position: { x: 0, y: 0, z: 0 },
+            //                 _workspace: 'abc',
+            //                 abcdef: `@
+            //                     const toast = player.toast('abc');
+            //                     action.reject(toast);
+            //                     action.perform(toast);
+            //                 `,
+            //             },
+            //         },
+            //     };
+
+            //     // specify the UUID to use next
+            //     uuidMock.mockReturnValue('uuid-0');
+            //     const botAction = action('abcdef', ['thisBot']);
+            //     const result = calculateActionResults(state, botAction);
+
+            //     expect(result.actions).toEqual([
+            //         toast('abc'),
+            //         reject(toast('abc')),
+            //         toast('abc'),
+            //     ]);
+            // });
+        });
     });
 });

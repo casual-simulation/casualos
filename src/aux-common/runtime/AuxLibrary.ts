@@ -269,6 +269,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadFile,
                 saveFile,
             },
+
+            action: {
+                perform,
+            },
         },
     };
 
@@ -1340,6 +1344,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             allowBatching
         );
         return addAction(r);
+    }
+
+    /**
+     * Performs the given action.
+     * @param action The action to perform.
+     */
+    function perform(action: any) {
+        return addAction(action);
     }
 
     // Helpers
