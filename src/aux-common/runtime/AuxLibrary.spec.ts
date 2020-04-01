@@ -2593,204 +2593,81 @@ describe('AuxLibrary', () => {
                 })
             );
         });
-        // it('should ignore strings because they are no longer used to set the creator ID', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}("otherBot", { abc: "def" })`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should ignore strings because they are no longer used to set the creator ID', () => {
+            const creator = createDummyScriptBot(context, 'creator');
+            addToContext(context, creator);
+            context.currentBot = creator;
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 abc: 'def',
-        //                 auxCreator: 'thisBot',
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should support multiple arguments', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}({ abc: "def" }, { ghi: 123 })`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create('otherBot' as any, {
+                abc: 'def',
+            });
+            expect(bot).toEqual(
+                createDummyScriptBot(context, 'uuid', {
+                    auxCreator: 'creator',
+                    abc: 'def',
+                })
+            );
+        });
+        it('should support multiple arguments', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(
+                {
+                    abc: 'def',
+                },
+                { ghi: 123 }
+            );
+            expect(bot).toEqual(
+                createDummyScriptBot(context, 'uuid', {
+                    abc: 'def',
+                    ghi: 123,
+                })
+            );
+        });
+        it('should support bots as arguments', () => {
+            const other = createDummyScriptBot(context, 'other');
+            addToContext(context, other);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 abc: 'def',
-        //                 ghi: 123,
-        //                 auxCreator: 'thisBot',
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should support bots as arguments', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}(getBots("name", "that"))`,
-        //             },
-        //         },
-        //         thatBot: {
-        //             id: 'thatBot',
-        //             tags: {
-        //                 name: 'that',
-        //                 abc: 'def',
-        //                 formula: '=this.abc',
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            other.tags.abc = 'def';
+            other.tags.num = 1;
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 abc: 'def',
-        //                 name: 'that',
-        //                 formula: '=this.abc',
-        //                 auxCreator: 'thisBot',
-        //             },
-        //         }),
-        //     ]);
-        // });
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create(other);
+            expect(bot).toEqual(
+                createDummyScriptBot(context, 'uuid', {
+                    abc: 'def',
+                    num: 1,
+                })
+            );
+        });
 
-        // it('should support modifying the returned bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@let newBot = ${name}({ auxCreator: null }, { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should support modifying the returned bot', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create({ abc: 'def' }) as ScriptBot;
+            bot.tags.fun = true;
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 abc: 'def',
-        //                 auxCreator: null,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 fun: true,
-        //                 num: 123,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should add the new bot to the formulas', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}({ auxCreator: null }, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            expect(bot).toEqual({
+                id: 'uuid',
+                tags: {
+                    abc: 'def',
+                    fun: true,
+                },
+                raw: {
+                    abc: 'def',
+                    fun: true,
+                },
+                changes: {
+                    fun: true,
+                },
+            });
+        });
+        it('should add the new bot to the context', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot = library.api.create({ abc: 'def' });
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 name: 'bob',
-        //                 auxCreator: null,
-        //             },
-        //         }),
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 botId: expectedId,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should support formulas on the new bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@let newBot = ${name}({ auxCreator: null }, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 formula: '=getTag(this, "#num")',
-        //                 num: 100,
-        //                 auxCreator: null,
-        //             },
-        //         }),
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 result: 100,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should return normal javascript objects', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 num: 100,
-        //                 test: `@let newBot = ${name}({ abc: getTag(this, "#num") });`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 abc: 100,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            const bots = library.api.getBots('abc', 'def');
+            expect(bots[0]).toBe(bot);
+        });
         // it('should trigger onCreate() on the created bot.', () => {
         //     const state: BotsState = {
         //         thisBot: {
@@ -2859,196 +2736,106 @@ describe('AuxLibrary', () => {
         //         }),
         //     ]);
         // });
-        // it('should support arrays of diffs as arguments', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ]).length)`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     let num = 0;
-        //     uuidMock.mockImplementation(() => `${id}-${num++}`);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should support arrays of diffs as arguments', () => {
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
+            const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: `${expectedId}-0`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: true,
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-1`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: false,
-        //             },
-        //         }),
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 num: 2,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should create every combination of diff', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     let num = 0;
-        //     uuidMock.mockImplementation(() => `${id}-${num++}`);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            expect(bots).toEqual([
+                createDummyScriptBot(context, 'uuid1', {
+                    abc: 'def',
+                }),
+                createDummyScriptBot(context, 'uuid2', {
+                    abc: 123,
+                }),
+            ]);
+        });
+        it('should create every combination of diff', () => {
+            let num = 1;
+            uuidMock.mockImplementation(() => `uuid-${num++}`);
+            const bots = library.api.create(
+                [{ hello: true }, { hello: false }],
+                { abc: 'def' },
+                [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
+            );
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: `${expectedId}-0`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: true,
-        //                 wow: 1,
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-1`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: false,
-        //                 wow: 1,
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-2`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: true,
-        //                 oh: 'haha',
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-3`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: false,
-        //                 oh: 'haha',
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-4`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: true,
-        //                 test: 'a',
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-5`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 hello: false,
-        //                 test: 'a',
-        //             },
-        //         }),
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 num: 6,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should duplicate each of the bots in the list', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}(getBots("test", true))`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 hello: true,
-        //             },
-        //         },
-        //         bBot: {
-        //             id: 'bBot',
-        //             tags: {
-        //                 test: true,
-        //                 hello: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     let num = 0;
-        //     uuidMock.mockImplementation(() => `${id}-${num++}`);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            expect(bots).toEqual([
+                createDummyScriptBot(context, 'uuid-1', {
+                    hello: true,
+                    abc: 'def',
+                    wow: 1,
+                }),
+                createDummyScriptBot(context, 'uuid-2', {
+                    hello: false,
+                    abc: 'def',
+                    wow: 1,
+                }),
+                createDummyScriptBot(context, 'uuid-3', {
+                    hello: true,
+                    abc: 'def',
+                    oh: 'haha',
+                }),
+                createDummyScriptBot(context, 'uuid-4', {
+                    hello: false,
+                    abc: 'def',
+                    oh: 'haha',
+                }),
+                createDummyScriptBot(context, 'uuid-5', {
+                    hello: true,
+                    abc: 'def',
+                    test: 'a',
+                }),
+                createDummyScriptBot(context, 'uuid-6', {
+                    hello: false,
+                    abc: 'def',
+                    test: 'a',
+                }),
+            ]);
+        });
+        it('should duplicate each of the bots in the list', () => {
+            const first = createDummyScriptBot(context, 'first', {
+                abc: 'def',
+            });
+            const second = createDummyScriptBot(context, 'second', {
+                num: 123,
+            });
+            addToContext(context, first, second);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: `${expectedId}-0`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 test: true,
-        //                 hello: true,
-        //             },
-        //         }),
-        //         botAdded({
-        //             id: `${expectedId}-1`,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 test: true,
-        //                 hello: false,
-        //             },
-        //         }),
-        //     ]);
-        // });
-        // it('should copy the space of another bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}(getBots("test", true))`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             space: 'tempLocal',
-        //             tags: {
-        //                 test: true,
-        //                 hello: true,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
+            const bots = library.api.create([first, second]);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             space: 'tempLocal',
-        //             tags: {
-        //                 auxCreator: null,
-        //                 test: true,
-        //                 hello: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(bots).toEqual([
+                createDummyScriptBot(context, 'uuid1', {
+                    abc: 'def',
+                }),
+                createDummyScriptBot(context, 'uuid2', {
+                    num: 123,
+                }),
+            ]);
+        });
+        it('should copy the space of another bot', () => {
+            const other = createDummyScriptBot(
+                context,
+                'other',
+                {
+                    abc: 'def',
+                },
+                <any>'test'
+            );
+            addToContext(context, other);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+            const bots = library.api.create([other]);
+            expect(bots).toEqual(
+                createDummyScriptBot(
+                    context,
+                    'uuid1',
+                    {
+                        abc: 'def',
+                    },
+                    <any>'test'
+                )
+            );
+        });
 
         // it('should be able to shout to a new bot', () => {
         //     const state: BotsState = {
@@ -3381,233 +3168,95 @@ describe('AuxLibrary', () => {
         //     ]);
         // });
 
-        // describe('space', () => {
-        //     it('should set the space of the bot', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: null }, { space: "local" })`,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
+        describe('space', () => {
+            it('should set the space of the bot', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create({ space: 'local' });
+                expect(bot).toEqual(
+                    createDummyScriptBot(context, 'uuid', {}, 'local')
+                );
+            });
 
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 space: 'local',
-        //                 tags: {
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
+            it('should use the last space', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create(
+                    { space: 'tempLocal' },
+                    { space: 'local' }
+                );
+                expect(bot).toEqual(
+                    createDummyScriptBot(context, 'uuid', {}, 'local')
+                );
+            });
 
-        //     it('should use the last space', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: "local" })`,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
+            it('should use the last space even if it is null', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create(
+                    { space: 'tempLocal' },
+                    { space: null }
+                );
+                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+            });
 
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 space: 'local',
-        //                 tags: {
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
+            const normalCases = [
+                ['null', null],
+                ['undefined', undefined],
+                ['(empty string)', ''],
+            ];
 
-        //     it('should use the last space even if it is null', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: null })`,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
+            it.each(normalCases)(
+                'should treat %s as the default type',
+                (desc, value) => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = library.api.create({ space: value });
+                    expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+                }
+            );
+        });
 
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 tags: {
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
+        describe('auxCreator', () => {
+            let current: ScriptBot;
+            let bot1: ScriptBot;
 
-        //     const normalCases = [
-        //         ['null', null],
-        //         ['undefined', undefined],
-        //         ['(empty string)', '""'],
-        //     ];
+            beforeEach(() => {
+                current = createDummyScriptBot(context, 'current');
+                bot1 = createDummyScriptBot(context, 'bot1');
+                addToContext(context, current, bot1);
 
-        //     it.each(normalCases)(
-        //         'should treat %s as the default type',
-        //         (desc, value) => {
-        //             const state: BotsState = {
-        //                 thisBot: {
-        //                     id: 'thisBot',
-        //                     tags: {
-        //                         test: `@${name}({ auxCreator: null }, { space: ${value} })`,
-        //                     },
-        //                 },
-        //             };
-        //             // specify the UUID to use next
-        //             uuidMock.mockReturnValue(id);
-        //             const botAction = action('test', ['thisBot']);
-        //             const result = calculateActionResults(state, botAction);
+                context.currentBot = current;
+            });
 
-        //             expect(result.actions).toEqual([
-        //                 botAdded({
-        //                     id: expectedId,
-        //                     tags: {
-        //                         auxCreator: null,
-        //                     },
-        //                 }),
-        //             ]);
-        //         }
-        //     );
-        // });
+            it('should set the auxCreator to the given bot', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create({ auxCreator: bot1.id });
+                expect(bot).toEqual(
+                    createDummyScriptBot(context, 'uuid', {
+                        auxCreator: 'bot1',
+                    })
+                );
+            });
 
-        // describe('auxCreator', () => {
-        //     it('should set the auxCreator to the given bot', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: getID(getBot("other", true)) }, { abc: "def" })`,
-        //                 },
-        //             },
-        //             otherBot: {
-        //                 id: 'otherBot',
-        //                 tags: {
-        //                     other: true,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
+            it('should be able to set the auxCreator to null', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create({ auxCreator: null });
+                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+            });
 
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 tags: {
-        //                     abc: 'def',
-        //                     auxCreator: 'otherBot',
-        //                 },
-        //             }),
-        //         ]);
-        //     });
+            it('should set auxCreator to null if it references a bot in a different space', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create({
+                    auxCreator: bot1.id,
+                    space: 'local',
+                });
+                expect(bot).toEqual(
+                    createDummyScriptBot(context, 'uuid', {}, 'local')
+                );
+            });
 
-        //     it('should be able to set the auxCreator to null', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: null }, { abc: "def" })`,
-        //                 },
-        //             },
-        //             otherBot: {
-        //                 id: 'otherBot',
-        //                 tags: {
-        //                     other: true,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
-
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 tags: {
-        //                     abc: 'def',
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
-
-        //     it('should set auxCreator to null if it references a bot in a different space', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: "otherBot" }, { space: "def" })`,
-        //                 },
-        //             },
-        //             otherBot: {
-        //                 id: 'otherBot',
-        //                 space: 'shared',
-        //                 tags: {
-        //                     other: true,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
-
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 space: <any>'def',
-        //                 tags: {
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
-
-        //     it('should set auxCreator to null if it references a bot that does not exist', () => {
-        //         const state: BotsState = {
-        //             thisBot: {
-        //                 id: 'thisBot',
-        //                 tags: {
-        //                     test: `@${name}({ auxCreator: "otherBot" })`,
-        //                 },
-        //             },
-        //         };
-        //         // specify the UUID to use next
-        //         uuidMock.mockReturnValue(id);
-        //         const botAction = action('test', ['thisBot']);
-        //         const result = calculateActionResults(state, botAction);
-
-        //         expect(result.actions).toEqual([
-        //             botAdded({
-        //                 id: expectedId,
-        //                 tags: {
-        //                     auxCreator: null,
-        //                 },
-        //             }),
-        //         ]);
-        //     });
-        // });
+            it('should set auxCreator to null if it references a bot that does not exist', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const bot = library.api.create({ auxCreator: 'missing' });
+                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+            });
+        });
     });
 });

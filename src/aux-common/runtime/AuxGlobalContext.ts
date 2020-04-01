@@ -198,7 +198,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): ScriptBot {
-        const script = createDummyScriptBot(bot.id, bot.tags, bot.space);
+        const script = createDummyScriptBot(this, bot.id, bot.tags, bot.space);
         addToContext(this, script);
         return script;
     }

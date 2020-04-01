@@ -1755,21 +1755,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod(bot.tags, ...v);
 
             if ('auxCreator' in bot.tags) {
-                const creatorId = bot.tags['auxCreator'];
-                const creator = getBot('id', creatorId);
                 let clearCreator = false;
-                if (!creator) {
+                const creatorId = bot.tags['auxCreator'];
+                if (!creatorId) {
                     clearCreator = true;
                 } else {
-                    const creatorSpace = getBotSpace(creator);
-                    const currentSpace = getBotSpace(bot);
-                    if (creatorSpace !== currentSpace) {
+                    const creator = getBot('id', creatorId);
+                    if (!creator) {
                         clearCreator = true;
+                    } else {
+                        const creatorSpace = getBotSpace(creator);
+                        const currentSpace = getBotSpace(bot);
+                        if (creatorSpace !== currentSpace) {
+                            clearCreator = true;
+                        }
                     }
                 }
 
                 if (clearCreator) {
-                    applyMod(bot.tags, { auxCreator: null });
+                    delete bot.tags.auxCreator;
                 }
             }
 
