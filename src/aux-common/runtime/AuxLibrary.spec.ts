@@ -50,6 +50,7 @@ import {
     backupToGithub,
     backupAsDownload,
     finishCheckout,
+    markHistory,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2109,6 +2110,23 @@ describe('AuxLibrary', () => {
                     {
                         abc: 'def',
                     }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.markHistory()', () => {
+            it('should emit a mark_history event', () => {
+                const action = library.api.server.markHistory({
+                    message: 'testMark',
+                });
+                const expected = remote(
+                    markHistory({
+                        message: 'testMark',
+                    }),
+                    undefined,
+                    false
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

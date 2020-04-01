@@ -42,6 +42,7 @@ import {
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
     finishCheckout as calcFinishCheckout,
+    markHistory as calcMarkHistory,
     BotAction,
     download,
     BotsState,
@@ -136,6 +137,16 @@ interface FinishCheckoutOptions {
 }
 
 /**
+ * Defines an interface for options that mark a specific time in history.
+ */
+interface MarkHistoryOptions {
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -222,6 +233,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 backupToGithub,
                 backupAsDownload,
                 finishCheckout,
+                markHistory,
             },
         },
     };
@@ -1188,6 +1200,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options.extra
         );
         return addAction(event);
+    }
+
+    /**
+     * Saves the current state as a history mark.
+     * @param options The options that describe what information the mark should contain.
+     *
+     * @example
+     * // Bookmark the current state with a message
+     * server.markHistory({
+     *   message: "Save recent changes"
+     * });
+     */
+    function markHistory(options: MarkHistoryOptions) {
+        return remote(calcMarkHistory(options), undefined, false);
     }
 
     /**
