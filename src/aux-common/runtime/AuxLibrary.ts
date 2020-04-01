@@ -44,6 +44,7 @@ import {
     finishCheckout as calcFinishCheckout,
     markHistory as calcMarkHistory,
     browseHistory as calcBrowseHistory,
+    restoreHistoryMark as calcRestoreHistoryMark,
     BotAction,
     download,
     BotsState,
@@ -236,6 +237,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 finishCheckout,
                 markHistory,
                 browseHistory,
+                restoreHistoryMark,
             },
         },
     };
@@ -1223,6 +1225,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function browseHistory() {
         return remote(calcBrowseHistory());
+    }
+
+    /**
+     * Restores the current state to the given mark.
+     * @param mark The bot or bot ID that represents the mark that should be restored.
+     */
+    function restoreHistoryMark(mark: Bot | string) {
+        const id = getID(mark);
+        return remote(calcRestoreHistoryMark(id));
     }
 
     /**

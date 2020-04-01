@@ -52,6 +52,7 @@ import {
     finishCheckout,
     markHistory,
     browseHistory,
+    restoreHistoryMark,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2138,6 +2139,15 @@ describe('AuxLibrary', () => {
             it('should emit a browse_history event', () => {
                 const action = library.api.server.browseHistory();
                 const expected = remote(browseHistory());
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.restoreHistoryMark()', () => {
+            it('should emit a restore_history_mark event', () => {
+                const action = library.api.server.restoreHistoryMark('mark');
+                const expected = remote(restoreHistoryMark('mark'));
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
