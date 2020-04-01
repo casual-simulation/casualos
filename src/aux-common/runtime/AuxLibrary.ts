@@ -41,6 +41,7 @@ import {
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
+    finishCheckout as calcFinishCheckout,
     BotAction,
     download,
     BotsState,
@@ -97,6 +98,41 @@ export interface SessionSelector {
     username?: string;
     device?: string;
     session?: string;
+}
+
+/**
+ * Defines an interface for options that complete payment for a product.
+ */
+interface FinishCheckoutOptions {
+    /**
+     * The secret API key that should be used to checkout with stripe.
+     */
+    secretKey: string;
+
+    /**
+     * The token that authorized payment from the user.
+     */
+    token: string;
+
+    /**
+     * The amount that should be charged in the currency's smallest unit. (cents, etc.)
+     */
+    amount: number;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
+
+    /**
+     * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
+     */
+    extra?: any;
 }
 
 /**
@@ -185,6 +221,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 shell,
                 backupToGithub,
                 backupAsDownload,
+                finishCheckout,
             },
         },
     };
@@ -1122,6 +1159,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function backupAsDownload(target: SessionSelector) {
         return remote(calcBackupAsDownload(convertSessionSelector(target)));
+    }
+
+    /**
+     * Finishes the checkout process by charging the payment fee to the user.
+     *
+     * @param options The options for finishing the checkout.
+     *
+     * @example
+     * // Finish the checkout process
+     * server.finishCheckout({
+     *   secretKey: 'YOUR_SECRET_API_KEY',
+     *   token: 'token from onCheckout',
+     *
+     *   // 1000 cents == $10.00
+     *   amount: 1000,
+     *   currency: 'usd',
+     *   description: 'Description for purchase'
+     * });
+     */
+    function finishCheckout(options: FinishCheckoutOptions) {
+        const event = calcFinishCheckout(
+            options.secretKey,
+            options.token,
+            options.amount,
+            options.currency,
+            options.description,
+            options.extra
+        );
+        return addAction(event);
     }
 
     /**

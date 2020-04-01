@@ -49,6 +49,7 @@ import {
     shell,
     backupToGithub,
     backupAsDownload,
+    finishCheckout,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2062,6 +2063,52 @@ describe('AuxLibrary', () => {
                         deviceId: '123',
                         sessionId: 'def',
                     })
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.finishCheckout()', () => {
+            it('should emit a finish checkout event', () => {
+                const action = library.api.server.finishCheckout({
+                    secretKey: 'key',
+                    token: 'token1',
+                    description: 'Test',
+                    amount: 100,
+                    currency: 'usd',
+                });
+                const expected = finishCheckout(
+                    'key',
+                    'token1',
+                    100,
+                    'usd',
+                    'Test'
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include extra info', () => {
+                const action = library.api.server.finishCheckout({
+                    secretKey: 'key',
+                    token: 'token1',
+                    description: 'Test',
+                    amount: 100,
+                    currency: 'usd',
+                    extra: {
+                        abc: 'def',
+                    },
+                });
+                const expected = finishCheckout(
+                    'key',
+                    'token1',
+                    100,
+                    'usd',
+                    'Test',
+                    {
+                        abc: 'def',
+                    }
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
