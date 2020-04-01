@@ -55,6 +55,8 @@ import {
     restoreHistoryMark,
     loadFile,
     saveFile,
+    reject,
+    ORIGINAL_OBJECT,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2249,33 +2251,44 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected, expected]);
             });
 
-            // it('should should add the action if it has been rejected', () => {
-            //     const state: BotsState = {
-            //         thisBot: {
-            //             id: 'thisBot',
-            //             tags: {
-            //                 _position: { x: 0, y: 0, z: 0 },
-            //                 _workspace: 'abc',
-            //                 abcdef: `@
-            //                     const toast = player.toast('abc');
-            //                     action.reject(toast);
-            //                     action.perform(toast);
-            //                 `,
-            //             },
-            //         },
-            //     };
+            it('should should add the action if it has been rejected', () => {
+                const action = library.api.player.toast('abc');
+                library.api.action.reject(action);
+                library.api.action.perform(action);
+                expect(context.actions).toEqual([
+                    toast('abc'),
+                    reject(toast('abc')),
+                    toast('abc'),
+                ]);
+            });
+        });
 
-            //     // specify the UUID to use next
-            //     uuidMock.mockReturnValue('uuid-0');
-            //     const botAction = action('abcdef', ['thisBot']);
-            //     const result = calculateActionResults(state, botAction);
+        describe('action.reject()', () => {
+            it('should emit a reject action', () => {
+                const action = library.api.action.reject({
+                    type: 'test',
+                    message: 'abc',
+                });
+                const expected = reject(<any>{
+                    type: 'test',
+                    message: 'abc',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
 
-            //     expect(result.actions).toEqual([
-            //         toast('abc'),
-            //         reject(toast('abc')),
-            //         toast('abc'),
-            //     ]);
-            // });
+            it('should resolve the original action', () => {
+                const original = toast('abc');
+                const action = library.api.action.reject({
+                    type: 'show_toast',
+                    message: 'abc',
+                    [ORIGINAL_OBJECT]: original,
+                });
+                const expected = reject(original);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+                expect(action.action).toBe(original);
+            });
         });
     });
 });

@@ -47,6 +47,7 @@ import {
     restoreHistoryMark as calcRestoreHistoryMark,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
+    reject as calcReject,
     BotAction,
     download,
     BotsState,
@@ -63,6 +64,7 @@ import {
     openConsole,
     StartCheckoutOptions,
     tagsOnBot,
+    getOriginalObject,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -272,6 +274,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             action: {
                 perform,
+                reject,
             },
         },
     };
@@ -1352,6 +1355,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function perform(action: any) {
         return addAction(action);
+    }
+
+    /**
+     * Rejects the given action.
+     * @param action The action to reject.
+     */
+    function reject(action: any) {
+        const event = calcReject(getOriginalObject(action));
+        return addAction(event);
     }
 
     // Helpers
