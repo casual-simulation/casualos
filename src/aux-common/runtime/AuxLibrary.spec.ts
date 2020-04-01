@@ -48,6 +48,7 @@ import {
     setupUniverse,
     shell,
     backupToGithub,
+    backupAsDownload,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2045,6 +2046,25 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([
                     remote(backupToGithub('abc')),
                 ]);
+            });
+        });
+
+        describe('server.backupAsDownload()', () => {
+            it('should emit a remote backup as download event', () => {
+                const action = library.api.server.backupAsDownload({
+                    username: 'abc',
+                    device: '123',
+                    session: 'def',
+                });
+                const expected = remote(
+                    backupAsDownload({
+                        username: 'abc',
+                        deviceId: '123',
+                        sessionId: 'def',
+                    })
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

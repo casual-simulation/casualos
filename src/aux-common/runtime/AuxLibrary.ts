@@ -40,6 +40,7 @@ import {
     setupUniverse as calcSetupUniverse,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
+    backupAsDownload as calcBackupAsDownload,
     BotAction,
     download,
     BotsState,
@@ -183,6 +184,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setupUniverse,
                 shell,
                 backupToGithub,
+                backupAsDownload,
             },
         },
     };
@@ -1113,6 +1115,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function backupToGithub(auth: string) {
         return remote(calcBackupToGithub(auth));
+    }
+
+    /**
+     * Backs up all the AUX universes to a zip bot.
+     */
+    function backupAsDownload(target: SessionSelector) {
+        return remote(calcBackupAsDownload(convertSessionSelector(target)));
     }
 
     /**
