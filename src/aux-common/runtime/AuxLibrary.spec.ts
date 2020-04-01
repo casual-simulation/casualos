@@ -65,6 +65,10 @@ import {
     possibleTagValueCases,
 } from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
+import uuid from 'uuid/v4';
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -405,504 +409,518 @@ describe('AuxLibrary', () => {
         );
     });
 
-    describe('byTag()', () => {
-        let bot1: ScriptBot;
+    describe('filters', () => {
+        describe('byTag()', () => {
+            let bot1: ScriptBot;
 
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
 
-            addToContext(context, bot1);
-        });
+                addToContext(context, bot1);
+            });
 
-        describe('just tag', () => {
-            const cases = [
-                [true, 'a bot has the given tag', 0],
-                [false, 'a bot has null for the given tag', null],
-                [false, 'a bot has undefined for the given tag', undefined],
-            ];
+            describe('just tag', () => {
+                const cases = [
+                    [true, 'a bot has the given tag', 0],
+                    [false, 'a bot has null for the given tag', null],
+                    [false, 'a bot has undefined for the given tag', undefined],
+                ];
 
-            it.each(cases)(
-                'should return a function that returns %s if %s',
-                (expected, desc, val) => {
-                    const filter = library.api.byTag('red');
+                it.each(cases)(
+                    'should return a function that returns %s if %s',
+                    (expected, desc, val) => {
+                        const filter = library.api.byTag('red');
 
+                        bot1.tags.red = val;
+
+                        expect(filter(bot1)).toEqual(expected);
+                    }
+                );
+
+                it('should support using a hashtag at the beginning of a tag', () => {
+                    const filter = library.api.byTag('#red');
+                    bot1.tags.red = 'abc';
+
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should support using a @ symbol at the beginning of a tag', () => {
+                    const filter = library.api.byTag('@red');
+                    bot1.tags.red = 'abc';
+
+                    expect(filter(bot1)).toBe(true);
+                });
+            });
+
+            describe('tag + value', () => {
+                it('should return a function that returns true when the value matches the tag', () => {
+                    const filter = library.api.byTag('red', 'abc');
+                    bot1.tags.red = 'abc';
+
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should return a function that returns false when the value does not match the tag', () => {
+                    const filter = library.api.byTag('red', 'abc');
+                    bot1.tags.red = 123;
+
+                    expect(filter(bot1)).toBe(false);
+                });
+
+                it.each(falsyCases)('should work with %s', (desc, val) => {
+                    const filter = library.api.byTag('red', val);
                     bot1.tags.red = val;
 
-                    expect(filter(bot1)).toEqual(expected);
-                }
-            );
+                    expect(filter(bot1)).toBe(true);
 
-            it('should support using a hashtag at the beginning of a tag', () => {
-                const filter = library.api.byTag('#red');
-                bot1.tags.red = 'abc';
+                    bot1.tags.red = 5;
+                    expect(filter(bot1)).toBe(false);
+                });
 
-                expect(filter(bot1)).toBe(true);
+                it('should be able to match bots without the given tag using null', () => {
+                    const filter = library.api.byTag('red', null);
+                    bot1.tags.red = 'abc';
+
+                    expect(filter(bot1)).toBe(false);
+
+                    delete bot1.tags.red;
+                    expect(filter(bot1)).toBe(true);
+                });
             });
 
-            it('should support using a @ symbol at the beginning of a tag', () => {
-                const filter = library.api.byTag('@red');
-                bot1.tags.red = 'abc';
+            describe('tag + filter', () => {
+                it('should return a function that returns true when the function returns true', () => {
+                    const filter = library.api.byTag(
+                        'red',
+                        tag => typeof tag === 'number'
+                    );
 
-                expect(filter(bot1)).toBe(true);
-            });
-        });
+                    bot1.tags.red = 123;
+                    expect(filter(bot1)).toBe(true);
+                });
 
-        describe('tag + value', () => {
-            it('should return a function that returns true when the value matches the tag', () => {
-                const filter = library.api.byTag('red', 'abc');
-                bot1.tags.red = 'abc';
+                it('should return a function that returns false when the function returns false', () => {
+                    const filter = library.api.byTag(
+                        'red',
+                        tag => typeof tag === 'number'
+                    );
 
-                expect(filter(bot1)).toBe(true);
-            });
-
-            it('should return a function that returns false when the value does not match the tag', () => {
-                const filter = library.api.byTag('red', 'abc');
-                bot1.tags.red = 123;
-
-                expect(filter(bot1)).toBe(false);
-            });
-
-            it.each(falsyCases)('should work with %s', (desc, val) => {
-                const filter = library.api.byTag('red', val);
-                bot1.tags.red = val;
-
-                expect(filter(bot1)).toBe(true);
-
-                bot1.tags.red = 5;
-                expect(filter(bot1)).toBe(false);
-            });
-
-            it('should be able to match bots without the given tag using null', () => {
-                const filter = library.api.byTag('red', null);
-                bot1.tags.red = 'abc';
-
-                expect(filter(bot1)).toBe(false);
-
-                delete bot1.tags.red;
-                expect(filter(bot1)).toBe(true);
+                    bot1.tags.red = 'abc';
+                    expect(filter(bot1)).toBe(false);
+                });
             });
         });
 
-        describe('tag + filter', () => {
-            it('should return a function that returns true when the function returns true', () => {
-                const filter = library.api.byTag(
-                    'red',
-                    tag => typeof tag === 'number'
-                );
+        describe('byMod()', () => {
+            let bot1: ScriptBot;
 
-                bot1.tags.red = 123;
-                expect(filter(bot1)).toBe(true);
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+
+                addToContext(context, bot1);
             });
 
-            it('should return a function that returns false when the function returns false', () => {
-                const filter = library.api.byTag(
-                    'red',
-                    tag => typeof tag === 'number'
-                );
+            it('should match bots with all of the same tags and values', () => {
+                const filter = library.api.byMod({
+                    auxColor: 'red',
+                    number: 123,
+                });
 
-                bot1.tags.red = 'abc';
-                expect(filter(bot1)).toBe(false);
-            });
-        });
-    });
+                bot1.tags.auxColor = 'red';
+                bot1.tags.number = 123;
+                bot1.tags.other = true;
 
-    describe('byMod()', () => {
-        let bot1: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-
-            addToContext(context, bot1);
-        });
-
-        it('should match bots with all of the same tags and values', () => {
-            const filter = library.api.byMod({
-                auxColor: 'red',
-                number: 123,
+                expect(filter(bot1)).toEqual(true);
             });
 
-            bot1.tags.auxColor = 'red';
-            bot1.tags.number = 123;
-            bot1.tags.other = true;
+            it('should not match bots with wrong tag values', () => {
+                const filter = library.api.byMod({
+                    auxColor: 'red',
+                    number: 123,
+                });
 
-            expect(filter(bot1)).toEqual(true);
-        });
+                bot1.tags.auxColor = 'red';
+                bot1.tags.number = 999;
+                bot1.tags.other = true;
 
-        it('should not match bots with wrong tag values', () => {
-            const filter = library.api.byMod({
-                auxColor: 'red',
-                number: 123,
+                expect(filter(bot1)).toEqual(false);
             });
 
-            bot1.tags.auxColor = 'red';
-            bot1.tags.number = 999;
-            bot1.tags.other = true;
+            it('should match tags using the given filter', () => {
+                const filter = library.api.byMod({
+                    auxColor: (x: string) => x.startsWith('r'),
+                    number: 123,
+                });
 
-            expect(filter(bot1)).toEqual(false);
-        });
+                bot1.tags.auxColor = 'rubble';
+                bot1.tags.number = 123;
+                bot1.tags.other = true;
 
-        it('should match tags using the given filter', () => {
-            const filter = library.api.byMod({
-                auxColor: (x: string) => x.startsWith('r'),
-                number: 123,
+                expect(filter(bot1)).toEqual(true);
             });
 
-            bot1.tags.auxColor = 'rubble';
-            bot1.tags.number = 123;
-            bot1.tags.other = true;
+            it('should match tags with null', () => {
+                const filter = library.api.byMod({
+                    auxColor: null,
+                    number: 123,
+                });
 
-            expect(filter(bot1)).toEqual(true);
+                bot1.tags.number = 123;
+                bot1.tags.other = true;
+
+                expect(filter(bot1)).toEqual(true);
+
+                bot1.tags.auxColor = 'red';
+
+                expect(filter(bot1)).toEqual(false);
+            });
         });
 
-        it('should match tags with null', () => {
-            const filter = library.api.byMod({
-                auxColor: null,
-                number: 123,
+        describe('inDimension()', () => {
+            let bot1: ScriptBot;
+
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+
+                addToContext(context, bot1);
             });
 
-            bot1.tags.number = 123;
-            bot1.tags.other = true;
+            it('should return a function that returns true if the bot is in the given dimension', () => {
+                const filter = library.api.inDimension('red');
 
-            expect(filter(bot1)).toEqual(true);
-
-            bot1.tags.auxColor = 'red';
-
-            expect(filter(bot1)).toEqual(false);
-        });
-    });
-
-    describe('inDimension()', () => {
-        let bot1: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-
-            addToContext(context, bot1);
-        });
-
-        it('should return a function that returns true if the bot is in the given dimension', () => {
-            const filter = library.api.inDimension('red');
-
-            bot1.tags.red = true;
-            expect(filter(bot1)).toEqual(true);
-        });
-
-        it('should return a function that returns false if the bot is not in the given dimension', () => {
-            const filter = library.api.inDimension('red');
-            expect(filter(bot1)).toEqual(false);
-        });
-    });
-
-    describe('atPosition()', () => {
-        let bot1: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-
-            addToContext(context, bot1);
-        });
-
-        it('should return a function that returns true if the bot is at the given position', () => {
-            const filter = library.api.atPosition('red', 1, 2);
-
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-
-            expect(filter(bot1)).toEqual(true);
-        });
-
-        it('should return a function that returns false if the bot is not at the given position', () => {
-            const filter = library.api.atPosition('red', 1, 2);
-
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 3;
-
-            expect(filter(bot1)).toEqual(false);
-        });
-
-        it('should return a function that returns false if the bot is not in the given dimension', () => {
-            const filter = library.api.atPosition('red', 1, 2);
-
-            bot1.tags.red = false;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-
-            expect(filter(bot1)).toEqual(false);
-        });
-
-        it('should return a function with a sort function that sorts the bots by their sort order', () => {
-            const filter = library.api.atPosition('red', 1, 2);
-
-            bot1.tags.red = false;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            bot1.tags.redSortOrder = 100;
-
-            expect(typeof filter.sort).toBe('function');
-            expect(filter.sort(bot1)).toBe(100);
-        });
-
-        it('should support sorting when the dimension tag starts with a hashtag', () => {
-            const filter = library.api.atPosition('#red', 1, 2);
-
-            bot1.tags.red = false;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            bot1.tags.redSortOrder = 100;
-
-            expect(typeof filter.sort).toBe('function');
-            expect(filter.sort(bot1)).toBe(100);
-        });
-    });
-
-    describe('inStack()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-
-            addToContext(context, bot1, bot2);
-        });
-
-        it('should return a function that returns true if the bot is in the same stack as another bot', () => {
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            const filter = library.api.inStack(bot1, 'red');
-
-            bot2.tags.red = true;
-            bot2.tags.redX = 1;
-            bot2.tags.redY = 2;
-
-            expect(filter(bot2)).toEqual(true);
-        });
-
-        it('should return a function that returns false if the bot is not in the same stack as another bot', () => {
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            const filter = library.api.inStack(bot1, 'red');
-
-            bot2.tags.red = true;
-            bot2.tags.redX = 1;
-            bot2.tags.redY = 3;
-
-            expect(filter(bot2)).toEqual(false);
-        });
-
-        it('should return a function that returns false if the bot is not in the same dimension as another bot', () => {
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            const filter = library.api.inStack(bot1, 'red');
-
-            bot2.tags.red = false;
-            bot2.tags.redX = 1;
-            bot2.tags.redY = 2;
-
-            expect(filter(bot2)).toEqual(false);
-        });
-
-        it('should return a function with a sort function that sorts the bots by their sort order', () => {
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            const filter = library.api.inStack(bot1, 'red');
-
-            bot2.tags.red = true;
-            bot2.tags.redX = 1;
-            bot2.tags.redY = 2;
-            bot2.tags.redSortOrder = 100;
-
-            expect(typeof filter.sort).toBe('function');
-            expect(filter.sort(bot2)).toEqual(100);
-        });
-
-        it('should support sorting when the dimension tag starts with a hashtag', () => {
-            bot1.tags.red = true;
-            bot1.tags.redX = 1;
-            bot1.tags.redY = 2;
-            const filter = library.api.inStack(bot1, '#red');
-
-            bot2.tags.red = true;
-            bot2.tags.redX = 1;
-            bot2.tags.redY = 2;
-            bot2.tags.redSortOrder = 100;
-
-            expect(typeof filter.sort).toBe('function');
-            expect(filter.sort(bot2)).toEqual(100);
-        });
-    });
-
-    describe('neighboring()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-
-            addToContext(context, bot1, bot2);
-        });
-
-        const directionCases = [
-            ['front', 0, -1],
-            ['back', 0, 1],
-            ['left', 1, 0],
-            ['right', -1, 0],
-        ];
-
-        describe.each(directionCases)('%s', (direction, x, y) => {
-            it('should return a function that returns true if the given bot is at the correct position', () => {
                 bot1.tags.red = true;
-                bot1.tags.redX = 0;
-                bot1.tags.redY = 0;
-                const filter = library.api.neighboring(bot1, 'red', direction);
+                expect(filter(bot1)).toEqual(true);
+            });
+
+            it('should return a function that returns false if the bot is not in the given dimension', () => {
+                const filter = library.api.inDimension('red');
+                expect(filter(bot1)).toEqual(false);
+            });
+        });
+
+        describe('atPosition()', () => {
+            let bot1: ScriptBot;
+
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+
+                addToContext(context, bot1);
+            });
+
+            it('should return a function that returns true if the bot is at the given position', () => {
+                const filter = library.api.atPosition('red', 1, 2);
+
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+
+                expect(filter(bot1)).toEqual(true);
+            });
+
+            it('should return a function that returns false if the bot is not at the given position', () => {
+                const filter = library.api.atPosition('red', 1, 2);
+
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 3;
+
+                expect(filter(bot1)).toEqual(false);
+            });
+
+            it('should return a function that returns false if the bot is not in the given dimension', () => {
+                const filter = library.api.atPosition('red', 1, 2);
+
+                bot1.tags.red = false;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+
+                expect(filter(bot1)).toEqual(false);
+            });
+
+            it('should return a function with a sort function that sorts the bots by their sort order', () => {
+                const filter = library.api.atPosition('red', 1, 2);
+
+                bot1.tags.red = false;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                bot1.tags.redSortOrder = 100;
+
+                expect(typeof filter.sort).toBe('function');
+                expect(filter.sort(bot1)).toBe(100);
+            });
+
+            it('should support sorting when the dimension tag starts with a hashtag', () => {
+                const filter = library.api.atPosition('#red', 1, 2);
+
+                bot1.tags.red = false;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                bot1.tags.redSortOrder = 100;
+
+                expect(typeof filter.sort).toBe('function');
+                expect(filter.sort(bot1)).toBe(100);
+            });
+        });
+
+        describe('inStack()', () => {
+            let bot1: ScriptBot;
+            let bot2: ScriptBot;
+
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
+
+                addToContext(context, bot1, bot2);
+            });
+
+            it('should return a function that returns true if the bot is in the same stack as another bot', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, 'red');
 
                 bot2.tags.red = true;
-                bot2.tags.redX = x;
-                bot2.tags.redY = y;
+                bot2.tags.redX = 1;
+                bot2.tags.redY = 2;
 
                 expect(filter(bot2)).toEqual(true);
             });
 
-            it('should return a function that returns false if the given bot is not at the correct position', () => {
+            it('should return a function that returns false if the bot is not in the same stack as another bot', () => {
                 bot1.tags.red = true;
-                bot1.tags.redX = 0;
-                bot1.tags.redY = 0;
-                const filter = library.api.neighboring(bot1, 'red', direction);
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, 'red');
 
                 bot2.tags.red = true;
-                bot2.tags.redX = -x;
-                bot2.tags.redY = -y;
+                bot2.tags.redX = 1;
+                bot2.tags.redY = 3;
+
+                expect(filter(bot2)).toEqual(false);
+            });
+
+            it('should return a function that returns false if the bot is not in the same dimension as another bot', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, 'red');
+
+                bot2.tags.red = false;
+                bot2.tags.redX = 1;
+                bot2.tags.redY = 2;
 
                 expect(filter(bot2)).toEqual(false);
             });
 
             it('should return a function with a sort function that sorts the bots by their sort order', () => {
                 bot1.tags.red = true;
-                bot1.tags.redX = 0;
-                bot1.tags.redY = 0;
-                const filter = library.api.neighboring(bot1, 'red', direction);
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, 'red');
 
                 bot2.tags.red = true;
-                bot2.tags.redX = x;
-                bot2.tags.redY = y;
+                bot2.tags.redX = 1;
+                bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toEqual('function');
+                expect(typeof filter.sort).toBe('function');
+                expect(filter.sort(bot2)).toEqual(100);
+            });
+
+            it('should support sorting when the dimension tag starts with a hashtag', () => {
+                bot1.tags.red = true;
+                bot1.tags.redX = 1;
+                bot1.tags.redY = 2;
+                const filter = library.api.inStack(bot1, '#red');
+
+                bot2.tags.red = true;
+                bot2.tags.redX = 1;
+                bot2.tags.redY = 2;
+                bot2.tags.redSortOrder = 100;
+
+                expect(typeof filter.sort).toBe('function');
                 expect(filter.sort(bot2)).toEqual(100);
             });
         });
-    });
 
-    describe('bySpace()', () => {
-        let bot1: ScriptBot;
+        describe('neighboring()', () => {
+            let bot1: ScriptBot;
+            let bot2: ScriptBot;
 
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
-            addToContext(context, bot1);
+                addToContext(context, bot1, bot2);
+            });
+
+            const directionCases = [
+                ['front', 0, -1],
+                ['back', 0, 1],
+                ['left', 1, 0],
+                ['right', -1, 0],
+            ];
+
+            describe.each(directionCases)('%s', (direction, x, y) => {
+                it('should return a function that returns true if the given bot is at the correct position', () => {
+                    bot1.tags.red = true;
+                    bot1.tags.redX = 0;
+                    bot1.tags.redY = 0;
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        direction
+                    );
+
+                    bot2.tags.red = true;
+                    bot2.tags.redX = x;
+                    bot2.tags.redY = y;
+
+                    expect(filter(bot2)).toEqual(true);
+                });
+
+                it('should return a function that returns false if the given bot is not at the correct position', () => {
+                    bot1.tags.red = true;
+                    bot1.tags.redX = 0;
+                    bot1.tags.redY = 0;
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        direction
+                    );
+
+                    bot2.tags.red = true;
+                    bot2.tags.redX = -x;
+                    bot2.tags.redY = -y;
+
+                    expect(filter(bot2)).toEqual(false);
+                });
+
+                it('should return a function with a sort function that sorts the bots by their sort order', () => {
+                    bot1.tags.red = true;
+                    bot1.tags.redX = 0;
+                    bot1.tags.redY = 0;
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        direction
+                    );
+
+                    bot2.tags.red = true;
+                    bot2.tags.redX = x;
+                    bot2.tags.redY = y;
+                    bot2.tags.redSortOrder = 100;
+
+                    expect(typeof filter.sort).toEqual('function');
+                    expect(filter.sort(bot2)).toEqual(100);
+                });
+            });
         });
 
-        it('should return a function that returns true if the bot is in given space', () => {
-            const filter = library.api.bySpace(<any>'test');
+        describe('bySpace()', () => {
+            let bot1: ScriptBot;
 
-            bot1.tags.space = 'test';
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
 
-            expect(filter(bot1)).toEqual(true);
-        });
-    });
+                addToContext(context, bot1);
+            });
 
-    describe('byCreator()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+            it('should return a function that returns true if the bot is in given space', () => {
+                const filter = library.api.bySpace(<any>'test');
 
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+                bot1.tags.space = 'test';
 
-            addToContext(context, bot1, bot2);
+                expect(filter(bot1)).toEqual(true);
+            });
         });
 
-        it('should return a function that returns true if the bot is created by the given bot', () => {
-            const filter = library.api.byCreator(bot1);
+        describe('byCreator()', () => {
+            let bot1: ScriptBot;
+            let bot2: ScriptBot;
 
-            bot2.tags.auxCreator = bot1.id;
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
-            expect(filter(bot2)).toEqual(true);
+                addToContext(context, bot1, bot2);
+            });
+
+            it('should return a function that returns true if the bot is created by the given bot', () => {
+                const filter = library.api.byCreator(bot1);
+
+                bot2.tags.auxCreator = bot1.id;
+
+                expect(filter(bot2)).toEqual(true);
+            });
+
+            it('should return a function that returns true if the bot is created by the given bot ID', () => {
+                const filter = library.api.byCreator(bot1.id);
+
+                bot2.tags.auxCreator = bot1.id;
+
+                expect(filter(bot2)).toEqual(true);
+            });
+
+            it('should return a function that returns false if the bot not is created by the given bot ID', () => {
+                const filter = library.api.byCreator(bot1.id);
+
+                bot2.tags.auxCreator = 'other';
+
+                expect(filter(bot2)).toEqual(false);
+            });
+
+            it('should return a function that returns false if the bot not is created by the given bot', () => {
+                const filter = library.api.byCreator(bot1);
+
+                bot2.tags.auxCreator = 'other';
+
+                expect(filter(bot2)).toEqual(false);
+            });
         });
 
-        it('should return a function that returns true if the bot is created by the given bot ID', () => {
-            const filter = library.api.byCreator(bot1.id);
+        describe('either()', () => {
+            let bot1: ScriptBot;
 
-            bot2.tags.auxCreator = bot1.id;
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
 
-            expect(filter(bot2)).toEqual(true);
+                addToContext(context, bot1);
+            });
+
+            it('should return a function that returns true when any of the given functions return true', () => {
+                const filter = library.api.either(b => false, b => true);
+                expect(filter(bot1)).toEqual(true);
+            });
+
+            it('should return a function that returns false when all of the given functions return false', () => {
+                const filter = library.api.either(b => false, b => false);
+                expect(filter(bot1)).toEqual(false);
+            });
+
+            it('should return a function that doesnt have a sort function', () => {
+                const filter = library.api.either(b => false, b => true);
+                expect(typeof filter.sort).toEqual('undefined');
+            });
         });
 
-        it('should return a function that returns false if the bot not is created by the given bot ID', () => {
-            const filter = library.api.byCreator(bot1.id);
+        describe('not()', () => {
+            let bot1: ScriptBot;
+            let bot2: ScriptBot;
 
-            bot2.tags.auxCreator = 'other';
+            beforeEach(() => {
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
-            expect(filter(bot2)).toEqual(false);
-        });
+                addToContext(context, bot1, bot2);
+            });
 
-        it('should return a function that returns false if the bot not is created by the given bot', () => {
-            const filter = library.api.byCreator(bot1);
+            it('should return a function which negates the given function results', () => {
+                const filter = library.api.not(b => b.id === 'test1');
 
-            bot2.tags.auxCreator = 'other';
-
-            expect(filter(bot2)).toEqual(false);
-        });
-    });
-
-    describe('either()', () => {
-        let bot1: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-
-            addToContext(context, bot1);
-        });
-
-        it('should return a function that returns true when any of the given functions return true', () => {
-            const filter = library.api.either(b => false, b => true);
-            expect(filter(bot1)).toEqual(true);
-        });
-
-        it('should return a function that returns false when all of the given functions return false', () => {
-            const filter = library.api.either(b => false, b => false);
-            expect(filter(bot1)).toEqual(false);
-        });
-
-        it('should return a function that doesnt have a sort function', () => {
-            const filter = library.api.either(b => false, b => true);
-            expect(typeof filter.sort).toEqual('undefined');
-        });
-    });
-
-    describe('not()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-
-        beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-
-            addToContext(context, bot1, bot2);
-        });
-
-        it('should return a function which negates the given function results', () => {
-            const filter = library.api.not(b => b.id === 'test1');
-
-            expect(filter(bot1)).toEqual(false);
-            expect(filter(bot2)).toEqual(true);
+                expect(filter(bot1)).toEqual(false);
+                expect(filter(bot2)).toEqual(true);
+            });
         });
     });
 
@@ -2337,4 +2355,1145 @@ describe('AuxLibrary', () => {
             });
         });
     });
+
+    describe('setTag()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should change the given tag on the given bot', () => {
+            library.api.setTag(bot1, '#name', 'bob');
+            expect(bot1.tags.name).toEqual('bob');
+        });
+
+        it('should change the given tag on the given mod', () => {
+            let mod: any = {};
+            library.api.setTag(mod, '#name', 'bob');
+            expect(mod.name).toEqual('bob');
+        });
+
+        it('should change the tags on the given bots', () => {
+            library.api.setTag([bot1, bot2], '#name', 'bob');
+            expect(bot1.tags.name).toEqual('bob');
+            expect(bot2.tags.name).toEqual('bob');
+        });
+
+        it('should recursively set the tags on the given bots', () => {
+            let bot3 = createDummyScriptBot('test3');
+            let bot4 = createDummyScriptBot('test4');
+            addToContext(context, bot3, bot4);
+
+            library.api.setTag([bot1, [bot3, bot4], bot2], '#name', 'bob');
+            expect(bot1.tags.name).toEqual('bob');
+            expect(bot2.tags.name).toEqual('bob');
+            expect(bot3.tags.name).toEqual('bob');
+            expect(bot4.tags.name).toEqual('bob');
+        });
+
+        it('should not allow setting the ID', () => {
+            library.api.setTag(bot1, '#id', 'bob');
+            expect(bot1.tags.id).not.toEqual('bob');
+        });
+
+        it('should not allow setting the space', () => {
+            library.api.setTag(bot1, '#space', 'bob');
+            expect(bot1.tags.space).not.toEqual('bob');
+        });
+
+        it('should not allow setting the space on another mod', () => {
+            let mod: any = {};
+            library.api.setTag(mod, '#space', 'bob');
+            expect(mod.space).not.toEqual('bob');
+        });
+
+        it('should not allow setting the id on another mod', () => {
+            let mod: any = {};
+            library.api.setTag(mod, '#id', 'bob');
+            expect(mod.id).not.toEqual('bob');
+        });
+    });
+
+    // describe('create()', () => {
+    //     it('should return the created bot', () => {
+    //         const bot = library.api.create({
+    //             abc: 'def'
+    //         });
+    //         expect(bot).toEqual(createDummyScriptBot('uuid', {
+    //             abc: 'def'
+    //         }));
+    //         // const state: BotsState = {
+    //         //     thisBot: {
+    //         //         id: 'thisBot',
+    //         //         tags: {
+    //         //             test: `@setTag(this, "#newBotId", ${name}({ auxCreator: null }, { abc: "def" }).id)`,
+    //         //         },
+    //         //     },
+    //         // };
+    //         // // specify the UUID to use next
+    //         // uuidMock.mockReturnValue(id);
+    //         // const botAction = action('test', ['thisBot']);
+    //         // const result = calculateActionResults(state, botAction);
+
+    //         // expect(result.actions).toEqual([
+    //         //     botAdded({
+    //         //         id: expectedId,
+    //         //         tags: {
+    //         //             abc: 'def',
+    //         //             auxCreator: null,
+    //         //         },
+    //         //     }),
+    //         //     botUpdated('thisBot', {
+    //         //         tags: {
+    //         //             newBotId: expectedId,
+    //         //         },
+    //         //     }),
+    //         // ]);
+    //     });
+    //     // it('should automatically set the creator to the current bot ID', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}({ abc: "def" })`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 abc: 'def',
+    //     //                 auxCreator: 'thisBot',
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should ignore strings because they are no longer used to set the creator ID', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}("otherBot", { abc: "def" })`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 abc: 'def',
+    //     //                 auxCreator: 'thisBot',
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should support multiple arguments', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}({ abc: "def" }, { ghi: 123 })`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 abc: 'def',
+    //     //                 ghi: 123,
+    //     //                 auxCreator: 'thisBot',
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should support bots as arguments', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}(getBots("name", "that"))`,
+    //     //             },
+    //     //         },
+    //     //         thatBot: {
+    //     //             id: 'thatBot',
+    //     //             tags: {
+    //     //                 name: 'that',
+    //     //                 abc: 'def',
+    //     //                 formula: '=this.abc',
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 abc: 'def',
+    //     //                 name: 'that',
+    //     //                 formula: '=this.abc',
+    //     //                 auxCreator: 'thisBot',
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should support modifying the returned bot', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@let newBot = ${name}({ auxCreator: null }, { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 abc: 'def',
+    //     //                 auxCreator: null,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 fun: true,
+    //     //                 num: 123,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should add the new bot to the formulas', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}({ auxCreator: null }, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 name: 'bob',
+    //     //                 auxCreator: null,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('thisBot', {
+    //     //             tags: {
+    //     //                 botId: expectedId,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should support formulas on the new bot', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@let newBot = ${name}({ auxCreator: null }, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 formula: '=getTag(this, "#num")',
+    //     //                 num: 100,
+    //     //                 auxCreator: null,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('thisBot', {
+    //     //             tags: {
+    //     //                 result: 100,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should return normal javascript objects', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 num: 100,
+    //     //                 test: `@let newBot = ${name}({ abc: getTag(this, "#num") });`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 abc: 100,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should trigger onCreate() on the created bot.', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 num: 1,
+    //     //                 test: `@${name}({ abc: getTag(this, "#num"), "onCreate": "@setTag(this, \\"#num\\", 100)" });`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 abc: 1,
+    //     //                 onCreate: '@setTag(this, "#num", 100)',
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 num: 100,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should trigger onAnyCreate() with the created bot as a parameter', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 num: 1,
+    //     //                 test: `@${name}({ abc: getTag(this, "#num") });`,
+    //     //             },
+    //     //         },
+    //     //         shoutBot: {
+    //     //             id: 'shoutBot',
+    //     //             tags: {
+    //     //                 onAnyCreate: '@setTag(this, "#num", 100)',
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 abc: 1,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('shoutBot', {
+    //     //             tags: {
+    //     //                 num: 100,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should support arrays of diffs as arguments', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ]).length)`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     let num = 0;
+    //     //     uuidMock.mockImplementation(() => `${id}-${num++}`);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: `${expectedId}-0`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: true,
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-1`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: false,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('thisBot', {
+    //     //             tags: {
+    //     //                 num: 2,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should create every combination of diff', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@setTag(this, "#num", ${name}([ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     let num = 0;
+    //     //     uuidMock.mockImplementation(() => `${id}-${num++}`);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: `${expectedId}-0`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: true,
+    //     //                 wow: 1,
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-1`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: false,
+    //     //                 wow: 1,
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-2`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: true,
+    //     //                 oh: 'haha',
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-3`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: false,
+    //     //                 oh: 'haha',
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-4`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: true,
+    //     //                 test: 'a',
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-5`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 hello: false,
+    //     //                 test: 'a',
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('thisBot', {
+    //     //             tags: {
+    //     //                 num: 6,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should duplicate each of the bots in the list', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}(getBots("test", true))`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 hello: true,
+    //     //             },
+    //     //         },
+    //     //         bBot: {
+    //     //             id: 'bBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 hello: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     let num = 0;
+    //     //     uuidMock.mockImplementation(() => `${id}-${num++}`);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: `${expectedId}-0`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 test: true,
+    //     //                 hello: true,
+    //     //             },
+    //     //         }),
+    //     //         botAdded({
+    //     //             id: `${expectedId}-1`,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 test: true,
+    //     //                 hello: false,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+    //     // it('should copy the space of another bot', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}(getBots("test", true))`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             space: 'tempLocal',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 hello: true,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             space: 'tempLocal',
+    //     //             tags: {
+    //     //                 auxCreator: null,
+    //     //                 test: true,
+    //     //                 hello: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to shout to a new bot', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}(getBots("test", true)); shout("abc");`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated('aBot', {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to shout to a new bot that is just now listening', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@${name}(getBots("test", true), { auxListening: true }); shout("abc");`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'thisBot',
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to shout to a bot that was created during another shout', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@shout("create"); shout("abc");`,
+    //     //             },
+    //     //         },
+    //     //         creatorBot: {
+    //     //             id: 'creatorBot',
+    //     //             tags: {
+    //     //                 create: `@${name}(getBots("test", true), { auxListening: true });`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'creatorBot',
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to shout multiple times to a bot that was created during another shout', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@shout("create"); shout("abc"); shout("def")`,
+    //     //             },
+    //     //         },
+    //     //         creatorBot: {
+    //     //             id: 'creatorBot',
+    //     //             tags: {
+    //     //                 create: `@${name}(getBots("test", true), { auxListening: true, space: 'custom' });`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //                 def: `@tags.hit2 = true;`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             space: <any>'custom',
+    //     //             tags: {
+    //     //                 auxCreator: null,
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //                 def: `@tags.hit2 = true;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //                 hit2: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to whisper to a bot that was created during another shout', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@let [newBot] = shout("create"); whisper(newBot, "abc");`,
+    //     //             },
+    //     //         },
+    //     //         creatorBot: {
+    //     //             id: 'creatorBot',
+    //     //             tags: {
+    //     //                 create: `@return ${name}(getBots("test", true), { auxListening: true });`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'creatorBot',
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 abc: `@tags.hit = true;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should be able to whisper to itself after being created', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@shout("create"); shout("abc");`,
+    //     //             },
+    //     //         },
+    //     //         creatorBot: {
+    //     //             id: 'creatorBot',
+    //     //             tags: {
+    //     //                 create: `@return ${name}(getBots("test", true), { auxListening: true });`,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 abc: `@tags.value = 10; whisper(this, "def")`,
+    //     //                 def: `@tags.hit = tags.value === 10;`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             tags: {
+    //     //                 auxCreator: 'creatorBot',
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 abc: `@tags.value = 10; whisper(this, "def")`,
+    //     //                 def: `@tags.hit = tags.value === 10;`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hit: true,
+    //     //                 value: 10,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // it('should support complicated setup expressions', () => {
+    //     //     const state: BotsState = {
+    //     //         thisBot: {
+    //     //             id: 'thisBot',
+    //     //             tags: {
+    //     //                 test: `@shout("ensureCreated"); shout("ensureCreated");`,
+    //     //             },
+    //     //         },
+    //     //         creatorBot: {
+    //     //             id: 'creatorBot',
+    //     //             tags: {
+    //     //                 ensureCreated: `@
+    //     //                     let b = getBot(byTag("test", true), bySpace("custom"));
+    //     //                     if (!b) {
+    //     //                         b = ${name}(getBots("test", true), { auxListening: true, space: "custom" });
+    //     //                         whisper(b, "setup");
+    //     //                     }
+
+    //     //                     return b;
+    //     //                 `,
+    //     //             },
+    //     //         },
+    //     //         aBot: {
+    //     //             id: 'aBot',
+    //     //             tags: {
+    //     //                 test: true,
+    //     //                 setup: `@whisper(this, "otherPart")`,
+    //     //                 otherPart: `@tags.hitSetup = true`,
+    //     //                 auxListening: false,
+    //     //             },
+    //     //         },
+    //     //     };
+    //     //     // specify the UUID to use next
+    //     //     uuidMock.mockReturnValue(id);
+    //     //     const botAction = action('test', ['thisBot']);
+    //     //     const result = calculateActionResults(state, botAction);
+
+    //     //     expect(result.actions).toEqual([
+    //     //         botAdded({
+    //     //             id: expectedId,
+    //     //             space: <any>'custom',
+    //     //             tags: {
+    //     //                 auxCreator: null,
+    //     //                 test: true,
+    //     //                 auxListening: true,
+    //     //                 setup: `@whisper(this, "otherPart")`,
+    //     //                 otherPart: `@tags.hitSetup = true`,
+    //     //             },
+    //     //         }),
+    //     //         botUpdated(expectedId, {
+    //     //             tags: {
+    //     //                 hitSetup: true,
+    //     //             },
+    //     //         }),
+    //     //     ]);
+    //     // });
+
+    //     // describe('space', () => {
+    //     //     it('should set the space of the bot', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: null }, { space: "local" })`,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 space: 'local',
+    //     //                 tags: {
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     it('should use the last space', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: "local" })`,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 space: 'local',
+    //     //                 tags: {
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     it('should use the last space even if it is null', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: null })`,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 tags: {
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     const normalCases = [
+    //     //         ['null', null],
+    //     //         ['undefined', undefined],
+    //     //         ['(empty string)', '""'],
+    //     //     ];
+
+    //     //     it.each(normalCases)(
+    //     //         'should treat %s as the default type',
+    //     //         (desc, value) => {
+    //     //             const state: BotsState = {
+    //     //                 thisBot: {
+    //     //                     id: 'thisBot',
+    //     //                     tags: {
+    //     //                         test: `@${name}({ auxCreator: null }, { space: ${value} })`,
+    //     //                     },
+    //     //                 },
+    //     //             };
+    //     //             // specify the UUID to use next
+    //     //             uuidMock.mockReturnValue(id);
+    //     //             const botAction = action('test', ['thisBot']);
+    //     //             const result = calculateActionResults(state, botAction);
+
+    //     //             expect(result.actions).toEqual([
+    //     //                 botAdded({
+    //     //                     id: expectedId,
+    //     //                     tags: {
+    //     //                         auxCreator: null,
+    //     //                     },
+    //     //                 }),
+    //     //             ]);
+    //     //         }
+    //     //     );
+    //     // });
+
+    //     // describe('auxCreator', () => {
+    //     //     it('should set the auxCreator to the given bot', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: getID(getBot("other", true)) }, { abc: "def" })`,
+    //     //                 },
+    //     //             },
+    //     //             otherBot: {
+    //     //                 id: 'otherBot',
+    //     //                 tags: {
+    //     //                     other: true,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 tags: {
+    //     //                     abc: 'def',
+    //     //                     auxCreator: 'otherBot',
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     it('should be able to set the auxCreator to null', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: null }, { abc: "def" })`,
+    //     //                 },
+    //     //             },
+    //     //             otherBot: {
+    //     //                 id: 'otherBot',
+    //     //                 tags: {
+    //     //                     other: true,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 tags: {
+    //     //                     abc: 'def',
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     it('should set auxCreator to null if it references a bot in a different space', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: "otherBot" }, { space: "def" })`,
+    //     //                 },
+    //     //             },
+    //     //             otherBot: {
+    //     //                 id: 'otherBot',
+    //     //                 space: 'shared',
+    //     //                 tags: {
+    //     //                     other: true,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 space: <any>'def',
+    //     //                 tags: {
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+
+    //     //     it('should set auxCreator to null if it references a bot that does not exist', () => {
+    //     //         const state: BotsState = {
+    //     //             thisBot: {
+    //     //                 id: 'thisBot',
+    //     //                 tags: {
+    //     //                     test: `@${name}({ auxCreator: "otherBot" })`,
+    //     //                 },
+    //     //             },
+    //     //         };
+    //     //         // specify the UUID to use next
+    //     //         uuidMock.mockReturnValue(id);
+    //     //         const botAction = action('test', ['thisBot']);
+    //     //         const result = calculateActionResults(state, botAction);
+
+    //     //         expect(result.actions).toEqual([
+    //     //             botAdded({
+    //     //                 id: expectedId,
+    //     //                 tags: {
+    //     //                     auxCreator: null,
+    //     //                 },
+    //     //             }),
+    //     //         ]);
+    //     //     });
+    //     // });
+    // });
 });

@@ -31,6 +31,11 @@ export interface AuxGlobalContext {
     playerBot: ScriptBot;
 
     /**
+     * The current bot.
+     */
+    currentBot: ScriptBot;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -41,6 +46,12 @@ export interface AuxGlobalContext {
      * @param bot The bot.
      */
     unwrapBot(bot: Bot | BotTags): Bot | BotTags;
+
+    /**
+     * Adds the given bot to the state and creates a new script bot to represent it.
+     * @param bot The bot that should be created.
+     */
+    createBot(bot: Bot): ScriptBot;
 }
 
 /**
@@ -135,6 +146,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     playerBot: ScriptBot = null;
 
     /**
+     * The current bot.
+     */
+    currentBot: ScriptBot = null;
+
+    /**
      * Creates a new global context.
      * @param version The version number.
      * @param device The device that we're running on.
@@ -178,5 +194,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             };
         }
         return bot;
+    }
+
+    createBot(bot: Bot): ScriptBot {
+        throw new Error('Method not implemented.');
     }
 }
