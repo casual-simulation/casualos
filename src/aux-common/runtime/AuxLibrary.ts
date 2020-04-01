@@ -43,6 +43,7 @@ import {
     backupAsDownload as calcBackupAsDownload,
     finishCheckout as calcFinishCheckout,
     markHistory as calcMarkHistory,
+    browseHistory as calcBrowseHistory,
     BotAction,
     download,
     BotsState,
@@ -234,6 +235,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 backupAsDownload,
                 finishCheckout,
                 markHistory,
+                browseHistory,
             },
         },
     };
@@ -1214,6 +1216,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function markHistory(options: MarkHistoryOptions) {
         return remote(calcMarkHistory(options), undefined, false);
+    }
+
+    /**
+     * Loads the "history" space into the universe.
+     */
+    function browseHistory() {
+        return remote(calcBrowseHistory());
     }
 
     /**

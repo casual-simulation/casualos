@@ -51,6 +51,7 @@ import {
     backupAsDownload,
     finishCheckout,
     markHistory,
+    browseHistory,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2128,6 +2129,15 @@ describe('AuxLibrary', () => {
                     undefined,
                     false
                 );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.browseHistory()', () => {
+            it('should emit a browse_history event', () => {
+                const action = library.api.server.browseHistory();
+                const expected = remote(browseHistory());
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
