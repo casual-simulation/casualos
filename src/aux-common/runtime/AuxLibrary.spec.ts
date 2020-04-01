@@ -57,6 +57,7 @@ import {
     saveFile,
     reject,
     ORIGINAL_OBJECT,
+    webhook,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2222,6 +2223,51 @@ describe('AuxLibrary', () => {
                     sessionId: 's',
                     username: 'u',
                     deviceId: 'd',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('webhook()', () => {
+            it('should emit a SendWebhookAction', () => {
+                const action = library.api.webhook({
+                    method: 'POST',
+                    url: 'https://example.com',
+                    data: {
+                        test: 'abc',
+                    },
+                    responseShout: 'test.response()',
+                });
+                const expected = webhook({
+                    method: 'POST',
+                    url: 'https://example.com',
+                    data: {
+                        test: 'abc',
+                    },
+                    responseShout: 'test.response()',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('webhook.post()', () => {
+            it('should emit a SendWebhookAction', () => {
+                const action = library.api.webhook.post(
+                    'https://example.com',
+                    { test: 'abc' },
+                    {
+                        responseShout: 'test.response()',
+                    }
+                );
+                const expected = webhook({
+                    method: 'POST',
+                    url: 'https://example.com',
+                    data: {
+                        test: 'abc',
+                    },
+                    responseShout: 'test.response()',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

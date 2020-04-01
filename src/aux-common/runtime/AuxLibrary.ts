@@ -48,6 +48,7 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     reject as calcReject,
+    webhook as calcWebhook,
     BotAction,
     download,
     BotsState,
@@ -178,10 +179,51 @@ interface SaveFileOptions {
 }
 
 /**
+ * Defines a set of options for a webhook.
+ */
+export interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method?: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url?: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
+    webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
+        return webhook({
+            ...options,
+            method: 'POST',
+            url: url,
+            data: data,
+        });
+    };
+
     return {
         api: {
             getBots,
@@ -204,6 +246,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             not,
 
             remote,
+            webhook,
 
             player: {
                 toast,
@@ -1358,6 +1401,45 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
         return addAction(r);
     }
+
+    function webhook(options: WebhookOptions) {
+        const event = calcWebhook(<any>options);
+        return addAction(event);
+    }
+
+    // /**
+    //  * Sends a web request based on the given options.
+    //  * @param options The options that specify where and what to send in the web request.
+    //  *
+    //  * @example
+    //  * // Send a HTTP POST request to https://www.example.com/api/createThing
+    //  * webhook({
+    //  *   method: 'POST',
+    //  *   url: 'https://www.example.com/api/createThing',
+    //  *   data: {
+    //  *     hello: 'world'
+    //  *   },
+    //  *   responseShout: 'requestFinished'
+    //  * });
+    //  */
+    // const webhook: {
+    //     (options: WebhookOptions): BotAction;
+
+    //     /**
+    //      * Sends a HTTP POST request to the given URL with the given data.
+    //      *
+    //      * @param url The URL that the request should be sent to.
+    //      * @param data That that should be sent.
+    //      * @param options The options that should be included in the request.
+    //      *
+    //      * @example
+    //      * // Send a HTTP POST request to https://www.example.com/api/createThing
+    //      * webhook.post('https://www.example.com/api/createThing', {
+    //      *   hello: 'world'
+    //      * }, { responseShout: 'requestFinished' });
+    //      */
+    //     post: (url: string, data?: any, options?: WebhookOptions) => BotAction;
+    // } = <any>;
 
     /**
      * Performs the given action.
