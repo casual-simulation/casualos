@@ -238,6 +238,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 markHistory,
                 browseHistory,
                 restoreHistoryMark,
+                restoreHistoryMarkToUniverse,
             },
         },
     };
@@ -1234,6 +1235,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function restoreHistoryMark(mark: Bot | string) {
         const id = getID(mark);
         return remote(calcRestoreHistoryMark(id));
+    }
+
+    /**
+     * Restores the current state to the given mark.
+     * @param mark The bot or bot ID that represents the mark that should be restored.
+     * @param universe The universe that the mark should be restored to.
+     */
+    function restoreHistoryMarkToUniverse(
+        mark: Bot | string,
+        universe: string
+    ) {
+        const id = getID(mark);
+        return remote(calcRestoreHistoryMark(id, universe));
     }
 
     /**

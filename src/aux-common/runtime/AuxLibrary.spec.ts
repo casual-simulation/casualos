@@ -2153,6 +2153,18 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.restoreHistoryMarkToUniverse()', () => {
+            it('should emit a restore_history_mark event', () => {
+                const action = library.api.server.restoreHistoryMarkToUniverse(
+                    'mark',
+                    'universe'
+                );
+                const expected = remote(restoreHistoryMark('mark', 'universe'));
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(
