@@ -67,6 +67,7 @@ import {
     tagsOnBot,
     getOriginalObject,
     botAdded,
+    isScriptBot,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -238,6 +239,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag,
             setTag,
             removeTags,
+            applyMod,
 
             byTag,
             byMod,
@@ -1642,6 +1644,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     // if the tag starts with the tag section
                     setTag(bot, tags[i], null);
                 }
+            }
+        }
+    }
+
+    /**
+     * Applies the given mods to the given bot.
+     * @param bot The bot.
+     * @param diffs The mods to apply.
+     */
+    function applyMod(bot: any, ...diffs: Mod[]) {
+        let appliedDiffs: BotTags[] = [];
+        for (let diff of diffs) {
+            if (!diff) {
+                continue;
+            }
+            let tags: BotTags;
+            if (isScriptBot(diff)) {
+                tags = diff.raw;
+            } else if (isBot(diff)) {
+                tags = diff.tags;
+            } else {
+                tags = diff;
+            }
+            appliedDiffs.push(tags);
+            for (let key in tags) {
+                setTag(bot, key, tags[key]);
             }
         }
     }

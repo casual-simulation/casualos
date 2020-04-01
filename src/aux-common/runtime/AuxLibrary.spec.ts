@@ -2463,6 +2463,54 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('applyMod()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should update the given bot with the given diff', () => {
+            library.api.applyMod(bot1, { abc: 'def', ghi: true, num: 1 });
+            expect(bot1.tags).toEqual({
+                abc: 'def',
+                ghi: true,
+                num: 1,
+            });
+        });
+
+        it('should support multiple mods', () => {
+            library.api.applyMod(
+                bot1,
+                { abc: 'def', ghi: true, num: 1 },
+                { abc: 'xyz' }
+            );
+            expect(bot1.tags).toEqual({
+                abc: 'xyz',
+                ghi: true,
+                num: 1,
+            });
+        });
+
+        it('should support merging mods into mods', () => {
+            let mod: any = {};
+            library.api.applyMod(
+                mod,
+                { abc: 'def', ghi: true, num: 1 },
+                { abc: 'xyz' }
+            );
+            expect(mod).toEqual({
+                abc: 'xyz',
+                ghi: true,
+                num: 1,
+            });
+        });
+    });
+
     // describe('create()', () => {
     //     it('should return the created bot', () => {
     //         const bot = library.api.create({
