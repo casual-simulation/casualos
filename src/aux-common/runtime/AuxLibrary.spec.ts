@@ -47,6 +47,7 @@ import {
     playSound,
     setupUniverse,
     shell,
+    backupToGithub,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2034,6 +2035,16 @@ describe('AuxLibrary', () => {
                 const action = library.api.server.shell('abc');
                 expect(action).toEqual(remote(shell('abc')));
                 expect(context.actions).toEqual([remote(shell('abc'))]);
+            });
+        });
+
+        describe('server.backupToGithub()', () => {
+            it('should emit a remote backup to github event', () => {
+                const action = library.api.server.backupToGithub('abc');
+                expect(action).toEqual(remote(backupToGithub('abc')));
+                expect(context.actions).toEqual([
+                    remote(backupToGithub('abc')),
+                ]);
             });
         });
 

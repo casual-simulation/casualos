@@ -39,6 +39,7 @@ import {
     playSound as calcPlaySound,
     setupUniverse as calcSetupUniverse,
     shell as calcShell,
+    backupToGithub as calcBackupToGithub,
     BotAction,
     download,
     BotsState,
@@ -181,6 +182,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             server: {
                 setupUniverse,
                 shell,
+                backupToGithub,
             },
         },
     };
@@ -1103,6 +1105,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function shell(script: string) {
         return remote(calcShell(script));
+    }
+
+    /**
+     * Backs up all the AUX universes to a Github Gist.
+     * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+     */
+    function backupToGithub(auth: string) {
+        return remote(calcBackupToGithub(auth));
     }
 
     /**
