@@ -38,6 +38,7 @@ import {
     checkout as calcCheckout,
     playSound as calcPlaySound,
     setupUniverse as calcSetupUniverse,
+    shell as calcShell,
     BotAction,
     download,
     BotsState,
@@ -179,6 +180,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupUniverse,
+                shell,
             },
         },
     };
@@ -1093,6 +1095,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function setupUniverse(universe: string, botOrMod?: Mod) {
         return remote(calcSetupUniverse(universe, context.unwrapBot(botOrMod)));
+    }
+
+    /**
+     * Executes the given shell script on the server.
+     * @param script The shell script  that should be executed.
+     */
+    function shell(script: string) {
+        return remote(calcShell(script));
     }
 
     /**

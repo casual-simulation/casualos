@@ -46,6 +46,7 @@ import {
     checkout,
     playSound,
     setupUniverse,
+    shell,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2025,6 +2026,14 @@ describe('AuxLibrary', () => {
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.shell()', () => {
+            it('should emit a remote shell event', () => {
+                const action = library.api.server.shell('abc');
+                expect(action).toEqual(remote(shell('abc')));
+                expect(context.actions).toEqual([remote(shell('abc'))]);
             });
         });
 
