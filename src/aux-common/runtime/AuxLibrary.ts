@@ -234,8 +234,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getMod,
             getID,
             getJSON,
+
             getTag,
             setTag,
+            removeTags,
 
             byTag,
             byMod,
@@ -1591,6 +1593,56 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (bot) {
             (<BotTags>bot)[tag] = value;
             return value;
+        }
+    }
+
+    /**
+     * Removes tags from the given list of bots.
+     * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
+     * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
+     *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+     *
+     * @example
+     * // Remove tags named starting with "abc" from the `this` bot.
+     * removeTags(this, "abc");
+     *
+     * @example
+     * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
+     * removeTags(this, /^hello$/gi);
+     *
+     */
+    function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
+        if (typeof bot === 'object' && Array.isArray(bot)) {
+            let botList: any[] = bot;
+
+            for (let h = 0; h < bot.length; h++) {
+                let currentBot = botList[h];
+                let tags = tagsOnBot(currentBot);
+
+                for (let i = tags.length - 1; i >= 0; i--) {
+                    if (tagSection instanceof RegExp) {
+                        if (tagSection.test(tags[i])) {
+                            setTag(currentBot, tags[i], null);
+                        }
+                    } else if (tags[i].indexOf(tagSection) === 0) {
+                        setTag(currentBot, tags[i], null);
+                    }
+                }
+            }
+        } else {
+            let tags = tagsOnBot(bot);
+
+            for (let i = tags.length - 1; i >= 0; i--) {
+                // if the tag section is relevant to the curretn tag at all
+                if (tagSection instanceof RegExp) {
+                    if (tagSection.test(tags[i])) {
+                        setTag(bot, tags[i], null);
+                    }
+                } else if (tags[i].indexOf(tagSection) === 0) {
+                    // if the tag starts with the tag section
+                    setTag(bot, tags[i], null);
+                }
+            }
         }
     }
 

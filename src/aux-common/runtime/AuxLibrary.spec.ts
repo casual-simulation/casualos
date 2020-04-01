@@ -2419,6 +2419,50 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('removeTags()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should remove the given tag sections on the given bot', () => {
+            bot1.tags.name = 'bob';
+            bot1.tags.nameX = 1;
+            bot1.tags.nameY = 2;
+            bot1.tags.other = true;
+            library.api.removeTags(bot1, 'name');
+            expect(bot1.tags.name).toEqual(null);
+            expect(bot1.tags.nameX).toEqual(null);
+            expect(bot1.tags.nameY).toEqual(null);
+            expect(bot1.tags.other).toEqual(true);
+        });
+
+        it('should remove the given tags from the given array of bots', () => {
+            bot1.tags.name = 'bob';
+            bot1.tags.nameX = 1;
+            bot1.tags.nameY = 2;
+            bot1.tags.other = true;
+            bot2.tags.name = 'bob';
+            bot2.tags.nameX = 1;
+            bot2.tags.nameY = 2;
+            bot2.tags.other = true;
+            library.api.removeTags([bot1, bot2], 'name');
+            expect(bot1.tags.name).toEqual(null);
+            expect(bot1.tags.nameX).toEqual(null);
+            expect(bot1.tags.nameY).toEqual(null);
+            expect(bot1.tags.other).toEqual(true);
+            expect(bot2.tags.name).toEqual(null);
+            expect(bot2.tags.nameX).toEqual(null);
+            expect(bot2.tags.nameY).toEqual(null);
+            expect(bot2.tags.other).toEqual(true);
+        });
+    });
+
     // describe('create()', () => {
     //     it('should return the created bot', () => {
     //         const bot = library.api.create({
