@@ -53,6 +53,7 @@ import {
     markHistory,
     browseHistory,
     restoreHistoryMark,
+    loadFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2160,6 +2161,19 @@ describe('AuxLibrary', () => {
                     'universe'
                 );
                 const expected = remote(restoreHistoryMark('mark', 'universe'));
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.loadFile()', () => {
+            it('should issue a LoadFileAction in a remote event', () => {
+                const action = library.api.server.loadFile('path');
+                const expected = remote(
+                    loadFile({
+                        path: 'path',
+                    })
+                );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

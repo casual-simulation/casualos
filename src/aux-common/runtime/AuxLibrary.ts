@@ -45,6 +45,7 @@ import {
     markHistory as calcMarkHistory,
     browseHistory as calcBrowseHistory,
     restoreHistoryMark as calcRestoreHistoryMark,
+    loadFile as calcLoadFile,
     BotAction,
     download,
     BotsState,
@@ -149,6 +150,16 @@ interface MarkHistoryOptions {
 }
 
 /**
+ * Options for loading a file.
+ */
+interface LoadFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -239,6 +250,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 browseHistory,
                 restoreHistoryMark,
                 restoreHistoryMarkToUniverse,
+                loadFile,
             },
         },
     };
@@ -1248,6 +1260,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ) {
         const id = getID(mark);
         return remote(calcRestoreHistoryMark(id, universe));
+    }
+
+    /**
+     * Loads a file from the server at the given path.
+     * @param path The path of the file.
+     * @param options The options.
+     */
+    function loadFile(path: string, options?: LoadFileOptions) {
+        return remote(
+            calcLoadFile({
+                path: path,
+                ...(options || {}),
+            })
+        );
     }
 
     /**
