@@ -38,6 +38,7 @@ import {
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
+import { DependencyManager } from './DependencyManager';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -49,6 +50,7 @@ export class AuxRuntime {
     private _originalState: BotsState = {};
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
+    private _dependencies = new DependencyManager();
 
     // TODO: Update version number
     // TODO: Update device
@@ -122,9 +124,7 @@ export class AuxRuntime {
             };
 
             const tags = tagsOnBot(bot);
-            for (let tag of tags) {
-                this._compileTag(newBot, tag, bot.tags[tag]);
-            }
+            this._compileTags(tags, newBot, bot);
 
             for (let tag of tags) {
                 precalculated.values[tag] = convertToCopiableValue(
@@ -136,6 +136,7 @@ export class AuxRuntime {
                 newBot.space = bot.space;
                 precalculated.space = bot.space;
             }
+            this._compiledState[bot.id] = newBot;
             nextOriginalState[bot.id] = bot;
             update.state[bot.id] = precalculated;
             update.addedBots.push(bot.id);
@@ -159,7 +160,47 @@ export class AuxRuntime {
      * @param updates The bot updates.
      */
     botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
-        return null;
+        let update = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+
+        let nextOriginalState = Object.assign({}, this._originalState);
+
+        for (let u of updates) {
+            // 1. get compiled bot
+            let compiled = this._compiledState[u.bot.id];
+
+            // 2. update
+            this._compileTags(u.tags, compiled, u.bot);
+
+            // 3. convert to precalculated
+            let partial = {
+                tags: {},
+                values: {},
+            } as Partial<PrecalculatedBot>;
+            for (let tag of u.tags) {
+                partial.tags[tag] = u.bot.tags[tag];
+                partial.values[tag] = convertToCopiableValue(
+                    this._updateTag(compiled, tag)
+                );
+            }
+
+            update.state[u.bot.id] = <any>partial;
+            update.updatedBots.push(u.bot.id);
+        }
+
+        this._originalState = nextOriginalState;
+
+        return update;
+    }
+
+    private _compileTags(tags: string[], compiled: CompiledBot, bot: Bot) {
+        for (let tag of tags) {
+            this._compileTag(compiled, tag, bot.tags[tag]);
+        }
     }
 
     private _createCompiledBot(bot: Bot): CompiledBot {

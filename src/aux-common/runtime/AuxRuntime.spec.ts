@@ -264,7 +264,7 @@ describe('AuxRuntime', () => {
         });
     });
 
-    describe.skip('botsUpdated()', () => {
+    describe('botsUpdated()', () => {
         it('should return a state update for the updated bot', () => {
             const update1 = runtime.botsAdded([
                 createBot('test', {
@@ -317,9 +317,220 @@ describe('AuxRuntime', () => {
                         },
                     },
                 },
-                addedBots: ['test', 'test2'],
+                addedBots: [],
                 removedBots: [],
-                updatedBots: [],
+                updatedBots: ['test', 'test2'],
+            });
+        });
+
+        it('should re-compile changed formulas', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: '=123',
+                }),
+            ]);
+
+            const update2 = runtime.botsUpdated([
+                {
+                    bot: createBot('test2', {
+                        num: '=456',
+                    }),
+                    tags: ['num'],
+                },
+            ]);
+
+            expect(update2).toEqual({
+                state: {
+                    test2: {
+                        tags: {
+                            num: '=456',
+                        },
+                        values: {
+                            num: 456,
+                        },
+                    },
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test2'],
+            });
+        });
+
+        describe('numbers', () => {
+            it('should calculate number values', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        num: '123.145',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            num: '145.123',
+                        }),
+                        tags: ['num'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                num: '145.123',
+                            },
+                            values: {
+                                num: 145.123,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle numbers that start with a dot', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        num: '145',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            num: '.145',
+                        }),
+                        tags: ['num'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                num: '.145',
+                            },
+                            values: {
+                                num: 0.145,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+        });
+
+        describe('booleans', () => {
+            it('should calculate boolean values', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        value1: 'true',
+                        value2: 'false',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            value1: 'false',
+                            value2: 'true',
+                        }),
+                        tags: ['value1', 'value2'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                value1: 'false',
+                                value2: 'true',
+                            },
+                            values: {
+                                value1: false,
+                                value2: true,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+        });
+
+        describe('arrays', () => {
+            it('should calculate array values', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        value: '[true, false, hello, 1.23, .35]',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            value: '[false, true, 1.23, hello]',
+                        }),
+                        tags: ['value'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                value: '[false, true, 1.23, hello]',
+                            },
+                            values: {
+                                value: [false, true, 1.23, 'hello'],
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should recalculate the array when the formula changes', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        value: '[true, false, ="hello", 1.23, .35]',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            value: '[false, true, 1.23, ="hello1"]',
+                        }),
+                        tags: ['value'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                value: '[false, true, 1.23, ="hello1"]',
+                            },
+                            values: {
+                                value: [false, true, 1.23, 'hello1'],
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
             });
         });
     });
@@ -442,6 +653,34 @@ describe('AuxRuntime', () => {
                             },
                             {
                                 formula: '=raw === this.raw',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it.skip('should define a creator variable which is the bot that created this', () => {
+                runtime.botsAdded([createBot('test', {})]);
+
+                const update = runtime.botsAdded([
+                    createBot('test2', {
+                        auxCreator: 'test',
+                        formula: '=creator.id',
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test2',
+                            {
+                                formula: 'test',
+                            },
+                            {
+                                formula: '=creator.id',
                             }
                         ),
                     },
