@@ -206,5 +206,27 @@ describe('AuxCompiler', () => {
 
             expect(func()).toEqual(8);
         });
+
+        it('should support arguments in listeners', () => {
+            const func = compiler.compile('return args.length');
+
+            expect(func(1, 2, 3, 4, 5)).toEqual(5);
+        });
+
+        it('should support mapping arguments to variable names', () => {
+            const func = compiler.compile('return abc + def + args.length', {
+                arguments: ['abc', 'def'],
+            });
+
+            expect(func(1, 2, 3, 4, 5)).toEqual(3 + 5);
+        });
+
+        it('should support mapping multiple variable names to a single argument', () => {
+            const func = compiler.compile('return abc + def + args.length', {
+                arguments: [['abc', 'def']],
+            });
+
+            expect(func(1, 2, 3, 4, 5)).toEqual(2 + 5);
+        });
     });
 });

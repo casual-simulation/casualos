@@ -1,5 +1,6 @@
 import { Transpiler } from '../Formulas/Transpiler';
 import { isFormula, isScript, parseScript } from '../bots';
+import flatMap from 'lodash/flatMap';
 
 /**
  * Defines a class that can compile scripts and formulas
@@ -94,6 +95,22 @@ export class AuxCompiler {
             scriptLineOffset += 1 + (lines.length - 1);
         }
 
+        let argumentsCode = '';
+        if (options.arguments) {
+            const lines = flatMap(
+                options.arguments
+                    .filter(v => v !== 'this')
+                    .map((v, i) =>
+                        Array.isArray(v)
+                            ? ([v, i] as const)
+                            : ([[v] as string[], i] as const)
+                    ),
+                ([v, i]) => v.map(name => `const ${name} = args[${i}];`)
+            );
+            argumentsCode = '\n' + lines.join('\n');
+            scriptLineOffset += 1 + (lines.length - 1);
+        }
+
         let scriptCode: string;
         if (formula) {
             scriptCode = `\nreturn eval(_script)`;
@@ -104,7 +121,7 @@ export class AuxCompiler {
 
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
-        const functionCode = `function _() { ${variablesCode}${scriptCode}\n }`;
+        const functionCode = `function _(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
         const transpiled = formula
             ? functionCode
             : this._transpiler.transpile(functionCode);
@@ -198,6 +215,11 @@ export interface AuxCompileOptions<T> {
     constants?: {
         [name: string]: any;
     };
+
+    /**
+     * The names that each argument should be assigned.
+     */
+    arguments?: (string | string[])[];
 
     /**
      * A function that should be called before the compiled function is executed.
