@@ -1,9 +1,16 @@
 import { MemoryPartition, createMemoryPartition } from '../partitions';
 import { AuxRuntime } from './AuxRuntime';
-import { BotAction, createBot, createPrecalculatedBot } from '../bots';
+import {
+    BotAction,
+    createBot,
+    createPrecalculatedBot,
+    toast,
+    botAdded,
+    botRemoved,
+} from '../bots';
 import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
-import { PrecalculationManager } from '.';
+import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -22,7 +29,7 @@ describe('AuxRuntime', () => {
 
         events = [];
 
-        // runtime.onActions.subscribe(a => events.push(a));
+        runtime.onActions.subscribe(a => events.push(a));
     });
 
     describe('botsAdded()', () => {
@@ -883,6 +890,122 @@ describe('AuxRuntime', () => {
                     removedBots: [],
                     updatedBots: ['test2', 'test'],
                 });
+            });
+        });
+    });
+
+    describe('shout()', () => {
+        it('should execute all the listeners that match the given event name and produce the resulting actions', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast("hi1")',
+                }),
+                createBot('test2', {
+                    hello: '@player.toast("hi2")',
+                }),
+                createBot('test3', {}),
+            ]);
+            runtime.shout('hello', null);
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
+        });
+
+        it('should execute all the listeners that match the given event name among the given IDs and produce the resulting actions', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast("hi1")',
+                }),
+                createBot('test2', {
+                    hello: '@player.toast("hi2")',
+                }),
+                createBot('test3', {}),
+            ]);
+            runtime.shout('hello', ['test2', 'test3']);
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('hi2')]]);
+        });
+
+        describe('bot_added', () => {
+            it('should produce an event when a bot is created', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        create: '@create({ abc: "def" })',
+                    }),
+                ]);
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                abc: 'def',
+                            })
+                        ),
+                    ],
+                ]);
+            });
+
+            it('should add the created bot to the runtime state', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        create: `@create({ "shout": "@player.toast('abc')" })`,
+                    }),
+                ]);
+                runtime.shout('create');
+                runtime.shout('shout');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                shout: "@player.toast('abc')",
+                            })
+                        ),
+                    ],
+                    [toast('abc')],
+                ]);
+            });
+        });
+
+        describe('bot_removed', () => {
+            it('should produce an event when a bot is deleted', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        delete: '@destroy(this)',
+                    }),
+                ]);
+                runtime.shout('delete');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should remove the bot from the runtime state', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        delete: '@destroy(this)',
+                        hello: '@player.toast("hi")',
+                    }),
+                ]);
+                runtime.shout('delete');
+                runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')], []]);
             });
         });
     });

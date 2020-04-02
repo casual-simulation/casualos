@@ -28,8 +28,9 @@ import {
     ScriptTags,
     BOT_SPACE_TAG,
     convertToCopiableValue,
+    botAdded,
 } from '../bots';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -58,6 +59,7 @@ export class AuxRuntime
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
+    private _onActions: Subject<BotAction[]>;
 
     // TODO: Update version number
     // TODO: Update device
@@ -84,13 +86,16 @@ export class AuxRuntime
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary
     ) {
-        this._library = createDefaultLibrary(this._globalContext);
+        this._library = libraryFactory(this._globalContext);
+        this._onActions = new Subject();
     }
 
     /**
      * An observable that resolves whenever the runtime issues an action.
      */
-    onActions: Observable<BotAction[]>;
+    get onActions(): Observable<BotAction[]> {
+        return this._onActions;
+    }
 
     /**
      * Executes a shout with the given event name on the given bot IDs with the given argument.
@@ -98,7 +103,18 @@ export class AuxRuntime
      * @param botIds The Bot IDs that the shout is being sent to.
      * @param arg The argument to include in the shout.
      */
-    shout(eventName: string, botIds: string[], arg?: any): void {}
+    shout(eventName: string, botIds?: string[], arg?: any): void {
+        const ids = botIds ? botIds : Object.keys(this._compiledState);
+        for (let id of ids) {
+            const bot = this._compiledState[id];
+            const listener = bot.listeners[eventName];
+            if (listener) {
+                listener(arg);
+            }
+        }
+        const actions = this._globalContext.dequeueActions();
+        this._onActions.next(actions);
+    }
 
     /**
      * Executes the given script.
@@ -126,6 +142,7 @@ export class AuxRuntime
             // TODO: Make the compiled bot have a script variant
             //       for supporting writing to tags and such.
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
+
             let precalculated: PrecalculatedBot = {
                 id: bot.id,
                 precalculated: true,
@@ -133,16 +150,12 @@ export class AuxRuntime
                 values: {},
             };
 
-            const tags = tagsOnBot(bot);
-            this._compileTags(tags, newBot, bot);
-
             if (hasValue(bot.space)) {
                 newBot.space = bot.space;
                 precalculated.space = bot.space;
             }
             newBots.push([newBot, precalculated]);
             newBotIDs.add(newBot.id);
-            this._compiledState[bot.id] = newBot;
             nextOriginalState[bot.id] = bot;
             update.state[bot.id] = precalculated;
             update.addedBots.push(bot.id);
@@ -242,6 +255,10 @@ export class AuxRuntime
         return compiled.script;
     }
 
+    destroyScriptBot(bot: ScriptBot) {
+        delete this._compiledState[bot.id];
+    }
+
     private _updateDependentBots(
         updated: BotDependentInfo,
         update: StateUpdatedEvent,
@@ -299,10 +316,14 @@ export class AuxRuntime
             compiledBot.space = bot.space;
         }
         compiledBot.script = this._createScriptBot(compiledBot);
+        const tags = tagsOnBot(compiledBot);
+        this._compileTags(tags, compiledBot, bot);
 
         if (!fromFactory) {
             addToContext(this._globalContext, compiledBot.script);
         }
+
+        this._compiledState[bot.id] = compiledBot;
 
         return compiledBot;
     }
@@ -466,7 +487,7 @@ interface CompiledBot extends PrecalculatedBot {
      * The tags that are listeners and have been compiled into functions.
      */
     listeners: {
-        [tag: string]: () => any;
+        [tag: string]: (arg?: any) => any;
     };
 
     /**

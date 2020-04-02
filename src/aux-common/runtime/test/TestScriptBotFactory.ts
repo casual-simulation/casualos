@@ -17,6 +17,8 @@ export class TestScriptBotFactory implements ScriptBotFactory {
     createScriptBot(bot: Bot): ScriptBot {
         return createDummyScriptBot(bot.id, bot.tags, bot.space);
     }
+
+    destroyScriptBot() {}
 }
 
 /**

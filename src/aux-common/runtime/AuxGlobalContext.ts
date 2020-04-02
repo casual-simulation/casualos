@@ -5,6 +5,8 @@ import {
     BotTags,
     isBot,
     PrecalculatedBot,
+    botAdded,
+    botRemoved,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { ScriptBotFactory } from './ScriptBot';
@@ -48,6 +50,11 @@ export interface AuxGlobalContext {
      * @param action The action to enqueue.
      */
     enqueueAction(action: BotAction): void;
+
+    /**
+     * Gets the list of actions that have been queued and resets the action queue.
+     */
+    dequeueActions(): BotAction[];
 
     /**
      * Converts the given bot into a non-script enabled version.
@@ -214,6 +221,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
     }
 
+    dequeueActions(): BotAction[] {
+        let actions = this.actions;
+        this.actions = [];
+        return actions;
+    }
+
     /**
      * Converts the given bot into a non-script enabled version.
      * @param bot The bot.
@@ -236,6 +249,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     createBot(bot: Bot): ScriptBot {
         const script = this._scriptFactory.createScriptBot(bot);
         addToContext(this, script);
+        this.enqueueAction(botAdded(bot));
         return script;
     }
 
@@ -244,6 +258,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * @param bot The bot to destroy.
      */
     destroyBot(bot: ScriptBot): void {
+        this._scriptFactory.destroyScriptBot(bot);
         removeFromContext(this, bot);
+        this.enqueueAction(botRemoved(bot.id));
     }
 }

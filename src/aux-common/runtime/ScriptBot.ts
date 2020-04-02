@@ -162,8 +162,18 @@ export interface ScriptBotInterface<T extends PrecalculatedBot> {
 }
 
 /**
- * Defines an interface for an object that is able to create script bots.
+ * Defines an interface for an object that is able to manage the creation and destruction of script bots in the runtime.
  */
 export interface ScriptBotFactory {
+    /**
+     * Creates a new script bot from the given bot and adds it to the runtime.
+     * @param bot The bot.
+     */
     createScriptBot(bot: Bot): ScriptBot;
+
+    /**
+     * Destroyes the given script bot and removes it from the runtime.
+     * @param bot The bot.
+     */
+    destroyScriptBot(bot: ScriptBot): void;
 }
