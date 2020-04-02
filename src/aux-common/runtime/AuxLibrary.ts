@@ -244,6 +244,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             subtractMods,
 
             create,
+            destroy,
 
             byTag,
             byMod,
@@ -392,7 +393,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example
      * let firstBot = getBot();
      */
-    function getBot(...args: any[]): Bot {
+    function getBot(...args: any[]): ScriptBot {
         const bots = getBots(...args);
         return bots.first();
     }
@@ -1833,6 +1834,63 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return ret[0];
         } else {
             return ret;
+        }
+    }
+
+    /**
+     * Destroys the given bot, bot ID, or list of bots.
+     * @param bot The bot, bot ID, or list of bots to destroy.
+     */
+    function destroy(bot: ScriptBot | string | (ScriptBot | string)[]) {
+        if (typeof bot === 'object' && Array.isArray(bot)) {
+            bot.forEach(f => destroyBot(f));
+        } else {
+            destroyBot(bot);
+        }
+    }
+
+    /**
+     * Removes the given bot or bot ID from the simulation.
+     * @param bot The bot or bot ID to remove from the simulation.
+     */
+    function destroyBot(bot: ScriptBot | string) {
+        let realBot: ScriptBot;
+        let id: string;
+        if (typeof bot === 'object') {
+            id = bot.id;
+            realBot = bot;
+        } else if (typeof bot === 'string') {
+            if (!hasValue(bot)) {
+                return;
+            }
+            id = bot;
+            realBot = getBot('id', id);
+        }
+
+        if (!realBot) {
+            return;
+        }
+
+        const destroyable = realBot.tags.auxDestroyable;
+        if (hasValue(destroyable) && destroyable !== true) {
+            return;
+        }
+
+        if (id) {
+            // event(DESTROY_ACTION_NAME, [id]);
+            // // let actions = getActions();
+            // // actions.push(botRemoved(id));
+            // calc.sandbox.interface.removeBot(id);
+            context.destroyBot(realBot);
+        }
+
+        destroyChildren(id);
+    }
+
+    function destroyChildren(id: string) {
+        const children = getBots('auxCreator', id);
+        for (let child of children) {
+            destroyBot(child);
         }
     }
 

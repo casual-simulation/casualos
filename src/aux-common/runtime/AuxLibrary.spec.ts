@@ -3221,4 +3221,119 @@ describe('AuxLibrary', () => {
             });
         });
     });
+
+    describe('destroy()', () => {
+        let bot1: ScriptBot;
+        let bot2: ScriptBot;
+        let bot3: ScriptBot;
+        let bot4: ScriptBot;
+
+        beforeEach(() => {
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
+            bot4 = createDummyScriptBot('test4');
+
+            addToContext(context, bot1, bot2, bot3, bot4);
+        });
+
+        it('should remove the given bot from the context', () => {
+            library.api.destroy(bot2);
+            expect(context.bots).toEqual([bot1, bot3, bot4]);
+        });
+
+        it('should remove the bot with the given ID from the context', () => {
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1, bot3, bot4]);
+        });
+
+        it('should destroy and bots that have auxCreator set to the bot ID', () => {
+            bot3.tags.auxCreator = 'test2';
+            bot4.tags.auxCreator = 'test2';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
+        it('should recursively destroy bots that have auxCreator set to the bot ID', () => {
+            bot3.tags.auxCreator = 'test2';
+            bot4.tags.auxCreator = 'test3';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
+        it('should support an array of bots to destroy', () => {
+            library.api.destroy([bot1, bot2, bot3]);
+            expect(context.bots).toEqual([bot4]);
+        });
+
+        it('should support an array of bot IDs to destroy', () => {
+            library.api.destroy(['test1', 'test2', 'test3']);
+            expect(context.bots).toEqual([bot4]);
+        });
+
+        it('should support an array of bots and bot IDs to destroy', () => {
+            library.api.destroy(['test1', bot2, 'test3']);
+            expect(context.bots).toEqual([bot4]);
+        });
+
+        // it('should trigger onDestroy()', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 onDestroy:
+        //                     '@setTag(getBot("#name", "other"), "#num", 100)',
+        //                 test: '@destroy(this)',
+        //             },
+        //         },
+        //         otherBot: {
+        //             id: 'otherBot',
+        //             tags: {
+        //                 name: 'other',
+        //             },
+        //         },
+        //     };
+
+        //     const botAction = action('test', ['thisBot']);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         // This is weird because it means that an update for a bot could happen
+        //         // after it gets removed but I currently don't have a great solution for it at the moment.
+        //         botRemoved('thisBot'),
+        //         botUpdated('otherBot', {
+        //             tags: {
+        //                 num: 100,
+        //             },
+        //         }),
+        //     ]);
+        // });
+
+        it('should not destroy bots that are not destroyable', () => {
+            bot2.tags.auxDestroyable = false;
+            library.api.destroy(context.bots.slice());
+            expect(context.bots).toEqual([bot2]);
+        });
+
+        it('should short-circut destroying child bots', () => {
+            bot2.tags.auxDestroyable = false;
+            bot3.tags.auxCreator = 'test2';
+            library.api.destroy([bot1, bot2, bot4]);
+            expect(context.bots).toEqual([bot2, bot3]);
+        });
+
+        it('should be able to destroy a bot that was just created', () => {
+            const newBot = library.api.create();
+            library.api.destroy(newBot);
+            expect(context.bots).not.toContain(newBot);
+        });
+
+        it('should remove the destroyed bot from searches', () => {
+            library.api.destroy('test2');
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot3, bot4]);
+        });
+    });
 });

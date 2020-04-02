@@ -60,6 +60,12 @@ export interface AuxGlobalContext {
      * @param bot The bot that should be created.
      */
     createBot(bot: Bot): ScriptBot;
+
+    /**
+     * Destroys the given bot.
+     * @param bot The bot to destroy.
+     */
+    destroyBot(bot: ScriptBot): void;
 }
 
 /**
@@ -231,5 +237,13 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         const script = this._scriptFactory.createScriptBot(bot);
         addToContext(this, script);
         return script;
+    }
+
+    /**
+     * Destroys the given bot.
+     * @param bot The bot to destroy.
+     */
+    destroyBot(bot: ScriptBot): void {
+        removeFromContext(this, bot);
     }
 }
