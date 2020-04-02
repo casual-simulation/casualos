@@ -120,6 +120,21 @@ export function addToContext(context: AuxGlobalContext, ...bots: ScriptBot[]) {
 }
 
 /**
+ * Removes the given bots from the given context.
+ * @param context The context that the bots should be removed from.
+ * @param bots The bots that should be removed.
+ */
+export function removeFromContext(
+    context: AuxGlobalContext,
+    ...bots: ScriptBot[]
+) {
+    for (let bot of bots) {
+        const index = sortedIndexBy(context.bots, bot, sb => sb.id);
+        context.bots.splice(index, 1);
+    }
+}
+
+/**
  * Defines a global context that stores all information in memory.
  */
 export class MemoryGlobalContext implements AuxGlobalContext {

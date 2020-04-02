@@ -388,6 +388,121 @@ describe('AuxRuntime', () => {
         });
     });
 
+    describe('botsRemoved()', () => {
+        it('should return a state update for the removed bots', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+                createBot('test3', {
+                    value: true,
+                }),
+                createBot('test4', {
+                    tag1: 'test',
+                    tag2: 'other',
+                }),
+            ]);
+
+            const update2 = runtime.botsRemoved(['test', 'test2']);
+
+            expect(update2).toEqual({
+                state: {
+                    test: null,
+                    test2: null,
+                },
+                addedBots: [],
+                removedBots: ['test', 'test2'],
+                updatedBots: [],
+            });
+        });
+
+        describe('dependencies', () => {
+            it('should support calculating tags that depend on all other bots', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots().length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsRemoved(['test2']);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 1,
+                            },
+                        },
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2'],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should support calculating tags that depend on the ID tag', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("id", "test2").length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsRemoved(['test2']);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 0,
+                            },
+                        },
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2'],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should automatically re-calculate tags when a dependent tag was added to a bot', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("num").length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsRemoved(['test2']);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 0,
+                            },
+                        },
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2'],
+                    updatedBots: ['test'],
+                });
+            });
+        });
+    });
+
     describe('botsUpdated()', () => {
         it('should return a state update for the updated bot', () => {
             const update1 = runtime.botsAdded([

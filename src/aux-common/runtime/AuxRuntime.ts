@@ -35,6 +35,7 @@ import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
+    removeFromContext,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
@@ -169,7 +170,30 @@ export class AuxRuntime
      * @param botIds The IDs of the bots that were removed.
      */
     botsRemoved(botIds: string[]): StateUpdatedEvent {
-        return null;
+        let update = {
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+        } as StateUpdatedEvent;
+        let nextOriginalState = Object.assign({}, this._originalState);
+
+        for (let id of botIds) {
+            const bot = this._compiledState[id];
+            if (bot) {
+                removeFromContext(this._globalContext, bot.script);
+            }
+            delete this._compiledState[id];
+            delete nextOriginalState[id];
+            update.state[id] = null;
+            update.removedBots.push(id);
+        }
+
+        const changes = this._dependencies.removeBots(botIds);
+        this._updateDependentBots(changes, update, new Set());
+
+        this._originalState = nextOriginalState;
+        return update;
     }
 
     /**
