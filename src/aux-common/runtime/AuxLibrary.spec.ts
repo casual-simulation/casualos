@@ -6,7 +6,6 @@ import {
     AuxVersion,
     AuxDevice,
 } from './AuxGlobalContext';
-import { createDummyScriptBot } from './ScriptBot';
 import {
     ScriptBot,
     toast,
@@ -66,6 +65,10 @@ import {
 } from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import {
+    TestScriptBotFactory,
+    createDummyScriptBot,
+} from './test/TestScriptBotFactory';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -88,7 +91,11 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
         };
-        context = new MemoryGlobalContext(version, device);
+        context = new MemoryGlobalContext(
+            version,
+            device,
+            new TestScriptBotFactory()
+        );
         library = createDefaultLibrary(context);
     });
 
@@ -101,9 +108,9 @@ describe('AuxLibrary', () => {
         let bot3: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
-            bot3 = createDummyScriptBot(context, 'test3');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -294,9 +301,9 @@ describe('AuxLibrary', () => {
         let bot3: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
-            bot3 = createDummyScriptBot(context, 'test3');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -414,7 +421,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
+                bot1 = createDummyScriptBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -515,7 +522,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
+                bot1 = createDummyScriptBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -580,7 +587,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
+                bot1 = createDummyScriptBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -602,7 +609,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
+                bot1 = createDummyScriptBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -667,8 +674,8 @@ describe('AuxLibrary', () => {
             let bot2: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
-                bot2 = createDummyScriptBot(context, 'test2');
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -748,8 +755,8 @@ describe('AuxLibrary', () => {
             let bot2: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
-                bot2 = createDummyScriptBot(context, 'test2');
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -821,9 +828,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1', undefined, <any>(
-                    'test'
-                ));
+                bot1 = createDummyScriptBot('test1', undefined, <any>'test');
 
                 addToContext(context, bot1);
             });
@@ -839,8 +844,8 @@ describe('AuxLibrary', () => {
             let bot2: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
-                bot2 = createDummyScriptBot(context, 'test2');
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -882,7 +887,7 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
+                bot1 = createDummyScriptBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -908,8 +913,8 @@ describe('AuxLibrary', () => {
             let bot2: ScriptBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot(context, 'test1');
-                bot2 = createDummyScriptBot(context, 'test2');
+                bot1 = createDummyScriptBot('test1');
+                bot2 = createDummyScriptBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -927,7 +932,7 @@ describe('AuxLibrary', () => {
         let bot1: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
+            bot1 = createDummyScriptBot('test1');
 
             addToContext(context, bot1);
         });
@@ -952,7 +957,7 @@ describe('AuxLibrary', () => {
         let bot1: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
+            bot1 = createDummyScriptBot('test1');
 
             addToContext(context, bot1);
         });
@@ -981,9 +986,9 @@ describe('AuxLibrary', () => {
         let bot3: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
-            bot3 = createDummyScriptBot(context, 'test3');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -1018,9 +1023,9 @@ describe('AuxLibrary', () => {
         let bot3: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
-            bot3 = createDummyScriptBot(context, 'test3');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
+            bot3 = createDummyScriptBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -1078,8 +1083,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -1145,8 +1150,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -1428,9 +1433,8 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                bot3 = createDummyScriptBot(context, 'test3');
+                bot3 = createDummyScriptBot('test3');
                 player = createDummyScriptBot(
-                    context,
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1460,30 +1464,10 @@ describe('AuxLibrary', () => {
             });
 
             it('should only include bots in the shared space', () => {
-                const bot4 = createDummyScriptBot(
-                    context,
-                    'test4',
-                    {},
-                    'history'
-                );
-                const bot5 = createDummyScriptBot(
-                    context,
-                    'test5',
-                    {},
-                    'local'
-                );
-                const bot6 = createDummyScriptBot(
-                    context,
-                    'test6',
-                    {},
-                    'tempLocal'
-                );
-                const bot7 = createDummyScriptBot(
-                    context,
-                    'test7',
-                    {},
-                    'error'
-                );
+                const bot4 = createDummyScriptBot('test4', {}, 'history');
+                const bot5 = createDummyScriptBot('test5', {}, 'local');
+                const bot6 = createDummyScriptBot('test6', {}, 'tempLocal');
+                const bot7 = createDummyScriptBot('test7', {}, 'error');
                 addToContext(context, bot4, bot5, bot6, bot7);
 
                 const action = library.api.player.downloadUniverse();
@@ -1679,12 +1663,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1700,7 +1679,6 @@ describe('AuxLibrary', () => {
 
             beforeEach(() => {
                 player = createDummyScriptBot(
-                    context,
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1734,7 +1712,6 @@ describe('AuxLibrary', () => {
 
             beforeEach(() => {
                 player = createDummyScriptBot(
-                    context,
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1761,12 +1738,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1787,12 +1759,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1808,12 +1775,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1829,12 +1791,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1873,12 +1830,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -2047,12 +1999,7 @@ describe('AuxLibrary', () => {
             let player: ScriptBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
-                    context,
-                    'player',
-                    {},
-                    'tempLocal'
-                );
+                player = createDummyScriptBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -2415,8 +2362,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2439,8 +2386,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should recursively set the tags on the given bots', () => {
-            let bot3 = createDummyScriptBot(context, 'test3');
-            let bot4 = createDummyScriptBot(context, 'test4');
+            let bot3 = createDummyScriptBot('test3');
+            let bot4 = createDummyScriptBot('test4');
             addToContext(context, bot3, bot4);
 
             library.api.setTag([bot1, [bot3, bot4], bot2], '#name', 'bob');
@@ -2478,8 +2425,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2522,8 +2469,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2570,8 +2517,8 @@ describe('AuxLibrary', () => {
         let bot2: ScriptBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot(context, 'test1');
-            bot2 = createDummyScriptBot(context, 'test2');
+            bot1 = createDummyScriptBot('test1');
+            bot2 = createDummyScriptBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2595,13 +2542,13 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot(context, 'uuid', {
+                createDummyScriptBot('uuid', {
                     abc: 'def',
                 })
             );
         });
         it('should automatically set the creator to the current bot ID', () => {
-            const creator = createDummyScriptBot(context, 'creator');
+            const creator = createDummyScriptBot('creator');
             addToContext(context, creator);
             context.currentBot = creator;
 
@@ -2610,14 +2557,14 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot(context, 'uuid', {
+                createDummyScriptBot('uuid', {
                     auxCreator: 'creator',
                     abc: 'def',
                 })
             );
         });
         it('should ignore strings because they are no longer used to set the creator ID', () => {
-            const creator = createDummyScriptBot(context, 'creator');
+            const creator = createDummyScriptBot('creator');
             addToContext(context, creator);
             context.currentBot = creator;
 
@@ -2626,7 +2573,7 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot(context, 'uuid', {
+                createDummyScriptBot('uuid', {
                     auxCreator: 'creator',
                     abc: 'def',
                 })
@@ -2641,14 +2588,14 @@ describe('AuxLibrary', () => {
                 { ghi: 123 }
             );
             expect(bot).toEqual(
-                createDummyScriptBot(context, 'uuid', {
+                createDummyScriptBot('uuid', {
                     abc: 'def',
                     ghi: 123,
                 })
             );
         });
         it('should support bots as arguments', () => {
-            const other = createDummyScriptBot(context, 'other');
+            const other = createDummyScriptBot('other');
             addToContext(context, other);
 
             other.tags.abc = 'def';
@@ -2657,7 +2604,7 @@ describe('AuxLibrary', () => {
             uuidMock.mockReturnValue('uuid');
             const bot = library.api.create(other);
             expect(bot).toEqual(
-                createDummyScriptBot(context, 'uuid', {
+                createDummyScriptBot('uuid', {
                     abc: 'def',
                     num: 1,
                 })
@@ -2764,10 +2711,10 @@ describe('AuxLibrary', () => {
             const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
 
             expect(bots).toEqual([
-                createDummyScriptBot(context, 'uuid1', {
+                createDummyScriptBot('uuid1', {
                     abc: 'def',
                 }),
-                createDummyScriptBot(context, 'uuid2', {
+                createDummyScriptBot('uuid2', {
                     abc: 123,
                 }),
             ]);
@@ -2782,32 +2729,32 @@ describe('AuxLibrary', () => {
             );
 
             expect(bots).toEqual([
-                createDummyScriptBot(context, 'uuid-1', {
+                createDummyScriptBot('uuid-1', {
                     hello: true,
                     abc: 'def',
                     wow: 1,
                 }),
-                createDummyScriptBot(context, 'uuid-2', {
+                createDummyScriptBot('uuid-2', {
                     hello: false,
                     abc: 'def',
                     wow: 1,
                 }),
-                createDummyScriptBot(context, 'uuid-3', {
+                createDummyScriptBot('uuid-3', {
                     hello: true,
                     abc: 'def',
                     oh: 'haha',
                 }),
-                createDummyScriptBot(context, 'uuid-4', {
+                createDummyScriptBot('uuid-4', {
                     hello: false,
                     abc: 'def',
                     oh: 'haha',
                 }),
-                createDummyScriptBot(context, 'uuid-5', {
+                createDummyScriptBot('uuid-5', {
                     hello: true,
                     abc: 'def',
                     test: 'a',
                 }),
-                createDummyScriptBot(context, 'uuid-6', {
+                createDummyScriptBot('uuid-6', {
                     hello: false,
                     abc: 'def',
                     test: 'a',
@@ -2815,10 +2762,10 @@ describe('AuxLibrary', () => {
             ]);
         });
         it('should duplicate each of the bots in the list', () => {
-            const first = createDummyScriptBot(context, 'first', {
+            const first = createDummyScriptBot('first', {
                 abc: 'def',
             });
-            const second = createDummyScriptBot(context, 'second', {
+            const second = createDummyScriptBot('second', {
                 num: 123,
             });
             addToContext(context, first, second);
@@ -2827,17 +2774,16 @@ describe('AuxLibrary', () => {
             const bots = library.api.create([first, second]);
 
             expect(bots).toEqual([
-                createDummyScriptBot(context, 'uuid1', {
+                createDummyScriptBot('uuid1', {
                     abc: 'def',
                 }),
-                createDummyScriptBot(context, 'uuid2', {
+                createDummyScriptBot('uuid2', {
                     num: 123,
                 }),
             ]);
         });
         it('should copy the space of another bot', () => {
             const other = createDummyScriptBot(
-                context,
                 'other',
                 {
                     abc: 'def',
@@ -2850,7 +2796,6 @@ describe('AuxLibrary', () => {
             const bots = library.api.create([other]);
             expect(bots).toEqual(
                 createDummyScriptBot(
-                    context,
                     'uuid1',
                     {
                         abc: 'def',
@@ -3195,9 +3140,7 @@ describe('AuxLibrary', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ space: 'local' });
-                expect(bot).toEqual(
-                    createDummyScriptBot(context, 'uuid', {}, 'local')
-                );
+                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
             });
 
             it('should use the last space', () => {
@@ -3206,9 +3149,7 @@ describe('AuxLibrary', () => {
                     { space: 'tempLocal' },
                     { space: 'local' }
                 );
-                expect(bot).toEqual(
-                    createDummyScriptBot(context, 'uuid', {}, 'local')
-                );
+                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
             });
 
             it('should use the last space even if it is null', () => {
@@ -3217,7 +3158,7 @@ describe('AuxLibrary', () => {
                     { space: 'tempLocal' },
                     { space: null }
                 );
-                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+                expect(bot).toEqual(createDummyScriptBot('uuid'));
             });
 
             const normalCases = [
@@ -3231,7 +3172,7 @@ describe('AuxLibrary', () => {
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
                     const bot = library.api.create({ space: value });
-                    expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+                    expect(bot).toEqual(createDummyScriptBot('uuid'));
                 }
             );
         });
@@ -3241,8 +3182,8 @@ describe('AuxLibrary', () => {
             let bot1: ScriptBot;
 
             beforeEach(() => {
-                current = createDummyScriptBot(context, 'current');
-                bot1 = createDummyScriptBot(context, 'bot1');
+                current = createDummyScriptBot('current');
+                bot1 = createDummyScriptBot('bot1');
                 addToContext(context, current, bot1);
 
                 context.currentBot = current;
@@ -3252,7 +3193,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: bot1.id });
                 expect(bot).toEqual(
-                    createDummyScriptBot(context, 'uuid', {
+                    createDummyScriptBot('uuid', {
                         auxCreator: 'bot1',
                     })
                 );
@@ -3261,7 +3202,7 @@ describe('AuxLibrary', () => {
             it('should be able to set the auxCreator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: null });
-                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+                expect(bot).toEqual(createDummyScriptBot('uuid'));
             });
 
             it('should set auxCreator to null if it references a bot in a different space', () => {
@@ -3270,15 +3211,13 @@ describe('AuxLibrary', () => {
                     auxCreator: bot1.id,
                     space: 'local',
                 });
-                expect(bot).toEqual(
-                    createDummyScriptBot(context, 'uuid', {}, 'local')
-                );
+                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
             });
 
             it('should set auxCreator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: 'missing' });
-                expect(bot).toEqual(createDummyScriptBot(context, 'uuid'));
+                expect(bot).toEqual(createDummyScriptBot('uuid'));
             });
         });
     });

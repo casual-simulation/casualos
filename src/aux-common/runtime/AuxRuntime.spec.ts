@@ -262,6 +262,70 @@ describe('AuxRuntime', () => {
                 });
             });
         });
+
+        describe('dependencies', () => {
+            it('should support calculating tags that depend all other bots', () => {
+                const update = runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots().length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                numBots: 2,
+                            },
+                            {
+                                numBots: '=getBots().length',
+                            }
+                        ),
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should support calculating tags that depend on the ID tag', () => {
+                const update = runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("id", "test2").length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                numBots: 1,
+                            },
+                            {
+                                numBots: '=getBots("id", "test2").length',
+                            }
+                        ),
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+        });
     });
 
     describe('botsUpdated()', () => {

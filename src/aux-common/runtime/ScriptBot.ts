@@ -9,24 +9,6 @@ import {
     getBotSpace,
     createPrecalculatedBot,
 } from '../bots';
-import { AuxGlobalContext } from './AuxGlobalContext';
-
-/**
- * Creates a dummy script bot.
- * That is, a bot which uses the given values directly and does not marshall changes back to a runtime.
- * @param id The ID of the bot.
- * @param tags The tags the bot should have.
- * @param space The space of the bot.
- */
-export function createDummyScriptBot(
-    context: AuxGlobalContext,
-    id: string,
-    tags: BotTags = {},
-    space?: BotSpace
-): ScriptBot {
-    const precalc = createPrecalculatedBot(id, tags, undefined, space);
-    return createScriptBot(precalc, dummyScriptBotManager, context);
-}
 
 /**
  * Constructs a new script bot for the given bot.
@@ -39,8 +21,7 @@ export function createDummyScriptBot(
  */
 export function createScriptBot<T extends PrecalculatedBot>(
     bot: T,
-    manager: ScriptBotManager<T>,
-    context: AuxGlobalContext
+    manager: ScriptBotInterface<T>
 ): ScriptBot {
     if (!bot) {
         return null;
@@ -64,22 +45,24 @@ export function createScriptBot<T extends PrecalculatedBot>(
             return bot.values[key];
         },
         set(target, key: string, value, receiver) {
-            if (key in constantTags || !context.allowsEditing) {
+            if (key in constantTags) {
                 return true;
             }
-            rawTags[key] = value;
-            changedRawTags[key] = value;
-            manager.updateTag(bot, key, value);
+            if (manager.updateTag(bot, key, value)) {
+                rawTags[key] = value;
+                changedRawTags[key] = value;
+            }
             return true;
         },
         deleteProperty(target, key: string) {
-            if (key in constantTags || !context.allowsEditing) {
+            if (key in constantTags) {
                 return true;
             }
             const value = null as any;
-            rawTags[key] = value;
-            changedRawTags[key] = value;
-            manager.updateTag(bot, key, value);
+            if (manager.updateTag(bot, key, value)) {
+                rawTags[key] = value;
+                changedRawTags[key] = value;
+            }
             return true;
         },
     });
@@ -91,22 +74,24 @@ export function createScriptBot<T extends PrecalculatedBot>(
             return Reflect.get(target, key, proxy);
         },
         set(target, key: string, value, receiver) {
-            if (key in constantTags || !context.allowsEditing) {
+            if (key in constantTags) {
                 return true;
             }
-            rawTags[key] = value;
-            changedRawTags[key] = value;
-            manager.updateTag(bot, key, value);
+            if (manager.updateTag(bot, key, value)) {
+                rawTags[key] = value;
+                changedRawTags[key] = value;
+            }
             return true;
         },
         deleteProperty(target, key: string) {
-            if (key in constantTags || !context.allowsEditing) {
+            if (key in constantTags) {
                 return true;
             }
             const value = null as any;
-            rawTags[key] = value;
-            changedRawTags[key] = value;
-            manager.updateTag(bot, key, value);
+            if (manager.updateTag(bot, key, value)) {
+                rawTags[key] = value;
+                changedRawTags[key] = value;
+            }
             return true;
         },
     });
@@ -161,17 +146,24 @@ export function createScriptBot<T extends PrecalculatedBot>(
     return script;
 }
 
-export interface ScriptBotManager<T extends PrecalculatedBot> {
-    updateTag(bot: T, tag: string, newValue: any): void;
+/**
+ * Defines an interface for an object that provides the API that script bots use for housekeeping.
+ * T is the type of bots that the generated script bots are representing.
+ */
+export interface ScriptBotInterface<T extends PrecalculatedBot> {
+    /**
+     * Updates the tag of the given bot.
+     * Returns whether the tag was able to be updated.
+     * @param bot The bot.
+     * @param tag The tag that should be updated.
+     * @param newValue The new tag value.
+     */
+    updateTag(bot: T, tag: string, newValue: any): boolean;
 }
 
 /**
- * Defines a script bot manager that is useful for testing since it ignores
- * complicated interactions like formulas.
+ * Defines an interface for an object that is able to create script bots.
  */
-export const dummyScriptBotManager: ScriptBotManager<PrecalculatedBot> = {
-    updateTag(bot, tag, newValue) {
-        bot.tags[tag] = newValue;
-        bot.values[tag] = newValue;
-    },
-};
+export interface ScriptBotFactory {
+    createScriptBot(bot: Bot): ScriptBot;
+}

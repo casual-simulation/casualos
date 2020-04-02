@@ -39,6 +39,11 @@ import {
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { DependencyManager } from './DependencyManager';
+import {
+    ScriptBotInterface,
+    ScriptBotFactory,
+    createScriptBot,
+} from './ScriptBot';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -46,7 +51,8 @@ import { DependencyManager } from './DependencyManager';
  * Being a runtime means providing and managing the execution state that an AUX is in.
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
-export class AuxRuntime {
+export class AuxRuntime
+    implements ScriptBotInterface<CompiledBot>, ScriptBotFactory {
     private _originalState: BotsState = {};
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
@@ -62,7 +68,8 @@ export class AuxRuntime {
             minor: 2,
             patch: 3,
         },
-        null
+        null,
+        this
     );
 
     private _library: AuxLibrary;
@@ -111,11 +118,12 @@ export class AuxRuntime {
         } as StateUpdatedEvent;
 
         let nextOriginalState = Object.assign({}, this._originalState);
+        let newBots = [] as [CompiledBot, PrecalculatedBot][];
 
         for (let bot of bots) {
             // TODO: Make the compiled bot have a script variant
             //       for supporting writing to tags and such.
-            let newBot: CompiledBot = this._createCompiledBot(bot);
+            let newBot: CompiledBot = this._createCompiledBot(bot, false);
             let precalculated: PrecalculatedBot = {
                 id: bot.id,
                 precalculated: true,
@@ -126,20 +134,24 @@ export class AuxRuntime {
             const tags = tagsOnBot(bot);
             this._compileTags(tags, newBot, bot);
 
-            for (let tag of tags) {
-                precalculated.values[tag] = convertToCopiableValue(
-                    this._updateTag(newBot, tag)
-                );
-            }
-
             if (hasValue(bot.space)) {
                 newBot.space = bot.space;
                 precalculated.space = bot.space;
             }
+            newBots.push([newBot, precalculated]);
             this._compiledState[bot.id] = newBot;
             nextOriginalState[bot.id] = bot;
             update.state[bot.id] = precalculated;
             update.addedBots.push(bot.id);
+        }
+
+        for (let [bot, precalculated] of newBots) {
+            let tags = Object.keys(bot.compiledValues);
+            for (let tag of tags) {
+                precalculated.values[tag] = convertToCopiableValue(
+                    this._updateTag(bot, tag)
+                );
+            }
         }
 
         this._originalState = nextOriginalState;
@@ -197,13 +209,18 @@ export class AuxRuntime {
         return update;
     }
 
+    createScriptBot(bot: Bot): ScriptBot {
+        const compiled = this._createCompiledBot(bot, true);
+        return compiled.script;
+    }
+
     private _compileTags(tags: string[], compiled: CompiledBot, bot: Bot) {
         for (let tag of tags) {
             this._compileTag(compiled, tag, bot.tags[tag]);
         }
     }
 
-    private _createCompiledBot(bot: Bot): CompiledBot {
+    private _createCompiledBot(bot: Bot, fromFactory: boolean): CompiledBot {
         let compiledBot: CompiledBot = {
             id: bot.id,
             precalculated: true,
@@ -217,108 +234,24 @@ export class AuxRuntime {
             compiledBot.space = bot.space;
         }
         compiledBot.script = this._createScriptBot(compiledBot);
-        addToContext(this._globalContext, compiledBot.script);
+
+        if (!fromFactory) {
+            addToContext(this._globalContext, compiledBot.script);
+        }
 
         return compiledBot;
     }
 
     private _createScriptBot(bot: CompiledBot): ScriptBot {
-        if (!bot) {
-            return null;
+        return createScriptBot(bot, this);
+    }
+
+    updateTag(bot: CompiledBot, tag: string, newValue: any): boolean {
+        if (this._globalContext.allowsEditing) {
+            this._compileTag(bot, tag, newValue);
+            return true;
         }
-        const _this = this;
-
-        const constantTags = {
-            id: bot.id,
-            space: bot.space,
-        };
-        let changedRawTags: BotTags = {};
-        let rawTags: ScriptTags = <ScriptTags>{
-            ...bot.tags,
-        };
-        const tagsProxy = new Proxy(rawTags, {
-            get(target, key: string, proxy) {
-                if (key === 'toJSON') {
-                    return Reflect.get(target, key, proxy);
-                }
-                return bot.values[key];
-            },
-            set(target, key: string, value, receiver) {
-                if (
-                    key in constantTags ||
-                    !_this._globalContext.allowsEditing
-                ) {
-                    return true;
-                }
-                rawTags[key] = value;
-                changedRawTags[key] = value;
-                _this._compileTag(bot, key, value);
-                return true;
-            },
-        });
-        const rawProxy = new Proxy(rawTags, {
-            set(target, key: string, value, receiver) {
-                if (
-                    key in constantTags ||
-                    !_this._globalContext.allowsEditing
-                ) {
-                    return true;
-                }
-                rawTags[key] = value;
-                changedRawTags[key] = value;
-                _this._compileTag(bot, key, value);
-                return true;
-            },
-        });
-
-        // Define a toJSON() function but
-        // make it not enumerable so it is not included
-        // in Object.keys() and for..in expressions.
-        Object.defineProperty(tagsProxy, 'toJSON', {
-            value: () => rawTags,
-            writable: false,
-            enumerable: false,
-
-            // This is so the function can be wrapped with another proxy
-            // if needed. (Like for VM2Sandbox)
-            configurable: true,
-        });
-
-        let script: ScriptBot = {
-            id: bot.id,
-            tags: tagsProxy,
-            raw: rawProxy,
-            changes: changedRawTags,
-        };
-
-        Object.defineProperty(script, 'toJSON', {
-            value: () => {
-                if ('space' in bot) {
-                    return {
-                        id: bot.id,
-                        space: bot.space,
-                        tags: tagsProxy,
-                    };
-                } else {
-                    return {
-                        id: bot.id,
-                        tags: tagsProxy,
-                    };
-                }
-            },
-            writable: false,
-            enumerable: false,
-
-            // This is so the function can be wrapped with another proxy
-            // if needed. (Like for VM2Sandbox)
-            configurable: true,
-        });
-
-        if (BOT_SPACE_TAG in bot) {
-            script.space = bot.space;
-        }
-
-        return script;
+        return false;
     }
 
     private _updateTag(newBot: CompiledBot, tag: string): any {

@@ -1,6 +1,13 @@
-import { ScriptBot, BotAction, Bot, BotTags, isBot } from '../bots';
+import {
+    ScriptBot,
+    BotAction,
+    Bot,
+    BotTags,
+    isBot,
+    PrecalculatedBot,
+} from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { createDummyScriptBot } from './ScriptBot';
+import { ScriptBotFactory } from './ScriptBot';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -151,14 +158,22 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     currentBot: ScriptBot = null;
 
+    private _scriptFactory: ScriptBotFactory;
+
     /**
      * Creates a new global context.
      * @param version The version number.
      * @param device The device that we're running on.
+     * @param scriptFactory The factory that should be used to create new script bots.
      */
-    constructor(version: AuxVersion, device: AuxDevice) {
+    constructor(
+        version: AuxVersion,
+        device: AuxDevice,
+        scriptFactory: ScriptBotFactory
+    ) {
         this.version = version;
         this.device = device;
+        this._scriptFactory = scriptFactory;
     }
 
     /**
@@ -198,7 +213,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): ScriptBot {
-        const script = createDummyScriptBot(this, bot.id, bot.tags, bot.space);
+        const script = this._scriptFactory.createScriptBot(bot);
         addToContext(this, script);
         return script;
     }

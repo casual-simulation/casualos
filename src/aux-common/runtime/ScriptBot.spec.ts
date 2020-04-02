@@ -10,7 +10,8 @@ import {
     AuxVersion,
     AuxDevice,
 } from './AuxGlobalContext';
-import { createScriptBot, ScriptBotManager } from './ScriptBot';
+import { createScriptBot, ScriptBotInterface } from './ScriptBot';
+import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 
 describe('ScriptBot', () => {
     let precalc: PrecalculatedBot;
@@ -18,7 +19,8 @@ describe('ScriptBot', () => {
     let context: AuxGlobalContext;
     let version: AuxVersion;
     let device: AuxDevice;
-    let manager: ScriptBotManager<PrecalculatedBot>;
+    let manager: ScriptBotInterface<PrecalculatedBot>;
+    let updateTagMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -32,10 +34,16 @@ describe('ScriptBot', () => {
             supportsAR: true,
             supportsVR: false,
         };
-        context = new MemoryGlobalContext(version, device);
+        context = new MemoryGlobalContext(
+            version,
+            device,
+            new TestScriptBotFactory()
+        );
 
+        updateTagMock = jest.fn();
+        updateTagMock.mockReturnValue(true);
         manager = {
-            updateTag: jest.fn(),
+            updateTag: updateTagMock,
         };
 
         precalc = createPrecalculatedBot(
@@ -55,7 +63,7 @@ describe('ScriptBot', () => {
             'shared'
         );
 
-        script = createScriptBot(precalc, manager, context);
+        script = createScriptBot(precalc, manager);
     });
 
     describe('tags', () => {
@@ -86,7 +94,7 @@ describe('ScriptBot', () => {
 
         it('should return the default space when the bot has no specified space', () => {
             precalc = createPrecalculatedBot('test', {}, undefined);
-            script = createScriptBot(precalc, manager, context);
+            script = createScriptBot(precalc, manager);
             expect(script.tags[BOT_SPACE_TAG]).toEqual('shared');
         });
 
@@ -108,6 +116,13 @@ describe('ScriptBot', () => {
             expect(script.raw.fun).toEqual('hello');
         });
 
+        it('should prevent setting the tag when updateTag() returns false', () => {
+            updateTagMock.mockReturnValueOnce(false);
+            script.tags.fun = 'hello';
+            expect(script.tags.fun).not.toEqual('hello');
+            expect(script.raw.fun).not.toEqual('hello');
+        });
+
         it('should inherit value changes made to the original bot', () => {
             precalc.values.fun = 'hello';
             expect(script.tags.fun).toEqual('hello');
@@ -121,6 +136,13 @@ describe('ScriptBot', () => {
                 'abc',
                 null
             );
+        });
+
+        it('should prevent deleting the tag when updateTag() returns false', () => {
+            updateTagMock.mockReturnValueOnce(false);
+            delete script.tags.abc;
+            expect(script.tags.abc).not.toEqual(null);
+            expect(script.raw.abc).not.toEqual(null);
         });
     });
 
@@ -152,7 +174,7 @@ describe('ScriptBot', () => {
 
         it('should return the default space when the bot has no specified space', () => {
             precalc = createPrecalculatedBot('test', {}, undefined);
-            script = createScriptBot(precalc, manager, context);
+            script = createScriptBot(precalc, manager);
             expect(script.raw[BOT_SPACE_TAG]).toEqual('shared');
         });
 
@@ -165,6 +187,13 @@ describe('ScriptBot', () => {
             );
         });
 
+        it('should prevent setting the tag when updateTag() returns false', () => {
+            updateTagMock.mockReturnValueOnce(false);
+            script.raw.fun = 'hello';
+            expect(script.tags.fun).not.toEqual('hello');
+            expect(script.raw.fun).not.toEqual('hello');
+        });
+
         it('should support the delete keyword', () => {
             delete script.raw.abc;
             expect(script.raw.abc).toEqual(null);
@@ -173,6 +202,13 @@ describe('ScriptBot', () => {
                 'abc',
                 null
             );
+        });
+
+        it('should prevent deleting the tag when updateTag() returns false', () => {
+            updateTagMock.mockReturnValueOnce(false);
+            delete script.raw.abc;
+            expect(script.tags.abc).not.toEqual(null);
+            expect(script.raw.abc).not.toEqual(null);
         });
     });
 });
