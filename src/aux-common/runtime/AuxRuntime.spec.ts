@@ -264,7 +264,7 @@ describe('AuxRuntime', () => {
         });
 
         describe('dependencies', () => {
-            it('should support calculating tags that depend all other bots', () => {
+            it('should support calculating tags that depend on all other bots', () => {
                 const update = runtime.botsAdded([
                     createBot('test', {
                         numBots: '=getBots().length',
@@ -323,6 +323,66 @@ describe('AuxRuntime', () => {
                     addedBots: ['test', 'test2'],
                     removedBots: [],
                     updatedBots: [],
+                });
+            });
+
+            it('should automatically re-calculate tags that depend on all other bots', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots().length',
+                    }),
+                ]);
+
+                const update = runtime.botsAdded([
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 2,
+                            },
+                        },
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test2'],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should automatically re-calculate tags that depend on the new bot', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("num").length',
+                    }),
+                ]);
+
+                const update = runtime.botsAdded([
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 1,
+                            },
+                        },
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    },
+                    addedBots: ['test2'],
+                    removedBots: [],
+                    updatedBots: ['test'],
                 });
             });
         });
@@ -594,6 +654,119 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                });
+            });
+        });
+
+        describe('dependencies', () => {
+            it('should support calculating tags that depend on all other bots', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots().length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            numBots: '=getBots().length + 1',
+                        }),
+                        tags: ['numBots'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                numBots: '=getBots().length + 1',
+                            },
+                            values: {
+                                numBots: 3,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should support calculating tags that depend on the ID tag', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("id", "test2").length',
+                    }),
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test', {
+                            numBots: '=getBots("id", "test2").length + 1',
+                        }),
+                        tags: ['numBots'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                numBots: '=getBots("id", "test2").length + 1',
+                            },
+                            values: {
+                                numBots: 2,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should automatically re-calculate tags when a dependent tag was added to a bot', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        numBots: '=getBots("num").length',
+                    }),
+                    createBot('test2', {}),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('test2', {
+                            num: 123,
+                        }),
+                        tags: ['num'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                numBots: 1,
+                            },
+                        },
+                        test2: {
+                            tags: {
+                                num: 123,
+                            },
+                            values: {
+                                num: 123,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test2', 'test'],
                 });
             });
         });

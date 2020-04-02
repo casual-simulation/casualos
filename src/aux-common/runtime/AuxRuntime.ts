@@ -38,7 +38,7 @@ import {
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { DependencyManager } from './DependencyManager';
+import { DependencyManager, BotDependentInfo } from './DependencyManager';
 import {
     ScriptBotInterface,
     ScriptBotFactory,
@@ -119,6 +119,7 @@ export class AuxRuntime
 
         let nextOriginalState = Object.assign({}, this._originalState);
         let newBots = [] as [CompiledBot, PrecalculatedBot][];
+        let newBotIDs = new Set<string>();
 
         for (let bot of bots) {
             // TODO: Make the compiled bot have a script variant
@@ -139,6 +140,7 @@ export class AuxRuntime
                 precalculated.space = bot.space;
             }
             newBots.push([newBot, precalculated]);
+            newBotIDs.add(newBot.id);
             this._compiledState[bot.id] = newBot;
             nextOriginalState[bot.id] = bot;
             update.state[bot.id] = precalculated;
@@ -153,6 +155,9 @@ export class AuxRuntime
                 );
             }
         }
+
+        const changes = this._dependencies.addBots(bots);
+        this._updateDependentBots(changes, update, newBotIDs);
 
         this._originalState = nextOriginalState;
 
@@ -195,14 +200,13 @@ export class AuxRuntime
             } as Partial<PrecalculatedBot>;
             for (let tag of u.tags) {
                 partial.tags[tag] = u.bot.tags[tag];
-                partial.values[tag] = convertToCopiableValue(
-                    this._updateTag(compiled, tag)
-                );
             }
 
             update.state[u.bot.id] = <any>partial;
-            update.updatedBots.push(u.bot.id);
         }
+
+        const changes = this._dependencies.updateBots(updates);
+        this._updateDependentBots(changes, update, new Set());
 
         this._originalState = nextOriginalState;
 
@@ -212,6 +216,43 @@ export class AuxRuntime
     createScriptBot(bot: Bot): ScriptBot {
         const compiled = this._createCompiledBot(bot, true);
         return compiled.script;
+    }
+
+    private _updateDependentBots(
+        updated: BotDependentInfo,
+        update: StateUpdatedEvent,
+        newBotIDs: Set<string>
+    ) {
+        const nextState = update.state;
+        const originalState = this._compiledState;
+        for (let botId in updated) {
+            const originalBot = originalState[botId];
+            if (!originalBot) {
+                continue;
+            }
+            let botUpdate: Partial<PrecalculatedBot> = nextState[botId];
+            if (!botUpdate) {
+                botUpdate = {
+                    values: {},
+                };
+            }
+            const tags = updated[botId];
+            for (let tag of tags) {
+                const originalTag = originalBot.tags[tag];
+                if (hasValue(originalTag)) {
+                    botUpdate.values[tag] = convertToCopiableValue(
+                        this._updateTag(originalBot, tag)
+                    );
+                } else {
+                    botUpdate.tags[tag] = null;
+                    botUpdate.values[tag] = null;
+                }
+            }
+            nextState[botId] = <PrecalculatedBot>botUpdate;
+            if (!newBotIDs.has(botId)) {
+                update.updatedBots.push(botId);
+            }
+        }
     }
 
     private _compileTags(tags: string[], compiled: CompiledBot, bot: Bot) {
