@@ -250,6 +250,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             changeState,
             superShout,
             shout,
+            whisper,
 
             byTag,
             byMod,
@@ -1975,6 +1976,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell all the red bots to reset themselves.
+     * whisper(getBots("#auxColor", "red"), "reset()");
+     *
+     * @example
+     * // Ask all the tall bots for their names.
+     * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
+     *
+     * @example
+     * // Tell every friendly bot to say "Hi" to you.
+     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     */
+    function whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ) {
+        let bots;
+        if (Array.isArray(bot)) {
+            bots = bot;
+        } else {
+            bots = [bot];
+        }
+
+        return event(eventName, bots, arg, false);
+    }
+
+    /**
      * Runs an event on the given bots.
      * @param name The name of the event to run.
      * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
@@ -1988,63 +2025,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         sort?: boolean
     ) {
         let ids = !!bots
-            ? new Set(
-                  bots.map(bot => {
-                      return typeof bot === 'string' ? bot : bot.id;
-                  })
-              )
-            : null;
-        let tag = trimEvent(name);
+            ? bots.map(bot => {
+                  return typeof bot === 'string' ? bot : bot.id;
+              })
+            : context.bots.map(b => b.id);
+
         let results = [] as any[];
-        let length = context.bots.length;
-        for (let i = 0; i < context.bots.length; i++) {
-            const bot = context.bots[i];
-            if (ids && !ids.has(bot.id)) {
+        let tag = trimEvent(name);
+
+        for (let id of ids) {
+            const bot = context.state[id];
+            if (!bot) {
                 continue;
             }
 
             let listener = bot.listeners[tag];
             if (listener) {
                 results.push(listener(arg));
-
-                if (length !== context.bots.length) {
-                    // Length changed, update the index
-                    // so that we don't skip any bots.
-
-                    const newIndex = context.bots.indexOf(bot);
-                    if (newIndex < 0) {
-                        // Current bot was removed
-                        // Don't need to do anything.
-                    } else if (newIndex < i) {
-                        // Bot before current bot was removed.
-                        // Update index by the difference
-                        i += newIndex - i;
-                    } else if (newIndex > i) {
-                        // New bot was added before current bot.
-                        // Update index by the difference.
-                        i += newIndex - i;
-                    }
-                    length = context.bots.length;
-                }
             }
         }
 
         return results;
-
-        // const state = getBotState();
-        // if (!!state) {
-
-        //     let result = calculateActionResultsUsingContext(
-        //         state,
-        //         action(, ids, getUserId(), arg, sort),
-        //         getCalculationContext()
-        //     );
-
-        //     let actions = getActions();
-        //     actions.push(...result.actions);
-
-        //     return result.results;
-        // }
     }
 
     // Helpers

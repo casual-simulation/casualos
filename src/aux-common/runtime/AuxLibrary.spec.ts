@@ -3771,4 +3771,66 @@ describe('AuxLibrary', () => {
             }
         );
     });
+
+    describe('whisper()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+        let bot4: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+            bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3, bot4);
+        });
+
+        it('should send an event only to the given bot', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            library.api.whisper(bot1, 'sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).not.toBeCalled();
+        });
+
+        it('should send an event only to the given list of bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+
+            library.api.whisper([bot1, bot2], 'sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).not.toBeCalled();
+        });
+
+        it('should return an array of results from the other formulas ordered by how they were given', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+
+            const results = library.api.whisper([bot2, bot1], 'sayHello');
+            expect(results).toEqual([2, 1]);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).not.toBeCalled();
+        });
+
+        it.each(trimEventCases)(
+            'should handle %s in the event name.',
+            (desc, eventName) => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+
+                library.api.whisper([bot2, bot1], eventName);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            }
+        );
+    });
 });

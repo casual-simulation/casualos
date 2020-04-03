@@ -8,7 +8,7 @@ import {
     botRemoved,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { RuntimeBot, RuntimeBotFactory } from './RuntimeBot';
+import { RuntimeBot, RuntimeBotFactory, RuntimeBotsState } from './RuntimeBot';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -23,6 +23,11 @@ export interface AuxGlobalContext {
      * The ordered list of script bots.
      */
     bots: RuntimeBot[];
+
+    /**
+     * The state that the runtime bots occupy.
+     */
+    state: RuntimeBotsState;
 
     /**
      * The version.
@@ -128,6 +133,7 @@ export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
     for (let bot of bots) {
         const index = sortedIndexBy(context.bots, bot, sb => sb.id);
         context.bots.splice(index, 0, bot);
+        context.state[bot.id] = bot;
     }
 }
 
@@ -143,6 +149,7 @@ export function removeFromContext(
     for (let bot of bots) {
         const index = sortedIndexBy(context.bots, bot, sb => sb.id);
         context.bots.splice(index, 1);
+        delete context.state[bot.id];
     }
 }
 
@@ -159,6 +166,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The ordered list of script bots.
      */
     bots: RuntimeBot[] = [];
+
+    /**
+     * The state that the runtime bots occupy.
+     */
+    state: RuntimeBotsState = {};
 
     /**
      * The list of actions that have been queued.

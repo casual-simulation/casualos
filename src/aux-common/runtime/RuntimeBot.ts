@@ -28,6 +28,14 @@ export interface RuntimeBot {
 }
 
 /**
+ * Defines an interface that contains runtime bots state.
+ * That is, a map of bot IDs to the runtime bot instances.
+ */
+export interface RuntimeBotsState {
+    [id: string]: RuntimeBot;
+}
+
+/**
  * Constructs a new script bot for the given bot.
  * Script bots provide special behaviors by implemlementing getters and setters for tag values as well
  * as handling extra compatibility concerns like serialization.
