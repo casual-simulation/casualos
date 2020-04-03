@@ -423,9 +423,21 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     } {
         let listener: AuxCompiledScript;
         if (isFormula(value)) {
-            value = this._compile(bot, tag, value, { allowsEditing: false });
+            try {
+                value = this._compile(bot, tag, value, {
+                    allowsEditing: false,
+                });
+            } catch (ex) {
+                value = ex;
+            }
         } else if (isScript(value)) {
-            listener = this._compile(bot, tag, value, { allowsEditing: true });
+            try {
+                listener = this._compile(bot, tag, value, {
+                    allowsEditing: true,
+                });
+            } catch (ex) {
+                value = ex;
+            }
         } else if (isNumber(value)) {
             value = parseFloat(value);
         } else if (value === 'true') {
