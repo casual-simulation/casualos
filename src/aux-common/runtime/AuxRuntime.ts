@@ -129,24 +129,10 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             listeners: [],
             results: [],
         } as ActionResult;
-
-        let ids = !!botIds ? botIds : this._globalContext.bots.map(b => b.id);
-        let tag = trimEvent(eventName);
         arg = this._mapBotsToRuntimeBots(arg);
 
-        for (let id of ids) {
-            const bot = this._globalContext.state[id];
-            if (!bot || bot.tags.auxListening === false) {
-                continue;
-            }
-
-            let listener = bot.listeners[tag];
-            if (listener) {
-                // TODO: Handle exceptions
-                result.results.push(listener(arg));
-                result.listeners.push(bot);
-            }
-        }
+        const results = this._library.api.whisper(botIds, eventName, arg);
+        result.results.push(...results);
 
         const actions = this._globalContext.dequeueActions();
         const updates = [...this._updatedBots.values()]

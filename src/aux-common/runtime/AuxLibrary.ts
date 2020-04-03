@@ -72,6 +72,7 @@ import {
     trimEvent,
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
+    DESTROY_ACTION_NAME,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -88,6 +89,11 @@ import { RuntimeBot } from './RuntimeBot';
  */
 export interface AuxLibrary {
     api: {
+        whisper(
+            bot: (Bot | string)[] | Bot | string,
+            eventName: string,
+            arg?: any
+        ): any[];
         [key: string]: any;
     };
     typeDefinitions?: string;
@@ -1995,7 +2001,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bots = [bot];
         }
 
-        return event(eventName, bots, arg, false);
+        return event(eventName, bots, arg);
     }
 
     /**
@@ -2009,7 +2015,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string,
         bots: (Bot | string)[],
         arg?: any,
-        sort?: boolean
+        sendListenEvents: boolean = true
     ) {
         let ids = !!bots
             ? bots.map(bot => {
@@ -2020,8 +2026,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let results = [] as any[];
         let tag = trimEvent(name);
 
+        let targets = [] as RuntimeBot[];
+        let listeners = [] as RuntimeBot[];
+
         for (let id of ids) {
             const bot = context.state[id];
+            if (bot) {
+                targets.push(bot);
+            }
             if (!bot || bot.tags.auxListening === false) {
                 continue;
             }
@@ -2030,7 +2042,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             if (listener) {
                 // TODO: Handle exceptions
                 results.push(listener(arg));
+                listeners.push(bot);
             }
+        }
+
+        if (sendListenEvents) {
+            const listenArg = {
+                name: name,
+                that: arg,
+                responses: results,
+                targets,
+                listeners,
+            };
+            event('onListen', listeners, listenArg, false);
+            event('onAnyListen', null, listenArg, false);
         }
 
         return results;
