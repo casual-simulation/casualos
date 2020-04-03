@@ -28,6 +28,7 @@ import {
     BOT_SPACE_TAG,
     convertToCopiableValue,
     botAdded,
+    ActionResult,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -36,6 +37,8 @@ import {
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
+    AuxVersion,
+    AuxDevice,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
@@ -67,17 +70,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
 
     // TODO: Update version number
     // TODO: Update device
-    private _globalContext: AuxGlobalContext = new MemoryGlobalContext(
-        {
-            hash: 'hash',
-            version: 'v1.2.3',
-            major: 1,
-            minor: 2,
-            patch: 3,
-        },
-        null,
-        this
-    );
+    private _globalContext: AuxGlobalContext;
 
     private _library: AuxLibrary;
 
@@ -86,12 +79,24 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      * @param libraryFactory
      */
     constructor(
+        version: AuxVersion,
+        device: AuxDevice,
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary
     ) {
+        this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
         this._onActions = new Subject();
+    }
+
+    set userId(id: string) {
+        const bot = this._compiledState[id];
+        if (bot) {
+            this._globalContext.playerBot = bot.script;
+        } else {
+            this._globalContext.playerBot = null;
+        }
     }
 
     /**
@@ -107,17 +112,26 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      * @param botIds The Bot IDs that the shout is being sent to.
      * @param arg The argument to include in the shout.
      */
-    shout(eventName: string, botIds?: string[], arg?: any): void {
+    shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
+        let result = {
+            actions: [],
+            errors: [],
+            listeners: [],
+            results: [],
+        } as ActionResult;
         const ids = botIds ? botIds : Object.keys(this._compiledState);
         for (let id of ids) {
             const bot = this._compiledState[id];
             const listener = bot.listeners[eventName];
             if (listener) {
-                listener(arg);
+                result.results.push(listener(arg));
+                result.listeners.push(bot);
             }
         }
         const actions = this._globalContext.dequeueActions();
         this._onActions.next(actions);
+        result.actions = actions;
+        return result;
     }
 
     /**
@@ -448,6 +462,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 tags: ctx => ctx.bot.script.tags,
                 raw: ctx => ctx.bot.script.raw,
             },
+            arguments: [['that', 'data']],
         });
     }
 }
