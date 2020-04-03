@@ -4311,15 +4311,9 @@ describe('original action tests', () => {
                     id: 'uuid-0',
                     tags: {
                         stay: 'def',
-                        leaveX: 0,
-                        leaveY: 0,
-                        auxCreator: 'thisBot',
-                    },
-                }),
-                botUpdated('uuid-0', {
-                    tags: {
                         leaveX: null,
                         leaveY: null,
+                        auxCreator: 'thisBot',
                     },
                 }),
             ]);

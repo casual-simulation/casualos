@@ -72,6 +72,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     private _onActions: Subject<BotAction[]>;
 
     private _updatedBots = new Map<string, RuntimeBot>();
+    private _newBots = new Map<string, RuntimeBot>();
+
     // TODO: Update version number
     // TODO: Update device
     private _globalContext: AuxGlobalContext;
@@ -145,7 +147,10 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         const actions = this._globalContext.dequeueActions();
         const updates = [...this._updatedBots.values()]
             .filter(bot => {
-                return Object.keys(bot.changes).length > 0;
+                return (
+                    Object.keys(bot.changes).length > 0 &&
+                    !this._newBots.has(bot.id)
+                );
             })
             .map(bot =>
                 botUpdated(bot.id, {
@@ -154,6 +159,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             );
         const sortedUpdates = sortBy(updates, u => u.id);
         this._updatedBots.clear();
+        this._newBots.clear();
         actions.push(...sortedUpdates);
         this._onActions.next(actions);
         result.actions = actions;
@@ -296,6 +302,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
 
     createRuntimeBot(bot: Bot): RuntimeBot {
         const compiled = this._createCompiledBot(bot, true);
+        this._newBots.set(bot.id, compiled.script);
         return compiled.script;
     }
 
