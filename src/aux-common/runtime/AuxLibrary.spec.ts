@@ -56,6 +56,7 @@ import {
     reject,
     ORIGINAL_OBJECT,
     webhook,
+    superShout,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -102,6 +103,12 @@ describe('AuxLibrary', () => {
     const falsyCases = [['false', false], ['0', 0]];
     const emptyCases = [['null', null], ['empty string', '']];
     const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
+    const trimEventCases = [
+        ['parenthesis', 'sayHello()'],
+        ['hashtag', '#sayHello'],
+        ['hashtag and parenthesis', '#sayHello()'],
+        ['@ symbol', '@sayHello'],
+        ['@ symbol and parenthesis', '@sayHello()'],
     ];
 
     describe('getBots()', () => {
@@ -3403,5 +3410,21 @@ describe('AuxLibrary', () => {
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot3, bot4]);
         });
+    });
+    describe('superShout()', () => {
+        it('should emit a super_shout local event', () => {
+            const action = library.api.superShout('sayHello');
+            expect(action).toEqual(superShout('sayHello'));
+            expect(context.actions).toEqual([superShout('sayHello')]);
+        });
+
+        it.each(trimEventCases)(
+            'should handle %s in the event name.',
+            (desc, eventName) => {
+                const action = library.api.superShout(eventName);
+                expect(action).toEqual(superShout('sayHello'));
+                expect(context.actions).toEqual([superShout('sayHello')]);
+            }
+        );
     });
 });

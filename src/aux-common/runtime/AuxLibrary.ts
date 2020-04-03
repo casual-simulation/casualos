@@ -48,6 +48,7 @@ import {
     saveFile as calcSaveFile,
     reject as calcReject,
     webhook as calcWebhook,
+    superShout as calcSuperShout,
     BotAction,
     download,
     BotsState,
@@ -68,6 +69,7 @@ import {
     botAdded,
     isScriptBot,
     getBotSpace,
+    trimEvent,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -245,6 +247,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             create,
             destroy,
+            superShout,
 
             byTag,
             byMod,
@@ -1906,6 +1909,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         for (let child of children) {
             destroyBot(child);
         }
+    }
+
+    /**
+     * Shouts the given event to every bot in every loaded simulation.
+     * @param eventName The name of the event to shout.
+     * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+     */
+    function superShout(eventName: string, arg?: any) {
+        const event = calcSuperShout(trimEvent(eventName), arg);
+        return addAction(event);
     }
 
     // Helpers
