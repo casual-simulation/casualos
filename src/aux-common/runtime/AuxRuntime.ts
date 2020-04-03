@@ -482,6 +482,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 bot,
                 tag,
                 global: this._globalContext,
+                previousBot: null as RuntimeBot,
                 wasEditable: true,
             },
             before: ctx => {
@@ -489,11 +490,14 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                     ctx.wasEditable = ctx.global.allowsEditing;
                     ctx.global.allowsEditing = false;
                 }
+                ctx.previousBot = ctx.global.currentBot;
+                ctx.global.currentBot = ctx.bot.script;
             },
             after: ctx => {
                 if (!options.allowsEditing) {
                     ctx.global.allowsEditing = ctx.wasEditable;
                 }
+                ctx.global.currentBot = ctx.previousBot;
             },
             constants: {
                 ...this._library.api,
