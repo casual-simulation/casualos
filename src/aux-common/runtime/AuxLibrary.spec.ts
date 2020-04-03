@@ -57,6 +57,8 @@ import {
     ORIGINAL_OBJECT,
     webhook,
     superShout,
+    botRemoved,
+    botAdded,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3611,6 +3613,161 @@ describe('AuxLibrary', () => {
                 const action = library.api.superShout(eventName);
                 expect(action).toEqual(superShout('sayHello'));
                 expect(context.actions).toEqual([superShout('sayHello')]);
+            }
+        );
+    });
+
+    describe('shout()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+        let bot4: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+            bot4 = createDummyRuntimeBot('test4');
+
+            addToContext(context, bot1, bot2, bot3, bot4);
+        });
+
+        it('should run the event on every bot', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+        });
+
+        it('should set the given argument as the first variable', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello', { hi: 'test' });
+            expect(sayHello1).toBeCalledWith({ hi: 'test' });
+            expect(sayHello2).toBeCalledWith({ hi: 'test' });
+        });
+
+        it('should handle passing bots as arguments', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello', bot3);
+            expect(sayHello1).toBeCalledWith(bot3);
+            expect(sayHello2).toBeCalledWith(bot3);
+        });
+
+        it('should be able to modify bots that are arguments', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(b3 => {
+                b3.tags.hit1 = true;
+            }));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(b3 => {
+                b3.tags.hit2 = true;
+            }));
+
+            library.api.shout('sayHello', bot3);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(bot3.tags.hit1).toEqual(true);
+            expect(bot3.tags.hit2).toEqual(true);
+        });
+
+        it('should handle bots nested in an object as an argument', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(arg => {
+                arg.bot.tags.hit1 = true;
+            }));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(arg => {
+                arg.bot.tags.hit2 = true;
+            }));
+
+            library.api.shout('sayHello', { bot: bot3 });
+            expect(sayHello1).toBeCalledWith({ bot: bot3 });
+            expect(sayHello2).toBeCalledWith({ bot: bot3 });
+            expect(bot3.tags.hit1).toEqual(true);
+            expect(bot3.tags.hit2).toEqual(true);
+        });
+
+        it('should handle primitive values', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello', true);
+            expect(sayHello1).toBeCalledWith(true);
+            expect(sayHello2).toBeCalledWith(true);
+        });
+
+        it('should return an array of results from the other formulas', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+
+            const results = library.api.shout('sayHello');
+            expect(results).toEqual([1, 2]);
+        });
+
+        it('should handle when a bot in the shout list is deleted', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                library.api.destroy([bot1, bot4]);
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).not.toBeCalled();
+            expect(context.actions).toEqual([
+                botRemoved('test1'),
+                botRemoved('test4'),
+            ]);
+        });
+
+        it('should handle when a bot is created during a shout', () => {
+            uuidMock.mockReturnValueOnce('test0').mockReturnValueOnce('test5');
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
+                library.api.create({
+                    num: 1,
+                });
+                library.api.create({
+                    num: 2,
+                });
+            }));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello');
+
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).toBeCalled();
+            expect(context.actions).toEqual([
+                botAdded(
+                    createBot('test0', {
+                        num: 1,
+                    })
+                ),
+                botAdded(
+                    createBot('test5', {
+                        num: 2,
+                    })
+                ),
+            ]);
+        });
+
+        it.each(trimEventCases)(
+            'should handle %s in the event name.',
+            (desc, eventName) => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+                library.api.shout(eventName);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
             }
         );
     });
