@@ -31,6 +31,7 @@ import {
     ActionResult,
     botUpdated,
     createBot,
+    trimEvent,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -125,25 +126,25 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             listeners: [],
             results: [],
         } as ActionResult;
-        const ids = botIds ? botIds : Object.keys(this._compiledState);
+
+        let ids = !!botIds ? botIds : this._globalContext.bots.map(b => b.id);
+
+        let tag = trimEvent(eventName);
+
         for (let id of ids) {
-            const bot = this._compiledState[id];
-            const listener = bot.listeners[eventName];
+            const bot = this._globalContext.state[id];
+            if (!bot || bot.tags.auxListening === false) {
+                continue;
+            }
+
+            let listener = bot.listeners[tag];
             if (listener) {
-                let value = null;
-                try {
-                    value = listener(arg);
-                } catch (ex) {
-                    result.errors.push({
-                        bot: createBot(bot.id, bot.tags),
-                        tag: eventName,
-                        error: ex,
-                    });
-                }
-                result.results.push(value);
+                // TODO: Handle exceptions
+                result.results.push(listener(arg));
                 result.listeners.push(bot);
             }
         }
+
         const actions = this._globalContext.dequeueActions();
         const updates = [...this._updatedBots.values()]
             .filter(bot => {

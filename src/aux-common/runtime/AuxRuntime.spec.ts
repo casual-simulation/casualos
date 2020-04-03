@@ -8135,14 +8135,10 @@ describe('original action tests', () => {
                             auxCreator: 'thisBot',
                             test: true,
                             abc: `@tags.hit = true;`,
-                        },
-                    }),
-                    botUpdated('aBot', {
-                        tags: {
                             hit: true,
                         },
                     }),
-                    botUpdated(expectedId, {
+                    botUpdated('aBot', {
                         tags: {
                             hit: true,
                         },
@@ -8180,10 +8176,6 @@ describe('original action tests', () => {
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hit: true,
                         },
                     }),
@@ -8226,10 +8218,6 @@ describe('original action tests', () => {
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hit: true,
                         },
                     }),
@@ -8274,10 +8262,6 @@ describe('original action tests', () => {
                             auxListening: true,
                             abc: `@tags.hit = true;`,
                             def: `@tags.hit2 = true;`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hit: true,
                             hit2: true,
                         },
@@ -8321,10 +8305,6 @@ describe('original action tests', () => {
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hit: true,
                         },
                     }),

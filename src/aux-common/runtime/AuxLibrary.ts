@@ -2035,12 +2035,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         for (let id of ids) {
             const bot = context.state[id];
-            if (!bot) {
+            if (!bot || bot.tags.auxListening === false) {
                 continue;
             }
 
             let listener = bot.listeners[tag];
             if (listener) {
+                // TODO: Handle exceptions
                 results.push(listener(arg));
             }
         }

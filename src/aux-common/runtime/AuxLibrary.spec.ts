@@ -3706,6 +3706,17 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([1, 2]);
         });
 
+        it('should ignore bots that are not listening', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+            bot2.tags.auxListening = false;
+
+            const results = library.api.shout('sayHello');
+            expect(results).toEqual([1]);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).not.toBeCalled();
+        });
+
         it('should handle when a bot in the shout list is deleted', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
@@ -3816,6 +3827,19 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([2, 1]);
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
+            expect(sayHello3).not.toBeCalled();
+        });
+
+        it('should ignore bots that are not listening', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+            bot2.tags.auxListening = false;
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+
+            const results = library.api.whisper([bot2, bot1], 'sayHello');
+            expect(results).toEqual([1]);
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).not.toBeCalled();
             expect(sayHello3).not.toBeCalled();
         });
 
