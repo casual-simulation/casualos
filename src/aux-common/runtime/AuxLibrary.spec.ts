@@ -3123,38 +3123,13 @@ describe('AuxLibrary', () => {
             expect(context.bots).toEqual([bot4]);
         });
 
-        // it('should trigger onDestroy()', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 onDestroy:
-        //                     '@setTag(getBot("#name", "other"), "#num", 100)',
-        //                 test: '@destroy(this)',
-        //             },
-        //         },
-        //         otherBot: {
-        //             id: 'otherBot',
-        //             tags: {
-        //                 name: 'other',
-        //             },
-        //         },
-        //     };
+        it('should trigger onDestroy()', () => {
+            const onDestroy1 = (bot1.listeners.onDestroy = jest.fn());
 
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            library.api.destroy(['test1']);
 
-        //     expect(result.actions).toEqual([
-        //         // This is weird because it means that an update for a bot could happen
-        //         // after it gets removed but I currently don't have a great solution for it at the moment.
-        //         botRemoved('thisBot'),
-        //         botUpdated('otherBot', {
-        //             tags: {
-        //                 num: 100,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(onDestroy1).toBeCalledTimes(1);
+        });
 
         it('should not destroy bots that are not destroyable', () => {
             bot2.tags.auxDestroyable = false;

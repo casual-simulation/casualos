@@ -1833,18 +1833,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ret[i] = context.createBot(bots[i]);
         }
 
-        // let actions = getActions();
-        // for(let b of bots) {
-        //     addAction(botAdded(b));
-        // }
-        // actions.push(...bots.map(f => botAdded(f)));
-
-        // let ret = new Array<RuntimeBot>(bots.length);
-        // const calc = getCalculationContext();
-        // for (let i = 0; i < bots.length; i++) {
-        //     ret[i] = calc.sandbox.interface.addBot(bots[i]);
-        // }
-
         event(CREATE_ACTION_NAME, ret);
         for (let bot of ret) {
             event(CREATE_ANY_ACTION_NAME, null, {
@@ -1899,10 +1887,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         if (id) {
-            // event(DESTROY_ACTION_NAME, [id]);
-            // // let actions = getActions();
-            // // actions.push(botRemoved(id));
-            // calc.sandbox.interface.removeBot(id);
+            event(DESTROY_ACTION_NAME, [id]);
             context.destroyBot(realBot);
         }
 
