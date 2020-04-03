@@ -483,6 +483,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 tag,
                 global: this._globalContext,
                 previousBot: null as RuntimeBot,
+                creator: null as RuntimeBot,
+                config: null as RuntimeBot,
                 wasEditable: true,
             },
             before: ctx => {
@@ -492,6 +494,12 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 }
                 ctx.previousBot = ctx.global.currentBot;
                 ctx.global.currentBot = ctx.bot.script;
+                ctx.creator = this._getRuntimeBot(
+                    ctx.bot.script.tags.auxCreator
+                );
+                ctx.config = this._getRuntimeBot(
+                    ctx.bot.script.tags.auxConfigBot
+                );
             },
             after: ctx => {
                 if (!options.allowsEditing) {
@@ -508,16 +516,18 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 bot: ctx => ctx.bot.script,
                 tags: ctx => ctx.bot.script.tags,
                 raw: ctx => ctx.bot.script.raw,
-                creator: ctx => this._getCreator(ctx.bot),
+                creator: ctx => ctx.creator,
+                config: ctx => ctx.config,
+                configTag: ctx =>
+                    ctx.config ? ctx.config.tags[ctx.tag] : null,
             },
             arguments: [['that', 'data']],
         });
     }
 
-    private _getCreator(bot: CompiledBot) {
-        const creatorId = bot.script.tags.auxCreator;
-        if (hasValue(creatorId) && typeof creatorId === 'string') {
-            const creator = this._compiledState[creatorId];
+    private _getRuntimeBot(id: string): RuntimeBot {
+        if (hasValue(id) && typeof id === 'string') {
+            const creator = this._compiledState[id];
             if (creator) {
                 return creator.script;
             }
