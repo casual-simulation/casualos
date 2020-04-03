@@ -1,7 +1,6 @@
 import { AuxRuntime } from './AuxRuntime';
 import { AuxGlobalContext } from './AuxGlobalContext';
 import {
-    ScriptBot,
     hasValue,
     trimTag,
     isBot,
@@ -78,6 +77,7 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import { RuntimeBot } from './RuntimeBot';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -351,7 +351,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Gets all the bots in the universe.
      * let bots = getBots();
      */
-    function getBots(...args: any[]): ScriptBot[] {
+    function getBots(...args: any[]): RuntimeBot[] {
         if (args.length > 0 && typeof args[0] === 'function') {
             const filtered = context.bots.filter(b => args.every(f => f(b)));
 
@@ -393,7 +393,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example
      * let firstBot = getBot();
      */
-    function getBot(...args: any[]): ScriptBot {
+    function getBot(...args: any[]): RuntimeBot {
         const bots = getBots(...args);
         return bots.first();
     }
@@ -1806,7 +1806,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return bot;
         });
 
-        let ret = new Array<ScriptBot>(bots.length);
+        let ret = new Array<RuntimeBot>(bots.length);
         for (let i = 0; i < bots.length; i++) {
             ret[i] = context.createBot(bots[i]);
         }
@@ -1817,7 +1817,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         // }
         // actions.push(...bots.map(f => botAdded(f)));
 
-        // let ret = new Array<ScriptBot>(bots.length);
+        // let ret = new Array<RuntimeBot>(bots.length);
         // const calc = getCalculationContext();
         // for (let i = 0; i < bots.length; i++) {
         //     ret[i] = calc.sandbox.interface.addBot(bots[i]);
@@ -1841,7 +1841,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Destroys the given bot, bot ID, or list of bots.
      * @param bot The bot, bot ID, or list of bots to destroy.
      */
-    function destroy(bot: ScriptBot | string | (ScriptBot | string)[]) {
+    function destroy(bot: RuntimeBot | string | (RuntimeBot | string)[]) {
         if (typeof bot === 'object' && Array.isArray(bot)) {
             bot.forEach(f => destroyBot(f));
         } else {
@@ -1853,8 +1853,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Removes the given bot or bot ID from the simulation.
      * @param bot The bot or bot ID to remove from the simulation.
      */
-    function destroyBot(bot: ScriptBot | string) {
-        let realBot: ScriptBot;
+    function destroyBot(bot: RuntimeBot | string) {
+        let realBot: RuntimeBot;
         let id: string;
         if (typeof bot === 'object') {
             id = bot.id;

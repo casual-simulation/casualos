@@ -7,7 +7,6 @@ import {
     AuxDevice,
 } from './AuxGlobalContext';
 import {
-    ScriptBot,
     toast,
     showJoinCode,
     requestFullscreen,
@@ -67,8 +66,9 @@ import { remote } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
     TestScriptBotFactory,
-    createDummyScriptBot,
+    createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
+import { RuntimeBot } from './RuntimeBot';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -103,14 +103,14 @@ describe('AuxLibrary', () => {
     const emptyCases = [['null', null], ['empty string', '']];
 
     describe('getBots()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-        let bot3: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-            bot3 = createDummyScriptBot('test3');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -167,8 +167,8 @@ describe('AuxLibrary', () => {
             bot3.tags.hello = false;
             bot3.tags.num = 100;
             const bots = library.api.getBots(
-                (b: ScriptBot) => b.tags.hello === false,
-                (b: ScriptBot) => b.tags.num > 50
+                (b: RuntimeBot) => b.tags.hello === false,
+                (b: RuntimeBot) => b.tags.num > 50
             );
 
             expect(bots).toEqual([bot3]);
@@ -252,10 +252,10 @@ describe('AuxLibrary', () => {
             bot3.tags.hello = false;
             bot3.tags.num = 50;
 
-            let filter = (b: ScriptBot) => {
+            let filter = (b: RuntimeBot) => {
                 return b.tags.hello === false;
             };
-            (<any>filter).sort = (b: ScriptBot) => b.tags.num;
+            (<any>filter).sort = (b: RuntimeBot) => b.tags.num;
 
             const bots = library.api.getBots(filter);
 
@@ -296,14 +296,14 @@ describe('AuxLibrary', () => {
     });
 
     describe('getBot()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-        let bot3: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-            bot3 = createDummyScriptBot('test3');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -370,7 +370,7 @@ describe('AuxLibrary', () => {
             bot3.tags.name = 'bob';
 
             const bot = library.api.getBot(
-                (b: ScriptBot) => b.tags.name === 'bob'
+                (b: RuntimeBot) => b.tags.name === 'bob'
             );
 
             expect(bot).toEqual(bot1);
@@ -383,8 +383,8 @@ describe('AuxLibrary', () => {
             bot3.tags.abc = true;
 
             const bot = library.api.getBot(
-                (b: ScriptBot) => b.tags.name === 'bob',
-                (b: ScriptBot) => b.tags.abc === true
+                (b: RuntimeBot) => b.tags.name === 'bob',
+                (b: RuntimeBot) => b.tags.abc === true
             );
 
             expect(bot).toEqual(bot3);
@@ -418,10 +418,10 @@ describe('AuxLibrary', () => {
 
     describe('filters', () => {
         describe('byTag()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
+                bot1 = createDummyRuntimeBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -519,10 +519,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('byMod()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
+                bot1 = createDummyRuntimeBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -584,10 +584,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('inDimension()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
+                bot1 = createDummyRuntimeBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -606,10 +606,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('atPosition()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
+                bot1 = createDummyRuntimeBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -670,12 +670,12 @@ describe('AuxLibrary', () => {
         });
 
         describe('inStack()', () => {
-            let bot1: ScriptBot;
-            let bot2: ScriptBot;
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
-                bot2 = createDummyScriptBot('test2');
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -751,12 +751,12 @@ describe('AuxLibrary', () => {
         });
 
         describe('neighboring()', () => {
-            let bot1: ScriptBot;
-            let bot2: ScriptBot;
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
-                bot2 = createDummyScriptBot('test2');
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -825,10 +825,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('bySpace()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1', undefined, <any>'test');
+                bot1 = createDummyRuntimeBot('test1', undefined, <any>'test');
 
                 addToContext(context, bot1);
             });
@@ -840,12 +840,12 @@ describe('AuxLibrary', () => {
         });
 
         describe('byCreator()', () => {
-            let bot1: ScriptBot;
-            let bot2: ScriptBot;
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
-                bot2 = createDummyScriptBot('test2');
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -884,10 +884,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('either()', () => {
-            let bot1: ScriptBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
+                bot1 = createDummyRuntimeBot('test1');
 
                 addToContext(context, bot1);
             });
@@ -909,12 +909,12 @@ describe('AuxLibrary', () => {
         });
 
         describe('not()', () => {
-            let bot1: ScriptBot;
-            let bot2: ScriptBot;
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
 
             beforeEach(() => {
-                bot1 = createDummyScriptBot('test1');
-                bot2 = createDummyScriptBot('test2');
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
 
                 addToContext(context, bot1, bot2);
             });
@@ -929,10 +929,10 @@ describe('AuxLibrary', () => {
     });
 
     describe('getID()', () => {
-        let bot1: ScriptBot;
+        let bot1: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
+            bot1 = createDummyRuntimeBot('test1');
 
             addToContext(context, bot1);
         });
@@ -954,10 +954,10 @@ describe('AuxLibrary', () => {
     });
 
     describe('getJSON()', () => {
-        let bot1: ScriptBot;
+        let bot1: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
+            bot1 = createDummyRuntimeBot('test1');
 
             addToContext(context, bot1);
         });
@@ -981,14 +981,14 @@ describe('AuxLibrary', () => {
     });
 
     describe('getTag()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-        let bot3: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-            bot3 = createDummyScriptBot('test3');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -1018,14 +1018,14 @@ describe('AuxLibrary', () => {
     });
 
     describe('getBotTagValues()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-        let bot3: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-            bot3 = createDummyScriptBot('test3');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
 
             addToContext(context, bot1, bot2, bot3);
         });
@@ -1079,12 +1079,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('getMod()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -1146,12 +1146,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('actions', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -1429,12 +1429,12 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.downloadUniverse()', () => {
-            let bot3: ScriptBot;
-            let player: ScriptBot;
+            let bot3: RuntimeBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                bot3 = createDummyScriptBot('test3');
-                player = createDummyScriptBot(
+                bot3 = createDummyRuntimeBot('test3');
+                player = createDummyRuntimeBot(
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1464,10 +1464,10 @@ describe('AuxLibrary', () => {
             });
 
             it('should only include bots in the shared space', () => {
-                const bot4 = createDummyScriptBot('test4', {}, 'history');
-                const bot5 = createDummyScriptBot('test5', {}, 'local');
-                const bot6 = createDummyScriptBot('test6', {}, 'tempLocal');
-                const bot7 = createDummyScriptBot('test7', {}, 'error');
+                const bot4 = createDummyRuntimeBot('test4', {}, 'history');
+                const bot5 = createDummyRuntimeBot('test5', {}, 'local');
+                const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
+                const bot7 = createDummyRuntimeBot('test7', {}, 'error');
                 addToContext(context, bot4, bot5, bot6, bot7);
 
                 const action = library.api.player.downloadUniverse();
@@ -1660,10 +1660,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getBot()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1675,10 +1675,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.isInDimension()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
+                player = createDummyRuntimeBot(
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1708,10 +1708,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getCurrentDimension()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot(
+                player = createDummyRuntimeBot(
                     'player',
                     {
                         auxUniverse: 'channel',
@@ -1735,10 +1735,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getCurrentUniverse()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1756,10 +1756,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getInventoryDimension()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1772,10 +1772,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getMenuDimension()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1788,10 +1788,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getPortalDimension()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1827,10 +1827,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.getDimensionalDepth()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -1996,10 +1996,10 @@ describe('AuxLibrary', () => {
         });
 
         describe('player.hasBotInInventory()', () => {
-            let player: ScriptBot;
+            let player: RuntimeBot;
 
             beforeEach(() => {
-                player = createDummyScriptBot('player', {}, 'tempLocal');
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
                 addToContext(context, player);
                 context.playerBot = player;
             });
@@ -2358,12 +2358,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('setTag()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2386,8 +2386,8 @@ describe('AuxLibrary', () => {
         });
 
         it('should recursively set the tags on the given bots', () => {
-            let bot3 = createDummyScriptBot('test3');
-            let bot4 = createDummyScriptBot('test4');
+            let bot3 = createDummyRuntimeBot('test3');
+            let bot4 = createDummyRuntimeBot('test4');
             addToContext(context, bot3, bot4);
 
             library.api.setTag([bot1, [bot3, bot4], bot2], '#name', 'bob');
@@ -2421,12 +2421,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('removeTags()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2465,12 +2465,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('applyMod()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2513,12 +2513,12 @@ describe('AuxLibrary', () => {
     });
 
     describe('subtractMods()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
         });
@@ -2542,13 +2542,13 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot('uuid', {
+                createDummyRuntimeBot('uuid', {
                     abc: 'def',
                 })
             );
         });
         it('should automatically set the creator to the current bot ID', () => {
-            const creator = createDummyScriptBot('creator');
+            const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
             context.currentBot = creator;
 
@@ -2557,14 +2557,14 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot('uuid', {
+                createDummyRuntimeBot('uuid', {
                     auxCreator: 'creator',
                     abc: 'def',
                 })
             );
         });
         it('should ignore strings because they are no longer used to set the creator ID', () => {
-            const creator = createDummyScriptBot('creator');
+            const creator = createDummyRuntimeBot('creator');
             addToContext(context, creator);
             context.currentBot = creator;
 
@@ -2573,7 +2573,7 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
             expect(bot).toEqual(
-                createDummyScriptBot('uuid', {
+                createDummyRuntimeBot('uuid', {
                     auxCreator: 'creator',
                     abc: 'def',
                 })
@@ -2588,14 +2588,14 @@ describe('AuxLibrary', () => {
                 { ghi: 123 }
             );
             expect(bot).toEqual(
-                createDummyScriptBot('uuid', {
+                createDummyRuntimeBot('uuid', {
                     abc: 'def',
                     ghi: 123,
                 })
             );
         });
         it('should support bots as arguments', () => {
-            const other = createDummyScriptBot('other');
+            const other = createDummyRuntimeBot('other');
             addToContext(context, other);
 
             other.tags.abc = 'def';
@@ -2604,7 +2604,7 @@ describe('AuxLibrary', () => {
             uuidMock.mockReturnValue('uuid');
             const bot = library.api.create(other);
             expect(bot).toEqual(
-                createDummyScriptBot('uuid', {
+                createDummyRuntimeBot('uuid', {
                     abc: 'def',
                     num: 1,
                 })
@@ -2613,7 +2613,7 @@ describe('AuxLibrary', () => {
 
         it('should support modifying the returned bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.api.create({ abc: 'def' }) as ScriptBot;
+            const bot = library.api.create({ abc: 'def' }) as RuntimeBot;
             bot.tags.fun = true;
 
             expect(bot).toEqual({
@@ -2629,6 +2629,7 @@ describe('AuxLibrary', () => {
                 changes: {
                     fun: true,
                 },
+                listeners: {},
             });
         });
         it('should add the new bot to the context', () => {
@@ -2711,10 +2712,10 @@ describe('AuxLibrary', () => {
             const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
 
             expect(bots).toEqual([
-                createDummyScriptBot('uuid1', {
+                createDummyRuntimeBot('uuid1', {
                     abc: 'def',
                 }),
-                createDummyScriptBot('uuid2', {
+                createDummyRuntimeBot('uuid2', {
                     abc: 123,
                 }),
             ]);
@@ -2729,32 +2730,32 @@ describe('AuxLibrary', () => {
             );
 
             expect(bots).toEqual([
-                createDummyScriptBot('uuid-1', {
+                createDummyRuntimeBot('uuid-1', {
                     hello: true,
                     abc: 'def',
                     wow: 1,
                 }),
-                createDummyScriptBot('uuid-2', {
+                createDummyRuntimeBot('uuid-2', {
                     hello: false,
                     abc: 'def',
                     wow: 1,
                 }),
-                createDummyScriptBot('uuid-3', {
+                createDummyRuntimeBot('uuid-3', {
                     hello: true,
                     abc: 'def',
                     oh: 'haha',
                 }),
-                createDummyScriptBot('uuid-4', {
+                createDummyRuntimeBot('uuid-4', {
                     hello: false,
                     abc: 'def',
                     oh: 'haha',
                 }),
-                createDummyScriptBot('uuid-5', {
+                createDummyRuntimeBot('uuid-5', {
                     hello: true,
                     abc: 'def',
                     test: 'a',
                 }),
-                createDummyScriptBot('uuid-6', {
+                createDummyRuntimeBot('uuid-6', {
                     hello: false,
                     abc: 'def',
                     test: 'a',
@@ -2762,10 +2763,10 @@ describe('AuxLibrary', () => {
             ]);
         });
         it('should duplicate each of the bots in the list', () => {
-            const first = createDummyScriptBot('first', {
+            const first = createDummyRuntimeBot('first', {
                 abc: 'def',
             });
-            const second = createDummyScriptBot('second', {
+            const second = createDummyRuntimeBot('second', {
                 num: 123,
             });
             addToContext(context, first, second);
@@ -2774,16 +2775,16 @@ describe('AuxLibrary', () => {
             const bots = library.api.create([first, second]);
 
             expect(bots).toEqual([
-                createDummyScriptBot('uuid1', {
+                createDummyRuntimeBot('uuid1', {
                     abc: 'def',
                 }),
-                createDummyScriptBot('uuid2', {
+                createDummyRuntimeBot('uuid2', {
                     num: 123,
                 }),
             ]);
         });
         it('should copy the space of another bot', () => {
-            const other = createDummyScriptBot(
+            const other = createDummyRuntimeBot(
                 'other',
                 {
                     abc: 'def',
@@ -2795,7 +2796,7 @@ describe('AuxLibrary', () => {
             uuidMock.mockReturnValueOnce('uuid1');
             const bots = library.api.create([other]);
             expect(bots).toEqual(
-                createDummyScriptBot(
+                createDummyRuntimeBot(
                     'uuid1',
                     {
                         abc: 'def',
@@ -3140,7 +3141,7 @@ describe('AuxLibrary', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ space: 'local' });
-                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
             });
 
             it('should use the last space', () => {
@@ -3149,7 +3150,7 @@ describe('AuxLibrary', () => {
                     { space: 'tempLocal' },
                     { space: 'local' }
                 );
-                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
             });
 
             it('should use the last space even if it is null', () => {
@@ -3158,7 +3159,7 @@ describe('AuxLibrary', () => {
                     { space: 'tempLocal' },
                     { space: null }
                 );
-                expect(bot).toEqual(createDummyScriptBot('uuid'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
 
             const normalCases = [
@@ -3172,18 +3173,18 @@ describe('AuxLibrary', () => {
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
                     const bot = library.api.create({ space: value });
-                    expect(bot).toEqual(createDummyScriptBot('uuid'));
+                    expect(bot).toEqual(createDummyRuntimeBot('uuid'));
                 }
             );
         });
 
         describe('auxCreator', () => {
-            let current: ScriptBot;
-            let bot1: ScriptBot;
+            let current: RuntimeBot;
+            let bot1: RuntimeBot;
 
             beforeEach(() => {
-                current = createDummyScriptBot('current');
-                bot1 = createDummyScriptBot('bot1');
+                current = createDummyRuntimeBot('current');
+                bot1 = createDummyRuntimeBot('bot1');
                 addToContext(context, current, bot1);
 
                 context.currentBot = current;
@@ -3193,7 +3194,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: bot1.id });
                 expect(bot).toEqual(
-                    createDummyScriptBot('uuid', {
+                    createDummyRuntimeBot('uuid', {
                         auxCreator: 'bot1',
                     })
                 );
@@ -3202,7 +3203,7 @@ describe('AuxLibrary', () => {
             it('should be able to set the auxCreator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: null });
-                expect(bot).toEqual(createDummyScriptBot('uuid'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
 
             it('should set auxCreator to null if it references a bot in a different space', () => {
@@ -3211,28 +3212,28 @@ describe('AuxLibrary', () => {
                     auxCreator: bot1.id,
                     space: 'local',
                 });
-                expect(bot).toEqual(createDummyScriptBot('uuid', {}, 'local'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
             });
 
             it('should set auxCreator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({ auxCreator: 'missing' });
-                expect(bot).toEqual(createDummyScriptBot('uuid'));
+                expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
         });
     });
 
     describe('destroy()', () => {
-        let bot1: ScriptBot;
-        let bot2: ScriptBot;
-        let bot3: ScriptBot;
-        let bot4: ScriptBot;
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+        let bot4: RuntimeBot;
 
         beforeEach(() => {
-            bot1 = createDummyScriptBot('test1');
-            bot2 = createDummyScriptBot('test2');
-            bot3 = createDummyScriptBot('test3');
-            bot4 = createDummyScriptBot('test4');
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+            bot4 = createDummyRuntimeBot('test4');
 
             addToContext(context, bot1, bot2, bot3, bot4);
         });

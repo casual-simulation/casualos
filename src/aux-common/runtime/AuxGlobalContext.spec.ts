@@ -4,7 +4,7 @@ import {
     MemoryGlobalContext,
 } from './AuxGlobalContext';
 import {
-    createDummyScriptBot,
+    createDummyRuntimeBot,
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
 
@@ -30,9 +30,9 @@ describe('AuxGlobalContext', () => {
 
     describe('addToContext()', () => {
         it('should insert the given bot in order by ID', () => {
-            const bot1 = createDummyScriptBot('test1');
-            const bot2 = createDummyScriptBot('test2');
-            const bot3 = createDummyScriptBot('test3');
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
             addToContext(context, bot1, bot3, bot2);
 
             expect(context.bots).toEqual([bot1, bot2, bot3]);

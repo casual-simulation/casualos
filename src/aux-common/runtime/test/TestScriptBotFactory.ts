@@ -1,21 +1,15 @@
+import { PrecalculatedBot, BotTags, BotSpace, Bot } from '../../bots';
 import {
-    ScriptBot,
-    PrecalculatedBot,
-    createPrecalculatedBot,
-    BotTags,
-    BotSpace,
-    Bot,
-} from '../../bots';
-import {
-    createScriptBot,
-    ScriptBotInterface,
-    ScriptBotFactory,
-} from '../ScriptBot';
-import { AuxGlobalContext } from '../AuxGlobalContext';
+    createRuntimeBot,
+    RuntimeBotInterface,
+    RuntimeBotFactory,
+    RuntimeBot,
+} from '../RuntimeBot';
+import { createCompiledBot } from '../CompiledBot';
 
-export class TestScriptBotFactory implements ScriptBotFactory {
-    createScriptBot(bot: Bot): ScriptBot {
-        return createDummyScriptBot(bot.id, bot.tags, bot.space);
+export class TestScriptBotFactory implements RuntimeBotFactory {
+    createRuntimeBot(bot: Bot): RuntimeBot {
+        return createDummyRuntimeBot(bot.id, bot.tags, bot.space);
     }
 
     destroyScriptBot() {}
@@ -28,16 +22,16 @@ export class TestScriptBotFactory implements ScriptBotFactory {
  * @param tags The tags the bot should have.
  * @param space The space of the bot.
  */
-export function createDummyScriptBot(
+export function createDummyRuntimeBot(
     id: string,
     tags: BotTags = {},
     space?: BotSpace
-): ScriptBot {
-    const precalc = createPrecalculatedBot(id, tags, undefined, space);
-    return createScriptBot(precalc, testScriptBotInterface);
+): RuntimeBot {
+    const precalc = createCompiledBot(id, tags, undefined, space);
+    return createRuntimeBot(precalc, testScriptBotInterface);
 }
 
-export const testScriptBotInterface: ScriptBotInterface<PrecalculatedBot> = {
+export const testScriptBotInterface: RuntimeBotInterface = {
     updateTag(bot: PrecalculatedBot, tag: string, newValue: any) {
         bot.tags[tag] = newValue;
         bot.values[tag] = newValue;

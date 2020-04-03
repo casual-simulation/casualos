@@ -1,25 +1,25 @@
-import {
-    PrecalculatedBot,
-    ScriptBot,
-    createPrecalculatedBot,
-    BOT_SPACE_TAG,
-} from '../bots';
+import { BOT_SPACE_TAG } from '../bots';
 import {
     AuxGlobalContext,
     MemoryGlobalContext,
     AuxVersion,
     AuxDevice,
 } from './AuxGlobalContext';
-import { createScriptBot, ScriptBotInterface } from './ScriptBot';
+import {
+    createRuntimeBot,
+    RuntimeBotInterface,
+    RuntimeBot,
+} from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
+import { createCompiledBot, CompiledBot } from './CompiledBot';
 
-describe('ScriptBot', () => {
-    let precalc: PrecalculatedBot;
-    let script: ScriptBot;
+describe('RuntimeBot', () => {
+    let precalc: CompiledBot;
+    let script: RuntimeBot;
     let context: AuxGlobalContext;
     let version: AuxVersion;
     let device: AuxDevice;
-    let manager: ScriptBotInterface<PrecalculatedBot>;
+    let manager: RuntimeBotInterface;
     let updateTagMock: jest.Mock;
 
     beforeEach(() => {
@@ -46,7 +46,7 @@ describe('ScriptBot', () => {
             updateTag: updateTagMock,
         };
 
-        precalc = createPrecalculatedBot(
+        precalc = createCompiledBot(
             'test',
             {
                 abc: 'def',
@@ -63,7 +63,7 @@ describe('ScriptBot', () => {
             'shared'
         );
 
-        script = createScriptBot(precalc, manager);
+        script = createRuntimeBot(precalc, manager);
     });
 
     describe('tags', () => {
@@ -93,8 +93,8 @@ describe('ScriptBot', () => {
         });
 
         it('should return the default space when the bot has no specified space', () => {
-            precalc = createPrecalculatedBot('test', {}, undefined);
-            script = createScriptBot(precalc, manager);
+            precalc = createCompiledBot('test', {}, undefined);
+            script = createRuntimeBot(precalc, manager);
             expect(script.tags[BOT_SPACE_TAG]).toEqual('shared');
         });
 
@@ -173,8 +173,8 @@ describe('ScriptBot', () => {
         });
 
         it('should return the default space when the bot has no specified space', () => {
-            precalc = createPrecalculatedBot('test', {}, undefined);
-            script = createScriptBot(precalc, manager);
+            precalc = createCompiledBot('test', {}, undefined);
+            script = createRuntimeBot(precalc, manager);
             expect(script.raw[BOT_SPACE_TAG]).toEqual('shared');
         });
 

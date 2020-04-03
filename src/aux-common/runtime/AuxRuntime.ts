@@ -24,7 +24,6 @@ import {
     PrecalculatedTags,
     BotSpace,
     BotTags,
-    ScriptBot,
     ScriptTags,
     BOT_SPACE_TAG,
     convertToCopiableValue,
@@ -42,10 +41,16 @@ import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { DependencyManager, BotDependentInfo } from './DependencyManager';
 import {
-    ScriptBotInterface,
-    ScriptBotFactory,
-    createScriptBot,
-} from './ScriptBot';
+    RuntimeBotInterface,
+    RuntimeBotFactory,
+    createRuntimeBot,
+    RuntimeBot,
+} from './RuntimeBot';
+import {
+    CompiledBot,
+    CompiledBotsState,
+    CompiledBotValues,
+} from './CompiledBot';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -53,8 +58,7 @@ import {
  * Being a runtime means providing and managing the execution state that an AUX is in.
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
-export class AuxRuntime
-    implements ScriptBotInterface<CompiledBot>, ScriptBotFactory {
+export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     private _originalState: BotsState = {};
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
@@ -250,12 +254,12 @@ export class AuxRuntime
         return update;
     }
 
-    createScriptBot(bot: Bot): ScriptBot {
+    createRuntimeBot(bot: Bot): RuntimeBot {
         const compiled = this._createCompiledBot(bot, true);
         return compiled.script;
     }
 
-    destroyScriptBot(bot: ScriptBot) {
+    destroyScriptBot(bot: RuntimeBot) {
         delete this._compiledState[bot.id];
     }
 
@@ -315,7 +319,7 @@ export class AuxRuntime
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;
         }
-        compiledBot.script = this._createScriptBot(compiledBot);
+        compiledBot.script = this._createRuntimeBot(compiledBot);
         const tags = tagsOnBot(compiledBot);
         this._compileTags(tags, compiledBot, bot);
 
@@ -324,12 +328,11 @@ export class AuxRuntime
         }
 
         this._compiledState[bot.id] = compiledBot;
-
         return compiledBot;
     }
 
-    private _createScriptBot(bot: CompiledBot): ScriptBot {
-        return createScriptBot(bot, this);
+    private _createRuntimeBot(bot: CompiledBot): RuntimeBot {
+        return createRuntimeBot(bot, this);
     }
 
     updateTag(bot: CompiledBot, tag: string, newValue: any): boolean {
@@ -458,40 +461,4 @@ interface CompileOptions {
      * If false, then the script will set the bot's editable value to false for the duration of the script.
      */
     allowsEditing: boolean;
-}
-
-// Types of bots
-// 1. Raw bot - original data
-// 2. Script bot - data + compiled scripts
-// 3. Precalculated bot - derived data
-
-// Raw bot -> runtime bot -> precalculated bot
-
-interface CompiledBotsState {
-    [id: string]: CompiledBot;
-}
-
-/**
- * A bot that has been pre-compiled so that running tag listeners or formulas is quick.
- */
-interface CompiledBot extends PrecalculatedBot {
-    /**
-     * The tags that have been compiled.
-     * Formulas and other tag values get stored here as an intermediate state.
-     */
-    compiledValues: {
-        [tag: string]: (() => any) | any;
-    };
-
-    /**
-     * The tags that are listeners and have been compiled into functions.
-     */
-    listeners: {
-        [tag: string]: (arg?: any) => any;
-    };
-
-    /**
-     * The bot that is referenced in scripts.
-     */
-    script: ScriptBot;
 }

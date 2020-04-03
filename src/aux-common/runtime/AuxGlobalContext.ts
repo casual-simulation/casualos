@@ -1,5 +1,4 @@
 import {
-    ScriptBot,
     BotAction,
     Bot,
     BotTags,
@@ -9,7 +8,7 @@ import {
     botRemoved,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { ScriptBotFactory } from './ScriptBot';
+import { RuntimeBot, RuntimeBotFactory } from './RuntimeBot';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -23,7 +22,7 @@ export interface AuxGlobalContext {
     /**
      * The ordered list of script bots.
      */
-    bots: ScriptBot[];
+    bots: RuntimeBot[];
 
     /**
      * The version.
@@ -38,12 +37,12 @@ export interface AuxGlobalContext {
     /**
      * The player bot.
      */
-    playerBot: ScriptBot;
+    playerBot: RuntimeBot;
 
     /**
      * The current bot.
      */
-    currentBot: ScriptBot;
+    currentBot: RuntimeBot;
 
     /**
      * Enqueues the given action.
@@ -66,13 +65,13 @@ export interface AuxGlobalContext {
      * Adds the given bot to the state and creates a new script bot to represent it.
      * @param bot The bot that should be created.
      */
-    createBot(bot: Bot): ScriptBot;
+    createBot(bot: Bot): RuntimeBot;
 
     /**
      * Destroys the given bot.
      * @param bot The bot to destroy.
      */
-    destroyBot(bot: ScriptBot): void;
+    destroyBot(bot: RuntimeBot): void;
 }
 
 /**
@@ -125,7 +124,7 @@ export interface AuxDevice {
  * @param context The context.
  * @param bot The bot.
  */
-export function addToContext(context: AuxGlobalContext, ...bots: ScriptBot[]) {
+export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
     for (let bot of bots) {
         const index = sortedIndexBy(context.bots, bot, sb => sb.id);
         context.bots.splice(index, 0, bot);
@@ -139,7 +138,7 @@ export function addToContext(context: AuxGlobalContext, ...bots: ScriptBot[]) {
  */
 export function removeFromContext(
     context: AuxGlobalContext,
-    ...bots: ScriptBot[]
+    ...bots: RuntimeBot[]
 ) {
     for (let bot of bots) {
         const index = sortedIndexBy(context.bots, bot, sb => sb.id);
@@ -159,7 +158,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     /**
      * The ordered list of script bots.
      */
-    bots: ScriptBot[] = [];
+    bots: RuntimeBot[] = [];
 
     /**
      * The list of actions that have been queued.
@@ -179,14 +178,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     /**
      * The player bot.
      */
-    playerBot: ScriptBot = null;
+    playerBot: RuntimeBot = null;
 
     /**
      * The current bot.
      */
-    currentBot: ScriptBot = null;
+    currentBot: RuntimeBot = null;
 
-    private _scriptFactory: ScriptBotFactory;
+    private _scriptFactory: RuntimeBotFactory;
 
     /**
      * Creates a new global context.
@@ -197,7 +196,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     constructor(
         version: AuxVersion,
         device: AuxDevice,
-        scriptFactory: ScriptBotFactory
+        scriptFactory: RuntimeBotFactory
     ) {
         this.version = version;
         this.device = device;
@@ -246,8 +245,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return bot;
     }
 
-    createBot(bot: Bot): ScriptBot {
-        const script = this._scriptFactory.createScriptBot(bot);
+    createBot(bot: Bot): RuntimeBot {
+        const script = this._scriptFactory.createRuntimeBot(bot);
         addToContext(this, script);
         this.enqueueAction(botAdded(bot));
         return script;
@@ -257,7 +256,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * Destroys the given bot.
      * @param bot The bot to destroy.
      */
-    destroyBot(bot: ScriptBot): void {
+    destroyBot(bot: RuntimeBot): void {
         this._scriptFactory.destroyScriptBot(bot);
         removeFromContext(this, bot);
         this.enqueueAction(botRemoved(bot.id));
