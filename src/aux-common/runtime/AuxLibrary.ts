@@ -1997,7 +1997,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let bots;
         if (Array.isArray(bot)) {
             bots = bot;
-        } else {
+        } else if (hasValue(bot)) {
             bots = [bot];
         }
 
