@@ -6,6 +6,7 @@ import {
     PrecalculatedBot,
     botAdded,
     botRemoved,
+    DEFAULT_ENERGY,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { RuntimeBot, RuntimeBotFactory, RuntimeBotsState } from './RuntimeBot';
@@ -48,6 +49,11 @@ export interface AuxGlobalContext {
      * The current bot.
      */
     currentBot: RuntimeBot;
+
+    /**
+     * The current energy that the context has.
+     */
+    energy: number;
 
     /**
      * Enqueues the given action.
@@ -196,6 +202,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The current bot.
      */
     currentBot: RuntimeBot = null;
+
+    /**
+     * The current energy that the context has.
+     */
+    energy: number = DEFAULT_ENERGY;
 
     private _scriptFactory: RuntimeBotFactory;
 

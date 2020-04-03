@@ -34,6 +34,7 @@ import {
     trimEvent,
     isBot,
     ORIGINAL_OBJECT,
+    DEFAULT_ENERGY,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -131,6 +132,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         } as ActionResult;
         arg = this._mapBotsToRuntimeBots(arg);
 
+        this._globalContext.energy = DEFAULT_ENERGY;
         const results = this._library.api.whisper(botIds, eventName, arg);
         result.results.push(...results);
 

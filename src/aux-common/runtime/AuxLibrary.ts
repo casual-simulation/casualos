@@ -73,6 +73,7 @@ import {
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
+    RanOutOfEnergyError,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -94,6 +95,7 @@ export interface AuxLibrary {
             eventName: string,
             arg?: any
         ): any[];
+        __energyCheck(): void;
         [key: string]: any;
     };
     typeDefinitions?: string;
@@ -273,6 +275,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             remote,
             webhook,
+
+            __energyCheck,
 
             player: {
                 toast,
@@ -2059,6 +2063,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return results;
+    }
+
+    function __energyCheck() {
+        let current = context.energy;
+        current -= 1;
+        context.energy = current;
+        if (current <= 0) {
+            throw new RanOutOfEnergyError();
+        }
     }
 
     // Helpers
