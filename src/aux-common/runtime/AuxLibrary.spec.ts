@@ -3176,109 +3176,40 @@ describe('AuxLibrary', () => {
             });
         });
 
-        // it('should send an @onEnter whisper to the bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 state: 'Xyz',
-        //                 test: '@changeState(this, "Abc")',
-        //                 stateAbcOnEnter:
-        //                     '@tags.enter = that.from + "-" + that.to',
-        //             },
-        //         },
-        //     };
+        it('should send an @onEnter whisper to the bot', () => {
+            const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
+            library.api.changeState(bot1, 'Abc');
 
-        //     // specify the UUID to use next
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            expect(enter).toBeCalledTimes(1);
+        });
 
-        //     expect(result.actions).toEqual([
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 state: 'Abc',
-        //                 enter: 'Xyz-Abc',
-        //             },
-        //         }),
-        //     ]);
-        // });
+        it('should send an @onExit whisper to the bot', () => {
+            const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+            bot1.tags.state = 'Xyz';
+            library.api.changeState(bot1, 'Abc');
 
-        // it('should send an @onExit whisper to the bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 state: 'Xyz',
-        //                 test: '@changeState(this, "Abc")',
-        //                 stateXyzOnExit:
-        //                     '@tags.exit = that.from + "-" + that.to',
-        //             },
-        //         },
-        //     };
+            expect(exit).toBeCalledTimes(1);
+        });
 
-        //     // specify the UUID to use next
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should use the given group name', () => {
+            const enter = (bot1.listeners.funAbcOnEnter = jest.fn());
+            const exit = (bot1.listeners.funXyzOnExit = jest.fn());
+            bot1.tags.fun = 'Xyz';
+            library.api.changeState(bot1, 'Abc', 'fun');
 
-        //     expect(result.actions).toEqual([
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 state: 'Abc',
-        //                 exit: 'Xyz-Abc',
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(enter).toBeCalledTimes(1);
+            expect(exit).toBeCalledTimes(1);
+        });
 
-        // it('should use the given group name', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 fun: 'Xyz',
-        //                 test: '@changeState(this, "Abc", "fun")',
-        //                 funXyzOnExit: '@tags.exit = that.from + "-" + that.to',
-        //                 funAbcOnEnter:
-        //                     '@tags.enter = that.from + "-" + that.to',
-        //             },
-        //         },
-        //     };
+        it('should do nothing if the state does not change', () => {
+            const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
+            const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+            bot1.tags.state = 'Xyz';
+            library.api.changeState(bot1, 'Xyz');
 
-        //     // specify the UUID to use next
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([
-        //         botUpdated('thisBot', {
-        //             tags: {
-        //                 fun: 'Abc',
-        //                 enter: 'Xyz-Abc',
-        //                 exit: 'Xyz-Abc',
-        //             },
-        //         }),
-        //     ]);
-        // });
-
-        // it('should do nothing if the state does not change', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 state: 'Xyz',
-        //                 test: '@changeState(this, "Xyz")',
-        //                 funXyzOnExit: '@tags.exit = that.from + "-" + that.to',
-        //                 funXyzOnEnter:
-        //                     '@tags.enter = that.from + "-" + that.to',
-        //             },
-        //         },
-        //     };
-
-        //     // specify the UUID to use next
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([]);
-        // });
+            expect(enter).not.toBeCalled();
+            expect(exit).not.toBeCalled();
+        });
 
         // it('should set the state tag on a bot from an argument to the given value', () => {
         //     const state: BotsState = {

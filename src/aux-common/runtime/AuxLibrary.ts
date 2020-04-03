@@ -1924,14 +1924,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         setTag(bot, groupName, stateName);
 
-        // const arg = {
-        //     to: stateName,
-        //     from: previousState,
-        // };
-        // if (hasValue(previousState)) {
-        //     whisper(bot, `${groupName}${previousState}OnExit`, arg);
-        // }
-        // whisper(bot, `${groupName}${stateName}OnEnter`, arg);
+        const arg = {
+            to: stateName,
+            from: previousState,
+        };
+        if (hasValue(previousState)) {
+            whisper(bot, `${groupName}${previousState}OnExit`, arg);
+        }
+        whisper(bot, `${groupName}${stateName}OnEnter`, arg);
     }
 
     /**
