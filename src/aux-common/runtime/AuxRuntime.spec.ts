@@ -4799,13 +4799,9 @@ describe('original action tests', () => {
                     createBot('newBot', {
                         auxCreator: 'thisBot',
                         onCreate: "@changeState(this, 'abc')",
+                        state: 'abc',
                     })
                 ),
-                botUpdated('newBot', {
-                    tags: {
-                        state: 'abc',
-                    },
-                }),
             ]);
         });
     });
@@ -7757,10 +7753,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             fun: true,
                             num: 123,
                         },
@@ -7871,10 +7863,6 @@ describe('original action tests', () => {
                             auxCreator: 'thisBot',
                             abc: 1,
                             onCreate: '@setTag(this, "#num", 100)',
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             num: 100,
                         },
                     }),
@@ -8349,10 +8337,6 @@ describe('original action tests', () => {
                             auxListening: true,
                             abc: `@tags.value = 10; whisper(this, "def")`,
                             def: `@tags.hit = tags.value === 10;`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hit: true,
                             value: 10,
                         },
@@ -8406,10 +8390,6 @@ describe('original action tests', () => {
                             auxListening: true,
                             setup: `@whisper(this, "otherPart")`,
                             otherPart: `@tags.hitSetup = true`,
-                        },
-                    }),
-                    botUpdated(expectedId, {
-                        tags: {
                             hitSetup: true,
                         },
                     }),

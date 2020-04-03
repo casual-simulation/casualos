@@ -2715,74 +2715,42 @@ describe('AuxLibrary', () => {
             const bots = library.api.getBots('abc', 'def');
             expect(bots[0]).toBe(bot);
         });
-        // it('should trigger onCreate() on the created bot.', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 num: 1,
-        //                 test: `@${name}({ abc: getTag(this, "#num"), "onCreate": "@setTag(this, \\"#num\\", 100)" });`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should trigger onCreate() on the created bot.', () => {
+            uuidMock.mockReturnValue('uuid');
+            const callback = jest.fn();
+            const bot = library.api.create({ abc: 'def', onCreate: callback });
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 abc: 1,
-        //                 onCreate: '@setTag(this, "#num", 100)',
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 num: 100,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(callback).toBeCalled();
+            expect(bot).toEqual({
+                id: 'uuid',
+                tags: {
+                    abc: 'def',
+                    onCreate: callback,
+                },
+                raw: {
+                    abc: 'def',
+                    onCreate: callback,
+                },
+                changes: {},
+                listeners: {
+                    onCreate: expect.any(Function),
+                },
+            });
+        });
 
-        // it('should trigger onAnyCreate() with the created bot as a parameter', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 num: 1,
-        //                 test: `@${name}({ abc: getTag(this, "#num") });`,
-        //             },
-        //         },
-        //         shoutBot: {
-        //             id: 'shoutBot',
-        //             tags: {
-        //                 onAnyCreate: '@setTag(this, "#num", 100)',
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should trigger onAnyCreate() with the created bot as a parameter', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 abc: 1,
-        //             },
-        //         }),
-        //         botUpdated('shoutBot', {
-        //             tags: {
-        //                 num: 100,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
+
+            const bot = library.api.create({ abc: 'def' });
+
+            expect(onAnyCreate1).toBeCalledWith({
+                bot: bot,
+            });
+        });
         it('should support arrays of diffs as arguments', () => {
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
             const bots = library.api.create([{ abc: 'def' }, { abc: 123 }]);
@@ -2882,336 +2850,136 @@ describe('AuxLibrary', () => {
             );
         });
 
-        // it('should be able to shout to a new bot', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}(getBots("test", true)); shout("abc");`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should be able to shout to a new bot', () => {
+            uuidMock.mockReturnValue('uuid');
+            const abc = jest.fn();
+            library.api.create({ abc: abc, test: true });
+            library.api.shout('abc');
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //             },
-        //         }),
-        //         botUpdated('aBot', {
-        //             tags: {
-        //                 hit: true,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(abc).toBeCalled();
+        });
 
-        // it('should be able to shout to a new bot that is just now listening', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@${name}(getBots("test", true), { auxListening: true }); shout("abc");`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should be able to shout to a new bot that is just now listening', () => {
+            uuidMock.mockReturnValue('uuid');
+            const abc = jest.fn();
+            library.api.create(
+                { auxListening: false, abc: abc, test: true },
+                { auxListening: true }
+            );
+            library.api.shout('abc');
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'thisBot',
-        //                 test: true,
-        //                 auxListening: true,
-        //                 abc: `@tags.hit = true;`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(abc).toBeCalled();
+        });
 
-        // it('should be able to shout to a bot that was created during another shout', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@shout("create"); shout("abc");`,
-        //             },
-        //         },
-        //         creatorBot: {
-        //             id: 'creatorBot',
-        //             tags: {
-        //                 create: `@${name}(getBots("test", true), { auxListening: true });`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should be able to shout to a bot that was created during another shout', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1', {});
+            addToContext(context, bot1);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'creatorBot',
-        //                 test: true,
-        //                 auxListening: true,
-        //                 abc: `@tags.hit = true;`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            const abc = jest.fn();
+            bot1.listeners.create = jest.fn(() => {
+                library.api.create({ test: true, abc: abc });
+            });
 
-        // it('should be able to shout multiple times to a bot that was created during another shout', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@shout("create"); shout("abc"); shout("def")`,
-        //             },
-        //         },
-        //         creatorBot: {
-        //             id: 'creatorBot',
-        //             tags: {
-        //                 create: `@${name}(getBots("test", true), { auxListening: true, space: 'custom' });`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //                 def: `@tags.hit2 = true;`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            library.api.shout('create');
+            library.api.shout('abc');
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             space: <any>'custom',
-        //             tags: {
-        //                 auxCreator: null,
-        //                 test: true,
-        //                 auxListening: true,
-        //                 abc: `@tags.hit = true;`,
-        //                 def: `@tags.hit2 = true;`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //                 hit2: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(abc).toBeCalledTimes(1);
+        });
 
-        // it('should be able to whisper to a bot that was created during another shout', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@let [newBot] = shout("create"); whisper(newBot, "abc");`,
-        //             },
-        //         },
-        //         creatorBot: {
-        //             id: 'creatorBot',
-        //             tags: {
-        //                 create: `@return ${name}(getBots("test", true), { auxListening: true });`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.hit = true;`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+        it('should be able to shout multiple times to a bot that was created during another shout', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1', {});
+            addToContext(context, bot1);
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'creatorBot',
-        //                 test: true,
-        //                 auxListening: true,
-        //                 abc: `@tags.hit = true;`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            const abc = jest.fn();
+            const def = jest.fn();
+            bot1.listeners.create = jest.fn(() => {
+                library.api.create({ test: true, abc, def, space: 'custom' });
+            });
 
-        // it('should be able to whisper to itself after being created', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@shout("create"); shout("abc");`,
-        //             },
-        //         },
-        //         creatorBot: {
-        //             id: 'creatorBot',
-        //             tags: {
-        //                 create: `@return ${name}(getBots("test", true), { auxListening: true });`,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 abc: `@tags.value = 10; whisper(this, "def")`,
-        //                 def: `@tags.hit = tags.value === 10;`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            library.api.shout('create');
+            library.api.shout('abc');
+            library.api.shout('def');
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             tags: {
-        //                 auxCreator: 'creatorBot',
-        //                 test: true,
-        //                 auxListening: true,
-        //                 abc: `@tags.value = 10; whisper(this, "def")`,
-        //                 def: `@tags.hit = tags.value === 10;`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hit: true,
-        //                 value: 10,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            expect(abc).toBeCalledTimes(1);
+            expect(def).toBeCalledTimes(1);
+        });
 
-        // it('should support complicated setup expressions', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@shout("ensureCreated"); shout("ensureCreated");`,
-        //             },
-        //         },
-        //         creatorBot: {
-        //             id: 'creatorBot',
-        //             tags: {
-        //                 ensureCreated: `@
-        //                     let b = getBot(byTag("test", true), bySpace("custom"));
-        //                     if (!b) {
-        //                         b = ${name}(getBots("test", true), { auxListening: true, space: "custom" });
-        //                         whisper(b, "setup");
-        //                     }
+        it('should be able to whisper to a bot that was created during another shout', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1', {});
+            addToContext(context, bot1);
 
-        //                     return b;
-        //                 `,
-        //             },
-        //         },
-        //         aBot: {
-        //             id: 'aBot',
-        //             tags: {
-        //                 test: true,
-        //                 setup: `@whisper(this, "otherPart")`,
-        //                 otherPart: `@tags.hitSetup = true`,
-        //                 auxListening: false,
-        //             },
-        //         },
-        //     };
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue(id);
-        //     const botAction = action('test', ['thisBot']);
-        //     const result = calculateActionResults(state, botAction);
+            const abc = jest.fn();
+            bot1.listeners.create = jest.fn(() => {
+                return library.api.create({ test: true, abc });
+            });
 
-        //     expect(result.actions).toEqual([
-        //         botAdded({
-        //             id: expectedId,
-        //             space: <any>'custom',
-        //             tags: {
-        //                 auxCreator: null,
-        //                 test: true,
-        //                 auxListening: true,
-        //                 setup: `@whisper(this, "otherPart")`,
-        //                 otherPart: `@tags.hitSetup = true`,
-        //             },
-        //         }),
-        //         botUpdated(expectedId, {
-        //             tags: {
-        //                 hitSetup: true,
-        //             },
-        //         }),
-        //     ]);
-        // });
+            let [newBot] = library.api.shout('create');
+            library.api.whisper(newBot, 'abc');
+
+            expect(abc).toBeCalledTimes(1);
+        });
+
+        it('should be able to whisper to itself after being created', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1', {});
+            addToContext(context, bot1);
+
+            const abc = jest.fn(() => {
+                library.api.whisper('uuid', 'def');
+            });
+            const def = jest.fn();
+            bot1.listeners.create = jest.fn(() => {
+                return library.api.create({ test: true, abc, def });
+            });
+
+            let [newBot] = library.api.shout('create');
+            library.api.shout('abc');
+
+            expect(abc).toBeCalledTimes(1);
+            expect(def).toBeCalledTimes(1);
+        });
+
+        it('should support complicated setup expressions', () => {
+            uuidMock.mockReturnValue('uuid');
+            const bot1 = createDummyRuntimeBot('test1', {});
+            addToContext(context, bot1);
+
+            const setup = jest.fn(() => {
+                library.api.whisper('uuid', 'otherPart');
+            });
+            const otherPart = jest.fn();
+            const ensureCreated = (bot1.listeners.ensureCreated = jest.fn(
+                () => {
+                    let b = library.api.getBot(
+                        library.api.byTag('test', true),
+                        library.api.bySpace('custom')
+                    );
+                    if (!b) {
+                        b = library.api.create(
+                            {
+                                test: true,
+                                otherPart,
+                                setup,
+                            },
+                            { space: 'custom' }
+                        ) as RuntimeBot;
+                        library.api.whisper(b, 'setup');
+                    }
+
+                    return b;
+                }
+            ));
+
+            library.api.shout('ensureCreated');
+            library.api.shout('ensureCreated');
+
+            expect(ensureCreated).toBeCalledTimes(2);
+            expect(setup).toBeCalledTimes(1);
+            expect(otherPart).toBeCalledTimes(1);
+        });
 
         describe('space', () => {
             it('should set the space of the bot', () => {

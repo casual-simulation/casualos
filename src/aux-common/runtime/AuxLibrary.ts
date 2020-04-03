@@ -70,6 +70,8 @@ import {
     isScriptBot,
     getBotSpace,
     trimEvent,
+    CREATE_ACTION_NAME,
+    CREATE_ANY_ACTION_NAME,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -1843,12 +1845,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         //     ret[i] = calc.sandbox.interface.addBot(bots[i]);
         // }
 
-        // event(CREATE_ACTION_NAME, ret);
-        // for (let bot of ret) {
-        //     event(CREATE_ANY_ACTION_NAME, null, {
-        //         bot: bot,
-        //     });
-        // }
+        event(CREATE_ACTION_NAME, ret);
+        for (let bot of ret) {
+            event(CREATE_ANY_ACTION_NAME, null, {
+                bot: bot,
+            });
+        }
 
         if (ret.length === 1) {
             return ret[0];

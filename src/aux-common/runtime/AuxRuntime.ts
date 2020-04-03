@@ -32,6 +32,8 @@ import {
     botUpdated,
     createBot,
     trimEvent,
+    isBot,
+    ORIGINAL_OBJECT,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -58,6 +60,7 @@ import {
     CompiledBotValues,
 } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
+import transform from 'lodash/transform';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -128,8 +131,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         } as ActionResult;
 
         let ids = !!botIds ? botIds : this._globalContext.bots.map(b => b.id);
-
         let tag = trimEvent(eventName);
+        arg = this._mapBotsToRuntimeBots(arg);
 
         for (let id of ids) {
             const bot = this._globalContext.state[id];
@@ -541,6 +544,48 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             }
         }
         return null;
+    }
+
+    /**
+     * Maps the given value to a new value where bots are replaced with script bots.
+     * This makes it easy to modify other bot values in listeners. If the value is not convertable,
+     * then it is returned unaffected. Only objects and arrays are convertable.
+     *
+     * Works by making a copy of the value where every bot value is replaced with a reference
+     * to a script bot instance for the bot. The copy has a reference to the original value in the ORIGINAL_OBJECT symbol property.
+     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onUniverseAction works properly.
+     *
+     * @param context The sandbox context.
+     * @param value The value that should be converted.
+     */
+    private _mapBotsToRuntimeBots(value: any): any {
+        if (isBot(value)) {
+            return this._globalContext.state[value.id];
+        } else if (Array.isArray(value) && value.some(isBot)) {
+            let arr = value.map(b =>
+                isBot(b) ? this._globalContext.state[b.id] : b
+            );
+            (<any>arr)[ORIGINAL_OBJECT] = value;
+            return arr;
+        } else if (
+            hasValue(value) &&
+            !Array.isArray(value) &&
+            !(value instanceof ArrayBuffer) &&
+            typeof value === 'object'
+        ) {
+            return transform(
+                value,
+                (result, value, key) =>
+                    this._transformBotsToRuntimeBots(result, value, key),
+                { [ORIGINAL_OBJECT]: value }
+            );
+        }
+
+        return value;
+    }
+
+    private _transformBotsToRuntimeBots(result: any, value: any, key: any) {
+        result[key] = this._mapBotsToRuntimeBots(value);
     }
 }
 

@@ -6,6 +6,7 @@ import {
     RuntimeBot,
 } from '../RuntimeBot';
 import { createCompiledBot } from '../CompiledBot';
+import pickBy from 'lodash/pickBy';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {
@@ -27,7 +28,15 @@ export function createDummyRuntimeBot(
     tags: BotTags = {},
     space?: BotSpace
 ): RuntimeBot {
-    const precalc = createCompiledBot(id, tags, undefined, space);
+    let functions = pickBy(tags, (t: any) => typeof t === 'function');
+    const precalc = createCompiledBot(
+        id,
+        tags,
+        undefined,
+        space,
+        undefined,
+        functions
+    );
     return createRuntimeBot(precalc, testScriptBotInterface);
 }
 
