@@ -81,6 +81,7 @@ describe('AuxRuntime', () => {
     let events: BotAction[][];
 
     beforeEach(() => {
+        uuidMock.mockReset();
         memory = createMemoryPartition({
             type: 'memory',
             initialState: {},
@@ -1017,6 +1018,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid', {
+                                auxCreator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -1025,7 +1027,7 @@ describe('AuxRuntime', () => {
             });
 
             it('should add the created bot to the runtime state', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
+                uuidMock.mockReturnValue('uuid');
                 runtime.botsAdded([
                     createBot('test1', {
                         create: `@create({ "shout": "@player.toast('abc')" })`,
@@ -1040,6 +1042,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid', {
+                                auxCreator: 'test1',
                                 shout: "@player.toast('abc')",
                             })
                         ),
@@ -1051,7 +1054,7 @@ describe('AuxRuntime', () => {
 
         describe('bot_removed', () => {
             it('should produce an event when a bot is deleted', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
+                uuidMock.mockReturnValue('uuid');
                 runtime.botsAdded([
                     createBot('test1', {
                         delete: '@destroy(this)',
@@ -1065,7 +1068,7 @@ describe('AuxRuntime', () => {
             });
 
             it('should remove the bot from the runtime state', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
+                uuidMock.mockReturnValue('uuid');
                 runtime.botsAdded([
                     createBot('test1', {
                         delete: '@destroy(this)',
@@ -1652,7 +1655,6 @@ describe('original action tests', () => {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
                     test: '@create({ auxCreator: null }, this);',
-                    auxCreator: null,
 
                     // the new bot is not destroyed
                 },
@@ -2473,7 +2475,6 @@ describe('original action tests', () => {
                         '@create({ auxCreator: null }, this, that, { testFormula: "=this.name" });',
                     name: 'Friend',
                     testFormula: '=this.name',
-                    auxCreator: null,
 
                     // the new bot is not destroyed
                 },
@@ -2513,7 +2514,6 @@ describe('original action tests', () => {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
                     abcdef: '@create({ auxCreator: null }, this)',
-                    auxCreator: null,
                 },
             }),
         ]);
@@ -2551,7 +2551,6 @@ describe('original action tests', () => {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
                     abcdef: '@create({ auxCreator: null }, this)',
-                    auxCreator: null,
                 },
             }),
         ]);
@@ -7736,7 +7735,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            auxCreator: null,
                         },
                     }),
                     botUpdated('thisBot', {
@@ -7765,7 +7763,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            auxCreator: null,
                         },
                     }),
                     botUpdated(expectedId, {
@@ -7795,7 +7792,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             name: 'bob',
-                            auxCreator: null,
                         },
                     }),
                     botUpdated('thisBot', {
@@ -7825,7 +7821,6 @@ describe('original action tests', () => {
                         tags: {
                             formula: '=getTag(this, "#num")',
                             num: 100,
-                            auxCreator: null,
                         },
                     }),
                     botUpdated('thisBot', {
@@ -8111,7 +8106,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         space: 'tempLocal',
                         tags: {
-                            auxCreator: null,
                             test: true,
                             hello: true,
                         },
@@ -8282,7 +8276,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         space: <any>'custom',
                         tags: {
-                            auxCreator: null,
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
@@ -8435,7 +8428,6 @@ describe('original action tests', () => {
                         id: expectedId,
                         space: <any>'custom',
                         tags: {
-                            auxCreator: null,
                             test: true,
                             auxListening: true,
                             setup: `@whisper(this, "otherPart")`,
@@ -8469,9 +8461,7 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: 'local',
-                            tags: {
-                                auxCreator: null,
-                            },
+                            tags: {},
                         }),
                     ]);
                 });
@@ -8494,9 +8484,7 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: 'local',
-                            tags: {
-                                auxCreator: null,
-                            },
+                            tags: {},
                         }),
                     ]);
                 });
@@ -8518,9 +8506,7 @@ describe('original action tests', () => {
                     expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
-                            tags: {
-                                auxCreator: null,
-                            },
+                            tags: {},
                         }),
                     ]);
                 });
@@ -8550,9 +8536,7 @@ describe('original action tests', () => {
                         expect(result.actions).toEqual([
                             botAdded({
                                 id: expectedId,
-                                tags: {
-                                    auxCreator: null,
-                                },
+                                tags: {},
                             }),
                         ]);
                     }
@@ -8616,7 +8600,6 @@ describe('original action tests', () => {
                             id: expectedId,
                             tags: {
                                 abc: 'def',
-                                auxCreator: null,
                             },
                         }),
                     ]);
@@ -8647,9 +8630,7 @@ describe('original action tests', () => {
                         botAdded({
                             id: expectedId,
                             space: <any>'def',
-                            tags: {
-                                auxCreator: null,
-                            },
+                            tags: {},
                         }),
                     ]);
                 });
@@ -8671,9 +8652,7 @@ describe('original action tests', () => {
                     expect(result.actions).toEqual([
                         botAdded({
                             id: expectedId,
-                            tags: {
-                                auxCreator: null,
-                            },
+                            tags: {},
                         }),
                     ]);
                 });

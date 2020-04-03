@@ -29,6 +29,8 @@ import {
     convertToCopiableValue,
     botAdded,
     ActionResult,
+    botUpdated,
+    createBot,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -54,6 +56,7 @@ import {
     CompiledBotsState,
     CompiledBotValues,
 } from './CompiledBot';
+import sortBy from 'lodash/sortBy';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -68,6 +71,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
 
+    private _updatedBots = new Map<string, RuntimeBot>();
     // TODO: Update version number
     // TODO: Update device
     private _globalContext: AuxGlobalContext;
@@ -124,11 +128,33 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             const bot = this._compiledState[id];
             const listener = bot.listeners[eventName];
             if (listener) {
-                result.results.push(listener(arg));
+                let value = null;
+                try {
+                    value = listener(arg);
+                } catch (ex) {
+                    result.errors.push({
+                        bot: createBot(bot.id, bot.tags),
+                        tag: eventName,
+                        error: ex,
+                    });
+                }
+                result.results.push(value);
                 result.listeners.push(bot);
             }
         }
         const actions = this._globalContext.dequeueActions();
+        const updates = [...this._updatedBots.values()]
+            .filter(bot => {
+                return Object.keys(bot.changes).length > 0;
+            })
+            .map(bot =>
+                botUpdated(bot.id, {
+                    tags: bot.changes,
+                })
+            );
+        const sortedUpdates = sortBy(updates, u => u.id);
+        this._updatedBots.clear();
+        actions.push(...sortedUpdates);
         this._onActions.next(actions);
         result.actions = actions;
         return result;
@@ -352,6 +378,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     updateTag(bot: CompiledBot, tag: string, newValue: any): boolean {
         if (this._globalContext.allowsEditing) {
             this._compileTag(bot, tag, newValue);
+            this._updatedBots.set(bot.id, bot.script);
             return true;
         }
         return false;
