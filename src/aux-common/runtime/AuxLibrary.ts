@@ -1039,7 +1039,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const user = context.playerBot;
         if (user) {
             const dimension = getTag(user, 'auxPagePortal');
-            return dimension || undefined;
+            if (hasValue(dimension)) {
+                return dimension.toString();
+            }
+            return undefined;
         }
         return undefined;
     }
@@ -1051,7 +1054,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const user = context.playerBot;
         if (user) {
             let universe = getTag(user, 'auxUniverse');
-            return universe || undefined;
+            if (hasValue(universe)) {
+                return universe.toString();
+            }
+            return undefined;
         }
         return undefined;
     }
@@ -1062,7 +1068,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getInventoryDimension(): string {
         const user = context.playerBot;
         if (user) {
-            return getTag(user, 'auxInventoryPortal');
+            const inventory = getTag(user, 'auxInventoryPortal');
+            if (hasValue(inventory)) {
+                return inventory.toString();
+            }
+            return null;
         } else {
             return null;
         }
@@ -1074,7 +1084,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getMenuDimension(): string {
         const user = context.playerBot;
         if (user) {
-            return getTag(user, 'auxMenuPortal');
+            const menu = getTag(user, 'auxMenuPortal');
+            if (hasValue(menu)) {
+                return menu.toString();
+            }
+            return null;
         } else {
             return null;
         }
@@ -1098,7 +1112,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return null;
         }
 
-        return dimension;
+        return dimension.toString();
     }
 
     /**

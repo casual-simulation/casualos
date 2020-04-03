@@ -101,6 +101,8 @@ describe('AuxLibrary', () => {
 
     const falsyCases = [['false', false], ['0', 0]];
     const emptyCases = [['null', null], ['empty string', '']];
+    const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
+    ];
 
     describe('getBots()', () => {
         let bot1: RuntimeBot;
@@ -1705,6 +1707,15 @@ describe('AuxLibrary', () => {
                 const result = library.api.player.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
+
+            it.each(numberCases)(
+                'should support "%s" when given %s',
+                (expected, given) => {
+                    player.tags.auxPagePortal = given;
+                    const result = library.api.player.isInDimension(expected);
+                    expect(result).toEqual(true);
+                }
+            );
         });
 
         describe('player.getCurrentDimension()', () => {
@@ -1732,6 +1743,15 @@ describe('AuxLibrary', () => {
                 const result = library.api.player.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.auxPagePortal = given;
+                    const result = library.api.player.getCurrentDimension();
+                    expect(result).toEqual(expected);
+                }
+            );
         });
 
         describe('player.getCurrentUniverse()', () => {
@@ -1753,6 +1773,15 @@ describe('AuxLibrary', () => {
                 const result = library.api.player.getCurrentUniverse();
                 expect(result).toBeUndefined();
             });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.auxUniverse = given;
+                    const result = library.api.player.getCurrentUniverse();
+                    expect(result).toEqual(expected);
+                }
+            );
         });
 
         describe('player.getInventoryDimension()', () => {
@@ -1769,6 +1798,15 @@ describe('AuxLibrary', () => {
                 const result = library.api.player.getInventoryDimension();
                 expect(result).toEqual('abc');
             });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.auxInventoryPortal = given;
+                    const result = library.api.player.getInventoryDimension();
+                    expect(result).toEqual(expected);
+                }
+            );
         });
 
         describe('player.getMenuDimension()', () => {
@@ -1785,6 +1823,15 @@ describe('AuxLibrary', () => {
                 const result = library.api.player.getMenuDimension();
                 expect(result).toEqual('abc');
             });
+
+            it.each(numberCases)(
+                'should return "%s" when given %s',
+                (expected, given) => {
+                    player.tags.auxMenuPortal = given;
+                    const result = library.api.player.getMenuDimension();
+                    expect(result).toEqual(expected);
+                }
+            );
         });
 
         describe('player.getPortalDimension()', () => {
@@ -1809,9 +1856,8 @@ describe('AuxLibrary', () => {
                 ['falsy', null],
             ];
 
-            it.each(cases)(
-                'should get the dimension for the %s portal',
-                (portal, expectedDimension) => {
+            describe.each(cases)('%s', (portal, expectedDimension) => {
+                it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.auxPagePortal = 'pageDimension';
                     player.tags.auxInventoryPortal = 'inventoryDimension';
                     player.tags.auxMenuPortal = 'menuDimension';
@@ -1822,8 +1868,29 @@ describe('AuxLibrary', () => {
                         portal
                     );
                     expect(result).toEqual(expectedDimension);
-                }
-            );
+                });
+
+                it.each(numberCases)(
+                    'should return "%s" when given %s',
+                    (expected, given) => {
+                        player.tags.auxPagePortal = given;
+                        player.tags.auxInventoryPortal = given;
+                        player.tags.auxMenuPortal = given;
+                        player.tags.auxSheetPortal = given;
+                        player.tags.falsy = false;
+                        player.tags.number = 0;
+                        const result = library.api.player.getPortalDimension(
+                            portal
+                        );
+
+                        if (expectedDimension) {
+                            expect(result).toEqual(expected);
+                        } else {
+                            expect(result).toEqual(null);
+                        }
+                    }
+                );
+            });
         });
 
         describe('player.getDimensionalDepth()', () => {
