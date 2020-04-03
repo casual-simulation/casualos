@@ -508,9 +508,21 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 bot: ctx => ctx.bot.script,
                 tags: ctx => ctx.bot.script.tags,
                 raw: ctx => ctx.bot.script.raw,
+                creator: ctx => this._getCreator(ctx.bot),
             },
             arguments: [['that', 'data']],
         });
+    }
+
+    private _getCreator(bot: CompiledBot) {
+        const creatorId = bot.script.tags.auxCreator;
+        if (hasValue(creatorId) && typeof creatorId === 'string') {
+            const creator = this._compiledState[creatorId];
+            if (creator) {
+                return creator.script;
+            }
+        }
+        return null;
     }
 }
 
