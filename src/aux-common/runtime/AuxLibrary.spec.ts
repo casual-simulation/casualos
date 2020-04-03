@@ -3411,6 +3411,193 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot3, bot4]);
         });
     });
+
+    describe('changeState()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should set the state tag to the given value', () => {
+            library.api.changeState(bot1, 'abc');
+
+            expect(bot1.tags).toEqual({
+                state: 'abc',
+            });
+        });
+
+        // it('should send an @onEnter whisper to the bot', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 state: 'Xyz',
+        //                 test: '@changeState(this, "Abc")',
+        //                 stateAbcOnEnter:
+        //                     '@tags.enter = that.from + "-" + that.to',
+        //             },
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     const botAction = action('test', ['thisBot']);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         botUpdated('thisBot', {
+        //             tags: {
+        //                 state: 'Abc',
+        //                 enter: 'Xyz-Abc',
+        //             },
+        //         }),
+        //     ]);
+        // });
+
+        // it('should send an @onExit whisper to the bot', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 state: 'Xyz',
+        //                 test: '@changeState(this, "Abc")',
+        //                 stateXyzOnExit:
+        //                     '@tags.exit = that.from + "-" + that.to',
+        //             },
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     const botAction = action('test', ['thisBot']);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         botUpdated('thisBot', {
+        //             tags: {
+        //                 state: 'Abc',
+        //                 exit: 'Xyz-Abc',
+        //             },
+        //         }),
+        //     ]);
+        // });
+
+        // it('should use the given group name', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 fun: 'Xyz',
+        //                 test: '@changeState(this, "Abc", "fun")',
+        //                 funXyzOnExit: '@tags.exit = that.from + "-" + that.to',
+        //                 funAbcOnEnter:
+        //                     '@tags.enter = that.from + "-" + that.to',
+        //             },
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     const botAction = action('test', ['thisBot']);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         botUpdated('thisBot', {
+        //             tags: {
+        //                 fun: 'Abc',
+        //                 enter: 'Xyz-Abc',
+        //                 exit: 'Xyz-Abc',
+        //             },
+        //         }),
+        //     ]);
+        // });
+
+        // it('should do nothing if the state does not change', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 state: 'Xyz',
+        //                 test: '@changeState(this, "Xyz")',
+        //                 funXyzOnExit: '@tags.exit = that.from + "-" + that.to',
+        //                 funXyzOnEnter:
+        //                     '@tags.enter = that.from + "-" + that.to',
+        //             },
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     const botAction = action('test', ['thisBot']);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([]);
+        // });
+
+        // it('should set the state tag on a bot from an argument to the given value', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 test: '@changeState(that, "abc")',
+        //             },
+        //         },
+        //         thatBot: {
+        //             id: 'thatBot',
+        //             tags: {},
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     const botAction = action(
+        //         'test',
+        //         ['thisBot'],
+        //         null,
+        //         state['thatBot']
+        //     );
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         botUpdated('thatBot', {
+        //             tags: {
+        //                 state: 'abc',
+        //             },
+        //         }),
+        //     ]);
+        // });
+
+        // it('should be possible to use changeState() while in onCreate()', () => {
+        //     const state: BotsState = {
+        //         thisBot: {
+        //             id: 'thisBot',
+        //             tags: {
+        //                 test: `@create({ onCreate: "@changeState(this, 'abc')" })`,
+        //             },
+        //         },
+        //     };
+
+        //     // specify the UUID to use next
+        //     uuidMock.mockReturnValue('newBot');
+        //     const botAction = action('test', ['thisBot'], null);
+        //     const result = calculateActionResults(state, botAction);
+
+        //     expect(result.actions).toEqual([
+        //         botAdded(
+        //             createBot('newBot', {
+        //                 auxCreator: 'thisBot',
+        //                 onCreate: "@changeState(this, 'abc')",
+        //             })
+        //         ),
+        //         botUpdated('newBot', {
+        //             tags: {
+        //                 state: 'abc',
+        //             },
+        //         }),
+        //     ]);
+        // });
+    });
+
     describe('superShout()', () => {
         it('should emit a super_shout local event', () => {
             const action = library.api.superShout('sayHello');

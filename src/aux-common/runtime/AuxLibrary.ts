@@ -247,6 +247,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             create,
             destroy,
+            changeState,
             superShout,
 
             byTag,
@@ -1909,6 +1910,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         for (let child of children) {
             destroyBot(child);
         }
+    }
+
+    /**
+     * Changes the state that the given bot is in.
+     * @param bot The bot to change.
+     * @param stateName The state that the bot should move to.
+     * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+     */
+    function changeState(
+        bot: Bot,
+        stateName: string,
+        groupName: string = 'state'
+    ) {
+        const previousState = getTag(bot, groupName);
+        if (previousState === stateName) {
+            return;
+        }
+        setTag(bot, groupName, stateName);
+
+        // const arg = {
+        //     to: stateName,
+        //     from: previousState,
+        // };
+        // if (hasValue(previousState)) {
+        //     whisper(bot, `${groupName}${previousState}OnExit`, arg);
+        // }
+        // whisper(bot, `${groupName}${stateName}OnEnter`, arg);
     }
 
     /**
