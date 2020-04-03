@@ -37,4 +37,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         bot.values[tag] = newValue;
         return true;
     },
+    getValue(bot: PrecalculatedBot, tag: string) {
+        return bot.values[tag];
+    },
 };

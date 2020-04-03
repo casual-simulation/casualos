@@ -59,7 +59,8 @@ export function createRuntimeBot(
             } else if (key in constantTags) {
                 return constantTags[<keyof typeof constantTags>key];
             }
-            return bot.values[key];
+
+            return manager.getValue(bot, key);
         },
         set(target, key: string, value, receiver) {
             if (key in constantTags) {
@@ -177,6 +178,13 @@ export interface RuntimeBotInterface {
      * @param newValue The new tag value.
      */
     updateTag(bot: CompiledBot, tag: string, newValue: any): boolean;
+
+    /**
+     * Gets the value for the given tag on the given bot.
+     * @param bot The bot.
+     * @param tag The tag.
+     */
+    getValue(bot: CompiledBot, tag: string): any;
 }
 
 /**

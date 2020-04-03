@@ -357,6 +357,10 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         return false;
     }
 
+    getValue(bot: CompiledBot, tag: string): any {
+        return this._updateTag(bot, tag);
+    }
+
     private _updateTag(newBot: CompiledBot, tag: string): any {
         const compiled = newBot.compiledValues[tag];
         try {
