@@ -62,6 +62,7 @@ import {
     RestoreHistoryMarkAction,
     loadSimulation,
     unloadSimulation,
+    BotSpace,
 } from '../bots';
 import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
@@ -71,6 +72,7 @@ import { remote } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { AuxDevice, AuxVersion } from './AuxGlobalContext';
 import { values } from 'lodash';
+import { RealtimeEditMode } from './RuntimeBot';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -97,7 +99,12 @@ describe('AuxRuntime', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
-            }
+            },
+            undefined,
+            new Map<BotSpace, RealtimeEditMode>([
+                ['shared', RealtimeEditMode.Immediate],
+                [<any>'delayed', RealtimeEditMode.Delayed],
+            ])
         );
 
         events = [];
@@ -1084,7 +1091,29 @@ describe('AuxRuntime', () => {
             });
         });
 
-        describe('bot_updated', () => {});
+        describe('bot_updated', () => {
+            it('should produce an event when a bot is modified', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        update: '@tags.value = 123',
+                    }),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                value: 123,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+        });
     });
 
     describe('formulas', () => {
@@ -1598,6 +1627,105 @@ describe('AuxRuntime', () => {
                 addedBots: ['test'],
                 removedBots: [],
                 updatedBots: [],
+            });
+        });
+    });
+
+    describe('edit modes', () => {
+        // The delayed realtime edit mode disallows
+        // edits from being immediately observed in the realtime space.
+        describe('delayed', () => {
+            it('should delay updates for bots that are in a space that is delayed', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot(
+                        'test1',
+                        {
+                            update: `@
+                            tags.value = 123;
+                            // value is not updated to 123 because
+                            // the update is delayed
+                            player.toast(tags.value);
+                        `,
+                        },
+                        <any>'delayed'
+                    ),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        // value should not have been updated
+                        toast(undefined),
+
+                        // but it should emit a bot update
+                        // so the partition can choose to propagate it.
+                        botUpdated('test1', {
+                            tags: {
+                                value: 123,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+
+            it('should delay creation of bots that are in a space that is delayed', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        create: `@
+                            let b = create({ space: 'delayed', value: 123 });
+                            expect(b).toBe(null);
+                        `,
+                    }),
+                ]);
+                const result = runtime.shout('create');
+
+                await waitAsync();
+
+                expect(result.errors).toEqual([]);
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot(
+                                'uuid',
+                                {
+                                    value: 123,
+                                },
+                                <any>'delayed'
+                            )
+                        ),
+                    ],
+                ]);
+            });
+
+            it('should delay deletion of bots that are in a space that is delayed', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        delete: `@
+                            let b1 = getBot('id', 'test2');
+                            destroy('test2');
+                            let b2 = getBot('id', 'test2');
+                            expect(b1).toEqual(b2);
+                        `,
+                    }),
+                    createBot(
+                        'test2',
+                        {
+                            value: 123,
+                        },
+                        <any>'delayed'
+                    ),
+                ]);
+                const result = runtime.shout('delete');
+
+                await waitAsync();
+
+                expect(result.errors).toEqual([]);
+                expect(events).toEqual([[botRemoved('test2')]]);
             });
         });
     });

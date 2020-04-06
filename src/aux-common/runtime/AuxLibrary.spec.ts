@@ -3658,5 +3658,11 @@ describe('AuxLibrary', () => {
             };
             expect(onAnyListen4).toBeCalledWith(expected);
         });
+
+        it('should ignore null bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            library.api.whisper([bot1, null], 'sayHello');
+            expect(sayHello1).toBeCalledTimes(1);
+        });
     });
 });

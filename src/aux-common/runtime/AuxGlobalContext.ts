@@ -11,7 +11,12 @@ import {
     RanOutOfEnergyError,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { RuntimeBot, RuntimeBotFactory, RuntimeBotsState } from './RuntimeBot';
+import {
+    RuntimeBot,
+    RuntimeBotFactory,
+    RuntimeBotsState,
+    RealtimeEditMode,
+} from './RuntimeBot';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -300,8 +305,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): RuntimeBot {
-        const script = this._scriptFactory.createRuntimeBot(bot);
-        addToContext(this, script);
+        const script = this._scriptFactory.createRuntimeBot(bot) || null;
+        if (script) {
+            addToContext(this, script);
+        }
         this.enqueueAction(botAdded(bot));
         return script;
     }
@@ -311,8 +318,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * @param bot The bot to destroy.
      */
     destroyBot(bot: RuntimeBot): void {
-        this._scriptFactory.destroyScriptBot(bot);
-        removeFromContext(this, bot);
+        const mode = this._scriptFactory.destroyScriptBot(bot);
+        if (mode === RealtimeEditMode.Immediate) {
+            removeFromContext(this, bot);
+        }
         this.enqueueAction(botRemoved(bot.id));
     }
 }

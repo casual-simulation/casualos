@@ -37,6 +37,7 @@ import {
     DEFAULT_ENERGY,
     ScriptError,
     RanOutOfEnergyError,
+    getBotSpace,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -56,11 +57,16 @@ import {
     RuntimeBotFactory,
     createRuntimeBot,
     RuntimeBot,
+    RealtimeEditMode,
+    getRealtimeEditMode,
+    SpaceRealtimeEditModeMap,
+    DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
 } from './RuntimeBot';
 import {
     CompiledBot,
     CompiledBotsState,
     CompiledBotValues,
+    CompiledBotListener,
 } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
@@ -86,6 +92,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     private _globalContext: AuxGlobalContext;
 
     private _library: AuxLibrary;
+    private _editModesMap: SpaceRealtimeEditModeMap;
 
     /**
      * Creates a new AuxRuntime using the given library factory.
@@ -96,10 +103,12 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         device: AuxDevice,
         libraryFactory: (
             context: AuxGlobalContext
-        ) => AuxLibrary = createDefaultLibrary
+        ) => AuxLibrary = createDefaultLibrary,
+        editModesMap: SpaceRealtimeEditModeMap = DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
+        this._editModesMap = editModesMap;
         this._onActions = new Subject();
     }
 
@@ -297,13 +306,25 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     }
 
     createRuntimeBot(bot: Bot): RuntimeBot {
-        const compiled = this._createCompiledBot(bot, true);
-        this._newBots.set(bot.id, compiled.script);
-        return compiled.script;
+        const space = getBotSpace(bot);
+        const mode = getRealtimeEditMode(this._editModesMap, space);
+        if (mode === RealtimeEditMode.Immediate) {
+            const compiled = this._createCompiledBot(bot, true);
+            this._newBots.set(bot.id, compiled.script);
+            return compiled.script;
+        }
+        return null;
     }
 
     destroyScriptBot(bot: RuntimeBot) {
-        delete this._compiledState[bot.id];
+        const space = getBotSpace(bot);
+        const mode = getRealtimeEditMode(this._editModesMap, space);
+
+        if (mode === RealtimeEditMode.Immediate) {
+            delete this._compiledState[bot.id];
+        }
+
+        return mode;
     }
 
     private _updateDependentBots(
@@ -378,24 +399,45 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         return createRuntimeBot(bot, this);
     }
 
-    updateTag(bot: CompiledBot, tag: string, newValue: any): boolean {
+    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
         if (this._globalContext.allowsEditing) {
-            this._compileTag(bot, tag, newValue);
+            const space = getBotSpace(bot);
+            const mode = getRealtimeEditMode(this._editModesMap, space);
+            if (mode === RealtimeEditMode.Immediate) {
+                this._compileTag(bot, tag, newValue);
+            }
             this._updatedBots.set(bot.id, bot.script);
-            return true;
+            return mode;
         }
-        return false;
+        return RealtimeEditMode.None;
     }
 
     getValue(bot: CompiledBot, tag: string): any {
         return this._updateTag(bot, tag);
     }
 
+    getListener(bot: CompiledBot, tag: string): CompiledBotListener {
+        const listener = bot.listeners[tag];
+        if (listener) {
+            return listener;
+        }
+        this.getValue(bot, tag);
+        return bot.listeners[tag] || null;
+    }
+
     private _updateTag(newBot: CompiledBot, tag: string): any {
         const compiled = newBot.compiledValues[tag];
         try {
-            return (newBot.values[tag] =
+            const value = (newBot.values[tag] =
                 typeof compiled === 'function' ? compiled() : compiled);
+
+            if (isScript(value) && !newBot.listeners[tag]) {
+                newBot.listeners[tag] = this._compile(newBot, tag, value, {
+                    allowsEditing: true,
+                });
+            }
+
+            return value;
         } catch (ex) {
             if ('error' in ex) {
                 const scriptError = ex as ScriptError;
@@ -412,6 +454,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
             bot.listeners[tag] = listener;
+        } else {
+            delete bot.listeners[tag];
         }
         bot.compiledValues[tag] = value;
         if (typeof value !== 'function') {

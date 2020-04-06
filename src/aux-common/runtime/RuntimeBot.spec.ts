@@ -9,6 +9,7 @@ import {
     createRuntimeBot,
     RuntimeBotInterface,
     RuntimeBot,
+    RealtimeEditMode,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -21,6 +22,7 @@ describe('RuntimeBot', () => {
     let device: AuxDevice;
     let manager: RuntimeBotInterface;
     let updateTagMock: jest.Mock;
+    let getListenerMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -41,12 +43,17 @@ describe('RuntimeBot', () => {
         );
 
         updateTagMock = jest.fn();
-        updateTagMock.mockReturnValue(true);
+        updateTagMock.mockReturnValue(RealtimeEditMode.Immediate);
+
+        getListenerMock = jest.fn(
+            (bot: CompiledBot, tag: string) => bot.listeners[tag]
+        );
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
                 return bot.values[tag];
             },
+            getListener: getListenerMock,
         };
 
         precalc = createCompiledBot(
@@ -119,8 +126,8 @@ describe('RuntimeBot', () => {
             expect(script.raw.fun).toEqual('hello');
         });
 
-        it('should prevent setting the tag when updateTag() returns false', () => {
-            updateTagMock.mockReturnValueOnce(false);
+        it('should prevent setting the tag when updateTag() returns RealtimeEditMode.None', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
             script.tags.fun = 'hello';
             expect(script.tags.fun).not.toEqual('hello');
             expect(script.raw.fun).not.toEqual('hello');
@@ -141,11 +148,27 @@ describe('RuntimeBot', () => {
             );
         });
 
-        it('should prevent deleting the tag when updateTag() returns false', () => {
-            updateTagMock.mockReturnValueOnce(false);
+        it('should prevent deleting the tag when updateTag() returns RealtimeEditMode.None', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
             delete script.tags.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
+        });
+
+        it('should delay setting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            script.tags.abc = 'fun';
+            expect(script.tags.abc).not.toEqual('fun');
+            expect(script.raw.abc).not.toEqual('fun');
+            expect(script.changes.abc).toEqual('fun');
+        });
+
+        it('should delay deleting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            delete script.tags.abc;
+            expect(script.tags.abc).not.toEqual(null);
+            expect(script.raw.abc).not.toEqual(null);
+            expect(script.changes.abc).toEqual(null);
         });
     });
 
@@ -190,8 +213,8 @@ describe('RuntimeBot', () => {
             );
         });
 
-        it('should prevent setting the tag when updateTag() returns false', () => {
-            updateTagMock.mockReturnValueOnce(false);
+        it('should prevent setting the tag when updateTag() returns RealtimeEditMode.None', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
             script.raw.fun = 'hello';
             expect(script.tags.fun).not.toEqual('hello');
             expect(script.raw.fun).not.toEqual('hello');
@@ -207,11 +230,36 @@ describe('RuntimeBot', () => {
             );
         });
 
-        it('should prevent deleting the tag when updateTag() returns false', () => {
-            updateTagMock.mockReturnValueOnce(false);
+        it('should prevent deleting the tag when updateTag() returns RealtimeEditMode.None', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
             delete script.raw.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
+        });
+
+        it('should delay setting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            script.raw.abc = 'fun';
+            expect(script.tags.abc).not.toEqual('fun');
+            expect(script.raw.abc).not.toEqual('fun');
+            expect(script.changes.abc).toEqual('fun');
+        });
+
+        it('should delay deleting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
+            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            delete script.raw.abc;
+            expect(script.tags.abc).not.toEqual(null);
+            expect(script.raw.abc).not.toEqual(null);
+            expect(script.changes.abc).toEqual(null);
+        });
+    });
+
+    describe('listeners', () => {
+        it('should use the return value from the getListener() function', () => {
+            let func = () => {};
+            getListenerMock.mockReturnValueOnce(func);
+            const listener = script.listeners.abc;
+            expect(listener).toBe(func);
         });
     });
 });

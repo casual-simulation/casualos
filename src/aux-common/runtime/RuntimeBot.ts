@@ -8,7 +8,11 @@ import {
     getBotSpace,
     createPrecalculatedBot,
 } from '../bots';
-import { CompiledBot, CompiledBotListeners } from './CompiledBot';
+import {
+    CompiledBot,
+    CompiledBotListeners,
+    CompiledBotListener,
+} from './CompiledBot';
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -21,9 +25,27 @@ import { CompiledBot, CompiledBotListeners } from './CompiledBot';
 export interface RuntimeBot {
     id: string;
     space?: BotSpace;
+
+    /**
+     * The calculated tag values.
+     * This lets you get the calculated values from formulas.
+     */
     tags: ScriptTags;
+
+    /**
+     * The raw tag values. This lets you get the raw script text from formulas.
+     */
     raw: BotTags;
+
+    /**
+     * The changes that have been made to the bot.
+     */
     changes: BotTags;
+
+    /**
+     * The calculated listener functions.
+     * This lets you get the compiled listener functions.
+     */
     listeners: CompiledBotListeners;
 }
 
@@ -74,8 +96,11 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            if (manager.updateTag(bot, key, value)) {
+            const mode = manager.updateTag(bot, key, value);
+            if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
+                changedRawTags[key] = value;
+            } else if (mode === RealtimeEditMode.Delayed) {
                 changedRawTags[key] = value;
             }
             return true;
@@ -85,8 +110,11 @@ export function createRuntimeBot(
                 return true;
             }
             const value = null as any;
-            if (manager.updateTag(bot, key, value)) {
+            const mode = manager.updateTag(bot, key, value);
+            if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
+                changedRawTags[key] = value;
+            } else if (mode === RealtimeEditMode.Delayed) {
                 changedRawTags[key] = value;
             }
             return true;
@@ -103,8 +131,11 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            if (manager.updateTag(bot, key, value)) {
+            const mode = manager.updateTag(bot, key, value);
+            if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
+                changedRawTags[key] = value;
+            } else if (mode === RealtimeEditMode.Delayed) {
                 changedRawTags[key] = value;
             }
             return true;
@@ -114,12 +145,30 @@ export function createRuntimeBot(
                 return true;
             }
             const value = null as any;
-            if (manager.updateTag(bot, key, value)) {
+            const mode = manager.updateTag(bot, key, value);
+            if (mode === RealtimeEditMode.Immediate) {
                 rawTags[key] = value;
+                changedRawTags[key] = value;
+            } else if (mode === RealtimeEditMode.Delayed) {
                 changedRawTags[key] = value;
             }
             return true;
         },
+    });
+
+    const listenersProxy = new Proxy(bot.listeners, {
+        get(target, key: string, proxy) {
+            if (key in constantTags) {
+                return null;
+            }
+            return manager.getListener(bot, key);
+        },
+        // set(target, key: string, value, receiver) {
+        //     return true;
+        // },
+        // deleteProperty(target, key: string) {
+        //     return true;
+        // },
     });
 
     // Define a toJSON() function but
@@ -140,7 +189,7 @@ export function createRuntimeBot(
         tags: tagsProxy,
         raw: rawProxy,
         changes: changedRawTags,
-        listeners: bot.listeners,
+        listeners: listenersProxy,
     };
 
     Object.defineProperty(script, 'toJSON', {
@@ -180,12 +229,12 @@ export function createRuntimeBot(
 export interface RuntimeBotInterface {
     /**
      * Updates the tag of the given bot.
-     * Returns whether the tag was able to be updated.
+     * Returns the realtime edit mode that should be used for this particular assignment.
      * @param bot The bot.
      * @param tag The tag that should be updated.
      * @param newValue The new tag value.
      */
-    updateTag(bot: CompiledBot, tag: string, newValue: any): boolean;
+    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode;
 
     /**
      * Gets the value for the given tag on the given bot.
@@ -193,6 +242,14 @@ export interface RuntimeBotInterface {
      * @param tag The tag.
      */
     getValue(bot: CompiledBot, tag: string): any;
+
+    /**
+     * Gets the listener for the given bot and tag, resolving any formulas that may be present.
+     * Returns null if no listener is available.
+     * @param bot The bot.
+     * @param tag The tag.
+     */
+    getListener(bot: CompiledBot, tag: string): CompiledBotListener;
 }
 
 /**
@@ -201,13 +258,78 @@ export interface RuntimeBotInterface {
 export interface RuntimeBotFactory {
     /**
      * Creates a new script bot from the given bot and adds it to the runtime.
+     *
+     * Returns null if a runtime bot could not be created for the given bot.
+     * This can happen when a bot is being created in a space that doesn't support immediate realtime edits.
+     *
      * @param bot The bot.
      */
     createRuntimeBot(bot: Bot): RuntimeBot;
 
     /**
      * Destroyes the given script bot and removes it from the runtime.
+     * Returns the realtime edit mode that should apply for this operation.
+     *
      * @param bot The bot.
      */
-    destroyScriptBot(bot: RuntimeBot): void;
+    destroyScriptBot(bot: RuntimeBot): RealtimeEditMode;
+}
+
+/**
+ * The list of possible realtime edit modes.
+ */
+export enum RealtimeEditMode {
+    /**
+     * Specifies that bots in this edit mode cannot be edited.
+     */
+    None = 0,
+
+    /**
+     * Specifies that all changes to the bot will be accepted.
+     * This allows the changes to be immediately used.
+     */
+    Immediate = 1,
+
+    /**
+     * Specifies that some changes to the bot may be rejected.
+     * This requires that changes be delayed until the related
+     * partition accepts/denies them.
+     */
+    Delayed = 2,
+}
+
+/**
+ * The default realtime edit mode.
+ */
+export const DEFAULT_REALTIME_EDIT_MODE: RealtimeEditMode =
+    RealtimeEditMode.Immediate;
+
+/**
+ * A map between space types and the realtime edit modes they should use.
+ */
+export type SpaceRealtimeEditModeMap = Map<BotSpace, RealtimeEditMode>;
+
+/**
+ * The default map between bot spaces and realtime edit modes.
+ */
+export const DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP: SpaceRealtimeEditModeMap = new Map(
+    [
+        ['shared', RealtimeEditMode.Immediate],
+        ['local', RealtimeEditMode.Immediate],
+        ['tempLocal', RealtimeEditMode.Immediate],
+        ['history', RealtimeEditMode.Delayed],
+        ['error', RealtimeEditMode.Delayed],
+    ]
+);
+
+/**
+ * Gets the realtime edit mode for the given space and map.
+ * @param map The map.
+ * @param space The space.
+ */
+export function getRealtimeEditMode(
+    map: SpaceRealtimeEditModeMap,
+    space: BotSpace
+): RealtimeEditMode {
+    return map.get(space) || DEFAULT_REALTIME_EDIT_MODE;
 }

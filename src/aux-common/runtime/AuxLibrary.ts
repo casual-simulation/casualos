@@ -1,4 +1,3 @@
-import { AuxRuntime } from './AuxRuntime';
 import { AuxGlobalContext } from './AuxGlobalContext';
 import {
     hasValue,
@@ -2023,7 +2022,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ) {
         let ids = !!bots
             ? bots.map(bot => {
-                  return typeof bot === 'string' ? bot : bot.id;
+                  return !!bot
+                      ? typeof bot === 'string'
+                          ? bot
+                          : bot.id
+                      : null;
               })
             : context.bots.map(b => b.id);
 
@@ -2034,6 +2037,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let listeners = [] as RuntimeBot[];
 
         for (let id of ids) {
+            if (!id) {
+                continue;
+            }
             const bot = context.state[id];
             if (bot) {
                 targets.push(bot);

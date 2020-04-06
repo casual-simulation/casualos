@@ -4,8 +4,13 @@ import {
     RuntimeBotInterface,
     RuntimeBotFactory,
     RuntimeBot,
+    RealtimeEditMode,
 } from '../RuntimeBot';
-import { createCompiledBot } from '../CompiledBot';
+import {
+    createCompiledBot,
+    CompiledBotListener,
+    CompiledBot,
+} from '../CompiledBot';
 import pickBy from 'lodash/pickBy';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
@@ -13,7 +18,9 @@ export class TestScriptBotFactory implements RuntimeBotFactory {
         return createDummyRuntimeBot(bot.id, bot.tags, bot.space);
     }
 
-    destroyScriptBot() {}
+    destroyScriptBot() {
+        return RealtimeEditMode.Immediate;
+    }
 }
 
 /**
@@ -44,9 +51,12 @@ export const testScriptBotInterface: RuntimeBotInterface = {
     updateTag(bot: PrecalculatedBot, tag: string, newValue: any) {
         bot.tags[tag] = newValue;
         bot.values[tag] = newValue;
-        return true;
+        return RealtimeEditMode.Immediate;
     },
     getValue(bot: PrecalculatedBot, tag: string) {
         return bot.values[tag];
+    },
+    getListener(bot: CompiledBot, tag: string) {
+        return bot.listeners[tag];
     },
 };
