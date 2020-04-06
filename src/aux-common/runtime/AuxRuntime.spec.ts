@@ -2024,8 +2024,8 @@ describe('original action tests', () => {
 
             expect(result.errors).toEqual([
                 {
-                    error: expect.any(Error),
-                    bot: state['thisBot'],
+                    error: new Error('abc'),
+                    bot: expect.objectContaining(state['thisBot']),
                     tag: 'test',
                     // line: 0,
                     // column: 0,

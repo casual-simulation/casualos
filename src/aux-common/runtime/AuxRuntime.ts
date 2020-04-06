@@ -35,6 +35,8 @@ import {
     isBot,
     ORIGINAL_OBJECT,
     DEFAULT_ENERGY,
+    ScriptError,
+    RanOutOfEnergyError,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -137,6 +139,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         result.results.push(...results);
 
         const actions = this._globalContext.dequeueActions();
+        const errors = this._globalContext.dequeueErrors();
         const updates = [...this._updatedBots.values()]
             .filter(bot => {
                 return (
@@ -155,6 +158,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         actions.push(...sortedUpdates);
         this._onActions.next(actions);
         result.actions = actions;
+        result.errors = errors;
         return result;
     }
 
@@ -393,7 +397,12 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             return (newBot.values[tag] =
                 typeof compiled === 'function' ? compiled() : compiled);
         } catch (ex) {
-            return (newBot.values[tag] = ex);
+            if ('error' in ex) {
+                const scriptError = ex as ScriptError;
+                return (newBot.values[tag] = scriptError.error);
+            } else {
+                return (newBot.values[tag] = ex);
+            }
         }
     }
 
@@ -505,6 +514,16 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                     ctx.global.allowsEditing = ctx.wasEditable;
                 }
                 ctx.global.currentBot = ctx.previousBot;
+            },
+            onError: (err, ctx) => {
+                if (err instanceof RanOutOfEnergyError) {
+                    throw err;
+                }
+                throw {
+                    error: err,
+                    bot: ctx.bot,
+                    tag: ctx.tag,
+                } as ScriptError;
             },
             constants: {
                 ...this._library.api,

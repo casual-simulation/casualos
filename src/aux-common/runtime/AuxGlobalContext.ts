@@ -7,6 +7,8 @@ import {
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
+    ScriptError,
+    RanOutOfEnergyError,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { RuntimeBot, RuntimeBotFactory, RuntimeBotsState } from './RuntimeBot';
@@ -65,6 +67,17 @@ export interface AuxGlobalContext {
      * Gets the list of actions that have been queued and resets the action queue.
      */
     dequeueActions(): BotAction[];
+
+    /**
+     * Records the given error.
+     * @param error The error to record.
+     */
+    enqueueError(error: ScriptError | RanOutOfEnergyError): void;
+
+    /**
+     * Gets the list of errors that have been queued and resets the error queue.
+     */
+    dequeueErrors(): ScriptError[];
 
     /**
      * Converts the given bot into a non-script enabled version.
@@ -184,6 +197,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     actions: BotAction[] = [];
 
     /**
+     * The list of errors that have been queued.
+     */
+    errors: ScriptError[] = [];
+
+    /**
      * The version.
      */
     version: AuxVersion;
@@ -247,6 +265,19 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         let actions = this.actions;
         this.actions = [];
         return actions;
+    }
+
+    enqueueError(error: ScriptError | RanOutOfEnergyError): void {
+        if (error instanceof RanOutOfEnergyError) {
+            throw error;
+        }
+        this.errors.push(error);
+    }
+
+    dequeueErrors(): ScriptError[] {
+        let errors = this.errors;
+        this.errors = [];
+        return errors;
     }
 
     /**

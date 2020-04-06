@@ -2044,9 +2044,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             let listener = bot.listeners[tag];
             if (listener) {
-                // TODO: Handle exceptions
-                results.push(listener(arg));
-                listeners.push(bot);
+                try {
+                    // TODO: Handle exceptions
+                    results.push(listener(arg));
+                    listeners.push(bot);
+                } catch (ex) {
+                    context.enqueueError(ex);
+                }
             }
         }
 
@@ -2058,7 +2062,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', listeners, listenArg, false);
+            event('onListen', targets, listenArg, false);
             event('onAnyListen', null, listenArg, false);
         }
 

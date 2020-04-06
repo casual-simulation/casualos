@@ -7,6 +7,7 @@ import {
     createDummyRuntimeBot,
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
+import { RanOutOfEnergyError } from '../bots';
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
@@ -36,6 +37,15 @@ describe('AuxGlobalContext', () => {
             addToContext(context, bot1, bot3, bot2);
 
             expect(context.bots).toEqual([bot1, bot2, bot3]);
+        });
+    });
+
+    describe('enqueueError()', () => {
+        it('should throw if the given error is a RanOutOfEnergyError', () => {
+            const err = new RanOutOfEnergyError();
+            expect(() => {
+                context.enqueueError(err);
+            }).toThrow(err);
         });
     });
 });

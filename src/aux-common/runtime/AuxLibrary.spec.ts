@@ -3455,6 +3455,70 @@ describe('AuxLibrary', () => {
                 expect(sayHello2).toBeCalled();
             }
         );
+
+        it('should handle exceptions on an individual bot basis', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            library.api.shout('sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).toBeCalled();
+            expect(context.errors).toEqual([new Error('abc')]);
+        });
+
+        it('should send a onListen whisper to all the targeted bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+            const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+            const onListen3 = (bot3.listeners.onListen = jest.fn());
+            const onListen4 = (bot4.listeners.onListen = jest.fn());
+
+            library.api.shout('sayHello', 123);
+            const expected = {
+                name: 'sayHello',
+                that: 123,
+                responses: [undefined, undefined, undefined] as any[],
+                targets: [bot1, bot2, bot3, bot4],
+                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+            };
+            expect(onListen1).toBeCalledWith(expected);
+            expect(onListen2).toBeCalledWith(expected);
+            expect(onListen3).toBeCalledWith(expected);
+            expect(onListen4).toBeCalledWith(expected);
+        });
+
+        it('should send a onAnyListen shout', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+
+            library.api.shout('sayHello', 123);
+            const expected = {
+                name: 'sayHello',
+                that: 123,
+                responses: [undefined, undefined, undefined] as any[],
+                targets: [bot1, bot2, bot3, bot4],
+                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+            };
+            expect(onAnyListen4).toBeCalledWith(expected);
+        });
     });
 
     describe('whisper()', () => {
@@ -3530,5 +3594,69 @@ describe('AuxLibrary', () => {
                 expect(sayHello3).not.toBeCalled();
             }
         );
+
+        it('should handle exceptions on an individual bot basis', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            library.api.whisper([bot1, bot2, bot3], 'sayHello');
+            expect(sayHello1).toBeCalled();
+            expect(sayHello2).toBeCalled();
+            expect(sayHello3).toBeCalled();
+            expect(sayHello4).not.toBeCalled();
+            expect(context.errors).toEqual([new Error('abc')]);
+        });
+
+        it('should send a onListen whisper to all the targeted bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+            const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+            const onListen3 = (bot3.listeners.onListen = jest.fn());
+            const onListen4 = (bot4.listeners.onListen = jest.fn());
+
+            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
+            const expected = {
+                name: 'sayHello',
+                that: 123,
+                responses: [undefined, undefined] as any[],
+                targets: [bot1, bot2, bot3],
+                listeners: [bot1, bot3], // should exclude erroring listeners
+            };
+            expect(onListen1).toBeCalledWith(expected);
+            expect(onListen2).toBeCalledWith(expected);
+            expect(onListen3).toBeCalledWith(expected);
+            expect(onListen4).not.toBeCalled();
+        });
+
+        it('should send a onAnyListen shout', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+
+            const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+
+            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
+            const expected = {
+                name: 'sayHello',
+                that: 123,
+                responses: [undefined, undefined] as any[],
+                targets: [bot1, bot2, bot3],
+                listeners: [bot1, bot3], // should exclude erroring listeners
+            };
+            expect(onAnyListen4).toBeCalledWith(expected);
+        });
     });
 });

@@ -228,5 +228,27 @@ describe('AuxCompiler', () => {
 
             expect(func(1, 2, 3, 4, 5)).toEqual(2 + 5);
         });
+
+        it('should support running some code when an error occurs', () => {
+            let errors = [] as any[];
+            const func = compiler.compile('throw new Error("abc")', {
+                onError(err: any) {
+                    errors.push(err);
+                },
+            });
+
+            func();
+            expect(errors).toEqual([new Error('abc')]);
+        });
+
+        it('should rethrow the error by default', () => {
+            const func = compiler.compile('throw new Error("abc")', {
+                before() {},
+            });
+
+            expect(() => {
+                func();
+            }).toThrow(new Error('abc'));
+        });
     });
 });

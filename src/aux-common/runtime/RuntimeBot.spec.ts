@@ -1,4 +1,4 @@
-import { BOT_SPACE_TAG } from '../bots';
+import { BOT_SPACE_TAG, PrecalculatedBot } from '../bots';
 import {
     AuxGlobalContext,
     MemoryGlobalContext,
@@ -44,6 +44,9 @@ describe('RuntimeBot', () => {
         updateTagMock.mockReturnValue(true);
         manager = {
             updateTag: updateTagMock,
+            getValue(bot: PrecalculatedBot, tag: string) {
+                return bot.values[tag];
+            },
         };
 
         precalc = createCompiledBot(

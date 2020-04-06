@@ -26,9 +26,14 @@ export class AuxCompiler {
         const scriptFunction = func;
 
         if (options) {
-            if (options.before || options.after) {
+            if (options.before || options.after || options.onError) {
                 const before = options.before || (() => {});
                 const after = options.after || (() => {});
+                const onError =
+                    options.onError ||
+                    (err => {
+                        throw err;
+                    });
 
                 const scriptFunc = func;
                 const context = options.context;
@@ -36,6 +41,8 @@ export class AuxCompiler {
                     before(context);
                     try {
                         return scriptFunc(...args);
+                    } catch (ex) {
+                        onError(ex, context);
                     } finally {
                         after(context);
                     }
@@ -230,4 +237,21 @@ export interface AuxCompileOptions<T> {
      * A function that should be called after the compiled function is executed.
      */
     after?: (context?: T) => void;
+
+    /**
+     * A function that should be called when an error occurs.
+     */
+    onError?: (error: any, context?: T) => void;
 }
+
+// export class CompiledScriptError extends Error {
+//     /**
+//      * The inner error.
+//      */
+//     error: Error;
+
+//     constructor(error: Error) {
+//         super(error.message);
+//         this.error = error;
+//     }
+// }
