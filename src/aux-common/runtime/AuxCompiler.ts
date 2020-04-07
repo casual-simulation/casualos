@@ -1,6 +1,11 @@
 import { Transpiler } from '../Formulas/Transpiler';
-import { isFormula, isScript, parseScript } from '../bots';
+import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import flatMap from 'lodash/flatMap';
+
+/**
+ * A symbol that identifies a function as having been compiled using the AuxCompiler.
+ */
+export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
 
 /**
  * Defines a class that can compile scripts and formulas
@@ -24,6 +29,10 @@ export class AuxCompiler {
         );
 
         const scriptFunction = func;
+        const meta = {
+            scriptFunction,
+            scriptLineOffset,
+        };
 
         if (options) {
             if (options.before || options.after || options.onError) {
@@ -42,7 +51,7 @@ export class AuxCompiler {
                     try {
                         return scriptFunc(...args);
                     } catch (ex) {
-                        onError(ex, context);
+                        onError(ex, context, meta);
                     } finally {
                         after(context);
                     }
@@ -51,12 +60,43 @@ export class AuxCompiler {
         }
 
         const final = func as AuxCompiledScript;
-        final.metadata = {
-            scriptFunction,
-            scriptLineOffset,
-        };
+        final.metadata = meta;
 
         return final;
+    }
+
+    /**
+     * Finds the line number information for a function created with this compiler using the
+     * given stack trace and metadata.
+     * @param stackTrace The stack trace.
+     * @param metadata The metadata.
+     */
+    findLineInfo(stackTrace: NodeJS.CallSite[], metadata: AuxScriptMetadata) {
+        const frame = stackTrace.find(f => {
+            const func: any = f.getFunction();
+            return func && func[COMPILED_SCRIPT_SYMBOL] === true;
+        });
+
+        if (frame) {
+            const line = frame.getLineNumber();
+            const column = frame.getColumnNumber();
+
+            const result = {
+                line: null,
+                column: null,
+            } as LineInfo;
+
+            if (hasValue(line)) {
+                result.line = line - metadata.scriptLineOffset;
+            }
+            if (hasValue(column)) {
+                result.column = column;
+            }
+
+            return result;
+        }
+
+        return null;
     }
 
     private _parseScript(script: string): string {
@@ -91,6 +131,7 @@ export class AuxCompiler {
                 .filter(v => v !== 'this')
                 .map(v => `const ${v} = constants["${v}"];`);
             constantsCode = lines.join('\n') + '\n';
+            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let variablesCode = '';
@@ -99,7 +140,7 @@ export class AuxCompiler {
                 .filter(v => v !== 'this')
                 .map(v => `const ${v} = variables["${v}"](context);`);
             variablesCode = '\n' + lines.join('\n');
-            scriptLineOffset += 1 + (lines.length - 1);
+            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let argumentsCode = '';
@@ -115,7 +156,7 @@ export class AuxCompiler {
                 ([v, i]) => v.map(name => `const ${name} = args[${i}];`)
             );
             argumentsCode = '\n' + lines.join('\n');
-            scriptLineOffset += 1 + (lines.length - 1);
+            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let scriptCode: string;
@@ -140,6 +181,13 @@ export class AuxCompiler {
             options,
             formula ? this._transpiler.transpile(script) : null
         );
+        (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+
+        // Add 2 extra lines to count the line feeds that
+        // are automatically inserted as part of the process of
+        // compiling the dynamic script.
+        // See https://tc39.es/ecma262/#sec-createdynamicfunction
+        scriptLineOffset += 2;
 
         if (options.variables) {
             if ('this' in options.variables) {
@@ -183,6 +231,21 @@ export interface AuxCompiledScript {
      * The metadata for the script.
      */
     metadata: AuxScriptMetadata;
+}
+
+/**
+ * Line information that has been calculated from a stack trace.
+ */
+export interface LineInfo {
+    /**
+     * The line number.
+     */
+    line: number | null;
+
+    /**
+     * The column number.
+     */
+    column: number | null;
 }
 
 /**
@@ -241,7 +304,7 @@ export interface AuxCompileOptions<T> {
     /**
      * A function that should be called when an error occurs.
      */
-    onError?: (error: any, context?: T) => void;
+    onError?: (error: any, context?: T, meta?: AuxScriptMetadata) => void;
 }
 
 // export class CompiledScriptError extends Error {

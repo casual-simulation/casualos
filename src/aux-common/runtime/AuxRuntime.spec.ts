@@ -2155,13 +2155,15 @@ describe('original action tests', () => {
                     error: new Error('abc'),
                     bot: expect.objectContaining(state['thisBot']),
                     tag: 'test',
-                    // line: 0,
-                    // column: 0,
+                    line: 1,
+
+                    //  TODO: Improve to support correct column numbers
+                    column: expect.any(Number),
                 },
             ]);
         });
 
-        it.skip('should include the line and column number that the error occurred at in the script', () => {
+        it('should include the line and column number that the error occurred at in the script', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -2179,12 +2181,78 @@ describe('original action tests', () => {
             expect(result.errors).toEqual([
                 {
                     error: expect.any(Error),
-                    bot: state['thisBot'],
+                    bot: expect.objectContaining(state['thisBot']),
                     tag: 'test',
-                    line: 1,
-                    column: 0,
+                    line: 2,
+                    //  TODO: Improve to support correct column numbers
+                    column: expect.any(Number),
                 },
             ]);
+        });
+
+        // TODO: Improve to support these cases better
+        it('should ignore extra lines added by __energyCheck() calls', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        test: `@while(true) {
+                            throw new Error('abc')
+                        }`,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.errors).toEqual([
+                {
+                    error: expect.any(Error),
+                    bot: expect.objectContaining(state['thisBot']),
+                    tag: 'test',
+
+                    // It shows line 3 because it doesn't
+                    // know to remove the extra line added by the energy check call
+                    line: 3,
+                    //  TODO: Improve to support correct column numbers
+                    column: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should not include line numbers when Error.prepareStackTrace() is not available', () => {
+            const prev = Error.prepareStackTrace;
+            try {
+                Error.prepareStackTrace = null;
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            test: `@while(true) {
+                                throw new Error('abc')
+                            }`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionResults(state, botAction);
+
+                expect(result.errors).toEqual([
+                    {
+                        error: expect.any(Error),
+                        bot: expect.objectContaining(state['thisBot']),
+                        tag: 'test',
+                    },
+                ]);
+            } finally {
+                Error.prepareStackTrace = prev;
+            }
         });
     });
 

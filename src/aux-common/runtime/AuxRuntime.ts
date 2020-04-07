@@ -559,15 +559,46 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 }
                 ctx.global.currentBot = ctx.previousBot;
             },
-            onError: (err, ctx) => {
+            onError: (err, ctx, meta) => {
                 if (err instanceof RanOutOfEnergyError) {
                     throw err;
                 }
-                throw {
+                let data: ScriptError = {
                     error: err,
                     bot: ctx.bot,
                     tag: ctx.tag,
-                } as ScriptError;
+                };
+                if (err instanceof Error) {
+                    if (Error.prepareStackTrace) {
+                        const prev = Error.prepareStackTrace;
+                        try {
+                            Error.prepareStackTrace = (err, stackTrace) => {
+                                const info = this._compiler.findLineInfo(
+                                    stackTrace,
+                                    meta
+                                );
+                                if (info) {
+                                    Object.assign(err, info);
+                                }
+
+                                return prev(err, stackTrace);
+                            };
+
+                            // force the stack trace to be computed
+                            err.stack;
+                            const anyError = <any>err;
+                            if (hasValue(anyError.line)) {
+                                data.line = anyError.line;
+                            }
+                            if (hasValue(anyError.column)) {
+                                data.column = anyError.column;
+                            }
+                        } finally {
+                            Error.prepareStackTrace = prev;
+                        }
+                    }
+                }
+                throw data;
             },
             constants: {
                 ...this._library.api,

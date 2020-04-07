@@ -333,6 +333,16 @@ export interface ScriptError {
      * Null if the script was not attached to a bot.
      */
     tag: string;
+
+    /**
+     * The line number that the error occurred at.
+     */
+    line?: number;
+
+    /**
+     * The column number that the error occurred at.
+     */
+    column?: number;
 }
 
 /**

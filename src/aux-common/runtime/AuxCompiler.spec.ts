@@ -165,11 +165,9 @@ describe('AuxCompiler', () => {
                 after: () => {},
             });
 
-            const source = func.metadata.scriptFunction.toString();
-            const lines = source.split('\n');
-            const scriptLine = lines[func.metadata.scriptLineOffset].trim();
-
-            expect(scriptLine).toEqual(script);
+            // Contants + variables + extras + lines added by the JS spec
+            // See https://tc39.es/ecma262/#sec-createdynamicfunction
+            expect(func.metadata.scriptLineOffset).toEqual(7);
         });
 
         it('should transpile the user code to include energy checks', () => {
