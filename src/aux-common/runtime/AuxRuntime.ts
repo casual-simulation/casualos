@@ -83,6 +83,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
+    private _onErrors: Subject<ScriptError[]>;
 
     private _updatedBots = new Map<string, RuntimeBot>();
     private _newBots = new Map<string, RuntimeBot>();
@@ -110,6 +111,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         this._library = libraryFactory(this._globalContext);
         this._editModesMap = editModesMap;
         this._onActions = new Subject();
+        this._onErrors = new Subject();
     }
 
     set userId(id: string) {
@@ -126,6 +128,13 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      */
     get onActions(): Observable<BotAction[]> {
         return this._onActions;
+    }
+
+    /**
+     * An observable that resolves whenever the runtime issues an error.
+     */
+    get onErrors(): Observable<ScriptError[]> {
+        return this._onErrors;
     }
 
     /**
@@ -166,6 +175,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         this._newBots.clear();
         actions.push(...sortedUpdates);
         this._onActions.next(actions);
+        this._onErrors.next(errors);
         result.actions = actions;
         result.errors = errors;
         return result;

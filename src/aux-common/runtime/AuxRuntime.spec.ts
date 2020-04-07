@@ -63,6 +63,7 @@ import {
     loadSimulation,
     unloadSimulation,
     BotSpace,
+    ScriptError,
 } from '../bots';
 import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
@@ -81,6 +82,7 @@ describe('AuxRuntime', () => {
     let memory: MemoryPartition;
     let runtime: AuxRuntime;
     let events: BotAction[][];
+    let errors: ScriptError[][];
 
     beforeEach(() => {
         uuidMock.mockReset();
@@ -108,8 +110,10 @@ describe('AuxRuntime', () => {
         );
 
         events = [];
+        errors = [];
 
         runtime.onActions.subscribe(a => events.push(a));
+        runtime.onErrors.subscribe(e => errors.push(e));
     });
 
     describe('botsAdded()', () => {
@@ -1727,6 +1731,34 @@ describe('AuxRuntime', () => {
                 expect(result.errors).toEqual([]);
                 expect(events).toEqual([[botRemoved('test2')]]);
             });
+        });
+    });
+
+    describe('errors', () => {
+        it('should emit errors that occur in scripts', async () => {
+            runtime.botsAdded([
+                createBot('test', {
+                    onClick: '@throw new Error("abc")',
+                }),
+            ]);
+
+            runtime.shout('onClick');
+
+            await waitAsync();
+
+            expect(errors).toEqual([
+                [
+                    expect.objectContaining({
+                        error: expect.any(Error),
+                        bot: expect.objectContaining(
+                            createBot('test', {
+                                onClick: '@throw new Error("abc")',
+                            })
+                        ),
+                        tag: 'onClick',
+                    }),
+                ],
+            ]);
         });
     });
 });
