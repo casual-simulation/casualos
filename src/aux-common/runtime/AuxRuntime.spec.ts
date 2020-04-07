@@ -64,6 +64,7 @@ import {
     unloadSimulation,
     BotSpace,
     ScriptError,
+    StateUpdatedEvent,
 } from '../bots';
 import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
@@ -74,6 +75,7 @@ import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { AuxDevice, AuxVersion } from './AuxGlobalContext';
 import { values } from 'lodash';
 import { RealtimeEditMode } from './RuntimeBot';
+import { skip } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -115,6 +117,31 @@ describe('AuxRuntime', () => {
         runtime.onActions.subscribe(a => events.push(a));
         runtime.onErrors.subscribe(e => errors.push(e));
     });
+
+    async function captureUpdates(fn: () => void) {
+        let updates = [] as StateUpdatedEvent[];
+
+        let subs = [
+            memory.onBotsAdded
+                .pipe(skip(1))
+                .subscribe(added => updates.push(runtime.botsAdded(added))),
+            memory.onBotsRemoved.subscribe(removed =>
+                updates.push(runtime.botsRemoved(removed))
+            ),
+            memory.onBotsUpdated.subscribe(updated =>
+                updates.push(runtime.botsUpdated(updated))
+            ),
+        ];
+
+        try {
+            await fn();
+            return updates;
+        } finally {
+            for (let s of subs) {
+                s.unsubscribe();
+            }
+        }
+    }
 
     describe('botsAdded()', () => {
         it('should return a state update for the new bot', () => {
@@ -218,6 +245,20 @@ describe('AuxRuntime', () => {
                 removedBots: [],
                 updatedBots: [],
             });
+        });
+
+        it('should not modify the given bot in scripts', async () => {
+            const bot = createBot('test1', {
+                update: `@tags.abc = "def"`,
+            });
+            runtime.botsAdded([bot]);
+            runtime.shout('update');
+            await waitAsync();
+            expect(bot).toEqual(
+                createBot('test1', {
+                    update: `@tags.abc = "def"`,
+                })
+            );
         });
 
         describe('numbers', () => {
@@ -1061,6 +1102,40 @@ describe('AuxRuntime', () => {
                     [toast('abc')],
                 ]);
             });
+
+            it('should be able to integrate new bots which get accepted to the partition', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        create: `@create({ abc: "def", "shout": "@player.toast('abc')" })`,
+                    }),
+                ]);
+                runtime.shout('create');
+
+                await waitAsync();
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            uuid: createPrecalculatedBot('uuid', {
+                                auxCreator: 'test1',
+                                shout: "@player.toast('abc')",
+                                abc: 'def',
+                            }),
+                        },
+                        addedBots: ['uuid'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                ]);
+            });
         });
 
         describe('bot_removed', () => {
@@ -1093,6 +1168,37 @@ describe('AuxRuntime', () => {
 
                 expect(events).toEqual([[botRemoved('test1')], []]);
             });
+
+            it('should be able to delete bots which get accepted to the partition', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        delete: `@destroy(this)`,
+                        abc: 'def',
+                    }),
+                ]);
+                runtime.shout('delete');
+
+                await waitAsync();
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test1'],
+                        updatedBots: [],
+                    },
+                ]);
+            });
         });
 
         describe('bot_updated', () => {
@@ -1112,6 +1218,260 @@ describe('AuxRuntime', () => {
                         botUpdated('test1', {
                             tags: {
                                 value: 123,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+
+            it('should be able to update bots which get accepted to the partition', async () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = createBot('test1', {
+                    update: `@tags.abc = "def"`,
+                });
+                runtime.botsAdded([bot]);
+                await memory.applyEvents([botAdded(bot)]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 'def',
+                            },
+                        }),
+                    ],
+                ]);
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    abc: 'def',
+                                },
+                                values: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+            });
+
+            it('should be able to update formulas which get accepted to the partition', async () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = createBot('test1', {
+                    update: `@tags.formula = "=456"`,
+                    formula: '=1',
+                });
+                runtime.botsAdded([bot]);
+                await memory.applyEvents([botAdded(bot)]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                formula: '=456',
+                            },
+                        }),
+                    ],
+                ]);
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    formula: '=456',
+                                },
+                                values: {
+                                    formula: 456,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+            });
+
+            it('should handle updates in separate shouts', async () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = createBot('test1', {
+                    update1: `@tags.abc = 123`,
+                    update2: `@tags.abc = 456`,
+                });
+                runtime.botsAdded([bot]);
+                await memory.applyEvents([botAdded(bot)]);
+
+                runtime.shout('update1');
+                await waitAsync();
+
+                runtime.shout('update2');
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 123,
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 456,
+                            },
+                        }),
+                    ],
+                ]);
+
+                const updates = await captureUpdates(async () => {
+                    for (let e of events) {
+                        await memory.applyEvents(e);
+                    }
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    abc: 123,
+                                },
+                                values: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    abc: 456,
+                                },
+                                values: {
+                                    abc: 456,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+            });
+
+            // TODO: Improve the concurrency handling of the runtime
+            //       to fix this issue
+            it.skip('should not overwrite the current state when a race condition occurs', async () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = createBot('test1', {
+                    update1: `@tags.abc = 123`,
+                    update2: `@tags.abc = 456`,
+                    update3: `@tags.fun = tags.abc`,
+                });
+                runtime.botsAdded([bot]);
+                await memory.applyEvents([botAdded(bot)]);
+
+                runtime.shout('update1');
+                await waitAsync();
+
+                runtime.shout('update2');
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 123,
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 456,
+                            },
+                        }),
+                    ],
+                ]);
+
+                const updates = await captureUpdates(async () => {
+                    // Apply only the first update
+                    await memory.applyEvents(events[0]);
+                    await waitAsync();
+                });
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    abc: 123,
+                                },
+                                values: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+
+                runtime.shout('update3');
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 123,
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: 456,
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                fun: 456,
                             },
                         }),
                     ],

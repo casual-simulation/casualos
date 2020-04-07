@@ -61,6 +61,7 @@ import {
     getRealtimeEditMode,
     SpaceRealtimeEditModeMap,
     DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
+    CLEAR_CHANGES_SYMBOL,
 } from './RuntimeBot';
 import {
     CompiledBot,
@@ -158,7 +159,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
 
         const actions = this._globalContext.dequeueActions();
         const errors = this._globalContext.dequeueErrors();
-        const updates = [...this._updatedBots.values()]
+        const updatedBots = [...this._updatedBots.values()];
+        const updates = updatedBots
             .filter(bot => {
                 return (
                     Object.keys(bot.changes).length > 0 &&
@@ -167,9 +169,12 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             })
             .map(bot =>
                 botUpdated(bot.id, {
-                    tags: bot.changes,
+                    tags: { ...bot.changes },
                 })
             );
+        for (let bot of updatedBots) {
+            bot[CLEAR_CHANGES_SYMBOL]();
+        }
         const sortedUpdates = sortBy(updates, u => u.id);
         this._updatedBots.clear();
         this._newBots.clear();
@@ -384,7 +389,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         let compiledBot: CompiledBot = {
             id: bot.id,
             precalculated: true,
-            tags: bot.tags,
+            tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
             values: {},
             compiledValues: {},

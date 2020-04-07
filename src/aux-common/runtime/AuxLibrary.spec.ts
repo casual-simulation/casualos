@@ -2850,6 +2850,30 @@ describe('AuxLibrary', () => {
             );
         });
 
+        it('should not pollute the original bot', () => {
+            const other = createDummyRuntimeBot(
+                'other',
+                {
+                    abc: 'def',
+                },
+                <any>'test'
+            );
+            addToContext(context, other);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+            const bots = library.api.create([other]) as RuntimeBot;
+            bots.tags.hello = true;
+            expect(other).toEqual(
+                createDummyRuntimeBot(
+                    'other',
+                    {
+                        abc: 'def',
+                    },
+                    <any>'test'
+                )
+            );
+        });
+
         it('should be able to shout to a new bot', () => {
             uuidMock.mockReturnValue('uuid');
             const abc = jest.fn();

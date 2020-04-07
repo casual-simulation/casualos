@@ -15,6 +15,11 @@ import {
 } from './CompiledBot';
 
 /**
+ * Defines a symbol that is used to clear changes on a runtime bot.
+ */
+export const CLEAR_CHANGES_SYMBOL = Symbol('clear_changes');
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -47,6 +52,11 @@ export interface RuntimeBot {
      * This lets you get the compiled listener functions.
      */
     listeners: CompiledBotListeners;
+
+    /**
+     * A function that can clear all the changes from the runtime bot.
+     */
+    [CLEAR_CHANGES_SYMBOL]: () => void;
 }
 
 /**
@@ -190,7 +200,18 @@ export function createRuntimeBot(
         raw: rawProxy,
         changes: changedRawTags,
         listeners: listenersProxy,
+        [CLEAR_CHANGES_SYMBOL]: null,
     };
+
+    Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
+        value: () => {
+            changedRawTags = {};
+            script.changes = changedRawTags;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
 
     Object.defineProperty(script, 'toJSON', {
         value: () => {

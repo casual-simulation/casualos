@@ -10,6 +10,7 @@ import {
     RuntimeBotInterface,
     RuntimeBot,
     RealtimeEditMode,
+    CLEAR_CHANGES_SYMBOL,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -260,6 +261,45 @@ describe('RuntimeBot', () => {
             getListenerMock.mockReturnValueOnce(func);
             const listener = script.listeners.abc;
             expect(listener).toBe(func);
+        });
+    });
+
+    describe('clear_changes', () => {
+        it('should be able to clear changes from the script bot', () => {
+            updateTagMock.mockReturnValue(RealtimeEditMode.Immediate);
+            script.tags.abc = 123;
+            script.tags.def = 'hello';
+
+            expect(script.raw.abc).toEqual(123);
+
+            const changes = script.changes;
+            expect(changes).toEqual({
+                abc: 123,
+                def: 'hello',
+            });
+
+            script[CLEAR_CHANGES_SYMBOL]();
+
+            expect(script.changes).toEqual({});
+            expect(script.changes).not.toEqual(changes);
+            expect(script.raw.abc).toEqual(123);
+            expect(script.raw.def).toEqual('hello');
+
+            script.raw.abc = 456;
+            expect(script.changes).toEqual({
+                abc: 456,
+            });
+            expect(script.raw.abc).toEqual(456);
+        });
+
+        it('should not be enumerable, configurable, or writable', () => {
+            const descriptor = Object.getOwnPropertyDescriptor(
+                script,
+                CLEAR_CHANGES_SYMBOL
+            );
+            expect(descriptor.writable).toBe(false);
+            expect(descriptor.enumerable).toBe(false);
+            expect(descriptor.configurable).toBe(false);
         });
     });
 });
