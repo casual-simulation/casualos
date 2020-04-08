@@ -1055,6 +1055,47 @@ describe('AuxRuntime', () => {
                 [toast('hi0'), toast('hi1'), toast('hi2'), toast('hi3')],
             ]);
         });
+
+        it('should flatten run script events into the given batch', async () => {
+            runtime.process([
+                toast('hi0'),
+                runScript('player.toast("hi1")'),
+                toast('hi2'),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [toast('hi0'), toast('hi1'), toast('hi2')],
+            ]);
+        });
+    });
+
+    describe('execute()', () => {
+        it('should compile and run the given script', async () => {
+            runtime.execute('player.toast("hello")');
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('hello')]]);
+        });
+
+        it('should emit an error if the script has a syntax error', async () => {
+            runtime.execute('player.toast(');
+
+            await waitAsync();
+
+            expect(errors).toEqual([
+                [
+                    {
+                        error: expect.any(SyntaxError),
+                        script: 'player.toast(',
+                        bot: null,
+                        tag: null,
+                    },
+                ],
+            ]);
+        });
     });
 
     describe('shout()', () => {

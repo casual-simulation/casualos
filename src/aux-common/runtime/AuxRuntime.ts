@@ -192,6 +192,8 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                         action.botIds,
                         action.argument
                     );
+                } else if (action.type === 'run_script') {
+                    this.execute(action.script);
                 } else {
                     this._actionBatch.push(action);
                 }
@@ -207,57 +209,54 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      * @param arg The argument to include in the shout.
      */
     shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
-        return this._zone.run(() => {
-            let result = {
-                actions: [],
-                errors: [],
-                listeners: [],
-                results: [],
-            } as ActionResult;
-            this._globalContext.playerBot = this.userBot;
-            arg = this._mapBotsToRuntimeBots(arg);
-
-            this._globalContext.energy = DEFAULT_ENERGY;
+        arg = this._mapBotsToRuntimeBots(arg);
+        const { result, actions, errors } = this._batchScriptResults(() => {
             const results = this._library.api.whisper(botIds, eventName, arg);
-            result.results.push(...results);
 
-            const actions = this._globalContext.dequeueActions();
-            const errors = this._globalContext.dequeueErrors();
-            const updatedBots = [...this._updatedBots.values()];
-            const updates = updatedBots
-                .filter(bot => {
-                    return (
-                        Object.keys(bot.changes).length > 0 &&
-                        !this._newBots.has(bot.id)
-                    );
-                })
-                .map(bot =>
-                    botUpdated(bot.id, {
-                        tags: { ...bot.changes },
-                    })
-                );
-            for (let bot of updatedBots) {
-                bot[CLEAR_CHANGES_SYMBOL]();
-            }
-            const sortedUpdates = sortBy(updates, u => u.id);
-            this._updatedBots.clear();
-            this._newBots.clear();
-            actions.push(...sortedUpdates);
-            result.actions = actions;
-            result.errors = errors;
-
-            this._actionBatch.push(...actions);
-            this._errorBatch.push(...errors);
-
-            return result;
+            return results;
         });
+
+        return {
+            actions,
+            errors,
+            results: result,
+            listeners: [],
+        };
     }
 
     /**
      * Executes the given script.
      * @param script The script to run.
      */
-    execute(script: string): void {}
+    execute(script: string): void {
+        let fn: () => any;
+
+        try {
+            fn = this._compile(null, null, script, {
+                allowsEditing: true,
+            });
+        } catch (ex) {
+            this._onErrors.next([
+                {
+                    error: ex,
+                    bot: null,
+                    tag: null,
+                    script: script,
+                },
+            ]);
+        }
+
+        if (!fn) {
+            return;
+        }
+        this._batchScriptResults(() => {
+            try {
+                fn();
+            } catch (ex) {
+                this._globalContext.enqueueError(ex);
+            }
+        });
+    }
 
     /**
      * Signals to the runtime that the given bots were added.
@@ -396,6 +395,49 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         }
 
         return mode;
+    }
+
+    private _batchScriptResults<T>(
+        callback: () => T
+    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
+        return this._zone.run(() => {
+            this._globalContext.playerBot = this.userBot;
+
+            this._globalContext.energy = DEFAULT_ENERGY;
+            const result = callback();
+
+            const actions = this._globalContext.dequeueActions();
+            const errors = this._globalContext.dequeueErrors();
+            const updatedBots = [...this._updatedBots.values()];
+            const updates = updatedBots
+                .filter(bot => {
+                    return (
+                        Object.keys(bot.changes).length > 0 &&
+                        !this._newBots.has(bot.id)
+                    );
+                })
+                .map(bot =>
+                    botUpdated(bot.id, {
+                        tags: { ...bot.changes },
+                    })
+                );
+            for (let bot of updatedBots) {
+                bot[CLEAR_CHANGES_SYMBOL]();
+            }
+            const sortedUpdates = sortBy(updates, u => u.id);
+            this._updatedBots.clear();
+            this._newBots.clear();
+            actions.push(...sortedUpdates);
+
+            this._actionBatch.push(...actions);
+            this._errorBatch.push(...errors);
+
+            return {
+                result: result,
+                actions: actions,
+                errors: errors,
+            };
+        });
     }
 
     private _updateDependentBots(
@@ -616,13 +658,13 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                     ctx.global.allowsEditing = false;
                 }
                 ctx.previousBot = ctx.global.currentBot;
-                ctx.global.currentBot = ctx.bot.script;
-                ctx.creator = this._getRuntimeBot(
-                    ctx.bot.script.tags.auxCreator
-                );
-                ctx.config = this._getRuntimeBot(
-                    ctx.bot.script.tags.auxConfigBot
-                );
+                ctx.global.currentBot = ctx.bot ? ctx.bot.script : null;
+                ctx.creator = ctx.bot
+                    ? this._getRuntimeBot(ctx.bot.script.tags.auxCreator)
+                    : null;
+                ctx.config = ctx.bot
+                    ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)
+                    : null;
             },
             after: ctx => {
                 if (!options.allowsEditing) {
@@ -676,10 +718,10 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 tagName: tag,
             },
             variables: {
-                this: ctx => ctx.bot.script,
-                bot: ctx => ctx.bot.script,
-                tags: ctx => ctx.bot.script.tags,
-                raw: ctx => ctx.bot.script.raw,
+                this: ctx => (ctx.bot ? ctx.bot.script : null),
+                bot: ctx => (ctx.bot ? ctx.bot.script : null),
+                tags: ctx => (ctx.bot ? ctx.bot.script.tags : null),
+                raw: ctx => (ctx.bot ? ctx.bot.script.raw : null),
                 creator: ctx => ctx.creator,
                 config: ctx => ctx.config,
                 configTag: ctx =>

@@ -343,6 +343,12 @@ export interface ScriptError {
      * The column number that the error occurred at.
      */
     column?: number;
+
+    /**
+     * The script that caused the error.
+     * Only set if the script was unable to be compiled.
+     */
+    script?: string;
 }
 
 /**
