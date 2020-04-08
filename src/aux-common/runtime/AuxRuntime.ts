@@ -71,6 +71,7 @@ import {
 } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
+import { BatchingZoneSpec } from './BatchingZoneSpec';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -79,12 +80,17 @@ import transform from 'lodash/transform';
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
-    private _originalState: BotsState = {};
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
+
+    private _actionBatch: BotAction[] = [];
+    private _errorBatch: ScriptError[] = [];
+
+    private _userId: string;
+    private _zone: Zone;
 
     private _updatedBots = new Map<string, RuntimeBot>();
     private _newBots = new Map<string, RuntimeBot>();
@@ -113,14 +119,42 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         this._editModesMap = editModesMap;
         this._onActions = new Subject();
         this._onErrors = new Subject();
+
+        this._zone = Zone.current.fork(
+            new BatchingZoneSpec(() => {
+                // Send the batch once all the micro tasks are completed
+                const actions = this._actionBatch;
+                const errors = this._errorBatch;
+                this._actionBatch = [];
+                this._errorBatch = [];
+
+                this._onActions.next(actions);
+                this._onErrors.next(errors);
+            })
+        );
+    }
+
+    /**
+     * Gets the current state that the runtime is operating on.
+     */
+    get currentState() {
+        return this._compiledState;
     }
 
     set userId(id: string) {
-        const bot = this._compiledState[id];
+        this._userId = id;
+        this._globalContext.playerBot = this.userBot;
+    }
+
+    get userBot() {
+        if (!this._userId) {
+            return;
+        }
+        const bot = this._compiledState[this._userId];
         if (bot) {
-            this._globalContext.playerBot = bot.script;
+            return bot.script;
         } else {
-            this._globalContext.playerBot = null;
+            return null;
         }
     }
 
@@ -139,51 +173,84 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     }
 
     /**
+     * Gets the dependency manager that the runtime is using.
+     */
+    get dependencies() {
+        return this._dependencies;
+    }
+
+    /**
+     * Processes the given bot actions and dispatches the resulting actions in the future.
+     * @param actions The actions to process.
+     */
+    process(actions: BotAction[]) {
+        this._zone.run(() => {
+            for (let action of actions) {
+                if (action.type === 'action') {
+                    this.shout(
+                        action.eventName,
+                        action.botIds,
+                        action.argument
+                    );
+                } else {
+                    this._actionBatch.push(action);
+                }
+            }
+        });
+    }
+
+    /**
      * Executes a shout with the given event name on the given bot IDs with the given argument.
+     * Also dispatches any actions and errors that occur.
      * @param eventName The name of the event.
      * @param botIds The Bot IDs that the shout is being sent to.
      * @param arg The argument to include in the shout.
      */
     shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
-        let result = {
-            actions: [],
-            errors: [],
-            listeners: [],
-            results: [],
-        } as ActionResult;
-        arg = this._mapBotsToRuntimeBots(arg);
+        return this._zone.run(() => {
+            let result = {
+                actions: [],
+                errors: [],
+                listeners: [],
+                results: [],
+            } as ActionResult;
+            this._globalContext.playerBot = this.userBot;
+            arg = this._mapBotsToRuntimeBots(arg);
 
-        this._globalContext.energy = DEFAULT_ENERGY;
-        const results = this._library.api.whisper(botIds, eventName, arg);
-        result.results.push(...results);
+            this._globalContext.energy = DEFAULT_ENERGY;
+            const results = this._library.api.whisper(botIds, eventName, arg);
+            result.results.push(...results);
 
-        const actions = this._globalContext.dequeueActions();
-        const errors = this._globalContext.dequeueErrors();
-        const updatedBots = [...this._updatedBots.values()];
-        const updates = updatedBots
-            .filter(bot => {
-                return (
-                    Object.keys(bot.changes).length > 0 &&
-                    !this._newBots.has(bot.id)
-                );
-            })
-            .map(bot =>
-                botUpdated(bot.id, {
-                    tags: { ...bot.changes },
+            const actions = this._globalContext.dequeueActions();
+            const errors = this._globalContext.dequeueErrors();
+            const updatedBots = [...this._updatedBots.values()];
+            const updates = updatedBots
+                .filter(bot => {
+                    return (
+                        Object.keys(bot.changes).length > 0 &&
+                        !this._newBots.has(bot.id)
+                    );
                 })
-            );
-        for (let bot of updatedBots) {
-            bot[CLEAR_CHANGES_SYMBOL]();
-        }
-        const sortedUpdates = sortBy(updates, u => u.id);
-        this._updatedBots.clear();
-        this._newBots.clear();
-        actions.push(...sortedUpdates);
-        this._onActions.next(actions);
-        this._onErrors.next(errors);
-        result.actions = actions;
-        result.errors = errors;
-        return result;
+                .map(bot =>
+                    botUpdated(bot.id, {
+                        tags: { ...bot.changes },
+                    })
+                );
+            for (let bot of updatedBots) {
+                bot[CLEAR_CHANGES_SYMBOL]();
+            }
+            const sortedUpdates = sortBy(updates, u => u.id);
+            this._updatedBots.clear();
+            this._newBots.clear();
+            actions.push(...sortedUpdates);
+            result.actions = actions;
+            result.errors = errors;
+
+            this._actionBatch.push(...actions);
+            this._errorBatch.push(...errors);
+
+            return result;
+        });
     }
 
     /**
@@ -204,7 +271,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             removedBots: [],
         } as StateUpdatedEvent;
 
-        let nextOriginalState = Object.assign({}, this._originalState);
         let newBots = [] as [CompiledBot, PrecalculatedBot][];
         let newBotIDs = new Set<string>();
 
@@ -226,7 +292,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             }
             newBots.push([newBot, precalculated]);
             newBotIDs.add(newBot.id);
-            nextOriginalState[bot.id] = bot;
             update.state[bot.id] = precalculated;
             update.addedBots.push(bot.id);
         }
@@ -243,8 +308,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         const changes = this._dependencies.addBots(bots);
         this._updateDependentBots(changes, update, newBotIDs);
 
-        this._originalState = nextOriginalState;
-
         return update;
     }
 
@@ -259,7 +322,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             updatedBots: [],
             removedBots: [],
         } as StateUpdatedEvent;
-        let nextOriginalState = Object.assign({}, this._originalState);
 
         for (let id of botIds) {
             const bot = this._compiledState[id];
@@ -267,7 +329,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 removeFromContext(this._globalContext, bot.script);
             }
             delete this._compiledState[id];
-            delete nextOriginalState[id];
             update.state[id] = null;
             update.removedBots.push(id);
         }
@@ -275,7 +336,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         const changes = this._dependencies.removeBots(botIds);
         this._updateDependentBots(changes, update, new Set());
 
-        this._originalState = nextOriginalState;
         return update;
     }
 
@@ -290,8 +350,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             updatedBots: [],
             removedBots: [],
         } as StateUpdatedEvent;
-
-        let nextOriginalState = Object.assign({}, this._originalState);
 
         for (let u of updates) {
             // 1. get compiled bot
@@ -314,8 +372,6 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
 
         const changes = this._dependencies.updateBots(updates);
         this._updateDependentBots(changes, update, new Set());
-
-        this._originalState = nextOriginalState;
 
         return update;
     }

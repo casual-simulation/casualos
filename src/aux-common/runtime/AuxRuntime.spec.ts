@@ -1019,6 +1019,44 @@ describe('AuxRuntime', () => {
         });
     });
 
+    describe('process()', () => {
+        it('should execute shouts', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast("hi1")',
+                }),
+                createBot('test2', {
+                    hello: '@player.toast("hi2")',
+                }),
+                createBot('test3', {}),
+            ]);
+            runtime.process([action('hello')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
+        });
+
+        it('should flatten shout events into the given batch', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast("hi1")',
+                }),
+                createBot('test2', {
+                    hello: '@player.toast("hi2")',
+                }),
+                createBot('test3', {}),
+            ]);
+            runtime.process([toast('hi0'), action('hello'), toast('hi3')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [toast('hi0'), toast('hi1'), toast('hi2'), toast('hi3')],
+            ]);
+        });
+    });
+
     describe('shout()', () => {
         it('should execute all the listeners that match the given event name and produce the resulting actions', async () => {
             runtime.botsAdded([
