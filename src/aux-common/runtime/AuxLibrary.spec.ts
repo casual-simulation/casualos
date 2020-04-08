@@ -3689,4 +3689,24 @@ describe('AuxLibrary', () => {
             expect(sayHello1).toBeCalledTimes(1);
         });
     });
+
+    describe('player.inSheet()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot('player', {}, 'tempLocal');
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return true if the player bot has a sheet portal', () => {
+            player.tags.auxSheetPortal = 'sheet';
+
+            expect(library.api.player.inSheet()).toBe(true);
+        });
+
+        it('should return false if the player bot does not have a sheet portal', () => {
+            expect(library.api.player.inSheet()).toBe(false);
+        });
+    });
 });

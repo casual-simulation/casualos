@@ -328,6 +328,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 checkout,
                 playSound,
                 hasBotInInventory,
+                inSheet,
             },
 
             server: {
@@ -2005,6 +2006,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return event(eventName, bots, arg);
+    }
+
+    /**
+     * Gets whether the player is in the sheet dimension.
+     */
+    function inSheet(): boolean {
+        return getPortalDimension('sheet') !== null;
     }
 
     /**
