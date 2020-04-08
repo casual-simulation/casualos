@@ -39,10 +39,7 @@ export function buildFormulaLibraryOptions(
             isBuilder: config.isBuilder,
             isPlayer: config.isPlayer,
         },
-        version: {
-            hash: config.versionHash,
-            ...parseVersionNumber(config.version),
-        },
+        version: buildVersionNumber(config),
     };
 
     if (config.device) {
@@ -50,6 +47,13 @@ export function buildFormulaLibraryOptions(
     }
 
     return options;
+}
+
+export function buildVersionNumber(config: AuxConfigParameters) {
+    return {
+        hash: config.versionHash,
+        ...parseVersionNumber(config.version),
+    };
 }
 
 /**

@@ -44,8 +44,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._remoteEvents.next(events);
     }
 
-    protected _createPrecalculationManager(): PrecalculationManager {
-        const manager = super._createPrecalculationManager();
+    protected _createRuntime(): PrecalculationManager {
+        const manager = super._createRuntime();
         manager.logFormulaErrors = true;
         return manager;
     }

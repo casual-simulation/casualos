@@ -18,9 +18,14 @@ import {
     PartitionConfig,
     iteratePartitions,
     BotDependentInfo,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildFormulaLibraryOptions } from './AuxConfig';
+import {
+    AuxConfig,
+    buildFormulaLibraryOptions,
+    buildVersionNumber,
+} from './AuxConfig';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -41,7 +46,8 @@ export interface AuxChannelOptions {
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
-    protected _precalculation: PrecalculationManager;
+    // protected _precalculation: PrecalculationManager;
+    protected _runtime: AuxRuntime;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
@@ -326,7 +332,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._precalculation.dependencies.getDependents(tag);
+        return this._runtime.dependencies.getDependents(tag);
+        // return this._precalculation.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {
@@ -347,11 +354,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _createAuxHelper() {
         const partitions: any = this._partitions;
-        let helper = new AuxHelper(
-            partitions,
-            buildFormulaLibraryOptions(this._config.config),
-            this._options.sandboxFactory
-        );
+        let helper = new AuxHelper(partitions, this._runtime);
         helper.userId = this.user ? this.user.id : null;
         return helper;
     }
@@ -383,9 +386,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsAdded(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsAdded(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
@@ -395,9 +396,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsRemoved(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsRemoved(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
@@ -407,9 +406,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsUpdated(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsUpdated(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e))
@@ -418,11 +415,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected async _ensureSetup() {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        if (!this._runtime) {
+            this._runtime = this._createRuntime();
+        }
         if (!this._helper) {
             this._helper = this._createAuxHelper();
-        }
-        if (!this._precalculation) {
-            this._precalculation = this._createPrecalculationManager();
         }
 
         await this._initAux();
@@ -476,11 +473,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onError.next(error);
     }
 
-    protected _createPrecalculationManager(): PrecalculationManager {
-        return new PrecalculationManager(
-            () => this._helper.botsState,
-            () => this._helper.createContext()
+    protected _createRuntime(): AuxRuntime {
+        const runtime = new AuxRuntime(
+            buildVersionNumber(this._config.config),
+            this._config.config.device
         );
+        runtime.userId = this.user ? this.user.id : null;
+        return runtime;
     }
 
     protected _handleLocalEvents(e: LocalActions[]) {

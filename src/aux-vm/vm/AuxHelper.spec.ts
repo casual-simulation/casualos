@@ -18,6 +18,9 @@ import {
     createMemoryPartition,
     MemoryBotClient,
     createBotClientPartition,
+    AuxRuntime,
+    AuxPartitions,
+    iteratePartitions,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -28,6 +31,8 @@ import {
 import uuid from 'uuid/v4';
 import { buildFormulaLibraryOptions } from './AuxConfig';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -40,9 +45,12 @@ describe('AuxHelper', () => {
     let userId: string = 'user';
     let memory: MemoryPartition;
     let error: MemoryPartition;
+    // let runtime: AuxRuntime;
     let helper: AuxHelper;
+    let subs: SubscriptionLike[];
 
     beforeEach(async () => {
+        subs = [];
         uuidMock.mockReset();
         memory = createMemoryPartition({
             type: 'memory',
@@ -52,7 +60,7 @@ describe('AuxHelper', () => {
             type: 'memory',
             initialState: {},
         });
-        helper = new AuxHelper({
+        helper = createHelper({
             shared: memory,
             error: error,
         });
@@ -61,28 +69,81 @@ describe('AuxHelper', () => {
         await memory.applyEvents([botAdded(createBot('user'))]);
     });
 
-    it('should use the given sandbox factory', async () => {
-        const sandbox: Sandbox = {
-            library: null,
-            interface: null,
-            run: null,
-        };
-        helper = new AuxHelper(
+    afterEach(() => {
+        for (let sub of subs) {
+            sub.unsubscribe();
+        }
+    });
+
+    function createHelper(partitions: AuxPartitions) {
+        const runtime = new AuxRuntime(
             {
-                shared: memory,
+                hash: 'hash',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
             },
-            undefined,
-            () => sandbox
+            {
+                supportsAR: false,
+                supportsVR: false,
+            }
         );
+        const helper = new AuxHelper(partitions, runtime);
+
+        for (let [, partition] of iteratePartitions(partitions)) {
+            subs.push(
+                partition.onBotsAdded
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsAdded(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e)),
+                partition.onBotsRemoved
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsRemoved(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e)),
+                partition.onBotsUpdated
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsUpdated(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e))
+            );
+        }
+
+        runtime.userId = userId;
+
+        return helper;
+    }
+
+    it('should not produce sandbox contexts', async () => {
+        helper = createHelper({
+            shared: memory,
+        });
         helper.userId = userId;
 
-        const context = helper.createContext();
-        expect(context.sandbox).toBe(sandbox);
+        const context: any = helper.createContext();
+        expect(context.sandbox).toBeUndefined();
     });
 
     describe('partitions', () => {
         it('should exclude partitions which dont have their bot from the bot state', () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -102,7 +163,7 @@ describe('AuxHelper', () => {
         });
 
         it('should send local events for the events that are returned from the partition', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -145,7 +206,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -160,7 +221,7 @@ describe('AuxHelper', () => {
         });
 
         it('should ignore bots going to partitions that dont exist', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -172,7 +233,7 @@ describe('AuxHelper', () => {
         });
 
         it('should prevent partitions from overriding other partitions', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -211,7 +272,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: mem,
             });
@@ -242,7 +303,7 @@ describe('AuxHelper', () => {
                     normal: createBot('normal', {}),
                 },
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: TEST,
             });
@@ -272,7 +333,7 @@ describe('AuxHelper', () => {
                     userId: createBot('userId'),
                 },
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: TEST,
             });
@@ -323,7 +384,7 @@ describe('AuxHelper', () => {
 
         describe('addPartition()', () => {
             it('should add the bots from the partition to the helper', () => {
-                helper = new AuxHelper({
+                helper = createHelper({
                     shared: createMemoryPartition({
                         type: 'memory',
                         initialState: {
@@ -378,7 +439,7 @@ describe('AuxHelper', () => {
 
     describe('publicBotsState', () => {
         it('should return the bots state from all the public partitions', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -423,56 +484,38 @@ describe('AuxHelper', () => {
     });
 
     describe('createContext()', () => {
-        describe('player.inSheet()', () => {
-            it('should return true when in builder', async () => {
-                helper = new AuxHelper(
-                    {
-                        shared: memory,
-                    },
-                    buildFormulaLibraryOptions({
-                        isBuilder: true,
-                        isPlayer: false,
-                        versionHash: 'abc',
-                        version: 'v1.0.0',
-                    })
-                );
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(true);
-            });
-
-            it('should return false when not in builder', async () => {
-                helper = new AuxHelper(
-                    {
-                        shared: memory,
-                    },
-                    buildFormulaLibraryOptions({
-                        isBuilder: false,
-                        isPlayer: true,
-                        versionHash: 'abc',
-                        version: 'v1.0.0',
-                    })
-                );
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(false);
-            });
-
-            it('should default to not in aux builder or player', async () => {
-                helper = new AuxHelper({
-                    shared: memory,
-                });
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(false);
-            });
-        });
+        // describe('player.inSheet()', () => {
+        //     it('should return true when in builder', async () => {
+        //         helper = createHelper(
+        //             {
+        //                 shared: memory,
+        //             },
+        //             runtime
+        //         );
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(true);
+        //     });
+        //     it('should return false when not in builder', async () => {
+        //         helper = createHelper(
+        //             {
+        //                 shared: memory,
+        //             },
+        //             runtime
+        //         );
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
+        //     });
+        //     it('should default to not in aux builder or player', async () => {
+        //         helper = createHelper({
+        //             shared: memory,
+        //         });
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
+        //     });
+        // });
     });
 
     describe('transaction()', () => {
@@ -516,18 +559,16 @@ describe('AuxHelper', () => {
         });
 
         it('should support player.inSheet() in actions', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
+            helper = createHelper({
+                shared: memory,
+            });
             helper.userId = userId;
+
+            await helper.updateBot(helper.userBot, {
+                tags: {
+                    auxSheetPortal: 'sheet',
+                },
+            });
 
             await helper.createBot('test', {
                 action: '@setTag(this, "#value", player.inSheet())',
@@ -668,7 +709,7 @@ describe('AuxHelper', () => {
                     universe: 'universe',
                     client: searchClient,
                 });
-                helper = new AuxHelper({
+                helper = createHelper({
                     shared: createMemoryPartition({
                         type: 'memory',
                         initialState: {},
@@ -1267,28 +1308,21 @@ describe('AuxHelper', () => {
     });
 
     describe('search()', () => {
-        it('should support player.inSheet()', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
-            helper.userId = userId;
-
-            await helper.createBot('test', {
-                'action()': 'setTag(this, "#value", player.inSheet())',
-            });
-
-            const result = await helper.search('player.inSheet()');
-
-            expect(result.result).toBe(true);
-        });
+        // TODO:
+        // it.skip('should support player.inSheet()', async () => {
+        //     helper = createHelper(
+        //         {
+        //             shared: memory,
+        //         },
+        //         runtime
+        //     );
+        //     helper.userId = userId;
+        //     await helper.createBot('test', {
+        //         'action()': 'setTag(this, "#value", player.inSheet())',
+        //     });
+        //     const result = await helper.search('player.inSheet()');
+        //     expect(result.result).toBe(true);
+        // });
     });
 
     describe('getTags()', () => {
@@ -1312,18 +1346,16 @@ describe('AuxHelper', () => {
 
     describe('formulaBatch()', () => {
         it('should support player.inSheet()', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
+            helper = createHelper({
+                shared: memory,
+            });
             helper.userId = userId;
+
+            await helper.updateBot(helper.userBot, {
+                tags: {
+                    auxSheetPortal: 'sheet',
+                },
+            });
 
             await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inSheet())',
@@ -1332,6 +1364,8 @@ describe('AuxHelper', () => {
             await helper.formulaBatch([
                 'setTag(getBot("id", "test"), "value", player.inSheet())',
             ]);
+
+            await waitAsync();
 
             expect(helper.botsState['test'].tags.value).toBe(true);
         });
@@ -1343,7 +1377,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1372,7 +1406,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -1411,7 +1445,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1433,7 +1467,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1451,7 +1485,7 @@ describe('AuxHelper', () => {
 
     describe('exportBots()', () => {
         it('should only export bots with the given IDs', () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {

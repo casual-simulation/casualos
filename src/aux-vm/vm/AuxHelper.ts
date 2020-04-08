@@ -49,6 +49,11 @@ import {
     AuxPartitions,
     AuxPartition,
     getPartitionState,
+    AuxRuntime,
+    createPrecalculatedContext,
+    PrecalculatedBot,
+    BotCalculationContext,
+    runScript,
 } from '@casual-simulation/aux-common';
 import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
@@ -61,6 +66,8 @@ import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
 import transform from 'lodash/transform';
+import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
+import { tap } from 'rxjs/operators';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -69,11 +76,10 @@ import transform from 'lodash/transform';
 export class AuxHelper extends BaseHelper<Bot> {
     private static readonly _debug = false;
     private _partitions: AuxPartitions;
-    private _lib: SandboxLibrary;
+    private _runtime: AuxRuntime;
     private _localEvents: Subject<LocalActions[]>;
     private _remoteEvents: Subject<RemoteAction[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
-    private _sandboxFactory: SandboxFactory;
     private _partitionStates: Map<string, BotsState>;
     private _stateCache: Map<string, BotsState>;
 
@@ -81,21 +87,24 @@ export class AuxHelper extends BaseHelper<Bot> {
      * Creates a new bot helper.
      * @param partitions The partitions that the helper should use.
      */
-    constructor(
-        partitions: AuxPartitions,
-        config?: FormulaLibraryOptions,
-        sandboxFactory?: (lib: SandboxLibrary) => Sandbox
-    ) {
+    constructor(partitions: AuxPartitions, runtime: AuxRuntime) {
         super();
         this._localEvents = new Subject<LocalActions[]>();
         this._remoteEvents = new Subject<RemoteAction[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
-        this._sandboxFactory = sandboxFactory;
 
         this._partitions = partitions;
+        this._runtime = runtime;
         this._partitionStates = new Map();
         this._stateCache = new Map();
-        this._lib = createFormulaLibrary(config);
+
+        this._runtime.onActions
+            .pipe(
+                tap(e => {
+                    this._sendEvents(e);
+                })
+            )
+            .subscribe(null, (e: any) => console.error(e));
     }
 
     /**
@@ -206,13 +215,10 @@ export class AuxHelper extends BaseHelper<Bot> {
     /**
      * Creates a new BotCalculationContext from the current state.
      */
-    createContext(): BotSandboxContext {
-        return createCalculationContext(
-            this.objects,
-            this.userId,
-            this._lib,
-            this._sandboxFactory
-        );
+    createContext(): BotCalculationContext {
+        const state = this._runtime.currentState;
+        const bots = <CompiledBot[]>getActiveObjects(state);
+        return createPrecalculatedContext(bots);
     }
 
     /**
@@ -254,8 +260,12 @@ export class AuxHelper extends BaseHelper<Bot> {
      * @param newData The new data that the bot should have.
      */
     async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
-        updateBot(bot, this.userBot ? this.userBot.id : null, newData, () =>
-            this.createContext()
+        // TODO:
+        updateBot(
+            bot,
+            this.userBot ? this.userBot.id : null,
+            newData,
+            () => <any>this.createContext()
         );
 
         await this._sendEvents([botUpdated(bot.id, newData)]);
@@ -318,12 +328,9 @@ export class AuxHelper extends BaseHelper<Bot> {
     async createOrUpdateBuilderBots(builder: string) {
         let state = JSON.parse(builder);
         const objects = getActiveObjects(state);
-        const stateCalc = createCalculationContext(
-            objects,
-            this.userId,
-            this._lib,
-            this._sandboxFactory
-        );
+        const stateCalc = createPrecalculatedContext(<PrecalculatedBot[]>(
+            objects
+        ));
         const calc = this.createContext();
         let needsUpdate = false;
         let needsToBeEnabled = false;
@@ -380,28 +387,31 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
-        const state = this.botsState;
-        let events = flatMap(formulas, f =>
-            calculateFormulaEvents(
-                state,
-                f,
-                this.userId,
-                undefined,
-                this._sandboxFactory,
-                this._lib
-            )
-        );
-        await this.transaction(...events);
+        this._runtime.process(formulas.map(f => runScript(f)));
+        // TODO:
+        // const state = this.botsState;
+        // let events = flatMap(formulas, f =>
+        //     calculateFormulaEvents(
+        //         state,
+        //         f,
+        //         this.userId,
+        //         undefined,
+        //         this._sandboxFactory,
+        //         this._lib
+        //     )
+        // );
+        // await this.transaction(...events);
     }
 
     search(search: string) {
-        return searchBotState(
-            search,
-            this.botsState,
-            this.userId,
-            this._lib,
-            this._sandboxFactory
-        );
+        // TODO:
+        // return searchBotState(
+        //     search,
+        //     this.botsState,
+        //     this.userId,
+        //     this._lib,
+        //     this._sandboxFactory
+        // );
     }
 
     getTags(): string[] {
@@ -427,12 +437,17 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         for (let event of filteredEvents) {
             if (event.type === 'action') {
-                const result = calculateActionResults(
-                    this.botsState,
-                    event,
-                    this._sandboxFactory,
-                    this._lib
+                const result = this._runtime.shout(
+                    event.eventName,
+                    event.botIds,
+                    event.argument
                 );
+                // const result = calculateActionResults(
+                //     this.botsState,
+                //     event,
+                //     this._sandboxFactory,
+                //     this._lib
+                // );
                 resultEvents.push(...this._flattenEvents(result.actions));
                 resultEvents.push(
                     ...result.errors.map(e => {
@@ -453,25 +468,31 @@ export class AuxHelper extends BaseHelper<Bot> {
                     })
                 );
             } else if (event.type === 'run_script') {
-                const events = [
-                    ...calculateFormulaEvents(
-                        this.botsState,
-                        event.script,
-                        this.userId,
-                        undefined,
-                        this._sandboxFactory,
-                        this._lib
-                    ),
-                ];
-                resultEvents.push(...this._flattenEvents(events));
+                // TODO:
+                // const events = [
+                //     ...calculateFormulaEvents(
+                //         this.botsState,
+                //         event.script,
+                //         this.userId,
+                //         undefined,
+                //         this._sandboxFactory,
+                //         this._lib
+                //     ),
+                // ];
+                // resultEvents.push(...this._flattenEvents(events));
             } else if (event.type === 'update_bot') {
                 const bot = this.botsState[event.id];
-                updateBot(bot, this.userBot.id, event.update, () =>
-                    this.createContext()
+                // TODO:
+                updateBot(
+                    bot,
+                    this.userBot.id,
+                    event.update,
+                    () => <any>this.createContext()
                 );
                 resultEvents.push(event);
             } else if (event.type === 'paste_state') {
-                resultEvents.push(...this._pasteState(event));
+                // TODO:
+                // resultEvents.push(...this._pasteState(event));
             } else if (event.type === 'apply_state') {
                 const events = breakIntoIndividualEvents(this.botsState, event);
                 resultEvents.push(...events);
@@ -502,29 +523,31 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     private _allowEvent(
-        context: BotSandboxContext,
+        context: BotCalculationContext,
         event: BotAction
     ): BotAction[] {
-        try {
-            const results = calculateActionResults(
-                this.botsState,
-                action(ON_ACTION_ACTION_NAME, null, this.userId, {
-                    action: event,
-                }),
-                undefined,
-                undefined,
-                context,
-                false
-            );
+        // TODO:
+        // try {
+        //     const results = calculateActionResults(
+        //         this.botsState,
+        //         action(ON_ACTION_ACTION_NAME, null, this.userId, {
+        //             action: event,
+        //         }),
+        //         undefined,
+        //         undefined,
+        //         context,
+        //         false
+        //     );
 
-            return results.actions;
-        } catch (err) {
-            console.error(
-                '[AuxHelper] The onUniverseAction() handler errored:',
-                err
-            );
-            return [];
-        }
+        //     return results.actions;
+        // } catch (err) {
+        //     console.error(
+        //         '[AuxHelper] The onUniverseAction() handler errored:',
+        //         err
+        //     );
+        //     return [];
+        // }
+        return [];
     }
 
     private async _sendEvents(events: BotAction[]) {
@@ -670,28 +693,27 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     private _pasteState(event: PasteStateAction) {
         // TODO: Cleanup this function to make it easier to understand
-        const value = event.state;
-        const botIds = Object.keys(value);
-        let state: BotsState = {};
-        const oldBots = botIds.map(id => value[id]);
-        const oldCalc = createCalculationContext(
-            oldBots,
-            this.userId,
-            this._lib,
-            this._sandboxFactory
-        );
-        const newCalc = this.createContext();
-
-        if (event.options.dimension) {
-            return this._pasteExistingWorksurface(
-                oldBots,
-                oldCalc,
-                event,
-                newCalc
-            );
-        } else {
-            return this._pasteNewWorksurface(oldBots, oldCalc, event, newCalc);
-        }
+        // const value = event.state;
+        // const botIds = Object.keys(value);
+        // let state: BotsState = {};
+        // const oldBots = botIds.map(id => value[id]);
+        // const oldCalc = createCalculationContext(
+        //     oldBots,
+        //     this.userId,
+        //     this._lib,
+        //     this._sandboxFactory
+        // );
+        // const newCalc = this.createContext();
+        // if (event.options.dimension) {
+        //     return this._pasteExistingWorksurface(
+        //         oldBots,
+        //         oldCalc,
+        //         event,
+        //         newCalc
+        //     );
+        // } else {
+        //     return this._pasteNewWorksurface(oldBots, oldCalc, event, newCalc);
+        // }
     }
 
     private _pasteExistingWorksurface(
