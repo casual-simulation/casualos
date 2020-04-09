@@ -189,35 +189,38 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      */
     process(actions: BotAction[]) {
         this._zone.run(() => {
-            for (let newAction of actions) {
-                let { rejected, newActions } = this._rejectAction(newAction);
-                this._actionBatch.push(...newActions);
+            for (let action of actions) {
+                let { rejected, newActions } = this._rejectAction(action);
+                for (let newAction of newActions) {
+                    this._processAction(newAction);
+                }
                 if (rejected) {
                     continue;
                 }
 
-                if (newAction.type === 'action') {
-                    const result = this._shout(
-                        newAction.eventName,
-                        newAction.botIds,
-                        newAction.argument,
-                        false
-                    );
-                    this.process(result.actions);
-                } else if (newAction.type === 'run_script') {
-                    const result = this._execute(newAction.script, false);
-                    this.process(result.actions);
-                } else if (newAction.type === 'apply_state') {
-                    const events = breakIntoIndividualEvents(
-                        this.currentState,
-                        newAction
-                    );
-                    this.process(events);
-                } else {
-                    this._actionBatch.push(newAction);
-                }
+                this._processAction(action);
             }
         });
+    }
+
+    private _processAction(action: BotAction) {
+        if (action.type === 'action') {
+            const result = this._shout(
+                action.eventName,
+                action.botIds,
+                action.argument,
+                false
+            );
+            this.process(result.actions);
+        } else if (action.type === 'run_script') {
+            const result = this._execute(action.script, false);
+            this.process(result.actions);
+        } else if (action.type === 'apply_state') {
+            const events = breakIntoIndividualEvents(this.currentState, action);
+            this.process(events);
+        } else {
+            this._actionBatch.push(action);
+        }
     }
 
     private _rejectAction(
@@ -308,7 +311,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         }
         return this._batchScriptResults(() => {
             try {
-                fn();
+                return fn();
             } catch (ex) {
                 this._globalContext.enqueueError(ex);
             }

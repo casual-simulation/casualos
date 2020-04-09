@@ -70,7 +70,7 @@ import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote, device } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { AuxDevice, AuxVersion } from './AuxGlobalContext';
 import { values } from 'lodash';
@@ -1217,6 +1217,51 @@ describe('AuxRuntime', () => {
                 [
                     botAdded(createBot('abc', {}, <any>'TEST')),
                     botAdded(createBot('normal', {})),
+                ],
+            ]);
+        });
+
+        it('should support dispatching a new shout from inside onUniverseAction()', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                    test: '@tags.hit = true',
+                }),
+            ]);
+            runtime.process([device(<any>{}, action('test'))]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    // onUniverseAction is executed before
+                    // the device action is executed
+                    botUpdated('test1', {
+                        tags: {
+                            hit: true,
+                        },
+                    }),
+                    device(<any>{}, action('test')),
+                ],
+            ]);
+        });
+
+        it('should support dispatching a new script from inside onUniverseAction()', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                }),
+            ]);
+            runtime.process([device(<any>{}, runScript('player.toast("hi")'))]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    // onUniverseAction is executed before
+                    // the device action is executed
+                    toast('hi'),
+                    device(<any>{}, runScript('player.toast("hi")')),
                 ],
             ]);
         });
