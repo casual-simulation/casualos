@@ -85,4 +85,22 @@ describe('BatchingZoneSpec', () => {
         expect(result).toEqual(3);
         expect(flush).toBeCalledTimes(1);
     });
+
+    it('should support running in the zone while in flush', () => {
+        const task1 = jest.fn();
+        const task2 = jest.fn();
+        flush.mockImplementation(() => {
+            zone.run(task1);
+            zone.run(task2);
+        });
+
+        const result = zone.run(() => {
+            return 1 + 2;
+        });
+
+        expect(result).toEqual(3);
+        expect(flush).toBeCalledTimes(1);
+        expect(task1).toBeCalledTimes(1);
+        expect(task2).toBeCalledTimes(1);
+    });
 });

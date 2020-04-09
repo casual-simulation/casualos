@@ -1069,6 +1069,157 @@ describe('AuxRuntime', () => {
                 [toast('hi0'), toast('hi1'), toast('hi2')],
             ]);
         });
+
+        it('should send onUniverseAction() shouts for each event', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: '@player.toast(that.action.message)',
+                }),
+            ]);
+            runtime.process([
+                toast('hi0'),
+                runScript('player.toast("hi1")'),
+                toast('hi2'),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    toast('hi0'),
+                    toast('hi0'),
+                    toast(undefined),
+                    toast('hi1'),
+                    toast('hi1'),
+                    toast('hi2'),
+                    toast('hi2'),
+                ],
+            ]);
+        });
+
+        it('should resolve rejected events', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: '@action.reject(that.action)',
+                }),
+            ]);
+            runtime.process([
+                toast('hi0'),
+                runScript('player.toast("hi1")'),
+                toast('hi2'),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[]]);
+        });
+
+        it('should call onUniverseAction() once per action in a batch', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: '@tags.count += 1',
+                    wow: '@player.toast("hi")',
+                    count: 0,
+                }),
+            ]);
+            runtime.process([
+                toast('hi0'),
+                action('wow'),
+                runScript('player.toast("hi1")'),
+                toast('hi2'),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    botUpdated('test1', {
+                        tags: {
+                            count: 1,
+                        },
+                    }),
+                    toast('hi0'),
+
+                    // action
+                    botUpdated('test1', {
+                        tags: {
+                            count: 2,
+                        },
+                    }),
+                    botUpdated('test1', {
+                        tags: {
+                            count: 3,
+                        },
+                    }),
+                    toast('hi'),
+
+                    // runScript
+                    botUpdated('test1', {
+                        tags: {
+                            count: 4,
+                        },
+                    }),
+                    botUpdated('test1', {
+                        tags: {
+                            count: 5,
+                        },
+                    }),
+                    toast('hi1'),
+
+                    botUpdated('test1', {
+                        tags: {
+                            count: 6,
+                        },
+                    }),
+                    toast('hi2'),
+                ],
+            ]);
+        });
+
+        it('should be able to filter actions before they are executed', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: `@if(that.action.type === "action") action.reject(that.action);`,
+                    test: '@player.toast("hi")',
+                }),
+            ]);
+            runtime.process([action('test')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[]]);
+        });
+
+        it('should be able to filter runScript actions before they are executed', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    onUniverseAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
+                }),
+            ]);
+            runtime.process([runScript('player.toast("hi")')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[]]);
+        });
+
+        it('should split add_state events into individual bot updates', async () => {
+            runtime.process([
+                addState({
+                    abc: createBot('abc', {}, <any>'TEST'),
+                    normal: createBot('normal', {}),
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    botAdded(createBot('abc', {}, <any>'TEST')),
+                    botAdded(createBot('normal', {})),
+                ],
+            ]);
+        });
     });
 
     describe('execute()', () => {

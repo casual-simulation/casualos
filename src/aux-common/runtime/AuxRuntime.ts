@@ -38,6 +38,9 @@ import {
     ScriptError,
     RanOutOfEnergyError,
     getBotSpace,
+    resolveRejectedActions,
+    ON_ACTION_ACTION_NAME,
+    breakIntoIndividualEvents,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -125,6 +128,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 // Send the batch once all the micro tasks are completed
                 const actions = this._actionBatch;
                 const errors = this._errorBatch;
+
                 this._actionBatch = [];
                 this._errorBatch = [];
 
@@ -185,20 +189,60 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      */
     process(actions: BotAction[]) {
         this._zone.run(() => {
-            for (let action of actions) {
-                if (action.type === 'action') {
-                    this.shout(
-                        action.eventName,
-                        action.botIds,
-                        action.argument
+            for (let newAction of actions) {
+                let { rejected, newActions } = this._rejectAction(newAction);
+                this._actionBatch.push(...newActions);
+                if (rejected) {
+                    continue;
+                }
+
+                if (newAction.type === 'action') {
+                    const result = this._shout(
+                        newAction.eventName,
+                        newAction.botIds,
+                        newAction.argument,
+                        false
                     );
-                } else if (action.type === 'run_script') {
-                    this.execute(action.script);
+                    this.process(result.actions);
+                } else if (newAction.type === 'run_script') {
+                    const result = this._execute(newAction.script, false);
+                    this.process(result.actions);
+                } else if (newAction.type === 'apply_state') {
+                    const events = breakIntoIndividualEvents(
+                        this.currentState,
+                        newAction
+                    );
+                    this.process(events);
                 } else {
-                    this._actionBatch.push(action);
+                    this._actionBatch.push(newAction);
                 }
             }
         });
+    }
+
+    private _rejectAction(
+        action: BotAction
+    ): { rejected: boolean; newActions: BotAction[] } {
+        const result = this._shout(
+            ON_ACTION_ACTION_NAME,
+            null,
+            {
+                action: action,
+            },
+            false
+        );
+
+        let rejected = false;
+        for (let i = 0; i < result.actions.length; i++) {
+            const a = result.actions[i];
+            if (a.type === 'reject' && a.action === action) {
+                rejected = true;
+                result.actions.splice(i, 1);
+                break;
+            }
+        }
+
+        return { rejected, newActions: result.actions };
     }
 
     /**
@@ -209,12 +253,21 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      * @param arg The argument to include in the shout.
      */
     shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
+        return this._shout(eventName, botIds, arg, true);
+    }
+
+    private _shout(
+        eventName: string,
+        botIds: string[],
+        arg: any,
+        batch: boolean
+    ): ActionResult {
         arg = this._mapBotsToRuntimeBots(arg);
         const { result, actions, errors } = this._batchScriptResults(() => {
             const results = this._library.api.whisper(botIds, eventName, arg);
 
             return results;
-        });
+        }, batch);
 
         return {
             actions,
@@ -228,7 +281,11 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
      * Executes the given script.
      * @param script The script to run.
      */
-    execute(script: string): void {
+    execute(script: string) {
+        return this._execute(script, true);
+    }
+
+    private _execute(script: string, batch: boolean) {
         let fn: () => any;
 
         try {
@@ -249,13 +306,13 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         if (!fn) {
             return;
         }
-        this._batchScriptResults(() => {
+        return this._batchScriptResults(() => {
             try {
                 fn();
             } catch (ex) {
                 this._globalContext.enqueueError(ex);
             }
-        });
+        }, batch);
     }
 
     /**
@@ -398,46 +455,56 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
     }
 
     private _batchScriptResults<T>(
-        callback: () => T
+        callback: () => T,
+        batch: boolean
     ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
         return this._zone.run(() => {
-            this._globalContext.playerBot = this.userBot;
+            const results = this._calculateScriptResults(callback);
 
-            this._globalContext.energy = DEFAULT_ENERGY;
-            const result = callback();
-
-            const actions = this._globalContext.dequeueActions();
-            const errors = this._globalContext.dequeueErrors();
-            const updatedBots = [...this._updatedBots.values()];
-            const updates = updatedBots
-                .filter(bot => {
-                    return (
-                        Object.keys(bot.changes).length > 0 &&
-                        !this._newBots.has(bot.id)
-                    );
-                })
-                .map(bot =>
-                    botUpdated(bot.id, {
-                        tags: { ...bot.changes },
-                    })
-                );
-            for (let bot of updatedBots) {
-                bot[CLEAR_CHANGES_SYMBOL]();
+            if (batch) {
+                this._actionBatch.push(...results.actions);
             }
-            const sortedUpdates = sortBy(updates, u => u.id);
-            this._updatedBots.clear();
-            this._newBots.clear();
-            actions.push(...sortedUpdates);
+            this._errorBatch.push(...results.errors);
 
-            this._actionBatch.push(...actions);
-            this._errorBatch.push(...errors);
-
-            return {
-                result: result,
-                actions: actions,
-                errors: errors,
-            };
+            return results;
         });
+    }
+
+    private _calculateScriptResults<T>(
+        callback: () => T
+    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
+        this._globalContext.playerBot = this.userBot;
+        this._globalContext.energy = DEFAULT_ENERGY;
+        const result = callback();
+
+        const actions = this._globalContext.dequeueActions();
+        const errors = this._globalContext.dequeueErrors();
+        const updatedBots = [...this._updatedBots.values()];
+        const updates = updatedBots
+            .filter(bot => {
+                return (
+                    Object.keys(bot.changes).length > 0 &&
+                    !this._newBots.has(bot.id)
+                );
+            })
+            .map(bot =>
+                botUpdated(bot.id, {
+                    tags: { ...bot.changes },
+                })
+            );
+        for (let bot of updatedBots) {
+            bot[CLEAR_CHANGES_SYMBOL]();
+        }
+        const sortedUpdates = sortBy(updates, u => u.id);
+        this._updatedBots.clear();
+        this._newBots.clear();
+        actions.push(...sortedUpdates);
+
+        return {
+            result: result,
+            actions: actions,
+            errors: errors,
+        };
     }
 
     private _updateDependentBots(
