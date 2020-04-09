@@ -21,7 +21,6 @@ import {
     cleanBot,
     Sandbox,
     SandboxFactory,
-    searchBotState,
     createFormulaLibrary,
     FormulaLibraryOptions,
     addToDimensionDiff,
@@ -403,17 +402,6 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     async formulaBatch(formulas: string[]): Promise<void> {
         this._runtime.process(formulas.map(f => runScript(f)));
-    }
-
-    search(search: string) {
-        // TODO:
-        // return searchBotState(
-        //     search,
-        //     this.botsState,
-        //     this.userId,
-        //     this._lib,
-        //     this._sandboxFactory
-        // );
     }
 
     getTags(): string[] {

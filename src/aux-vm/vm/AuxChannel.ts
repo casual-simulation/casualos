@@ -92,12 +92,6 @@ export interface AuxChannel {
     formulaBatch(formulas: string[]): Promise<void>;
 
     /**
-     * Runs a search on the bots state.
-     * @param search The search.
-     */
-    search(search: string): Promise<any>;
-
-    /**
      * Forks the AUX into the channel with the given ID.
      * @param newId The ID that the new AUX should have.
      */

@@ -295,10 +295,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._helper.formulaBatch(formulas);
     }
 
-    async search(search: string): Promise<any> {
-        return convertToCopiableValue(this._helper.search(search));
-    }
-
     async forkAux(newId: string): Promise<any> {}
 
     async setGrant(grant: string): Promise<void> {

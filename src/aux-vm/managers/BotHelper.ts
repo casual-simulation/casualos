@@ -273,8 +273,4 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
             },
         });
     }
-
-    search(search: string): Promise<any> {
-        return this._vm.search(search);
-    }
 }

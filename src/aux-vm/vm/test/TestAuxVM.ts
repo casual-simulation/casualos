@@ -9,7 +9,6 @@ import {
     BotsState,
     createCalculationContext,
     merge,
-    searchBotState,
     getActiveObjects,
     tagsOnBot,
     StateUpdatedEvent,
@@ -114,10 +113,6 @@ export class TestAuxVM implements AuxVM {
     }
 
     async init(loadingCallback?: any): Promise<void> {}
-
-    async search(search: string): Promise<any> {
-        return searchBotState(search, this._precalculator.botsState);
-    }
 
     async forkAux(newId: string): Promise<void> {}
 

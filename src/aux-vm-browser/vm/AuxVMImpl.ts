@@ -172,11 +172,6 @@ export class AuxVMImpl implements AuxVM {
         return await this._proxy.formulaBatch(formulas);
     }
 
-    async search(search: string): Promise<any> {
-        if (!this._proxy) return null;
-        return await this._proxy.search(search);
-    }
-
     async forkAux(newId: string): Promise<void> {
         if (!this._proxy) return null;
         return await this._proxy.forkAux(newId);

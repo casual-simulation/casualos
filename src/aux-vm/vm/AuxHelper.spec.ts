@@ -1088,24 +1088,6 @@ describe('AuxHelper', () => {
         });
     });
 
-    describe('search()', () => {
-        // TODO:
-        // it.skip('should support player.inSheet()', async () => {
-        //     helper = createHelper(
-        //         {
-        //             shared: memory,
-        //         },
-        //         runtime
-        //     );
-        //     helper.userId = userId;
-        //     await helper.createBot('test', {
-        //         'action()': 'setTag(this, "#value", player.inSheet())',
-        //     });
-        //     const result = await helper.search('player.inSheet()');
-        //     expect(result.result).toBe(true);
-        // });
-    });
-
     describe('getTags()', () => {
         it('should return the full list of tags sorted alphabetically', async () => {
             await helper.createBot('test', {

@@ -1,5 +1,9 @@
 import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
-import { createBot, setupUniverse } from '@casual-simulation/aux-common';
+import {
+    createBot,
+    setupUniverse,
+    createPrecalculatedBot,
+} from '@casual-simulation/aux-common';
 import { deviceInfo } from '@casual-simulation/causal-trees';
 import { SetupChannelModule2 } from './SetupChannelModule2';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
@@ -135,11 +139,8 @@ describe('SetupChannelModule2', () => {
                 );
                 await newChannelSim.init();
 
-                const { result } = await newChannelSim.helper.search(
-                    `getBot("abc", "def")`
-                );
-                expect(result).toEqual(
-                    createBot(result.id, {
+                expect(newChannelSim.helper.objects).toContainEqual(
+                    createPrecalculatedBot(expect.any(String), {
                         abc: 'def',
                     })
                 );
@@ -168,11 +169,8 @@ describe('SetupChannelModule2', () => {
                 );
                 await newChannelSim.init();
 
-                const { result } = await newChannelSim.helper.search(
-                    `getBot("abc", "def")`
-                );
-                expect(result).toEqual(
-                    createBot(result.id, {
+                expect(newChannelSim.helper.objects).toContainEqual(
+                    createPrecalculatedBot(expect.any(String), {
                         abc: 'def',
                     })
                 );
@@ -201,11 +199,8 @@ describe('SetupChannelModule2', () => {
                 );
                 await newChannelSim.init();
 
-                const { result } = await newChannelSim.helper.search(
-                    `getBot("created", true)`
-                );
-                expect(result).toEqual(
-                    createBot(result.id, {
+                expect(newChannelSim.helper.objects).toContainEqual(
+                    createPrecalculatedBot(expect.any(String), {
                         onCreate: '@setTag(this, "created", true)',
                         created: true,
                     })
@@ -231,10 +226,11 @@ describe('SetupChannelModule2', () => {
 
                 await waitAsync();
 
-                const { result } = await newChannelSim.helper.search(
-                    `getBot("abc", "def")`
+                expect(newChannelSim.helper.objects).not.toContainEqual(
+                    createPrecalculatedBot(expect.any(String), {
+                        abc: 'def',
+                    })
                 );
-                expect(result).toBeUndefined();
             });
         });
     });

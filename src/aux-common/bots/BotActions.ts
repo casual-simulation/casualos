@@ -37,29 +37,6 @@ import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 
 /**
- * Executes the given formula on the given bot state and returns the results.
- * @param formula The formula to run.
- * @param state The bot state to use.
- * @param options The options.
- */
-export function searchBotState(
-    formula: string,
-    state: BotsState,
-    userId?: string,
-    library?: SandboxLibrary,
-    createSandbox?: SandboxFactory
-) {
-    const context = createCalculationContextFromState(
-        state,
-        userId,
-        library,
-        createSandbox
-    );
-    const result = calculateFormulaValue(context, formula);
-    return convertToCopiableValue(result);
-}
-
-/**
  * Calculates the results for the given action run with the given state.
  * @param state The state.
  * @param action The action.

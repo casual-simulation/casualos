@@ -76,10 +76,6 @@ export class AuxVMNode implements AuxVM {
         return this._channel.formulaBatch(formulas);
     }
 
-    search(search: string): Promise<any> {
-        return this._channel.search(search);
-    }
-
     forkAux(newId: string): Promise<void> {
         return this._channel.forkAux(newId);
     }
