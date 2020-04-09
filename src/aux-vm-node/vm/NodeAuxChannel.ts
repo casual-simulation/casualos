@@ -10,6 +10,7 @@ import {
     createMemoryPartition,
     createCausalRepoPartition,
     PrecalculationManager,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
@@ -44,9 +45,9 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._remoteEvents.next(events);
     }
 
-    protected _createRuntime(): PrecalculationManager {
+    protected _createRuntime(): AuxRuntime {
         const manager = super._createRuntime();
-        manager.logFormulaErrors = true;
+        // manager.logFormulaErrors = true;
         return manager;
     }
 

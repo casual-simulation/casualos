@@ -50,6 +50,9 @@ export function buildFormulaLibraryOptions(
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {
+    if (!config) {
+        return null;
+    }
     return {
         hash: config.versionHash,
         ...parseVersionNumber(config.version),

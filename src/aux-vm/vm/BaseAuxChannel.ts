@@ -251,27 +251,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         config: PartitionConfig
     ): Promise<AuxPartition>;
 
-    /**
-     * Initializes the aux.
-     * @param loadingProgress The loading progress.
-     */
-    protected async _initAux() {
-        this._handleStatusUpdated({
-            type: 'progress',
-            message: 'Initializing user bot...',
-            progress: 0.8,
-        });
-        await this._initUserBot();
-
-        this._handleStatusUpdated({
-            type: 'progress',
-            message: 'Launching interface...',
-            progress: 0.9,
-        });
-        await this._initUserDimensionBot();
-        await this._initBuilderBots();
-    }
-
     async setUser(user: AuxUser): Promise<void> {
         for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.setUser) {
@@ -418,7 +397,26 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._helper = this._createAuxHelper();
         }
 
-        await this._initAux();
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing user bot...',
+            progress: 0.8,
+        });
+        await this._initUserBot();
+
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Launching interface...',
+            progress: 0.9,
+        });
+        await this._initUserDimensionBot();
+
+        if (!this._hasRegisteredSubs) {
+            this._hasRegisteredSubs = true;
+            this._registerSubscriptions();
+        }
+
+        await this._initBuilderBots();
 
         if (!this._checkAccessAllowed()) {
             this._onConnectionStateChanged.next({
@@ -427,11 +425,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 reason: 'unauthorized',
             });
             return;
-        }
-
-        if (!this._hasRegisteredSubs) {
-            this._hasRegisteredSubs = true;
-            this._registerSubscriptions();
         }
 
         console.log('[BaseAuxChannel] Sending init event');
@@ -472,7 +465,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _createRuntime(): AuxRuntime {
         const runtime = new AuxRuntime(
             buildVersionNumber(this._config.config),
-            this._config.config.device
+            this._config.config ? this._config.config.device : null
         );
         runtime.userId = this.user ? this.user.id : null;
         return runtime;
