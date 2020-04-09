@@ -104,6 +104,35 @@ export class AuxHelper extends BaseHelper<Bot> {
                 })
             )
             .subscribe(null, (e: any) => console.error(e));
+
+        this._runtime.onErrors
+            .pipe(
+                tap(errors => {
+                    // Send the new errors
+                    // directly to the partitions
+                    // so that the runtime can't error
+                    // infinitely
+                    this._sendEvents(
+                        errors.map(e =>
+                            botAdded(
+                                createBot(
+                                    undefined,
+                                    {
+                                        auxError: true,
+                                        auxErrorName: e.error.name,
+                                        auxErrorMessage: e.error.message,
+                                        auxErrorStack: e.error.stack,
+                                        auxErrorBot: e.bot ? e.bot.id : null,
+                                        auxErrorTag: e.tag || null,
+                                    },
+                                    'error'
+                                )
+                            )
+                        )
+                    );
+                })
+            )
+            .subscribe(null, (e: any) => console.error(e));
     }
 
     /**
@@ -374,19 +403,6 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     async formulaBatch(formulas: string[]): Promise<void> {
         this._runtime.process(formulas.map(f => runScript(f)));
-        // TODO:
-        // const state = this.botsState;
-        // let events = flatMap(formulas, f =>
-        //     calculateFormulaEvents(
-        //         state,
-        //         f,
-        //         this.userId,
-        //         undefined,
-        //         this._sandboxFactory,
-        //         this._lib
-        //     )
-        // );
-        // await this.transaction(...events);
     }
 
     search(search: string) {
@@ -416,79 +432,35 @@ export class AuxHelper extends BaseHelper<Bot> {
         };
     }
 
-    private _flattenEvents(events: BotAction[]): BotAction[] {
-        let resultEvents: BotAction[] = [];
+    // private _flattenEvents(events: BotAction[]): BotAction[] {
+    //     let resultEvents: BotAction[] = [];
 
-        const filteredEvents = this._rejectEvents(events);
+    //     const filteredEvents = this._rejectEvents(events);
 
-        for (let event of filteredEvents) {
-            if (event.type === 'action') {
-                const result = this._runtime.shout(
-                    event.eventName,
-                    event.botIds,
-                    event.argument
-                );
-                // const result = calculateActionResults(
-                //     this.botsState,
-                //     event,
-                //     this._sandboxFactory,
-                //     this._lib
-                // );
-                resultEvents.push(...this._flattenEvents(result.actions));
-                resultEvents.push(
-                    ...result.errors.map(e => {
-                        return botAdded(
-                            createBot(
-                                undefined,
-                                {
-                                    auxError: true,
-                                    auxErrorName: e.error.name,
-                                    auxErrorMessage: e.error.message,
-                                    auxErrorStack: e.error.stack,
-                                    auxErrorBot: e.bot ? e.bot.id : null,
-                                    auxErrorTag: e.tag || null,
-                                },
-                                'error'
-                            )
-                        );
-                    })
-                );
-            } else if (event.type === 'run_script') {
-                // TODO:
-                // const events = [
-                //     ...calculateFormulaEvents(
-                //         this.botsState,
-                //         event.script,
-                //         this.userId,
-                //         undefined,
-                //         this._sandboxFactory,
-                //         this._lib
-                //     ),
-                // ];
-                // resultEvents.push(...this._flattenEvents(events));
-            } else if (event.type === 'update_bot') {
-                const bot = this.botsState[event.id];
-                // TODO:
-                updateBot(
-                    bot,
-                    this.userBot.id,
-                    event.update,
-                    () => <any>this.createContext()
-                );
-                resultEvents.push(event);
-            } else if (event.type === 'paste_state') {
-                // TODO:
-                // resultEvents.push(...this._pasteState(event));
-            } else if (event.type === 'apply_state') {
-                const events = breakIntoIndividualEvents(this.botsState, event);
-                resultEvents.push(...events);
-            } else {
-                resultEvents.push(event);
-            }
-        }
+    //     for (let event of filteredEvents) {
+    //         if (event.type === 'update_bot') {
+    //             const bot = this.botsState[event.id];
+    //             // TODO:
+    //             updateBot(
+    //                 bot,
+    //                 this.userBot.id,
+    //                 event.update,
+    //                 () => <any>this.createContext()
+    //             );
+    //             resultEvents.push(event);
+    //         } else if (event.type === 'paste_state') {
+    //             // TODO:
+    //             // resultEvents.push(...this._pasteState(event));
+    //         } else if (event.type === 'apply_state') {
+    //             const events = breakIntoIndividualEvents(this.botsState, event);
+    //             resultEvents.push(...events);
+    //         } else {
+    //             resultEvents.push(event);
+    //         }
+    //     }
 
-        return resultEvents;
-    }
+    //     return resultEvents;
+    // }
 
     private _rejectEvents(events: BotAction[]): BotAction[] {
         const context = this.createContext();

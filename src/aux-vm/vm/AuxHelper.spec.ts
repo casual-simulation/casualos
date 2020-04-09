@@ -742,224 +742,6 @@ describe('AuxHelper', () => {
             });
         });
 
-        describe('paste_state', () => {
-            it('should add the given bots to a new dimension', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot1: createBot('bot1', {
-                        auxDimensionConfig: 'gen',
-                        auxDimensionVisualize: 'surface',
-                        auxDimensionX: 0,
-                        auxDimensionY: 1,
-                        auxDimensionZ: 2,
-                    }),
-                    bot2: createBot('bot2', {
-                        gen: true,
-                        genX: 0,
-                        genY: 0,
-                        test: 'abc',
-                    }),
-                });
-            });
-
-            it('should preserve X and Y positions if a dimension bot is included', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2')
-                    .mockReturnValueOnce('bot3');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            old: true,
-                            oldX: 3,
-                            oldY: 2,
-                            oldZ: 1,
-                        }),
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    },
-                    options: {
-                        x: -1,
-                        y: 1,
-                        z: 2,
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot1: createBot('bot1', {
-                        auxDimensionConfig: 'gen',
-                        auxDimensionVisualize: true,
-                        auxDimensionX: -1,
-                        auxDimensionY: 1,
-                        auxDimensionZ: 2,
-                        other: 'def',
-                    }),
-                    bot2: createBot('bot2', {
-                        gen: true,
-                        genX: 3,
-                        genY: 2,
-                        genZ: 1,
-                        test: 'abc',
-                    }),
-                });
-            });
-
-            it('should check the current state for dimensions if they are not included in the copied state', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2')
-                    .mockReturnValueOnce('bot3');
-
-                await helper.transaction(
-                    addState({
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    })
-                );
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            oldX: 3,
-                            oldY: 2,
-                            oldZ: 1,
-                        }),
-                    },
-                    options: {
-                        x: -1,
-                        y: 1,
-                        z: 2,
-                    },
-                });
-
-                expect(helper.botsState).toEqual({
-                    dimensionBot: expect.any(Object),
-                    user: expect.any(Object),
-                    bot1: expect.objectContaining(
-                        createBot('bot1', {
-                            auxDimensionConfig: 'gen',
-                            auxDimensionVisualize: 'surface',
-                            auxDimensionX: -1,
-                            auxDimensionY: 1,
-                            auxDimensionZ: 2,
-                        })
-                    ),
-                    bot2: expect.objectContaining(
-                        createBot('bot2', {
-                            gen: true,
-                            genX: 0,
-                            genY: 0,
-                            genSortOrder: 0,
-                            test: 'abc',
-                        })
-                    ),
-                });
-            });
-
-            it('should add the given bots to the given dimension at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('bot2');
-
-                await helper.transaction(
-                    addState({
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    })
-                );
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            old: true,
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                        dimension: 'fun',
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: {
-                        tags: expect.not.objectContaining({
-                            old: true,
-                        }),
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: createBot('bot2', {
-                        fun: true,
-                        funX: 0,
-                        funY: 1,
-                        funZ: 2,
-                        test: 'abc',
-                    }),
-                });
-            });
-
-            it('should add the given bots the given dimension at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('bot2');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                        dimension: 'fun',
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: createBot('bot2', {
-                        fun: true,
-                        funX: 0,
-                        funY: 1,
-                        funZ: 2,
-                        test: 'abc',
-                    }),
-                });
-            });
-        });
-
         describe('onUniverseAction()', () => {
             it('should shout an onUniverseAction() call', async () => {
                 await helper.createBot('abc', {
@@ -970,6 +752,8 @@ describe('AuxHelper', () => {
                     type: 'go_to_url',
                     url: 'test',
                 });
+
+                await waitAsync();
 
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
@@ -1266,6 +1050,8 @@ describe('AuxHelper', () => {
                 await helper.createBot('test', {});
 
                 await helper.transaction(action('test'));
+
+                await waitAsync();
 
                 const matching = helper.objects.filter(o => 'test' in o.tags);
                 expect(matching.length).toBe(1);
