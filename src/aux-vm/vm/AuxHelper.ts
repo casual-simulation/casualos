@@ -8,7 +8,6 @@ import {
     BotActions,
     createBot,
     Bot,
-    updateBot,
     PartialBot,
     merge,
     AUX_BOT_VERSION,
@@ -227,10 +226,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * @param events The events to run.
      */
     async transaction(...events: BotAction[]): Promise<void> {
-        const finalEvents = this._flattenEvents(events);
-        await this._sendEvents(finalEvents);
-        // await this._tree.addEvents(allNonRejected);
-        // this._sendOtherEvents(allNonRejected);
+        this._runtime.process(events);
     }
 
     /**
@@ -249,7 +245,6 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         const bot = createBot(id, tags, type);
         await this._sendEvents([botAdded(bot)]);
-        // await this._tree.addBot(bot);
 
         return bot.id;
     }
@@ -260,16 +255,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * @param newData The new data that the bot should have.
      */
     async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
-        // TODO:
-        updateBot(
-            bot,
-            this.userBot ? this.userBot.id : null,
-            newData,
-            () => <any>this.createContext()
-        );
-
         await this._sendEvents([botUpdated(bot.id, newData)]);
-        // await this._tree.updateBot(bot, newData);
     }
 
     /**

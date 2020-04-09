@@ -601,7 +601,7 @@ describe('AuxHelper', () => {
             expect(events).toEqual([toast('test')]);
         });
 
-        it('should calculate assignment formulas', async () => {
+        it('should not calculate assignment formulas', async () => {
             let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
@@ -618,12 +618,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['test']).toMatchObject({
                 id: 'test',
                 tags: {
-                    test: {
-                        _assignment: true,
-                        editing: true,
-                        formula: ':="abc"',
-                        value: 'abc',
-                    },
+                    test: ':="abc"',
                 },
             });
         });

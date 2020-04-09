@@ -1,14 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
-import {
-    Bot,
-    Assignment,
-    isFormula,
-    isAssignment,
-    merge,
-    hasValue,
-} from '@casual-simulation/aux-common';
+import { Bot, isFormula, merge, hasValue } from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
 import { appManager } from '../../AppManager';
 import { EventBus } from '../../EventBus';
@@ -69,7 +62,6 @@ export default class BotValue extends Vue {
     blur() {
         this._focused = false;
         this._updateValue();
-        this._updateAssignment();
 
         this.$emit('focusChanged', false);
     }
@@ -102,31 +94,10 @@ export default class BotValue extends Vue {
             );
         } else {
             const val = this.bot.tags[this.tag];
-            if (isAssignment(val)) {
-                const assignment: Assignment = val;
-                this.value = assignment.editing
-                    ? assignment.formula
-                    : assignment.value;
-            } else if (typeof val === 'object') {
+            if (typeof val === 'object') {
                 this.value = JSON.stringify(val);
             } else {
                 this.value = val;
-            }
-        }
-    }
-
-    private _updateAssignment() {
-        const val = this.bot.tags[this.tag];
-        if (isAssignment(val)) {
-            const assignment: Assignment = val;
-            if (assignment.editing) {
-                this.getBotManager().helper.updateBot(this.bot, {
-                    tags: {
-                        [this.tag]: assign(assignment, {
-                            editing: false,
-                        }),
-                    },
-                });
             }
         }
     }
