@@ -681,16 +681,19 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
             value = false;
         } else if (isArray(value)) {
             const split = parseArray(value);
-            let isFormula = false;
+
+            // Note: Don't name isFormula because then webpack will be
+            // confused and decide to not import the isFormula function above
+            let isAFormula = false;
             const values = split.map(s => {
                 const result = this._compileValue(bot, tag, s.trim());
                 if (typeof result.value === 'function') {
-                    isFormula = true;
+                    isAFormula = true;
                 }
                 return result;
             });
 
-            if (isFormula) {
+            if (isAFormula) {
                 // TODO: Add the proper metadata for formulas in array elements
                 value = <any>(() => {
                     return values.map(v =>
