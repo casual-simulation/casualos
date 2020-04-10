@@ -864,10 +864,10 @@ export class AuxRuntime
      */
     private _mapBotsToRuntimeBots(value: any): any {
         if (isBot(value)) {
-            return this._globalContext.state[value.id];
+            return this._globalContext.state[value.id] || value;
         } else if (Array.isArray(value) && value.some(isBot)) {
             let arr = value.map(b =>
-                isBot(b) ? this._globalContext.state[b.id] : b
+                isBot(b) ? this._globalContext.state[b.id] || b : b
             );
             (<any>arr)[ORIGINAL_OBJECT] = value;
             return arr;
@@ -875,7 +875,8 @@ export class AuxRuntime
             hasValue(value) &&
             !Array.isArray(value) &&
             !(value instanceof ArrayBuffer) &&
-            typeof value === 'object'
+            typeof value === 'object' &&
+            Object.getPrototypeOf(value) === Object.prototype
         ) {
             return transform(
                 value,

@@ -14,6 +14,11 @@
         -   Now supports `setTimeout()` and `setInterval()`
             -   This lets you write your own custom game loop if you want.
 
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where a shout argument might be recognized as a bot even though it isn't.
+    -   Fixed an issue where a shout argument with a custom prototype would be overridden.
+
 ## V1.0.21
 
 ### Date: 3/30/2020

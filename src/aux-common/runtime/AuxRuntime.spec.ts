@@ -1439,6 +1439,72 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([[toast('hi2')]]);
         });
 
+        it('should not map argument objects that have a custom prototype', async () => {
+            class MyClass {}
+
+            const obj = new MyClass();
+
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            runtime.shout('hello', null, {
+                value: obj,
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message.value).toBe(obj);
+        });
+
+        it('should not map argument bots that are not in the current state', async () => {
+            const obj = {
+                id: 'test2',
+                tags: {},
+            };
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            runtime.shout('hello', null, {
+                value: obj,
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message.value).toBe(obj);
+        });
+
+        it('should not map argument bots in arrays that are not in the current state', async () => {
+            const obj = {
+                id: 'test2',
+                tags: {},
+            };
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            runtime.shout('hello', null, {
+                value: [obj],
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message.value[0]).toBe(obj);
+        });
+
         describe('bot_added', () => {
             it('should produce an event when a bot is created', async () => {
                 uuidMock.mockReturnValueOnce('uuid');
