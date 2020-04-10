@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V1.0.22
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Features
+
+    -   Added a new runtime for scripts and formulas.
+        -   This new runtime is much faster than the previous system and lets us provide features that were not possible before.
+        -   Should work exactly the same as the previous system. (There might be a couple of tricky-to-reproduce bugs)
+        -   Now supports `setTimeout()` and `setInterval()`
+            -   This lets you write your own custom game loop if you want.
+
 ## V1.0.21
 
 ### Date: 3/30/2020
