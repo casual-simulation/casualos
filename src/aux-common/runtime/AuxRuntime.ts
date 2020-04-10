@@ -140,8 +140,14 @@ export class AuxRuntime
                 this._actionBatch = [];
                 this._errorBatch = [];
 
-                this._onActions.next(actions);
-                this._onErrors.next(errors);
+                // Schedule a new micro task to
+                // run at a later time with the actions.
+                // This ensures that we don't block other flush operations
+                // due to handlers running synchronously.
+                Zone.root.scheduleMicroTask('AuxRuntime#flush', () => {
+                    this._onActions.next(actions);
+                    this._onErrors.next(errors);
+                });
             })
         );
     }

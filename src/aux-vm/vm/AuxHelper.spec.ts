@@ -284,6 +284,8 @@ describe('AuxHelper', () => {
                 })
             );
 
+            await waitAsync();
+
             expect(Object.keys(helper.botsState)).toEqual(['normal', 'abc']);
             expect(Object.keys(mem.state)).toEqual(['abc']);
             expect(Object.keys(shared.state)).toEqual(['normal']);

@@ -104,7 +104,7 @@ describe('AdminModule2', () => {
                     shell('echo "Hello, World!"')
                 );
 
-                await wait(20);
+                await waitAsync();
 
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',

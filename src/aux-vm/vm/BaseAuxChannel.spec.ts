@@ -23,6 +23,7 @@ import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -363,6 +364,8 @@ describe('BaseAuxChannel', () => {
                         },
                     },
                 ]);
+
+                await waitAsync();
 
                 const { abc } = channel.helper.botsState;
                 expect(abc).toEqual(createBot('abc', {}, 'tempLocal'));

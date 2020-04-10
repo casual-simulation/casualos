@@ -2513,6 +2513,24 @@ describe('AuxRuntime', () => {
         });
     });
 
+    it('should not leak zones to callbacks', async () => {
+        let root = Zone.root;
+        const zones = [] as Zone[];
+        runtime.onActions.subscribe(e => {
+            zones.push(Zone.current);
+        });
+        runtime.botsAdded([
+            createBot('test', {
+                start: '@player.toast("abc")',
+            }),
+        ]);
+        runtime.shout('start');
+
+        await waitAsync();
+
+        expect(zones.length).toBe(1);
+        expect(zones[0]).toBe(root);
+    });
 });
 
 function calculateActionResults(
