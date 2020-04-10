@@ -507,7 +507,12 @@ export function isBot(object: any): object is Bot {
  */
 export function isScriptBot(object: any): object is ScriptBot {
     if (object) {
-        return !!object.id && !!object.tags && !!object.raw;
+        return (
+            !!object.id &&
+            typeof object.tags === 'object' &&
+            typeof object.raw === 'object' &&
+            typeof object.tags.toJSON === 'function'
+        );
     }
     return false;
 }
