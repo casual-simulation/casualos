@@ -42,7 +42,7 @@ import {
     ON_ACTION_ACTION_NAME,
     breakIntoIndividualEvents,
 } from '../bots';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -75,6 +75,7 @@ import {
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 import { BatchingZoneSpec } from './BatchingZoneSpec';
+import { CleanupZoneSpec } from './CleanupZoneSpec';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -82,7 +83,8 @@ import { BatchingZoneSpec } from './BatchingZoneSpec';
  * Being a runtime means providing and managing the execution state that an AUX is in.
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
-export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
+export class AuxRuntime
+    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike {
     private _compiledState: CompiledBotsState = {};
     private _compiler = new AuxCompiler();
     private _dependencies = new DependencyManager();
@@ -94,6 +96,7 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
 
     private _userId: string;
     private _zone: Zone;
+    private _sub: SubscriptionLike;
 
     private _updatedBots = new Map<string, RuntimeBot>();
     private _newBots = new Map<string, RuntimeBot>();
@@ -123,7 +126,12 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
-        this._zone = Zone.current.fork(
+        const cleanupSpec = new CleanupZoneSpec();
+        this._sub = cleanupSpec;
+
+        const cleanupZone = Zone.current.fork(cleanupSpec);
+
+        this._zone = cleanupZone.fork(
             new BatchingZoneSpec(() => {
                 // Send the batch once all the micro tasks are completed
                 const actions = this._actionBatch;
@@ -136,6 +144,14 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
                 this._onErrors.next(errors);
             })
         );
+    }
+
+    get closed() {
+        return this._sub.closed;
+    }
+
+    unsubscribe() {
+        return this._sub.unsubscribe();
     }
 
     /**

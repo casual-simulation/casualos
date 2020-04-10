@@ -1,3 +1,5 @@
+jest.useFakeTimers();
+
 import { MemoryPartition, createMemoryPartition } from '../partitions';
 import { AuxRuntime } from './AuxRuntime';
 import {
@@ -76,15 +78,20 @@ import { AuxDevice, AuxVersion } from './AuxGlobalContext';
 import { values } from 'lodash';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
+import { createDefaultLibrary } from './AuxLibrary';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
+
+console.warn = jest.fn();
 
 describe('AuxRuntime', () => {
     let memory: MemoryPartition;
     let runtime: AuxRuntime;
     let events: BotAction[][];
     let errors: ScriptError[][];
+    let version: AuxVersion;
+    let auxDevice: AuxDevice;
 
     beforeEach(() => {
         uuidMock.mockReset();
@@ -92,18 +99,20 @@ describe('AuxRuntime', () => {
             type: 'memory',
             initialState: {},
         });
+        version = {
+            hash: 'hash',
+            major: 1,
+            minor: 0,
+            patch: 0,
+            version: 'v1.0.0',
+        };
+        auxDevice = {
+            supportsAR: false,
+            supportsVR: false,
+        };
         runtime = new AuxRuntime(
-            {
-                hash: 'hash',
-                major: 1,
-                minor: 0,
-                patch: 0,
-                version: 'v1.0.0',
-            },
-            {
-                supportsAR: false,
-                supportsVR: false,
-            },
+            version,
+            auxDevice,
             undefined,
             new Map<BotSpace, RealtimeEditMode>([
                 ['shared', RealtimeEditMode.Immediate],
@@ -2466,6 +2475,44 @@ describe('AuxRuntime', () => {
             ]);
         });
     });
+
+    describe('unsubscribe()', () => {
+        it('should cancel any scheduled tasks', () => {
+            const test = jest.fn();
+            runtime = new AuxRuntime(
+                version,
+                auxDevice,
+                context => ({
+                    api: {
+                        ...createDefaultLibrary(context).api,
+                        test: test,
+                    },
+                }),
+                new Map<BotSpace, RealtimeEditMode>([
+                    ['shared', RealtimeEditMode.Immediate],
+                    [<any>'delayed', RealtimeEditMode.Delayed],
+                ])
+            );
+
+            runtime.botsAdded([
+                createBot('test', {
+                    start: '@setInterval(() => { test() }, 100)',
+                }),
+            ]);
+            runtime.shout('start');
+
+            jest.advanceTimersByTime(200);
+
+            expect(test).toBeCalledTimes(2);
+
+            runtime.unsubscribe();
+
+            jest.advanceTimersByTime(200);
+
+            expect(test).toBeCalledTimes(2);
+        });
+    });
+
 });
 
 function calculateActionResults(
