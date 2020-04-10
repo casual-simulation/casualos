@@ -11,8 +11,12 @@
     -   Added a new runtime for scripts and formulas.
         -   This new runtime is much faster than the previous system and lets us provide features that were not possible before.
         -   Should work exactly the same as the previous system. (There might be a couple of tricky-to-reproduce bugs)
-        -   Now supports `setTimeout()` and `setInterval()`
+        -   Now supports `setTimeout()` and `setInterval()`.
             -   This lets you write your own custom game loop if you want.
+            -   Note that the script energy will only be restored if a user action triggers a shout.
+        -   Paves the way for future functionality (not guarenteed):
+            -   Change notifications (`@onBotChanged`, `@onBotTagChanged()`, etc.)
+            -   Asynchronous functions instead of `responseShout`. (e.g. `const response = await webhook.post("https://example.com", data)`)
 
 -   :bug: Bug Fixes
 
