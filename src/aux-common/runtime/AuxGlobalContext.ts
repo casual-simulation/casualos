@@ -155,6 +155,9 @@ export interface AuxDevice {
  */
 export function addToContext(context: AuxGlobalContext, ...bots: RuntimeBot[]) {
     for (let bot of bots) {
+        if (!!context.state[bot.id]) {
+            throw new Error('Bot already exists in the context!');
+        }
         const index = sortedIndexBy(context.bots, bot, sb => sb.id);
         context.bots.splice(index, 0, bot);
         context.state[bot.id] = bot;

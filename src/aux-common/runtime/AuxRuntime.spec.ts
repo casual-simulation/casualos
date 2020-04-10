@@ -261,6 +261,76 @@ describe('AuxRuntime', () => {
             );
         });
 
+        it('should overwrite the existing bot with the new bot', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+            ]);
+
+            const update2 = runtime.botsAdded([
+                createBot('test1', {
+                    abc: 'ghi',
+                }),
+            ]);
+
+            expect(update1).toEqual({
+                state: {
+                    test1: createPrecalculatedBot('test1', {
+                        abc: 'def',
+                    }),
+                },
+                addedBots: ['test1'],
+                removedBots: [],
+                updatedBots: [],
+            });
+
+            expect(update2).toEqual({
+                state: {
+                    test1: createPrecalculatedBot('test1', {
+                        abc: 'ghi',
+                    }),
+                },
+                addedBots: ['test1'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
+        it('should not add the bot to the runtime twice', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    value: '=getBots("abc","def").length',
+                }),
+            ]);
+
+            expect(update1).toEqual({
+                state: {
+                    test1: createPrecalculatedBot('test1', {
+                        abc: 'def',
+                    }),
+                    test2: createPrecalculatedBot(
+                        'test2',
+                        {
+                            value: 1,
+                        },
+                        {
+                            value: '=getBots("abc","def").length',
+                        }
+                    ),
+                },
+                addedBots: ['test1', 'test2'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
         describe('numbers', () => {
             it('should calculate number values', () => {
                 const update = runtime.botsAdded([

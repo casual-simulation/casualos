@@ -334,8 +334,18 @@ export class AuxRuntime implements RuntimeBotInterface, RuntimeBotFactory {
         let newBotIDs = new Set<string>();
 
         for (let bot of bots) {
-            // TODO: Make the compiled bot have a script variant
-            //       for supporting writing to tags and such.
+            const existing = this._compiledState[bot.id];
+            if (!!existing) {
+                removeFromContext(this._globalContext, existing.script);
+                delete this._compiledState[bot.id];
+
+                const index = newBots.findIndex(([b]) => b === existing);
+                if (index >= 0) {
+                    newBots.splice(index, 1);
+                    update.addedBots.splice(index, 1);
+                }
+            }
+
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
             let precalculated: PrecalculatedBot = {
