@@ -1097,7 +1097,7 @@ let LegacyGLTFLoaderExport = ( function () {
 
 						}
 
-						var textureLoader = THREE.Loader.Handlers.get( sourceUri );
+						var textureLoader = THREE.DefaultLoadingManager.getHandler( sourceUri );
 
 						if ( textureLoader === null ) {
 
