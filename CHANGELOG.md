@@ -28,6 +28,12 @@
         -   Paves the way for future functionality (not guarenteed):
             -   Change notifications (`@onBotChanged`, `@onBotTagChanged()`, etc.)
             -   Asynchronous functions instead of `responseShout`. (e.g. `const response = await webhook.post("https://example.com", data)`)
+    -   Added the `error` space.
+        -   The `error` space contains bots that represent errors that have occurred scripts in a universe.
+        -   Unlike other spaces, the `error` space does not load all of its bots into the universe automatically.
+        -   Instead, they have to be requested via a search query. These queries filter bots by tag/value pairs.
+        -   Currently, `error` space is only used for storing errors and there is no way to load bots from the space.
+        -   In the future, we will add the ability to load errors via scripts as well as display them in the sheet.
 
 -   :bug: Bug Fixes
 
