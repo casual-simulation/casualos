@@ -392,6 +392,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._runtime) {
             this._runtime = this._createRuntime();
+            this._subs.push(this._runtime);
         }
         if (!this._helper) {
             this._helper = this._createAuxHelper();
