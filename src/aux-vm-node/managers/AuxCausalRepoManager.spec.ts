@@ -24,7 +24,7 @@ import {
     deviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 console.log = jest.fn();
 

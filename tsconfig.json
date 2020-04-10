@@ -26,6 +26,7 @@
         { "path": "./src/causal-tree-store-mongodb" },
         { "path": "./src/crypto-browser" },
         { "path": "./src/crypto-node" },
+        { "path": "./src/stacktrace" },
         { "path": "./src/tunnel" }
     ]
 }

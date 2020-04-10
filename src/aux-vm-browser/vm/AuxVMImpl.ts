@@ -1,14 +1,13 @@
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer } from 'comlink';
 import {
-    AuxConfig,
-    AuxVM,
-    AuxUser,
+    LocalActions,
+    BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
     ProxyBridgePartitionImpl,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-common';
+import { Observable, Subject } from 'rxjs';
+import { wrap, proxy, Remote, expose, transfer } from 'comlink';
+import { AuxConfig, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
     AuxStatic,
@@ -173,11 +172,6 @@ export class AuxVMImpl implements AuxVM {
         return await this._proxy.formulaBatch(formulas);
     }
 
-    async search(search: string): Promise<any> {
-        if (!this._proxy) return null;
-        return await this._proxy.search(search);
-    }
-
     async forkAux(newId: string): Promise<void> {
         if (!this._proxy) return null;
         return await this._proxy.forkAux(newId);
@@ -233,6 +227,7 @@ function processPartitions(config: AuxConfig): AuxConfig {
             transferrables.push(channel.port2);
             config.partitions[key] = {
                 type: 'proxy_client',
+                editStrategy: partition.partition.realtimeStrategy,
                 private: partition.partition.private,
                 port: channel.port2,
             };

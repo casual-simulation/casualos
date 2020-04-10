@@ -68,6 +68,11 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     You need to use the <ActionLink action='server.browseHistory()'/> function to load it.
     Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
   </PossibleValueCode>
+  <PossibleValueCode value='error'>
+    The bot represents an error.
+    Whenever an error occurs in a script, a new bot is created and placed in error space.
+    Note that once a bot is added to error space it is unable to be changed.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxCreator`
@@ -1099,6 +1104,34 @@ You can use this tag as a way to find previous marks from a mark.
 </Badges>
 
 The time that the mark was created.
+
+## Error Tags
+
+Error tags are tags that are automatically appied to bots in the `error` space.
+
+### `auxError`
+
+Whether the bot is in the `auxError` dimension.
+
+### `auxErrorName`
+
+The name of the error that occurred.
+
+### `auxErrorMessage`
+
+The error message containing more information about what went wrong.
+
+### `auxErrorStack`
+
+The [stack trace](https://en.wikipedia.org/wiki/Stack_trace) that indicates where the error occurred.
+
+### `auxErrorBot`
+
+The bot that the error occurred in.
+
+### `auxErrorTag`
+
+The tag that the error occurred in.
 
 ## Player Bot Tags
 

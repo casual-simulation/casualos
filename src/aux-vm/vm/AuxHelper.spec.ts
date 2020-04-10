@@ -13,6 +13,14 @@ import {
     USERS_DIMENSION,
     runScript,
     ON_RUN_ACTION_NAME,
+    loadBots,
+    MemoryPartition,
+    createMemoryPartition,
+    MemoryBotClient,
+    createBotClientPartition,
+    AuxRuntime,
+    AuxPartitions,
+    iteratePartitions,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -21,10 +29,10 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import { createMemoryPartition } from '../partitions/MemoryPartition';
-import { waitAsync } from '../test/TestHelpers';
 import { buildFormulaLibraryOptions } from './AuxConfig';
-import { MemoryPartition } from '../partitions/AuxPartition';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -36,44 +44,106 @@ console.error = jest.fn();
 describe('AuxHelper', () => {
     let userId: string = 'user';
     let memory: MemoryPartition;
+    let error: MemoryPartition;
+    // let runtime: AuxRuntime;
     let helper: AuxHelper;
+    let subs: SubscriptionLike[];
 
     beforeEach(async () => {
+        subs = [];
         uuidMock.mockReset();
         memory = createMemoryPartition({
             type: 'memory',
             initialState: {},
         });
-        helper = new AuxHelper({
+        error = createMemoryPartition({
+            type: 'memory',
+            initialState: {},
+        });
+        helper = createHelper({
             shared: memory,
+            error: error,
         });
         helper.userId = userId;
 
         await memory.applyEvents([botAdded(createBot('user'))]);
     });
 
-    it('should use the given sandbox factory', async () => {
-        const sandbox: Sandbox = {
-            library: null,
-            interface: null,
-            run: null,
-        };
-        helper = new AuxHelper(
+    afterEach(() => {
+        for (let sub of subs) {
+            sub.unsubscribe();
+        }
+    });
+
+    function createHelper(partitions: AuxPartitions) {
+        const runtime = new AuxRuntime(
             {
-                shared: memory,
+                hash: 'hash',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
             },
-            undefined,
-            () => sandbox
+            {
+                supportsAR: false,
+                supportsVR: false,
+            }
         );
+        const helper = new AuxHelper(partitions, runtime);
+
+        for (let [, partition] of iteratePartitions(partitions)) {
+            subs.push(
+                partition.onBotsAdded
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsAdded(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e)),
+                partition.onBotsRemoved
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsRemoved(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e)),
+                partition.onBotsUpdated
+                    .pipe(
+                        tap(e => {
+                            if (e.length === 0) {
+                                return;
+                            }
+                            runtime.botsUpdated(e);
+                        })
+                    )
+                    .subscribe(null, (e: any) => console.error(e))
+            );
+        }
+
+        runtime.userId = userId;
+
+        return helper;
+    }
+
+    it('should not produce sandbox contexts', async () => {
+        helper = createHelper({
+            shared: memory,
+        });
         helper.userId = userId;
 
-        const context = helper.createContext();
-        expect(context.sandbox).toBe(sandbox);
+        const context: any = helper.createContext();
+        expect(context.sandbox).toBeUndefined();
     });
 
     describe('partitions', () => {
         it('should exclude partitions which dont have their bot from the bot state', () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -93,7 +163,7 @@ describe('AuxHelper', () => {
         });
 
         it('should send local events for the events that are returned from the partition', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -136,7 +206,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -151,7 +221,7 @@ describe('AuxHelper', () => {
         });
 
         it('should ignore bots going to partitions that dont exist', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -163,7 +233,7 @@ describe('AuxHelper', () => {
         });
 
         it('should prevent partitions from overriding other partitions', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -202,7 +272,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: mem,
             });
@@ -213,6 +283,8 @@ describe('AuxHelper', () => {
                     normal: createBot('normal', {}),
                 })
             );
+
+            await waitAsync();
 
             expect(Object.keys(helper.botsState)).toEqual(['normal', 'abc']);
             expect(Object.keys(mem.state)).toEqual(['abc']);
@@ -233,7 +305,7 @@ describe('AuxHelper', () => {
                     normal: createBot('normal', {}),
                 },
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: TEST,
             });
@@ -263,7 +335,7 @@ describe('AuxHelper', () => {
                     userId: createBot('userId'),
                 },
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: shared,
                 TEST: TEST,
             });
@@ -314,7 +386,7 @@ describe('AuxHelper', () => {
 
         describe('addPartition()', () => {
             it('should add the bots from the partition to the helper', () => {
-                helper = new AuxHelper({
+                helper = createHelper({
                     shared: createMemoryPartition({
                         type: 'memory',
                         initialState: {
@@ -369,7 +441,7 @@ describe('AuxHelper', () => {
 
     describe('publicBotsState', () => {
         it('should return the bots state from all the public partitions', async () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {
@@ -414,56 +486,38 @@ describe('AuxHelper', () => {
     });
 
     describe('createContext()', () => {
-        describe('player.inSheet()', () => {
-            it('should return true when in builder', async () => {
-                helper = new AuxHelper(
-                    {
-                        shared: memory,
-                    },
-                    buildFormulaLibraryOptions({
-                        isBuilder: true,
-                        isPlayer: false,
-                        versionHash: 'abc',
-                        version: 'v1.0.0',
-                    })
-                );
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(true);
-            });
-
-            it('should return false when not in builder', async () => {
-                helper = new AuxHelper(
-                    {
-                        shared: memory,
-                    },
-                    buildFormulaLibraryOptions({
-                        isBuilder: false,
-                        isPlayer: true,
-                        versionHash: 'abc',
-                        version: 'v1.0.0',
-                    })
-                );
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(false);
-            });
-
-            it('should default to not in aux builder or player', async () => {
-                helper = new AuxHelper({
-                    shared: memory,
-                });
-                helper.userId = userId;
-
-                const context = helper.createContext();
-
-                expect(context.sandbox.library.player.inSheet()).toBe(false);
-            });
-        });
+        // describe('player.inSheet()', () => {
+        //     it('should return true when in builder', async () => {
+        //         helper = createHelper(
+        //             {
+        //                 shared: memory,
+        //             },
+        //             runtime
+        //         );
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(true);
+        //     });
+        //     it('should return false when not in builder', async () => {
+        //         helper = createHelper(
+        //             {
+        //                 shared: memory,
+        //             },
+        //             runtime
+        //         );
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
+        //     });
+        //     it('should default to not in aux builder or player', async () => {
+        //         helper = createHelper({
+        //             shared: memory,
+        //         });
+        //         helper.userId = userId;
+        //         const context = helper.createContext();
+        //         expect(context.sandbox.library.player.inSheet()).toBe(false);
+        //     });
+        // });
     });
 
     describe('transaction()', () => {
@@ -507,18 +561,16 @@ describe('AuxHelper', () => {
         });
 
         it('should support player.inSheet() in actions', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
+            helper = createHelper({
+                shared: memory,
+            });
             helper.userId = userId;
+
+            await helper.updateBot(helper.userBot, {
+                tags: {
+                    auxSheetPortal: 'sheet',
+                },
+            });
 
             await helper.createBot('test', {
                 action: '@setTag(this, "#value", player.inSheet())',
@@ -551,7 +603,7 @@ describe('AuxHelper', () => {
             expect(events).toEqual([toast('test')]);
         });
 
-        it('should calculate assignment formulas', async () => {
+        it('should not calculate assignment formulas', async () => {
             let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
@@ -568,12 +620,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['test']).toMatchObject({
                 id: 'test',
                 tags: {
-                    test: {
-                        _assignment: true,
-                        editing: true,
-                        formula: ':="abc"',
-                        value: 'abc',
-                    },
+                    test: ':="abc"',
                 },
             });
         });
@@ -627,220 +674,72 @@ describe('AuxHelper', () => {
             ]);
         });
 
-        describe('paste_state', () => {
-            it('should add the given bots to a new dimension', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot1: createBot('bot1', {
-                        auxDimensionConfig: 'gen',
-                        auxDimensionVisualize: 'surface',
-                        auxDimensionX: 0,
-                        auxDimensionY: 1,
-                        auxDimensionZ: 2,
-                    }),
-                    bot2: createBot('bot2', {
-                        gen: true,
-                        genX: 0,
-                        genY: 0,
-                        test: 'abc',
-                    }),
-                });
+        it('should store errors in the error space', async () => {
+            await helper.createBot('test', {
+                action: '@throw new Error("abc")',
             });
 
-            it('should preserve X and Y positions if a dimension bot is included', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2')
-                    .mockReturnValueOnce('bot3');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            old: true,
-                            oldX: 3,
-                            oldY: 2,
-                            oldZ: 1,
-                        }),
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    },
-                    options: {
-                        x: -1,
-                        y: 1,
-                        z: 2,
-                    },
-                });
+            uuidMock.mockReturnValue('error');
+            await helper.transaction(action('action', ['test'], 'user'));
 
-                expect(helper.botsState).toMatchObject({
-                    bot1: createBot('bot1', {
-                        auxDimensionConfig: 'gen',
-                        auxDimensionVisualize: true,
-                        auxDimensionX: -1,
-                        auxDimensionY: 1,
-                        auxDimensionZ: 2,
-                        other: 'def',
-                    }),
-                    bot2: createBot('bot2', {
-                        gen: true,
-                        genX: 3,
-                        genY: 2,
-                        genZ: 1,
-                        test: 'abc',
-                    }),
-                });
+            expect(error.state).toEqual({
+                error: {
+                    id: 'error',
+                    space: 'error',
+                    tags: {
+                        auxError: true,
+                        auxErrorName: 'Error',
+                        auxErrorMessage: 'abc',
+                        auxErrorStack: expect.any(String),
+                        auxErrorBot: 'test',
+                        auxErrorTag: 'action',
+                    },
+                },
             });
+        });
 
-            it('should check the current state for dimensions if they are not included in the copied state', async () => {
-                uuidMock
-                    .mockReturnValueOnce('gen')
-                    .mockReturnValueOnce('bot1')
-                    .mockReturnValueOnce('bot2')
-                    .mockReturnValueOnce('bot3');
+        describe('load_bots', () => {
+            it('should be able to load bots from the error space', async () => {
+                let searchClient = new MemoryBotClient();
+                let error = createBotClientPartition({
+                    type: 'bot_client',
+                    universe: 'universe',
+                    client: searchClient,
+                });
+                helper = createHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    error: error,
+                });
+                helper.userId = userId;
+
+                await searchClient.addBots('universe', [
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                ]);
 
                 await helper.transaction(
-                    addState({
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    })
+                    loadBots('error', [
+                        {
+                            tag: 'abc',
+                            value: 'def',
+                        },
+                    ])
                 );
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            oldX: 3,
-                            oldY: 2,
-                            oldZ: 1,
-                        }),
-                    },
-                    options: {
-                        x: -1,
-                        y: 1,
-                        z: 2,
-                    },
-                });
+
+                await waitAsync();
 
                 expect(helper.botsState).toEqual({
-                    dimensionBot: expect.any(Object),
-                    user: expect.any(Object),
-                    bot1: expect.objectContaining(
-                        createBot('bot1', {
-                            auxDimensionConfig: 'gen',
-                            auxDimensionVisualize: 'surface',
-                            auxDimensionX: -1,
-                            auxDimensionY: 1,
-                            auxDimensionZ: 2,
-                        })
+                    test1: createBot(
+                        'test1',
+                        {
+                            abc: 'def',
+                        },
+                        'error'
                     ),
-                    bot2: expect.objectContaining(
-                        createBot('bot2', {
-                            gen: true,
-                            genX: 0,
-                            genY: 0,
-                            genSortOrder: 0,
-                            test: 'abc',
-                        })
-                    ),
-                });
-            });
-
-            it('should add the given bots to the given dimension at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('bot2');
-
-                await helper.transaction(
-                    addState({
-                        dimensionBot: createBot('dimensionBot', {
-                            auxDimensionConfig: 'old',
-                            auxDimensionVisualize: true,
-                            other: 'def',
-                        }),
-                    })
-                );
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                            old: true,
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                        dimension: 'fun',
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: {
-                        tags: expect.not.objectContaining({
-                            old: true,
-                        }),
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: createBot('bot2', {
-                        fun: true,
-                        funX: 0,
-                        funY: 1,
-                        funZ: 2,
-                        test: 'abc',
-                    }),
-                });
-            });
-
-            it('should add the given bots the given dimension at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('bot2');
-                await helper.transaction({
-                    type: 'paste_state',
-                    state: {
-                        botId: createBot('botId', {
-                            test: 'abc',
-                        }),
-                    },
-                    options: {
-                        x: 0,
-                        y: 1,
-                        z: 2,
-                        dimension: 'fun',
-                    },
-                });
-
-                expect(helper.botsState).toMatchObject({
-                    bot2: createBot('bot2', {
-                        fun: true,
-                        funX: 0,
-                        funY: 1,
-                        funZ: 2,
-                        test: 'abc',
-                    }),
                 });
             });
         });
@@ -855,6 +754,8 @@ describe('AuxHelper', () => {
                     type: 'go_to_url',
                     url: 'test',
                 });
+
+                await waitAsync();
 
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
@@ -1152,6 +1053,8 @@ describe('AuxHelper', () => {
 
                 await helper.transaction(action('test'));
 
+                await waitAsync();
+
                 const matching = helper.objects.filter(o => 'test' in o.tags);
                 expect(matching.length).toBe(1);
             });
@@ -1187,31 +1090,6 @@ describe('AuxHelper', () => {
         });
     });
 
-    describe('search()', () => {
-        it('should support player.inSheet()', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
-            helper.userId = userId;
-
-            await helper.createBot('test', {
-                'action()': 'setTag(this, "#value", player.inSheet())',
-            });
-
-            const result = await helper.search('player.inSheet()');
-
-            expect(result.result).toBe(true);
-        });
-    });
-
     describe('getTags()', () => {
         it('should return the full list of tags sorted alphabetically', async () => {
             await helper.createBot('test', {
@@ -1233,18 +1111,16 @@ describe('AuxHelper', () => {
 
     describe('formulaBatch()', () => {
         it('should support player.inSheet()', async () => {
-            helper = new AuxHelper(
-                {
-                    shared: memory,
-                },
-                buildFormulaLibraryOptions({
-                    isBuilder: true,
-                    isPlayer: true,
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                })
-            );
+            helper = createHelper({
+                shared: memory,
+            });
             helper.userId = userId;
+
+            await helper.updateBot(helper.userBot, {
+                tags: {
+                    auxSheetPortal: 'sheet',
+                },
+            });
 
             await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inSheet())',
@@ -1253,6 +1129,8 @@ describe('AuxHelper', () => {
             await helper.formulaBatch([
                 'setTag(getBot("id", "test"), "value", player.inSheet())',
             ]);
+
+            await waitAsync();
 
             expect(helper.botsState['test'].tags.value).toBe(true);
         });
@@ -1264,7 +1142,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1293,7 +1171,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {},
@@ -1332,7 +1210,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1354,7 +1232,7 @@ describe('AuxHelper', () => {
                 type: 'memory',
                 initialState: {},
             });
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: memory,
             });
             helper.userId = userId;
@@ -1372,7 +1250,7 @@ describe('AuxHelper', () => {
 
     describe('exportBots()', () => {
         it('should only export bots with the given IDs', () => {
-            helper = new AuxHelper({
+            helper = createHelper({
                 shared: createMemoryPartition({
                     type: 'memory',
                     initialState: {

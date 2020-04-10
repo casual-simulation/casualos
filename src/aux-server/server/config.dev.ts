@@ -31,6 +31,10 @@ const config: Config = {
         dbName: 'aux-repos',
         objectsCollectionName: 'objects',
     },
+    bots: {
+        dbName: 'aux-bots',
+        timeToLive: 3600,
+    },
     directory: {
         server: {
             secret: 'test',

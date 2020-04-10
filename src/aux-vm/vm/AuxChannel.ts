@@ -1,11 +1,14 @@
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    BotAction,
+    StateUpdatedEvent,
+    BotDependentInfo,
+} from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable } from 'rxjs';
-import { BotDependentInfo } from '../managers/DependencyManager';
 import { StoredAux } from '../StoredAux';
 
 /**
@@ -87,12 +90,6 @@ export interface AuxChannel {
      * @param formulas The formulas.
      */
     formulaBatch(formulas: string[]): Promise<void>;
-
-    /**
-     * Runs a search on the bots state.
-     * @param search The search.
-     */
-    search(search: string): Promise<any>;
 
     /**
      * Forks the AUX into the channel with the given ID.

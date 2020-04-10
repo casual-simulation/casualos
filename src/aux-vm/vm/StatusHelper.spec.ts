@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 import { StatusUpdate } from '@casual-simulation/causal-trees';
 import { StatusHelper } from './StatusHelper';
-import { waitAsync } from '../test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 describe('StatusHelper', () => {
     describe('progress', () => {

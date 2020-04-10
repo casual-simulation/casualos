@@ -15,6 +15,7 @@ export interface Config {
     redis: RedisConfig;
     trees: CausalTreeServerConfig;
     repos: CausalReposServerConfig;
+    bots: BotsServerConfig;
     directory: DirectoryConfig;
     proxy: ProxyConfig;
     dist: string;
@@ -48,6 +49,23 @@ export interface CausalTreeServerConfig {
 export interface CausalReposServerConfig {
     dbName: string;
     objectsCollectionName: string;
+}
+
+/**
+ * The config for where bots in the bots store should be kept.
+ */
+export interface BotsServerConfig {
+    /**
+     * The name of the database that the bots should be stored in.
+     * Each universe gets its own collection.
+     */
+    dbName: string;
+
+    /**
+     * The number of seconds that the bots should live for.
+     * Negative numbers prevent bots from being collected.
+     */
+    timeToLive: number;
 }
 
 export interface DirectoryConfig {

@@ -15,6 +15,10 @@ const localIpAddress = process.env.LOCAL_IP_ADDRESS;
 const tunnel = process.env.PROXY_TUNNEL;
 const trustProxy = process.env.PROXY_IP_RANGE;
 
+// Defaults to a week.
+const botsTimeToLive =
+    parseInt(process.env.BOTS_TIME_TO_LIVE) || 60 * 60 * 24 * 7;
+
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -45,6 +49,10 @@ const config: Config = {
     repos: {
         dbName: 'aux-repos',
         objectsCollectionName: 'objects',
+    },
+    bots: {
+        dbName: 'aux-bots',
+        timeToLive: botsTimeToLive,
     },
     directory: {
         server: directoryWebhook

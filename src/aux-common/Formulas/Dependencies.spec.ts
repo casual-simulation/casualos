@@ -1790,6 +1790,20 @@ describe('Dependencies', () => {
                 ]);
             });
 
+            it('should return a bot dependency on the ID tag when there are no arguments', () => {
+                const tree = dependencies.dependencyTree(`${name}()`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'bot',
+                        name: 'id',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
             it('should replace inner dependencies', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}("#abc", ${name}("#def"))`

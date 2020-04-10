@@ -29,6 +29,7 @@ import {
     getUploadState,
     botHasLOD,
     calculateBotLOD,
+    isScriptBot,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import { createCalculationContext } from './BotCalculationContextFactories';
@@ -152,6 +153,51 @@ describe('BotCalculations', () => {
 
             expect(isBot(null)).toBe(false);
             expect(isBot({})).toBe(false);
+        });
+    });
+
+    describe('isScriptBot()', () => {
+        it('should return true if the object has ID, tags, and raw properties', () => {
+            expect(
+                isScriptBot({
+                    id: 'test',
+                    tags: {
+                        toJSON: function() {},
+                    },
+                    raw: {},
+                })
+            ).toBe(true);
+
+            // tags needs a toJSON() function
+            expect(
+                isScriptBot({
+                    id: 'test',
+                    tags: {},
+                    raw: {},
+                })
+            ).toBe(false);
+
+            expect(
+                isScriptBot({
+                    id: 'false',
+                    tags: {
+                        test: 'abc',
+                        toJSON: function() {},
+                    },
+                    raw: {},
+                })
+            ).toBe(true);
+
+            expect(
+                isScriptBot({
+                    id: '',
+                    tags: {},
+                    raw: {},
+                })
+            ).toBe(false);
+
+            expect(isScriptBot(null)).toBe(false);
+            expect(isScriptBot({})).toBe(false);
         });
     });
 

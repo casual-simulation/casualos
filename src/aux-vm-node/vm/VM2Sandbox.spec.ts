@@ -1,4 +1,4 @@
-import { botActionsTests } from '@casual-simulation/aux-common/bots/test/BotActionsTests';
+import { botCalculationContextActionsTests } from '@casual-simulation/aux-common/bots/test/BotActionsTests';
 import { VM2Sandbox } from './VM2Sandbox';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from '@casual-simulation/aux-common/bots/test/BotCalculationContextTests';
@@ -20,7 +20,7 @@ describe('VM2Sandbox', () => {
     });
 
     describe('actions', () => {
-        botActionsTests(uuidMock, lib => new VM2Sandbox(lib));
+        botCalculationContextActionsTests(uuidMock, lib => new VM2Sandbox(lib));
     });
 
     describe('calculations', () => {

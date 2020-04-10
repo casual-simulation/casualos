@@ -1,11 +1,11 @@
 import {
     BaseSimulation,
     AuxUser,
-    AuxPartitionConfig,
     BaseAuxChannel,
     AuxConfig,
 } from '@casual-simulation/aux-vm';
 import { AuxVMNode } from '../vm/AuxVMNode';
+import { AuxPartitionConfig } from '@casual-simulation/aux-common';
 
 export class NodeSimulation extends BaseSimulation {
     get channel() {

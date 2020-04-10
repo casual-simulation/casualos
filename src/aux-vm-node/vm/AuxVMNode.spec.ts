@@ -11,7 +11,7 @@ import { NodeAuxChannel } from './NodeAuxChannel';
 import {
     MemoryPartition,
     createMemoryPartition,
-} from '@casual-simulation/aux-vm/partitions';
+} from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
 

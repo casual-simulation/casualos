@@ -9,7 +9,7 @@ import {
 import { WebhooksModule2 } from './WebhooksModule2';
 import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 jest.mock('axios');
 

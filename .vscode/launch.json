@@ -29,6 +29,12 @@
             "request": "attach",
             "name": "Attach by Process ID",
             "processId": "${command:PickProcess}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Benchmarks",
+            "program": "${workspaceFolder}/src/aux-benchmarks/dist/index.js"
         }
     ]
 }

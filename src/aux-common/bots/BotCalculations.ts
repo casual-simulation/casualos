@@ -80,19 +80,6 @@ export var ShortId_Length: number = 5;
  */
 export const DEFAULT_ENERGY: number = 100_000;
 
-/**
- * Defines an interface for objects that represent assignment formula expressions.
- * Assignment formula expressions are formulas that are only evaluated once.
- * Internally we store them as objects in the tag and display the calculated result.
- * This way, we can preserve the formula value if needed.
- */
-export interface Assignment {
-    _assignment: boolean;
-    editing: boolean;
-    formula: string;
-    value?: any;
-}
-
 export type SimulationIdParseResult =
     | SimulationIdParseFailure
     | SimulationIdParseSuccess;
@@ -427,15 +414,8 @@ export function calculateFormattedBotValue(
 /**
  * Determines if the given value represents a formula.
  */
-export function isFormula(value: unknown): boolean {
+export function isFormula(value: unknown): value is string {
     return typeof value === 'string' && value.indexOf('=') === 0;
-}
-
-/**
- * Determines if the given value represents an assignment.
- */
-export function isAssignment(object: any): any {
-    return typeof object === 'object' && object && !!object._assignment;
 }
 
 /**
@@ -527,7 +507,12 @@ export function isBot(object: any): object is Bot {
  */
 export function isScriptBot(object: any): object is ScriptBot {
     if (object) {
-        return !!object.id && !!object.tags && !!object.raw;
+        return (
+            !!object.id &&
+            typeof object.tags === 'object' &&
+            typeof object.raw === 'object' &&
+            typeof object.tags.toJSON === 'function'
+        );
     }
     return false;
 }
@@ -902,13 +887,23 @@ export function createBot(
 export function createPrecalculatedBot(
     id = uuid(),
     values: PrecalculatedTags = {},
-    tags?: Object['tags']
+    tags?: Object['tags'],
+    space?: BotSpace
 ): PrecalculatedBot {
+    if (hasValue(space)) {
+        return {
+            id,
+            space,
+            precalculated: true,
+            tags: tags || values,
+            values,
+        };
+    }
     return {
-        id: id,
+        id,
         precalculated: true,
         tags: tags || values,
-        values: values,
+        values,
     };
 }
 
@@ -951,41 +946,6 @@ export function createWorkspace(
                 auxDimensionConfig: builderDimensionId,
             },
         };
-    }
-}
-
-/**
- * Performs a pre-process step for updating the given bot by nulling out falsy tags and also calculating assignments.
- * @param bot The bot to update.
- * @param userId The ID of the bot whose user edited this bot.
- * @param newData The new data to assign to the bot.
- * @param createContext A function that, when called, returns a new BotCalculationContext that can be used to calculate formulas for assignment expressions.
- */
-export function updateBot(
-    bot: Bot,
-    userId: string,
-    newData: PartialBot,
-    createContext: () => BotSandboxContext
-) {
-    if (newData.tags) {
-        // Cleanup/preprocessing
-        for (let property in newData.tags) {
-            let value = newData.tags[property];
-            if (value) {
-                if (_isAssignmentFormula(value)) {
-                    const assignment = _convertToAssignment(value);
-                    const result = _calculateFormulaValue(
-                        createContext(),
-                        bot,
-                        property,
-                        assignment.formula
-                    );
-                    newData.tags[property] = assign(assignment, {
-                        value: result.result,
-                    });
-                }
-            }
-        }
     }
 }
 
@@ -2481,29 +2441,6 @@ function _parseFilterValue(value: string): any {
     }
 }
 
-function _convertToAssignment(object: any): Assignment {
-    if (isAssignment(object)) {
-        return object;
-    }
-
-    return {
-        _assignment: true,
-        editing: true,
-        formula: object,
-    };
-}
-
-/**
- * Determines if the given value is an assignment expression or an assignment object.
- */
-function _isAssignmentFormula(value: any): boolean {
-    if (typeof value === 'string') {
-        return value.indexOf(':') === 0 && value.indexOf('=') === 1;
-    } else {
-        return isAssignment(value);
-    }
-}
-
 /**
  * Formats the given value and returns a string representing it.
  * @param value The value to format.
@@ -2561,9 +2498,6 @@ export function calculateValue(
         } else {
             throw result.error;
         }
-    } else if (isAssignment(formula)) {
-        const obj: Assignment = <any>formula;
-        return obj.value;
     } else if (isArray(formula)) {
         const split = parseArray(formula);
         return split.map(s =>

@@ -44,7 +44,8 @@
         "estraverse": "^4.2.0",
         "lru-cache": "^5.1.1",
         "rxjs": "^6.5.2",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "zone.js": "0.10.3"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

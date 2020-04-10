@@ -389,7 +389,7 @@ interface Bot {
 /**
  * The possible bot spaces.
  */
-type BotType = 'shared' | 'local' | 'tempLocal' | 'history';
+type BotType = 'shared' | 'local' | 'tempLocal' | 'history' | 'error';
 
 /**
  * The possible portal types.
@@ -837,16 +837,16 @@ function event(
               })
             : null;
 
-        let [events, results] = calculateActionResultsUsingContext(
+        let result = calculateActionResultsUsingContext(
             state,
             action(trimEvent(name), ids, getUserId(), arg, sort),
             getCalculationContext()
         );
 
         let actions = getActions();
-        actions.push(...events);
+        actions.push(...result.actions);
 
-        return results;
+        return result.results;
     }
 }
 

@@ -5,6 +5,8 @@ import {
     BotIndex,
     BotIndexEvent,
     tagsOnBot,
+    StateUpdatedEvent,
+    applyUpdates,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
@@ -20,7 +22,6 @@ import {
 } from 'rxjs/operators';
 import values from 'lodash/values';
 import omitBy from 'lodash/omitBy';
-import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { BotHelper } from './BotHelper';
 
 /**
@@ -107,39 +108,10 @@ export class BotWatcher implements SubscriptionLike {
             stateUpdated
                 .pipe(
                     tap(update => {
-                        if (this._helper.botsState) {
-                            let updatedState = omitBy(
-                                merge(this._helper.botsState, update.state),
-                                val => val === null
-                            );
-
-                            for (let id in update.state) {
-                                let botUpdate: Partial<Bot> = update.state[id];
-                                if (!botUpdate) {
-                                    continue;
-                                }
-                                let bot = updatedState[id];
-                                for (let tag in botUpdate.tags) {
-                                    if (bot.tags[tag] === null) {
-                                        delete bot.tags[tag];
-                                        delete bot.values[tag];
-                                    }
-                                }
-                            }
-
-                            if (this._helper.userId in update.state) {
-                                if (!this._helper.userBot) {
-                                    console.log(
-                                        '[BotWatcher] Got user',
-                                        update.state[this._helper.userId]
-                                    );
-                                }
-                            }
-
-                            this._helper.botsState = updatedState;
-                        } else {
-                            this._helper.botsState = update.state;
-                        }
+                        this._helper.botsState = applyUpdates(
+                            this._helper.botsState,
+                            update
+                        );
                     })
                 )
                 .subscribe(

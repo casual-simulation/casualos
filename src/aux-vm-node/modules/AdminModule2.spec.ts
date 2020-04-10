@@ -15,7 +15,10 @@ import {
 import { AuxUser, AuxConfig, Simulation } from '@casual-simulation/aux-vm';
 import { AdminModule2 } from './AdminModule2';
 import { Subscription } from 'rxjs';
-import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import {
+    wait,
+    waitAsync,
+} from '@casual-simulation/aux-common/test/TestHelpers';
 import uuid from 'uuid/v4';
 import { nodeSimulationForLocalRepo } from '../managers/NodeSimulationFactories';
 
@@ -101,7 +104,7 @@ describe('AdminModule2', () => {
                     shell('echo "Hello, World!"')
                 );
 
-                await wait(20);
+                await waitAsync();
 
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',

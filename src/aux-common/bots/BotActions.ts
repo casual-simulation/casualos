@@ -30,104 +30,63 @@ import {
     calculateBotActionEvents,
     getBotsForAction,
     formulaActions,
+    ActionResult,
 } from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 
 /**
- * Executes the given formula on the given bot state and returns the results.
- * @param formula The formula to run.
- * @param state The bot state to use.
- * @param options The options.
+ * Calculates the results for the given action run with the given state.
+ * @param state The state.
+ * @param action The action.
+ * @param sandboxFactory The factory that should be used to create a script sandbox.
+ * @param library The library that should be used for sandbox scripts.
+ * @param calc The calculation context.
+ * @param executeOnShout Whether to run the onListen actions.
  */
-export function searchBotState(
-    formula: string,
-    state: BotsState,
-    userId?: string,
-    library?: SandboxLibrary,
-    createSandbox?: SandboxFactory
-) {
-    const context = createCalculationContextFromState(
-        state,
-        userId,
-        library,
-        createSandbox
-    );
-    const result = calculateFormulaValue(context, formula);
-    return convertToCopiableValue(result);
-}
-
 export function calculateActionResults(
     state: BotsState,
     action: ShoutAction,
     sandboxFactory?: SandboxFactory,
+    library?: SandboxLibrary,
     calc?: BotSandboxContext,
     executeOnShout?: boolean
-): [BotAction[], any[]] {
+): ActionResult {
     const allObjects = values(state);
     calc =
         calc ||
         createCalculationContext(
             allObjects,
             action.userId,
-            undefined,
+            library,
             sandboxFactory
         );
     const { bots, objects } = getBotsForAction(action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
-        undefined,
+        library,
         sandboxFactory
     );
 
-    const [botEvents, results] = calculateBotActionEvents(
+    const result = calculateBotActionEvents(
         state,
         action,
         context,
         bots,
         executeOnShout
     );
-    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
-
-    return [events, results];
-}
-
-/**
- * Calculates the set of events that should be run for the given action.
- * @param state The current bot state.
- * @param action The action to process.
- * @param context The calculation context to use.
- * @param sandboxFactory The sandbox factory to use.
- */
-export function calculateActionEvents(
-    state: BotsState,
-    action: ShoutAction,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary
-) {
-    const allObjects = values(state);
-    const calc = createCalculationContext(
-        allObjects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-    const { bots, objects } = getBotsForAction(action, calc);
-    const context = createCalculationContext(
-        objects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-
-    const [botEvents] = calculateBotActionEvents(state, action, context, bots);
-    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
+    let events = [
+        ...result.actions,
+        ...context.sandbox.interface.getBotUpdates(),
+    ];
 
     return {
-        events,
-        hasUserDefinedEvents: events.length > 0,
+        actions: events,
+        errors: result.errors,
+        results: result.results,
+        listeners: result.listeners,
     };
 }
 
@@ -147,7 +106,7 @@ export function calculateFormulaEvents(
     argument: any = null,
     sandboxFactory?: SandboxFactory,
     library?: SandboxLibrary
-) {
+): BotAction[] {
     const objects = getActiveObjects(state);
     const context = createCalculationContext(
         objects,
@@ -156,9 +115,9 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [botEvents] = formulaActions(context, null, null, formula);
+    let result = formulaActions(context, null, null, formula);
 
-    return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
+    return [...result.actions, ...context.sandbox.interface.getBotUpdates()];
 }
 
 /**

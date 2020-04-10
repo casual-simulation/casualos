@@ -1,19 +1,25 @@
-import { LocalActions } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    PartitionConfig,
+    AuxPartition,
+    createAuxPartition,
+    createMemoryPartition,
+    createCausalRepoPartition,
+    createCausalRepoClientPartition,
+    createCausalRepoHistoryClientPartition,
+    createBotClientPartition,
+    iteratePartitions,
+} from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     BaseAuxChannel,
     AuxUser,
     AuxChannelOptions,
-    createMemoryPartition,
-    createAuxPartition,
-    createCausalRepoPartition,
-    PartitionConfig,
-    AuxPartition,
-    iteratePartitions,
-    createCausalRepoClientPartition,
-    createCausalRepoHistoryClientPartition,
 } from '@casual-simulation/aux-vm';
-import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartitionFactory';
+import {
+    createBotPartition,
+    createRemoteCausalRepoPartition,
+} from '../partitions';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
@@ -35,7 +41,9 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             config => createCausalRepoPartition(config, this.user),
             config => createRemoteCausalRepoPartition(config, this.user),
             config => createCausalRepoClientPartition(config, this.user),
-            config => createCausalRepoHistoryClientPartition(config, this.user)
+            config => createCausalRepoHistoryClientPartition(config, this.user),
+            config => createBotPartition(config),
+            config => createBotClientPartition(config)
         );
     }
 

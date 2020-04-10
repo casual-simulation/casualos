@@ -1,5 +1,46 @@
 # AUX Changelog
 
+## V1.0.22
+
+### Date: TBD
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   The `player.inSheet()` function has been changed to return whether the player bot has a dimension in their `auxSheetPortal`.
+        -   Previously, it was used to determine if the player was inside auxBuilder (which no longer exists).
+    -   Removed assignment formulas.
+        -   Assignment formulas were a special kind of formula where the tag value would be replaced with the result of the formula.
+        -   They were removed due to lack of use in addition to other means of achieving the same result being available.
+    -   Semantics of `@onUniverseAction` have changed.
+        -   Previously, `@onUniverseAction` was run before any particular action was executed but the actions that were dispatched from `@onUniverseAction` were run after the evaluated actions. This led to a scenario in which a `@onUniverseAction` call could overwrite values that were updated by an action that had not been checked yet.
+        -   Now, all actions dispatched by `@onUniverseAction` are executed before the action that is being evaluated. This makes the behavior of the data produced by `@onUniverseAction` mirror the runtime behavior of `@onUniverseAction`.
+
+-   :rocket: Features
+
+    -   Added a new runtime for scripts and formulas.
+        -   This new runtime is much faster than the previous system and lets us provide features that were not possible before.
+        -   _Should_ work exactly the same as the previous system. (There might be a couple of tricky-to-reproduce bugs)
+        -   Now supports `setTimeout()` and `setInterval()`.
+            -   This lets you write your own custom game loop if you want.
+            -   Note that the script energy will only be restored if a user action triggers a shout.
+        -   Paves the way for future functionality (not guarenteed):
+            -   Change notifications (`@onBotChanged`, `@onBotTagChanged()`, etc.)
+            -   Asynchronous functions instead of `responseShout`. (e.g. `const response = await webhook.post("https://example.com", data)`)
+    -   Added the `error` space.
+        -   The `error` space contains bots that represent errors that have occurred scripts in a universe.
+        -   Unlike other spaces, the `error` space does not load all of its bots into the universe automatically.
+        -   Instead, they have to be requested via a search query. These queries filter bots by tag/value pairs.
+        -   Currently, `error` space is only used for storing errors and there is no way to load bots from the space.
+        -   In the future, we will add the ability to load errors via scripts as well as display them in the sheet.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where a shout argument might be recognized as a bot even though it isn't.
+    -   Fixed an issue where a shout argument with a custom prototype would be overridden.
+    -   Fixed a bug in three.js's LegacyGLTFLoader where it was using an old API.
+
 ## V1.0.21
 
 ### Date: 3/30/2020
