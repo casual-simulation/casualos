@@ -446,6 +446,10 @@ export class AuxRuntime
             // 1. get compiled bot
             let compiled = this._compiledState[u.bot.id];
 
+            if (!compiled) {
+                continue;
+            }
+
             // 2. update
             this._compileTags(u.tags, compiled, u.bot);
 

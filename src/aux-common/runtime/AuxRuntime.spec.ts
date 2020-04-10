@@ -630,6 +630,19 @@ describe('AuxRuntime', () => {
             });
         });
 
+        it('should support deletes for bots that dont exist', () => {
+            const update1 = runtime.botsRemoved(['test1']);
+
+            expect(update1).toEqual({
+                state: {
+                    test1: null,
+                },
+                addedBots: [],
+                removedBots: ['test1'],
+                updatedBots: [],
+            });
+        });
+
         describe('dependencies', () => {
             it('should support calculating tags that depend on all other bots', () => {
                 runtime.botsAdded([
@@ -806,6 +819,24 @@ describe('AuxRuntime', () => {
                 addedBots: [],
                 removedBots: [],
                 updatedBots: ['test2'],
+            });
+        });
+
+        it('should ignore updates for bots that dont exist', () => {
+            const update1 = runtime.botsUpdated([
+                {
+                    bot: createBot('test2', {
+                        num: '=456',
+                    }),
+                    tags: ['num'],
+                },
+            ]);
+
+            expect(update1).toEqual({
+                state: {},
+                addedBots: [],
+                removedBots: [],
+                updatedBots: [],
             });
         });
 
