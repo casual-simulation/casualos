@@ -9,6 +9,7 @@ import {
     Object3D,
     AmbientLight,
     DirectionalLight,
+    sRGBEncoding,
 } from 'three';
 import {
     merge,
@@ -49,6 +50,7 @@ export class BotRenderer {
             preserveDrawingBuffer: true,
             antialias: false,
         });
+        this._renderer.outputEncoding = sRGBEncoding;
         this._renderer.setClearColor(new Color(), 0);
         // this._renderer.setPixelRatio(window.devicePixelRatio || 1);
 

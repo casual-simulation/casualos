@@ -37,6 +37,7 @@ import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
+import { buildSRGBColor } from './SceneUtils';
 
 /**
  * Defines a mesh that represents a workspace.
@@ -204,8 +205,8 @@ export class WorkspaceMesh extends GameObject {
         // Hex color.
         const colorValue = getDimensionColor(calc, this.workspace);
         const color: Color = hasValue(colorValue)
-            ? new Color(colorValue)
-            : new Color(DEFAULT_WORKSPACE_COLOR);
+            ? buildSRGBColor(colorValue)
+            : buildSRGBColor(DEFAULT_WORKSPACE_COLOR);
         const hexes = this.hexGrid.hexes;
         hexes.forEach(h => {
             h.color = color;
