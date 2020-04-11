@@ -1,8 +1,9 @@
 import 'platform';
 import Benchmark from 'benchmark';
 import CausalTreeBenchmarks from '@casual-simulation/causal-trees/benchmarks';
+import RuntimeBenchmarks from '@casual-simulation/aux-common/benchmarks';
 
-run([...CausalTreeBenchmarks]);
+run([...RuntimeBenchmarks]);
 
 async function run(benchmarks: Benchmark.Suite[]) {
     for (let bench of benchmarks) {
@@ -22,5 +23,8 @@ function formatSuite(suite: Benchmark.Suite) {
 }
 
 function formatBenchmark(b: Benchmark) {
+    if (b.error) {
+        console.error(b.error);
+    }
     return b.toString();
 }

@@ -11,11 +11,21 @@ import {
     Sandbox,
     BotsState,
     BOT_SPACE_TAG,
+    StateUpdatedEvent,
+    PrecalculationManager,
+    AuxPartitions,
+    AuxPartition,
+    PartitionConfig,
+    iteratePartitions,
+    BotDependentInfo,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
-import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildFormulaLibraryOptions } from './AuxConfig';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import {
+    AuxConfig,
+    buildFormulaLibraryOptions,
+    buildVersionNumber,
+} from './AuxConfig';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -25,13 +35,6 @@ import {
     Action,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { BotDependentInfo } from '../managers/DependencyManager';
-import {
-    AuxPartitions,
-    AuxPartition,
-    iteratePartitions,
-} from '../partitions/AuxPartition';
-import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
@@ -43,7 +46,8 @@ export interface AuxChannelOptions {
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
-    protected _precalculation: PrecalculationManager;
+    // protected _precalculation: PrecalculationManager;
+    protected _runtime: AuxRuntime;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
@@ -247,27 +251,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         config: PartitionConfig
     ): Promise<AuxPartition>;
 
-    /**
-     * Initializes the aux.
-     * @param loadingProgress The loading progress.
-     */
-    protected async _initAux() {
-        this._handleStatusUpdated({
-            type: 'progress',
-            message: 'Initializing user bot...',
-            progress: 0.8,
-        });
-        await this._initUserBot();
-
-        this._handleStatusUpdated({
-            type: 'progress',
-            message: 'Launching interface...',
-            progress: 0.9,
-        });
-        await this._initUserDimensionBot();
-        await this._initBuilderBots();
-    }
-
     async setUser(user: AuxUser): Promise<void> {
         for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.setUser) {
@@ -289,10 +272,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async formulaBatch(formulas: string[]): Promise<void> {
         return this._helper.formulaBatch(formulas);
-    }
-
-    async search(search: string): Promise<any> {
-        return convertToCopiableValue(this._helper.search(search));
     }
 
     async forkAux(newId: string): Promise<any> {}
@@ -328,7 +307,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._precalculation.dependencies.getDependents(tag);
+        return this._runtime.dependencies.getDependents(tag);
+        // return this._precalculation.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {
@@ -349,11 +329,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _createAuxHelper() {
         const partitions: any = this._partitions;
-        let helper = new AuxHelper(
-            partitions,
-            buildFormulaLibraryOptions(this._config.config),
-            this._options.sandboxFactory
-        );
+        let helper = new AuxHelper(partitions, this._runtime);
         helper.userId = this.user ? this.user.id : null;
         return helper;
     }
@@ -385,9 +361,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsAdded(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsAdded(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
@@ -397,9 +371,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsRemoved(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsRemoved(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
@@ -409,9 +381,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         if (e.length === 0) {
                             return;
                         }
-                        this._handleStateUpdated(
-                            this._precalculation.botsUpdated(e)
-                        );
+                        this._handleStateUpdated(this._runtime.botsUpdated(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e))
@@ -420,14 +390,34 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected async _ensureSetup() {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        if (!this._runtime) {
+            this._runtime = this._createRuntime();
+            this._subs.push(this._runtime);
+        }
         if (!this._helper) {
             this._helper = this._createAuxHelper();
         }
-        if (!this._precalculation) {
-            this._precalculation = this._createPrecalculationManager();
+
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing user bot...',
+            progress: 0.8,
+        });
+        await this._initUserBot();
+
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Launching interface...',
+            progress: 0.9,
+        });
+        await this._initUserDimensionBot();
+
+        if (!this._hasRegisteredSubs) {
+            this._hasRegisteredSubs = true;
+            this._registerSubscriptions();
         }
 
-        await this._initAux();
+        await this._initBuilderBots();
 
         if (!this._checkAccessAllowed()) {
             this._onConnectionStateChanged.next({
@@ -436,11 +426,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 reason: 'unauthorized',
             });
             return;
-        }
-
-        if (!this._hasRegisteredSubs) {
-            this._hasRegisteredSubs = true;
-            this._registerSubscriptions();
         }
 
         console.log('[BaseAuxChannel] Sending init event');
@@ -478,11 +463,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onError.next(error);
     }
 
-    protected _createPrecalculationManager(): PrecalculationManager {
-        return new PrecalculationManager(
-            () => this._helper.botsState,
-            () => this._helper.createContext()
+    protected _createRuntime(): AuxRuntime {
+        const runtime = new AuxRuntime(
+            buildVersionNumber(this._config.config),
+            this._config.config ? this._config.config.device : null
         );
+        runtime.userId = this.user ? this.user.id : null;
+        return runtime;
     }
 
     protected _handleLocalEvents(e: LocalActions[]) {

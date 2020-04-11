@@ -1,0 +1,41 @@
+{
+    "name": "@casual-simulation/stacktrace",
+    "version": "1.0.0",
+    "description": "A stacktrace parser",
+    "keywords": [],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {}
+}

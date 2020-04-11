@@ -13,12 +13,11 @@ import {
     getActiveObjects,
     tagsOnBot,
     hasValue,
-} from '@casual-simulation/aux-common';
-import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
-import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
-} from '@casual-simulation/aux-vm';
+    AuxPartitionRealtimeStrategy,
+} from '@casual-simulation/aux-common';
+import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { Subject, Subscription, Observable, fromEventPattern } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
@@ -36,6 +35,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _hasRegisteredSubs = false;
     private _state: BotsState = {};
     private _sub = new Subscription();
+
+    get realtimeStrategy(): AuxPartitionRealtimeStrategy {
+        return 'immediate';
+    }
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));

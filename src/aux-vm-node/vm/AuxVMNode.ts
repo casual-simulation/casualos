@@ -1,12 +1,15 @@
 import {
     AuxVM,
-    StateUpdatedEvent,
     AuxChannelErrorType,
-    BotDependentInfo,
     StoredAux,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
-import { LocalActions, BotAction } from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    BotAction,
+    StateUpdatedEvent,
+    BotDependentInfo,
+} from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
     StatusUpdate,
@@ -71,10 +74,6 @@ export class AuxVMNode implements AuxVM {
 
     formulaBatch(formulas: string[]): Promise<void> {
         return this._channel.formulaBatch(formulas);
-    }
-
-    search(search: string): Promise<any> {
-        return this._channel.search(search);
     }
 
     forkAux(newId: string): Promise<void> {

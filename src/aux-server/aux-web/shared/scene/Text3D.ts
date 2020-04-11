@@ -20,7 +20,7 @@ import createBMFont, {
     TextGeometry,
     TextGeometryOptions,
 } from 'three-bmfont-text';
-import { calculateAnchorPosition } from './SceneUtils';
+import { calculateAnchorPosition, buildSRGBColor } from './SceneUtils';
 import { BotLabelAnchor } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
@@ -132,7 +132,7 @@ export class Text3D extends Object3D {
                 transparent: true,
                 // depthTest: false,
                 // depthWrite: false,
-                color: new Color(0, 0, 0),
+                color: buildSRGBColor(0, 0, 0),
             })
         );
 

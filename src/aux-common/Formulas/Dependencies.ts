@@ -565,7 +565,13 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                     },
                 ];
             }
-            return [];
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
         },
         getBots: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
@@ -584,7 +590,13 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                     },
                 ];
             }
-            return [];
+            return [
+                {
+                    type: 'bot',
+                    name: 'id',
+                    dependencies: [],
+                },
+            ];
         },
         getBotTagValues: (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {

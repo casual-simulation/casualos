@@ -10,116 +10,27 @@ Create persistent, distributed, realtime, and conflict-free data types.
 npm install @casual-simulation/causal-trees
 ```
 
-## Usage
+## Features
 
-```js
-// ES6-style imports are required.
-// If you are running in an environment that does not support ES Modules,
-// then use Webpack or Babel to transpile to the format you want. (like CommonJS)
-import { CausalTree, storedTree, site } from '@casual-simulation/causal-trees';
+### Custom CRDTs
 
-// Define a list of operation types that our atoms can have.
-let opTypes = {
-    root: 0,
-    add: 1,
-    subtract: 2,
-};
+Causal Trees enable the creation of custom CRDT data types and can be optimized for disparate use-cases. This ranges from Last-Write-Wins to Sequences and Text Editing.
 
-// Async is not required. Everything that is await-able returns a promise.
-async function demo() {
-    // Create a new causal tree with a site ID of 1.
-    // You can also extend the CausalTree class
-    // to add your own functionality.
-    let myTree = new CausalTree(storedTree(site(1)), new CounterReducer());
+### Data Integrity
 
-    console.log('Site: ', myOtherTree.site.id);
-    // Site: 1
+Causal Trees uses hash chains structured as a Reverse [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) to ensure not only that data is consistent but also that causality is preserved in even the most hostile environments.
 
-    // Create the root atom
-    let { added: root } = await myTree.create(
-        {
-            type: opTypes.root,
-        },
-        null
-    );
+### Performance
 
-    // Add 100
-    await myTree.create(
-        {
-            type: opTypes.add,
-            count: 100,
-        },
-        root
-    );
+Causal Trees are built on top of immutable data structures and also permit a variety of garbage collection techniques. This makes Causal Trees good for realtime synchronization scenarios due to optimization for low-latency and high-throughput.
 
-    console.log('Value: ', myTree.value);
-    // Value: 100
+### Isomorphic
 
-    // Subtract 50
-    await myTree.create({
-        type: opTypes.subtract,
-        count: 50,
-    });
+Causal Trees don't care whether they're running in a browser environment, node.js, or in an electron app. All networking is done by the application developer which enables additional performance gains via more better handling of things like batching and caching.
 
-    console.log('Value: ', myTree.value);
-    // Value: 50
+### History
 
-    console.log('Num Atoms: ', myTree.weave.atoms.length);
-    // Num Atoms: 3
-
-    // Export the tree to a format that can be shared/stored
-    let exported = myTree.export();
-
-    // Reload the tree from the exported state
-    let myOtherTree = new CausalTree(exported, new CounterReducer());
-
-    console.log('Site: ', myOtherTree.site.id);
-    // Site: 1
-
-    // Or load it into a different site.
-    let otherSite = new CausalTree(storedTree(site(2)), new CounterReducer());
-
-    await otherSite.import(exported);
-
-    console.log('Num Atoms: ', otherSite.weave.atoms.length);
-    // Num Atoms: 3
-}
-
-demo();
-
-// Reducers are used to calculate the
-// final state from the tree.
-class CounterReducer {
-    // The eval function is called by CausalTree
-    // with the weave of atoms that are stored in the tree.
-    // The weave is simply the depth-first traversal of the operation
-    // graph.
-    eval(weave) {
-        let count = 0;
-
-        for (let i = 0; i < weave.atoms.length; i++) {
-            let atom = weave.atoms[i];
-            if (atom.value.type === opTypes.root) {
-                // Root atom - do nothing
-            } else if (atom.value.type === opTypes.add) {
-                // Add operation
-                count += atom.value.count;
-            } else if (atom.value.type === opTypes.subtract) {
-                // Subtract operation
-                count -= atom.value.count;
-            }
-        }
-
-        // Reducers return the value and any metadata
-        // that they might want to keep around.
-        // In this case we have no metadata so we just return null.
-        return [
-            count, // value
-            null, // metadata
-        ];
-    }
-}
-```
+Causal Trees can be combined with Causal Repos to provide Git-like history capabilities. Causal Trees handle fine-grained, realtime edits while Causal Repos handle large, annotated edits. Create and revert commits to save specific states of a Causal Tree.
 
 ## Background
 

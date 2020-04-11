@@ -80,7 +80,8 @@ export type ExtraActions =
     | EnableVRAction
     | ShowJoinCodeAction
     | RequestFullscreenAction
-    | ExitFullscreenAction;
+    | ExitFullscreenAction
+    | LoadBotsAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1039,6 +1040,39 @@ export interface LoadSpaceAction {
 }
 
 /**
+ * Defines an event that loads bots from the given space that match the given tags and values.
+ */
+export interface LoadBotsAction {
+    type: 'load_bots';
+
+    /**
+     * The space that should be searched.
+     */
+    space: BotSpace;
+
+    /**
+     * The tags that the loaded bots should have.
+     */
+    tags: TagFilter[];
+}
+
+/**
+ * Defines an interface for objects that specify a tag and value
+ * that a bot should have to be loaded.
+ */
+export interface TagFilter {
+    /**
+     * The tag that the bot should have.
+     */
+    tag: string;
+
+    /**
+     * The value that the bot should have.
+     */
+    value?: any;
+}
+
+/**
  * Defines an event that enables AR on the device.
  */
 export interface EnableARAction {
@@ -1849,5 +1883,18 @@ export function requestFullscreen(): RequestFullscreenAction {
 export function exitFullscreen(): ExitFullscreenAction {
     return {
         type: 'exit_fullscreen_mode',
+    };
+}
+
+/**
+ * Requests that bots matching the given tags be loaded from the given space.
+ * @param space The space that the bots should be loaded from.
+ * @param tags The tags that should be on the loaded bots.
+ */
+export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
+    return {
+        type: 'load_bots',
+        space: space,
+        tags: tags,
     };
 }

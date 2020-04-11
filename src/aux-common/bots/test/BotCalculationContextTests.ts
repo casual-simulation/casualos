@@ -6,7 +6,6 @@ import {
     calculateFormulaValue,
     calculateBotValue,
     filterBotsBySelection,
-    updateBot,
     isMergeable,
     isPickupable,
     isSimulation,
@@ -2955,68 +2954,6 @@ export function botCalculationContextTests(
             expect(calculateNumericalTagValue(calc, bot, 'tag', null)).toBe(
                 expected
             );
-        });
-    });
-
-    describe('updateBot()', () => {
-        it('should do nothing if there is no new data', () => {
-            let bot: Bot = createBot();
-            let newData = {};
-
-            updateBot(bot, 'testUser', newData, () =>
-                createCalculationContext([bot])
-            );
-
-            expect(newData).toEqual({});
-        });
-
-        it('should set leave falsy fields alone in newData', () => {
-            let bot: Bot = createBot();
-            let newData = {
-                tags: {
-                    a: false,
-                    b: '',
-                    c: 0,
-                    d: <any>[],
-                    e: <any>null,
-                    f: <any>undefined,
-                    g: NaN,
-                },
-            };
-
-            updateBot(bot, 'testUser', newData, () =>
-                createCalculationContext([bot])
-            );
-
-            expect(newData).toEqual({
-                tags: {
-                    a: false,
-                    b: '',
-                    c: 0,
-                    d: [],
-                    e: null,
-                    f: undefined,
-                    g: NaN,
-                },
-            });
-        });
-
-        it('should calculate assignment formulas', () => {
-            let bot = createBot();
-            bot.tags.num = 5;
-
-            let newData: any = {
-                tags: {
-                    sum: ':=getTag(this, "#num") + 5',
-                },
-            };
-
-            updateBot(bot, 'testUser', newData, () =>
-                createCalculationContext([bot])
-            );
-
-            expect(newData.tags.sum.value).toBe(10);
-            expect(newData.tags.sum.formula).toBe(':=getTag(this, "#num") + 5');
         });
     });
 

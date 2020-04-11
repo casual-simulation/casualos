@@ -1,8 +1,8 @@
 import { saveFile, loadFile } from '@casual-simulation/aux-common';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { Subscription } from 'rxjs';
 import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import fs from 'fs';
 import { FilesModule2 } from './FilesModule2';
 import mockFs from 'mock-fs';

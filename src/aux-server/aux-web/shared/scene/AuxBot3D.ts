@@ -12,6 +12,7 @@ import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
+import { buildSRGBColor } from './SceneUtils';
 
 /**
  * Defines a class that is able to display Aux bots.
@@ -213,7 +214,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             if (DebugObjectManager.enabled && bot.id === this.bot.id) {
                 DebugObjectManager.drawBox3(
                     this.boundingBox,
-                    new Color('#999'),
+                    buildSRGBColor('#999'),
                     0.1
                 );
             }

@@ -1,1 +1,2 @@
-export * from './RemoteCausalRepoPartitionFactory';
+export * from './PartitionFactories';
+export * from './BotHttpClient';

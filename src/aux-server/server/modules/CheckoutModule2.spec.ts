@@ -14,7 +14,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import uuid from 'uuid/v4';
 import { CheckoutModule2 } from './CheckoutModule2';
 import {

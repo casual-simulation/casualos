@@ -59,8 +59,9 @@ export interface UpdatedBot {
  * - "local" means that the bot is stored in the local storage partition.
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
+ * - "error" means that the bot represents an error.
  */
-export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history';
+export type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error';
 
 /**
  * The possible portal types.
@@ -530,6 +531,11 @@ export const COOKIE_BOT_PARTITION_ID = 'local';
 export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 
 /**
+ * The partition ID for error bots.
+ */
+export const ERROR_BOT_PARTITION_ID = 'error';
+
+/**
  * The dimension ID that all users should be placed in.
  */
 export const USERS_DIMENSION = 'aux-users';
@@ -924,6 +930,13 @@ export const KNOWN_TAGS: string[] = [
     'auxTaskBackup',
     'auxTaskBackupType',
     'auxTaskBackupUrl',
+
+    'auxError',
+    'auxErrorName',
+    'auxErrorMessage',
+    'auxErrorStack',
+    'auxErrorBot',
+    'auxErrorTag',
 
     'stripeCharges',
     'stripeSuccessfulCharges',

@@ -12,6 +12,8 @@ import {
     BotTags,
     isBotTags,
     isBot,
+    ERROR_BOT_PARTITION_ID,
+    AuxPartitionConfig,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -30,7 +32,6 @@ import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import pickBy from 'lodash/pickBy';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
@@ -86,11 +87,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
+            const host = getFinalUrl(location.origin, parsedId.host);
             return {
                 shared: {
                     type: 'remote_causal_repo',
                     branch: parsedId.channel,
-                    host: getFinalUrl(location.origin, parsedId.host),
+                    host: host,
                 },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'proxy',
@@ -104,6 +106,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'memory',
                     private: true,
                     initialState: {},
+                },
+                [ERROR_BOT_PARTITION_ID]: {
+                    type: 'bot',
+                    host: host,
+                    universe: parsedId.channel,
                 },
             };
         }

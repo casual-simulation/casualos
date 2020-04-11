@@ -36,19 +36,6 @@ import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 
 /**
- * Calculates the set of events that should be run as the result of the given action using the given context.
- * The returned events are only events that were added directly from the scripts and not any events that were added via setTag() calls.
- */
-export function calculateActionEventsUsingContext(
-    state: BotsState,
-    action: ShoutAction,
-    context: BotSandboxContext
-): BotAction[] {
-    let [events] = calculateActionResultsUsingContext(state, action, context);
-    return events;
-}
-
-/**
  * Calculates the results of the given action run against the given state in the given context.
  * @param state The current bots state that the action should use.
  * @param action The action to run.
@@ -60,17 +47,15 @@ export function calculateActionResultsUsingContext(
     action: ShoutAction,
     context: BotSandboxContext,
     executeOnShout?: boolean
-): [BotAction[], any[]] {
+): ActionResult {
     const { bots, objects } = getBotsForAction(action, context);
-    const [events, results] = calculateBotActionEvents(
+    return calculateBotActionEvents(
         state,
         action,
         context,
         bots,
         executeOnShout
     );
-
-    return [events, results];
 }
 
 export function getBotsForAction(action: ShoutAction, calc: BotSandboxContext) {
@@ -100,23 +85,26 @@ export function calculateBotActionEvents(
     context: BotSandboxContext,
     bots: Bot[],
     executeOnShout: boolean = true
-): [BotAction[], any[], Bot[]] {
+): ActionResult {
     let events: BotAction[] = [];
     let results: any[] = [];
+    let errors: ScriptError[] = [];
     let listeners: Bot[] = [];
 
-    for (let f of bots) {
-        const [e, r, valid] = eventActions(
+    for (let bot of bots) {
+        const result = eventActions(
             context,
-            f,
+            bot,
             event.eventName,
             event.argument
         );
-        events.push(...e);
-        results.push(...r);
-
-        if (valid) {
-            listeners.push(f);
+        if (result) {
+            events.push(...result.actions);
+            results.push(result.result);
+            listeners.push(bot);
+            if (result.error) {
+                errors.push(result.error);
+            }
         }
     }
 
@@ -129,7 +117,7 @@ export function calculateBotActionEvents(
             responses: results,
         };
 
-        const [extraEvents] = calculateActionResultsUsingContext(
+        const extraResult = calculateActionResultsUsingContext(
             state,
             action(
                 ON_SHOUT_ACTION_NAME,
@@ -141,17 +129,23 @@ export function calculateBotActionEvents(
             false
         );
 
-        const [anyExtraEvents] = calculateActionResultsUsingContext(
+        const anyExtraResult = calculateActionResultsUsingContext(
             state,
             action(ON_ANY_SHOUT_ACTION_NAME, null, event.userId, argument),
             context,
             false
         );
 
-        events.push(...extraEvents, ...anyExtraEvents);
+        events.push(...extraResult.actions, ...anyExtraResult.actions);
+        errors.push(...extraResult.errors, ...anyExtraResult.errors);
     }
 
-    return [events, results, listeners];
+    return {
+        actions: events,
+        results: results,
+        errors: errors,
+        listeners: listeners,
+    };
 }
 
 function eventActions(
@@ -159,7 +153,7 @@ function eventActions(
     bot: Bot,
     eventName: string,
     argument: any
-): [BotAction[], any[], boolean] {
+): ScriptResult {
     if (bot === undefined) {
         return;
     }
@@ -167,19 +161,11 @@ function eventActions(
     const rawScript = calculateBotValue(context, bot, eventName);
     const parsed = parseScript(rawScript);
     if (!hasValue(parsed)) {
-        return [[], [], false];
+        return null;
     }
     const final = `(function() { \n${parsed.toString()}\n }).call(this)`;
 
-    const [events, results] = formulaActions(
-        context,
-        bot,
-        argument,
-        final,
-        eventName
-    );
-
-    return [events, results, true];
+    return formulaActions(context, bot, argument, final, eventName);
 }
 
 export function formulaActions(
@@ -188,7 +174,7 @@ export function formulaActions(
     arg: any,
     script: string,
     tag?: string
-): [BotAction[], any[]] {
+): ScriptResult {
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
@@ -207,7 +193,8 @@ export function formulaActions(
     setEnergy(DEFAULT_ENERGY);
     setCurrentBot(scriptBot);
 
-    let results: any[] = [];
+    let result: any = undefined;
+    let error: ScriptError = null;
     if ((scriptBot && thisObject) || (!scriptBot && !thisObject)) {
         arg = mapBotsToScriptBots(context, arg);
 
@@ -226,19 +213,34 @@ export function formulaActions(
             config
         );
 
-        const result = context.sandbox.run(script, {}, scriptBot, vars);
-        if (result.error && result.error instanceof RanOutOfEnergyError) {
-            throw result.error;
-        } else if (result.error) {
-            console.error(result.error);
+        const sandboxResult = context.sandbox.run(script, {}, scriptBot, vars);
+        result = sandboxResult.result;
+        if (sandboxResult.error) {
+            error = {
+                error: sandboxResult.error,
+                bot: thisObject,
+                tag: tag,
+            };
         }
-        results.push(result.result);
+
+        if (
+            sandboxResult.error &&
+            sandboxResult.error instanceof RanOutOfEnergyError
+        ) {
+            throw sandboxResult.error;
+        } else if (sandboxResult.error) {
+            console.error(sandboxResult.error);
+        }
     }
     setActions(previous);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
     setCurrentBot(prevBot);
-    return [actions, results];
+    return {
+        actions,
+        result,
+        error,
+    };
 }
 
 /**
@@ -290,4 +292,86 @@ export class RanOutOfEnergyError extends Error {
     constructor() {
         super('Ran out of energy');
     }
+}
+
+/**
+ * Defines the result of a script.
+ */
+export interface ScriptResult {
+    /**
+     * The actions that the script queued.
+     */
+    actions: BotAction[];
+    /**
+     * The value that the script returned.
+     */
+    result: any;
+
+    /**
+     * The error that the script ran into.
+     */
+    error: ScriptError;
+}
+
+/**
+ * Defines an error that a script ran into,
+ */
+export interface ScriptError {
+    /**
+     * The error.
+     */
+    error: Error;
+
+    /**
+     * The bot that ran into the error.
+     * Null if the script was not attached to a bot.
+     */
+    bot: Bot;
+
+    /**
+     * The tag that ran into the error.
+     * Null if the script was not attached to a bot.
+     */
+    tag: string;
+
+    /**
+     * The line number that the error occurred at.
+     */
+    line?: number;
+
+    /**
+     * The column number that the error occurred at.
+     */
+    column?: number;
+
+    /**
+     * The script that caused the error.
+     * Only set if the script was unable to be compiled.
+     */
+    script?: string;
+}
+
+/**
+ * Defines the result of running an action.
+ */
+export interface ActionResult {
+    /**
+     * The actions that were queued.
+     */
+    actions: BotAction[];
+
+    /**
+     * The results from the scripts that were run.
+     */
+    results: any[];
+
+    /**
+     * The errors that occurred.
+     */
+    errors: ScriptError[];
+
+    /**
+     * The bots that ran a script for the action.
+     */
+    listeners: Bot[];
 }

@@ -1,5 +1,7 @@
-import { AuxPartitionConfig } from '../partitions/AuxPartitionConfig';
-import { FormulaLibraryOptions } from '@casual-simulation/aux-common';
+import {
+    FormulaLibraryOptions,
+    AuxPartitionConfig,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -37,10 +39,7 @@ export function buildFormulaLibraryOptions(
             isBuilder: config.isBuilder,
             isPlayer: config.isPlayer,
         },
-        version: {
-            hash: config.versionHash,
-            ...parseVersionNumber(config.version),
-        },
+        version: buildVersionNumber(config),
     };
 
     if (config.device) {
@@ -48,6 +47,16 @@ export function buildFormulaLibraryOptions(
     }
 
     return options;
+}
+
+export function buildVersionNumber(config: AuxConfigParameters) {
+    if (!config) {
+        return null;
+    }
+    return {
+        hash: config.versionHash,
+        ...parseVersionNumber(config.version),
+    };
 }
 
 /**

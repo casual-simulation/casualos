@@ -19,7 +19,10 @@ import {
     watchPortalConfigBotCore,
 } from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
-import { waitAsync, wait } from '@casual-simulation/aux-vm/test/TestHelpers';
+import {
+    waitAsync,
+    wait,
+} from '@casual-simulation/aux-common/test/TestHelpers';
 
 console.log = jest.fn();
 

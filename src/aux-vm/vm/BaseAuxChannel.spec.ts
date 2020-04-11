@@ -12,18 +12,18 @@ import {
     createBot,
     botAdded,
     browseHistory,
+    MemoryPartition,
+    createMemoryPartition,
+    MemoryPartitionConfig,
+    PartitionConfig,
+    AuxPartition,
+    createAuxPartition,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
-import { AuxPartition, MemoryPartition } from '../partitions/AuxPartition';
-import {
-    PartitionConfig,
-    MemoryPartitionConfig,
-} from '../partitions/AuxPartitionConfig';
-import { createAuxPartition } from '../partitions/AuxPartitionFactories';
 import uuid from 'uuid/v4';
-import { createMemoryPartition } from '../partitions';
 import merge from 'lodash/merge';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -365,6 +365,8 @@ describe('BaseAuxChannel', () => {
                     },
                 ]);
 
+                await waitAsync();
+
                 const { abc } = channel.helper.botsState;
                 expect(abc).toEqual(createBot('abc', {}, 'tempLocal'));
             });
@@ -398,21 +400,6 @@ describe('BaseAuxChannel', () => {
             await channel.formulaBatch(['server.browseHistory()']);
 
             expect(channel.remoteEvents).toEqual([remote(browseHistory())]);
-        });
-    });
-
-    describe('search', () => {
-        it('should convert errors to copiable values', async () => {
-            await channel.initAndWait();
-
-            const result = await channel.search('throw new Error("abc")');
-
-            expect(result).toEqual({
-                success: false,
-                extras: expect.any(Object),
-                error: 'Error: abc',
-                logs: expect.any(Array),
-            });
         });
     });
 

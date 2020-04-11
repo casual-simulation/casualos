@@ -31,6 +31,7 @@
         "src/crypto/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-browser/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-node/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
         "src/**/*.d.ts.map": true
     },

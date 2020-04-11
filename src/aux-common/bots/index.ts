@@ -9,3 +9,4 @@ export * from './TagUpdatedEvent';
 export * from './BotIndex';
 export * from './BotLookupTable';
 export * from './BotLookupTableHelper';
+export * from './StateUpdatedEvent';

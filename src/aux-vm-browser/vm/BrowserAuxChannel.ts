@@ -3,6 +3,9 @@ import {
     LocalActions,
     EvalSandbox,
     BotAction,
+    createAuxPartition,
+    PartitionConfig,
+    AuxPartition,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -10,13 +13,7 @@ import {
     DeviceAction,
     Action,
 } from '@casual-simulation/causal-trees';
-import {
-    AuxConfig,
-    AuxUser,
-    createAuxPartition,
-    PartitionConfig,
-    AuxPartition,
-} from '@casual-simulation/aux-vm';
+import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 
