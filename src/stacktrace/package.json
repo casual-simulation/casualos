@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/stacktrace",
-    "version": "1.0.0",
+    "version": "1.0.22",
     "description": "A stacktrace parser",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -36,6 +36,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "dependencies": {}
+    }
 }
