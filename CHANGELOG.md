@@ -34,6 +34,7 @@
         -   Instead, they have to be requested via a search query. These queries filter bots by tag/value pairs.
         -   Currently, `error` space is only used for storing errors and there is no way to load bots from the space.
         -   In the future, we will add the ability to load errors via scripts as well as display them in the sheet.
+    -   Changed the renderer to output colors in the sRGB color space instead of linear.
 
 -   :bug: Bug Fixes
 

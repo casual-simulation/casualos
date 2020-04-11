@@ -17,6 +17,7 @@ import {
     Box3,
     Object3D,
     Vector2,
+    sRGBEncoding,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -424,6 +425,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
         }));
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
+        this.renderer.outputEncoding = sRGBEncoding;
 
         this.mainViewport = new Viewport('main', null, this.gameView.container);
         this.mainViewport.layer = 0;

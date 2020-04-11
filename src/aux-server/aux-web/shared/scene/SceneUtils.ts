@@ -70,6 +70,12 @@ export function baseAuxDirectionalLight() {
     return dirLight;
 }
 
+/**
+ * Creates a new sphere mesh.
+ * @param position The position of the sphere.
+ * @param color The color of the sphere in linear space.
+ * @param size The size of the sphere in meters.
+ */
 export function createSphere(
     position: Vector3,
     color: number,
@@ -95,6 +101,12 @@ export function createSprite(): Mesh {
     return sprite;
 }
 
+/**
+ * Creates a "user cone" mesh.
+ * @param radius The radius of the cone.
+ * @param height
+ * @param color The color of the cone in linear space.
+ */
 export function createUserCone(
     radius?: number,
     height?: number,
@@ -115,6 +127,10 @@ export function createUserCone(
     return mesh;
 }
 
+/**
+ * Creates a new cube mesh.
+ * @param size The size of the cube in meters.
+ */
 export function createCube(size: number): Mesh {
     const geometry = new BoxBufferGeometry(size, size, size);
     let material = baseAuxMeshMaterial();
@@ -125,6 +141,10 @@ export function createCube(size: number): Mesh {
     return cube;
 }
 
+/**
+ * Creates a new plane mesh.
+ * @param size The size of the mesh in meters.
+ */
 export function createPlane(size: number): Mesh {
     const geometry = new PlaneBufferGeometry(size, size);
     let material = baseAuxMeshMaterial();
@@ -552,9 +572,22 @@ export function calculateAnchorPosition(
 }
 
 /**
+ * Creates a Color object to represent the given sRGB color.
+ * Because the renderer automatically converts output colors from linear to sRGB,
+ * any colors that are provided in sRGB format need to be converted back to linear.
+ * This function converts the given color from sRGB to linear and returns the result.
+ * @param args The arguments for the color constructor.
+ */
+export function buildSRGBColor(...args: (string | number)[]): Color {
+    const c = new Color(...args);
+    c.convertSRGBToLinear();
+    return c;
+}
+
+/**
  * Changes the mesh's material to the given color.
  * @param mesh The mesh.
- * @param color The color.
+ * @param color The color in sRGB space.
  */
 export function setColor(mesh: Mesh | Sprite, color: string) {
     if (!mesh) {
@@ -564,7 +597,7 @@ export function setColor(mesh: Mesh | Sprite, color: string) {
     if (color) {
         shapeMat.visible = !isTransparent(color);
         if (shapeMat.visible) {
-            shapeMat.color = new Color(color);
+            shapeMat.color = buildSRGBColor(color);
         }
     } else {
         shapeMat.visible = true;

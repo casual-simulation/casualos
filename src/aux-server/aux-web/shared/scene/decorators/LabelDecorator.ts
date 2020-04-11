@@ -15,7 +15,7 @@ import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
-import { calculateScale } from '../SceneUtils';
+import { calculateScale, buildSRGBColor } from '../SceneUtils';
 
 export class LabelDecorator extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
@@ -206,6 +206,9 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                     this.bot3D.bot,
                     'auxLabelColor'
                 );
+
+                // Don't convert sRGB to linear
+                // because labels ignore the renderer's output encoding.
                 let color = new Color(calculatedValue);
                 if (color) {
                     this.text3D.setColor(color);

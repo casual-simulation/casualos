@@ -20,6 +20,7 @@ import {
     CSS3DObject,
 } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import { wrapHtmlWithSandboxContentSecurityPolicy } from '../SharedUtils';
+import { buildSRGBColor } from './SceneUtils';
 
 /**
  * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript bot along with
@@ -178,7 +179,7 @@ export namespace HtmlMixer {
             if (!this.object3d) {
                 let planeMaterial = new MeshBasicMaterial({
                     opacity: 0,
-                    color: new Color('black'),
+                    color: buildSRGBColor('black'),
                     blending: NoBlending,
                     side: DoubleSide,
                 });

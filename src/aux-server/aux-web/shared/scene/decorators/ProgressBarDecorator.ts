@@ -27,6 +27,7 @@ import {
     disposeMesh,
     createPlane,
     calculateAnchorPosition,
+    buildSRGBColor,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -170,11 +171,11 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         if (this.color) {
             shapeMat.visible = !isTransparent(this.color);
             if (shapeMat.visible) {
-                shapeMat.color = new Color(this.color);
+                shapeMat.color = buildSRGBColor(this.color);
             }
         } else {
             shapeMat.visible = true;
-            shapeMat.color = new Color(0x000000);
+            shapeMat.color = buildSRGBColor(0x000000);
         }
 
         //
@@ -187,11 +188,11 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         if (this.bgColor) {
             shapeMatBackground.visible = !isTransparent(this.bgColor);
             if (shapeMatBackground.visible) {
-                shapeMatBackground.color = new Color(this.bgColor);
+                shapeMatBackground.color = buildSRGBColor(this.bgColor);
             }
         } else {
             shapeMatBackground.visible = true;
-            shapeMatBackground.color = new Color(0xffffff);
+            shapeMatBackground.color = buildSRGBColor(0xffffff);
         }
     }
 

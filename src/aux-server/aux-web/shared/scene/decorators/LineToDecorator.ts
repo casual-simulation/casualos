@@ -11,6 +11,7 @@ import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
 import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { Wall3D } from '../Wall3D';
+import { buildSRGBColor } from '../SceneUtils';
 
 export class LineToDecorator extends AuxBot3DDecoratorBase {
     /**
@@ -83,7 +84,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 this._lineColorValue = lineColorValue;
 
                 if (lineColorValue) {
-                    this._lineColor = new Color(lineColorValue);
+                    this._lineColor = buildSRGBColor(lineColorValue);
                 } else {
                     this._lineColor = new Color();
                 }

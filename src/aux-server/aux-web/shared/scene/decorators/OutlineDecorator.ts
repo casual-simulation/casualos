@@ -11,7 +11,7 @@ import {
     calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { disposeMesh, isTransparent } from '../SceneUtils';
+import { disposeMesh, isTransparent, buildSRGBColor } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
@@ -136,7 +136,7 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         // Mesh
         let outlineGeo = this._targetMeshDecorator.mesh.geometry;
         let outlineMat = new MeshBasicMaterial({
-            color: new Color(DEFAULT_OUTLINE_COLOR),
+            color: buildSRGBColor(DEFAULT_OUTLINE_COLOR),
             side: BackSide,
         });
 
@@ -153,7 +153,7 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         const material = <MeshBasicMaterial>this.mesh.material;
         if (!isTransparent(this.color)) {
             material.visible = true;
-            material.color = new Color(this.color);
+            material.color = buildSRGBColor(this.color);
         } else {
             material.visible = false;
         }

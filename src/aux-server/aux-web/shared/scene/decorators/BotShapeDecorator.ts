@@ -47,6 +47,7 @@ import {
     disposeScene,
     disposeObject3D,
     setColor,
+    buildSRGBColor,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -190,7 +191,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
             if (strokeMat.visible) {
-                strokeMat.color = new Color(strokeColorValue);
+                strokeMat.color = buildSRGBColor(strokeColorValue);
             }
         } else {
             strokeMat.visible = false;
