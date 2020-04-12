@@ -134,8 +134,18 @@ export class AuxRuntime
         this._zone = cleanupZone.fork(
             new BatchingZoneSpec(() => {
                 // Send the batch once all the micro tasks are completed
+
+                // Grab any unbatched actions and errors.
+                // This can happen if an action is queued during a callback
+                // or promise.
+                const unbatchedActions = this._globalContext.dequeueActions();
+                const unbatchedErrors = this._globalContext.dequeueErrors();
+
                 const actions = this._actionBatch;
                 const errors = this._errorBatch;
+
+                actions.push(...unbatchedActions);
+                errors.push(...unbatchedErrors);
 
                 this._actionBatch = [];
                 this._errorBatch = [];

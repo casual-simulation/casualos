@@ -127,6 +127,10 @@ describe('AuxRuntime', () => {
         runtime.onErrors.subscribe(e => errors.push(e));
     });
 
+    afterEach(() => {
+        runtime.unsubscribe();
+    });
+
     async function captureUpdates(fn: () => void) {
         let updates = [] as StateUpdatedEvent[];
 
@@ -1503,6 +1507,58 @@ describe('AuxRuntime', () => {
             expect(events[0].length).toBe(1);
             expect(events[0][0].type).toBe('show_toast');
             expect((<any>events[0][0]).message.value[0]).toBe(obj);
+        });
+
+        it('should dispatch events from setInterval() callbacks', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@setInterval(() => player.toast("abc"), 100)',
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([[]]);
+
+            jest.advanceTimersByTime(200);
+
+            await waitAsync();
+
+            expect(events).toEqual([[], [toast('abc')], [toast('abc')]]);
+        });
+
+        it('should dispatch events from setTimeout() callbacks', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@setTimeout(() => player.toast("abc"), 100)',
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([[]]);
+
+            jest.advanceTimersByTime(200);
+
+            await waitAsync();
+
+            expect(events).toEqual([[], [toast('abc')]]);
+        });
+
+        it('should dispatch events from promise callbacks', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello:
+                        '@Promise.resolve(0).then(() => player.toast("abc")).then(() => player.toast("abc2"))',
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([[], [toast('abc')], [toast('abc2')]]);
         });
 
         describe('bot_added', () => {

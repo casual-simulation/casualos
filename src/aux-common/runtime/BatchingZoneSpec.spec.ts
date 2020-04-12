@@ -2,19 +2,28 @@ jest.useFakeTimers();
 
 import { BatchingZoneSpec } from './BatchingZoneSpec';
 import { waitAsync } from '../test/TestHelpers';
+import { CleanupZoneSpec } from './CleanupZoneSpec';
 
 console.warn = jest.fn();
 
 describe('BatchingZoneSpec', () => {
     let flush: jest.Mock<any>;
     let zone: Zone;
+    let cleanup: CleanupZoneSpec;
 
     beforeEach(() => {
         Zone.assertZonePatched();
 
         flush = jest.fn();
 
-        zone = Zone.current.fork(new BatchingZoneSpec(flush));
+        cleanup = new CleanupZoneSpec();
+        let wrapper = Zone.root.fork(cleanup);
+
+        zone = wrapper.fork(new BatchingZoneSpec(flush));
+    });
+
+    afterEach(() => {
+        cleanup.unsubscribe();
     });
 
     it('should trigger the flush callback when running a synchronous task', () => {
@@ -33,12 +42,12 @@ describe('BatchingZoneSpec', () => {
         });
 
         expect(task).not.toBeCalled();
-        expect(flush).not.toBeCalled();
+        expect(flush).toBeCalledTimes(1);
 
         await waitAsync();
 
         expect(task).toBeCalledTimes(1);
-        expect(flush).toBeCalledTimes(1);
+        expect(flush).toBeCalledTimes(2);
     });
 
     it('should trigger the flush callback when a macro task finishes', () => {
@@ -55,6 +64,25 @@ describe('BatchingZoneSpec', () => {
         expect(flush).toBeCalledTimes(2);
     });
 
+    it('should trigger the flush callback when an interval task executes', () => {
+        const task = jest.fn();
+        const result = zone.run(() => {
+            setInterval(() => task(), 1000);
+        });
+
+        expect(flush).toBeCalledTimes(1);
+
+        jest.advanceTimersByTime(1001);
+
+        expect(task).toBeCalledTimes(1);
+        expect(flush).toBeCalledTimes(2);
+
+        jest.advanceTimersByTime(1001);
+
+        expect(task).toBeCalledTimes(2);
+        expect(flush).toBeCalledTimes(3);
+    });
+
     it('should batch micro tasks together', async () => {
         const task1 = jest.fn();
         const task2 = jest.fn();
@@ -64,7 +92,7 @@ describe('BatchingZoneSpec', () => {
                 .then(task2);
         });
 
-        expect(flush).not.toBeCalled();
+        expect(flush).toBeCalledTimes(1);
         expect(task1).not.toBeCalled();
         expect(task2).not.toBeCalled();
 
@@ -72,7 +100,7 @@ describe('BatchingZoneSpec', () => {
 
         expect(task1).toBeCalledTimes(1);
         expect(task2).toBeCalledTimes(1);
-        expect(flush).toBeCalledTimes(1);
+        expect(flush).toBeCalledTimes(3);
     });
 
     it('should support nested calls', () => {
