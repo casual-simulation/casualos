@@ -96,6 +96,7 @@ export class AuxRuntime
 
     private _userId: string;
     private _zone: Zone;
+    private _globalVariablesSpec: ZoneSpec;
     private _sub: SubscriptionLike;
 
     private _updatedBots = new Map<string, RuntimeBot>();
@@ -131,15 +132,15 @@ export class AuxRuntime
 
         const cleanupZone = Zone.current.fork(cleanupSpec);
 
-        this._zone = cleanupZone.fork(
+        const batchingZone = cleanupZone.fork(
             new BatchingZoneSpec(() => {
                 // Send the batch once all the micro tasks are completed
 
                 // Grab any unbatched actions and errors.
                 // This can happen if an action is queued during a callback
                 // or promise.
-                const unbatchedActions = this._globalContext.dequeueActions();
-                const unbatchedErrors = this._globalContext.dequeueErrors();
+                const unbatchedActions = this._processUnbatchedActions();
+                const unbatchedErrors = this._processUnbatchedErrors();
 
                 const actions = this._actionBatch;
                 const errors = this._errorBatch;
@@ -160,6 +161,73 @@ export class AuxRuntime
                 });
             })
         );
+
+        const wrapInvoke = (targetZone: Zone, fn: Function) => {
+            const previousBot = this._globalContext.currentBot;
+            this._globalContext.currentBot =
+                targetZone.get('currentBot') || null;
+
+            const wasEditable = this._globalContext.allowsEditing;
+            this._globalContext.allowsEditing = targetZone.get('allowsEditing');
+            try {
+                return fn();
+            } finally {
+                this._globalContext.currentBot = previousBot || null;
+                this._globalContext.allowsEditing = wasEditable;
+            }
+        };
+
+        this._globalVariablesSpec = {
+            name: 'GlobalVariablesZone',
+            onScheduleTask: (
+                parentZoneDelegate: ZoneDelegate,
+                currentZone: Zone,
+                targetZone: Zone,
+                task: Task
+            ) => {
+                if (targetZone.get('allowsEditing') === false) {
+                    task.cancelScheduleRequest();
+                    return task;
+                }
+                return parentZoneDelegate.scheduleTask(targetZone, task);
+            },
+            onInvoke: (
+                parentZoneDelegate,
+                currentZone,
+                targetZone,
+                target,
+                applyThis,
+                applyArgs
+            ) => {
+                return wrapInvoke(targetZone, () =>
+                    parentZoneDelegate.invoke(
+                        targetZone,
+                        target,
+                        applyThis,
+                        applyArgs
+                    )
+                );
+            },
+            onInvokeTask: (
+                parentZoneDelegate,
+                currentZone,
+                targetZone,
+                task,
+                applyThis,
+                applyArgs
+            ) => {
+                return wrapInvoke(targetZone, () =>
+                    parentZoneDelegate.invokeTask(
+                        targetZone,
+                        task,
+                        applyThis,
+                        applyArgs
+                    )
+                );
+            },
+        };
+
+        this._zone = batchingZone;
     }
 
     get closed() {
@@ -526,8 +594,22 @@ export class AuxRuntime
         this._globalContext.energy = DEFAULT_ENERGY;
         const result = callback();
 
+        const actions = this._processUnbatchedActions();
+        const errors = this._processUnbatchedErrors();
+
+        return {
+            result: result,
+            actions: actions,
+            errors: errors,
+        };
+    }
+
+    private _processUnbatchedErrors() {
+        return this._globalContext.dequeueErrors();
+    }
+
+    private _processUnbatchedActions() {
         const actions = this._globalContext.dequeueActions();
-        const errors = this._globalContext.dequeueErrors();
         const updatedBots = [...this._updatedBots.values()];
         const updates = updatedBots
             .filter(bot => {
@@ -549,11 +631,7 @@ export class AuxRuntime
         this._newBots.clear();
         actions.push(...sortedUpdates);
 
-        return {
-            result: result,
-            actions: actions,
-            errors: errors,
-        };
+        return actions;
     }
 
     private _updateDependentBots(
@@ -765,19 +843,14 @@ export class AuxRuntime
             context: {
                 bot,
                 tag,
-                global: this._globalContext,
-                previousBot: null as RuntimeBot,
                 creator: null as RuntimeBot,
                 config: null as RuntimeBot,
-                wasEditable: true,
             },
             before: ctx => {
-                if (!options.allowsEditing) {
-                    ctx.wasEditable = ctx.global.allowsEditing;
-                    ctx.global.allowsEditing = false;
-                }
-                ctx.previousBot = ctx.global.currentBot;
-                ctx.global.currentBot = ctx.bot ? ctx.bot.script : null;
+                // if (!options.allowsEditing) {
+                //     ctx.wasEditable = ctx.global.allowsEditing;
+                //     ctx.global.allowsEditing = false;
+                // }
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.auxCreator)
                     : null;
@@ -785,11 +858,16 @@ export class AuxRuntime
                     ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)
                     : null;
             },
-            after: ctx => {
-                if (!options.allowsEditing) {
-                    ctx.global.allowsEditing = ctx.wasEditable;
-                }
-                ctx.global.currentBot = ctx.previousBot;
+            invoke: (fn, ctx) => {
+                return Zone.current
+                    .fork({
+                        ...this._globalVariablesSpec,
+                        properties: {
+                            currentBot: ctx.bot,
+                            allowsEditing: options.allowsEditing,
+                        },
+                    })
+                    .run(() => fn());
             },
             onError: (err, ctx, meta) => {
                 if (err instanceof RanOutOfEnergyError) {

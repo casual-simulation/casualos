@@ -35,7 +35,12 @@ export class AuxCompiler {
         };
 
         if (options) {
-            if (options.before || options.after || options.onError) {
+            if (
+                options.before ||
+                options.after ||
+                options.onError ||
+                options.invoke
+            ) {
                 const before = options.before || (() => {});
                 const after = options.after || (() => {});
                 const onError =
@@ -44,12 +49,17 @@ export class AuxCompiler {
                         throw err;
                     });
 
-                const scriptFunc = func;
+                const invoke = options.invoke;
                 const context = options.context;
+                const scriptFunc = func;
+                const finalFunc = invoke
+                    ? (...args: any[]) =>
+                          invoke(() => scriptFunc(...args), context)
+                    : scriptFunc;
                 func = function(...args: any[]) {
                     before(context);
                     try {
-                        return scriptFunc(...args);
+                        return finalFunc(...args);
                     } catch (ex) {
                         onError(ex, context, meta);
                     } finally {
@@ -300,6 +310,11 @@ export interface AuxCompileOptions<T> {
      * A function that should be called after the compiled function is executed.
      */
     after?: (context?: T) => void;
+
+    /**
+     * A function that should be called to invoke the compiled function.
+     */
+    invoke?: (func: Function, context?: T) => any;
 
     /**
      * A function that should be called when an error occurs.
