@@ -227,6 +227,29 @@ describe('AuxCompiler', () => {
             expect(func(1, 2, 3, 4, 5)).toEqual(2 + 5);
         });
 
+        it('should support wrapping the invocation with another function', () => {
+            const test = jest.fn();
+            const context = {
+                abc: 'def',
+            };
+            const func = compiler.compile('return 1 + 2 + abc + this.def;', {
+                invoke(fn, ctx) {
+                    test(ctx);
+                    return fn();
+                },
+                context: context,
+                arguments: [['abc']],
+                variables: {
+                    this: () => ({
+                        def: 4,
+                    }),
+                },
+            });
+
+            expect(func(3)).toBe(10);
+            expect(test).toBeCalledWith(context);
+        });
+
         it('should support running some code when an error occurs', () => {
             let errors = [] as any[];
             const func = compiler.compile('throw new Error("abc")', {

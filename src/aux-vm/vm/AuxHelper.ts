@@ -107,6 +107,10 @@ export class AuxHelper extends BaseHelper<Bot> {
         this._runtime.onErrors
             .pipe(
                 tap(errors => {
+                    for (let error of errors) {
+                        console.error(error.error);
+                    }
+
                     // Send the new errors
                     // directly to the partitions
                     // so that the runtime can't error

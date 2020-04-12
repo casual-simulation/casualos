@@ -7,8 +7,6 @@ import 'zone.js';
 export class BatchingZoneSpec implements ZoneSpec {
     name: string;
 
-    private _hasTask: boolean = false;
-    private _hasMicroTask: boolean;
     private _flush: () => void;
     private _flushing: boolean = false;
 
@@ -24,23 +22,6 @@ export class BatchingZoneSpec implements ZoneSpec {
                 this._flushing = false;
             }
         };
-    }
-
-    onHasTask(
-        parentZoneDelegate: ZoneDelegate,
-        currentZone: Zone,
-        targetZone: Zone,
-        hasTaskState: HasTaskState
-    ) {
-        if (this._flushing) {
-            return;
-        }
-        const hadTask = this._hasTask;
-        this._hasTask = hasTaskState.microTask || hasTaskState.macroTask;
-        this._hasMicroTask = hasTaskState.microTask;
-        if (hadTask && hadTask !== this._hasTask) {
-            this._flush();
-        }
     }
 
     onInvoke(
@@ -64,11 +45,32 @@ export class BatchingZoneSpec implements ZoneSpec {
             return result;
         } finally {
             this._invokeCount -= 1;
-            if (
-                !this._hasMicroTask &&
-                this._invokeCount === 0 &&
-                !this._flushing
-            ) {
+            if (this._invokeCount === 0 && !this._flushing) {
+                this._flush();
+            }
+        }
+    }
+
+    onInvokeTask(
+        parentZoneDelegate: ZoneDelegate,
+        currentZone: Zone,
+        targetZone: Zone,
+        task: Task,
+        applyThis: any,
+        applyArgs?: any[]
+    ): any {
+        try {
+            this._invokeCount += 1;
+            const result = parentZoneDelegate.invokeTask(
+                targetZone,
+                task,
+                applyThis,
+                applyArgs
+            );
+            return result;
+        } finally {
+            this._invokeCount -= 1;
+            if (this._invokeCount === 0 && !this._flushing) {
                 this._flush();
             }
         }

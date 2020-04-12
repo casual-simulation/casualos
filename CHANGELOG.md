@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V1.0.23
+
+### Date: 4/12/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved the handling of `setTimeout()` and `setInterval()` to support creating, updating, and deleting bots while in a callback.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue that prevented events produced while in a task from being dispatched.
+
 ## V1.0.22
 
 ### Date: 4/11/2020
