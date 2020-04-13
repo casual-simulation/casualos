@@ -27,14 +27,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "author": "Casual Simulation, Inc.",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
-    "homepage": "https://github.com/casual-simulation/aux#readme",
+    "homepage": "https://github.com/casual-simulation/casualos#readme",
     "files": [
         "dist",
         "/README.md",

@@ -57,7 +57,7 @@ $ docker-compose up -d
 
 ### Raspberry PI (ARM 32)
 
-On Raspberry PI, we provide an [installation script](https://github.com/casual-simulation/aux/blob/master/install.sh) which can be used to automatically install AUX with all of its dependencies.
+On Raspberry PI, we provide an [installation script](https://github.com/casual-simulation/casualos/blob/master/install.sh) which can be used to automatically install AUX with all of its dependencies.
 
 1. Download the script
 

@@ -8,7 +8,7 @@
         "releases"
     ],
     "author": "Casual Simulation, Inc.",
-    "homepage": "https://github.com/casual-simulation/aux",
+    "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
     "main": "index.js",
     "directories": {
@@ -23,13 +23,13 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
         "start": "node bin/make-github-release.js"
     },
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "publishConfig": {
         "access": "public"
