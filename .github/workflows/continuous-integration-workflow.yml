@@ -7,7 +7,7 @@ jobs:
         name: Test
         strategy:
             matrix:
-                os: [ubuntu-latest, macOS-latest]
+                os: [ubuntu-latest, macOS-latest, windows-latest]
                 node-version: [12.x]
         runs-on: ${{ matrix.os }}
         steps:
@@ -27,7 +27,7 @@ jobs:
         name: Build AUX
         strategy:
             matrix:
-                os: [ubuntu-latest, macOS-latest]
+                os: [ubuntu-latest, macOS-latest, windows-latest]
                 node-version: [12.x]
         runs-on: ${{ matrix.os }}
         steps:
@@ -47,7 +47,7 @@ jobs:
         name: Build Docs
         strategy:
             matrix:
-                os: [ubuntu-latest, macOS-latest]
+                os: [ubuntu-latest, macOS-latest, windows-latest]
                 node-version: [12.x]
         runs-on: ${{ matrix.os }}
         steps:
