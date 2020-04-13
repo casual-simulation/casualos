@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V1.0.24
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed the color encoding of sprites to use sRGB instead of linear.
+
 ## V1.0.23
 
 ### Date: 4/12/2020
