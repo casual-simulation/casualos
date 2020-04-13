@@ -24,7 +24,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
         "build": "npm run webpack",
@@ -36,7 +36,7 @@
         "access": "public"
     },
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
         "express": "^4.16.4"

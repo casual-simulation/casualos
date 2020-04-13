@@ -31,7 +31,7 @@ module.exports = {
       links: [
         {to: 'docs/tags', label: 'Docs', position: 'left'},
         {
-          href: 'https://github.com/casual-simulation/aux',
+          href: 'https://github.com/casual-simulation/casualos',
           label: 'GitHub',
           position: 'right',
         },

@@ -53,7 +53,7 @@ Build the entire project on the Raspberry PI
 5. Make sure lerna is installed
     - `npm install -g lerna`
 6. Clone the aux repository
-    - `git clone https://github.com/casual-simulation/aux.git`
+    - `git clone https://github.com/casual-simulation/casualos.git`
 
 **Steps:**
 
