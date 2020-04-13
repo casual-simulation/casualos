@@ -1,4 +1,4 @@
-# AUX Changelog
+# CasualOS Changelog
 
 ## V1.0.23
 

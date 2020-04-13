@@ -83,7 +83,7 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 
 ## Tools we use
 
-Here's a list of the tools and packages that we're using to build AUX.
+Here's a list of the tools and packages that we're using to build CasualOS.
 
 -   Dev tools
     -   [TypeScript](https://github.com/Microsoft/TypeScript) for type checking.
