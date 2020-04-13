@@ -20,7 +20,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
         "watch": "tsc --watch",
@@ -34,7 +34,7 @@
         "access": "public"
     },
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
         "@casual-simulation/aux-common": "^1.0.23",

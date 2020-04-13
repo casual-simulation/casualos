@@ -9,7 +9,7 @@
         "causal-tree"
     ],
     "author": "Casual Simulation, Inc.",
-    "homepage": "https://github.com/casual-simulation/aux",
+    "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
@@ -26,7 +26,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
         "watch": "tsc --watch",
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
         "@casual-simulation/causal-tree-server": "^1.0.22",

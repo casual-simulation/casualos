@@ -2,24 +2,24 @@
     <img alt="Casual Simulation Logo" src="./.github/images/casual-sim-logo.gif" width="180"/>
     <br/>
     <br/>
-    <a href="https://github.com/casual-simulation/aux/releases">
+    <a href="https://github.com/casual-simulation/casualos/releases">
         <img alt="Latest Release" src="https://img.shields.io/github/v/release/casual-simulation/aux">
     </a>
-    <a href="https://github.com/casual-simulation/aux/issues">
+    <a href="https://github.com/casual-simulation/casualos/issues">
         <img alt="GitHub Issues" src="https://img.shields.io/github/issues/casual-simulation/aux.svg">
     </a>
-    <a href="https://github.com/casual-simulation/aux/blob/develop/LICENSE.txt">
+    <a href="https://github.com/casual-simulation/casualos/blob/develop/LICENSE.txt">
         <img alt="MIT License" src="https://img.shields.io/github/license/casual-simulation/aux.svg">
     </a>
-    <a href="https://github.com/casual-simulation/aux/actions">
+    <a href="https://github.com/casual-simulation/casualos/actions">
         <img alt="Build Status" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fcasual-simulation%2Faux%2Fbadge%3Fref%3Ddevelop&style=flat" />
     </a>
-    <h1>AUX</h1>
+    <h1>CasualOS</h1>
     <p>
-        AUX (Ambient User Experience) is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+        CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
     </p>
     <p>
-        This repository is a monorepo that contains the code which makes the AUX web platform work.
+        This repository is a monorepo that contains the code which makes the CasualOS web platform work.
     </p>
 </div>
 
