@@ -121,11 +121,18 @@ export function atomId(
     timestamp: number,
     priority?: number
 ): AtomId {
-    return {
-        site,
-        timestamp,
-        priority,
-    };
+    if (typeof priority === 'number') {
+        return {
+            site,
+            timestamp,
+            priority,
+        };
+    } else {
+        return {
+            site,
+            timestamp,
+        };
+    }
 }
 
 /**
@@ -199,7 +206,11 @@ export function idEquals(first: AtomId, second: AtomId) {
             second &&
             second.site === first.site &&
             second.timestamp === first.timestamp &&
-            second.priority === first.priority)
+            (second.priority === first.priority ||
+                (second.priority === null &&
+                    typeof first.priority === 'undefined') ||
+                (typeof second.priority === 'undefined' &&
+                    first.priority === null)))
     );
 }
 

@@ -6,6 +6,7 @@
 }
 
 .code-editor-wrapper {
+    position: relative;
     width: 100%;
 
     /* Height is 100% the container minus the height of the breadcrumbs container */
@@ -20,4 +21,85 @@
     border-bottom: solid 1px var(--bot-cell-border-color);
     user-select: none;
     cursor: row-resize;
+
+    display: flex;
+}
+
+.editor-breadcrumbs .bot-tag {
+    flex: 1 1;
+}
+
+.editor-breadcrumbs .editor-errors {
+    flex: 0 1 120px;
+    text-align: right;
+}
+
+.editor-breadcrumbs .editor-errors > div {
+    display: inline-block;
+    padding: 0 8px;
+}
+
+.editor-breadcrumbs .editor-errors > .editor-button {
+    cursor: pointer;
+}
+
+.editor-breadcrumbs .editor-errors > .editor-button:hover {
+    background-color: #999;
+    color: #000;
+}
+
+.editor-errors .error-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px !important;
+    color: #c22;
+}
+
+.editor-button.active {
+    background-color: #999;
+    color: #000;
+}
+
+.errors-wrapper {
+    position: absolute;
+    z-index: 1;
+    background-color: #fff;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+
+    overflow-y: scroll;
+    padding: 8px;
+}
+
+.error-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error {
+    margin-bottom: 4px;
+    display: flex;
+}
+
+.error-details {
+    flex: 1 1;
+}
+
+.error-count {
+    flex: 0 0 28px;
+    align-self: center;
+    text-align: center;
+    background-color: #aaa;
+    border-radius: 28px;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    margin-right: 8px;
+}
+
+.error-name {
+    font-size: 20px;
+    font-weight: 700;
 }
