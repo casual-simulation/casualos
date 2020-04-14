@@ -39,6 +39,7 @@ import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
+import { addDebugApi } from '../DebugHelpers';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -127,6 +128,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 message: err.toString(),
             });
         });
+
+        addDebugApi('getChannel', () => this);
     }
 
     async init(
@@ -580,3 +583,5 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     closed: boolean;
 }
+
+addDebugApi('getChannel', () => null as any);
