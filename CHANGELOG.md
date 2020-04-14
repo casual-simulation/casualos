@@ -9,6 +9,7 @@
 -   :bug: Bug Fixes
 
     -   Fixed the color encoding of sprites to use sRGB instead of linear.
+    -   Fixed an issue where atoms would be sorted improperly because their causes were improperly treated as different.
 
 ## V1.0.23
 
