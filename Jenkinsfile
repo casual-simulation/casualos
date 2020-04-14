@@ -12,7 +12,7 @@ pipeline {
         DOCKER_PASSWORD = credentials('jenkins-docker-password')
         GITHUB_RELEASE_TOKEN = credentials('AUX_RELEASE_TOKEN')
         AUX_GIT_REPO_OWNER = 'casual-simulation'
-        AUX_GIT_REPO_NAME = 'aux'
+        AUX_GIT_REPO_NAME = 'casualos'
     }
 
     tools {
