@@ -4,9 +4,9 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) 10.13.0 or later.
+-   [Node.js](https://nodejs.org/en/download/) 12.16.2 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
-    -   Once NVM is installed, you can install the correct version of Node by running `nvm install 10.13.0` in your favorite terminal.
+    -   Once NVM is installed, you can install the correct version of Node by running `nvm install 12.16.2` in your favorite terminal.
 -   Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
     -   Used to make development with MongoDB easy.
     -   Once installed, make sure the `./docker/services/data` directory is shared with docker:
@@ -18,9 +18,9 @@ Make sure you have all the prerequisite tools installed:
 ## First Time Setup
 
 1. Clone the repository.
-    - `git clone https://github.com/casual-simulation/aux.git`
+    - `git clone https://github.com/casual-simulation/casualos.git`
     - On Windows you should clone to a custom folder since `aux` is a reserved file/folder name.
-        - e.g. `git clone https://github.com/casual-simulation/aux.git cs-aux`
+        - e.g. `git clone https://github.com/casual-simulation/casualos.git cs-aux`
 2. Make sure Lerna is installed.
     - `npm install -g lerna`
 3. Bootstrap the project.
@@ -83,7 +83,7 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 
 ## Tools we use
 
-Here's a list of the tools and packages that we're using to build AUX.
+Here's a list of the tools and packages that we're using to build CasualOS.
 
 -   Dev tools
     -   [TypeScript](https://github.com/Microsoft/TypeScript) for type checking.

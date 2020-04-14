@@ -5,7 +5,6 @@ Object {
   "cause": null,
   "hash": "a72872ffa3664d13ce709e7083444c479f5a674d8df0bc70e0b1870425cc8fc7",
   "id": Object {
-    "priority": undefined,
     "site": "A",
     "timestamp": 1,
   },

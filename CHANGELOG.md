@@ -1,4 +1,27 @@
-# AUX Changelog
+# CasualOS Changelog
+
+## V1.0.24
+
+### Date: 4/14/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added a button on the sheet code editor to show errors that the script has run into.
+        -   It is very basic at the moment. There are no line/column numbers, no timestamps, and no way to clear the errors.
+        -   Errors are automatically pulled from error space and queried based on the following tags:
+            -   `auxError` must be `true`
+            -   `auxErrorBot` must be the ID of the bot whose script is in the editor.
+            -   `auxErrorTag` must be the name of the tag that is being edited.
+        -   The following tags are displayed for each error:
+            -   `auxErrorName` is the name of the error that occurred.
+            -   `auxErrorMessage` is the message that the error contained.
+
+-   :bug: Bug Fixes
+
+    -   Fixed the color encoding of sprites to use sRGB instead of linear.
+    -   Fixed an issue where atoms would be sorted improperly because their causes were improperly treated as different.
 
 ## V1.0.23
 

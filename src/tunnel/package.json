@@ -4,7 +4,7 @@
     "description": "An WebSockets-based TCP tunnel.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
-    "homepage": "https://github.com/casual-simulation/aux",
+    "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
@@ -24,7 +24,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/casual-simulation/aux.git"
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
         "watch": "tsc --watch",
@@ -35,7 +35,7 @@
         "test:watch": "jest --watchAll"
     },
     "bugs": {
-        "url": "https://github.com/casual-simulation/aux/issues"
+        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "publishConfig": {
         "access": "public"

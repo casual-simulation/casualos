@@ -16,9 +16,11 @@ import {
     atom,
     atomId,
     WeaveResult,
+    addAtom,
 } from '@casual-simulation/causal-trees/core2';
 import { botAdded, botRemoved, botUpdated } from '../bots';
 import { BotStateUpdates } from './AuxStateHelpers';
+import reducer from './AuxWeaveReducer';
 
 describe('AuxCausalTree2', () => {
     describe('addAuxAtom()', () => {
@@ -30,6 +32,99 @@ describe('AuxCausalTree2', () => {
             expect(result.update).toEqual({
                 test: createBot('test'),
             });
+        });
+
+        it('should handle issue where the atom is not overwriting a previous value', () => {
+            const tree = auxTree('a');
+
+            const site1 = 'e4fc0a5b-1b58-46f9-ae3b-67769153903f';
+            const root = atom(atomId(site1, 1989, null), null, {
+                type: 1,
+                id: '98b4f896-413d-4875-9ddc-dd394f16c034',
+            });
+            expect(root.hash).toEqual(
+                'ccd9cea8f83001344e4be0202ad1116bbde20976c8b9dfa8953b1c9713860626'
+            );
+
+            const result1 = tree.weave.insert(root);
+            expect(result1).toEqual({
+                type: 'atom_added',
+                atom: root,
+            });
+            const update1 = reducer(tree.weave, result1, {});
+            expect(update1).toEqual({
+                '98b4f896-413d-4875-9ddc-dd394f16c034': createBot(
+                    '98b4f896-413d-4875-9ddc-dd394f16c034'
+                ),
+            });
+
+            const auxColor = atom(atomId(site1, 1996, null), root, {
+                type: 2,
+                name: 'auxColor',
+            });
+            expect(auxColor.hash).toEqual(
+                '5f02d0e3e44f1b4766eb5b31741c655edd025215d691f6b722e707e52eb19cee'
+            );
+
+            const result2 = tree.weave.insert(auxColor);
+            expect(result2).toEqual({
+                type: 'atom_added',
+                atom: auxColor,
+            });
+            const update2 = reducer(tree.weave, result2, {});
+            expect(update2).toEqual({});
+
+            const site2 = '6999e06b-7a56-4ea8-9e94-b9b104ee9360';
+            const first = atom(atomId(site2, 2091), auxColor, {
+                type: 3,
+                value: '#89ead4',
+            });
+
+            expect(first.hash).toEqual(
+                '2cc72a94414a0f18419be38cf3e04f581d376afdb0c34e83bfcd104094ba3eed'
+            );
+            const result3 = tree.weave.insert(first);
+            expect(result3).toEqual({
+                type: 'atom_added',
+                atom: first,
+            });
+            const update3 = reducer(tree.weave, result3, {});
+            expect(update3).toEqual({
+                '98b4f896-413d-4875-9ddc-dd394f16c034': {
+                    tags: {
+                        auxColor: '#89ead4',
+                    },
+                },
+            });
+
+            const site3 = '63b35cc1-b05e-4cbe-a25a-3e0262a36f6a';
+            const second = atom(atomId(site3, 3431), auxColor, {
+                type: 3,
+                value: '#89e',
+            });
+            expect(second.hash).toEqual(
+                '93955f3f854f4b0a9c315a7eda40afd2c0427fa342508a0eddedcfe4ec5fa583'
+            );
+            const result4 = tree.weave.insert(second);
+            expect(result4).toEqual({
+                type: 'atom_added',
+                atom: second,
+            });
+            const update4 = reducer(tree.weave, result4, {});
+            expect(update4).toEqual({
+                '98b4f896-413d-4875-9ddc-dd394f16c034': {
+                    tags: {
+                        auxColor: '#89e',
+                    },
+                },
+            });
+
+            expect(tree.weave.getAtoms()).toEqual([
+                root,
+                auxColor,
+                second,
+                first,
+            ]);
         });
     });
 

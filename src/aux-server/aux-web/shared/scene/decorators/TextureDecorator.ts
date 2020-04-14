@@ -4,6 +4,7 @@ import {
     MeshToonMaterial,
     MeshStandardMaterial,
     SpriteMaterial,
+    sRGBEncoding,
 } from 'three';
 import {
     BotCalculationContext,
@@ -143,6 +144,7 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
         if (this._targetMeshDecorator.allowModifications) {
             this.bot3D.display.visible = true;
         }
+        texture.encoding = sRGBEncoding;
         this._texture = texture;
 
         texture.needsUpdate = true;

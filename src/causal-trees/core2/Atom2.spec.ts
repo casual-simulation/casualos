@@ -7,6 +7,7 @@ import {
     atomIdToString,
     idEquals,
     isAtom,
+    AtomId,
 } from './Atom2';
 
 describe('Atom2', () => {
@@ -88,6 +89,20 @@ describe('Atom2', () => {
         });
     });
 
+    describe('atomId()', () => {
+        const excludePriorityCases = [['null', null], ['undefined', undefined]];
+        it.each(excludePriorityCases)(
+            'should exclude the priority if it is %s',
+            (desc, val) => {
+                expect('priority' in atomId('a', 1, val)).toBe(false);
+            }
+        );
+
+        it('should include the priority if it is 0', () => {
+            expect('priority' in atomId('a', 1, 0)).toBe(true);
+        });
+    });
+
     describe('idEquals()', () => {
         it('should be equal to other IDs', () => {
             expect(idEquals(atomId('a', 1), atomId('a', 1))).toBe(true);
@@ -100,6 +115,26 @@ describe('Atom2', () => {
             expect(idEquals(atomId('b', 2), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1, 2))).toBe(false);
+        });
+
+        it('should handle null/undefined priorities', () => {
+            const first = {
+                site: 'a',
+                timestamp: 1,
+            } as AtomId;
+            const second = {
+                site: 'a',
+                timestamp: 1,
+                priority: null,
+            } as AtomId;
+            const third = {
+                site: 'a',
+                timestamp: 1,
+                priority: undefined,
+            } as AtomId;
+            expect(idEquals(first, second)).toBe(true);
+            expect(idEquals(first, third)).toBe(true);
+            expect(idEquals(second, third)).toBe(true);
         });
     });
 
