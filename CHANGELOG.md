@@ -23,6 +23,10 @@
     -   Added the `experiment.localFormAnimation(bot, animation)` function to play an animation locally.
         -   It will interrupt and restore whichever animation is already playing on the bot.
 
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where tags that were added via the sheet would not be recognized by the `getMod()` function.
+
 ## V1.0.24
 
 ### Date: 4/14/2020
