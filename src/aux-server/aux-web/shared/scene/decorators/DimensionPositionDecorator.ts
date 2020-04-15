@@ -224,7 +224,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         } else {
             let update = false;
             if (
-                ['billboard', 'billboardZ'].indexOf(this._orientationMode) >= 0
+                ['billboard', 'billboardTop', 'billboardFront'].indexOf(
+                    this._orientationMode
+                ) >= 0
             ) {
                 const cameraRig = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
                 const cameraWorld = new Vector3();
@@ -246,21 +248,31 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 this._rotationObj.lookAt(cameraWorld);
 
-                // Rotate the object 90 degrees around its X axis
-                // so that the top of the bot is facing the camera.
-                const rotationOffset = new Quaternion().setFromAxisAngle(
-                    new Vector3(1, 0, 0),
-                    ThreeMath.degToRad(90)
-                );
-                this._rotationObj.quaternion.multiply(rotationOffset);
+                if (this._orientationMode !== 'billboardFront') {
+                    // Rotate the object 90 degrees around its X axis
+                    // so that the top of the bot is facing the camera.
+                    const rotationOffset = new Quaternion().setFromAxisAngle(
+                        new Vector3(1, 0, 0),
+                        ThreeMath.degToRad(90)
+                    );
+                    this._rotationObj.quaternion.multiply(rotationOffset);
+                }
 
                 update = true;
-                if (this._orientationMode === 'billboardZ') {
+                if (this._orientationMode === 'billboardTop') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
                         'YXZ'
                     );
                     euler.x = ThreeMath.degToRad(90);
+                    euler.z = 0;
+                    this._rotationObj.setRotationFromEuler(euler);
+                } else if (this._orientationMode === 'billboardFront') {
+                    const euler = new Euler().setFromQuaternion(
+                        this._rotationObj.quaternion,
+                        'YXZ'
+                    );
+                    euler.x = 0;
                     euler.z = 0;
                     this._rotationObj.setRotationFromEuler(euler);
                 }
