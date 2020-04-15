@@ -20,6 +20,8 @@
     -   Added the ability to set `auxFormAnimation` to an array.
         -   When set, the list of animations will play in sequence.
         -   The last animation will loop forever until changed.
+    -   Added the `experiment.localFormAnimation(bot, animation)` function to play an animation locally.
+        -   It will interrupt and restore whichever animation is already playing on the bot.
 
 ## V1.0.24
 
