@@ -46,6 +46,7 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     reject as calcReject,
+    localFormAnimation as calcLocalFormAnimation,
     webhook as calcWebhook,
     superShout as calcSuperShout,
     clearSpace,
@@ -75,6 +76,7 @@ import {
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
     RanOutOfEnergyError,
+    LocalFormAnimationAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -352,6 +354,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             action: {
                 perform,
                 reject,
+            },
+
+            experiment: {
+                localFormAnimation,
             },
 
             math: {
@@ -1535,6 +1541,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function reject(action: any) {
         const event = calcReject(getOriginalObject(action));
         return addAction(event);
+    }
+
+    /**
+     * Plays the given animation on the given bot locally.
+     * Reverts back to the original animation when done playing.
+     * @param bot The bot.
+     * @param animation The animation to play.
+     */
+    function localFormAnimation(
+        bot: Bot | string,
+        animation: string | number
+    ): LocalFormAnimationAction {
+        return addAction(calcLocalFormAnimation(getID(bot), animation));
     }
 
     /**

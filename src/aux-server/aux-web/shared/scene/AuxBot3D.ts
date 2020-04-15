@@ -6,6 +6,7 @@ import {
     calculateGridScale,
     isBotPointable,
     isBotFocusable,
+    LocalActions,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
@@ -244,6 +245,16 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
             );
         }
         this._updatesInFrame = 0;
+    }
+
+    localEvent(event: LocalActions, calc: BotCalculationContext): void {
+        if (this.decorators) {
+            for (let decorator of this.decorators) {
+                if (decorator.localEvent) {
+                    decorator.localEvent(event, calc);
+                }
+            }
+        }
     }
 
     updateFrameUpdateList() {

@@ -2417,4 +2417,26 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+## Experimental Actions
+
+### `experiment.localFormAnimation(bot, animation)`
+
+<FunctionCode name='localFormAnimation'/>
+
+Locally plays the given animation on the given bot.
+
+If an animation is already playing, it will be interrupted.
+When the given animation is finished playing, the interrupted animation will be restored.
+
+The **first parameter** is the Bot or Bot ID that the animation should be played on.
+
+The **second parameter** is the name or index of the animation that should be played.
+
+#### Examples
+
+1. Play the "jump" animation on this bot.
+```typescript
+experiment.localFormAnimation(this, "jump");
+```
+
 [listen-tag]: docs/listen-tags

@@ -68,6 +68,7 @@ import {
     addState,
     LoadBotsAction,
     ClearSpaceAction,
+    LocalFormAnimationAction,
 } from '../bots/BotEvents';
 import {
     calculateActionResultsUsingContext,
@@ -2380,6 +2381,19 @@ function inSheet(): boolean {
     return false;
 }
 
+/**
+ * Plays the given animation on the given bot locally.
+ * Reverts back to the original animation when done playing.
+ * @param bot The bot.
+ * @param animation The animation to play.
+ */
+function localFormAnimation(
+    bot: Bot | string,
+    animation: string | number
+): LocalFormAnimationAction {
+    return null;
+}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -2467,6 +2481,10 @@ const server = {
     loadErrors,
 };
 
+const experiment = {
+    localFormAnimation,
+};
+
 /**
  * Defines a set of functions that relate to common math operations.
  */
@@ -2494,6 +2512,7 @@ export default {
     player,
     server,
     action: actionNamespace,
+    experiment,
 
     // Global functions
     create,

@@ -82,7 +82,8 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LoadBotsAction
-    | ClearSpaceAction;
+    | ClearSpaceAction
+    | LocalFormAnimationAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1089,6 +1090,24 @@ export interface ClearSpaceAction {
 }
 
 /**
+ * Defines an event that runs an animation locally over
+ * whatever existing animations are playing.
+ */
+export interface LocalFormAnimationAction {
+    type: 'local_form_animation';
+
+    /**
+     * The bot to run the animation on.
+     */
+    botId: string;
+
+    /**
+     * The animation to run.
+     */
+    animation: number | string;
+}
+
+/**
  * Defines an event that enables AR on the device.
  */
 export interface EnableARAction {
@@ -1927,5 +1946,21 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+    };
+}
+
+/**
+ * Requests that the given animation be played for the given bot locally.
+ * @param botId The bot ID.
+ * @param animation The animation.
+ */
+export function localFormAnimation(
+    botId: string,
+    animation: string | number
+): LocalFormAnimationAction {
+    return {
+        type: 'local_form_animation',
+        botId,
+        animation,
     };
 }

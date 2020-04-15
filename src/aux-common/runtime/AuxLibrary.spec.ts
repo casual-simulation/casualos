@@ -61,6 +61,7 @@ import {
     botAdded,
     clearSpace,
     loadBots,
+    localFormAnimation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2482,6 +2483,28 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
                 expect(action.action).toBe(original);
+            });
+        });
+
+        describe('experiment.localFormAnimation()', () => {
+            it('should emit a LocalFormAnimationAction', () => {
+                const action = library.api.experiment.localFormAnimation(
+                    bot1,
+                    'test'
+                );
+                const expected = localFormAnimation(bot1.id, 'test');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing a bot ID directly', () => {
+                const action = library.api.experiment.localFormAnimation(
+                    'abc',
+                    'test'
+                );
+                const expected = localFormAnimation('abc', 'test');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
     });
