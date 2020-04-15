@@ -59,6 +59,7 @@ import {
     superShout,
     botRemoved,
     botAdded,
+    clearSpace,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2292,6 +2293,14 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.clearErrors()', () => {
+            it('should issue a ClearSpaceAction', () => {
+                const action = library.api.server.clearErrors();
+                const expected = clearSpace('error');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(

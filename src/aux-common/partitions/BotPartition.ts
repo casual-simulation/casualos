@@ -39,6 +39,7 @@ import {
     Bot,
     BotsState,
 } from '../bots';
+import values from 'lodash/values';
 
 /**
  * Attempts to create a BotPartition from the given config.
@@ -122,6 +123,8 @@ export class BotPartitionImpl implements BotPartition {
         for (let e of events) {
             if (e.type === 'load_bots') {
                 this._loadBots(e);
+            } else if (e.type === 'clear_space') {
+                this._clearBots();
             }
         }
 
@@ -181,5 +184,14 @@ export class BotPartitionImpl implements BotPartition {
             }
             this._onBotsAdded.next(sorted);
         }
+    }
+
+    private async _clearBots() {
+        await this._client.clearBots(this._universe);
+
+        const ids = sortBy(values(this.state).map(b => b.id));
+        this.state = {};
+
+        this._onBotsRemoved.next(ids);
     }
 }

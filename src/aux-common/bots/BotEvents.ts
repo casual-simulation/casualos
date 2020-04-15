@@ -81,7 +81,8 @@ export type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction;
+    | LoadBotsAction
+    | ClearSpaceAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1073,6 +1074,21 @@ export interface TagFilter {
 }
 
 /**
+ * Defines an event that clears all bots from a space.
+ *
+ * Only supported for the following spaces:
+ * - error
+ */
+export interface ClearSpaceAction {
+    type: 'clear_space';
+
+    /**
+     * The space to clear.
+     */
+    space: BotSpace;
+}
+
+/**
  * Defines an event that enables AR on the device.
  */
 export interface EnableARAction {
@@ -1896,5 +1912,20 @@ export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
         type: 'load_bots',
         space: space,
         tags: tags,
+    };
+}
+
+/**
+ * Requests that all the bots in the given space be cleared.
+ *
+ * Only supported for the following spaces:
+ * - error
+ *
+ * @param space The space to clear.
+ */
+export function clearSpace(space: BotSpace): ClearSpaceAction {
+    return {
+        type: 'clear_space',
+        space: space,
     };
 }

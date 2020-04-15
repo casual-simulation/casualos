@@ -66,6 +66,7 @@ import {
     requestFullscreen,
     exitFullscreen,
     addState,
+    ClearSpaceAction,
 } from '../bots/BotEvents';
 import {
     calculateActionResultsUsingContext,
@@ -1871,6 +1872,13 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
 }
 
 /**
+ * Clears all the errors in the universe.
+ */
+function clearErrors(): ClearSpaceAction {
+    return null;
+}
+
+/**
  * subrtacts the given diff from the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
@@ -2445,6 +2453,7 @@ const server = {
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
     setupUniverse,
+    clearErrors,
 };
 
 /**

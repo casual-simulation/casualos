@@ -48,6 +48,7 @@ import {
     reject as calcReject,
     webhook as calcWebhook,
     superShout as calcSuperShout,
+    clearSpace,
     BotAction,
     download,
     BotsState,
@@ -343,6 +344,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToUniverse,
                 loadFile,
                 saveFile,
+                clearErrors,
             },
 
             action: {
@@ -1411,6 +1413,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 ...(options || {}),
             })
         );
+    }
+
+    /**
+     * Clears all the errors in the universe.
+     */
+    function clearErrors() {
+        return addAction(clearSpace('error'));
     }
 
     /**
