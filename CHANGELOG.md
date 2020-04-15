@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V1.0.25
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `server.loadErrors(bot, tag)` function to make loading error bots from the error space easy.
+        -   `bot` is the bot or bot ID that the errors should be loaded for.
+        -   `tag` is the tag that the errors should be loaded for.
+    -   Added the `server.destroyErrors()` function to clear all the errors in the universe.
+
 ## V1.0.24
 
 ### Date: 4/14/2020
