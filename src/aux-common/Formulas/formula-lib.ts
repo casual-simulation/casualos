@@ -1875,7 +1875,7 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
 /**
  * Clears all the errors in the universe.
  */
-function clearErrors(): ClearSpaceAction {
+function destroyErrors(): ClearSpaceAction {
     return null;
 }
 
@@ -2463,7 +2463,7 @@ const server = {
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
     setupUniverse,
-    clearErrors,
+    destroyErrors,
     loadErrors,
 };
 

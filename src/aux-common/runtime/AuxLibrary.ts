@@ -345,7 +345,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToUniverse,
                 loadFile,
                 saveFile,
-                clearErrors,
+                destroyErrors,
                 loadErrors,
             },
 
@@ -1418,9 +1418,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Clears all the errors in the universe.
+     * Destroys all the errors in the universe.
      */
-    function clearErrors() {
+    function destroyErrors() {
         return addAction(clearSpace('error'));
     }
 
