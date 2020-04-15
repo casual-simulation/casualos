@@ -17,6 +17,9 @@
         -   `tag` is the tag that the errors should be loaded for.
     -   Added the `server.destroyErrors()` function to clear all the errors in the universe.
     -   Added the `billboardFront` auxOrientationMode option to billboard the front of a bot instead of its top.
+    -   Added the ability to set `auxFormAnimation` to an array.
+        -   When set, the list of animations will play in sequence.
+        -   The last animation will loop forever until changed.
 
 ## V1.0.24
 
