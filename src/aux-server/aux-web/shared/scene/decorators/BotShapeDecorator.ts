@@ -36,6 +36,8 @@ import {
     SkinnedMesh,
     AnimationAction,
     MathUtils as ThreeMath,
+    LoopRepeat,
+    LoopOnce,
 } from 'three';
 import {
     createCube,
@@ -238,6 +240,33 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
                 if (index >= 0 && index < this._animClips.length) {
                     this._animClips[index].play();
                     playing = true;
+                }
+            } else if (Array.isArray(this._animation)) {
+                let startTime = this._animationMixer.time;
+                for (let i = 0; i < this._animation.length; i++) {
+                    const val = this._animation[i];
+                    let clip: AnimationAction;
+                    const isLast: boolean = i === this._animation.length - 1;
+                    if (typeof val === 'number') {
+                        if (val >= 0 && val < this._animClips.length) {
+                            clip = this._animClips[val];
+                        }
+                    } else if (hasValue(val)) {
+                        const name = val.toString();
+                        clip = this._animClipMap.get(name);
+                    }
+
+                    if (clip) {
+                        playing = true;
+                        clip.startAt(startTime);
+                        clip.play();
+                        startTime += clip.getClip().duration;
+                        if (isLast) {
+                            clip.setLoop(LoopRepeat, Infinity);
+                        } else {
+                            clip.setLoop(LoopOnce, 1);
+                        }
+                    }
                 }
             }
 
