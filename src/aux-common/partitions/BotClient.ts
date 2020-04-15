@@ -12,6 +12,12 @@ export interface BotClient {
     addBots(universe: string, added: Bot[]): Promise<void>;
 
     /**
+     * Clears all the bots in the given universe.
+     * @param universe The universe to clear.
+     */
+    clearBots(universe: string): Promise<void>;
+
+    /**
      * Searches for bots matching the given tags in the given universe.
      * @param universe The universe.
      * @param tags The tags to search for.

@@ -59,6 +59,9 @@ import {
     superShout,
     botRemoved,
     botAdded,
+    clearSpace,
+    loadBots,
+    localFormAnimation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2292,6 +2295,57 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.destroyErrors()', () => {
+            it('should issue a ClearSpaceAction', () => {
+                const action = library.api.server.destroyErrors();
+                const expected = clearSpace('error');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.loadErrors()', () => {
+            it('should issue a LoadBotsAction for the given tag and bot ID', () => {
+                const action = library.api.server.loadErrors('test', 'abc');
+                const expected = loadBots('error', [
+                    {
+                        tag: 'auxError',
+                        value: true,
+                    },
+                    {
+                        tag: 'auxErrorBot',
+                        value: 'test',
+                    },
+                    {
+                        tag: 'auxErrorTag',
+                        value: 'abc',
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being passed a runtime bot', () => {
+                const action = library.api.server.loadErrors(bot1, 'abc');
+                const expected = loadBots('error', [
+                    {
+                        tag: 'auxError',
+                        value: true,
+                    },
+                    {
+                        tag: 'auxErrorBot',
+                        value: bot1.id,
+                    },
+                    {
+                        tag: 'auxErrorTag',
+                        value: 'abc',
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(
@@ -2429,6 +2483,28 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
                 expect(action.action).toBe(original);
+            });
+        });
+
+        describe('experiment.localFormAnimation()', () => {
+            it('should emit a LocalFormAnimationAction', () => {
+                const action = library.api.experiment.localFormAnimation(
+                    bot1,
+                    'test'
+                );
+                const expected = localFormAnimation(bot1.id, 'test');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing a bot ID directly', () => {
+                const action = library.api.experiment.localFormAnimation(
+                    'abc',
+                    'test'
+                );
+                const expected = localFormAnimation('abc', 'test');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
     });

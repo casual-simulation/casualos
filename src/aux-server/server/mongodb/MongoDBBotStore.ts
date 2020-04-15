@@ -37,6 +37,11 @@ export class MongoDBBotStore implements BotStore {
         return bots;
     }
 
+    async removeBots(namespace: string): Promise<void> {
+        const collection = await this._getCollection(namespace);
+        await collection.deleteMany({});
+    }
+
     private async _getCollection(namespace: string) {
         const collection = this._database.collection<Bot>(namespace);
 

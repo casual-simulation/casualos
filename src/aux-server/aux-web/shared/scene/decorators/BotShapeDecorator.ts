@@ -15,6 +15,7 @@ import {
     calculateStringTagValue,
     hasValue,
     isBotPointable,
+    LocalActions,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -36,6 +37,8 @@ import {
     SkinnedMesh,
     AnimationAction,
     MathUtils as ThreeMath,
+    LoopRepeat,
+    LoopOnce,
 } from 'three';
 import {
     createCube,
@@ -142,6 +145,12 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._updateAnimation(animation);
     }
 
+    localEvent(event: LocalActions, calc: BotCalculationContext) {
+        if (event.type === 'local_form_animation') {
+            this._playAnimation(event.animation);
+        }
+    }
+
     private _needsUpdate(
         shape: string,
         subShape: string,
@@ -219,7 +228,59 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
     }
 
-    private _updateAnimation(animation: any, forceUpdate: boolean = false) {
+    private _playAnimation(animation: string | number) {
+        if (!this._animationMixer) {
+            return;
+        }
+
+        console.log('[BotShapeDecorator] Play Animation:', animation);
+
+        const clips = this._getClips(animation);
+
+        if (clips.length > 0) {
+            let previousTime = this._animationMixer.time;
+            this._animationMixer.stopAllAction();
+            this._animationMixer.setTime(0);
+
+            let clips = this._getClips(animation);
+            let startTimeOffset = 0;
+            let lastClip: AnimationAction;
+
+            if (clips.length === 1) {
+                const clip = clips[0];
+                clip.startAt(startTimeOffset);
+                clip.play();
+                clip.setLoop(LoopOnce, 1);
+                lastClip = clip;
+            } else if (clips.length > 0) {
+                for (let i = 0; i < clips.length; i++) {
+                    let clip = clips[i];
+                    const isLast: boolean = i === clips.length - 1;
+                    clip.startAt(startTimeOffset);
+                    clip.play();
+                    startTimeOffset += clip.getClip().duration;
+                    if (isLast) {
+                        lastClip = clip;
+                    }
+                    clip.setLoop(LoopOnce, 1);
+                }
+            }
+
+            const listener = () => {
+                console.log('[BotShapeDecorator] Finished Animation');
+                this._updateAnimation(this._animation, true, previousTime);
+                this._animationMixer.removeEventListener('finished', listener);
+            };
+
+            this._animationMixer.addEventListener('finished', listener);
+        }
+    }
+
+    private _updateAnimation(
+        animation: any,
+        forceUpdate: boolean = false,
+        startTime: number = 0
+    ) {
         if (this._animation === animation && !forceUpdate) {
             return;
         }
@@ -228,30 +289,76 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         }
         this._animation = animation;
         this._animationMixer.stopAllAction();
+        this._animationMixer.setTime(startTime);
 
         const noAnimation = animation === false;
         if (noAnimation) {
         } else if (hasValue(this._animation)) {
-            let playing = false;
-            if (typeof this._animation === 'number') {
-                const index = Math.floor(this._animation);
-                if (index >= 0 && index < this._animClips.length) {
-                    this._animClips[index].play();
-                    playing = true;
-                }
-            }
+            let clips = this._getClips(this._animation);
 
-            if (!playing) {
-                const name = this._animation.toString();
-                const clip = this._animClipMap.get(name);
-                if (clip) {
+            let startTimeOffset = 0;
+            if (clips.length === 1) {
+                const clip = clips[0];
+                clip.startAt(startTimeOffset);
+                clip.play();
+            } else if (clips.length > 0) {
+                for (let i = 0; i < clips.length; i++) {
+                    let clip = clips[i];
+                    const isLast: boolean = i === clips.length - 1;
+                    clip.startAt(startTimeOffset);
                     clip.play();
-                    playing = true;
+                    startTimeOffset += clip.getClip().duration;
+                    if (isLast) {
+                        clip.setLoop(LoopRepeat, Infinity);
+                    } else {
+                        clip.setLoop(LoopOnce, 1);
+                    }
                 }
             }
         } else {
             this._animClips[0].play();
         }
+    }
+
+    private _getClips(animation: any): AnimationAction[] {
+        if (Array.isArray(animation)) {
+            let clips = [] as AnimationAction[];
+            for (let i = 0; i < animation.length; i++) {
+                const val = animation[i];
+                let clip: AnimationAction;
+                const isLast: boolean = i === animation.length - 1;
+                if (typeof val === 'number') {
+                    if (val >= 0 && val < this._animClips.length) {
+                        clip = this._animClips[val];
+                    }
+                } else if (hasValue(val)) {
+                    const name = val.toString();
+                    clip = this._animClipMap.get(name);
+                }
+
+                if (clip) {
+                    clips.push(clip);
+                }
+            }
+
+            return clips;
+        } else if (typeof animation === 'number') {
+            const index = Math.floor(animation);
+            if (index >= 0 && index < this._animClips.length) {
+                const clip = this._animClips[index];
+                if (clip) {
+                    return [clip];
+                }
+            }
+        } else if (hasValue(animation)) {
+            const name = animation.toString();
+            const clip = this._animClipMap.get(name);
+            if (clip) {
+                return [clip];
+            }
+        }
+
+        return [];
     }
 
     private _updateIframeHtml() {

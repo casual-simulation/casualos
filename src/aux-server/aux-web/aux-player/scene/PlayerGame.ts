@@ -364,6 +364,21 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
+        this.playerSimulations.push(playerSim3D);
+        this.mainScene.add(playerSim3D);
+
+        //
+        // Create Inventory Simulation
+        //
+        const inventorySim3D = new InventorySimulation3D(this, sim);
+        inventorySim3D.init();
+        inventorySim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        inventorySim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        inventorySim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
+
+        this.inventorySimulations.push(inventorySim3D);
+        this.inventoryScene.add(inventorySim3D);
+
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.type === 'go_to_dimension') {
@@ -395,21 +410,6 @@ export class PlayerGame extends Game {
                 }
             })
         );
-
-        this.playerSimulations.push(playerSim3D);
-        this.mainScene.add(playerSim3D);
-
-        //
-        // Create Inventory Simulation
-        //
-        const inventorySim3D = new InventorySimulation3D(this, sim);
-        inventorySim3D.init();
-        inventorySim3D.onBotAdded.addListener(this.onBotAdded.invoke);
-        inventorySim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
-        inventorySim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
-
-        this.inventorySimulations.push(inventorySim3D);
-        this.inventoryScene.add(inventorySim3D);
     }
 
     createAudio() {

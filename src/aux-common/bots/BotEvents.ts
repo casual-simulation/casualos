@@ -81,7 +81,9 @@ export type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction;
+    | LoadBotsAction
+    | ClearSpaceAction
+    | LocalFormAnimationAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -1073,6 +1075,39 @@ export interface TagFilter {
 }
 
 /**
+ * Defines an event that clears all bots from a space.
+ *
+ * Only supported for the following spaces:
+ * - error
+ */
+export interface ClearSpaceAction {
+    type: 'clear_space';
+
+    /**
+     * The space to clear.
+     */
+    space: BotSpace;
+}
+
+/**
+ * Defines an event that runs an animation locally over
+ * whatever existing animations are playing.
+ */
+export interface LocalFormAnimationAction {
+    type: 'local_form_animation';
+
+    /**
+     * The bot to run the animation on.
+     */
+    botId: string;
+
+    /**
+     * The animation to run.
+     */
+    animation: number | string;
+}
+
+/**
  * Defines an event that enables AR on the device.
  */
 export interface EnableARAction {
@@ -1896,5 +1931,36 @@ export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
         type: 'load_bots',
         space: space,
         tags: tags,
+    };
+}
+
+/**
+ * Requests that all the bots in the given space be cleared.
+ *
+ * Only supported for the following spaces:
+ * - error
+ *
+ * @param space The space to clear.
+ */
+export function clearSpace(space: BotSpace): ClearSpaceAction {
+    return {
+        type: 'clear_space',
+        space: space,
+    };
+}
+
+/**
+ * Requests that the given animation be played for the given bot locally.
+ * @param botId The bot ID.
+ * @param animation The animation.
+ */
+export function localFormAnimation(
+    botId: string,
+    animation: string | number
+): LocalFormAnimationAction {
+    return {
+        type: 'local_form_animation',
+        botId,
+        animation,
     };
 }

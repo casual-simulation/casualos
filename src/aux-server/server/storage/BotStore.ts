@@ -18,4 +18,10 @@ export interface BotStore {
      * @param tags The tags that the bots should have.
      */
     findBots(namespace: string, tags: TagFilter[]): Promise<Bot[]>;
+
+    /**
+     * Removes all the bots from the given namespace.
+     * @param namespace The namespace.
+     */
+    removeBots(namespace: string): Promise<void>;
 }

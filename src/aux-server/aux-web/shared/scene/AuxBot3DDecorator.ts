@@ -1,5 +1,8 @@
 import { AuxBot3D } from './AuxBot3D';
-import { BotCalculationContext } from '@casual-simulation/aux-common';
+import {
+    BotCalculationContext,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 
 export interface AuxBot3DDecorator {
     bot3D: AuxBot3D;
@@ -7,6 +10,7 @@ export interface AuxBot3DDecorator {
     botUpdated(calc: BotCalculationContext): void;
     botRemoved(calc: BotCalculationContext): void;
     frameUpdate?(calc: BotCalculationContext): void;
+    localEvent?(event: LocalActions, calc: BotCalculationContext): void;
     dispose(): void;
 }
 

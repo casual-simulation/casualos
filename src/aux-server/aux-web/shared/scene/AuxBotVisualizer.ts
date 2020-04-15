@@ -1,4 +1,8 @@
-import { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
+import {
+    BotCalculationContext,
+    Bot,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for a visualizer for a bot.
@@ -22,6 +26,13 @@ export interface AuxBotVisualizer {
      * @param calc The calculation context.
      */
     frameUpdate(calc: BotCalculationContext): void;
+
+    /**
+     * Handles the given local event.
+     * @param event The event.
+     * @param calc The calculation context.
+     */
+    localEvent(event: LocalActions, calc: BotCalculationContext): void;
 
     /**
      * Disposes of all the resources this bot uses.

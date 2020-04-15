@@ -18,6 +18,10 @@ export class MemoryBotClient implements BotClient {
         }
     }
 
+    async clearBots(universe: string) {
+        this.universes[universe] = {};
+    }
+
     async lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]> {
         let uni = this.universes[universe];
         if (!uni) {
