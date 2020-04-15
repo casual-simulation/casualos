@@ -1271,7 +1271,12 @@ export function getBotOrientationMode(
             DEFAULT_ORIENTATION_MODE
         )
     );
-    if (mode === 'absolute' || mode === 'billboard' || mode === 'billboardZ') {
+    if (
+        mode === 'absolute' ||
+        mode === 'billboard' ||
+        mode === 'billboardTop' ||
+        mode === 'billboardFront'
+    ) {
         return mode;
     }
     return DEFAULT_ORIENTATION_MODE;

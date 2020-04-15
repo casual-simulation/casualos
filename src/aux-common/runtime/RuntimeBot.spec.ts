@@ -44,7 +44,11 @@ describe('RuntimeBot', () => {
         );
 
         updateTagMock = jest.fn();
-        updateTagMock.mockReturnValue(RealtimeEditMode.Immediate);
+        updateTagMock.mockImplementation((bot, tag, value) => {
+            bot.values[tag] = value;
+            bot.tags[tag] = value;
+            return RealtimeEditMode.Immediate;
+        });
 
         getListenerMock = jest.fn(
             (bot: CompiledBot, tag: string) => bot.listeners[tag]
@@ -171,6 +175,40 @@ describe('RuntimeBot', () => {
             expect(script.raw.abc).not.toEqual(null);
             expect(script.changes.abc).toEqual(null);
         });
+
+        it('should Object.keys() for tags that were added after the bot was created', () => {
+            const keys1 = Object.keys(script.tags);
+            keys1.sort();
+
+            expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+            script.tags.newTag = true;
+
+            const keys2 = Object.keys(script.tags);
+            keys2.sort();
+
+            expect(keys2).toEqual([
+                'abc',
+                'bool',
+                'different',
+                'ghi',
+                'newTag',
+            ]);
+
+            precalc.values.otherNewTag = false;
+
+            const keys3 = Object.keys(script.tags);
+            keys3.sort();
+
+            expect(keys3).toEqual([
+                'abc',
+                'bool',
+                'different',
+                'ghi',
+                'newTag',
+                'otherNewTag',
+            ]);
+        });
     });
 
     describe('raw', () => {
@@ -252,6 +290,40 @@ describe('RuntimeBot', () => {
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
             expect(script.changes.abc).toEqual(null);
+        });
+
+        it('should Object.keys() for tags that were added after the bot was created', () => {
+            const keys1 = Object.keys(script.raw);
+            keys1.sort();
+
+            expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+            script.raw.newTag = true;
+
+            const keys2 = Object.keys(script.raw);
+            keys2.sort();
+
+            expect(keys2).toEqual([
+                'abc',
+                'bool',
+                'different',
+                'ghi',
+                'newTag',
+            ]);
+
+            precalc.tags.otherNewTag = false;
+
+            const keys3 = Object.keys(script.raw);
+            keys3.sort();
+
+            expect(keys3).toEqual([
+                'abc',
+                'bool',
+                'different',
+                'ghi',
+                'newTag',
+                'otherNewTag',
+            ]);
         });
     });
 

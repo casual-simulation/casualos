@@ -7,6 +7,7 @@ import {
     PrecalculatedBot,
     GLOBALS_BOT_ID,
     BotIndexEvent,
+    LocalActions,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
@@ -201,6 +202,11 @@ export abstract class Simulation3D extends Object3D
                 .pipe(tap(update => this._botsUpdated(update, false)))
                 .subscribe()
         );
+        this._subs.push(
+            this.simulation.localEvents
+                .pipe(tap(e => this._localEvent(e)))
+                .subscribe()
+        );
 
         this._subs.push(
             this.simulation.watcher
@@ -365,6 +371,16 @@ export abstract class Simulation3D extends Object3D
         }
 
         this._removeBotsFromGroups(groups, event.dimension, event.bot);
+    }
+
+    private _localEvent(e: LocalActions): void {
+        if (e.type === 'local_form_animation') {
+            const calc = this._currentContext;
+            const bots = this.findBotsById(e.botId);
+            for (let b of bots) {
+                b.localEvent(e, calc);
+            }
+        }
     }
 
     _onLoaded() {}

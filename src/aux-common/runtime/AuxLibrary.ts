@@ -46,8 +46,11 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     reject as calcReject,
+    localFormAnimation as calcLocalFormAnimation,
     webhook as calcWebhook,
     superShout as calcSuperShout,
+    clearSpace,
+    loadBots,
     BotAction,
     download,
     BotsState,
@@ -73,6 +76,7 @@ import {
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
     RanOutOfEnergyError,
+    LocalFormAnimationAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -343,11 +347,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 restoreHistoryMarkToUniverse,
                 loadFile,
                 saveFile,
+                destroyErrors,
+                loadErrors,
             },
 
             action: {
                 perform,
                 reject,
+            },
+
+            experiment: {
+                localFormAnimation,
             },
 
             math: {
@@ -1414,6 +1424,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Destroys all the errors in the universe.
+     */
+    function destroyErrors() {
+        return addAction(clearSpace('error'));
+    }
+
+    /**
+     * Loads the errors for the given bot and tag.
+     * @param bot The bot that the errors should be loaded for.
+     * @param tag The tag that the errors should be loaded for.
+     */
+    function loadErrors(bot: string | Bot, tag: string) {
+        return addAction(
+            loadBots('error', [
+                {
+                    tag: 'auxError',
+                    value: true,
+                },
+                {
+                    tag: 'auxErrorBot',
+                    value: getID(bot),
+                },
+                {
+                    tag: 'auxErrorTag',
+                    value: tag,
+                },
+            ])
+        );
+    }
+
+    /**
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
@@ -1500,6 +1541,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function reject(action: any) {
         const event = calcReject(getOriginalObject(action));
         return addAction(event);
+    }
+
+    /**
+     * Plays the given animation on the given bot locally.
+     * Reverts back to the original animation when done playing.
+     * @param bot The bot.
+     * @param animation The animation to play.
+     */
+    function localFormAnimation(
+        bot: Bot | string,
+        animation: string | number
+    ): LocalFormAnimationAction {
+        return addAction(calcLocalFormAnimation(getID(bot), animation));
     }
 
     /**

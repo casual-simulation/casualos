@@ -1,5 +1,32 @@
 # CasualOS Changelog
 
+## V1.0.25
+
+### Date: 4/15/2020
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   Renamed the `billboardZ` auxOrientationMode option to `billboardTop`.
+
+-   :rocket: Improvements
+
+    -   Added the `server.loadErrors(bot, tag)` function to make loading error bots from the error space easy.
+        -   `bot` is the bot or bot ID that the errors should be loaded for.
+        -   `tag` is the tag that the errors should be loaded for.
+    -   Added the `server.destroyErrors()` function to clear all the errors in the universe.
+    -   Added the `billboardFront` auxOrientationMode option to billboard the front of a bot instead of its top.
+    -   Added the ability to set `auxFormAnimation` to an array.
+        -   When set, the list of animations will play in sequence.
+        -   The last animation will loop forever until changed.
+    -   Added the `experiment.localFormAnimation(bot, animation)` function to play an animation locally.
+        -   It will interrupt and restore whichever animation is already playing on the bot.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where tags that were added via the sheet would not be recognized by the `getMod()` function.
+
 ## V1.0.24
 
 ### Date: 4/14/2020

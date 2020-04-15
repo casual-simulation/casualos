@@ -2211,6 +2211,45 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 });
 ```
 
+### `server.loadErrors(bot, tag)`
+
+<FunctionCode name='loadErrors'/>
+
+Loads the errors for the given bot and tag.
+Note that the bots don't load immediately. They will automatically be added to the universe state once they have been loaded.
+
+Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
+
+Finds bots by searching the error space for bots with the following tags:
+
+-   `auxError` must be set to true.
+-   `auxErrorBot` must be the ID of the bot that was specified.
+-   `auxErrorTag` must be the tag that was specified.
+
+The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
+
+The **second parameter** is the name of the tag that the errors should be loaded for.
+
+#### Examples:
+
+1. Load all errors that have occurred for this script:
+```typescript
+server.loadErrors(this, tagName);
+```
+
+### `server.destroyErrors()`
+
+<FunctionCode name='destroyErrors'/>
+
+Destroys all the error bots.
+
+#### Examples:
+
+1. Destroy all the error bots in this universe:
+```typescript
+server.destroyErrors();
+```
+
 ## Utility Actions
 
 ### `setTag(bot, tag, value)`
@@ -2376,6 +2415,28 @@ The **second parameter** is the largest allowed value that can be generated.
 1. Generate a random number between `0` and `Math.PI`.
 ```typescript
 const number = math.random(0, Math.PI);
+```
+
+## Experimental Actions
+
+### `experiment.localFormAnimation(bot, animation)`
+
+<FunctionCode name='localFormAnimation'/>
+
+Locally plays the given animation on the given bot.
+
+If an animation is already playing, it will be interrupted.
+When the given animation is finished playing, the interrupted animation will be restored.
+
+The **first parameter** is the Bot or Bot ID that the animation should be played on.
+
+The **second parameter** is the name or index of the animation that should be played.
+
+#### Examples
+
+1. Play the "jump" animation on this bot.
+```typescript
+experiment.localFormAnimation(this, "jump");
 ```
 
 [listen-tag]: docs/listen-tags

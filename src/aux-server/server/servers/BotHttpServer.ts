@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { BotStore } from '../storage/BotStore';
 import { AddBotsRequest } from '../../shared/AddBotsRequest';
 import { LookupBotsRequest } from '../../shared/LookupBotsRequest';
+import { ClearBotsRequest } from '../../shared/ClearBotsRequest';
 import { asyncMiddleware } from '../utils';
 
 /**
@@ -44,6 +45,16 @@ export class BotHttpServer {
                     lookupBotsRequest.tags
                 );
                 res.send(bots);
+            })
+        );
+
+        this._app.post(
+            '/api/bots/clear',
+            asyncMiddleware(async (req, res) => {
+                // TODO: Add request validation
+                const lookupBotsRequest = req.body as ClearBotsRequest;
+                await this._store.removeBots(lookupBotsRequest.namespace);
+                res.sendStatus(204);
             })
         );
     }

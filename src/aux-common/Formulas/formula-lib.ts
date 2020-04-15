@@ -66,6 +66,9 @@ import {
     requestFullscreen,
     exitFullscreen,
     addState,
+    LoadBotsAction,
+    ClearSpaceAction,
+    LocalFormAnimationAction,
 } from '../bots/BotEvents';
 import {
     calculateActionResultsUsingContext,
@@ -1871,6 +1874,22 @@ function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
 }
 
 /**
+ * Clears all the errors in the universe.
+ */
+function destroyErrors(): ClearSpaceAction {
+    return null;
+}
+
+/**
+ * Loads the errors for the given bot and tag.
+ * @param bot The bot that the errors should be loaded for.
+ * @param tag The tag that the errors should be loaded for.
+ */
+function loadErrors(bot: string | Bot, tag: string): LoadBotsAction {
+    return null;
+}
+
+/**
  * subrtacts the given diff from the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
@@ -2362,6 +2381,19 @@ function inSheet(): boolean {
     return false;
 }
 
+/**
+ * Plays the given animation on the given bot locally.
+ * Reverts back to the original animation when done playing.
+ * @param bot The bot.
+ * @param animation The animation to play.
+ */
+function localFormAnimation(
+    bot: Bot | string,
+    animation: string | number
+): LocalFormAnimationAction {
+    return null;
+}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -2445,6 +2477,12 @@ const server = {
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
     setupUniverse,
+    destroyErrors,
+    loadErrors,
+};
+
+const experiment = {
+    localFormAnimation,
 };
 
 /**
@@ -2474,6 +2512,7 @@ export default {
     player,
     server,
     action: actionNamespace,
+    experiment,
 
     // Global functions
     create,

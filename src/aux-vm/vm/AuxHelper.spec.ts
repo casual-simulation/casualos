@@ -21,6 +21,7 @@ import {
     AuxRuntime,
     AuxPartitions,
     iteratePartitions,
+    clearSpace,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -741,6 +742,37 @@ describe('AuxHelper', () => {
                         'error'
                     ),
                 });
+            });
+        });
+
+        describe('clear_space', () => {
+            it('should be able to clear a space', async () => {
+                let searchClient = new MemoryBotClient();
+                let error = createBotClientPartition({
+                    type: 'bot_client',
+                    universe: 'universe',
+                    client: searchClient,
+                });
+                helper = createHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    error: error,
+                });
+                helper.userId = userId;
+
+                await searchClient.addBots('universe', [
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                ]);
+
+                await helper.transaction(clearSpace('error'));
+
+                await waitAsync();
+
+                expect(searchClient.universes['universe']).toEqual({});
             });
         });
 

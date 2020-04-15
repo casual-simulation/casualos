@@ -23,6 +23,20 @@ export class BotHttpClient implements BotClient {
         }
     }
 
+    async clearBots(universe: string): Promise<void> {
+        const request = {
+            namespace: universe,
+        };
+        try {
+            const response = await axios.post(
+                `${this.host}/api/bots/clear`,
+                request
+            );
+        } catch (err) {
+            console.error('[BotHttpClient] Unable to clear bots:', err);
+        }
+    }
+
     async lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]> {
         const request = {
             namespace: universe,

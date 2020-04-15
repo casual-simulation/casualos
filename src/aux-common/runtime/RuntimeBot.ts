@@ -129,6 +129,17 @@ export function createRuntimeBot(
             }
             return true;
         },
+        ownKeys(target) {
+            const keys = Object.keys(bot.values);
+            return keys;
+        },
+        getOwnPropertyDescriptor(target, property) {
+            if (property === 'toJSON') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
+
+            return Reflect.getOwnPropertyDescriptor(bot.values, property);
+        },
     });
     const rawProxy = new Proxy(rawTags, {
         get(target, key: string, proxy) {
@@ -163,6 +174,17 @@ export function createRuntimeBot(
                 changedRawTags[key] = value;
             }
             return true;
+        },
+        ownKeys(target) {
+            const keys = Object.keys(bot.tags);
+            return keys;
+        },
+        getOwnPropertyDescriptor(target, property) {
+            if (property === 'toJSON') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
+
+            return Reflect.getOwnPropertyDescriptor(bot.tags, property);
         },
     });
 

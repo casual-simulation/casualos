@@ -8,6 +8,7 @@ import {
     botRemoved,
     loadBots,
     Bot,
+    clearSpace,
 } from '../bots';
 import { waitAsync } from '../test/TestHelpers';
 
@@ -152,6 +153,48 @@ describe('BotPartition', () => {
                     test: true,
                 }),
             });
+        });
+    });
+
+    describe('clear_space', () => {
+        it('should clear all the bots in the given universe', async () => {
+            await client.addBots('universe', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let removed = [] as string[];
+            subject.onBotsRemoved.subscribe(b => removed.push(...b));
+
+            await subject.applyEvents([
+                loadBots(<any>'space', [
+                    {
+                        tag: 'test',
+                        value: true,
+                    },
+                ]),
+            ]);
+
+            await subject.applyEvents([clearSpace(<any>'space')]);
+
+            await waitAsync();
+
+            const bots = await client.universes['universe'];
+            expect(bots).toEqual({});
+
+            // Should emit them in order of ID
+            expect(removed).toEqual(['test1', 'test2']);
+            expect(subject.state).toEqual({});
         });
     });
 });
