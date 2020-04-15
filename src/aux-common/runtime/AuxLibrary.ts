@@ -49,6 +49,7 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     clearSpace,
+    loadBots,
     BotAction,
     download,
     BotsState,
@@ -345,6 +346,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadFile,
                 saveFile,
                 clearErrors,
+                loadErrors,
             },
 
             action: {
@@ -1420,6 +1422,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function clearErrors() {
         return addAction(clearSpace('error'));
+    }
+
+    /**
+     * Loads the errors for the given bot and tag.
+     * @param bot The bot that the errors should be loaded for.
+     * @param tag The tag that the errors should be loaded for.
+     */
+    function loadErrors(bot: string | Bot, tag: string) {
+        return addAction(
+            loadBots('error', [
+                {
+                    tag: 'auxError',
+                    value: true,
+                },
+                {
+                    tag: 'auxErrorBot',
+                    value: getID(bot),
+                },
+                {
+                    tag: 'auxErrorTag',
+                    value: tag,
+                },
+            ])
+        );
     }
 
     /**

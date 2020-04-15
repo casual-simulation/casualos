@@ -66,6 +66,7 @@ import {
     requestFullscreen,
     exitFullscreen,
     addState,
+    LoadBotsAction,
     ClearSpaceAction,
 } from '../bots/BotEvents';
 import {
@@ -1879,6 +1880,15 @@ function clearErrors(): ClearSpaceAction {
 }
 
 /**
+ * Loads the errors for the given bot and tag.
+ * @param bot The bot that the errors should be loaded for.
+ * @param tag The tag that the errors should be loaded for.
+ */
+function loadErrors(bot: string | Bot, tag: string): LoadBotsAction {
+    return null;
+}
+
+/**
  * subrtacts the given diff from the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
@@ -2454,6 +2464,7 @@ const server = {
     saveFile: serverSaveFile,
     setupUniverse,
     clearErrors,
+    loadErrors,
 };
 
 /**

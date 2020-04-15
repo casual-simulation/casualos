@@ -60,6 +60,7 @@ import {
     botRemoved,
     botAdded,
     clearSpace,
+    loadBots,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2301,6 +2302,49 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
         });
+
+        describe('server.loadErrors()', () => {
+            it('should issue a LoadBotsAction for the given tag and bot ID', () => {
+                const action = library.api.server.loadErrors('test', 'abc');
+                const expected = loadBots('error', [
+                    {
+                        tag: 'auxError',
+                        value: true,
+                    },
+                    {
+                        tag: 'auxErrorBot',
+                        value: 'test',
+                    },
+                    {
+                        tag: 'auxErrorTag',
+                        value: 'abc',
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being passed a runtime bot', () => {
+                const action = library.api.server.loadErrors(bot1, 'abc');
+                const expected = loadBots('error', [
+                    {
+                        tag: 'auxError',
+                        value: true,
+                    },
+                    {
+                        tag: 'auxErrorBot',
+                        value: bot1.id,
+                    },
+                    {
+                        tag: 'auxErrorTag',
+                        value: 'abc',
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(
