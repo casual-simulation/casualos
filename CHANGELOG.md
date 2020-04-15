@@ -6,12 +6,17 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   Renamed the `billboardZ` auxOrientationMode option to `billboardTop`.
+
 -   :rocket: Improvements
 
     -   Added the `server.loadErrors(bot, tag)` function to make loading error bots from the error space easy.
         -   `bot` is the bot or bot ID that the errors should be loaded for.
         -   `tag` is the tag that the errors should be loaded for.
     -   Added the `server.destroyErrors()` function to clear all the errors in the universe.
+    -   Added the `billboardFront` auxOrientationMode option to billboard the front of a bot instead of its top.
 
 ## V1.0.24
 
