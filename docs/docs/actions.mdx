@@ -2211,6 +2211,45 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 });
 ```
 
+### `server.loadErrors(bot, tag)`
+
+<FunctionCode name='loadErrors'/>
+
+Loads the errors for the given bot and tag.
+Note that the bots don't load immediately. They will automatically be added to the universe state once they have been loaded.
+
+Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
+
+Finds bots by searching the error space for bots with the following tags:
+
+-   `auxError` must be set to true.
+-   `auxErrorBot` must be the ID of the bot that was specified.
+-   `auxErrorTag` must be the tag that was specified.
+
+The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
+
+The **second parameter** is the name of the tag that the errors should be loaded for.
+
+#### Examples:
+
+1. Load all errors that have occurred for this script:
+```typescript
+server.loadErrors(this, tagName);
+```
+
+### `server.clearErrors()`
+
+<FunctionCode name='clearErrors'/>
+
+Destroys all the error bots.
+
+#### Examples:
+
+1. Destroy all the error bots in this universe:
+```typescript
+server.clearErrors();
+```
+
 ## Utility Actions
 
 ### `setTag(bot, tag, value)`
