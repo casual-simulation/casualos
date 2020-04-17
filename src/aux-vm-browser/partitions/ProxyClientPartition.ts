@@ -129,7 +129,10 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     }
 
     applyEvents(events: any[]): Promise<any[]> {
-        return this._bridge.applyEvents(events);
+        // Unwrap the nested promise
+        // (technically gets unwrapped automatically, but this
+        //  fixes a return type issue)
+        return this._bridge.applyEvents(events).then(a => a);
     }
 
     async sendRemoteEvents(events: any[]): Promise<void> {
