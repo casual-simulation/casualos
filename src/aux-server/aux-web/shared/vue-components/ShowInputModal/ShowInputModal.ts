@@ -13,6 +13,8 @@ import {
     calculateFormattedBotValue,
     Bot,
     ShowInputForTagAction,
+    ShowInputAction,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
@@ -27,17 +29,18 @@ export default class ShowInputModal extends Vue {
     private _sub: Subscription;
     private _simulationSubs: Map<Simulation, Subscription>;
 
-    inputDialogLabel: string = '';
-    inputDialogPlaceholder: string = '';
-    inputDialogInput: string = '';
-    inputDialogType: ShowInputType = 'text';
-    inputDialogSubtype: ShowInputSubtype = 'basic';
-    inputDialogInputValue: any = '';
-    inputDialogLabelColor: string = '#000';
-    inputDialogBackgroundColor: string = '#FFF';
+    currentLabel: string = '';
+    currentPlaceholder: string = '';
+    currentType: ShowInputType = 'text';
+    currentSubtype: ShowInputSubtype = 'basic';
+    currentValue: any = '';
+    labelColor: string = '#000';
+    backgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
 
-    private _inputDialogTarget: Bot = null;
+    private _currentTag: string = '';
+    private _currentBot: Bot = null;
+    private _currentTask: number = null;
     private _inputDialogSimulation: Simulation = null;
 
     created() {
@@ -68,8 +71,10 @@ export default class ShowInputModal extends Vue {
             sim.localEvents.subscribe(e => {
                 if (e.type === 'show_input_for_tag') {
                     setTimeout(() => {
-                        this._showInputDialog(sim, e);
+                        this._showInputForTag(sim, e);
                     });
+                } else if (e.type === 'show_input') {
+                    this._showInput(sim, e);
                 }
             })
         );
@@ -83,24 +88,37 @@ export default class ShowInputModal extends Vue {
         this._simulationSubs.delete(sim);
     }
 
-    private _showInputDialog(
+    private _showInputForTag(
         simulation: Simulation,
         event: ShowInputForTagAction
     ) {
         const calc = simulation.helper.createContext();
         const bot = simulation.helper.botsState[event.botId];
-        this._updateLabel(calc, bot, event.tag, event.options);
-        this._updateColor(calc, bot, event.options);
-        this._updateInput(calc, bot, event.tag, event.options);
+        this._currentBot = bot;
+        this._currentTag = event.tag;
+        this._updateLabel(event.options);
+        this._updateColor(event.options);
+        this._updateInputForTag(calc, bot, event.tag, event.options);
         this._inputDialogSimulation = simulation;
+        this.showInputDialog = true;
+    }
+
+    private _showInput(simulation: Simulation, event: ShowInputAction) {
+        this._currentBot = null;
+        this._currentTag = null;
+        this._updateLabel(event.options);
+        this._updateColor(event.options);
+        this._updateInput(event.currentValue, event.options, '');
+        this._inputDialogSimulation = simulation;
+        this._currentTask = event.taskId;
         this.showInputDialog = true;
     }
 
     updateInputDialogColor(newColor: any) {
         if (typeof newColor === 'object') {
-            this.inputDialogInputValue = newColor.hex;
+            this.currentValue = newColor.hex;
         } else {
-            this.inputDialogInputValue = newColor;
+            this.currentValue = newColor;
         }
     }
 
@@ -120,89 +138,111 @@ export default class ShowInputModal extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this._inputDialogSimulation.helper.action('onCloseInput', [
-                this._inputDialogTarget,
-            ]);
+            if (this._currentBot) {
+                await this._inputDialogSimulation.helper.action(
+                    'onCloseInput',
+                    [this._currentBot]
+                );
+            }
             this.showInputDialog = false;
         }
+        this._currentBot = null;
+        this._currentTag = null;
+        this._currentTask = null;
     }
 
     async saveInputDialog() {
         let value: any;
         if (
-            this.inputDialogType === 'color' &&
-            typeof this.inputDialogInputValue === 'object'
+            this.currentType === 'color' &&
+            typeof this.currentValue === 'object'
         ) {
-            value = this.inputDialogInputValue.hex;
+            value = this.currentValue.hex;
         } else {
-            value = this.inputDialogInputValue;
+            value = this.currentValue;
         }
-        await this._inputDialogSimulation.helper.updateBot(
-            this._inputDialogTarget,
-            {
-                tags: {
-                    [this.inputDialogInput]: value,
-                },
-            }
-        );
-        await this._inputDialogSimulation.helper.action('onSaveInput', [
-            this._inputDialogTarget,
-        ]);
+
+        if (this._currentBot && this._currentTag) {
+            await this._saveInputForTag(value);
+        } else if (typeof this._currentTask === 'number') {
+            await this._saveInput(value);
+        } else {
+            console.error(
+                '[ShowInputModal] Unable to save since no bot or task was specified'
+            );
+        }
         await this.closeInputDialog();
     }
 
-    private _updateColor(
-        calc: BotCalculationContext,
-        bot: Bot,
-        options: Partial<ShowInputOptions>
-    ) {
+    private async _saveInput(value: any) {
+        await this._inputDialogSimulation.helper.transaction(
+            asyncResult(this._currentTask, value)
+        );
+    }
+
+    private async _saveInputForTag(value: any) {
+        await this._inputDialogSimulation.helper.updateBot(this._currentBot, {
+            tags: {
+                [this._currentTag]: value,
+            },
+        });
+        await this._inputDialogSimulation.helper.action('onSaveInput', [
+            this._currentBot,
+        ]);
+    }
+
+    private _updateColor(options: Partial<ShowInputOptions>) {
         if (typeof options.backgroundColor !== 'undefined') {
-            this.inputDialogBackgroundColor = options.backgroundColor;
+            this.backgroundColor = options.backgroundColor;
         } else {
-            this.inputDialogBackgroundColor = '#FFF';
+            this.backgroundColor = '#FFF';
         }
     }
 
-    private _updateLabel(
-        calc: BotCalculationContext,
-        bot: Bot,
-        tag: string,
-        options: Partial<ShowInputOptions>
-    ) {
+    private _updateLabel(options: Partial<ShowInputOptions>) {
         if (typeof options.title !== 'undefined') {
-            this.inputDialogLabel = options.title;
+            this.currentLabel = options.title;
         } else {
-            this.inputDialogLabel = null; // tag;
+            this.currentLabel = null; // tag;
         }
 
         if (typeof options.foregroundColor !== 'undefined') {
-            this.inputDialogLabelColor = options.foregroundColor;
+            this.labelColor = options.foregroundColor;
         } else {
-            this.inputDialogLabelColor = '#000';
+            this.labelColor = '#000';
         }
     }
 
-    private _updateInput(
+    private _updateInputForTag(
         calc: BotCalculationContext,
         bot: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
-        this.inputDialogInput = tag;
-        this.inputDialogType = options.type || 'text';
-        this.inputDialogSubtype = options.subtype || 'basic';
-        this._inputDialogTarget = bot;
-        this.inputDialogInputValue =
+        this._updateInput(
             calculateFormattedBotValue(
                 calc,
-                this._inputDialogTarget,
-                this.inputDialogInput
-            ) || '';
+                this._currentBot,
+                this._currentTag
+            ) || '',
+            options,
+            this._currentTag
+        );
+    }
+
+    private _updateInput(
+        currentValue: string,
+        options: Partial<ShowInputOptions>,
+        defaultPlaceholder: string
+    ) {
+        this.currentValue = currentValue || '';
+        this.currentType = options.type || 'text';
+        this.currentSubtype = options.subtype || 'basic';
 
         if (typeof options.placeholder !== 'undefined') {
-            this.inputDialogPlaceholder = options.placeholder;
+            this.currentPlaceholder = options.placeholder;
         } else {
-            this.inputDialogPlaceholder = this.inputDialogInput;
+            this.currentPlaceholder = defaultPlaceholder;
         }
     }
 }
