@@ -102,6 +102,7 @@
             <md-dialog
                 :md-active.sync="showInputDialog"
                 @md-closed="saveInputDialog()"
+                @md-opened="autoFocusInputDialog()"
                 class="input-dialog"
                 :style="{
                     'background-color': inputDialogBackgroundColor,
@@ -117,6 +118,7 @@
                         <md-input
                             v-model="inputDialogInputValue"
                             @keyup.enter="saveInputDialog()"
+                            ref="inputModalField"
                             style="-webkit-text-fill-color: inherit;"
                             :style="{ color: inputDialogLabelColor }"
                         ></md-input>

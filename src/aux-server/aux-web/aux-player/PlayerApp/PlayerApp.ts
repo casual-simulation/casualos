@@ -855,6 +855,20 @@ export default class PlayerApp extends Vue {
         }
     }
 
+    autoFocusInputDialog() {
+        // wait for the transition to finish
+        setTimeout(
+            () => {
+                const field = <Vue>this.$refs.inputModalField;
+                if (field) {
+                    field.$el.focus();
+                }
+            },
+            // 0.36 seconds (transition is 0.35 seconds)
+            1000 * 0.36
+        );
+    }
+
     async closeInputDialog() {
         if (this.showInputDialog) {
             await this._inputDialogSimulation.helper.action('onCloseInput', [
