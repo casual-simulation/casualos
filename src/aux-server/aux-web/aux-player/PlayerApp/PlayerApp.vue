@@ -101,7 +101,7 @@
 
             <md-dialog
                 :md-active.sync="showInputDialog"
-                @md-closed="closeInputDialog()"
+                @md-closed="saveInputDialog()"
                 :style="{
                     'background-color': inputDialogBackgroundColor,
                     color: inputDialogLabelColor,

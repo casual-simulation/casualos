@@ -865,27 +865,27 @@ export default class PlayerApp extends Vue {
     }
 
     async saveInputDialog() {
-        if (this.showInputDialog) {
-            let value: any;
-            if (
-                this.inputDialogType === 'color' &&
-                typeof this.inputDialogInputValue === 'object'
-            ) {
-                value = this.inputDialogInputValue.hex;
-            } else {
-                value = this.inputDialogInputValue;
+        let value: any;
+        if (
+            this.inputDialogType === 'color' &&
+            typeof this.inputDialogInputValue === 'object'
+        ) {
+            value = this.inputDialogInputValue.hex;
+        } else {
+            value = this.inputDialogInputValue;
+        }
+        await this._inputDialogSimulation.helper.updateBot(
+            this._inputDialogTarget,
+            {
+                tags: {
+                    [this.inputDialogInput]: value,
+                },
             }
-            await this._inputDialogSimulation.helper.updateBot(
-                this._inputDialogTarget,
-                {
-                    tags: {
-                        [this.inputDialogInput]: value,
-                    },
-                }
-            );
-            await this._inputDialogSimulation.helper.action('onSaveInput', [
-                this._inputDialogTarget,
-            ]);
+        );
+        await this._inputDialogSimulation.helper.action('onSaveInput', [
+            this._inputDialogTarget,
+        ]);
+        if (this.showInputDialog) {
             await this.closeInputDialog();
         }
     }
