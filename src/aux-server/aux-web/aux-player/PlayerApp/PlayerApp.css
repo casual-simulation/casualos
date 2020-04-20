@@ -119,14 +119,6 @@
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
 
-.color-picker-advanced {
-    margin: auto;
-}
-
-.color-picker-basic.vc-compact {
-    width: 245px;
-}
-
 .username-label {
     flex: 1;
 }
@@ -143,24 +135,4 @@
 
 .user-info {
     display: flex;
-}
-
-.input-dialog-content {
-    padding-bottom: 0;
-}
-
-.input-dialog-content .md-field {
-    margin-bottom: 20px;
-}
-
-.input-dialog .md-dialog-title {
-    margin-bottom: 0;
-}
-
-.input-dialog-color-tools {
-    padding-bottom: 16px;
-}
-
-.input-dialog {
-    transition-duration: 0.1s, 0.1s;
 }

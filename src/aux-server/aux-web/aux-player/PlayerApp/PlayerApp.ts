@@ -80,6 +80,7 @@ import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
 import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
+import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 
 @Component({
     components: {
@@ -88,15 +89,13 @@ import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
         'qrcode-stream': QrcodeStream,
         barcode: VueBarcode,
         'barcode-stream': BarcodeScanner,
-        'color-picker-swatches': Swatches,
-        'color-picker-advanced': Chrome,
-        'color-picker-basic': Compact,
         'html-modal': HtmlModal,
         'upload-universe-modal': UploadUniverseModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         'bot-sheet': BotSheet,
         'upload-files': UploadFiles,
+        'show-input': ShowInputModal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -201,15 +200,6 @@ export default class PlayerApp extends Vue {
     chatBarPrefill: string = null;
     chatBarPlaceholder: string = null;
 
-    inputDialogLabel: string = '';
-    inputDialogPlaceholder: string = '';
-    inputDialogInput: string = '';
-    inputDialogType: ShowInputType = 'text';
-    inputDialogSubtype: ShowInputSubtype = 'basic';
-    inputDialogInputValue: any = '';
-    inputDialogLabelColor: string = '#000';
-    inputDialogBackgroundColor: string = '#FFF';
-    showInputDialog: boolean = false;
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
     loginState: LoginState = null;
@@ -219,8 +209,6 @@ export default class PlayerApp extends Vue {
 
     @Provide() botRenderer: BotRenderer = getRenderer();
 
-    private _inputDialogTarget: Bot = null;
-    private _inputDialogSimulation: Simulation = null;
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
 
@@ -637,10 +625,6 @@ export default class PlayerApp extends Vue {
                     navigateToUrl(e.url, null, 'noreferrer');
                 } else if (e.type === 'open_url') {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
-                } else if (e.type === 'show_input_for_tag') {
-                    setTimeout(() => {
-                        this._showInputDialog(simulation, e);
-                    });
                 } else if (e.type === 'download') {
                     console.log(`[BuilderApp] Downloading ${e.filename}...`);
                     download(e.data, e.filename, e.mimeType);
@@ -809,17 +793,6 @@ export default class PlayerApp extends Vue {
         this.showBarcode = false;
     }
 
-    // TODO: Move to a shared class/component
-    _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
-        const calc = simulation.helper.createContext();
-        const bot = simulation.helper.botsState[event.botId];
-        this._updateLabel(calc, bot, event.tag, event.options);
-        this._updateColor(calc, bot, event.options);
-        this._updateInput(calc, bot, event.tag, event.options);
-        this._inputDialogSimulation = simulation;
-        this.showInputDialog = true;
-    }
-
     setTitleToID() {
         let id: string = '...';
 
@@ -845,116 +818,6 @@ export default class PlayerApp extends Vue {
 
         appManager.simulationManager.primary.updateID(id);
         document.title = id;
-    }
-
-    updateInputDialogColor(newColor: any) {
-        if (typeof newColor === 'object') {
-            this.inputDialogInputValue = newColor.hex;
-        } else {
-            this.inputDialogInputValue = newColor;
-        }
-    }
-
-    autoFocusInputDialog() {
-        // wait for the transition to finish
-        setTimeout(
-            () => {
-                const field = <Vue>this.$refs.inputModalField;
-                if (field) {
-                    field.$el.focus();
-                }
-            },
-            // 0.11 seconds (transition is 0.1 seconds)
-            1000 * 0.11
-        );
-    }
-
-    async closeInputDialog() {
-        if (this.showInputDialog) {
-            await this._inputDialogSimulation.helper.action('onCloseInput', [
-                this._inputDialogTarget,
-            ]);
-            this.showInputDialog = false;
-        }
-    }
-
-    async saveInputDialog() {
-        let value: any;
-        if (
-            this.inputDialogType === 'color' &&
-            typeof this.inputDialogInputValue === 'object'
-        ) {
-            value = this.inputDialogInputValue.hex;
-        } else {
-            value = this.inputDialogInputValue;
-        }
-        await this._inputDialogSimulation.helper.updateBot(
-            this._inputDialogTarget,
-            {
-                tags: {
-                    [this.inputDialogInput]: value,
-                },
-            }
-        );
-        await this._inputDialogSimulation.helper.action('onSaveInput', [
-            this._inputDialogTarget,
-        ]);
-        await this.closeInputDialog();
-    }
-
-    private _updateColor(
-        calc: BotCalculationContext,
-        bot: Bot,
-        options: Partial<ShowInputOptions>
-    ) {
-        if (typeof options.backgroundColor !== 'undefined') {
-            this.inputDialogBackgroundColor = options.backgroundColor;
-        } else {
-            this.inputDialogBackgroundColor = '#FFF';
-        }
-    }
-
-    private _updateLabel(
-        calc: BotCalculationContext,
-        bot: Bot,
-        tag: string,
-        options: Partial<ShowInputOptions>
-    ) {
-        if (typeof options.title !== 'undefined') {
-            this.inputDialogLabel = options.title;
-        } else {
-            this.inputDialogLabel = null; // tag;
-        }
-
-        if (typeof options.foregroundColor !== 'undefined') {
-            this.inputDialogLabelColor = options.foregroundColor;
-        } else {
-            this.inputDialogLabelColor = '#000';
-        }
-    }
-
-    private _updateInput(
-        calc: BotCalculationContext,
-        bot: Bot,
-        tag: string,
-        options: Partial<ShowInputOptions>
-    ) {
-        this.inputDialogInput = tag;
-        this.inputDialogType = options.type || 'text';
-        this.inputDialogSubtype = options.subtype || 'basic';
-        this._inputDialogTarget = bot;
-        this.inputDialogInputValue =
-            calculateFormattedBotValue(
-                calc,
-                this._inputDialogTarget,
-                this.inputDialogInput
-            ) || '';
-
-        if (typeof options.placeholder !== 'undefined') {
-            this.inputDialogPlaceholder = options.placeholder;
-        } else {
-            this.inputDialogPlaceholder = this.inputDialogInput;
-        }
     }
 
     private _simulationRemoved(simulation: Simulation) {
