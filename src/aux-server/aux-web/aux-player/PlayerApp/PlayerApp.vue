@@ -143,12 +143,6 @@
                         ></color-picker-basic>
                     </div>
                 </md-dialog-content>
-                <md-dialog-actions>
-                    <md-button @click="closeInputDialog()" :style="{ color: inputDialogLabelColor }"
-                        >Cancel</md-button
-                    >
-                    <md-button @click="saveInputDialog()" class="md-primary">Save</md-button>
-                </md-dialog-actions>
             </md-dialog>
 
             <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
