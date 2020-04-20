@@ -101,14 +101,16 @@
 
             <md-dialog
                 :md-active.sync="showInputDialog"
-                @md-closed="closeInputDialog()"
+                @md-closed="saveInputDialog()"
+                @md-opened="autoFocusInputDialog()"
+                class="input-dialog"
                 :style="{
                     'background-color': inputDialogBackgroundColor,
                     color: inputDialogLabelColor,
                 }"
             >
-                <md-dialog-title>{{ inputDialogLabel }}</md-dialog-title>
-                <md-dialog-content>
+                <md-dialog-title v-show="inputDialogLabel">{{ inputDialogLabel }}</md-dialog-title>
+                <md-dialog-content class="input-dialog-content">
                     <md-field>
                         <label :style="{ color: inputDialogLabelColor }">{{
                             inputDialogPlaceholder
@@ -116,11 +118,12 @@
                         <md-input
                             v-model="inputDialogInputValue"
                             @keyup.enter="saveInputDialog()"
+                            ref="inputModalField"
                             style="-webkit-text-fill-color: inherit;"
                             :style="{ color: inputDialogLabelColor }"
                         ></md-input>
                     </md-field>
-                    <div v-if="inputDialogType === 'color'">
+                    <div class="input-dialog-color-tools" v-if="inputDialogType === 'color'">
                         <color-picker-swatches
                             v-if="inputDialogSubtype === 'swatch'"
                             :value="inputDialogInputValue"
@@ -143,12 +146,6 @@
                         ></color-picker-basic>
                     </div>
                 </md-dialog-content>
-                <md-dialog-actions>
-                    <md-button @click="closeInputDialog()" :style="{ color: inputDialogLabelColor }"
-                        >Cancel</md-button
-                    >
-                    <md-button @click="saveInputDialog()" class="md-primary">Save</md-button>
-                </md-dialog-actions>
             </md-dialog>
 
             <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>

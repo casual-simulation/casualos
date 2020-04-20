@@ -2,6 +2,20 @@
 
 ## V1.0.25
 
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved the `player.showInputForTag()` modal.
+        -   Removed the "Save" and "Cancel" buttons. The tag will be saved automatically.
+        -   Hid the modal title when none is provided in the options.
+        -   Made the text box in the modal auto-focus.
+        -   Made the show/hide animations happen quicker.
+
+## V1.0.25
+
 ### Date: 4/15/2020
 
 ### Changes:

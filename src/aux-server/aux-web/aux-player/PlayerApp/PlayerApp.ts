@@ -855,6 +855,20 @@ export default class PlayerApp extends Vue {
         }
     }
 
+    autoFocusInputDialog() {
+        // wait for the transition to finish
+        setTimeout(
+            () => {
+                const field = <Vue>this.$refs.inputModalField;
+                if (field) {
+                    field.$el.focus();
+                }
+            },
+            // 0.11 seconds (transition is 0.1 seconds)
+            1000 * 0.11
+        );
+    }
+
     async closeInputDialog() {
         if (this.showInputDialog) {
             await this._inputDialogSimulation.helper.action('onCloseInput', [
@@ -865,29 +879,27 @@ export default class PlayerApp extends Vue {
     }
 
     async saveInputDialog() {
-        if (this.showInputDialog) {
-            let value: any;
-            if (
-                this.inputDialogType === 'color' &&
-                typeof this.inputDialogInputValue === 'object'
-            ) {
-                value = this.inputDialogInputValue.hex;
-            } else {
-                value = this.inputDialogInputValue;
-            }
-            await this._inputDialogSimulation.helper.updateBot(
-                this._inputDialogTarget,
-                {
-                    tags: {
-                        [this.inputDialogInput]: value,
-                    },
-                }
-            );
-            await this._inputDialogSimulation.helper.action('onSaveInput', [
-                this._inputDialogTarget,
-            ]);
-            await this.closeInputDialog();
+        let value: any;
+        if (
+            this.inputDialogType === 'color' &&
+            typeof this.inputDialogInputValue === 'object'
+        ) {
+            value = this.inputDialogInputValue.hex;
+        } else {
+            value = this.inputDialogInputValue;
         }
+        await this._inputDialogSimulation.helper.updateBot(
+            this._inputDialogTarget,
+            {
+                tags: {
+                    [this.inputDialogInput]: value,
+                },
+            }
+        );
+        await this._inputDialogSimulation.helper.action('onSaveInput', [
+            this._inputDialogTarget,
+        ]);
+        await this.closeInputDialog();
     }
 
     private _updateColor(
@@ -911,7 +923,7 @@ export default class PlayerApp extends Vue {
         if (typeof options.title !== 'undefined') {
             this.inputDialogLabel = options.title;
         } else {
-            this.inputDialogLabel = tag;
+            this.inputDialogLabel = null; // tag;
         }
 
         if (typeof options.foregroundColor !== 'undefined') {
