@@ -319,8 +319,9 @@ export class AuxRuntime
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);
         } else if (action.type === 'async_result') {
-            // const actions =
             this._globalContext.resolveTask(action.taskId, action.result);
+        } else if (action.type === 'async_error') {
+            this._globalContext.rejectTask(action.taskId, action.error);
         } else {
             this._actionBatch.push(action);
         }
