@@ -19,6 +19,9 @@
         -   The function accepts two arguments:
             -   `value` is a string containing the value that should
             -   `options` is an object that takes the same properties that the options for `player.showInputForTag()` takes.
+    -   Added the ability to use the [`await` keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) in scripts.
+        -   `await` tells the system to wait for a promise to finish before continuing.
+        -   This makes it easier to write scripts which deal with tasks that take a while to complete.
     -   Improved Builder to support opening a single bot in a new tab and changed its hover label from "menu" to "|||".
 
 ## V1.0.25
