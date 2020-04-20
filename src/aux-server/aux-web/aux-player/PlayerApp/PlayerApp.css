@@ -144,3 +144,23 @@
 .user-info {
     display: flex;
 }
+
+.input-dialog-content {
+    padding-bottom: 0;
+}
+
+.input-dialog-content .md-field {
+    margin-bottom: 20px;
+}
+
+.input-dialog .md-dialog-title {
+    margin-bottom: 0;
+}
+
+.input-dialog-color-tools {
+    padding-bottom: 16px;
+}
+
+.input-dialog {
+    transition-duration: 0.1s, 0.1s;
+}
