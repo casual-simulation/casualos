@@ -885,9 +885,7 @@ export default class PlayerApp extends Vue {
         await this._inputDialogSimulation.helper.action('onSaveInput', [
             this._inputDialogTarget,
         ]);
-        if (this.showInputDialog) {
-            await this.closeInputDialog();
-        }
+        await this.closeInputDialog();
     }
 
     private _updateColor(
@@ -911,7 +909,7 @@ export default class PlayerApp extends Vue {
         if (typeof options.title !== 'undefined') {
             this.inputDialogLabel = options.title;
         } else {
-            this.inputDialogLabel = tag;
+            this.inputDialogLabel = null; // tag;
         }
 
         if (typeof options.foregroundColor !== 'undefined') {

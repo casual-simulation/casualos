@@ -102,13 +102,14 @@
             <md-dialog
                 :md-active.sync="showInputDialog"
                 @md-closed="saveInputDialog()"
+                class="input-dialog"
                 :style="{
                     'background-color': inputDialogBackgroundColor,
                     color: inputDialogLabelColor,
                 }"
             >
-                <md-dialog-title>{{ inputDialogLabel }}</md-dialog-title>
-                <md-dialog-content>
+                <md-dialog-title v-show="inputDialogLabel">{{ inputDialogLabel }}</md-dialog-title>
+                <md-dialog-content class="input-dialog-content">
                     <md-field>
                         <label :style="{ color: inputDialogLabelColor }">{{
                             inputDialogPlaceholder
@@ -120,7 +121,7 @@
                             :style="{ color: inputDialogLabelColor }"
                         ></md-input>
                     </md-field>
-                    <div v-if="inputDialogType === 'color'">
+                    <div class="input-dialog-color-tools" v-if="inputDialogType === 'color'">
                         <color-picker-swatches
                             v-if="inputDialogSubtype === 'swatch'"
                             :value="inputDialogInputValue"
