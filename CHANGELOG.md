@@ -13,6 +13,7 @@
         -   Hid the modal title when none is provided in the options.
         -   Made the text box in the modal auto-focus.
         -   Made the show/hide animations happen quicker.
+    -   Improved Builder to support opening a single bot in a new tab and changed its hover label from "menu" to "|||".
 
 ## V1.0.25
 
