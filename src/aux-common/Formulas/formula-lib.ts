@@ -1127,6 +1127,26 @@ function showInputForTag(
 }
 
 /**
+ * Shows an input box. Returns a promise that resolves with the new value.
+ *
+ * @param currentValue The value that the input box should be prefilled with.
+ * @param options The options that indicate how the input box should be customized.
+ *
+ * @example
+ * // Show an input box.
+ * const result = await player.showInput({
+ *    title: "Change the label",
+ *    type: "text"
+ * });
+ */
+function showInput(
+    currentValue?: any,
+    options?: Partial<ShowInputOptions>
+): Promise<any> {
+    return null;
+}
+
+/**
  * Shows a checkout screen that lets the user purchase something.
  *
  * @param options The options for the payment box.
@@ -2441,6 +2461,7 @@ const player = {
     getCurrentUniverse,
     getDimensionalDepth,
     showInputForTag,
+    showInput,
     checkout,
     replaceDragBot,
     setClipboard,

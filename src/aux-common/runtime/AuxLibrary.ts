@@ -1208,7 +1208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show an input box.
-     * player.showInputForTag({
+     * const result = await player.showInput({
      *    title: "Change the label",
      *    type: "text"
      * });
