@@ -1359,37 +1359,33 @@ The **third parameter** is optional and is the possible cusomization options for
 
 1. Show a basic text input modal and displays a toast message with the input value.
 ```typescript
-player.showInput().then(value => {
-    player.toast(value);
-});
+const value = await player.showInput();
+player.toast(value);
 ```
 
 2. Show a text input modal with a placeholder.
 ```typescript
-player.showInput(null, {
+const name = await player.showInput(null, {
     placeholder: 'Enter a name'
-}).then(name => {
-    player.toast(name);
 });
+player.toast(name);
 ```
 
 3. Show a input modal with a custom title.
 ```typescript
-player.showInput('My Name', {
+const name = await player.showInput('My Name', {
     title: 'Edit name'
-}).then(name => {
-    player.toast(name);
 });
+player.toast(name);
 ```
 
 4. Show a color input modal with a custom title.
 ```typescript
-player.showInput('green', {
+const color = await player.showInput('green', {
     type: 'color',
     title: 'Enter a custom color'
-}).then(name => {
-    player.toast(name);
 });
+player.toast(name);
 ```
 
 ### `player.showInputForTag(bot, tag, options?)`
