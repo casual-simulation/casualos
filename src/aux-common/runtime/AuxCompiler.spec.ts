@@ -271,5 +271,44 @@ describe('AuxCompiler', () => {
                 func();
             }).toThrow(new Error('abc'));
         });
+
+        it('should return an AsyncFunction when the script contains await', async () => {
+            const func = compiler.compile('return await abc;', {
+                variables: {
+                    abc: () => 100,
+                },
+            });
+
+            const AsyncFunction = (async () => {}).constructor;
+            expect(func).toBeInstanceOf(AsyncFunction);
+
+            const result = func();
+            expect(result).toBeInstanceOf(Promise);
+
+            const final = await result;
+            expect(final).toEqual(100);
+        });
+
+        it('should support wrapping the native promise with a global promise if theyre not the same', async () => {
+            const DefaultPromise = Promise;
+            try {
+                class CustomPromise {}
+                Promise = <any>CustomPromise;
+
+                const func = compiler.compile('return await abc;', {
+                    variables: {
+                        abc: () => 100,
+                    },
+                });
+
+                const AsyncFunction = (async () => {}).constructor;
+                expect(func).toBeInstanceOf(AsyncFunction);
+
+                const result = func();
+                expect(result).toBeInstanceOf(CustomPromise);
+            } finally {
+                Promise = DefaultPromise;
+            }
+        });
     });
 });

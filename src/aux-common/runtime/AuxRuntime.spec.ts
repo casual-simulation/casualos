@@ -1426,6 +1426,29 @@ describe('AuxRuntime', () => {
 
             expect(events.slice(1)).toEqual([[], [toast('abc')]]);
         });
+
+        it('should support using await for async actions', async () => {
+            runtime.process([
+                runScript(
+                    `const result = await player.showInput();
+                     player.toast(result);`
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [showInput(undefined, undefined, expect.any(Number))],
+            ]);
+
+            const taskId = (<any>events[0][0]).taskId as number;
+
+            runtime.process([asyncResult(taskId, 'abc')]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+        });
     });
 
     describe('execute()', () => {
