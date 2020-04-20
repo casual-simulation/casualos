@@ -8,7 +8,7 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 
-export type LocalActions = BotActions | ExtraActions;
+export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
  * Defines a union type for all the possible events that can be emitted from a bots channel.
@@ -17,6 +17,7 @@ export type BotAction =
     | BotActions
     | TransactionAction
     | ExtraActions
+    | AsyncActions
     | RemoteAction
     | DeviceAction;
 
@@ -84,6 +85,48 @@ export type ExtraActions =
     | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction;
+
+/**
+ * Defines a set of possible async action types.
+ */
+export type AsyncActions =
+    | AsyncResultAction
+    | AsyncErrorAction
+    | ShowInputAction;
+
+/**
+ * Defines an interface for actions that represent asynchronous tasks.
+ */
+export interface AsyncAction extends Action {
+    /**
+     * The ID of the async task.
+     */
+    taskId: number;
+}
+
+/**
+ * Defines an action that supplies a result for an AsyncRequestAction.
+ */
+export interface AsyncResultAction extends AsyncAction {
+    type: 'async_result';
+
+    /**
+     * The result value.
+     */
+    result: any;
+}
+
+/**
+ * Defines an action that supplies an error for an AsyncRequestAction.
+ */
+export interface AsyncErrorAction extends AsyncAction {
+    type: 'async_error';
+
+    /**
+     * The error.
+     */
+    error: any;
+}
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -732,6 +775,23 @@ export interface ShowInputForTagAction extends Action {
      * The tag that should be edited on the bot.
      */
     tag: string;
+
+    /**
+     * The options for the input box.
+     */
+    options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an event that is used to show an input box.
+ */
+export interface ShowInputAction extends AsyncAction {
+    type: 'show_input';
+
+    /**
+     * The value that should be in the input box.
+     */
+    currentValue?: any;
 
     /**
      * The options for the input box.
@@ -1528,6 +1588,25 @@ export function showInputForTag(
 }
 
 /**
+ * Creates a new ShowInputAction.
+ * @param currentValue The value that the input should be prefilled with.
+ * @param options The options for the input.
+ * @param taskId The ID of the async task.
+ */
+export function showInput(
+    currentValue?: any,
+    options?: Partial<ShowInputOptions>,
+    taskId?: number
+): ShowInputAction {
+    return {
+        type: 'show_input',
+        taskId,
+        currentValue,
+        options: options || {},
+    };
+}
+
+/**
  * Creates a new SetForcedOfflineAction event.
  * @param offline Whether the connection should be offline.
  */
@@ -1962,5 +2041,31 @@ export function localFormAnimation(
         type: 'local_form_animation',
         botId,
         animation,
+    };
+}
+
+/**
+ * Creates an action that resolves an async task with the given result.
+ * @param taskId The ID of the task.
+ * @param result The result.
+ */
+export function asyncResult(taskId: number, result: any): AsyncResultAction {
+    return {
+        type: 'async_result',
+        taskId,
+        result,
+    };
+}
+
+/**
+ * Creates an action that resolves an async task with the given error.
+ * @param taskId The ID of the task.
+ * @param error The error.
+ */
+export function asyncError(taskId: number, error: any): AsyncErrorAction {
+    return {
+        type: 'async_error',
+        taskId,
+        error,
     };
 }

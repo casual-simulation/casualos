@@ -67,6 +67,9 @@ import {
     BotSpace,
     ScriptError,
     StateUpdatedEvent,
+    showInput,
+    asyncResult,
+    asyncError,
 } from '../bots';
 import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
@@ -1378,6 +1381,50 @@ describe('AuxRuntime', () => {
                     device(<any>{}, runScript('player.toast("hi")')),
                 ],
             ]);
+        });
+
+        it('should support resolving async actions', async () => {
+            runtime.process([
+                runScript(
+                    'player.showInput().then(result => player.toast(result))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [showInput(undefined, undefined, expect.any(Number))],
+            ]);
+
+            const taskId = (<any>events[0][0]).taskId as number;
+
+            runtime.process([asyncResult(taskId, 'abc')]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+        });
+
+        it('should support rejecting async actions', async () => {
+            runtime.process([
+                runScript(
+                    'player.showInput().catch(result => player.toast(result))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [showInput(undefined, undefined, expect.any(Number))],
+            ]);
+
+            const taskId = (<any>events[0][0]).taskId as number;
+
+            runtime.process([asyncError(taskId, 'abc')]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
         });
     });
 

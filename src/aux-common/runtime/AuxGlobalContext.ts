@@ -101,6 +101,25 @@ export interface AuxGlobalContext {
      * @param bot The bot to destroy.
      */
     destroyBot(bot: RuntimeBot): void;
+
+    /**
+     * Creates a new task.
+     */
+    createTask(): AsyncTask;
+
+    /**
+     * Completes the task with the given task ID with the given result.
+     * @param taskId The ID of the task.
+     * @param result The result.
+     */
+    resolveTask(taskId: number, result: any): void;
+
+    /**
+     * Completes the task with the given task ID with the given error.
+     * @param taskId The ID of the task.
+     * @param error The error.
+     */
+    rejectTask(taskId: number, error: any): void;
 }
 
 /**
@@ -146,6 +165,31 @@ export interface AuxDevice {
      * Whether the device supports virtual reality features.
      */
     supportsVR: boolean;
+}
+
+/**
+ * Defines an interface for an asynchronous task.
+ */
+export interface AsyncTask {
+    /**
+     * The ID of the task.
+     */
+    taskId: number;
+
+    /**
+     * The promise that the task contains.
+     */
+    promise: Promise<any>;
+
+    /**
+     * The function that is used to resolve the task with a result.
+     */
+    resolve: (val: any) => void;
+
+    /**
+     * The function that is used to reject the task with an error.
+     */
+    reject: (err: any) => void;
 }
 
 /**
@@ -210,6 +254,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     errors: ScriptError[] = [];
 
     /**
+     * The map of task IDs to tasks.
+     */
+    tasks: Map<number, AsyncTask> = new Map();
+
+    /**
      * The version.
      */
     version: AuxVersion;
@@ -234,6 +283,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     energy: number = DEFAULT_ENERGY;
 
+    private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
 
     /**
@@ -326,5 +376,39 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             removeFromContext(this, bot);
         }
         this.enqueueAction(botRemoved(bot.id));
+    }
+
+    createTask(): AsyncTask {
+        let resolve: AsyncTask['resolve'];
+        let reject: AsyncTask['reject'];
+        let promise = new Promise((res, rej) => {
+            resolve = res;
+            reject = rej;
+        });
+        const task: AsyncTask = {
+            taskId: this._taskCounter += 1,
+            resolve: resolve,
+            reject: reject,
+            promise,
+        };
+
+        this.tasks.set(task.taskId, task);
+        return task;
+    }
+
+    resolveTask(taskId: number, result: any): void {
+        const task = this.tasks.get(taskId);
+        if (task) {
+            this.tasks.delete(taskId);
+            task.resolve(result);
+        }
+    }
+
+    rejectTask(taskId: number, error: any): void {
+        const task = this.tasks.get(taskId);
+        if (task) {
+            this.tasks.delete(taskId);
+            task.reject(error);
+        }
     }
 }

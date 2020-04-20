@@ -62,6 +62,7 @@ import {
     clearSpace,
     loadBots,
     localFormAnimation,
+    showInput,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2001,6 +2002,47 @@ describe('AuxLibrary', () => {
                         foregroundColor: 'green',
                     }),
                 ]);
+            });
+        });
+
+        describe('player.showInput()', () => {
+            it('should emit a ShowInputAction', () => {
+                const promise: any = library.api.player.showInput();
+                const expected = showInput(
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing the current value', () => {
+                const promise: any = library.api.player.showInput('abc');
+                const expected = showInput(
+                    'abc',
+                    undefined,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing extra options', () => {
+                const promise: any = library.api.player.showInput('abc', {
+                    backgroundColor: 'red',
+                    foregroundColor: 'green',
+                });
+                const expected = showInput(
+                    'abc',
+                    {
+                        backgroundColor: 'red',
+                        foregroundColor: 'green',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
