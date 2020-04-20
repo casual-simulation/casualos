@@ -160,3 +160,7 @@
 .input-dialog-color-tools {
     padding-bottom: 16px;
 }
+
+.input-dialog {
+    transition-duration: 0.1s, 0.1s;
+}

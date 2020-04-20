@@ -864,8 +864,8 @@ export default class PlayerApp extends Vue {
                     field.$el.focus();
                 }
             },
-            // 0.36 seconds (transition is 0.35 seconds)
-            1000 * 0.36
+            // 0.11 seconds (transition is 0.1 seconds)
+            1000 * 0.11
         );
     }
 
