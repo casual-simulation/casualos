@@ -25,7 +25,6 @@ import {
     getBotSpace,
     getBotTag,
     goToDimension,
-    simulationIdToString,
     BotTags,
     tweenTo,
 } from '@casual-simulation/aux-common';

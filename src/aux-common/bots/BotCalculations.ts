@@ -1996,20 +1996,21 @@ export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {
-    let str = '';
     if (id.host) {
-        str += `${id.host}/*/`;
+        let str = id.host;
+        if (id.channel) {
+            str += `?auxUniverse=${encodeURIComponent(id.channel)}`;
+        }
+        return str;
     }
-    if (id.channel) {
-        str += `${id.channel}`;
-    }
-    return str;
+
+    return id.channel;
 }
 
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.pathname.slice(1);
+        const channel = uri.searchParams.get('auxUniverse');
         if (channel) {
             return {
                 success: true,
@@ -2023,29 +2024,10 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             };
         }
     } catch (ex) {
-        const split = id.split('/');
-        if (split.length === 1) {
-            return {
-                success: true,
-                channel: id,
-            };
-        } else {
-            const firstSlashIndex = id.indexOf('/');
-            const firstDotIndex = id.indexOf('.');
-
-            if (firstDotIndex >= 0 && firstDotIndex < firstSlashIndex) {
-                return {
-                    success: true,
-                    host: split[0],
-                    channel: split.slice(1).join('/'),
-                };
-            } else {
-                return {
-                    success: true,
-                    channel: id,
-                };
-            }
-        }
+        return {
+            success: true,
+            channel: id,
+        };
     }
 }
 
