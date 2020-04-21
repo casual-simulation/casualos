@@ -788,7 +788,6 @@ export class Server {
 function getServerUser(): AuxUser {
     return {
         id: 'server',
-        isGuest: false,
         name: 'Server',
         username: 'Server',
         token: 'server-tokenbc',
@@ -798,7 +797,6 @@ function getServerUser(): AuxUser {
 function getCheckoutUser(): AuxUser {
     return {
         id: 'server-checkout',
-        isGuest: false,
         name: 'Server',
         username: 'Server',
         token: 'server-checkout-token',
@@ -808,7 +806,6 @@ function getCheckoutUser(): AuxUser {
 function getBackupUser(): AuxUser {
     return {
         id: 'server-backup',
-        isGuest: false,
         name: 'Server',
         username: 'Server',
         token: 'server-backup-token',
@@ -818,7 +815,6 @@ function getBackupUser(): AuxUser {
 function getSetupChannelUser(): AuxUser {
     return {
         id: 'server-setup-channel',
-        isGuest: false,
         name: 'Server',
         username: 'Server',
         token: 'server-setup-channel-token',
@@ -828,7 +824,6 @@ function getSetupChannelUser(): AuxUser {
 function getWebhooksUser(): AuxUser {
     return {
         id: 'server-webhooks',
-        isGuest: false,
         name: 'Server',
         username: 'Server',
         token: 'server-webhooks-token',

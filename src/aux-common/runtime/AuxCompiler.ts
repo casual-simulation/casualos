@@ -23,7 +23,7 @@ export class AuxCompiler {
         script: string,
         options?: AuxCompileOptions<T>
     ): AuxCompiledScript {
-        let { func, scriptLineOffset } = this._compileFunction(
+        let { func, scriptLineOffset, async } = this._compileFunction(
             script,
             options || {}
         );
@@ -39,7 +39,8 @@ export class AuxCompiler {
                 options.before ||
                 options.after ||
                 options.onError ||
-                options.invoke
+                options.invoke ||
+                async
             ) {
                 const before = options.before || (() => {});
                 const after = options.after || (() => {});
@@ -56,16 +57,35 @@ export class AuxCompiler {
                     ? (...args: any[]) =>
                           invoke(() => scriptFunc(...args), context)
                     : scriptFunc;
-                func = function(...args: any[]) {
-                    before(context);
-                    try {
-                        return finalFunc(...args);
-                    } catch (ex) {
-                        onError(ex, context, meta);
-                    } finally {
-                        after(context);
-                    }
-                };
+                if (async) {
+                    func = function(...args: any[]) {
+                        before(context);
+                        try {
+                            const result = finalFunc(...args);
+                            if (!(result instanceof Promise)) {
+                                return new Promise((resolve, reject) => {
+                                    result.then(resolve, reject);
+                                });
+                            }
+                            return result;
+                        } catch (ex) {
+                            onError(ex, context, meta);
+                        } finally {
+                            after(context);
+                        }
+                    };
+                } else {
+                    func = function(...args: any[]) {
+                        before(context);
+                        try {
+                            return finalFunc(...args);
+                        } catch (ex) {
+                            onError(ex, context, meta);
+                        } finally {
+                            after(context);
+                        }
+                    };
+                }
             }
         }
 
@@ -119,6 +139,7 @@ export class AuxCompiler {
     ): {
         func: Function;
         scriptLineOffset: number;
+        async: boolean;
     } {
         // Yes this code is super ugly.
         // Some day we will engineer this into a real
@@ -126,11 +147,15 @@ export class AuxCompiler {
         // seems to work.
 
         let formula = false;
+        let async = false;
         if (isFormula(script)) {
             script = script.substring(1);
             formula = true;
         } else if (isScript(script)) {
             script = parseScript(script);
+        }
+        if (script.indexOf('await ') >= 0) {
+            async = true;
         }
         script = this._parseScript(script);
         let scriptLineOffset = 0;
@@ -179,7 +204,10 @@ export class AuxCompiler {
 
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
-        const functionCode = `function _(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
+        let functionCode = `function _(...args) { ${argumentsCode}${variablesCode}${scriptCode}\n }`;
+        if (async) {
+            functionCode = `async ` + functionCode;
+        }
         const transpiled = formula
             ? functionCode
             : this._transpiler.transpile(functionCode);
@@ -205,7 +233,7 @@ export class AuxCompiler {
             }
         }
 
-        return { func, scriptLineOffset };
+        return { func, scriptLineOffset, async };
     }
 }
 

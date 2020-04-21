@@ -73,7 +73,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
     }
 
-    constructor(user: AuxUser, id: string, config: AuxConfig['config']) {
+    constructor(
+        user: AuxUser,
+        id: string,
+        config: AuxConfig['config'],
+        defaultHost: string = location.origin
+    ) {
         super(
             id,
             config,
@@ -87,7 +92,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
-            const host = getFinalUrl(location.origin, parsedId.host);
+            const host = getFinalUrl(defaultHost, parsedId.host);
             return {
                 shared: {
                     type: 'remote_causal_repo',

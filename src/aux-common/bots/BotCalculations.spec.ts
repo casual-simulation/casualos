@@ -1109,67 +1109,55 @@ describe('BotCalculations', () => {
             });
         });
 
-        it('should fill in the dimension', () => {
+        it('should not fill in the dimension', () => {
             let result = parseSimulationId('abc/def');
             expect(result).toEqual({
                 success: true,
-                dimension: 'abc',
-                channel: 'def',
+                channel: 'abc/def',
             });
 
             result = parseSimulationId('!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                dimension: '!@#$%',
-                channel: '@@a*987',
+                channel: '!@#$%/@@a*987',
             });
 
             result = parseSimulationId('abc/def/ghi/');
             expect(result).toEqual({
                 success: true,
-                dimension: 'abc',
-                channel: 'def/ghi/',
+                channel: 'abc/def/ghi/',
             });
 
             result = parseSimulationId('abc/def/ghi/.hello');
             expect(result).toEqual({
                 success: true,
-                dimension: 'abc',
-                channel: 'def/ghi/.hello',
+                channel: 'abc/def/ghi/.hello',
             });
         });
 
-        it('should fill in the host', () => {
+        it('should not fill in the host when given an incomplete URL', () => {
             let result = parseSimulationId('auxplayer.com/abc/def');
             expect(result).toEqual({
                 success: true,
-                host: 'auxplayer.com',
-                dimension: 'abc',
-                channel: 'def',
+                channel: 'auxplayer.com/abc/def',
             });
 
             result = parseSimulationId('abc.test.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                host: 'abc.test.local',
-                dimension: '!@#$%',
-                channel: '@@a*987',
+                channel: 'abc.test.local/!@#$%/@@a*987',
             });
 
             result = parseSimulationId('.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                host: '.local',
-                dimension: '!@#$%',
-                channel: '@@a*987',
+                channel: '.local/!@#$%/@@a*987',
             });
 
             result = parseSimulationId('.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                host: '.local',
-                dimension: '!@#$%',
-                channel: '@@a*987',
+                channel: '.local/!@#$%/@@a*987',
             });
         });
 
@@ -1177,67 +1165,29 @@ describe('BotCalculations', () => {
             let result = parseSimulationId('https://example.com');
             expect(result).toEqual({
                 success: true,
-                host: 'example.com',
+                host: 'https://example.com',
             });
 
             result = parseSimulationId('https://example.com/sim');
             expect(result).toEqual({
                 success: true,
-                host: 'example.com',
-                dimension: 'sim',
+                host: 'https://example.com',
             });
 
-            result = parseSimulationId('https://example.com/sim/dimension');
+            result = parseSimulationId('https://example.com?auxUniverse=sim');
             expect(result).toEqual({
                 success: true,
-                host: 'example.com',
-                dimension: 'sim',
-                channel: 'dimension',
+                host: 'https://example.com',
+                channel: 'sim',
             });
 
             result = parseSimulationId(
-                'https://example.com:3000/sim/dimension'
+                'https://example.com:3000?auxUniverse=sim/dimension'
             );
             expect(result).toEqual({
                 success: true,
-                host: 'example.com:3000',
-                dimension: 'sim',
-                channel: 'dimension',
-            });
-        });
-
-        it('should handle *s in front of the dimension value', () => {
-            let result = parseSimulationId('*abc/def');
-            expect(result).toEqual({
-                success: true,
-                dimension: 'abc',
-                dimensionVisualizer: '*',
-                channel: 'def',
-            });
-
-            result = parseSimulationId('**abc/def');
-            expect(result).toEqual({
-                success: true,
-                dimension: '*abc',
-                dimensionVisualizer: '*',
-                channel: 'def',
-            });
-
-            result = parseSimulationId('**abc/def/ghi');
-            expect(result).toEqual({
-                success: true,
-                dimension: '*abc',
-                dimensionVisualizer: '*',
-                channel: 'def/ghi',
-            });
-        });
-
-        it('should set dimension to undefined when it is just a *', () => {
-            let result = parseSimulationId('*/def');
-            expect(result).toEqual({
-                success: true,
-                channel: 'def',
-                dimensionVisualizer: '*',
+                host: 'https://example.com:3000',
+                channel: 'sim/dimension',
             });
         });
     });
@@ -1256,7 +1206,6 @@ describe('BotCalculations', () => {
             const id: SimulationIdParseSuccess = {
                 success: true,
                 channel: 'test',
-                dimension: 'abc',
             };
 
             expect(simulationIdToString(id)).toBe('test');
@@ -1265,12 +1214,24 @@ describe('BotCalculations', () => {
         it('should encode the host', () => {
             const id: SimulationIdParseSuccess = {
                 success: true,
-                host: 'example.com',
-                channel: 'test',
-                dimension: 'abc',
+                host: 'https://example.com',
+                channel: 'test/abc',
             };
 
-            expect(simulationIdToString(id)).toBe('example.com/*/test');
+            expect(simulationIdToString(id)).toBe(
+                `https://example.com?auxUniverse=${encodeURIComponent(
+                    'test/abc'
+                )}`
+            );
+        });
+
+        it('should support the host without a channel', () => {
+            const id: SimulationIdParseSuccess = {
+                success: true,
+                host: 'https://example.com',
+            };
+
+            expect(simulationIdToString(id)).toBe(`https://example.com`);
         });
     });
 

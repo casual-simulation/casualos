@@ -16,8 +16,6 @@ export interface AuxConfig {
 }
 
 export interface AuxConfigParameters {
-    isBuilder: boolean;
-    isPlayer: boolean;
     version: string;
     versionHash: string;
     builder?: string;
@@ -35,10 +33,7 @@ export function buildFormulaLibraryOptions(
         return null;
     }
     let options: FormulaLibraryOptions = {
-        config: {
-            isBuilder: config.isBuilder,
-            isPlayer: config.isPlayer,
-        },
+        config: {},
         version: buildVersionNumber(config),
     };
 

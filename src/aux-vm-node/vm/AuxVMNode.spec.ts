@@ -30,8 +30,6 @@ describe('AuxVMNode', () => {
 
         config = {
             config: {
-                isBuilder: false,
-                isPlayer: false,
                 versionHash: 'abc',
                 version: 'v1.0.0',
             },
@@ -44,7 +42,6 @@ describe('AuxVMNode', () => {
         };
         user = {
             id: 'server',
-            isGuest: false,
             name: 'Server',
             token: 'token',
             username: 'server',

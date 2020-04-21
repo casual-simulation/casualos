@@ -9,6 +9,7 @@ import {
 } from './test/TestScriptBotFactory';
 import { RanOutOfEnergyError, createBot, botAdded, botRemoved } from '../bots';
 import { RealtimeEditMode } from './RuntimeBot';
+import { waitAsync } from '../test/TestHelpers';
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
@@ -135,6 +136,50 @@ describe('AuxGlobalContext', () => {
             expect(() => {
                 context.enqueueError(err);
             }).toThrow(err);
+        });
+    });
+
+    describe('createTask()', () => {
+        it('should increment task IDs', () => {
+            const t1 = context.createTask();
+            const t2 = context.createTask();
+            const t3 = context.createTask();
+
+            expect(t1.taskId).toBe(1);
+            expect(t2.taskId).toBe(2);
+            expect(t3.taskId).toBe(3);
+        });
+    });
+
+    describe('resolveTask()', () => {
+        it('should be able to resolve a created task', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask();
+            t1.promise.then(fn);
+
+            context.resolveTask(t1.taskId, 'abc');
+            context.resolveTask(t1.taskId, 'def');
+
+            await waitAsync();
+
+            expect(fn).toBeCalledWith('abc');
+            expect(fn).not.toBeCalledWith('def');
+        });
+    });
+
+    describe('rejectTask()', () => {
+        it('should be able to reject a created task', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask();
+            t1.promise.catch(fn);
+
+            context.rejectTask(t1.taskId, 'abc');
+            context.rejectTask(t1.taskId, 'def');
+
+            await waitAsync();
+
+            expect(fn).toBeCalledWith('abc');
+            expect(fn).not.toBeCalledWith('def');
         });
     });
 });

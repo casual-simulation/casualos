@@ -36,15 +36,12 @@ describe('FilesModule2', () => {
 
         user = {
             id: 'userId',
-            isGuest: false,
             name: 'User Name',
             username: 'username',
             token: 'token',
         };
         config = {
             config: {
-                isBuilder: false,
-                isPlayer: false,
                 versionHash: 'abc',
                 version: 'v1.0.0',
             },

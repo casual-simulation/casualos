@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as process from 'process';
 import { Config } from './config';
-import projectorConfig from './projector.config';
 import playerConfig from './player.config';
 
 const redisHost = process.env.REDIS_HOST;

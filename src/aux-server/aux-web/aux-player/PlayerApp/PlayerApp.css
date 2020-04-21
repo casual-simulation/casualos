@@ -119,14 +119,6 @@
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
 
-.color-picker-advanced {
-    margin: auto;
-}
-
-.color-picker-basic.vc-compact {
-    width: 245px;
-}
-
 .username-label {
     flex: 1;
 }

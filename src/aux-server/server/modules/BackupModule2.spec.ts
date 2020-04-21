@@ -58,14 +58,12 @@ describe('BackupModule2', () => {
     beforeEach(async () => {
         user = {
             id: 'userId',
-            isGuest: false,
             name: 'User Name',
             username: 'username',
             token: 'token',
         };
         deviceUser = {
             id: 'deviceId',
-            isGuest: false,
             name: 'Device',
             username: 'username',
             token: 'sessionId',
@@ -81,7 +79,6 @@ describe('BackupModule2', () => {
 
         serverUser = {
             id: 'server',
-            isGuest: false,
             name: 'Server',
             username: 'server',
             token: 'server',
@@ -90,7 +87,6 @@ describe('BackupModule2', () => {
 
         testUser = {
             id: 'processing',
-            isGuest: false,
             name: 'Processing',
             username: 'processing',
             token: 'processing',
