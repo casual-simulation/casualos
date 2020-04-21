@@ -42,8 +42,6 @@ describe('NodeAuxChannel', () => {
             },
             {
                 config: {
-                    isBuilder: false,
-                    isPlayer: false,
                     versionHash: 'abc',
                     version: 'v1.0.0',
                 },

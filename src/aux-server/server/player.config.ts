@@ -4,7 +4,6 @@ import * as process from 'process';
 const config: ClientConfig = {
     index: 'player.html',
     web: {
-        isBuilder: false,
         isPlayer: true,
         sentryDsn: process.env.SENTRY_DSN,
         version: null,

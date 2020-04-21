@@ -92,8 +92,6 @@ export class AppManager {
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new BotManager(this._user, id, {
-                isBuilder: this._config.isBuilder,
-                isPlayer: this._config.isPlayer,
                 version: this.version.latestTaggedVersion,
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
