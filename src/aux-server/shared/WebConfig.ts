@@ -3,16 +3,6 @@
  */
 export interface WebConfig {
     /**
-     * Whether the client currently represents an AUX Builder.
-     */
-    isBuilder: boolean;
-
-    /**
-     * Whether the client currently represents an AUX Player.
-     */
-    isPlayer: boolean;
-
-    /**
      * The Sentry DSN that should be used to report errors.
      */
     sentryDsn: string;

@@ -43,7 +43,6 @@ describe('BaseAuxChannel', () => {
         user = {
             id: 'userId',
             username: 'username',
-            isGuest: false,
             name: 'name',
             token: 'token',
         };
@@ -58,8 +57,6 @@ describe('BaseAuxChannel', () => {
         memory = createMemoryPartition({ type: 'memory', initialState: {} });
         config = {
             config: {
-                isBuilder: false,
-                isPlayer: false,
                 version: 'v1.0.0',
                 versionHash: 'hash',
             },
@@ -236,8 +233,6 @@ describe('BaseAuxChannel', () => {
         it('should error if unable to construct a partition', async () => {
             config = {
                 config: {
-                    isBuilder: false,
-                    isPlayer: false,
                     version: 'v1.0.0',
                     versionHash: 'hash',
                 },
@@ -407,8 +402,6 @@ describe('BaseAuxChannel', () => {
         beforeEach(async () => {
             config = {
                 config: {
-                    isBuilder: false,
-                    isPlayer: false,
                     version: 'v1.0.0',
                     versionHash: 'hash',
                 },

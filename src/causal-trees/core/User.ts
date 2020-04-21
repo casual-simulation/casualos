@@ -10,5 +10,4 @@ export interface DeviceToken {
     username: string;
     token: string;
     grant?: string;
-    isGuest?: boolean;
 }

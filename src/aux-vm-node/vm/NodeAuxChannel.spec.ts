@@ -28,7 +28,6 @@ describe('NodeAuxChannel', () => {
         return (channel = new NodeAuxChannel(
             {
                 id: 'server',
-                isGuest: false,
                 name: 'Server',
                 token: 'token',
                 username: 'server',
@@ -43,8 +42,6 @@ describe('NodeAuxChannel', () => {
             },
             {
                 config: {
-                    isBuilder: false,
-                    isPlayer: false,
                     versionHash: 'abc',
                     version: 'v1.0.0',
                 },

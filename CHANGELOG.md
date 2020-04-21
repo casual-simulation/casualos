@@ -6,7 +6,18 @@
 
 ### Changes:
 
--   :rocket: Improvements
+-   :boom: Breaking Changes
+
+    -   Changed how universes from other auxPlayers are specified.
+        -   This affects the `player.loadUniverse()` function and the `BotManager` API.
+        -   Previously, you could load a universe from a different auxPlayer by using a universe ID like:
+            -   `otherAuxPlayer.com/*/universeToLoad`
+        -   Now, you can load a universe by simply using its full URL. Like this:
+            -   `https://otherAuxPlayer.com?auxUniverse=universeToLoad`
+        -   Note that this does not affect loading universes from the same auxPlayer. If you pass a universe ID that is not a URL then it will load that particular universe from same auxPlayer.
+            -   e.g. `player.loadUniverse("myUniverse")`
+
+*   :rocket: Improvements
 
     -   Improved the `player.showInputForTag()` modal.
         -   Removed the "Save" and "Cancel" buttons. The tag will be saved automatically.
@@ -23,6 +34,10 @@
         -   `await` tells the system to wait for a promise to finish before continuing.
         -   This makes it easier to write scripts which deal with tasks that take a while to complete.
     -   Improved Builder to support opening a single bot in a new tab and changed its hover label from "menu" to "|||".
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where it was impossible to load an AUX over HTTPS from a UI that was loaded over HTTP.
 
 ## V1.0.25
 

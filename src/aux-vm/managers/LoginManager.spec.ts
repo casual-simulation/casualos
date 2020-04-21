@@ -268,7 +268,6 @@ describe('LoginManager', () => {
         it('should pipe the call to the VM', async () => {
             const user: AuxUser = {
                 id: 'test',
-                isGuest: true,
                 name: 'name',
                 token: 'token',
                 username: 'username',

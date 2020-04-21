@@ -92,8 +92,6 @@ export class AppManager {
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new BotManager(this._user, id, {
-                isBuilder: this._config.isBuilder,
-                isPlayer: this._config.isPlayer,
                 version: this.version.latestTaggedVersion,
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
@@ -489,7 +487,7 @@ export class AppManager {
     }
 
     getUsers(): Promise<AuxUser[]> {
-        return this._db.users.toCollection().sortBy('isGuest');
+        return this._db.users.toCollection().toArray();
     }
 
     getUser(username: string): Promise<AuxUser> {
@@ -555,13 +553,11 @@ export class AppManager {
             username: username,
             name: username,
             token: this._generateRandomKey(),
-            isGuest: false,
             id: uuid(),
         };
 
         if (user.name.includes('guest_')) {
             user.name = 'Guest';
-            user.isGuest = true;
         }
 
         return user;

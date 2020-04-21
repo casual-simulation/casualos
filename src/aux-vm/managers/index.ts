@@ -10,3 +10,4 @@ export * from './ProgressManager';
 export * from './BotDimensionManager';
 
 export * from './BaseSimulation';
+export * from './SimulationHelpers';

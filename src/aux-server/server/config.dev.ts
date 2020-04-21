@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { Config } from './config';
-import projectorConfig from './projector.config';
 import playerConfig from './player.config';
 
 const config: Config = {

@@ -4,17 +4,12 @@ describe('AuxConfig', () => {
     describe('buildFormulaLibraryOptions()', () => {
         it('should produce a formula lib config', () => {
             const config = buildFormulaLibraryOptions({
-                isBuilder: true,
-                isPlayer: true,
                 version: 'v1.0.0',
                 versionHash: 'abc',
             });
 
             expect(config).toEqual({
-                config: {
-                    isBuilder: true,
-                    isPlayer: true,
-                },
+                config: {},
                 version: {
                     version: 'v1.0.0',
                     major: 1,
@@ -27,8 +22,6 @@ describe('AuxConfig', () => {
 
         it('should include device info if specified', () => {
             const config = buildFormulaLibraryOptions({
-                isBuilder: true,
-                isPlayer: true,
                 version: 'v1.0.0',
                 versionHash: 'abc',
                 device: {
@@ -38,10 +31,7 @@ describe('AuxConfig', () => {
             });
 
             expect(config).toEqual({
-                config: {
-                    isBuilder: true,
-                    isPlayer: true,
-                },
+                config: {},
                 version: {
                     version: 'v1.0.0',
                     major: 1,

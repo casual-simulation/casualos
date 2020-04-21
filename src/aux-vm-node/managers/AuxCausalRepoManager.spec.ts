@@ -47,7 +47,6 @@ describe('AuxCausalRepoManager', () => {
         manager = new AuxCausalRepoManager(
             {
                 id: 'server',
-                isGuest: false,
                 name: 'Server',
                 username: 'server',
                 token: 'token',

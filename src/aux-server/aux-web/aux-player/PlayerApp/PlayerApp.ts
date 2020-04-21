@@ -17,7 +17,6 @@ import {
     getBotChannel,
     calculateDestroyBotEvents,
     merge,
-    simulationIdToString,
     BotCalculationContext,
     calculateBotValue,
     calculateFormattedBotValue,

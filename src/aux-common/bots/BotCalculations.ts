@@ -92,8 +92,6 @@ export interface SimulationIdParseSuccess {
     success: true;
     channel?: string;
     host?: string;
-    dimension?: string;
-    dimensionVisualizer?: string;
 }
 
 export const POSSIBLE_DIMENSION_VISUALIZERS = ['*'] as const;
@@ -1998,89 +1996,39 @@ export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {
-    let str = '';
     if (id.host) {
-        str += `${id.host}/*/`;
+        let str = id.host;
+        if (id.channel) {
+            str += `?auxUniverse=${encodeURIComponent(id.channel)}`;
+        }
+        return str;
     }
-    if (id.channel) {
-        str += `${id.channel}`;
-    }
-    return str;
+
+    return id.channel;
 }
 
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const split = uri.pathname.slice(1).split('/');
-        if (split.length === 1) {
-            if (split[0]) {
-                return {
-                    success: true,
-                    host: uri.host,
-                    ...parseDimension(split[0]),
-                };
-            } else {
-                return {
-                    success: true,
-                    host: uri.host,
-                };
-            }
+        const channel = uri.searchParams.get('auxUniverse');
+        if (channel) {
+            return {
+                success: true,
+                host: `${uri.protocol}//${uri.host}`,
+                channel,
+            };
         } else {
             return {
                 success: true,
-                host: uri.host,
-                ...parseDimension(split[0]),
-                channel: split.slice(1).join('/'),
+                host: `${uri.protocol}//${uri.host}`,
             };
         }
     } catch (ex) {
-        const split = id.split('/');
-        if (split.length === 1) {
-            return {
-                success: true,
-                channel: id,
-            };
-        } else {
-            const firstSlashIndex = id.indexOf('/');
-            const firstDotIndex = id.indexOf('.');
-
-            if (firstDotIndex >= 0 && firstDotIndex < firstSlashIndex) {
-                return {
-                    success: true,
-                    host: split[0],
-                    ...parseDimension(split[1]),
-                    channel: split.slice(2).join('/'),
-                };
-            } else {
-                return {
-                    success: true,
-                    ...parseDimension(split[0]),
-                    channel: split.slice(1).join('/'),
-                };
-            }
-        }
+        return {
+            success: true,
+            channel: id,
+        };
     }
-}
-
-function parseDimension(dimension: string): Partial<SimulationIdParseSuccess> {
-    if (dimension) {
-        for (let prefix of POSSIBLE_DIMENSION_VISUALIZERS) {
-            if (dimension === prefix) {
-                return {
-                    dimensionVisualizer: prefix,
-                };
-            } else if (dimension.startsWith(prefix)) {
-                let sub = dimension.substring(prefix.length);
-                return {
-                    dimension: sub,
-                    dimensionVisualizer: prefix,
-                };
-            }
-        }
-    }
-    return {
-        dimension,
-    };
 }
 
 /**

@@ -35,7 +35,7 @@ export default class LoginPopup extends Vue {
     async visibleChanged() {
         this._reset();
         if (this.show) {
-            this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
+            this.users = await appManager.getUsers();
         }
     }
 
