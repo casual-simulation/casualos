@@ -1,4 +1,4 @@
-import { AuxGlobalContext } from './AuxGlobalContext';
+import { AuxGlobalContext, AsyncTask } from './AuxGlobalContext';
 import {
     hasValue,
     trimTag,
@@ -29,6 +29,7 @@ import {
     showBarcode as calcShowBarcode,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
+    showInput as calcShowInput,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -77,6 +78,9 @@ import {
     DESTROY_ACTION_NAME,
     RanOutOfEnergyError,
     LocalFormAnimationAction,
+    AsyncAction,
+    ORIGINAL_OBJECT,
+    AsyncActions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -325,6 +329,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
+                showInput,
                 goToDimension,
                 goToURL,
                 openURL,
@@ -1193,6 +1198,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const id = typeof bot === 'string' ? bot : bot.id;
         const event = calcShowInputForTag(id, trimTag(tag), options);
         return addAction(event);
+    }
+
+    /**
+     * Shows an input box. Returns a promise that resolves with the new value.
+     *
+     * @param currentValue The value that the input box should be prefilled with.
+     * @param options The options that indicate how the input box should be customized.
+     *
+     * @example
+     * // Show an input box.
+     * const result = await player.showInput({
+     *    title: "Change the label",
+     *    type: "text"
+     * });
+     */
+    function showInput(
+        currentValue?: any,
+        options?: Partial<ShowInputOptions>
+    ) {
+        const task = context.createTask();
+        const event = calcShowInput(currentValue, options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -2150,6 +2177,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function addAction<T extends BotAction>(action: T) {
         context.enqueueAction(action);
         return action;
+    }
+
+    function addAsyncAction<T extends AsyncActions>(
+        task: AsyncTask,
+        action: T
+    ) {
+        addAction(action);
+        let promise = task.promise;
+        (<any>promise)[ORIGINAL_OBJECT] = action;
+        return promise;
     }
 
     function getDownloadState(state: BotsState) {

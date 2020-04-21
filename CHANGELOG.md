@@ -13,6 +13,15 @@
         -   Hid the modal title when none is provided in the options.
         -   Made the text box in the modal auto-focus.
         -   Made the show/hide animations happen quicker.
+    -   Added the `player.showInput(value, options)` function.
+        -   Shows an input modal but without requiring a bot and a tag.
+        -   Returns a [Promise](https://web.dev/promises/) that resolves with the final value when the input modal is closed.
+        -   The function accepts two arguments:
+            -   `value` is a string containing the value that should
+            -   `options` is an object that takes the same properties that the options for `player.showInputForTag()` takes.
+    -   Added the ability to use the [`await` keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) in scripts.
+        -   `await` tells the system to wait for a promise to finish before continuing.
+        -   This makes it easier to write scripts which deal with tasks that take a while to complete.
     -   Improved Builder to support opening a single bot in a new tab and changed its hover label from "menu" to "|||".
 
 ## V1.0.25
