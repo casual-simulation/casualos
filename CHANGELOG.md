@@ -35,7 +35,7 @@
         -   This makes it easier to write scripts which deal with tasks that take a while to complete.
     -   Improved Builder to support opening a single bot in a new tab and changed its hover label from "menu" to "|||".
 
-*   :bug: Bug Fixes
+-   :bug: Bug Fixes
 
     -   Fixed an issue where it was impossible to load an AUX over HTTPS from a UI that was loaded over HTTP.
 
