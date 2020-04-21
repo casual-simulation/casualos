@@ -36,7 +36,6 @@ describe('FilesModule2', () => {
 
         user = {
             id: 'userId',
-            isGuest: false,
             name: 'User Name',
             username: 'username',
             token: 'token',

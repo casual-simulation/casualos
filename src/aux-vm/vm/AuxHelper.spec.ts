@@ -1184,7 +1184,6 @@ describe('AuxHelper', () => {
                     id: 'testUser',
                     username: 'username',
                     name: 'test',
-                    isGuest: false,
                     token: 'abc',
                 },
                 null
@@ -1220,7 +1219,6 @@ describe('AuxHelper', () => {
                     id: 'testUser',
                     username: 'username',
                     name: 'test',
-                    isGuest: false,
                     token: 'abc',
                 },
                 null

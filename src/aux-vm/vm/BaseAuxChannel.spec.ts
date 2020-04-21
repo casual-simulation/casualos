@@ -43,7 +43,6 @@ describe('BaseAuxChannel', () => {
         user = {
             id: 'userId',
             username: 'username',
-            isGuest: false,
             name: 'name',
             token: 'token',
         };

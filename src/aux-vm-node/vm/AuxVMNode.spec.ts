@@ -44,7 +44,6 @@ describe('AuxVMNode', () => {
         };
         user = {
             id: 'server',
-            isGuest: false,
             name: 'Server',
             token: 'token',
             username: 'server',

@@ -28,7 +28,6 @@ describe('NodeAuxChannel', () => {
         return (channel = new NodeAuxChannel(
             {
                 id: 'server',
-                isGuest: false,
                 name: 'Server',
                 token: 'token',
                 username: 'server',

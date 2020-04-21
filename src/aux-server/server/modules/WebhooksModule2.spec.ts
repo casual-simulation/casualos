@@ -26,7 +26,6 @@ describe('WebhooksModule2', () => {
     beforeEach(async () => {
         user = {
             id: 'userId',
-            isGuest: false,
             name: 'User Name',
             username: 'username',
             token: 'token',
