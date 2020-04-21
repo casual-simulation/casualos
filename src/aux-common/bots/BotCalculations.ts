@@ -92,8 +92,6 @@ export interface SimulationIdParseSuccess {
     success: true;
     channel?: string;
     host?: string;
-    dimension?: string;
-    dimensionVisualizer?: string;
 }
 
 export const POSSIBLE_DIMENSION_VISUALIZERS = ['*'] as const;
@@ -2011,26 +2009,17 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const split = uri.pathname.slice(1).split('/');
-        if (split.length === 1) {
-            if (split[0]) {
-                return {
-                    success: true,
-                    host: uri.host,
-                    ...parseDimension(split[0]),
-                };
-            } else {
-                return {
-                    success: true,
-                    host: uri.host,
-                };
-            }
+        const channel = uri.pathname.slice(1);
+        if (channel) {
+            return {
+                success: true,
+                host: `${uri.protocol}//${uri.host}`,
+                channel,
+            };
         } else {
             return {
                 success: true,
-                host: uri.host,
-                ...parseDimension(split[0]),
-                channel: split.slice(1).join('/'),
+                host: `${uri.protocol}//${uri.host}`,
             };
         }
     } catch (ex) {
@@ -2048,39 +2037,16 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: split[0],
-                    ...parseDimension(split[1]),
-                    channel: split.slice(2).join('/'),
+                    channel: split.slice(1).join('/'),
                 };
             } else {
                 return {
                     success: true,
-                    ...parseDimension(split[0]),
-                    channel: split.slice(1).join('/'),
+                    channel: id,
                 };
             }
         }
     }
-}
-
-function parseDimension(dimension: string): Partial<SimulationIdParseSuccess> {
-    if (dimension) {
-        for (let prefix of POSSIBLE_DIMENSION_VISUALIZERS) {
-            if (dimension === prefix) {
-                return {
-                    dimensionVisualizer: prefix,
-                };
-            } else if (dimension.startsWith(prefix)) {
-                let sub = dimension.substring(prefix.length);
-                return {
-                    dimension: sub,
-                    dimensionVisualizer: prefix,
-                };
-            }
-        }
-    }
-    return {
-        dimension,
-    };
 }
 
 /**
