@@ -16,6 +16,7 @@
             -   `text` - The text to share. (optional)
             -   `title` - The title of the document that is being shared. (optional)
     -   Added the `auxLabelAlignment` tag.
+        -   Note that this value affects menu bots as well.
         -   Possible values are:
             -   `center` - Aligns the text in the center of the label. (default)
             -   `left` - Aligns the text to the left of the label.
