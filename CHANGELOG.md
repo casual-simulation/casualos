@@ -15,6 +15,11 @@
             -   `url` - The URL to share. (optional)
             -   `text` - The text to share. (optional)
             -   `title` - The title of the document that is being shared. (optional)
+    -   Added the `auxLabelAlignment` tag.
+        -   Possible values are:
+            -   `center` - Aligns the text in the center of the label. (default)
+            -   `left` - Aligns the text to the left of the label.
+            -   `right` - Aligns the text to the right of the label.
 
 ## V1.0.26
 
