@@ -1067,10 +1067,10 @@ player.hideHtml();
 Shares the given URL or text via the device's social share capabilities.
 Returns a [Promise](https://web.dev/promises/) that resolves when sharing has succeeded or failed.
 
-The **first parameter** is an object with the following properties:
--   `url` - The URL that should be shared.
--   `text` - The text that should be shared.
--   `title` - The title of the document that is being shared.
+The **first parameter** is an object with at least one the following properties:
+-   `url` - The URL that should be shared. (optional)
+-   `text` - The text that should be shared. (optional)
+-   `title` - The title of the document that is being shared. (optional)
 
 #### Examples:
 
