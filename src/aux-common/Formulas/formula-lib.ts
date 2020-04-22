@@ -69,6 +69,7 @@ import {
     LoadBotsAction,
     ClearSpaceAction,
     LocalFormAnimationAction,
+    ShareAction,
 } from '../bots/BotEvents';
 import {
     calculateActionResultsUsingContext,
@@ -1982,6 +1983,35 @@ function exitFullscreenMode() {
 }
 
 /**
+ * Defines the options that a share action can have.
+ */
+export interface ShareOptions {
+    /**
+     * The title of the document being shared.
+     */
+    title?: string;
+
+    /**
+     * The text that should be shared.
+     */
+    text?: string;
+
+    /**
+     * The URL of the document being shared.
+     */
+    url?: string;
+}
+
+/**
+ * Shares some information via the device's social sharing functionality.
+ * @param options The options.
+ */
+function share(options: ShareOptions): ShareAction {
+    // Implemented in AuxLibrary
+    return null;
+}
+
+/**
  * Shows some HTML to the user.
  * @param html The HTML to show.
  */
@@ -2481,6 +2511,7 @@ const player = {
     showJoinCode,
     requestFullscreenMode,
     exitFullscreenMode,
+    share,
 
     openDevConsole,
 };

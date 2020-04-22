@@ -40,6 +40,8 @@ import {
     onUniverseSubscribedArg,
     onUniverseUnsubscribedArg,
     calculateStringListTagValue,
+    asyncError,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -681,6 +683,48 @@ export default class PlayerApp extends Vue {
                         document.exitFullscreen();
                     } else if ((<any>document).webkitExitFullscreen) {
                         (<any>document).webkitExitFullscreen();
+                    }
+                } else if (e.type === 'share') {
+                    const anyNav = navigator as any;
+                    if (anyNav.share) {
+                        let shareOptions: any = {};
+                        if (e.title) {
+                            shareOptions.title = e.title;
+                        }
+                        if (e.url) {
+                            shareOptions.url = e.url;
+                        }
+                        if (e.text) {
+                            shareOptions.text = e.text;
+                        }
+                        if (anyNav.canShare(shareOptions)) {
+                            anyNav
+                                .share(shareOptions)
+                                .then(() => {
+                                    simulation.helper.transaction(
+                                        asyncResult(e.taskId, null)
+                                    );
+                                })
+                                .catch((error: Error) => {
+                                    simulation.helper.transaction(
+                                        asyncError(e.taskId, error.toString())
+                                    );
+                                });
+                        } else {
+                            simulation.helper.transaction(
+                                asyncError(
+                                    e.taskId,
+                                    'The given share options were invalid.'
+                                )
+                            );
+                        }
+                    } else {
+                        simulation.helper.transaction(
+                            asyncError(
+                                e.taskId,
+                                "This device doesn't support sharing"
+                            )
+                        );
                     }
                 }
             }),

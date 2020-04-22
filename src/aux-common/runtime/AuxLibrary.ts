@@ -50,6 +50,7 @@ import {
     localFormAnimation as calcLocalFormAnimation,
     webhook as calcWebhook,
     superShout as calcSuperShout,
+    share as calcShare,
     clearSpace,
     loadBots,
     BotAction,
@@ -81,6 +82,8 @@ import {
     AsyncAction,
     ORIGINAL_OBJECT,
     AsyncActions,
+    ShareOptions,
+    ShareAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -337,6 +340,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 checkout,
                 playSound,
                 hasBotInInventory,
+                share,
                 inSheet,
             },
 
@@ -1314,6 +1318,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return false;
         }
         return every(bots, f => getTag(f, inventoryDimension) === true);
+    }
+
+    /**
+     * Shares some information via the device's social sharing functionality.
+     * @param options The options.
+     */
+    function share(options: ShareOptions): Promise<void> {
+        const task = context.createTask();
+        const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
