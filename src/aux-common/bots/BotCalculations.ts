@@ -34,6 +34,8 @@ import {
     PortalPointerDragMode,
     DEFAULT_PORTAL_POINTER_DRAG_MODE,
     BotLOD,
+    BotLabelAlignment,
+    DEFAULT_LABEL_ALIGNMENT,
 } from './Bot';
 
 import {
@@ -1250,6 +1252,26 @@ export function getBotTagAnchor(
         return anchor;
     }
     return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
+ * Gets the text alignment for the bot's label.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotLabelAlignment(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotLabelAlignment {
+    const anchor: BotLabelAlignment = calculateBotValue(
+        calc,
+        bot,
+        'auxLabelAlignment'
+    );
+    if (anchor === 'center' || anchor === 'left' || anchor === 'right') {
+        return anchor;
+    }
+    return DEFAULT_LABEL_ALIGNMENT;
 }
 
 /**

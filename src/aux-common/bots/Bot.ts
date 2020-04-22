@@ -125,6 +125,7 @@ export interface BotTags {
     ['auxLabelSize']?: unknown;
     ['auxLabelSizeMode']?: 'auto' | null;
     ['auxLabelPosition']?: BotLabelAnchor | null | string;
+    ['auxLabelAlignment']?: BotLabelAlignment | null | string;
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
     ['auxFormAnimation']?: string;
@@ -302,6 +303,11 @@ export type BotLabelAnchor =
     | 'floating';
 
 /**
+ * Defines the possible label alignment types.
+ */
+export type BotLabelAlignment = 'center' | 'left' | 'right';
+
+/**
  * Defines the possible bot orientation modes.
  */
 export type BotOrientationMode =
@@ -356,6 +362,11 @@ export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
  * The default bot label anchor.
  */
 export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
+
+/**
+ * The default bot label alignment.
+ */
+export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'center';
 
 /**
  * The default bot orientation mode.
@@ -905,6 +916,7 @@ export const KNOWN_TAGS: string[] = [
     'auxLabelSize',
     'auxLabelSizeMode',
     'auxLabelPosition',
+    'auxLabelAlignment',
     'auxListening',
     'auxScale',
     'auxScaleX',

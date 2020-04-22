@@ -60,6 +60,7 @@ import {
     getAnchorPointOffset,
     isBotPointable,
     isBotFocusable,
+    getBotLabelAlignment,
 } from '../BotCalculations';
 import {
     Bot,
@@ -4375,6 +4376,45 @@ export function botCalculationContextTests(
             const anchor = getBotLabelAnchor(calc, bot);
 
             expect(anchor).toBe('front');
+        });
+    });
+
+    describe('getBotLabelAlignment()', () => {
+        it('should default to center', () => {
+            const bot = createBot('bot');
+
+            const calc = createCalculationContext([bot]);
+            const anchor = getBotLabelAlignment(calc, bot);
+
+            expect(anchor).toBe('center');
+        });
+
+        const cases = [
+            ['center', 'center'],
+            ['left', 'left'],
+            ['right', 'right'],
+            ['abc', 'center'],
+        ];
+        it.each(cases)('given %s it should return %s', (anchor, expected) => {
+            const bot = createBot('bot', {
+                auxLabelAlignment: anchor,
+            });
+
+            const calc = createCalculationContext([bot]);
+            const a = getBotLabelAlignment(calc, bot);
+
+            expect(a).toBe(expected);
+        });
+
+        it('should support formulas', () => {
+            const bot = createBot('bot', {
+                auxLabelAlignment: '="left"',
+            });
+
+            const calc = createCalculationContext([bot]);
+            const anchor = getBotLabelAlignment(calc, bot);
+
+            expect(anchor).toBe('left');
         });
     });
 
