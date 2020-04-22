@@ -9,6 +9,7 @@ import {
     getBotLabelAnchor,
     BotLabelAnchor,
     getBotScale,
+    getBotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -45,6 +46,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
         let label = this.bot3D.bot.tags['auxLabel'];
 
         const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
+        const alignment = getBotLabelAlignment(calc, this.bot3D.bot);
 
         let botWidth = calculateNumericalTagValue(
             calc,
@@ -84,9 +86,9 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                     this.bot3D.bot,
                     'auxLabel'
                 );
-                this.text3D.setText(calculatedValue);
+                this.text3D.setText(calculatedValue, alignment);
             } else {
-                this.text3D.setText(<string>label);
+                this.text3D.setText(<string>label, alignment);
             }
 
             // Update auto size mode.

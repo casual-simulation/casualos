@@ -21,7 +21,10 @@ import createBMFont, {
     TextGeometryOptions,
 } from 'three-bmfont-text';
 import { calculateAnchorPosition, buildSRGBColor } from './SceneUtils';
-import { BotLabelAnchor } from '@casual-simulation/aux-common';
+import {
+    BotLabelAnchor,
+    BotLabelAlignment,
+} from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
@@ -236,8 +239,9 @@ export class Text3D extends Object3D {
     /**
      * Set the text to display with this 3d text.
      * @param text the text to display.
+     * @param alignment The alignment to set.
      */
-    public setText(text: string) {
+    public setText(text: string, alignment?: BotLabelAlignment) {
         // Ignore if the text is already set to provided value.
         if (this._unprocessedText === text) return;
 
@@ -250,7 +254,10 @@ export class Text3D extends Object3D {
 
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
-            this._geometry.update(text.toString());
+            this._geometry.update(<any>(<Partial<TextGeometryOptions>>{
+                text: text.toString(),
+                align: alignment || 'center',
+            }));
             this.updateBoundingBox();
         } else {
             // Disable the text's rendering.
