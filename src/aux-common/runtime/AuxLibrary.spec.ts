@@ -63,6 +63,7 @@ import {
     loadBots,
     localFormAnimation,
     showInput,
+    share,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2162,6 +2163,24 @@ describe('AuxLibrary', () => {
                     bot2,
                 ]);
                 expect(result).toEqual(false);
+            });
+        });
+
+        describe('player.share()', () => {
+            it('should return a ShareAction', () => {
+                const promise: any = library.api.player.share({
+                    url: 'http://example.com',
+                    title: 'Example',
+                });
+                const expected = share(
+                    {
+                        url: 'http://example.com',
+                        title: 'Example',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
