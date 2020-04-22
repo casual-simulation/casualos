@@ -38,6 +38,7 @@ export default class MenuBot extends Vue {
         } else {
             this.label = '';
             this.labelColor = '#000';
+            this.labelAlign = 'center';
             this.backgroundColor = '#FFF';
         }
     }

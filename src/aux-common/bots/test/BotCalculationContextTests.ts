@@ -4380,20 +4380,20 @@ export function botCalculationContextTests(
     });
 
     describe('getBotLabelAlignment()', () => {
-        it('should default to center', () => {
+        it('should default to left', () => {
             const bot = createBot('bot');
 
             const calc = createCalculationContext([bot]);
             const anchor = getBotLabelAlignment(calc, bot);
 
-            expect(anchor).toBe('center');
+            expect(anchor).toBe('left');
         });
 
         const cases = [
             ['center', 'center'],
             ['left', 'left'],
             ['right', 'right'],
-            ['abc', 'center'],
+            ['abc', 'left'],
         ];
         it.each(cases)('given %s it should return %s', (anchor, expected) => {
             const bot = createBot('bot', {
@@ -4408,13 +4408,13 @@ export function botCalculationContextTests(
 
         it('should support formulas', () => {
             const bot = createBot('bot', {
-                auxLabelAlignment: '="left"',
+                auxLabelAlignment: '="right"',
             });
 
             const calc = createCalculationContext([bot]);
             const anchor = getBotLabelAlignment(calc, bot);
 
-            expect(anchor).toBe('left');
+            expect(anchor).toBe('right');
         });
     });
 
