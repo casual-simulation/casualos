@@ -366,7 +366,7 @@ export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
 /**
  * The default bot label alignment.
  */
-export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'left';
+export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'center';
 
 /**
  * The default bot orientation mode.
