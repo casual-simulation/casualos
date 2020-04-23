@@ -25,6 +25,11 @@
             -   `left` - Aligns the text to the left of the label. (default)
             -   `center` - Aligns the text in the center of the label.
             -   `right` - Aligns the text to the right of the label.
+    -   Improved the `auxPointable` tag to affect whether iframes are interactable.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue with the iframe form where non square scales would not resize the clickable area of the iframe.
 
 ## V1.0.26
 

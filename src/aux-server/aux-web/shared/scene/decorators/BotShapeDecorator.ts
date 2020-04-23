@@ -16,6 +16,7 @@ import {
     hasValue,
     isBotPointable,
     LocalActions,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -51,6 +52,7 @@ import {
     disposeObject3D,
     setColor,
     buildSRGBColor,
+    calculateScale,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -143,6 +145,21 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         this._updateStroke(calc);
         this._updateAddress(calc, address);
         this._updateAnimation(animation);
+
+        if (this._iframe) {
+            const gridScale = this.bot3D.gridScale;
+            const scale = calculateScale(calc, this.bot3D.bot, gridScale);
+            if (scale.x > scale.z) {
+                const widthToHeightRatio = scale.z / scale.x;
+                this._iframe.setPlaneSize(1, widthToHeightRatio);
+            } else {
+                const heightToWidthRatio = scale.x / scale.z;
+                this._iframe.setPlaneSize(heightToWidthRatio, 1);
+            }
+
+            const pointable = isBotPointable(calc, this.bot3D.bot);
+            this._iframe.setInteractable(pointable);
+        }
     }
 
     localEvent(event: LocalActions, calc: BotCalculationContext) {
