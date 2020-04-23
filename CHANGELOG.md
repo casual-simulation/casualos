@@ -26,6 +26,10 @@
             -   `center` - Aligns the text in the center of the label.
             -   `right` - Aligns the text to the right of the label.
 
+-   :bug: Bug Fixes
+
+    -   Fixed an issue with the iframe form where non square scales would not resize the clickable area of the iframe.
+
 ## V1.0.26
 
 ### Date: 4/21/2020
