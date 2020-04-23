@@ -357,7 +357,7 @@ export abstract class BaseInteractionManager {
                 input.currentInputType === InputType.Controller &&
                 controller.inputSource.targetRayMode !== 'screen'
             ) {
-                const { gameObject } = this.findHoveredGameObject(
+                const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
                     obj => obj.pointable
                 );
@@ -365,6 +365,8 @@ export abstract class BaseInteractionManager {
                     // Set bot as being hovered on.
                     this._setHoveredBot(gameObject);
                 }
+
+                inputMethod.controller.mesh.setPointerHitLocation(hit);
             }
         }
     }
