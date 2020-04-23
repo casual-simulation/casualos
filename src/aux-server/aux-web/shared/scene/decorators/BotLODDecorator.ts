@@ -39,7 +39,6 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
         if (this.bot3D.dimensionGroup) {
-            this._camera = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig().mainCamera;
             this._simulation = this.bot3D.dimensionGroup.simulation3D.simulation;
         }
     }
@@ -47,6 +46,7 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     frameUpdate?(calc: BotCalculationContext): void;
 
     botUpdated(calc: BotCalculationContext): void {
+        this._updateCamera();
         if (!this._camera) {
             return;
         }
@@ -77,10 +77,17 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     dispose(): void {}
 
     private _frameUpdate(calc: BotCalculationContext): void {
+        this._updateCamera();
         if (!this._camera) {
             return;
         }
         this._updateLOD(calc);
+    }
+
+    private _updateCamera() {
+        if (this.bot3D.dimensionGroup) {
+            this._camera = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig().mainCamera;
+        }
     }
 
     private _updateLOD(calc: BotCalculationContext) {
