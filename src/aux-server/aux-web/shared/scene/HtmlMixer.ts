@@ -229,13 +229,9 @@ export namespace HtmlMixer {
                 ((<any>this.object3d).geometry.parameters.width * scale.x);
             let oneOverScaleFactorW = 1.0 / scaleFactorW;
 
-            let scaleFactorH =
-                this.elementW /
-                ((<any>this.object3d).geometry.parameters.height * scale.y);
-            let oneOverScaleFactorH = 1.0 / scaleFactorH;
             this.cssObject.scale.set(
                 oneOverScaleFactorW,
-                oneOverScaleFactorH,
+                oneOverScaleFactorW,
                 oneOverScaleFactorW
             );
         }
