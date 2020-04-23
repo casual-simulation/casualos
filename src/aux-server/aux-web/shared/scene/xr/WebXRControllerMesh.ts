@@ -77,9 +77,9 @@ export class WebXRControllerMesh implements SubscriptionLike {
      * Sets the hit location that the pointer should draw to.
      * @param hit The hit location.
      */
-    setPointerHitLocation(hit: Intersection) {
-        if (hit) {
-            this._pointer.stopDistance = hit.distance;
+    setPointerHitDistance(distance: number) {
+        if (distance) {
+            this._pointer.stopDistance = distance;
         } else {
             this._pointer.stopDistance = null;
         }
