@@ -10,6 +10,13 @@
 
     -   Added the `autoSelect` property to the options in `player.showInput()` and `player.showInputForTags()`.
         -   When set to true, the text in the input box will be automatically selected when the box is displayed.
+    -   Made the VR pointer line draw all the way to the bot or grid that it is pointing at.
+
+-   :bug: Bug Fixes
+    -   Fixed LODs in VR.
+        -   There were two issues:
+            -   The first was that we were using the incorrect camera for LOD calculations.
+            -   The second was that Three.js's Sphere implementation incorrectly calculated the sphere size for perspective cameras.
 
 ## V1.0.27
 
