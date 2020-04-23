@@ -156,6 +156,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
                 const heightToWidthRatio = scale.x / scale.z;
                 this._iframe.setPlaneSize(heightToWidthRatio, 1);
             }
+
+            const pointable = isBotPointable(calc, this.bot3D.bot);
+            this._iframe.setInteractable(pointable);
         }
     }
 

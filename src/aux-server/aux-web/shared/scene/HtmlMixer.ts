@@ -285,6 +285,16 @@ export namespace HtmlMixer {
             this.updateDomElementSize();
         }
 
+        /**
+         * Sets whether the iframe can recieve pointer events from the cursor.
+         * @param interactable Whether the iframe is interactable.
+         */
+        setInteractable(interactable: boolean) {
+            this.domElement.style.pointerEvents = interactable
+                ? 'auto'
+                : 'none';
+        }
+
         private updateDomElementSize(): void {
             // width of iframe in pixels
             let aspectRatio = this.planeH / this.planeW;
