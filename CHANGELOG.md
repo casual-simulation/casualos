@@ -6,10 +6,6 @@
 
 ### Changes:
 
--   :boom: Breaking Changes
-
-    -   The default label alignment for bots in the page portal has changed from `center` to `left`. It is now consistent across all portals.
-
 -   :rocket: Improvements
 
     -   Added the `player.share(options)` function.
@@ -22,8 +18,8 @@
     -   Added the `auxLabelAlignment` tag.
         -   Note that this value affects menu bots as well.
         -   Possible values are:
-            -   `left` - Aligns the text to the left of the label. (default)
-            -   `center` - Aligns the text in the center of the label.
+            -   `center` - Aligns the text in the center of the label. (default)
+            -   `left` - Aligns the text to the left of the label.
             -   `right` - Aligns the text to the right of the label.
     -   Improved the `auxPointable` tag to affect whether iframes are interactable.
 
