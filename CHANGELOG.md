@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.0.28
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `autoSelect` property to the options in `player.showInput()` and `player.showInputForTags()`.
+        -   When set to true, the text in the input box will be automatically selected when the box is displayed.
+
 ## V1.0.27
 
 ### Date: 4/22/2020
