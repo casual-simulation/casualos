@@ -224,10 +224,16 @@ export namespace HtmlMixer {
             this.cssObject.position.copy(position);
 
             // handle scale
-            let scaleFactor =
+            let scaleFactorW =
                 this.elementW /
                 ((<any>this.object3d).geometry.parameters.width * scale.x);
-            this.cssObject.scale.set(1, 1, 1).multiplyScalar(1.0 / scaleFactor);
+            let oneOverScaleFactorW = 1.0 / scaleFactorW;
+
+            this.cssObject.scale.set(
+                oneOverScaleFactorW,
+                oneOverScaleFactorW,
+                oneOverScaleFactorW
+            );
         }
 
         setDomElement(newDomElement: HTMLElement): void {
@@ -265,6 +271,28 @@ export namespace HtmlMixer {
                     this.domElement.parentNode.removeChild(this.domElement);
                 }
             }
+        }
+
+        /**
+         * Sets the ratio of the plane width and heights to the element width.
+         * Usually, this is a number between 0 and 1 for both the width and the height.
+         * @param width The width.
+         * @param height The height.
+         */
+        setPlaneSize(width: number, height: number) {
+            this.planeW = width;
+            this.planeH = height;
+            this.updateDomElementSize();
+        }
+
+        /**
+         * Sets whether the iframe can recieve pointer events from the cursor.
+         * @param interactable Whether the iframe is interactable.
+         */
+        setInteractable(interactable: boolean) {
+            this.domElement.style.pointerEvents = interactable
+                ? 'auto'
+                : 'none';
         }
 
         private updateDomElementSize(): void {

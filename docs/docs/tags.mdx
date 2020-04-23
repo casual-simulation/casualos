@@ -145,6 +145,7 @@ The positioning mode that the bot uses.
 Whether the bot interacts with the pointer.
 
 Bots that are pointable can receive clicks, pointer enter/exit, and drop events.
+Note that the <TagLink tag='auxPointable'/> tag also affects whether the content inside an [iframe form](#iframe-form) is interactable.
 
 #### Possible values are:
 
@@ -361,6 +362,24 @@ The anchor position for the label.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
+### `auxLabelAlignment`
+
+The text alignment for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='left'>
+    The text is aligned on the left side of the label. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='center'>
+    The text is aligned around the center of the label.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The text is aligned on the right side of the label.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `auxScale`
 
 <Badges>
@@ -420,7 +439,7 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='mesh'>
     A mesh loaded from the web. See <TagLink tag="auxFormSubtype"/> for additional options.
   </PossibleValueCode>
-  <PossibleValueCode value='iframe'>
+  <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="auxFormSubtype"/> for additional options.
   </PossibleValueCode>
 </PossibleValuesTable>

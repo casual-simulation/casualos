@@ -18,17 +18,17 @@ export const PossibleValuesTable = ({children}) => (
   </table>
 );
 
-export const PossibleValue = ({value, children}) => (
-  <tr>
+export const PossibleValue = ({value, children, ...attributes}) => (
+  <tr {...attributes}>
     <td>{value}</td>
     <td>{children}</td>
   </tr>
 );
 
-export const PossibleValueCode = ({value, children}) => (
+export const PossibleValueCode = ({value, children, ...attributes}) => (
   <PossibleValue value={
     <code>{value}</code>
-  }>{children}</PossibleValue>
+  } {...attributes}>{children}</PossibleValue>
 );
 
 export const AnyColorValues = ({}) => (<>

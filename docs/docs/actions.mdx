@@ -1060,6 +1060,34 @@ Closes the HTML popup modal.
 player.hideHtml();
 ```
 
+### `player.share(options)`
+
+<FunctionCode name='share'/>
+
+Shares the given URL or text via the device's social share capabilities.
+Returns a [Promise](https://web.dev/promises/) that resolves when sharing has succeeded or failed.
+
+The **first parameter** is an object with at least one the following properties:
+-   `url` - The URL that should be shared. (optional)
+-   `text` - The text that should be shared. (optional)
+-   `title` - The title of the document that is being shared. (optional)
+
+#### Examples:
+
+1. Share a URL.
+```typescript
+player.share({
+    url: 'https://example.com'
+});
+```
+
+2. Share some text.
+```typescript
+player.share({
+    text: 'abcdefghijklmnopqrstuvwxyz'
+});
+```
+
 ### `player.toast(message, duration?)`
 
 <FunctionCode name='toast'/>

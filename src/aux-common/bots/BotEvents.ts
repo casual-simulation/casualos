@@ -92,7 +92,8 @@ export type ExtraActions =
 export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
-    | ShowInputAction;
+    | ShowInputAction
+    | ShareAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1223,6 +1224,34 @@ export interface ExitFullscreenAction {
     type: 'exit_fullscreen_mode';
 }
 
+/**
+ * Defines the options that a share action can have.
+ */
+export interface ShareOptions {
+    /**
+     * The title of the document being shared.
+     */
+    title?: string;
+
+    /**
+     * The text that should be shared.
+     */
+    text?: string;
+
+    /**
+     * The URL of the document being shared.
+     */
+    url?: string;
+}
+
+/**
+ * Defines an event that shares the given information using the
+ * device's native social sharing capabilities.
+ */
+export interface ShareAction extends AsyncAction, ShareOptions {
+    type: 'share';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -2067,5 +2096,18 @@ export function asyncError(taskId: number, error: any): AsyncErrorAction {
         type: 'async_error',
         taskId,
         error,
+    };
+}
+
+/**
+ * Creates an action that shares some data via the device's social share capabilities.
+ * @param options The options for sharing.
+ * @param taskId The ID of the task.
+ */
+export function share(options: ShareOptions, taskId?: number): ShareAction {
+    return {
+        type: 'share',
+        taskId,
+        ...options,
     };
 }

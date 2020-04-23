@@ -156,7 +156,14 @@ export class ItemDimension implements SubscriptionLike {
         for (let update of updates.updatedBots) {
             if (this._botItemMap.has(update.bot.id)) {
                 let item = this._botItemMap.get(update.bot.id);
-                item.bot = update.bot;
+
+                // We make a new item to force change detection
+                // in Vue.js for menus.
+                let newItem = {
+                    ...item,
+                    bot: update.bot,
+                };
+                this._botItemMap.set(update.bot.id, newItem);
                 hasUpdate = true;
             }
         }

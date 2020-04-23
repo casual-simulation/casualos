@@ -7,6 +7,8 @@ import {
     calculateFormattedBotValue,
     calculateBotValue,
     isFormula,
+    BotLabelAlignment,
+    getBotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -22,6 +24,7 @@ export default class MenuBot extends Vue {
 
     label: string = '';
     labelColor: string = '#000';
+    labelAlign: BotLabelAlignment = 'center';
     backgroundColor: string = '#FFF';
 
     @Watch('item')
@@ -31,9 +34,11 @@ export default class MenuBot extends Vue {
             const calc = simulation.helper.createContext();
             this._updateLabel(calc, item.bot);
             this._updateColor(calc, item.bot);
+            this._updateAlignment(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
+            this.labelAlign = 'center';
             this.backgroundColor = '#FFF';
         }
     }
@@ -76,6 +81,10 @@ export default class MenuBot extends Vue {
         } else {
             this.label = '';
         }
+    }
+
+    private _updateAlignment(calc: BotCalculationContext, bot: Bot) {
+        this.labelAlign = getBotLabelAlignment(calc, bot);
     }
 }
 

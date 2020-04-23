@@ -1,5 +1,36 @@
 # CasualOS Changelog
 
+## V1.0.27
+
+### Date: 4/22/2020
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   The default label alignment for bots in the page portal has changed from `center` to `left`. It is now consistent across all portals.
+
+-   :rocket: Improvements
+
+    -   Added the `player.share(options)` function.
+        -   This will trigger the device's social share capabilities to share the given URL or text.
+        -   Note that this only works on Android and iOS phones and only works in response to some user action like a click.
+        -   `options` is an object with at least one of the following properties:
+            -   `url` - The URL to share. (optional)
+            -   `text` - The text to share. (optional)
+            -   `title` - The title of the document that is being shared. (optional)
+    -   Added the `auxLabelAlignment` tag.
+        -   Note that this value affects menu bots as well.
+        -   Possible values are:
+            -   `left` - Aligns the text to the left of the label. (default)
+            -   `center` - Aligns the text in the center of the label.
+            -   `right` - Aligns the text to the right of the label.
+    -   Improved the `auxPointable` tag to affect whether iframes are interactable.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue with the iframe form where non square scales would not resize the clickable area of the iframe.
+
 ## V1.0.26
 
 ### Date: 4/21/2020
