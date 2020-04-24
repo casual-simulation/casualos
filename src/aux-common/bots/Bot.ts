@@ -587,6 +587,11 @@ export const DESTROY_ACTION_NAME: string = 'onDestroy';
 export const CLICK_ACTION_NAME: string = 'onClick';
 
 /**
+ * The name of the event that represents any bot being clicked.
+ */
+export const ANY_CLICK_ACTION_NAME: string = 'onAnyBotClicked';
+
+/**
  * The name of the event that represents a bot entering over another bot.
  */
 export const DROP_ENTER_ACTION_NAME: string = 'onDropEnter';
@@ -1040,6 +1045,13 @@ export function onClickArg(face: string, dimension: string) {
     return {
         face,
         dimension,
+    };
+}
+
+export function onAnyClickArg(face: string, dimension: string, bot: Bot) {
+    return {
+        ...onClickArg(face, dimension),
+        bot,
     };
 }
 

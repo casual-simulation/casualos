@@ -13,6 +13,9 @@ import {
     getBotDragMode,
     tagsOnBot,
     CLICK_ACTION_NAME,
+    ANY_CLICK_ACTION_NAME,
+    onClickArg,
+    onAnyClickArg,
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
@@ -28,7 +31,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
 
-    protected _argument: { face: string; dimension: string };
+    protected _face: string;
 
     constructor(
         simulation3D: Simulation3D,
@@ -40,24 +43,23 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     ) {
         super(simulation3D, interaction, bot.bot, bot, inputMethod, hit);
 
-        this._argument = { face: faceValue, dimension: null };
+        this._face = faceValue;
     }
 
     protected _performClick(calc: BotCalculationContext): void {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
-        this._argument.dimension = bot3D.dimension;
-
         this.simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._bot],
-            this._argument
+            onClickArg(this._face, bot3D.dimension)
         );
 
-        this.simulation.helper.action('onAnyBotClicked', null, {
-            ...this._argument,
-            bot: this._bot,
-        });
+        this.simulation.helper.action(
+            ANY_CLICK_ACTION_NAME,
+            null,
+            onAnyClickArg(this._face, bot3D.dimension, this._bot)
+        );
     }
 
     protected _createDragOperation(
@@ -94,7 +96,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 this._inputMethod,
                 fromCoord,
                 undefined,
-                this._argument.face,
+                this._face,
                 this._hit
             );
         }

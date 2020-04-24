@@ -9,9 +9,14 @@ import {
     isFormula,
     BotLabelAlignment,
     getBotLabelAlignment,
+    CLICK_ACTION_NAME,
+    onClickArg,
+    ANY_CLICK_ACTION_NAME,
+    onAnyClickArg,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
+import { first } from '@casual-simulation/causal-trees';
 
 @Component({
     components: {},
@@ -52,7 +57,17 @@ export default class MenuBot extends Vue {
 
     async click() {
         const simulation = _simulation(this.item);
-        await simulation.helper.action('onClick', [this.item.bot]);
+        const dimension = first(this.item.dimensions.values());
+        simulation.helper.action(
+            CLICK_ACTION_NAME,
+            [this.item.bot],
+            onClickArg(null, dimension)
+        );
+        simulation.helper.action(
+            ANY_CLICK_ACTION_NAME,
+            null,
+            onAnyClickArg(null, dimension, this.item.bot)
+        );
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
