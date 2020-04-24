@@ -36,7 +36,6 @@
             "auxStrokeColor": "=tags.builderState === \"Enabled\" ? tags.builderColor : \"black\";",
             "builderSetColor": "@tags.builderColor = that;",
             "auxLabelColor": "=tags.builderState === \"Enabled\" ? tags.builderColor : \"#fff\";",
-            "commandNewBot": "@const mod = that || { \r\n    dimension: player.getCurrentDimension(),\r\n    x: 0,\r\n    y: 0\r\n}\r\nshout(\"builderCopyBot\", { bot: mod });",
             "commandChangeColor": "@player.showInputForTag(this, \"#builderColor\", {\n    type: \"color\",\n    subtype: \"basic\",\n    title: \"Change Builder Color\"\n});",
             "onSaveInput": "@shout(\"builderSetColor\", tags.builderColor);",
             "builderGetPlayerHelper": "@let filters = [byTag(\"#auxBuilderLibrary\", \"playerTemplate\"), byTag(\"#builderName\", tags.builderName)];\r\nlet helper = getBot(...filters, bySpace(\"tempLocal\"));\r\nif (!helper && that.create) {\r\n    const prefab = getBot(...filters);\r\n    helper = create(prefab, { \r\n        space: \"tempLocal\",\r\n        auxListening: true,\r\n        auxBuilderId: bot.id,\r\n        builderColor: tags.builderColor,\r\n    });\r\n}\r\n\r\nreturn helper;",
@@ -52,10 +51,11 @@
             "commandDownloadBuilder": "@const bots = getBots(\r\n    bySpace(\"shared\"),\r\n    byTag(\"#builderName\", tags.builderName),\r\n);\r\n\r\nconst badTags = [\r\n    'builderState',\r\n    'builderColor',\r\n    'auxBuilderX',\r\n    'auxBuilderY',\r\n    'auxBuilderSortOrder',\r\n];\r\nconst filtered = bots.map(b => {\r\n    const mod = { ...b.raw };\r\n    for (let tag of badTags) {\r\n        delete mod[tag];\r\n    }\r\n    return {\r\n        id: b.id,\r\n        tags: mod\r\n    };\r\n});\r\n\r\nplayer.downloadBots(filtered, `${tags.builderName}.aux`);",
             "auxLabel": "=tags.builderName + ' config'",
             "commandShowChat": "@player.showChat();",
-            "builderVersion": "35",
             "commandScan": "@shout('builderBeginScanning');\nplayer.openQRCodeScanner();",
             "commandShowSheetNewTab": "@let [dimensionArg] = that || [];\r\nlet dimension = dimensionArg ? dimensionArg : player.getCurrentDimension();\r\nlet universe = player.getCurrentUniverse();\r\n\r\nplayer.openURL(`/?auxUniverse=${encodeURIComponent(universe)}&auxSheetPortal=${encodeURIComponent(dimension)}`);",
-            "commandClearUniverse": "@const day = new Date();\r\nserver.markHistory({\r\n    message: `Save before clear universe on ${day.getFullYear()}/${day.getMonth()}/${day.getDate()}`\r\n});\r\nlet bots = getBots();\r\nfor(let b of bots) {\r\n    b.tags.auxDestroyable = true;\r\n}\r\ndestroy(bots);"
+            "commandClearUniverse": "@const day = new Date();\r\nserver.markHistory({\r\n    message: `Save before clear universe on ${day.getFullYear()}/${day.getMonth()}/${day.getDate()}`\r\n});\r\nlet bots = getBots();\r\nfor(let b of bots) {\r\n    b.tags.auxDestroyable = true;\r\n}\r\ndestroy(bots);",
+            "commandNewBot": "@const arg = that || { \r\n    dimension: player.getCurrentDimension(),\r\n    x: 0,\r\n    y: 0\r\n}\r\nconst mod = {\r\n    [arg.dimension]: true,\r\n    [`${arg.dimension}X`]: arg.x,\r\n    [`${arg.dimension}Y`]: arg.y,\r\n};\r\nshout(\"builderCopyBot\", { bot: mod });",
+            "builderVersion": "36"
         }
     },
     "882f7922-e122-4957-bb2d-67004b483432": {
@@ -81,13 +81,13 @@
             "onDropEnter": "@const builderName = getTag(that.dragBot, \"#builderName\");\nif (builderName) {\n    return;\n}\nwhisper(this, 'builderWrapBot', that.dragBot);\ntags.dropOver = true;",
             "onDropExit": "@const builderName = getTag(that.dragBot, \"#builderName\");\nif (builderName) {\n    return;\n}\nwhisper(this, 'builderResetScale');\ntags.dropOver = false;",
             "onClick": "@if (tags.mod) {\r\n    tags.mod = null;\r\n    destroy(tags.clonedBotId);\r\n    whisper(this, 'builderResetScale');\r\n} else {\r\n    shout(\"dimensionBuilderOnClick\");\r\n}",
-            "builderCopyBot": "@const dimension = player.getCurrentDimension();\nconst builderName = that.bot.id ? getTag(that.bot, \"#builderName\") : null;\nif (builderName) {\n    return;\n}\nconsole.log('other', that.bot);\nconst mod = getMod(that.bot);\nconsole.log('mod', mod);\nconsole.log('different', mod !== that.bot.tags);\nconst clone = create(mod, {\n    space: \"tempLocal\",\n    auxCreator: bot.id,\n    [dimension]: true,\n    [`${dimension}X`]: tags[`${dimension}X`],\n    [`${dimension}Y`]: tags[`${dimension}Y`],\n    [`${dimension}SortOrder`]: 0,\n});\ntags.clonedBotId = clone.id;\ntags.mod = mod;\nwhisper(this, 'builderWrapBot', that.bot);\ndestroy(that.bot);",
             "builderWrapBot": "@const target = that.id ? getBot(\"#id\", that.id).tags : that;\r\ntags.auxScale = (target.auxScale || 1);\r\ntags.auxScaleX = (target.auxScaleX || 1) + 0.5;\r\ntags.auxScaleY = (target.auxScaleY || 1) + 0.5;\r\ntags.auxScaleZ = (target.auxScaleZ || 1) + 0.5;\r\n",
             "moveDimensionBuilder": "@const { dimension, x, y } = that || {\r\n    dimension: player.getCurrentDimension(),\r\n    x: 0,\r\n    y: 0\r\n};\r\n\r\ntags[dimension] = true;\r\ntags[`${dimension}X`] = x;\r\ntags[`${dimension}Y`] = y;\r\n\r\nif (tags.mod) {\r\n    const clone = getBot(\"#id\", tags.clonedBotId);\r\n    clone.tags[dimension] = true;\r\n    clone.tags[`${dimension}X`] = x;\r\n    clone.tags[`${dimension}Y`] = y;\r\n}",
             "onPaste": "@try {\r\n    const modOrBot = JSON.parse(that.text);\r\n    whisper(this, \"builderCopyBot\", { bot: modOrBot });\r\n} catch(err) {\r\n    // Couldn't parse JSON\r\n}\r\n",
             "onPointerEnter": "@tags.hovered = true;",
             "onPointerExit": "@tags.hovered = false;",
-            "auxLabel": "=!tags.hovered ? tags.builderName : \"|||\";"
+            "auxLabel": "=!tags.hovered ? tags.builderName : \"|||\";",
+            "builderCopyBot": "@const dimension = player.getCurrentDimension();\nconst builderName = that.bot.id ? getTag(that.bot, \"#builderName\") : null;\nif (builderName) {\n    return;\n}\nconsole.log('other', that.bot);\nconst mod = getMod(that.bot);\nconsole.log('mod', mod);\nconsole.log('different', mod !== that.bot.tags);\nconst clone = create(mod, {\n    space: \"tempLocal\",\n    auxCreator: bot.id,\n    [dimension]: true,\n    [`${dimension}X`]: tags[`${dimension}X`],\n    [`${dimension}Y`]: tags[`${dimension}Y`],\n    [`${dimension}SortOrder`]: 0,\n});\ntags.clonedBotId = clone.id;\ntags.mod = mod;\nwhisper(this, 'builderWrapBot', that.bot);\ndestroy(that.bot);"
         }
     },
     "9d840c59-7ee3-433e-969b-12ca706e44b4": {
