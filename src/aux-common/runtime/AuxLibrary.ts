@@ -1969,13 +1969,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function destroyBot(bot: RuntimeBot | string | Bot) {
         let realBot: RuntimeBot;
         let id: string;
+        if (!hasValue(bot)) {
+            return;
+        }
         if (typeof bot === 'object') {
             if (isRuntimeBot(bot)) {
                 id = bot.id;
                 realBot = bot;
-            } else {
+            } else if (isBot(bot)) {
                 id = bot.id;
                 realBot = getBot('id', id);
+            } else {
+                return;
             }
         } else if (typeof bot === 'string') {
             if (!hasValue(bot)) {
@@ -1985,7 +1990,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             realBot = getBot('id', id);
         }
 
-        if (!realBot || !isRuntimeBot(realBot)) {
+        if (!realBot || !isRuntimeBot(realBot) || !hasValue(id)) {
             return;
         }
 

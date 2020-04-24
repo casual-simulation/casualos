@@ -3334,8 +3334,27 @@ describe('AuxLibrary', () => {
 
         it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
             bot2.tags.auxDestroyable = false;
+            library.api.destroy({ id: bot2.id, tags: {} });
 
-            library.api.destroy(<any>{ id: bot2.id, tags: {} });
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
+
+        it('should not error when given null', () => {
+            library.api.destroy(null);
+
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
+
+        it('should not destroy all auxCreator bots when given a non-bot object', () => {
+            bot1.tags.auxCreator = 'a';
+            bot2.tags.auxCreator = 'b';
+            bot3.tags.auxCreator = 'c';
+
+            library.api.destroy(<any>{
+                abc: 'def',
+            });
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
