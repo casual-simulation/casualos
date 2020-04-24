@@ -1,6 +1,6 @@
 # CasualOS Changelog
 
-## V1.0.28
+## V1.1.0
 
 ### Date: TBD
 
