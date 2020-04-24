@@ -70,8 +70,6 @@ import {
     StartCheckoutOptions,
     tagsOnBot,
     getOriginalObject,
-    botAdded,
-    isScriptBot,
     getBotSpace,
     trimEvent,
     CREATE_ACTION_NAME,
@@ -79,11 +77,9 @@ import {
     DESTROY_ACTION_NAME,
     RanOutOfEnergyError,
     LocalFormAnimationAction,
-    AsyncAction,
     ORIGINAL_OBJECT,
     AsyncActions,
     ShareOptions,
-    ShareAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import { BotFilterFunction } from '../Formulas/SandboxInterface';
@@ -93,7 +89,7 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import { RuntimeBot } from './RuntimeBot';
+import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -1792,7 +1788,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 continue;
             }
             let tags: BotTags;
-            if (isScriptBot(diff)) {
+            if (isRuntimeBot(diff)) {
                 tags = diff.raw;
             } else if (isBot(diff)) {
                 tags = diff.tags;
@@ -1956,7 +1952,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Destroys the given bot, bot ID, or list of bots.
      * @param bot The bot, bot ID, or list of bots to destroy.
      */
-    function destroy(bot: RuntimeBot | string | (RuntimeBot | string)[]) {
+    function destroy(
+        bot: RuntimeBot | string | Bot | (RuntimeBot | string | Bot)[]
+    ) {
         if (typeof bot === 'object' && Array.isArray(bot)) {
             bot.forEach(f => destroyBot(f));
         } else {
@@ -1968,12 +1966,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Removes the given bot or bot ID from the simulation.
      * @param bot The bot or bot ID to remove from the simulation.
      */
-    function destroyBot(bot: RuntimeBot | string) {
+    function destroyBot(bot: RuntimeBot | string | Bot) {
         let realBot: RuntimeBot;
         let id: string;
         if (typeof bot === 'object') {
-            id = bot.id;
-            realBot = bot;
+            if (isRuntimeBot(bot)) {
+                id = bot.id;
+                realBot = bot;
+            } else {
+                id = bot.id;
+                realBot = getBot('id', id);
+            }
         } else if (typeof bot === 'string') {
             if (!hasValue(bot)) {
                 return;
@@ -1982,7 +1985,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             realBot = getBot('id', id);
         }
 
-        if (!realBot) {
+        if (!realBot || !isRuntimeBot(realBot)) {
             return;
         }
 

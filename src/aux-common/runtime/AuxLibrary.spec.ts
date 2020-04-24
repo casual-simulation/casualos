@@ -3316,6 +3316,30 @@ describe('AuxLibrary', () => {
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot3, bot4]);
         });
+
+        it('should not error when destroying something that is not a bot', () => {
+            library.api.destroy(<any>{
+                abc: 'def',
+                ghi: 'jfk',
+            });
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
+
+        it('should destroy bots that are not runtime bots', () => {
+            library.api.destroy(<any>{ id: bot2.id, tags: {} });
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot3, bot4]);
+        });
+
+        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+            bot2.tags.auxDestroyable = false;
+
+            library.api.destroy(<any>{ id: bot2.id, tags: {} });
+
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
     });
 
     describe('changeState()', () => {

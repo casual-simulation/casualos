@@ -68,6 +68,24 @@ export interface RuntimeBotsState {
 }
 
 /**
+ * Determines if the given bot is a runtime bot.
+ * @param bot The bot to check.
+ */
+export function isRuntimeBot(bot: any): bot is RuntimeBot {
+    if (typeof bot === 'object') {
+        return (
+            !!bot.id &&
+            typeof bot.tags === 'object' &&
+            typeof bot.raw === 'object' &&
+            typeof bot.tags.toJSON === 'function' &&
+            typeof bot.listeners === 'object' &&
+            typeof bot.changes === 'object'
+        );
+    }
+    return false;
+}
+
+/**
  * Constructs a new script bot for the given bot.
  * Script bots provide special behaviors by implemlementing getters and setters for tag values as well
  * as handling extra compatibility concerns like serialization.
