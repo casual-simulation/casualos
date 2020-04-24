@@ -44,6 +44,7 @@ import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 import { ItemDimension } from '../ItemDimension';
 import { DimensionItem } from '../DimensionItem';
 import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
+import { GameAudio } from '../../shared/scene/GameAudio';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -84,9 +85,7 @@ export class PlayerGame extends Game {
 
     menuOffset: number = 15;
 
-    mediaElement: HTMLAudioElement;
-    audioAdded: boolean = false;
-    currentAudio: string;
+    audio: GameAudio;
 
     inventoryFocusPoint: Mesh;
     mainFocusPoint: Mesh;
@@ -412,31 +411,10 @@ export class PlayerGame extends Game {
         );
     }
 
-    createAudio() {
-        if (!this.audioAdded) {
-            this.mediaElement = new Audio('');
-            this.mediaElement.loop = false;
-            this.mediaElement.play();
-            this.mediaElement.pause();
-            this.mediaElement.currentTime = 0;
-
-            this.audioAdded = true;
-        }
-    }
-
     playAudio(url: string) {
         if (url === null) return;
 
-        //if(this.currentAudio != url){
-        this.mediaElement.src = url;
-        this.mediaElement.load();
-        //this.currentAudio = url;
-        //}
-
-        if (this.mediaElement.currentTime != 0) {
-            this.mediaElement.currentTime = 0;
-        }
-        this.mediaElement.play();
+        this.audio.playFromUrl(url);
     }
 
     private simulationRemoved(sim: BrowserSimulation) {
@@ -596,6 +574,8 @@ export class PlayerGame extends Game {
         this.inventoryScene.add(invDirectional);
 
         this.setupDelay = true;
+
+        this.audio = new GameAudio();
     }
 
     onWindowResize(width: number, height: number) {
