@@ -1133,6 +1133,94 @@ describe('AuxRuntime', () => {
                     updatedBots: ['test2', 'test'],
                 });
             });
+
+            it('should recalculate formulas that depend on configTag', () => {
+                runtime.botsAdded([
+                    createBot('thisBot', {
+                        auxConfigBot: 'thatBot',
+                        test: `=configTag`,
+                    }),
+                    createBot('thatBot', {
+                        test: '@player.toast("hello")',
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: createBot('thatBot', {
+                            test: '@player.toast("different")',
+                        }),
+                        tags: ['test'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        thisBot: {
+                            values: {
+                                test: '@player.toast("different")',
+                            },
+                        },
+                        thatBot: {
+                            tags: {
+                                test: '@player.toast("different")',
+                            },
+                            values: {
+                                test: '@player.toast("different")',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['thatBot', 'thisBot'],
+                });
+            });
+
+            it('should recompile functions that depend on configTag', () => {
+                runtime.botsAdded([
+                    createBot('thisBot', {
+                        auxConfigBot: 'thatBot',
+                        test: `=configTag`,
+                    }),
+                    createBot('thatBot', {
+                        test: '@player.toast("hello")',
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('thatBot', {
+                            test: '@player.toast("different")',
+                        }),
+                        tags: ['test'],
+                    },
+                ]);
+
+                const result = runtime.shout('test', ['thisBot']);
+                expect(result.actions).toEqual([toast('different')]);
+            });
+
+            it('should recompile functions that depend on a tag', () => {
+                runtime.botsAdded([
+                    createBot('thisBot', {
+                        test: `="@" + tags.script`,
+                        script: `player.toast("hello");`,
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('thisBot', {
+                            test: `="@" + tags.script`,
+                            script: `player.toast("different");`,
+                        }),
+                        tags: ['script'],
+                    },
+                ]);
+
+                const result = runtime.shout('test', ['thisBot']);
+                expect(result.actions).toEqual([toast('different')]);
+            });
         });
     });
 
