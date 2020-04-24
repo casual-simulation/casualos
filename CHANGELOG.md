@@ -17,6 +17,9 @@
         -   There were two issues:
             -   The first was that we were using the incorrect camera for LOD calculations.
             -   The second was that Three.js's Sphere implementation incorrectly calculated the sphere size for perspective cameras.
+    -   Fixed some issues with the `destroy()` function where it improperly handled non-bot objects.
+    -   Fixed an issue with builder where extra tags would be added to new blank bots.
+    -   Fixed an issue with menu bots where they would not send `@onAnyBotClicked` shouts.
 
 ## V1.0.27
 
