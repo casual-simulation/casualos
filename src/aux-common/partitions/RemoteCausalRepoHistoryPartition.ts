@@ -215,7 +215,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
         this._commits.push(...reverse(commits));
         for (let bot of newBots) {
-            bot.tags.auxHistoryX = this._commits.findIndex(
+            bot.tags.auxHistoryY = -this._commits.findIndex(
                 c => c.hash === bot.tags.auxMarkHash
             );
             nextState[bot.id] = bot;
@@ -232,7 +232,9 @@ export class RemoteCausalRepoHistoryPartitionImpl
         return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
             auxHistory: true,
             auxLabel: commit.message,
-            auxLabelSize: 0.5,
+            auxLabelSize: 0.25,
+            auxScale: 0.8,
+            auxScaleX: 2,
             auxMarkHash: commit.hash,
             auxPreviousMarkHash: commit.previousCommit,
             auxMarkTime: commit.time,
