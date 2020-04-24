@@ -420,6 +420,27 @@ The Z scale (height) of the bot. Combines with the <TagLink tag='auxScale'/> tag
 
 Defaults to 1.
 
+### `auxScaleMode`
+
+How the form is scaled to fit inside the bot.
+
+Note that this setting does not affect <TagLink tag='auxScale'/>, <TagLink tag='auxScaleX'/>, <TagLink tag='auxScaleY'/> or <TagLink tag='auxScaleZ'/>.
+Instead, it changes how custom forms like meshes are scaled to fit inside the unit cube.
+
+Also note that this setting affects a bot's collision volume. The collision volume will always try to wrap the bot's form to the best of its ability.
+This means that if you have a really large mesh the collider will scale up to surround the mesh.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='fit'>
+    The form is scaled to fit inside the bot's unit cube. The aspect ratio will be preserved. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='absolute'>
+    The form is not scaled.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `auxForm`
 
 The shape that the bot should be displayed as.
