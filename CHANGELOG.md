@@ -11,6 +11,7 @@
     -   Added the `autoSelect` property to the options in `player.showInput()` and `player.showInputForTags()`.
         -   When set to true, the text in the input box will be automatically selected when the box is displayed.
     -   Made the VR pointer line draw all the way to the bot or grid that it is pointing at.
+    -   Changed the layout of sizing of the history bots so that they are easy to distinguish from each other and the labels fit on the bot.
 
 -   :bug: Bug Fixes
     -   Fixed LODs in VR.
