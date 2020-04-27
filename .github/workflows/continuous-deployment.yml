@@ -37,7 +37,7 @@ jobs:
               run: |
                   echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
                   echo "registry=https://npm.pkg.github.com/${{ github.repository_owner }}" >> .npmrc
-                  npx lerna publish from-package --yes
+                  npx lerna publish from-package --yes --registry="https://npm.pkg.github.com/${{ github.repository_owner }}"
                   echo "Updating package-lock.json..."
 
                   # Sleep for 5 seconds to hopefully give NPM time to update the package listing
@@ -61,7 +61,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
                   registry: docker.pkg.github.com
-                  repository: casualsimulation/aux
+                  repository: casualsimulation/casualos/aux
                   tags: latest #,${{ steps.gittag.outputs.tag }}
                   tag_with_sha: true
             - name: Build and Publish aux-proxy
@@ -70,7 +70,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
                   registry: docker.pkg.github.com
-                  repository: casualsimulation/aux-proxy
+                  repository: casualsimulation/casualos/aux-proxy
                   tags: latest #,${{ steps.gittag.outputs.tag }}
                   tag_with_sha: true
                   path: ${{ github.workspace }}/src/aux-proxy
@@ -80,7 +80,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
                   registry: docker.pkg.github.com
-                  repository: casualsimulation/aux-redirector
+                  repository: casualsimulation/casualos/aux-redirector
                   tags: latest #,${{ steps.gittag.outputs.tag }}
                   tag_with_sha: true
                   path: ${{ github.workspace }}/src/aux-redirector
