@@ -50,11 +50,12 @@ jobs:
               env:
                   CI: true
             # TODO: Enable when we have proper tagging of docker releases
-            - name: Get Git tag
-              id: gittag
-              uses: WyriHaximus/github-action-next-semvers@0.1.0
-              env:
-                  GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+            # - name: Get Git tag
+            #   id: gittag
+            #   uses: anothrNick/github-tag-action@1.17.2
+            #   env:
+            #       GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+            #       DRY_RUN: true
             - name: Build and Publish aux
               uses: mattdavis0351/actions/docker-gpr@v1
               with:
