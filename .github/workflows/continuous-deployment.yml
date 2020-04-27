@@ -1,0 +1,104 @@
+name: Continuous Integration
+
+on:
+    push:
+        branches:
+            - develop
+            - master
+
+jobs:
+    build:
+        name: Build and Publish
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node-version: [12.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: npm install, test and build
+              run: |
+                  npm ci
+                  npm run bootstrap
+                  npx jest --detectOpenHandles --forceExit --no-cache
+                  npm run build
+              env:
+                  CI: true
+                  NODE_ENV: production
+            - name: Publish NPM Packages
+              run: |
+                  echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+                  echo "registry=https://npm.pkg.github.com/${{ github.repository_owner }}" >> .npmrc
+                  npx lerna publish from-package --yes
+                  echo "Updating package-lock.json..."
+
+                  # Sleep for 5 seconds to hopefully give NPM time to update the package listing
+                  sleep 5
+                  cd ./src/aux-server
+
+                  for i in {1..5}; do 
+                      npm install --package-lock-only && break || sleep 5;
+                  done
+              env:
+                  CI: true
+            # TODO: Enable when we have proper tagging of docker releases
+            # - name: Get Git tag
+            #   id: gittag
+            #   uses: WyriHaximus/github-action-next-semvers@4df6a722a08b311473488b5aa97cfc0d510187e2
+            #   env:
+            #     GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+            - name: Build and Publish aux
+              uses: docker/build-push-action@v1
+              with:
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+                  registry: docker.pkg.github.com
+                  repository: casualsimulation/aux
+                  tags: latest #,${{ steps.gittag.outputs.tag }}
+                  tag_with_sha: true
+            - name: Build and Publish aux-proxy
+              uses: docker/build-push-action@v1
+              with:
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+                  registry: docker.pkg.github.com
+                  repository: casualsimulation/aux-proxy
+                  tags: latest #,${{ steps.gittag.outputs.tag }}
+                  tag_with_sha: true
+                  path: ${{ github.workspace }}/src/aux-proxy
+            - name: Build and Publish aux-redirector
+              uses: docker/build-push-action@v1
+              with:
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+                  registry: docker.pkg.github.com
+                  repository: casualsimulation/aux-redirector
+                  tags: latest #,${{ steps.gittag.outputs.tag }}
+                  tag_with_sha: true
+                  path: ${{ github.workspace }}/src/aux-redirector
+    # TODO: Enable this when the Docs should be built from GitHub instead
+    #       of Jenkins
+    # docs:
+    #     name: Build Docs
+    #     strategy:
+    #         matrix:
+    #             os: [ubuntu-latest, macOS-latest, windows-latest]
+    #             node-version: [12.x]
+    #     runs-on: ${{ matrix.os }}
+    #     steps:
+    #         - uses: actions/checkout@v1
+    #         - name: Use Node.js ${{ matrix.node-version }}
+    #           uses: actions/setup-node@v1
+    #           with:
+    #               node-version: ${{ matrix.node-version }}
+    #         - name: yarn install and build docs
+    #           run: |
+    #               cd docs
+    #               yarn
+    #               yarn build
+    #           env:
+    #               CI: true
