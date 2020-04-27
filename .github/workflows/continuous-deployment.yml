@@ -52,7 +52,7 @@ jobs:
             # TODO: Enable when we have proper tagging of docker releases
             - name: Get Git tag
               id: gittag
-              uses: WyriHaximus/github-action-next-semvers@v0.1.0
+              uses: WyriHaximus/github-action-next-semvers@0.1.0
               env:
                   GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
             - name: Build and Publish aux
