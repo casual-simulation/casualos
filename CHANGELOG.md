@@ -1,5 +1,30 @@
 # CasualOS Changelog
 
+## V1.1.0
+
+### Date: 4/27/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `autoSelect` property to the options in `player.showInput()` and `player.showInputForTags()`.
+        -   When set to true, the text in the input box will be automatically selected when the box is displayed.
+    -   Made the VR pointer line draw all the way to the bot or grid that it is pointing at.
+    -   Changed the layout of sizing of the history bots so that they are easy to distinguish from each other and the labels fit on the bot.
+    -   Added the `#auxScaleMode` tag to control how a custom mesh is scaled to fit inside a bot. It supports the following options:
+        -   `fit` - The mesh is scaled to fit inside the bot's unit cube. (default)
+        -   `absolute` - The mesh uses whatever scale it originally had.
+
+-   :bug: Bug Fixes
+    -   Fixed LODs in VR.
+        -   There were two issues:
+            -   The first was that we were using the incorrect camera for LOD calculations.
+            -   The second was that Three.js's Sphere implementation incorrectly calculated the sphere size for perspective cameras.
+    -   Fixed some issues with the `destroy()` function where it improperly handled non-bot objects.
+    -   Fixed an issue with builder where extra tags would be added to new blank bots.
+    -   Fixed an issue with menu bots where they would not send `@onAnyBotClicked` shouts.
+
 ## V1.0.27
 
 ### Date: 4/22/2020

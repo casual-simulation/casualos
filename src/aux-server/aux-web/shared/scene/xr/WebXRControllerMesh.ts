@@ -10,6 +10,7 @@ import {
     Group,
     MeshBasicMaterial,
     SphereGeometry,
+    Intersection,
 } from 'three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
@@ -70,6 +71,18 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this._updateMotionControllerModel(gripPose);
         this._updatePointer(rayPose);
         this.group.updateMatrixWorld();
+    }
+
+    /**
+     * Sets the hit location that the pointer should draw to.
+     * @param hit The hit location.
+     */
+    setPointerHitDistance(distance: number) {
+        if (distance) {
+            this._pointer.stopDistance = distance;
+        } else {
+            this._pointer.stopDistance = null;
+        }
     }
 
     private _updatePointer(pose: XRPose) {

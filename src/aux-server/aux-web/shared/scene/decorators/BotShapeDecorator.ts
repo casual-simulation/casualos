@@ -17,6 +17,8 @@ import {
     isBotPointable,
     LocalActions,
     getBotScale,
+    BotScaleMode,
+    getBotScaleMode,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -71,6 +73,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _gltfVersion: number = null;
     private _address: string = null;
     private _animation: any = null;
+    private _scaleMode: BotScaleMode = null;
     private _canHaveStroke = false;
     private _animationMixer: AnimationMixer;
     private _animClips: AnimationAction[];
@@ -108,7 +111,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         super(bot3D);
 
         this._game = game;
-        this._rebuildShape('cube', null, null, null);
+        this._rebuildShape('cube', null, null, null, null);
     }
 
     frameUpdate() {
@@ -121,6 +124,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.bot3D.bot);
         const subShape = getBotSubShape(calc, this.bot3D.bot);
+        const scaleMode = getBotScaleMode(calc, this.bot3D.bot);
         const address = calculateBotValue(
             calc,
             this.bot3D.bot,
@@ -137,8 +141,8 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.bot3D.bot,
             'auxFormAnimation'
         );
-        if (this._needsUpdate(shape, subShape, address, version)) {
-            this._rebuildShape(shape, subShape, address, version);
+        if (this._needsUpdate(shape, subShape, scaleMode, address, version)) {
+            this._rebuildShape(shape, subShape, scaleMode, address, version);
         }
 
         this._updateColor(calc);
@@ -171,12 +175,14 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _needsUpdate(
         shape: string,
         subShape: string,
+        scaleMode: string,
         address: string,
         version: number
     ) {
         return (
             this._shape !== shape ||
             this._subShape !== subShape ||
+            this._scaleMode !== scaleMode ||
             (shape === 'mesh' &&
                 (this._address !== address || this._gltfVersion !== version))
         );
@@ -427,11 +433,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
+        scaleMode: BotScaleMode,
         address: string,
         version: number
     ) {
         this._shape = shape;
         this._subShape = subShape;
+        this._scaleMode = scaleMode;
         this._address = address;
         this._gltfVersion = version;
         if (this.mesh || this.scene) {
@@ -535,13 +543,16 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         let center = new Vector3();
         box.getCenter(center);
         const maxScale = Math.max(size.x, size.y, size.z);
-        size.divideScalar(maxScale);
-        center.divideScalar(maxScale);
+
+        if (this._scaleMode !== 'absolute') {
+            size.divideScalar(maxScale);
+            center.divideScalar(maxScale);
+            gltf.scene.scale.divideScalar(maxScale);
+        }
 
         let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
 
         // Scene
-        gltf.scene.scale.divideScalar(maxScale);
         gltf.scene.position.copy(bottomCenter);
         this.scene = gltf.scene;
         this.container.add(gltf.scene);

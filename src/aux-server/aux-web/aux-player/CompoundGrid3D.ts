@@ -15,6 +15,26 @@ export class CompoundGrid3D implements Grid3D {
         return this.grids[0];
     }
 
+    getPointFromRay(ray: Ray): Vector3 {
+        let closestPoint: Vector3 = null;
+        let closestDist: number = Infinity;
+        for (let grid of this.grids) {
+            if (!grid.enabled) {
+                continue;
+            }
+            const point = grid.getPointFromRay(ray);
+            if (point) {
+                const dist = ray.origin.distanceTo(point);
+                if (dist < closestDist) {
+                    closestPoint = point;
+                    closestDist = dist;
+                }
+            }
+        }
+
+        return closestPoint;
+    }
+
     getTileFromRay(ray: Ray): GridTile {
         let closestTile: GridTile = null;
         let closestDist: number = Infinity;

@@ -92,6 +92,18 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         this.tileScale = getOptionalValue(tileScale, 1);
     }
 
+    getPointFromRay(ray: Ray): Vector3 {
+        let planeHit = Physics.pointOnPlane(ray, this.plane);
+        if (!planeHit) {
+            return null;
+        }
+        const tile = this.getTileFromPosition(planeHit);
+        if (tile === null) {
+            return null;
+        }
+        return planeHit;
+    }
+
     /**
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.

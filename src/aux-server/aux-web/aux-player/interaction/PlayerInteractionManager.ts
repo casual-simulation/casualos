@@ -29,6 +29,8 @@ import {
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
+import { Grid3D } from '../Grid3D';
+import { PlayerPageSimulation3D } from '../scene/PlayerPageSimulation3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -220,6 +222,18 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
+        return null;
+    }
+
+    getDefaultGrid3D(): Grid3D {
+        const sim = <PlayerPageSimulation3D>(
+            this._game
+                .getSimulations()
+                .find(sim3D => sim3D instanceof PlayerPageSimulation3D)
+        );
+        if (sim) {
+            return sim.grid3D;
+        }
         return null;
     }
 

@@ -36,6 +36,8 @@ import {
     BotLOD,
     BotLabelAlignment,
     DEFAULT_LABEL_ALIGNMENT,
+    BotScaleMode,
+    DEFAULT_SCALE_MODE,
 } from './Bot';
 
 import {
@@ -1272,6 +1274,22 @@ export function getBotLabelAlignment(
         return anchor;
     }
     return DEFAULT_LABEL_ALIGNMENT;
+}
+
+/**
+ * Gets the text alignment for the bot's label.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotScaleMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotScaleMode {
+    const anchor: BotScaleMode = calculateBotValue(calc, bot, 'auxScaleMode');
+    if (anchor === 'fit' || anchor === 'absolute') {
+        return anchor;
+    }
+    return DEFAULT_SCALE_MODE;
 }
 
 /**

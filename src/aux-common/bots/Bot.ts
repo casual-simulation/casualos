@@ -116,6 +116,7 @@ export interface BotTags {
     ['auxScaleX']?: number;
     ['auxScaleY']?: number;
     ['auxScaleZ']?: number;
+    ['auxScaleMode']?: BotScaleMode | null | string;
     ['auxLineTo']?: unknown;
     ['auxLineWidth']?: number;
     ['auxLineStyle']?: unknown;
@@ -292,6 +293,14 @@ export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 export type BotPositioningMode = 'stack' | 'absolute';
 
 /**
+ * Defines the possible scaling modes that a bot's mesh can have.
+ *
+ * "fit" means that the mesh is scaled to fit inside its bot unit cube.
+ * "absolute" means that the mesh is not scaled to fit inside the bot unit cube.
+ */
+export type BotScaleMode = 'fit' | 'absolute';
+
+/**
  * Defines the possible anchor positions for a label.
  */
 export type BotLabelAnchor =
@@ -367,6 +376,11 @@ export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
  * The default bot label alignment.
  */
 export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'center';
+
+/**
+ * The default bot scale mode.
+ */
+export const DEFAULT_SCALE_MODE: BotScaleMode = 'fit';
 
 /**
  * The default bot orientation mode.
@@ -585,6 +599,11 @@ export const DESTROY_ACTION_NAME: string = 'onDestroy';
  * The name of the event that represents a bot being clicked.
  */
 export const CLICK_ACTION_NAME: string = 'onClick';
+
+/**
+ * The name of the event that represents any bot being clicked.
+ */
+export const ANY_CLICK_ACTION_NAME: string = 'onAnyBotClicked';
 
 /**
  * The name of the event that represents a bot entering over another bot.
@@ -922,6 +941,7 @@ export const KNOWN_TAGS: string[] = [
     'auxScaleX',
     'auxScaleY',
     'auxScaleZ',
+    'auxScaleMode',
     'auxFormAddress',
     'auxFormSubtype',
     'auxForm',
@@ -1040,6 +1060,13 @@ export function onClickArg(face: string, dimension: string) {
     return {
         face,
         dimension,
+    };
+}
+
+export function onAnyClickArg(face: string, dimension: string, bot: Bot) {
+    return {
+        ...onClickArg(face, dimension),
+        bot,
     };
 }
 

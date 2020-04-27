@@ -17,6 +17,13 @@ export interface Grid3D {
     getTileFromRay(ray: Ray): GridTile;
 
     /**
+     * Calculates the point that the given ray intersects the grid.
+     * Will return null if the ray does not intersect with the grid.
+     * @param ray The ray to test.
+     */
+    getPointFromRay(ray: Ray): Vector3;
+
+    /**
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */

@@ -43,6 +43,7 @@ import { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
 import { Viewport } from '../scene/Viewport';
+import { Grid3D } from 'aux-web/aux-player/Grid3D';
 
 interface HoveredBot {
     /**
@@ -357,13 +358,29 @@ export abstract class BaseInteractionManager {
                 input.currentInputType === InputType.Controller &&
                 controller.inputSource.targetRayMode !== 'screen'
             ) {
-                const { gameObject } = this.findHoveredGameObject(
+                const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
                     obj => obj.pointable
                 );
                 if (gameObject) {
                     // Set bot as being hovered on.
                     this._setHoveredBot(gameObject);
+                }
+
+                if (hit) {
+                    controller.mesh.setPointerHitDistance(hit.distance);
+                } else {
+                    const grid = this.getDefaultGrid3D();
+                    const inputRay = objectForwardRay(controller.ray);
+                    const point = grid.getPointFromRay(inputRay);
+                    if (point) {
+                        const distance = point.distanceTo(
+                            controller.ray.position
+                        );
+                        controller.mesh.setPointerHitDistance(distance);
+                    } else {
+                        controller.mesh.setPointerHitDistance(null);
+                    }
                 }
             }
         }
@@ -915,6 +932,7 @@ export abstract class BaseInteractionManager {
         bot: Bot,
         simulation: Simulation
     ): void;
+    abstract getDefaultGrid3D(): Grid3D;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(

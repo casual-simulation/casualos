@@ -473,7 +473,7 @@ export class AuxRuntime
             let tags = Object.keys(bot.compiledValues);
             for (let tag of tags) {
                 precalculated.values[tag] = convertToCopiableValue(
-                    this._updateTag(bot, tag)
+                    this._updateTag(bot, tag, true)
                 );
             }
         }
@@ -661,7 +661,7 @@ export class AuxRuntime
                 const originalTag = originalBot.tags[tag];
                 if (hasValue(originalTag)) {
                     botUpdate.values[tag] = convertToCopiableValue(
-                        this._updateTag(originalBot, tag)
+                        this._updateTag(originalBot, tag, true)
                     );
                 } else {
                     botUpdate.tags[tag] = null;
@@ -724,7 +724,7 @@ export class AuxRuntime
     }
 
     getValue(bot: CompiledBot, tag: string): any {
-        return this._updateTag(bot, tag);
+        return this._updateTag(bot, tag, false);
     }
 
     getListener(bot: CompiledBot, tag: string): CompiledBotListener {
@@ -736,13 +736,20 @@ export class AuxRuntime
         return bot.listeners[tag] || null;
     }
 
-    private _updateTag(newBot: CompiledBot, tag: string): any {
+    private _updateTag(
+        newBot: CompiledBot,
+        tag: string,
+        forceUpdateListener: boolean
+    ): any {
         const compiled = newBot.compiledValues[tag];
         try {
             const value = (newBot.values[tag] =
                 typeof compiled === 'function' ? compiled() : compiled);
 
-            if (isScript(value) && !newBot.listeners[tag]) {
+            if (
+                isScript(value) &&
+                (!newBot.listeners[tag] || forceUpdateListener)
+            ) {
                 newBot.listeners[tag] = this._compile(newBot, tag, value, {
                     allowsEditing: true,
                 });

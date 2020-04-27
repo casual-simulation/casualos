@@ -61,6 +61,7 @@ import {
     isBotPointable,
     isBotFocusable,
     getBotLabelAlignment,
+    getBotScaleMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -4415,6 +4416,44 @@ export function botCalculationContextTests(
             const anchor = getBotLabelAlignment(calc, bot);
 
             expect(anchor).toBe('left');
+        });
+    });
+
+    describe('getBotScaleMode()', () => {
+        it('should default to fit', () => {
+            const bot = createBot('bot');
+
+            const calc = createCalculationContext([bot]);
+            const anchor = getBotScaleMode(calc, bot);
+
+            expect(anchor).toBe('fit');
+        });
+
+        const cases = [
+            ['fit', 'fit'],
+            ['absolute', 'absolute'],
+            ['abc', 'fit'],
+        ];
+        it.each(cases)('given %s it should return %s', (anchor, expected) => {
+            const bot = createBot('bot', {
+                auxScaleMode: anchor,
+            });
+
+            const calc = createCalculationContext([bot]);
+            const a = getBotScaleMode(calc, bot);
+
+            expect(a).toBe(expected);
+        });
+
+        it('should support formulas', () => {
+            const bot = createBot('bot', {
+                auxScaleMode: '="absolute"',
+            });
+
+            const calc = createCalculationContext([bot]);
+            const anchor = getBotScaleMode(calc, bot);
+
+            expect(anchor).toBe('absolute');
         });
     });
 

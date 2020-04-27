@@ -31,6 +31,7 @@ import {
     MeshBasicMaterial,
     Camera,
     Sphere,
+    PerspectiveCamera,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -670,15 +671,37 @@ export function percentOfScreen(
     boundingSphere: Sphere
 ): number {
     const sphere = boundingSphere.clone();
-    sphere
-        .applyMatrix4(camera.matrixWorldInverse)
-        .applyMatrix4(camera.projectionMatrix);
+    camera.matrixWorldInverse.getInverse(camera.matrixWorld);
+
+    sphere.applyMatrix4(camera.matrixWorldInverse);
+
+    let radius: number = null;
+    if (camera instanceof PerspectiveCamera) {
+        // Calculate the final radius of the sphere
+        // by projecting both the center and an edge of the sphere
+        // and measuring the distance between them.
+        // We need to do this for perspective cameras
+        // because the three.js Sphere class doesn't
+        // scale the radius properly.
+        const center = sphere.center.clone();
+        const edge = center.clone().add(new Vector3(sphere.radius, 0, 0));
+        center.applyMatrix4(camera.projectionMatrix);
+        edge.applyMatrix4(camera.projectionMatrix);
+        const finalRadius = center.distanceTo(edge);
+        radius = finalRadius;
+    }
+
+    sphere.applyMatrix4(camera.projectionMatrix);
+
+    if (radius === null) {
+        radius = sphere.radius;
+    }
 
     if (sphere.intersectsBox(clipBox)) {
         // Spheres are uniform so we can ignore the Z axis
         // and only consider the area of a circle when comparing to
         // the screen area.
-        const circleArea = Math.PI * sphere.radius * sphere.radius;
+        const circleArea = Math.PI * radius * radius;
         return circleArea * clipAreaRatio;
     } else {
         return 0;

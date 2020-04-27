@@ -905,6 +905,11 @@ export interface ShowInputOptions {
      * The foreground color to use.
      */
     foregroundColor: string;
+
+    /**
+     * Whether the text in the input box should be automatically selected.
+     */
+    autoSelect: boolean;
 }
 
 /**

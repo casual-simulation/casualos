@@ -37,6 +37,7 @@ export default class ShowInputModal extends Vue {
     labelColor: string = '#000';
     backgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    autoSelect: boolean = false;
 
     private _currentTag: string = '';
     private _currentBot: Bot = null;
@@ -100,6 +101,7 @@ export default class ShowInputModal extends Vue {
         this._updateColor(event.options);
         this._updateInputForTag(calc, bot, event.tag, event.options);
         this._inputDialogSimulation = simulation;
+        this.autoSelect = !!(event.options.autoSelect || false);
         this.showInputDialog = true;
     }
 
@@ -111,6 +113,7 @@ export default class ShowInputModal extends Vue {
         this._updateInput(event.currentValue, event.options, '');
         this._inputDialogSimulation = simulation;
         this._currentTask = event.taskId;
+        this.autoSelect = !!(event.options.autoSelect || false);
         this.showInputDialog = true;
     }
 
@@ -129,6 +132,10 @@ export default class ShowInputModal extends Vue {
                 const field = <Vue>this.$refs.inputModalField;
                 if (field) {
                     field.$el.focus();
+                    if (this.autoSelect) {
+                        const input = field.$el as HTMLInputElement;
+                        input.setSelectionRange(0, input.value.length);
+                    }
                 }
             },
             // 0.11 seconds (transition is 0.1 seconds)
