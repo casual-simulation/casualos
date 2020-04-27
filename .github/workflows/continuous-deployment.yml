@@ -20,10 +20,14 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: ${{ matrix.node-version }}
-            - name: npm install, test and build
+            - name: npm install
               run: |
                   npm ci
                   npm run bootstrap
+              env:
+                  CI: true
+            - name: npm test and build
+              run: |
                   npx jest --detectOpenHandles --forceExit --no-cache
                   npm run build
               env:
