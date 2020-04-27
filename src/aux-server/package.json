@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "1.0.27",
+    "version": "1.1.0",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -43,10 +43,10 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^1.0.27",
-        "@casual-simulation/aux-vm": "^1.0.27",
-        "@casual-simulation/aux-vm-browser": "^1.0.27",
-        "@casual-simulation/aux-vm-node": "^1.0.27",
+        "@casual-simulation/aux-common": "^1.1.0",
+        "@casual-simulation/aux-vm": "^1.1.0",
+        "@casual-simulation/aux-vm-browser": "^1.1.0",
+        "@casual-simulation/aux-vm-node": "^1.1.0",
         "@casual-simulation/causal-tree-client-socketio": "^1.0.26",
         "@casual-simulation/causal-tree-server": "^1.0.26",
         "@casual-simulation/causal-tree-server-socketio": "^1.0.26",
@@ -78,6 +78,7 @@
         "filepond": "^3.8.2",
         "filepond-plugin-file-validate-type": "^1.2.1",
         "helmet-csp": "2.9.3",
+        "howler": "2.1.3",
         "http-proxy": "1.17.0",
         "inherits": "2.0.4",
         "jsbarcode": "3.11.0",
@@ -107,7 +108,6 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6",
-        "howler": "2.1.3"
+        "vue-shortkey": "^3.1.6"
     }
 }
