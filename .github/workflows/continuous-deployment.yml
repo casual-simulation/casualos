@@ -56,19 +56,19 @@ jobs:
               env:
                   GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
             - name: Build and Publish aux
-              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
+              uses: mattdavis0351/actions/docker-gpr@v1
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
                   image-name: aux
                   dockerfile-location: ${{ github.workspace }}/Dockerfile
             - name: Build and Publish aux-proxy
-              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
+              uses: mattdavis0351/actions/docker-gpr@v1
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
                   image-name: aux
                   dockerfile-location: ${{ github.workspace }}/src/aux-proxy/Dockerfile
             - name: Build and Publish aux-redirector
-              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
+              uses: mattdavis0351/actions/docker-gpr@v1
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
                   image-name: aux
