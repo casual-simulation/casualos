@@ -37,7 +37,7 @@ jobs:
               run: |
                   echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
                   echo "registry=https://npm.pkg.github.com/${{ github.repository_owner }}" >> .npmrc
-                  npx lerna publish from-package --yes --registry="https://npm.pkg.github.com/${{ github.repository_owner }}"
+                  npx lerna publish from-package --yes --registry="https://npm.pkg.github.com/${{ github.repository_owner }} --canary --preid dev"
                   echo "Updating package-lock.json..."
 
                   # Sleep for 5 seconds to hopefully give NPM time to update the package listing
@@ -50,40 +50,29 @@ jobs:
               env:
                   CI: true
             # TODO: Enable when we have proper tagging of docker releases
-            # - name: Get Git tag
-            #   id: gittag
-            #   uses: WyriHaximus/github-action-next-semvers@4df6a722a08b311473488b5aa97cfc0d510187e2
-            #   env:
-            #     GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+            - name: Get Git tag
+              id: gittag
+              uses: WyriHaximus/github-action-next-semvers@4df6a722a08b311473488b5aa97cfc0d510187e2
+              env:
+                  GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
             - name: Build and Publish aux
-              uses: docker/build-push-action@v1
+              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
               with:
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-                  registry: docker.pkg.github.com
-                  repository: casualsimulation/casualos/aux
-                  tags: latest #,${{ steps.gittag.outputs.tag }}
-                  tag_with_sha: true
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  image-name: aux
+                  dockerfile-location: ${{ github.workspace }}/Dockerfile
             - name: Build and Publish aux-proxy
-              uses: docker/build-push-action@v1
+              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
               with:
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-                  registry: docker.pkg.github.com
-                  repository: casualsimulation/casualos/aux-proxy
-                  tags: latest #,${{ steps.gittag.outputs.tag }}
-                  tag_with_sha: true
-                  path: ${{ github.workspace }}/src/aux-proxy
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  image-name: aux
+                  dockerfile-location: ${{ github.workspace }}/src/aux-proxy/Dockerfile
             - name: Build and Publish aux-redirector
-              uses: docker/build-push-action@v1
+              uses: mattdavis0351/actions/docker-gpr@081317674cf42cd930cfd05e15de4041d294960f
               with:
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-                  registry: docker.pkg.github.com
-                  repository: casualsimulation/casualos/aux-redirector
-                  tags: latest #,${{ steps.gittag.outputs.tag }}
-                  tag_with_sha: true
-                  path: ${{ github.workspace }}/src/aux-redirector
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  image-name: aux
+                  dockerfile-location: ${{ github.workspace }}/src/aux-redirector
     # TODO: Enable this when the Docs should be built from GitHub instead
     #       of Jenkins
     # docs:
