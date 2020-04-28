@@ -20,7 +20,11 @@ import {
     commit,
     branch,
 } from './CausalRepoObject';
-import { CausalRepoStore } from './CausalRepoStore';
+import {
+    CausalRepoStore,
+    CausalObjectStore,
+    CausalBranchStore,
+} from './CausalRepoStore';
 import { Weave } from './Weave2';
 import { Observable } from 'rxjs';
 import merge from 'lodash/merge';
@@ -58,10 +62,12 @@ export interface CommitData extends IndexData {
 /**
  * Stores the given data in the given store.
  * @param store The store that the data should be saved in.
+ * @param head The head that the data is being stored for.
  * @param data The data to store.
  */
 export async function storeData(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
+    head: string,
     data: Storable[]
 ): Promise<void> {
     let objs: CausalRepoObject[] = [];
@@ -75,7 +81,7 @@ export async function storeData(
         }
     }
 
-    await store.storeObjects(objs);
+    await store.storeObjects(head, objs);
 }
 
 /**
@@ -84,22 +90,22 @@ export async function storeData(
  * @param branch The branch to load.
  */
 export async function loadBranch(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
     branch: CausalRepoBranch
 ): Promise<CommitData> {
     const hash = branch.hash;
-    const [commitOrIndex] = await store.getObjects([hash]);
+    const commitOrIndex = await store.getObject(hash);
 
     if (!commitOrIndex) {
         return null;
     }
 
     if (commitOrIndex.type === 'commit') {
-        return await loadCommit(store, commitOrIndex);
+        return await loadCommit(store, branch.name, commitOrIndex);
     } else if (commitOrIndex.type === 'index') {
         return {
             commit: null,
-            ...(await loadIndex(store, commitOrIndex)),
+            ...(await loadIndex(store, branch.name, commitOrIndex)),
         };
     }
 }
@@ -107,13 +113,15 @@ export async function loadBranch(
 /**
  * Loads the commit data for the given commit.
  * @param store The store.
+ * @param head The head that the commit is being loaded for.
  * @param commit The commit.
  */
 export async function loadCommit(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
+    head: string,
     commit: CausalRepoCommit
 ): Promise<CommitData> {
-    const [index] = await store.getObjects([commit.index]);
+    const index = await store.getObject(commit.index);
 
     if (index.type !== 'index') {
         throw new Error(
@@ -123,7 +131,7 @@ export async function loadCommit(
 
     return {
         commit: commit,
-        ...(await loadIndex(store, index)),
+        ...(await loadIndex(store, head, index)),
     };
 }
 
@@ -132,15 +140,17 @@ export async function loadCommit(
 /**
  * Loads the index data for the given commit.
  * @param store The store.
+ * @param head The head that the index is being loaded for.
  * @param index The index.
  */
 export async function loadIndex(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
+    head: string,
     index: CausalRepoIndex
 ): Promise<IndexData> {
     return {
         index: index,
-        atoms: await loadAtoms(store, index.data.atoms),
+        atoms: await loadAtomsForHead(store, head, index.data.atoms),
     };
 }
 
@@ -150,10 +160,10 @@ export async function loadIndex(
  * @param diff The diff to load.
  */
 export async function loadDiff(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
     diff: AtomIndexDiff
 ): Promise<AtomIndexFullDiff> {
-    const atoms = await loadAtoms(store, diff.additions);
+    const atoms = await loadAtomsWithoutHead(store, diff.additions);
 
     return {
         additions: [...atoms.values()],
@@ -180,11 +190,45 @@ export function applyDiff<T>(weave: Weave<T>, diff: AtomIndexFullDiff) {
     }
 }
 
-async function loadAtoms(
-    store: CausalRepoStore,
+/**
+ * Loads all the given atoms that have been stored for the given head from the given store.
+ * @param store The object store.
+ * @param head The head that the atoms should be loaded for.
+ * @param hashList The list of atom hashes to load.
+ */
+async function loadAtomsForHead(
+    store: CausalObjectStore,
+    head: string,
     hashList: AtomHashList
 ): Promise<Map<string, Atom<any>>> {
-    const repoAtoms = await store.getObjects(getAtomHashes(hashList));
+    const hashes = getAtomHashes(hashList);
+    const repoAtoms = await store.getObjects(head, hashes);
+
+    const atoms = repoAtoms.map(a => {
+        if (a.type !== 'atom') {
+            throw new Error(
+                'Found bad data. An index references an object other than an atom.'
+            );
+        }
+        return a.data;
+    });
+
+    return atomMap(atoms);
+}
+
+/**
+ * Loads all the given atoms from the given store.
+ * This method performs a point lookup for each hash, so it is not recommended to use
+ * this for a large number of hashes. Instead, you should use loadAtomsForHead() if at all possible.
+ * @param store The object store.
+ * @param hashList The list of atom hashes to load.
+ */
+async function loadAtomsWithoutHead(
+    store: CausalObjectStore,
+    hashList: AtomHashList
+): Promise<Map<string, Atom<any>>> {
+    const hashes = getAtomHashes(hashList);
+    const repoAtoms = await Promise.all(hashes.map(h => store.getObject(h)));
 
     const atoms = repoAtoms.map(a => {
         if (a.type !== 'atom') {
@@ -216,7 +260,7 @@ export async function updateBranch(
     store: CausalRepoStore,
     branch: CausalRepoBranch
 ): Promise<void> {
-    const [data] = await store.getObjects([branch.hash]);
+    const data = await store.getObject(branch.hash);
     if (!data) {
         throw new Error(
             `The branch (${branch.name}) references a hash (${
@@ -233,7 +277,7 @@ export async function updateBranch(
  * @param prefix The prefix that should be used to filter branches. If null then all branches are included.
  */
 export async function listBranches(
-    store: CausalRepoStore,
+    store: CausalBranchStore,
     prefix: string = null
 ): Promise<CausalRepoBranch[]> {
     return store.getBranches(prefix);
@@ -245,13 +289,13 @@ export async function listBranches(
  * @param hash
  */
 export async function listCommits(
-    store: CausalRepoStore,
+    store: CausalObjectStore,
     hash: string
 ): Promise<CausalRepoCommit[]> {
     let commit: CausalRepoObject;
     let commits: CausalRepoCommit[] = [];
     while (hash) {
-        [commit] = await store.getObjects([hash]);
+        commit = await store.getObject(hash);
         if (commit && commit.type === 'commit') {
             hash = commit.previousCommit;
             commits.push(commit);
@@ -446,7 +490,7 @@ export class CausalRepo {
             idx,
             this.currentCommit ? this.currentCommit.commit : null
         );
-        await storeData(this._store, [...addedAtoms, idx, c]);
+        await storeData(this._store, this._head.name, [...addedAtoms, idx, c]);
         await this._updateHead(c);
         await this._checkoutHead();
 

@@ -126,7 +126,7 @@ export class CausalRepoServer {
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
                             await this._stage.addAtoms(event.branch, added);
-                            await storeData(this._store, added);
+                            await storeData(this._store, event.branch, added);
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
@@ -244,9 +244,9 @@ export class CausalRepoServer {
                         }
 
                         const current = repo.currentCommit;
-                        const [oldCommit] = await this._store.getObjects([
-                            event.commit,
-                        ]);
+                        const oldCommit = await this._store.getObject(
+                            event.commit
+                        );
                         if (!oldCommit || oldCommit.type !== 'commit') {
                             console.log(
                                 `[CausalRepoServer] Could not restore to ${
@@ -261,7 +261,7 @@ export class CausalRepoServer {
                             oldCommit.index,
                             current ? current.commit : null
                         );
-                        await storeData(this._store, [newCommit]);
+                        await storeData(this._store, event.branch, [newCommit]);
                         await repo.reset(newCommit);
                         const after = repo.currentCommit;
 
