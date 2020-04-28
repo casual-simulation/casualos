@@ -21,66 +21,66 @@ export class CassandraDBObjectStore implements CausalObjectStore {
     }
 
     async init() {
+        console.log('[CassandraDBObjectStore] Initializing...');
         if (this._config.replication.class === 'SimpleStrategy') {
+            console.log('[CassandraDBObjectStore] Using Simple Strategy');
             await this._client.execute(
-                `
-                CREATE KEYSPACE IF NOT EXISTS ? WITH replication = {
+                `CREATE KEYSPACE IF NOT EXISTS ${
+                    this._config.keyspace
+                } WITH replication = {
                     'class': 'SimpleStrategy',
-                    'replication_factor': ?
-                };
-            `,
-                [
-                    this._config.keyspace,
-                    this._config.replication.replicationFactor,
-                ]
+                    'replication_factor': ${
+                        this._config.replication.replicationFactor
+                    }
+                };`
             );
         } else {
+            console.log(
+                '[CassandraDBObjectStore] Using NetworkTopologyStrategy'
+            );
             const replication = this._config.replication;
             const dataCenters = Object.keys(replication.dataCenters);
             const dataCenterReplications = dataCenters
-                .map(key => `'${key}': ?`)
+                .map(key => `'${key}': '${replication.dataCenters[key]}'`)
                 .join(',\n');
-            const dataCenterParams = dataCenters.map(
-                key => replication.dataCenters[key]
-            );
             await this._client.execute(
-                `
-                CREATE KEYSPACE IF NOT EXISTS ? WITH replication = {
+                `CREATE KEYSPACE IF NOT EXISTS ${
+                    this._config.keyspace
+                } WITH replication = {
                     'class': 'NetworkTopologyStrategy',
-                    'replication_factor': ?${dataCenters.length > 0 ? ',' : ''}
+                    'replication_factor': ${replication.replicationFactor}${
+                    dataCenters.length > 0 ? ',' : ''
+                }
                     ${dataCenterReplications}
-                };
-            `,
-                [
-                    this._config.keyspace,
-                    this._config.replication.replicationFactor,
-                    ...dataCenterParams,
-                ]
+                };`
             );
         }
+
+        this._client.keyspace = this._config.keyspace;
+
+        console.log('[CassandraDBObjectStore] Creating tables...');
         await this._client.execute(
-            `
-            CREATE TABLE IF NOT EXISTS objects (
+            `CREATE TABLE IF NOT EXISTS objects (
                 hash text,
                 type text,
                 data text,
                 message text,
-                index text,
+                idx text,
                 time timestamp,
                 previous_commit text,
                 PRIMARY KEY (hash)
-            ) WITH comment='Objects indexed by hash';
-
-            CREATE TABLE IF NOT EXISTS objects_by_head (
+            ) WITH comment='Objects indexed by hash';`
+        );
+        await this._client.execute(
+            `CREATE TABLE IF NOT EXISTS objects_by_head (
                 head text,
                 hash text,
                 data text,
                 PRIMARY KEY (head, hash)
             ) WITH comment='Objects indexed by head/branch'
-              AND CLUSTERING ORDER BY (hash ASC);
-        `,
-            []
+              AND CLUSTERING ORDER BY (hash ASC);`
         );
+        console.log('[CassandraDBObjectStore] Initialization Done.');
     }
 
     async getObjects(
@@ -101,6 +101,9 @@ export class CassandraDBObjectStore implements CausalObjectStore {
     }
 
     async getObject(key: string): Promise<CausalRepoObject> {
+        if (!key) {
+            return null;
+        }
         const query = `SELECT * FROM objects WHERE hash = ?`;
         const result = await this._client.execute(query, [key], {
             prepare: true,
@@ -128,9 +131,8 @@ export class CassandraDBObjectStore implements CausalObjectStore {
                 o.type === 'commit' ? o.previousCommit : null;
             return [
                 {
-                    query: `UPDATE objects SET hash = ?, type = ?, data = ?, message = ?, index = ?, time = ?, previous_commit = ? WHERE hash = ?`,
-                    parameters: [
-                        hash,
+                    query: `UPDATE objects SET type = ?, data = ?, message = ?, idx = ?, time = ?, previous_commit = ? WHERE hash = ?`,
+                    params: [
                         o.type,
                         data,
                         message,
@@ -141,12 +143,19 @@ export class CassandraDBObjectStore implements CausalObjectStore {
                     ],
                 },
                 {
-                    query: `UPDATE objects_by_head SET head = ?, hash = ?, data = ? WHERE head = ? AND hash = ?`,
-                    parameters: [head, hash, data, head, hash],
+                    query: `UPDATE objects_by_head SET data = ? WHERE head = ? AND hash = ?`,
+                    params: [data, head, hash],
                 },
             ];
         });
 
-        await this._client.batch(queries, { prepare: true });
+        if (queries.length <= 0) {
+            return;
+        }
+
+        const promises = queries.map(q =>
+            this._client.execute(q.query, q.params, { prepare: true })
+        );
+        await Promise.all(promises);
     }
 }

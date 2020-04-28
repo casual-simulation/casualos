@@ -807,6 +807,7 @@ export class Server {
                 this._config.repos.cassandra,
                 this._cassandraClient
             );
+            await cassandraStore.init();
             store = new CombinedCausalRepoStore(mongoStore, cassandraStore);
         }
 

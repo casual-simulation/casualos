@@ -18,6 +18,6 @@ services:
         image: 'cassandra:latest'
         restart: always
         ports:
-            - '7000'
+            - '9042:9042'
         volumes:
             - './services/data/cassandra:/var/lib/cassandra'
