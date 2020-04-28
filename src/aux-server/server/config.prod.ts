@@ -31,6 +31,7 @@ const config: Config = {
     mongodb: {
         url: process.env.MONGO_URL,
     },
+    cassandradb: null,
     redis: redisHost
         ? {
               options: {
@@ -46,8 +47,10 @@ const config: Config = {
         dbName: 'aux-trees',
     },
     repos: {
-        dbName: 'aux-repos',
-        objectsCollectionName: 'objects',
+        mongodb: {
+            dbName: 'aux-repos',
+        },
+        cassandra: null,
     },
     bots: {
         dbName: 'aux-bots',

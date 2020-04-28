@@ -6,19 +6,60 @@ import {
 import { Client } from 'cassandra-driver';
 import sortBy from 'lodash/sortBy';
 import flatMap from 'lodash/flatMap';
+import { CassandraDBCausalReposConfig } from 'server/config';
 
 /**
  * Defines a CausalObjectStore that interfaces with CassandraDB.
  */
 export class CassandraDBObjectStore implements CausalObjectStore {
     private _client: Client;
+    private _config: CassandraDBCausalReposConfig;
 
-    constructor(client: Client) {
+    constructor(config: CassandraDBCausalReposConfig, client: Client) {
+        this._config = config;
         this._client = client;
     }
 
     async init() {
-        await this._client.execute(`
+        if (this._config.replication.class === 'SimpleStrategy') {
+            await this._client.execute(
+                `
+                CREATE KEYSPACE IF NOT EXISTS ? WITH replication = {
+                    'class': 'SimpleStrategy',
+                    'replication_factor': ?
+                };
+            `,
+                [
+                    this._config.keyspace,
+                    this._config.replication.replicationFactor,
+                ]
+            );
+        } else {
+            const replication = this._config.replication;
+            const dataCenters = Object.keys(replication.dataCenters);
+            const dataCenterReplications = dataCenters
+                .map(key => `'${key}': ?`)
+                .join(',\n');
+            const dataCenterParams = dataCenters.map(
+                key => replication.dataCenters[key]
+            );
+            await this._client.execute(
+                `
+                CREATE KEYSPACE IF NOT EXISTS ? WITH replication = {
+                    'class': 'NetworkTopologyStrategy',
+                    'replication_factor': ?${dataCenters.length > 0 ? ',' : ''}
+                    ${dataCenterReplications}
+                };
+            `,
+                [
+                    this._config.keyspace,
+                    this._config.replication.replicationFactor,
+                    ...dataCenterParams,
+                ]
+            );
+        }
+        await this._client.execute(
+            `
             CREATE TABLE IF NOT EXISTS objects (
                 hash text,
                 type text,
@@ -37,7 +78,9 @@ export class CassandraDBObjectStore implements CausalObjectStore {
                 PRIMARY KEY (head, hash)
             ) WITH comment='Objects indexed by head/branch'
               AND CLUSTERING ORDER BY (hash ASC);
-        `);
+        `,
+            []
+        );
     }
 
     async getObjects(
