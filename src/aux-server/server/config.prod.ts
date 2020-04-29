@@ -1,6 +1,10 @@
 import * as path from 'path';
 import * as process from 'process';
-import { Config } from './config';
+import {
+    Config,
+    CassandraDBConfig,
+    CassandraDBCausalReposConfig,
+} from './config';
 import playerConfig from './player.config';
 
 const redisHost = process.env.REDIS_HOST;
@@ -13,6 +17,44 @@ const directoryUpstream = process.env.UPSTREAM_DIRECTORY;
 const localIpAddress = process.env.LOCAL_IP_ADDRESS;
 const tunnel = process.env.PROXY_TUNNEL;
 const trustProxy = process.env.PROXY_IP_RANGE;
+
+const cassandraContactPoints = process.env.CASSANDRA_CONTACT_POINTS;
+const cassandraLocalDataCenter = process.env.CASSANDRA_LOCAL_DATACENTER;
+const cassandraKeyspace = process.env.CASSANDRA_KEYSPACE;
+const cassandraCreateKeyspace = process.env.CASSANDRA_CREATE_KEYSPACE;
+
+let cassandradb: CassandraDBConfig = null;
+let cassandraReposConfig: CassandraDBCausalReposConfig = null;
+
+if (cassandraContactPoints && cassandraLocalDataCenter) {
+    cassandradb = {
+        contactPoints: cassandraContactPoints.split(','),
+        localDataCenter: cassandraLocalDataCenter,
+    };
+    console.log(
+        `[Config] Enabling CassandraDB with:\n\tcontactPoints: ${cassandraContactPoints}\n\tlocalDataCenter: ${cassandraLocalDataCenter}`
+    );
+
+    if (cassandraKeyspace) {
+        cassandraReposConfig = {
+            keyspace: cassandraKeyspace,
+            replication:
+                cassandraCreateKeyspace === 'true'
+                    ? {
+                          class: 'NetworkTopologyStrategy',
+                          replicationFactor: 3,
+                          dataCenters: {},
+                      }
+                    : null,
+        };
+        console.log(
+            `[Config] Enabling CassandraDB for Causal Repos with:\n\tkeyspace: ${cassandraKeyspace}\n\tcreateKeyspace: ${cassandraKeyspace ===
+                'true'}`
+        );
+    }
+} else {
+    console.log('[Config] Disabling CassandraDB.');
+}
 
 // Defaults to a week.
 const botsTimeToLive =
@@ -31,7 +73,7 @@ const config: Config = {
     mongodb: {
         url: process.env.MONGO_URL,
     },
-    cassandradb: null,
+    cassandradb: cassandradb,
     redis: redisHost
         ? {
               options: {
@@ -50,7 +92,7 @@ const config: Config = {
         mongodb: {
             dbName: 'aux-repos',
         },
-        cassandra: null,
+        cassandra: cassandraReposConfig,
     },
     bots: {
         dbName: 'aux-bots',

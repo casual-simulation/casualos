@@ -89,8 +89,16 @@ export interface MongoDBCaualReposConfig {
 }
 
 export interface CassandraDBCausalReposConfig {
+    /**
+     * The keyspace that should be used for the tables.
+     */
     keyspace: string;
-    replication: CassandraDBReplication;
+
+    /**
+     * The replication parameters that should be used for the keyspace.
+     * If null, then creating the keyspace will be skipped.
+     */
+    replication: CassandraDBReplication | null;
 }
 
 export type CassandraDBReplication =
