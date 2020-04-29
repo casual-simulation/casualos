@@ -92,3 +92,38 @@ export class CombinedCausalRepoStore implements CausalRepoStore {
         return this._branches.deleteBranch(head);
     }
 }
+
+/**
+ * Defines a class that tries loading objects from one store before trying another store.
+ */
+export class FallbackCausalObjectStore implements CausalObjectStore {
+    private _first: CausalObjectStore;
+    private _second: CausalObjectStore;
+
+    constructor(first: CausalObjectStore, second: CausalObjectStore) {
+        this._first = first;
+        this._second = second;
+    }
+
+    async getObjects(
+        head: string,
+        keys: string[]
+    ): Promise<CausalRepoObject[]> {
+        let objs = await this._first.getObjects(head, keys);
+        if (!objs || objs.every(o => typeof o === 'undefined')) {
+            objs = await this._second.getObjects(head, keys);
+        }
+        return objs;
+    }
+
+    async getObject(key: string): Promise<CausalRepoObject> {
+        return (
+            (await this._first.getObject(key)) ||
+            (await this._second.getObject(key))
+        );
+    }
+
+    storeObjects(head: string, objects: CausalRepoObject[]): Promise<void> {
+        return this._first.storeObjects(head, objects);
+    }
+}
