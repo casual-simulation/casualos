@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V1.1.1
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+    -   Added the ability to store universe data in CassandraDB. This allows us to support a much larger amount of total data while keeping the performance hit to a minimum.
+        -   Use the following environment variables to enable Cassandra support:
+            -   `CASSANDRA_CONTACT_POINTS` - This is the comma-separated list of hostnames that the Cassandra client to connect to on first load. (Required for Cassandra)
+            -   `CASSANDRA_LOCAL_DATACENTER` - This is the name of the data center that the AUX Server is booting up in. (Required for Cassandra)
+            -   `CASSANDRA_KEYSPACE` - This is the name of the keyspace that should be used by the client. (Required for Cassandra)
+            -   `CASSANDRA_CREATE_KEYSPACE` - This is a `true`/`false` value indicating whether the client should create the keyspace if it doesn't exist. (Optional)
+            -   `CASSANDRA_CERTIFICATE_AUTHORITY` - This is the path to the public key file (PEM format) that should be used. Only required if connecting to a Cassandra server which uses a self-signed certificate.
+
 ## V1.1.0
 
 ### Date: 4/27/2020
