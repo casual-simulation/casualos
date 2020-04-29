@@ -78,12 +78,12 @@ boot_config() {
 system_settings() {
     # Change Keyboard Layout
     echo "DEBUG: Changing Keyboard Layout..."
-    sudo sed -i 's/XKBLAYOUT=".*\?"/XKBLAYOUT="us"/g' /etc/default/keyboard
+    sudo sed -i 's/^XKBLAYOUT=".*\?"/XKBLAYOUT="us"/g' /etc/default/keyboard
 
     # Modify locale.gen file
     echo "DEBUG: Changing Locales..."
-    sudo sed -i 's/# en_US/en_US/g' /etc/locale.gen
-    sudo sed -i 's/en_GB/# en_GB/g' /etc/locale.gen
+    sudo sed -i 's/^# en_US/en_US/g' /etc/locale.gen
+    sudo sed -i 's/^en_GB/# en_GB/g' /etc/locale.gen
 
     # Generate Locales
     echo "DEBUG: Generating Locales..."
