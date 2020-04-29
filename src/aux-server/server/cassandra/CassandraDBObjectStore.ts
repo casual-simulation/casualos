@@ -92,9 +92,22 @@ export class CassandraDBObjectStore implements CausalObjectStore {
             prepare: true,
             fetchSize: 100_000,
         });
-        const objects = result.rows.map(row =>
-            JSON.parse(row.data)
-        ) as CausalRepoObject[];
+        const asyncResult = (<any>result) as {
+            isPaged: () => boolean;
+            [Symbol.asyncIterator]: any;
+        };
+
+        let objects: CausalRepoObject[] = null;
+        if (asyncResult.isPaged()) {
+            objects = [];
+            // Use the async iterator to process
+            // all the results.
+            for await (const row of asyncResult) {
+                objects.push(JSON.parse(row.data));
+            }
+        } else {
+            objects = result.rows.map(row => JSON.parse(row.data));
+        }
         return sortBy(objects, o =>
             o.type === 'atom' ? o.data.id.timestamp : -1
         );
