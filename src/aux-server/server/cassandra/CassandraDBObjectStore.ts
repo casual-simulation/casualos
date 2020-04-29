@@ -3,7 +3,7 @@ import {
     CausalObjectStore,
     getObjectHash,
 } from '@casual-simulation/causal-trees';
-import { Client } from 'cassandra-driver';
+import { Client, concurrent } from 'cassandra-driver';
 import sortBy from 'lodash/sortBy';
 import flatMap from 'lodash/flatMap';
 import { CassandraDBCausalReposConfig } from 'server/config';
@@ -153,9 +153,13 @@ export class CassandraDBObjectStore implements CausalObjectStore {
             return;
         }
 
-        const promises = queries.map(q =>
-            this._client.execute(q.query, q.params, { prepare: true })
+        const results = await concurrent.executeConcurrent(
+            this._client,
+            queries
         );
-        await Promise.all(promises);
+
+        for (let err of results.errors) {
+            console.error(err);
+        }
     }
 }
