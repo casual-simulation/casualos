@@ -22,6 +22,8 @@ const cassandraContactPoints = process.env.CASSANDRA_CONTACT_POINTS;
 const cassandraLocalDataCenter = process.env.CASSANDRA_LOCAL_DATACENTER;
 const cassandraKeyspace = process.env.CASSANDRA_KEYSPACE;
 const cassandraCreateKeyspace = process.env.CASSANDRA_CREATE_KEYSPACE;
+const cassandraCertificateAuthority =
+    process.env.CASSANDRA_CERTIFICATE_AUTHORITY;
 
 let cassandradb: CassandraDBConfig = null;
 let cassandraReposConfig: CassandraDBCausalReposConfig = null;
@@ -31,6 +33,8 @@ if (cassandraContactPoints && cassandraLocalDataCenter) {
         contactPoints: cassandraContactPoints.split(','),
         localDataCenter: cassandraLocalDataCenter,
         slowRequestTime: 1000,
+        requireTLS: true,
+        certificateAuthorityPublicKey: cassandraCertificateAuthority,
     };
     console.log(
         `[Config] Enabling CassandraDB with:\n\tcontactPoints: ${cassandraContactPoints}\n\tlocalDataCenter: ${cassandraLocalDataCenter}`

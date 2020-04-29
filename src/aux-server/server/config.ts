@@ -64,6 +64,16 @@ export interface CassandraDBConfig {
      * The number of miliseconds needed for a request to be logged as slow.
      */
     slowRequestTime: number;
+
+    /**
+     * Whether the server must provide a valid TLS certificate.
+     */
+    requireTLS: boolean;
+
+    /**
+     * The path to the public key file (PEM format) that the server's certificate authority uses.
+     */
+    certificateAuthorityPublicKey?: string;
 }
 
 export interface RedisConfig {

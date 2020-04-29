@@ -73,6 +73,8 @@ import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
 import { CassandraDBObjectStore } from './cassandra/CassandraDBObjectStore';
 import { EventEmitter } from 'events';
+import { ConnectionOptions } from 'tls';
+import { readFileSync } from 'fs';
 
 const connect = pify(MongoClient.connect);
 
@@ -435,9 +437,21 @@ export class Server {
             requestEmitter.on('slow', message => {
                 console.log(`[Cassandra] ${message}`);
             });
+            let sslOptions = {
+                rejectUnauthorized: this._config.cassandradb.requireTLS,
+            } as ConnectionOptions;
+            if (this._config.cassandradb.certificateAuthorityPublicKey) {
+                sslOptions.ca = [
+                    readFileSync(
+                        this._config.cassandradb.certificateAuthorityPublicKey
+                    ),
+                ];
+            }
             this._cassandraClient = new CassandraClient({
-                ...this._config.cassandradb,
+                contactPoints: this._config.cassandradb.contactPoints,
+                localDataCenter: this._config.cassandradb.localDataCenter,
                 requestTracker,
+                sslOptions,
             });
 
             this._cassandraClient.on(
