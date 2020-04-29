@@ -59,6 +59,11 @@ export interface CassandraDBConfig {
      * The client will prefer cassandra instances that are hosted in the same data center over others.
      */
     localDataCenter: string;
+
+    /**
+     * The number of miliseconds needed for a request to be logged as slow.
+     */
+    slowRequestTime: number;
 }
 
 export interface RedisConfig {

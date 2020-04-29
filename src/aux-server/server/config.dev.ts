@@ -19,6 +19,7 @@ const config: Config = {
     cassandradb: {
         contactPoints: ['localhost:9042'],
         localDataCenter: 'datacenter1',
+        slowRequestTime: 1000,
     },
     redis: {
         options: {

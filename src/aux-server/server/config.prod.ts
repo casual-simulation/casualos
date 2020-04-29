@@ -30,6 +30,7 @@ if (cassandraContactPoints && cassandraLocalDataCenter) {
     cassandradb = {
         contactPoints: cassandraContactPoints.split(','),
         localDataCenter: cassandraLocalDataCenter,
+        slowRequestTime: 1000,
     };
     console.log(
         `[Config] Enabling CassandraDB with:\n\tcontactPoints: ${cassandraContactPoints}\n\tlocalDataCenter: ${cassandraLocalDataCenter}`

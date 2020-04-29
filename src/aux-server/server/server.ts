@@ -8,7 +8,10 @@ import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
-import { Client as CassandraClient } from 'cassandra-driver';
+import {
+    Client as CassandraClient,
+    tracker as CassandraTracker,
+} from 'cassandra-driver';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
@@ -69,6 +72,7 @@ import { pickBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
 import { CassandraDBObjectStore } from './cassandra/CassandraDBObjectStore';
+import { EventEmitter } from 'events';
 
 const connect = pify(MongoClient.connect);
 
@@ -424,9 +428,31 @@ export class Server {
         this._mongoClient = await connect(this._config.mongodb.url);
         if (this._config.cassandradb) {
             console.log('[Server] Using CassandraDB');
+            const requestTracker = new CassandraTracker.RequestLogger({
+                slowThreshold: this._config.cassandradb.slowRequestTime,
+            });
+            const requestEmitter = <EventEmitter>(<any>requestTracker).emitter;
+            requestEmitter.on('slow', message => {
+                console.log(`[Cassandra] ${message}`);
+            });
             this._cassandraClient = new CassandraClient({
                 ...this._config.cassandradb,
+                requestTracker,
             });
+
+            this._cassandraClient.on(
+                'log',
+                (level, loggerName, message, furtherInfo) => {
+                    if (level === 'warning') {
+                        console.warn(`[Cassandra-${loggerName}]: ${message}`);
+                    } else if (level === 'error') {
+                        console.error(`[Cassandra-${loggerName}]: ${message}`);
+                    } else if (level === 'info') {
+                        console.log(`[Cassandra-${loggerName}]: ${message}`);
+                    }
+                }
+            );
+
             await this._cassandraClient.connect();
         } else {
             console.log('[Server] Skipping CassandraDB');
