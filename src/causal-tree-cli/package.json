@@ -43,7 +43,8 @@
         "@casual-simulation/causal-tree-store-cassandradb": "1.0.26",
         "commander": "4.0.1",
         "inquirer": "7.1.0",
-        "cli-progress": "3.8.1"
+        "cli-progress": "3.8.1",
+        "colors": "1.4.0"
     },
     "devDependencies": {
         "typescript": "^3.8.3",
