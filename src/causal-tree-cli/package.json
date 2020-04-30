@@ -42,7 +42,8 @@
         "@casual-simulation/causal-tree-store-mongodb": "1.0.26",
         "@casual-simulation/causal-tree-store-cassandradb": "1.0.26",
         "commander": "4.0.1",
-        "inquirer": "7.1.0"
+        "inquirer": "7.1.0",
+        "cli-progress": "3.8.1"
     },
     "devDependencies": {
         "typescript": "^3.8.3",
