@@ -44,7 +44,9 @@
         "commander": "4.0.1",
         "inquirer": "7.1.0",
         "cli-progress": "3.8.1",
-        "colors": "1.4.0"
+        "colors": "1.4.0",
+        "cassandra-driver": "4.5.1",
+        "mongodb": "3.2.3"
     },
     "devDependencies": {
         "typescript": "^3.8.3",
