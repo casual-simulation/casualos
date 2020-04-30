@@ -22,39 +22,7 @@ export class CassandraDBObjectStore implements CausalObjectStore {
 
     async init() {
         console.log('[CassandraDBObjectStore] Initializing...');
-        if (this._config.replication.class === 'SimpleStrategy') {
-            console.log('[CassandraDBObjectStore] Using Simple Strategy');
-            await this._client.execute(
-                `CREATE KEYSPACE IF NOT EXISTS ${
-                    this._config.keyspace
-                } WITH replication = {
-                    'class': 'SimpleStrategy',
-                    'replication_factor': ${
-                        this._config.replication.replicationFactor
-                    }
-                };`
-            );
-        } else {
-            console.log(
-                '[CassandraDBObjectStore] Using NetworkTopologyStrategy'
-            );
-            const replication = this._config.replication;
-            const dataCenters = Object.keys(replication.dataCenters);
-            const dataCenterReplications = dataCenters
-                .map(key => `'${key}': '${replication.dataCenters[key]}'`)
-                .join(',\n');
-            await this._client.execute(
-                `CREATE KEYSPACE IF NOT EXISTS ${
-                    this._config.keyspace
-                } WITH replication = {
-                    'class': 'NetworkTopologyStrategy',
-                    'replication_factor': ${replication.replicationFactor}${
-                    dataCenters.length > 0 ? ',' : ''
-                }
-                    ${dataCenterReplications}
-                };`
-            );
-        }
+        await this._createKeyspaceIfNeeded();
 
         this._client.keyspace = this._config.keyspace;
 
@@ -81,6 +49,40 @@ export class CassandraDBObjectStore implements CausalObjectStore {
               AND CLUSTERING ORDER BY (hash ASC);`
         );
         console.log('[CassandraDBObjectStore] Initialization Done.');
+    }
+
+    private async _createKeyspaceIfNeeded() {
+        if (this._config.replication) {
+            if (this._config.replication.class === 'SimpleStrategy') {
+                console.log('[CassandraDBObjectStore] Using Simple Strategy');
+                await this._client.execute(`CREATE KEYSPACE IF NOT EXISTS ${
+                    this._config.keyspace
+                } WITH replication = {
+                        'class': 'SimpleStrategy',
+                        'replication_factor': ${
+                            this._config.replication.replicationFactor
+                        }
+                    };`);
+            } else {
+                console.log(
+                    '[CassandraDBObjectStore] Using NetworkTopologyStrategy'
+                );
+                const replication = this._config.replication;
+                const dataCenters = Object.keys(replication.dataCenters);
+                const dataCenterReplications = dataCenters
+                    .map(key => `'${key}': '${replication.dataCenters[key]}'`)
+                    .join(',\n');
+                await this._client.execute(`CREATE KEYSPACE IF NOT EXISTS ${
+                    this._config.keyspace
+                } WITH replication = {
+                        'class': 'NetworkTopologyStrategy',
+                        'replication_factor': ${replication.replicationFactor}${
+                    dataCenters.length > 0 ? ',' : ''
+                }
+                        ${dataCenterReplications}
+                    };`);
+            }
+        }
     }
 
     async getObjects(
