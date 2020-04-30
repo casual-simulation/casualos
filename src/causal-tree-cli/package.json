@@ -26,8 +26,9 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "watch": "tsc --watch",
-        "build": "tsc",
+        "watch": "webpack --config webpack.dev.js --watch",
+        "build": "webpack --config webpack.dev.js",
+        "build:prod": "webpack --config webpack.prod.js",
         "start": "node bin/causal-tree-cli.js"
     },
     "bugs": {
@@ -38,10 +39,17 @@
     },
     "dependencies": {
         "@casual-simulation/causal-trees": "1.0.26",
+        "@casual-simulation/causal-tree-store-mongodb": "1.0.26",
+        "@casual-simulation/causal-tree-store-cassandradb": "1.0.26",
         "commander": "4.0.1",
         "inquirer": "7.1.0"
     },
     "devDependencies": {
-        "typescript": "^3.8.3"
+        "typescript": "^3.8.3",
+        "webpack": "^4.25.1",
+        "webpack-cli": "^3.1.2",
+        "webpack-merge": "^4.1.4",
+        "webpack-node-externals": "^1.7.2",
+        "hard-source-webpack-plugin": "0.13.1"
     }
 }
