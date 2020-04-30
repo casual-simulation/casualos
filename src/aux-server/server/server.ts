@@ -71,7 +71,7 @@ import { map, first } from 'rxjs/operators';
 import { pickBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
-import { CassandraDBObjectStore } from './cassandra/CassandraDBObjectStore';
+import { CassandraDBObjectStore } from '@casual-simulation/causal-tree-store-cassandradb';
 import { EventEmitter } from 'events';
 import { ConnectionOptions } from 'tls';
 import { readFileSync } from 'fs';
@@ -437,15 +437,19 @@ export class Server {
             requestEmitter.on('slow', message => {
                 console.log(`[Cassandra] ${message}`);
             });
-            let sslOptions = {
-                rejectUnauthorized: this._config.cassandradb.requireTLS,
-            } as ConnectionOptions;
-            if (this._config.cassandradb.certificateAuthorityPublicKey) {
-                sslOptions.ca = [
-                    readFileSync(
-                        this._config.cassandradb.certificateAuthorityPublicKey
-                    ),
-                ];
+            let sslOptions = null as ConnectionOptions;
+            if (this._config.cassandradb.requireTLS) {
+                sslOptions = {
+                    rejectUnauthorized: this._config.cassandradb.requireTLS,
+                };
+                if (this._config.cassandradb.certificateAuthorityPublicKey) {
+                    sslOptions.ca = [
+                        readFileSync(
+                            this._config.cassandradb
+                                .certificateAuthorityPublicKey
+                        ),
+                    ];
+                }
             }
             this._cassandraClient = new CassandraClient({
                 contactPoints: this._config.cassandradb.contactPoints,

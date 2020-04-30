@@ -1,10 +1,7 @@
 import * as path from 'path';
 import * as process from 'process';
-import {
-    Config,
-    CassandraDBConfig,
-    CassandraDBCausalReposConfig,
-} from './config';
+import { Config, CassandraDBConfig } from './config';
+import { CassandraDBCausalReposConfig } from '@casual-simulation/causal-tree-store-cassandradb';
 import playerConfig from './player.config';
 
 const redisHost = process.env.REDIS_HOST;

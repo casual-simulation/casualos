@@ -6,7 +6,7 @@ import {
 import { Client, concurrent } from 'cassandra-driver';
 import sortBy from 'lodash/sortBy';
 import flatMap from 'lodash/flatMap';
-import { CassandraDBCausalReposConfig } from 'server/config';
+import { CassandraDBCausalReposConfig } from './CassandraDBCausalReposConfig';
 
 /**
  * Defines a CausalObjectStore that interfaces with CassandraDB.
