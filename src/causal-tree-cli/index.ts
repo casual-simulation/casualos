@@ -1,10 +1,14 @@
 import { prompt } from 'inquirer';
 import { migrateMenu } from './migrate';
 
-main().catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+main()
+    .then(() => {
+        process.exit(0);
+    })
+    .catch(err => {
+        console.error(err);
+        process.exit(1);
+    });
 
 async function main() {
     await mainMenu();

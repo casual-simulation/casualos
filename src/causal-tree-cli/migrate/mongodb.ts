@@ -2,11 +2,15 @@ import { prompt } from 'inquirer';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
 import { connect } from 'mongodb';
 
-export async function mongoConnectionInfo(): Promise<MongoDBRepoStore> {
+export async function mongoConnectionInfo(
+    opts = {
+        urlMessage: 'Enter the source MongoDB URL',
+    }
+): Promise<MongoDBRepoStore> {
     const urlAnswer = await prompt({
         type: 'input',
         name: 'url',
-        message: 'Enter the MongoDB URL',
+        message: opts.urlMessage,
     });
 
     const client = await connect(

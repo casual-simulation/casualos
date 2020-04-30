@@ -15,7 +15,7 @@ import Progress from 'cli-progress';
 import sortBy from 'lodash/sortBy';
 import { prompt } from 'inquirer';
 import { mongoConnectionInfo } from './mongodb';
-import { cassandraConnectionInfo } from './cassandradb';
+import { cassandraAndMongoDBConnectionInfo } from './cassandradb';
 
 export async function migrateMenu() {
     const sourceAnswer = await prompt({
@@ -31,7 +31,7 @@ export async function migrateMenu() {
         type: 'list',
         name: 'destination',
         message: 'Where do you want to migrate to?',
-        choices: ['CassandraDB'],
+        choices: ['MongoDB', 'CassandraDB+MongoDB'],
     });
 
     const destination = await connectionInfo(destinationAnswer.destination);
@@ -109,7 +109,7 @@ async function migrate(
 async function migrateBranch(
     branch: CausalRepoBranch,
     source: CausalObjectStore,
-    destination: CausalObjectStore,
+    destination: CausalRepoStore,
     progress: Progress.MultiBar
 ): Promise<BranchMigrationResult> {
     const bar = progress.create(100, 0, {
@@ -126,6 +126,9 @@ async function migrateBranch(
                 numberOfObjectsMigrated: 0,
             };
         }
+
+        await _storeBranch(branch);
+        bar.increment();
 
         totalObjects += await _storeCommit(data);
         bar.increment();
@@ -176,6 +179,14 @@ async function migrateBranch(
 
         return atoms.length + 2;
     }
+
+    async function _storeBranch(branch: CausalRepoBranch) {
+        await destination.saveBranch({
+            hash: branch.hash,
+            name: branch.name,
+            type: branch.type,
+        });
+    }
 }
 
 function isRepoStore(obj: MigrationSource): obj is CausalRepoStore {
@@ -187,17 +198,17 @@ interface BranchMigrationResult {
     numberOfObjectsMigrated: number;
 }
 
-type MigrationSource = CausalRepoStore | CausalObjectStore;
-type MigrationDestination = CausalRepoStore | CausalObjectStore;
+type MigrationSource = CausalRepoStore;
+type MigrationDestination = CausalRepoStore;
 
-type ConnectionType = 'MongoDB' | 'CassandraDB';
+type ConnectionType = 'MongoDB' | 'CassandraDB+MongoDB';
 
 async function connectionInfo(
     connectionType: ConnectionType
-): Promise<CausalRepoStore | CausalObjectStore> {
+): Promise<CausalRepoStore> {
     if (connectionType === 'MongoDB') {
         return mongoConnectionInfo();
     } else {
-        return cassandraConnectionInfo();
+        return cassandraAndMongoDBConnectionInfo();
     }
 }

@@ -7,10 +7,24 @@ import {
     AWS_KEYSPACES_REGION_MAP,
 } from '@casual-simulation/causal-tree-store-cassandradb';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
+import {
+    CausalRepoStore,
+    CombinedCausalRepoStore,
+} from '@casual-simulation/causal-trees';
+import { mongoConnectionInfo } from './mongodb';
 
-export async function cassandraConnectionInfo(): Promise<
-    CassandraDBObjectStore
+export async function cassandraAndMongoDBConnectionInfo(): Promise<
+    CausalRepoStore
 > {
+    const objectStore = await casandraObjectStore();
+    const mongoStore = await mongoConnectionInfo({
+        urlMessage: 'Enter the destination MongoDB URL',
+    });
+
+    return new CombinedCausalRepoStore(mongoStore, objectStore);
+}
+
+async function casandraObjectStore() {
     const cassandraTypeAnswer = await prompt({
         type: 'list',
         name: 'type',
