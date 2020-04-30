@@ -80,6 +80,7 @@
         "@types/cors": "2.8.6",
         "@types/node": "^13.11.1",
         "@types/howler": "^2.1.2",
+        "@types/inquirer": "^6.5.0",
         "babel-loader": "^8.0.4",
         "braces": "^2.3.2",
         "chai": "^4.2.0",

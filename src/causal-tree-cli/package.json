@@ -1,0 +1,47 @@
+{
+    "name": "@casual-simulation/causal-tree-cli",
+    "version": "1.0.24",
+    "description": "A CLI to manage causal trees",
+    "keywords": [
+        "cli",
+        "github",
+        "releases"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "build": "tsc",
+        "start": "node bin/causal-tree-cli.js"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@casual-simulation/causal-trees": "1.0.26",
+        "commander": "4.0.1",
+        "inquirer": "7.1.0"
+    },
+    "devDependencies": {
+        "typescript": "^3.8.3"
+    }
+}
