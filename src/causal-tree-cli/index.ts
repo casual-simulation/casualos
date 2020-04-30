@@ -7,6 +7,9 @@ import {
     loadBranch,
     storeData,
     repoAtom,
+    CausalRepoCommit,
+    loadCommit,
+    CommitData,
 } from '@casual-simulation/causal-trees';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
@@ -149,38 +152,69 @@ async function migrateBranch(
     destination: CausalObjectStore,
     progress: Progress.MultiBar
 ): Promise<BranchMigrationResult> {
-    const b1 = progress.create(100, 0, {
+    const bar = progress.create(100, 0, {
         filename: branch.name,
     });
     try {
-        const data = await loadBranch(source, branch);
-        b1.update(50);
-
         let totalObjects = 0;
-        if (data) {
-            const atoms = [...data.atoms.values()];
-            totalObjects = atoms.length + 2;
-            b1.setTotal(totalObjects);
-            const objs: CausalRepoObject[] = [
-                data.commit,
-                data.index,
-                ...atoms.map(repoAtom),
-            ];
 
-            await destination.storeObjects(branch.name, objs);
+        const data = await loadBranch(source, branch);
+
+        if (!data) {
+            return {
+                error: null,
+                numberOfObjectsMigrated: 0,
+            };
         }
 
-        b1.update(b1.getTotal());
+        totalObjects += await _storeCommit(data);
+        bar.increment();
+
+        let currentCommit = await _previousCommit(data.commit);
+        while (currentCommit) {
+            const loaded = await loadCommit(source, branch.name, currentCommit);
+
+            totalObjects += await _storeCommit(loaded);
+            bar.increment();
+
+            currentCommit = await _previousCommit(currentCommit);
+        }
+
+        bar.update(bar.getTotal());
         return {
             error: null,
             numberOfObjectsMigrated: totalObjects,
         };
     } catch (err) {
-        b1.stop();
+        bar.stop();
         return {
             error: err,
             numberOfObjectsMigrated: 0,
         };
+    }
+
+    async function _previousCommit(
+        commit: CausalRepoCommit
+    ): Promise<CausalRepoCommit> {
+        if (commit.previousCommit) {
+            return (await source.getObject(
+                commit.previousCommit
+            )) as CausalRepoCommit;
+        } else {
+            return null;
+        }
+    }
+
+    async function _storeCommit(loaded: CommitData) {
+        const atoms = [...loaded.atoms.values()];
+        const objs: CausalRepoObject[] = [
+            loaded.commit,
+            loaded.index,
+            ...atoms.map(repoAtom),
+        ];
+        await destination.storeObjects(branch.name, objs);
+
+        return atoms.length + 2;
     }
 }
 

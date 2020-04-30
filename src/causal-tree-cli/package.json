@@ -17,8 +17,8 @@
     "files": [
         "/README.md",
         "/LICENSE.txt",
-        "**/*.js",
-        "**/*.js.map",
+        "/bin/*.js",
+        "/bin/*.js.map",
         "**/*.d.ts"
     ],
     "repository": {
