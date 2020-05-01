@@ -93,6 +93,7 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         const result = await this._client.execute(query, [head, keys], {
             prepare: true,
             fetchSize: 100_000,
+            executionProfile: 'read',
         });
         const asyncResult = (<any>result) as {
             isPaged: () => boolean;
@@ -122,6 +123,7 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         const query = `SELECT * FROM objects WHERE hash = ?`;
         const result = await this._client.execute(query, [key], {
             prepare: true,
+            executionProfile: 'read',
         });
         const first = result.first();
         if (first) {
@@ -170,7 +172,10 @@ export class CassandraDBObjectStore implements CausalObjectStore {
 
         const results = await concurrent.executeConcurrent(
             this._client,
-            queries
+            queries,
+            {
+                executionProfile: 'write',
+            }
         );
 
         for (let err of results.errors) {

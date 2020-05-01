@@ -113,7 +113,7 @@ async function migrateBranch(
     progress: Progress.MultiBar
 ): Promise<BranchMigrationResult> {
     const bar = progress.create(100, 0, {
-        filename: branch.name,
+        format: `${branch.name}: [{bar}] {percentage}% | {value}/{total}`,
     });
     try {
         let totalObjects = 0;

@@ -1,6 +1,6 @@
 import { prompt } from 'inquirer';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
-import { connect } from 'mongodb';
+import { connect, MongoClient } from 'mongodb';
 
 export async function mongoConnectionInfo(
     opts = {
