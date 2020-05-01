@@ -29,6 +29,11 @@ declare module '*.json' {
     export default json;
 }
 
+declare module '*.pem' {
+    const content: string;
+    export default content;
+}
+
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 
 declare module 'downloadjs' {

@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as process from 'process';
-import { Config, CassandraDBConfig } from './config';
+import { Config, CassandraDBConfig, CommonCassandraDBConfig } from './config';
 import { CassandraDBCausalReposConfig } from '@casual-simulation/causal-tree-store-cassandradb';
 import playerConfig from './player.config';
 
@@ -15,47 +15,74 @@ const localIpAddress = process.env.LOCAL_IP_ADDRESS;
 const tunnel = process.env.PROXY_TUNNEL;
 const trustProxy = process.env.PROXY_IP_RANGE;
 
+const cassandraAwsRegion = process.env.CASSANDRA_AWS_REGION;
 const cassandraContactPoints = process.env.CASSANDRA_CONTACT_POINTS;
 const cassandraLocalDataCenter = process.env.CASSANDRA_LOCAL_DATACENTER;
 const cassandraKeyspace = process.env.CASSANDRA_KEYSPACE;
 const cassandraCreateKeyspace = process.env.CASSANDRA_CREATE_KEYSPACE;
 const cassandraCertificateAuthority =
     process.env.CASSANDRA_CERTIFICATE_AUTHORITY;
+const cassandraUsername = process.env.CASSANDRA_USERNAME;
+const cassandraPassword = process.env.CASSANDRA_PASSWORD;
 
 let cassandradb: CassandraDBConfig = null;
 let cassandraReposConfig: CassandraDBCausalReposConfig = null;
 
-if (cassandraContactPoints && cassandraLocalDataCenter) {
+let cassandraCredentials: CommonCassandraDBConfig['credentials'] = cassandraUsername
+    ? {
+          username: cassandraUsername,
+          password: cassandraPassword,
+      }
+    : null;
+
+if (cassandraAwsRegion) {
+    cassandradb = {
+        awsRegion: cassandraAwsRegion,
+        slowRequestTime: 1000,
+        credentials: cassandraCredentials,
+    };
+} else if (cassandraContactPoints && cassandraLocalDataCenter) {
     cassandradb = {
         contactPoints: cassandraContactPoints.split(','),
         localDataCenter: cassandraLocalDataCenter,
         slowRequestTime: 1000,
         requireTLS: true,
         certificateAuthorityPublicKey: cassandraCertificateAuthority,
+        credentials: cassandraCredentials,
     };
     console.log(
         `[Config] Enabling CassandraDB with:\n\tcontactPoints: ${cassandraContactPoints}\n\tlocalDataCenter: ${cassandraLocalDataCenter}`
     );
+} else {
+    console.log('[Config] Disabling CassandraDB.');
+}
 
+if (
+    cassandraAwsRegion ||
+    (cassandraContactPoints && cassandraLocalDataCenter)
+) {
     if (cassandraKeyspace) {
         cassandraReposConfig = {
             keyspace: cassandraKeyspace,
             replication:
-                cassandraCreateKeyspace === 'true'
+                cassandraCreateKeyspace === 'true' && !cassandraAwsRegion
                     ? {
                           class: 'NetworkTopologyStrategy',
                           replicationFactor: 3,
                           dataCenters: {},
                       }
                     : null,
+            behavior: {
+                // Amazon Keyspaces doesn't support
+                // the CQL IN operator.
+                avoidInOperator: !cassandraAwsRegion ? true : false,
+            },
         };
         console.log(
             `[Config] Enabling CassandraDB for Causal Repos with:\n\tkeyspace: ${cassandraKeyspace}\n\tcreateKeyspace: ${cassandraKeyspace ===
                 'true'}`
         );
     }
-} else {
-    console.log('[Config] Disabling CassandraDB.');
 }
 
 // Defaults to a week.

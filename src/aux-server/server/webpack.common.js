@@ -32,6 +32,15 @@ module.exports = {
                 include: [__dirname, path.resolve(__dirname, '..', 'shared')],
                 exclude: /node_modules/,
             },
+            {
+                test: /\.(pem)$/,
+                use: [
+                    {
+                        loader: 'raw-loader',
+                        options: {},
+                    },
+                ],
+            },
         ],
     },
     resolve: {

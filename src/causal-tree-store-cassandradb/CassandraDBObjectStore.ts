@@ -89,6 +89,90 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         head: string,
         keys: string[]
     ): Promise<CausalRepoObject[]> {
+        if (this._config.behavior.avoidInOperator) {
+            return await this._getObjectsWithoutIn(head, keys);
+        } else {
+            return await this._getObjectsWithInOperator(head, keys);
+        }
+    }
+
+    private async _getObjectsWithoutIn(
+        head: string,
+        keys: string[]
+    ): Promise<CausalRepoObject[]> {
+        const start = process.hrtime();
+        try {
+            const query = `SELECT * FROM objects_by_head WHERE head = ?`;
+            const result = await this._client.execute(query, [head, keys], {
+                prepare: true,
+                fetchSize: 100_000,
+                executionProfile: 'read',
+            });
+            const asyncResult = (<any>result) as {
+                isPaged: () => boolean;
+                [Symbol.asyncIterator]: any;
+            };
+
+            let queryTime = process.hrtime(start);
+            console.log(
+                `[CassandraDBObjectStore] Query took %d seconds and %d nanoseconds`,
+                queryTime[0],
+                queryTime[1]
+            );
+
+            let hashes = new Set(keys);
+            let objects: CausalRepoObject[] = null;
+            let totalObjects = 0;
+            if (asyncResult.isPaged()) {
+                console.log(`[CassandraDBObjectStore] Query is paged`);
+                objects = [];
+                // Use the async iterator to process
+                // all the results.
+                for await (const row of asyncResult) {
+                    totalObjects += 1;
+                    if (hashes.has(row.hash)) {
+                        objects.push(JSON.parse(row.data));
+                    }
+                }
+            } else {
+                objects = [];
+                totalObjects += result.rows.length;
+                for (let row of result.rows) {
+                    if (hashes.has(row.hash)) {
+                        objects.push(JSON.parse(row.data));
+                    }
+                }
+            }
+
+            let filterTime = process.hrtime(queryTime);
+            console.log(
+                `[CassandraDBObjectStore] Filter took %d seconds and %d nanoseconds`,
+                filterTime[0],
+                filterTime[1]
+            );
+
+            console.log(
+                `[CassandraDBObjectStore] Query returned ${
+                    objects.length
+                } objects out of ${totalObjects} objects.`
+            );
+            return sortBy(objects, o =>
+                o.type === 'atom' ? o.data.id.timestamp : -1
+            );
+        } finally {
+            const [seconds, nanoseconds] = process.hrtime(start);
+            console.log(
+                `[CassandraDBObjectStore] Total took %d seconds and %d nanoseconds`,
+                seconds,
+                nanoseconds
+            );
+        }
+    }
+
+    private async _getObjectsWithInOperator(
+        head: string,
+        keys: string[]
+    ): Promise<CausalRepoObject[]> {
         const query = `SELECT * FROM objects_by_head WHERE head = ? AND hash IN ?`;
         const result = await this._client.execute(query, [head, keys], {
             prepare: true,

@@ -5,6 +5,16 @@ export interface CassandraDBCausalReposConfig {
     keyspace: string;
 
     /**
+     * Options to control the behavior of the storage drivers.
+     */
+    behavior: {
+        /**
+         * Whether to structure queries so that they don't use the IN operator.
+         */
+        avoidInOperator: boolean;
+    };
+
+    /**
      * The replication parameters that should be used for the keyspace.
      * If null, then creating the keyspace will be skipped.
      */

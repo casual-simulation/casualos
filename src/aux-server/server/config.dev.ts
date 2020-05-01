@@ -21,6 +21,7 @@ const config: Config = {
         localDataCenter: 'datacenter1',
         slowRequestTime: 1000,
         requireTLS: false,
+        credentials: null,
     },
     redis: {
         options: {

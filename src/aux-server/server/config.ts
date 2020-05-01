@@ -48,7 +48,11 @@ export interface MongoDbConfig {
     url: string;
 }
 
-export interface CassandraDBConfig {
+export type CassandraDBConfig =
+    | StandardCassandraDBConfig
+    | AwsCassandraDBConfig;
+
+export interface StandardCassandraDBConfig extends CommonCassandraDBConfig {
     /**
      * The list of hosts that the cassandra client can contact
      * on initialization.
@@ -62,11 +66,6 @@ export interface CassandraDBConfig {
     localDataCenter: string;
 
     /**
-     * The number of miliseconds needed for a request to be logged as slow.
-     */
-    slowRequestTime: number;
-
-    /**
      * Whether the server must provide a valid TLS certificate.
      */
     requireTLS: boolean;
@@ -75,6 +74,28 @@ export interface CassandraDBConfig {
      * The path to the public key file (PEM format) that the server's certificate authority uses.
      */
     certificateAuthorityPublicKey?: string;
+}
+
+export interface AwsCassandraDBConfig extends CommonCassandraDBConfig {
+    /**
+     * The AWS region that should be connected to.
+     */
+    awsRegion: string;
+}
+
+export interface CommonCassandraDBConfig {
+    /**
+     * The number of miliseconds needed for a request to be logged as slow.
+     */
+    slowRequestTime: number;
+
+    /**
+     * The credentials that should be used to login to Cassandra.
+     */
+    credentials: {
+        username: string;
+        password: string;
+    } | null;
 }
 
 export interface RedisConfig {

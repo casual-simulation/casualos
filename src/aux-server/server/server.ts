@@ -11,6 +11,9 @@ import { MongoClient } from 'mongodb';
 import {
     Client as CassandraClient,
     tracker as CassandraTracker,
+    DseClientOptions,
+    ExecutionProfile,
+    types,
 } from 'cassandra-driver';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
@@ -71,10 +74,13 @@ import { map, first } from 'rxjs/operators';
 import { pickBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
-import { CassandraDBObjectStore } from '@casual-simulation/causal-tree-store-cassandradb';
+import {
+    CassandraDBObjectStore,
+    AWS_KEYSPACES_REGIONS,
+} from '@casual-simulation/causal-tree-store-cassandradb';
 import { EventEmitter } from 'events';
-import { ConnectionOptions } from 'tls';
 import { readFileSync } from 'fs';
+import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 
 const connect = pify(MongoClient.connect);
 
@@ -437,26 +443,70 @@ export class Server {
             requestEmitter.on('slow', message => {
                 console.log(`[Cassandra] ${message}`);
             });
-            let sslOptions = null as ConnectionOptions;
-            if (this._config.cassandradb.requireTLS) {
-                sslOptions = {
-                    rejectUnauthorized: this._config.cassandradb.requireTLS,
+
+            let options = {} as DseClientOptions;
+            if ('awsRegion' in this._config.cassandradb) {
+                const config = this._config.cassandradb;
+                const region = AWS_KEYSPACES_REGIONS.find(
+                    r => r.region === config.awsRegion
+                );
+                if (!region) {
+                    throw new Error(
+                        'Unable to find Cassandra endpoint information for the given region.'
+                    );
+                }
+                options.contactPoints = [region.endpoint];
+                options.localDataCenter = region.region;
+                options.protocolOptions = {
+                    port: region.port,
                 };
-                if (this._config.cassandradb.certificateAuthorityPublicKey) {
-                    sslOptions.ca = [
-                        readFileSync(
-                            this._config.cassandradb
-                                .certificateAuthorityPublicKey
-                        ),
-                    ];
+                options.sslOptions = {
+                    host: region.endpoint,
+                    port: region.port,
+                    servername: region.endpoint,
+                    rejectUnauthorized: true,
+                    ca: [AmazonRootCA1],
+                };
+            } else {
+                options.contactPoints = this._config.cassandradb.contactPoints;
+                options.localDataCenter = this._config.cassandradb.localDataCenter;
+                if (this._config.cassandradb.requireTLS) {
+                    options.sslOptions = {
+                        rejectUnauthorized: this._config.cassandradb.requireTLS,
+                    };
+                    if (
+                        this._config.cassandradb.certificateAuthorityPublicKey
+                    ) {
+                        options.sslOptions.ca = [
+                            readFileSync(
+                                this._config.cassandradb
+                                    .certificateAuthorityPublicKey
+                            ),
+                        ];
+                    }
                 }
             }
-            this._cassandraClient = new CassandraClient({
-                contactPoints: this._config.cassandradb.contactPoints,
-                localDataCenter: this._config.cassandradb.localDataCenter,
-                requestTracker,
-                sslOptions,
+            if (this._config.cassandradb.credentials) {
+                options.credentials = this._config.cassandradb.credentials;
+            }
+            const readProfile = new ExecutionProfile('read', {
+                consistency: types.consistencies.localOne,
             });
+            const writeProfile = new ExecutionProfile('write', {
+                consistency: types.consistencies.localQuorum,
+            });
+            const defaultProfile = new ExecutionProfile('default', {
+                consistency: types.consistencies.localQuorum,
+            });
+            options.profiles = [readProfile, writeProfile, defaultProfile];
+            this._cassandraClient = new CassandraClient(options);
+
+            //     {
+            //     contactPoints: this._config.cassandradb.contactPoints,
+            //     localDataCenter: this._config.cassandradb.localDataCenter,
+            //     requestTracker,
+            //     sslOptions,
+            // });
 
             this._cassandraClient.on(
                 'log',

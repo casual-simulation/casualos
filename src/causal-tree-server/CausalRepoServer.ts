@@ -478,22 +478,32 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
-            repo = new CausalRepo(this._store);
-            await repo.checkout(branch, {
-                createIfDoesntExist: createBranch
-                    ? {
-                          hash: null,
-                      }
-                    : null,
-            });
-            const stage = await this._stage.getStage(branch);
-            repo.addMany(stage.additions);
-            const hashes = Object.keys(stage.deletions);
-            repo.removeMany(hashes);
+            const startTime = process.hrtime();
+            try {
+                console.log(`[CausalRepoServer] Loading branch: ${branch}`);
+                repo = new CausalRepo(this._store);
+                await repo.checkout(branch, {
+                    createIfDoesntExist: createBranch
+                        ? {
+                              hash: null,
+                          }
+                        : null,
+                });
+                const stage = await this._stage.getStage(branch);
+                repo.addMany(stage.additions);
+                const hashes = Object.keys(stage.deletions);
+                repo.removeMany(hashes);
 
-            this._repos.set(branch, repo);
-            this._branchLoaded(branch);
+                this._repos.set(branch, repo);
+                this._branchLoaded(branch);
+            } finally {
+                const [seconds, nanoseconds] = process.hrtime(startTime);
+                console.log(
+                    `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
+                    seconds,
+                    nanoseconds
+                );
+            }
         }
 
         return repo;
