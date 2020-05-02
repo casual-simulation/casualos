@@ -39,6 +39,7 @@ async function casandraObjectStore() {
     });
 
     let options = {} as DseClientOptions;
+    let aws = false;
 
     if (cassandraTypeAnswer.type === 'Standard') {
         const contactPointsAnswer = await prompt({
@@ -59,6 +60,7 @@ async function casandraObjectStore() {
 
         options.localDataCenter = localDataCenter.dataCenter;
     } else {
+        aws = true;
         const region = await awsRegion();
 
         options.contactPoints = [region.endpoint];
@@ -117,7 +119,7 @@ async function casandraObjectStore() {
     const client = new CassandraClient(options);
     await client.connect();
 
-    const config = await cassandraReposConfig(client);
+    const config = await cassandraReposConfig(client, aws);
 
     const store = new CassandraDBObjectStore(config, client);
     await store.init();
@@ -126,7 +128,8 @@ async function casandraObjectStore() {
 }
 
 async function cassandraReposConfig(
-    client: CassandraClient
+    client: CassandraClient,
+    aws: boolean
 ): Promise<CassandraDBCausalReposConfig> {
     const keyspacesResult = await client.execute(
         'SELECT keyspace_name from system_schema.keyspaces;'
@@ -144,6 +147,9 @@ async function cassandraReposConfig(
     return {
         keyspace: keyspaceAnswer.keyspace,
         replication: null,
+        behavior: {
+            allowInOperator: aws ? false : true,
+        },
     };
 }
 
