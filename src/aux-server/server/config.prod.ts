@@ -75,7 +75,7 @@ if (
             behavior: {
                 // Amazon Keyspaces doesn't support
                 // the CQL IN operator.
-                avoidInOperator: !cassandraAwsRegion ? true : false,
+                allowInOperator: !!cassandraAwsRegion ? false : true,
             },
         };
         console.log(

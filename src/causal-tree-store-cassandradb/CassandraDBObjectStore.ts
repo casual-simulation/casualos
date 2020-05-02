@@ -89,10 +89,10 @@ export class CassandraDBObjectStore implements CausalObjectStore {
         head: string,
         keys: string[]
     ): Promise<CausalRepoObject[]> {
-        if (this._config.behavior.avoidInOperator) {
-            return await this._getObjectsWithoutIn(head, keys);
-        } else {
+        if (this._config.behavior.allowInOperator) {
             return await this._getObjectsWithInOperator(head, keys);
+        } else {
+            return await this._getObjectsWithoutIn(head, keys);
         }
     }
 

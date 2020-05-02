@@ -43,6 +43,9 @@ const config: Config = {
                 class: 'SimpleStrategy',
                 replicationFactor: 1,
             },
+            behavior: {
+                allowInOperator: true,
+            },
         },
     },
     bots: {

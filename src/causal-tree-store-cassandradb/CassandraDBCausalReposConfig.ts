@@ -11,7 +11,7 @@ export interface CassandraDBCausalReposConfig {
         /**
          * Whether to structure queries so that they don't use the IN operator.
          */
-        avoidInOperator: boolean;
+        allowInOperator: boolean;
     };
 
     /**
