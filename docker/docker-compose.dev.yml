@@ -14,10 +14,3 @@ services:
             - '6379:6379'
         volumes:
             - './services/data/cache:/data'
-    cassandra:
-        image: 'cassandra:latest'
-        restart: always
-        ports:
-            - '9042:9042'
-        volumes:
-            - './services/data/cassandra:/var/lib/cassandra'

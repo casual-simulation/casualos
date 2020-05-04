@@ -16,13 +16,7 @@ const config: Config = {
     mongodb: {
         url: 'mongodb://127.0.0.1:27017',
     },
-    cassandradb: {
-        contactPoints: ['localhost:9042'],
-        localDataCenter: 'datacenter1',
-        slowRequestTime: 1000,
-        requireTLS: false,
-        credentials: null,
-    },
+    cassandradb: null,
     redis: {
         options: {
             host: '127.0.0.1',
@@ -37,16 +31,7 @@ const config: Config = {
         mongodb: {
             dbName: 'aux-repos',
         },
-        cassandra: {
-            keyspace: 'aux_objects',
-            replication: {
-                class: 'SimpleStrategy',
-                replicationFactor: 1,
-            },
-            behavior: {
-                allowInOperator: true,
-            },
-        },
+        cassandra: null,
     },
     bots: {
         dbName: 'aux-bots',
