@@ -7,10 +7,12 @@
 ### Changes:
 
 -   :rocket: Improvements
-    -   Added the ability to store universe data in CassandraDB. This allows us to support a much larger amount of total data while keeping the performance hit to a minimum.
+    -   Added the ability to store universe data in CassandraDB.
+        -   Note that support for CassandraDB is experimental and probably won't be supported in the future.
         -   Use the following environment variables to enable Cassandra support:
-            -   `CASSANDRA_CONTACT_POINTS` - This is the comma-separated list of hostnames that the Cassandra client to connect to on first load. (Required for Cassandra)
-            -   `CASSANDRA_LOCAL_DATACENTER` - This is the name of the data center that the AUX Server is booting up in. (Required for Cassandra)
+            -   `CASSANDRA_AWS_REGION` - This is the AWS region that the Amazon Keyspaces instance is hosted in.
+            -   `CASSANDRA_CONTACT_POINTS` - This is the comma-separated list of hostnames that the Cassandra client to connect to on first load. (Required if `CASSANDRA_AWS_REGION` is not specified)
+            -   `CASSANDRA_LOCAL_DATACENTER` - This is the name of the data center that the AUX Server is booting up in. (Required if `CASSANDRA_AWS_REGION` is not specified)
             -   `CASSANDRA_KEYSPACE` - This is the name of the keyspace that should be used by the client. (Required for Cassandra)
             -   `CASSANDRA_CREATE_KEYSPACE` - This is a `true`/`false` value indicating whether the client should create the keyspace if it doesn't exist. (Optional)
             -   `CASSANDRA_CERTIFICATE_AUTHORITY` - This is the path to the public key file (PEM format) that should be used. Only required if connecting to a Cassandra server which uses a self-signed certificate.
