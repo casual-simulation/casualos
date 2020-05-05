@@ -9,6 +9,7 @@
 -   :rocket: Improvements
     -   Added the ability to store universe data in CassandraDB.
         -   Note that support for CassandraDB is experimental and probably won't be supported in the future.
+        -   If the required environment variables are not specified, then Cassandra support will be disabled.
         -   Use the following environment variables to enable Cassandra support:
             -   `CASSANDRA_AWS_REGION` - This is the AWS region that the Amazon Keyspaces instance is hosted in.
             -   `CASSANDRA_CONTACT_POINTS` - This is the comma-separated list of hostnames that the Cassandra client to connect to on first load. (Required if `CASSANDRA_AWS_REGION` is not specified)
