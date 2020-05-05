@@ -525,6 +525,10 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private async _loadGLTF(url: string, legacy: boolean) {
         try {
             const gltf = await gltfPool.loadGLTF(url, legacy);
+            if (!this.container) {
+                // The decorator was disposed of by the Bot.
+                return;
+            }
             this._setGltf(gltf);
         } catch (err) {
             console.error(

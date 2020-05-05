@@ -264,9 +264,11 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     dispose() {
         super.dispose();
         if (this.decorators) {
-            this.decorators.forEach(d => {
+            const decorators = this.decorators;
+            this.decorators = [];
+            for (let d of decorators) {
                 d.dispose();
-            });
+            }
         }
     }
 
