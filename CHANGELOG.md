@@ -7,6 +7,7 @@
 ### Changes:
 
 -   :rocket: Improvements
+
     -   Added the ability to store universe data in CassandraDB.
         -   Note that support for CassandraDB is experimental and probably won't be supported in the future.
         -   If the required environment variables are not specified, then Cassandra support will be disabled.
@@ -17,6 +18,9 @@
             -   `CASSANDRA_KEYSPACE` - This is the name of the keyspace that should be used by the client. (Required for Cassandra)
             -   `CASSANDRA_CREATE_KEYSPACE` - This is a `true`/`false` value indicating whether the client should create the keyspace if it doesn't exist. (Optional)
             -   `CASSANDRA_CERTIFICATE_AUTHORITY` - This is the path to the public key file (PEM format) that should be used. Only required if connecting to a Cassandra server which uses a self-signed certificate.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where loading a GLTF would error if the bot was destroyed while the GLTF was loading.
 
 ## V1.1.0
 
