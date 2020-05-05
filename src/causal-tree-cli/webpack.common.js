@@ -21,8 +21,8 @@ module.exports = {
         __dirname: false,
     },
     output: {
-        filename: 'main.js',
-        path: path.resolve(__dirname, 'dist'),
+        filename: 'causal-tree-cli.js',
+        path: path.resolve(__dirname, 'bin'),
     },
     module: {
         rules: [
@@ -58,8 +58,6 @@ module.exports = {
         }),
     ], // in order to ignore all modules in node_modules folder
     plugins: [
-        new webpack.ContextReplacementPlugin(/socket\.io/, /socket\.io-client/),
-        new webpack.ContextReplacementPlugin(/express/, /express/),
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),

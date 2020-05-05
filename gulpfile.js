@@ -14,6 +14,7 @@ let folders = [
     `${__dirname}/src/causal-tree-server-socketio`,
     `${__dirname}/src/causal-tree-client-socketio`,
     `${__dirname}/src/causal-tree-store-mongodb`,
+    `${__dirname}/src/causal-tree-store-cassandradb`,
     `${__dirname}/src/causal-tree-store-browser`,
     `${__dirname}/src/crypto`,
     `${__dirname}/src/crypto-node`,

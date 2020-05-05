@@ -1,0 +1,49 @@
+{
+    "name": "@casual-simulation/causal-tree-store-cassandradb",
+    "version": "1.0.26",
+    "description": "A causal tree store that interfaces with CassandraDB",
+    "keywords": [
+        "cassandra",
+        "crdt",
+        "causal-tree"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts",
+        "**/*.pem"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-store-cassandradb .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/causal-trees": "^1.0.26",
+        "cassandra-driver": "4.5.1"
+    }
+}

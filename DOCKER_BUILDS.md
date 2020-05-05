@@ -61,7 +61,7 @@ Build the entire project on the Raspberry PI
 6. Clone the aux repository
     - `git clone https://github.com/casual-simulation/casualos.git`
 7. Setup SSH
-    1. On Server: 
+    1. On Server:
         1. `ssh-keygen -t rsa -b 4096 -C "your_email@example.com" -m PEM`
         2. Name the key
         3. Give Passphrase or Skip

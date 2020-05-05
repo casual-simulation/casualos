@@ -8,27 +8,42 @@ import { sortedIndexBy, findIndex, sortBy } from 'lodash';
 
 export class MemoryCausalRepoStore implements CausalRepoStore {
     private _map: Map<string, CausalRepoObject>;
+    private _headsMap: Map<string, Map<string, CausalRepoObject>>;
     private _branches: CausalRepoBranch[];
 
     constructor() {
         this._map = new Map();
+        this._headsMap = new Map();
         this._branches = [];
     }
 
-    async getObjects(keys: string[]): Promise<CausalRepoObject[]> {
+    async getObjects(
+        head: string,
+        keys: string[]
+    ): Promise<CausalRepoObject[]> {
         let results: CausalRepoObject[] = [];
+        let map = this._getHeadMap(head);
         for (let key of keys) {
-            let result = this._map.get(key);
+            let result = map.get(key);
             results.push(result);
         }
 
         return results;
     }
 
-    async storeObjects(objects: CausalRepoObject[]): Promise<void> {
+    async getObject(key: string): Promise<CausalRepoObject> {
+        return this._map.get(key) || null;
+    }
+
+    async storeObjects(
+        head: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
+        let map = this._getHeadMap(head);
         for (let obj of objects) {
             const hash = getObjectHash(obj);
             this._map.set(hash, obj);
+            map.set(hash, obj);
         }
     }
 
@@ -57,5 +72,15 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
         if (index >= 0) {
             this._branches.splice(index, 1);
         }
+    }
+
+    private _getHeadMap(head: string): Map<string, CausalRepoObject> {
+        let map = this._headsMap.get(head);
+        if (!map) {
+            map = new Map();
+            this._headsMap.set(head, map);
+        }
+
+        return map;
     }
 }

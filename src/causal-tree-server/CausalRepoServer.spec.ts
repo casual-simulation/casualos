@@ -90,7 +90,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             joinBranch.next('testBranch');
@@ -154,7 +154,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             joinBranch.next('testBranch');
@@ -203,7 +203,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             await stageStore.addAtoms('testBranch', [a3]);
@@ -251,7 +251,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
             await waitAsync();
 
@@ -318,7 +318,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             watchBranches.next();
@@ -371,7 +371,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             watchBranches.next();
@@ -447,7 +447,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             connections.connection.next(device);
@@ -585,7 +585,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -649,7 +649,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             joinBranch2.next('testBranch');
@@ -720,7 +720,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             joinBranch.next('testBranch');
@@ -775,7 +775,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -785,7 +785,7 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            const [repoAtom] = await store.getObjects([a3.hash]);
+            const repoAtom = await store.getObject(a3.hash);
             expect(repoAtom).toEqual({
                 type: 'atom',
                 data: a3,
@@ -821,7 +821,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, a3, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
             joinBranch2.next('testBranch');
@@ -887,7 +887,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -925,7 +925,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, a3, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
             removeAtoms.next({
@@ -989,7 +989,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, a3, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
             joinBranch2.next('testBranch');
@@ -1060,7 +1060,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, a3, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
             joinBranch.next('testBranch');
@@ -1124,7 +1124,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             joinBranch2.next('testBranch');
@@ -1190,7 +1190,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, a3, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -1231,7 +1231,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -1279,7 +1279,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -1301,7 +1301,7 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             const [testBranch] = await store.getBranches('testBranch');
-            const [newCommit] = await store.getObjects([testBranch.hash]);
+            const newCommit = await store.getObject(testBranch.hash);
 
             expect(device.messages).toEqual([
                 // Server should send a atoms received event
@@ -1355,7 +1355,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             addAtoms.next({
@@ -1423,7 +1423,15 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             watchCommits.next('testBranch');
@@ -1463,7 +1471,15 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             checkout.next({
@@ -1474,7 +1490,7 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             const [testBranch] = await store.getBranches('testBranch');
-            const [branchCommit] = await store.getObjects([testBranch.hash]);
+            const branchCommit = await store.getObject(testBranch.hash);
 
             expect(branchCommit).toEqual(c1);
         });
@@ -1502,7 +1518,17 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                a4,
+                a5,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             watchBranch.next('testBranch');
@@ -1560,7 +1586,17 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                a4,
+                a5,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             watchBranch.next('testBranch');
@@ -1575,7 +1611,7 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             const [testBranch] = await store.getBranches('testBranch');
-            const [branchCommit] = await store.getObjects([testBranch.hash]);
+            const branchCommit = await store.getObject(testBranch.hash);
 
             expect(branchCommit).toEqual({
                 type: 'commit',
@@ -1613,7 +1649,17 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                a4,
+                a5,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             watchBranch.next('testBranch');
@@ -1635,13 +1681,13 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             const [testBranch] = await store.getBranches('testBranch');
-            const [branchCommit] = (await store.getObjects([
-                testBranch.hash,
-            ])) as CausalRepoCommit[];
-            const [changesCommit] = (await store.getObjects([
-                branchCommit.previousCommit,
-            ])) as CausalRepoCommit[];
-            const data = await loadCommit(store, changesCommit);
+            const branchCommit = (await store.getObject(
+                testBranch.hash
+            )) as CausalRepoCommit;
+            const changesCommit = (await store.getObject(
+                branchCommit.previousCommit
+            )) as CausalRepoCommit;
+            const data = await loadCommit(store, 'testBranch', changesCommit);
 
             expect(branchCommit).toEqual({
                 type: 'commit',
@@ -1694,7 +1740,17 @@ describe('CausalRepoServer', () => {
             const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
             const b = branch('testBranch', c2);
 
-            await storeData(store, [a1, a2, a3, a4, a5, idx1, idx2, c1, c2]);
+            await storeData(store, 'testBranch', [
+                a1,
+                a2,
+                a3,
+                a4,
+                a5,
+                idx1,
+                idx2,
+                c1,
+                c2,
+            ]);
             await updateBranch(store, b);
 
             watchBranch.next('testBranch');
@@ -2090,7 +2146,7 @@ describe('CausalRepoServer', () => {
             const c = commit('message', new Date(2019, 9, 4), idx, null);
             const b = branch('testBranch', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b);
 
             branchInfo.next('testBranch');
@@ -2127,7 +2183,7 @@ describe('CausalRepoServer', () => {
             const b1 = branch('testBranch', c);
             const b2 = branch('testBranch2', c);
 
-            await storeData(store, [a1, a2, idx, c]);
+            await storeData(store, 'testBranch', [a1, a2, idx, c]);
             await updateBranch(store, b1);
             await updateBranch(store, b2);
 

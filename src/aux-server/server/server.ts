@@ -8,6 +8,13 @@ import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
+import {
+    Client as CassandraClient,
+    tracker as CassandraTracker,
+    DseClientOptions,
+    ExecutionProfile,
+    types,
+} from 'cassandra-driver';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
@@ -59,12 +66,21 @@ import { RedisStageStore } from './redis/RedisStageStore';
 import {
     MemoryStageStore,
     CausalRepoClient,
+    CausalRepoStore,
+    CombinedCausalRepoStore,
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
 import { pickBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
+import {
+    CassandraDBObjectStore,
+    AWS_KEYSPACES_REGIONS,
+} from '@casual-simulation/causal-tree-store-cassandradb';
+import { EventEmitter } from 'events';
+import { readFileSync } from 'fs';
+import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 
 const connect = pify(MongoClient.connect);
 
@@ -375,6 +391,7 @@ export class Server {
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
+    private _cassandraClient: CassandraClient;
     private _redisClient: RedisClient;
     private _directory: DirectoryService;
     private _directoryStore: DirectoryStore;
@@ -417,6 +434,98 @@ export class Server {
         this._app.use(cors());
 
         this._mongoClient = await connect(this._config.mongodb.url);
+        if (this._config.cassandradb) {
+            console.log('[Server] Using CassandraDB');
+            const requestTracker = new CassandraTracker.RequestLogger({
+                slowThreshold: this._config.cassandradb.slowRequestTime,
+            });
+            const requestEmitter = <EventEmitter>(<any>requestTracker).emitter;
+            requestEmitter.on('slow', message => {
+                console.log(`[Cassandra] ${message}`);
+            });
+
+            let options = {} as DseClientOptions;
+            if ('awsRegion' in this._config.cassandradb) {
+                const config = this._config.cassandradb;
+                const region = AWS_KEYSPACES_REGIONS.find(
+                    r => r.region === config.awsRegion
+                );
+                if (!region) {
+                    throw new Error(
+                        'Unable to find Cassandra endpoint information for the given region.'
+                    );
+                }
+                options.contactPoints = [region.endpoint];
+                options.localDataCenter = region.region;
+                options.protocolOptions = {
+                    port: region.port,
+                };
+                options.sslOptions = {
+                    host: region.endpoint,
+                    port: region.port,
+                    servername: region.endpoint,
+                    rejectUnauthorized: true,
+                    ca: [AmazonRootCA1],
+                };
+            } else {
+                options.contactPoints = this._config.cassandradb.contactPoints;
+                options.localDataCenter = this._config.cassandradb.localDataCenter;
+                if (this._config.cassandradb.requireTLS) {
+                    options.sslOptions = {
+                        rejectUnauthorized: this._config.cassandradb.requireTLS,
+                    };
+                    if (
+                        this._config.cassandradb.certificateAuthorityPublicKey
+                    ) {
+                        options.sslOptions.ca = [
+                            readFileSync(
+                                this._config.cassandradb
+                                    .certificateAuthorityPublicKey
+                            ),
+                        ];
+                    }
+                }
+            }
+            if (this._config.cassandradb.credentials) {
+                options.credentials = this._config.cassandradb.credentials;
+            }
+            const readProfile = new ExecutionProfile('read', {
+                consistency: types.consistencies.localOne,
+            });
+            const writeProfile = new ExecutionProfile('write', {
+                consistency: types.consistencies.localQuorum,
+            });
+            const defaultProfile = new ExecutionProfile('default', {
+                consistency: types.consistencies.localQuorum,
+            });
+            options.profiles = [readProfile, writeProfile, defaultProfile];
+            this._cassandraClient = new CassandraClient(options);
+
+            //     {
+            //     contactPoints: this._config.cassandradb.contactPoints,
+            //     localDataCenter: this._config.cassandradb.localDataCenter,
+            //     requestTracker,
+            //     sslOptions,
+            // });
+
+            this._cassandraClient.on(
+                'log',
+                (level, loggerName, message, furtherInfo) => {
+                    if (level === 'warning') {
+                        console.warn(`[Cassandra-${loggerName}]: ${message}`);
+                    } else if (level === 'error') {
+                        console.error(`[Cassandra-${loggerName}]: ${message}`);
+                    } else if (level === 'info') {
+                        console.log(`[Cassandra-${loggerName}]: ${message}`);
+                    }
+                }
+            );
+
+            await this._cassandraClient.connect();
+        } else {
+            console.log('[Server] Skipping CassandraDB');
+            this._config.cassandradb = null;
+        }
 
         await this._configureCausalRepoServices();
         this._app.use(bodyParser.json());
@@ -776,11 +885,26 @@ export class Server {
     }
 
     private async _setupRepoStore() {
-        const db = this._mongoClient.db(this._config.repos.dbName);
+        const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
         const objectsCollection = db.collection('objects');
         const headsCollection = db.collection('heads');
-        const store = new MongoDBRepoStore(objectsCollection, headsCollection);
-        await store.init();
+        const mongoStore = new MongoDBRepoStore(
+            objectsCollection,
+            headsCollection
+        );
+        await mongoStore.init();
+
+        let store: CausalRepoStore = mongoStore;
+        if (this._config.repos.cassandra && this._cassandraClient) {
+            console.log('[Server] Using Cassandra Support for Causal Repos');
+            const cassandraStore = new CassandraDBObjectStore(
+                this._config.repos.cassandra,
+                this._cassandraClient
+            );
+            await cassandraStore.init();
+            store = new CombinedCausalRepoStore(mongoStore, cassandraStore);
+        }
+
         return store;
     }
 }

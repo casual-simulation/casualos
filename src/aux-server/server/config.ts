@@ -1,4 +1,5 @@
 import { WebConfig } from '../shared/WebConfig';
+import { CassandraDBCausalReposConfig } from '@casual-simulation/causal-tree-store-cassandradb';
 import redis from 'redis';
 
 export const DRIVES_URL = '/drives';
@@ -12,8 +13,18 @@ export interface Config {
     httpPort: number;
     player: ClientConfig;
     mongodb: MongoDbConfig;
+
+    /**
+     * The config that should be used to setup a CassandraDB client.
+     * If null, then CassandraDB will not be used.
+     */
+    cassandradb: CassandraDBConfig | null;
     redis: RedisConfig;
     trees: CausalTreeServerConfig;
+
+    /**
+     * The config that should be used for Causal Repos.
+     */
     repos: CausalReposServerConfig;
     bots: BotsServerConfig;
     directory: DirectoryConfig;
@@ -37,6 +48,56 @@ export interface MongoDbConfig {
     url: string;
 }
 
+export type CassandraDBConfig =
+    | StandardCassandraDBConfig
+    | AwsCassandraDBConfig;
+
+export interface StandardCassandraDBConfig extends CommonCassandraDBConfig {
+    /**
+     * The list of hosts that the cassandra client can contact
+     * on initialization.
+     */
+    contactPoints: string[];
+
+    /**
+     * The data center that the server is being hosted in.
+     * The client will prefer cassandra instances that are hosted in the same data center over others.
+     */
+    localDataCenter: string;
+
+    /**
+     * Whether the server must provide a valid TLS certificate.
+     */
+    requireTLS: boolean;
+
+    /**
+     * The path to the public key file (PEM format) that the server's certificate authority uses.
+     */
+    certificateAuthorityPublicKey?: string;
+}
+
+export interface AwsCassandraDBConfig extends CommonCassandraDBConfig {
+    /**
+     * The AWS region that should be connected to.
+     */
+    awsRegion: string;
+}
+
+export interface CommonCassandraDBConfig {
+    /**
+     * The number of miliseconds needed for a request to be logged as slow.
+     */
+    slowRequestTime: number;
+
+    /**
+     * The credentials that should be used to login to Cassandra.
+     */
+    credentials: {
+        username: string;
+        password: string;
+    } | null;
+}
+
 export interface RedisConfig {
     options: redis.ClientOpts;
     defaultExpireSeconds: number;
@@ -47,8 +108,21 @@ export interface CausalTreeServerConfig {
 }
 
 export interface CausalReposServerConfig {
+    /**
+     * The config that should be used for MongoDB support of Causal Repos.
+     * A config must be specified for MongoDB.
+     */
+    mongodb: MongoDBCaualReposConfig;
+
+    /**
+     * The config that should be used for CassandraDB support of Causal Repos.
+     * If null is given, then CassandraDB support for Casual Repos will be disabled.
+     */
+    cassandra: CassandraDBCausalReposConfig | null;
+}
+
+export interface MongoDBCaualReposConfig {
     dbName: string;
-    objectsCollectionName: string;
 }
 
 /**
