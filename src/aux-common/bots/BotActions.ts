@@ -1,17 +1,10 @@
 import { Bot, BotsState } from './Bot';
-import {
-    calculateBotValue,
-    getActiveObjects,
-    isDestroyable,
-    convertToCopiableValue,
-} from './BotCalculations';
+import { calculateBotValue, isDestroyable } from './BotCalculations';
 import { BotCalculationContext } from './BotCalculationContext';
 import {
-    ShoutAction,
     botRemoved,
     BotAction,
     ApplyStateAction,
-    BotActions,
     botAdded,
     botUpdated,
     AddBotAction,

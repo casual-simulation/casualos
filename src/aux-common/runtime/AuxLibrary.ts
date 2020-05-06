@@ -75,14 +75,12 @@ import {
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    RanOutOfEnergyError,
     LocalFormAnimationAction,
     ORIGINAL_OBJECT,
     AsyncActions,
     ShareOptions,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
-import { BotFilterFunction } from '../Formulas/SandboxInterface';
 import every from 'lodash/every';
 import {
     remote as calcRemote,
@@ -90,6 +88,9 @@ import {
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
+import { RanOutOfEnergyError } from './AuxResults';
+import '../polyfill/Array.first.polyfill';
+import '../polyfill/Array.last.polyfill';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -230,6 +231,11 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+}
+
+export interface BotFilterFunction {
+    (bot: Bot): boolean;
+    sort?: (bot: Bot) => any;
 }
 
 /**

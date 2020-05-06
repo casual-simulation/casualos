@@ -12,8 +12,6 @@ import {
     Bot,
     UpdatedBot,
     PrecalculatedBot,
-    BotsState,
-    PrecalculatedBotsState,
     hasValue,
     tagsOnBot,
     isFormula,
@@ -21,39 +19,24 @@ import {
     isNumber,
     isArray,
     parseArray,
-    PrecalculatedTags,
-    BotSpace,
-    BotTags,
-    ScriptTags,
     BOT_SPACE_TAG,
-    convertToCopiableValue,
-    botAdded,
-    ActionResult,
     botUpdated,
-    createBot,
-    trimEvent,
     isBot,
     ORIGINAL_OBJECT,
     DEFAULT_ENERGY,
-    ScriptError,
-    RanOutOfEnergyError,
     getBotSpace,
-    resolveRejectedActions,
     ON_ACTION_ACTION_NAME,
     breakIntoIndividualEvents,
 } from '../bots';
-import { Observable, Subject, SubscriptionLike, Subscription } from 'rxjs';
+import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
 import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
-    AuxVersion,
-    AuxDevice,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
-import sortedIndexBy from 'lodash/sortedIndexBy';
 import { DependencyManager, BotDependentInfo } from './DependencyManager';
 import {
     RuntimeBotInterface,
@@ -65,17 +48,21 @@ import {
     SpaceRealtimeEditModeMap,
     DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
     CLEAR_CHANGES_SYMBOL,
+    isRuntimeBot,
 } from './RuntimeBot';
 import {
     CompiledBot,
     CompiledBotsState,
-    CompiledBotValues,
     CompiledBotListener,
 } from './CompiledBot';
 import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 import { BatchingZoneSpec } from './BatchingZoneSpec';
 import { CleanupZoneSpec } from './CleanupZoneSpec';
+import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
+import mapValues from 'lodash/mapValues';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -1002,4 +989,35 @@ interface CompileOptions {
      * If false, then the script will set the bot's editable value to false for the duration of the script.
      */
     allowsEditing: boolean;
+}
+
+/**
+ * Converts the given value to a copiable value.
+ * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
+ * Non-copiable values are functions and errors.
+ * @param value
+ */
+export function convertToCopiableValue(value: any): any {
+    if (typeof value === 'function') {
+        return `[Function ${value.name}]`;
+    } else if (value instanceof Error) {
+        return `${value.name}: ${value.message}`;
+    } else if (typeof value === 'object') {
+        if (isRuntimeBot(value)) {
+            return {
+                id: value.id,
+                tags: value.tags.toJSON(),
+            };
+        } else if (isBot(value)) {
+            return {
+                id: value.id,
+                tags: value.tags,
+            };
+        } else if (Array.isArray(value)) {
+            return value.map(val => convertToCopiableValue(val));
+        } else {
+            return mapValues(value, val => convertToCopiableValue(val));
+        }
+    }
+    return value;
 }

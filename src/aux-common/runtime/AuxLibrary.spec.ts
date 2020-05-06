@@ -3,8 +3,6 @@ import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
-    AuxVersion,
-    AuxDevice,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -77,6 +75,8 @@ import {
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
 import { RuntimeBot } from './RuntimeBot';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

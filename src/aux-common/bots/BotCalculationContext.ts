@@ -1,6 +1,4 @@
 import { Bot, PrecalculatedBot } from './Bot';
-import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
-import { BotIndex } from './BotIndex';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 /**
@@ -51,17 +49,13 @@ export function cacheFunction<T>(
     return result;
 }
 
-function hashCode(val: string | number | boolean) {
-    if (typeof val === 'string') {
-        let h = 0;
-        for (let i = 0; i < val.length; i++) {
-            h = (Math.imul(31, h) + val.charCodeAt(i)) | 0;
-        }
-
-        return h;
-    } else if (typeof val === 'number') {
-        return val;
-    } else {
-        return val ? 1 : 0;
-    }
+export function createPrecalculatedContext(
+    objects: Bot[]
+): BotCalculationContext {
+    const context = {
+        objects: objects,
+        cache: new Map(),
+        lookup: new BotLookupTableHelper(),
+    };
+    return context;
 }

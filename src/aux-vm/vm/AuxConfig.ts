@@ -1,7 +1,4 @@
-import {
-    FormulaLibraryOptions,
-    AuxPartitionConfig,
-} from '@casual-simulation/aux-common';
+import { AuxPartitionConfig, AuxDevice } from '@casual-simulation/aux-common';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -19,29 +16,7 @@ export interface AuxConfigParameters {
     version: string;
     versionHash: string;
     builder?: string;
-    device?: FormulaLibraryOptions['device'];
-}
-
-/**
- * Creates a set of formula library options for the given aux config.
- * @param config The config.
- */
-export function buildFormulaLibraryOptions(
-    config: AuxConfigParameters
-): FormulaLibraryOptions {
-    if (!config) {
-        return null;
-    }
-    let options: FormulaLibraryOptions = {
-        config: {},
-        version: buildVersionNumber(config),
-    };
-
-    if (config.device) {
-        options.device = config.device;
-    }
-
-    return options;
+    device?: AuxDevice;
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

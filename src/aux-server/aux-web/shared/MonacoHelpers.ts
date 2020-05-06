@@ -42,7 +42,7 @@ export function setup() {
         target: monaco.languages.typescript.ScriptTarget.ES2015,
 
         // Auto-import the given libraries
-        lib: ['defaultLib:lib.es2015.d.ts', 'file:///formula-lib.d.ts'],
+        lib: ['defaultLib:lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
 
         allowJs: true,
         alwaysStrict: true,
@@ -63,7 +63,7 @@ export function setup() {
     // Register the formula library
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
         calculateFormulaDefinitions(),
-        'file:///formula-lib.d.ts'
+        'file:///AuxDefinitions.d.ts'
     );
 
     /**

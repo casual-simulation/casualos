@@ -1,5 +1,5 @@
 import { Project, ts } from 'ts-morph';
-import apiText from 'raw-loader!@casual-simulation/aux-common/Formulas/formula-lib.d.ts';
+import apiText from 'raw-loader!@casual-simulation/aux-common/runtime/AuxLibraryDefinitions.def';
 
 const project = new Project({});
 const source = project.createSourceFile('api.d.ts', apiText);

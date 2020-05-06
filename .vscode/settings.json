@@ -38,6 +38,9 @@
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
         "src/**/*.d.ts.map": true
     },
+    "files.associations": {
+        "*.def": "typescript"
+    },
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
     "editor.detectIndentation": false,

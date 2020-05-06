@@ -1,19 +1,17 @@
 import { BOT_SPACE_TAG, PrecalculatedBot } from '../bots';
-import {
-    AuxGlobalContext,
-    MemoryGlobalContext,
-    AuxVersion,
-    AuxDevice,
-} from './AuxGlobalContext';
+import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     createRuntimeBot,
     RuntimeBotInterface,
     RuntimeBot,
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
+    isRuntimeBot,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -373,5 +371,132 @@ describe('RuntimeBot', () => {
             expect(descriptor.enumerable).toBe(false);
             expect(descriptor.configurable).toBe(false);
         });
+    });
+});
+
+describe('isRuntimeBot()', () => {
+    it('should return true if the object has ID, tags, raw, listeners, and changes properties', () => {
+        expect(
+            isRuntimeBot({
+                id: 'test',
+                tags: {
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(true);
+
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(true);
+    });
+
+    it('should require that the tags property has a toJSON function', () => {
+        expect(
+            isRuntimeBot({
+                id: 'test',
+                tags: {},
+                raw: {},
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require that the ID is not empty', () => {
+        expect(
+            isRuntimeBot({
+                id: '',
+                tags: {
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the listeners property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'test',
+                tags: {
+                    toJSON: function() {},
+                },
+                raw: {},
+                changes: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the tags property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                raw: {},
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the changes property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the raw property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function() {},
+                },
+                listeners: {},
+                changes: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should return false when given null', () => {
+        expect(isRuntimeBot(null)).toBe(false);
+    });
+
+    it('should return false when given a non-bot object', () => {
+        expect(isRuntimeBot({})).toBe(false);
+    });
+
+    it('should return false when given a string', () => {
+        expect(isRuntimeBot('string')).toBe(false);
+    });
+
+    it('should return false when given a number', () => {
+        expect(isRuntimeBot(99)).toBe(false);
+    });
+
+    it('should return false when given a boolean', () => {
+        expect(isRuntimeBot(true)).toBe(false);
     });
 });

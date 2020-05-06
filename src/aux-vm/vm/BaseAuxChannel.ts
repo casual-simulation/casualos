@@ -6,9 +6,6 @@ import {
     LocalActions,
     BotAction,
     GLOBALS_BOT_ID,
-    convertToCopiableValue,
-    SandboxLibrary,
-    Sandbox,
     BotsState,
     BOT_SPACE_TAG,
     StateUpdatedEvent,
@@ -20,11 +17,7 @@ import {
     AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
-import {
-    AuxConfig,
-    buildFormulaLibraryOptions,
-    buildVersionNumber,
-} from './AuxConfig';
+import { AuxConfig, buildVersionNumber } from './AuxConfig';
 import {
     StatusUpdate,
     remapProgressPercent,

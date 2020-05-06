@@ -21,7 +21,6 @@ import {
     BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
-    ScriptBot,
     BotPositioningMode,
     BotSpace,
     BOT_SPACE_TAG,
@@ -481,22 +480,6 @@ export function isNumber(value: string): boolean {
 export function isBot(object: any): object is Bot {
     if (object) {
         return !!object.id && !!object.tags;
-    }
-    return false;
-}
-
-/**
- * Determines if the given object is a script bot.
- * @param object The object.
- */
-export function isScriptBot(object: any): object is ScriptBot {
-    if (object) {
-        return (
-            !!object.id &&
-            typeof object.tags === 'object' &&
-            typeof object.raw === 'object' &&
-            typeof object.tags.toJSON === 'function'
-        );
     }
     return false;
 }
@@ -2441,37 +2424,6 @@ export function calculateValue(
     } else {
         return formula;
     }
-}
-
-/**
- * Converts the given value to a copiable value.
- * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
- * Non-copiable values are functions and errors.
- * @param value
- */
-export function convertToCopiableValue(value: any): any {
-    if (typeof value === 'function') {
-        return `[Function ${value.name}]`;
-    } else if (value instanceof Error) {
-        return `${value.name}: ${value.message}`;
-    } else if (typeof value === 'object') {
-        if (isScriptBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags.toJSON(),
-            };
-        } else if (isBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags,
-            };
-        } else if (Array.isArray(value)) {
-            return value.map(val => convertToCopiableValue(val));
-        } else {
-            return mapValues(value, val => convertToCopiableValue(val));
-        }
-    }
-    return value;
 }
 
 /**
