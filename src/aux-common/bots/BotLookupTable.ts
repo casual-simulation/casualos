@@ -1,5 +1,5 @@
 import { Bot } from './Bot';
-import { BotCalculationContext } from './BotCalculationContext';
+import { BotObjectsContext } from './BotObjectsContext';
 import { calculateBotValue } from './BotCalculations';
 import zip from 'lodash/zip';
 import sortBy from 'lodash/sortBy';
@@ -12,7 +12,7 @@ import sortBy from 'lodash/sortBy';
  * @param defaults The default values that should be used for tags that are missing.
  */
 export function buildLookupTable(
-    calc: BotCalculationContext,
+    calc: BotObjectsContext,
     tags: string[],
     defaults: any[] = null
 ) {
@@ -30,7 +30,7 @@ export class BotLookupTable {
     private _map: Map<string, Bot[]>;
     private _tags: string[];
 
-    constructor(calc: BotCalculationContext, tags: string[], defaults: any[]) {
+    constructor(calc: BotObjectsContext, tags: string[], defaults: any[]) {
         this._map = new Map();
         this._tags = sortBy(tags);
 
@@ -73,7 +73,7 @@ export class BotLookupTable {
  * @param defaults The default values to use if any of the tags are missing.
  */
 function calculateTagValueKey(
-    calc: BotCalculationContext,
+    calc: BotObjectsContext,
     bot: Bot,
     tags: string[],
     defaults: any[]

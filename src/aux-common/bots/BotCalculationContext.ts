@@ -1,16 +1,12 @@
 import { Bot, PrecalculatedBot } from './Bot';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
+import { BotObjectsContext } from './BotObjectsContext';
 
 /**
  * Defines an interface for objects that are able to provide the necessary information required to calculate
  * formula values and actions.
  */
-export interface BotCalculationContext {
-    /**
-     * The objects in the context.
-     */
-    objects: (Bot | PrecalculatedBot)[];
-
+export interface BotCalculationContext extends BotObjectsContext {
     /**
      * The cache that is attached to the context.
      * Useful for saving the results of operations.
@@ -47,15 +43,4 @@ export function cacheFunction<T>(
     const result = func();
     calc.cache.set(key, result);
     return result;
-}
-
-export function createPrecalculatedContext(
-    objects: Bot[]
-): BotCalculationContext {
-    const context = {
-        objects: objects,
-        cache: new Map(),
-        lookup: new BotLookupTableHelper(),
-    };
-    return context;
 }

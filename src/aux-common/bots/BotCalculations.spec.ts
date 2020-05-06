@@ -34,10 +34,8 @@ import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
-import {
-    BotCalculationContext,
-    createPrecalculatedContext,
-} from './BotCalculationContext';
+import { BotCalculationContext } from './BotCalculationContext';
+import { createPrecalculatedContext } from './BotCalculationContextFactory';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

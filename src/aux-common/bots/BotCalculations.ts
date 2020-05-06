@@ -61,6 +61,7 @@ import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
+import { BotObjectsContext } from './BotObjectsContext';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -369,7 +370,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 }
 
 export function calculateBotValue(
-    context: BotCalculationContext,
+    context: BotObjectsContext,
     object: Object | PrecalculatedBot,
     tag: keyof BotTags,
     energy?: number
@@ -381,7 +382,7 @@ export function calculateBotValue(
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
-        return calculateValue(context, object, tag, object.tags[tag], energy);
+        return calculateValue(object, tag, object.tags[tag], energy);
     }
 }
 
@@ -2397,14 +2398,12 @@ export function formatValue(value: any): string {
 
 /**
  * Calculates the value of the given formula as if it was on the given bot (object) and tag.
- * @param context The calculation context to use.
  * @param object The bot that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
  * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
-    context: BotCalculationContext,
     object: Bot,
     tag: keyof BotTags,
     formula: string,
@@ -2412,9 +2411,7 @@ export function calculateValue(
 ): any {
     if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s =>
-            calculateValue(context, object, tag, s.trim(), energy)
-        );
+        return split.map(s => calculateValue(object, tag, s.trim(), energy));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {

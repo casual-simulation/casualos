@@ -1,6 +1,7 @@
 export * from './Bot';
 export * from './BotEvents';
 export * from './BotCalculationContext';
+export * from './BotCalculationContextFactory';
 export * from './BotCalculations';
 export * from './BotActions';
 export * from './TagUpdatedEvent';
