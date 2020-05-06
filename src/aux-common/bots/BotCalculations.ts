@@ -2386,36 +2386,6 @@ export function botDimensionSortOrder(
     }
 }
 
-/**
- * Calculates the given formula and returns the result.
- * @param context The bot calculation context to run formulas with.
- * @param formula The formula to use.
- * @param extras The extra data to include in callbacks to the interface implementation.
- * @param thisObj The object that should be used for the this keyword in the formula.
- */
-export function calculateFormulaValue(
-    context: BotSandboxContext,
-    formula: string,
-    extras: any = {},
-    thisObj: any = null
-) {
-    const prevCalc = getCalculationContext();
-    const prevEnergy = getEnergy();
-    const prevBot = getCurrentBot();
-    setCalculationContext(context);
-
-    // TODO: Allow configuring energy per formula
-    setEnergy(DEFAULT_ENERGY);
-    setCurrentBot(null);
-
-    const result = context.sandbox.run(formula, extras, context);
-
-    setCalculationContext(prevCalc);
-    setEnergy(prevEnergy);
-    setCurrentBot(prevBot);
-    return result;
-}
-
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
     return calculateBooleanTagValue(calc, bot, `auxPlayerActive`, false);
 }

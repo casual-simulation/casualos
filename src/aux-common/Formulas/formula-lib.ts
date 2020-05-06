@@ -78,7 +78,6 @@ import {
 import uuid from 'uuid/v4';
 import every from 'lodash/every';
 import {
-    calculateFormulaValue,
     isBot,
     // isFormulaObject,
     // unwrapProxy,

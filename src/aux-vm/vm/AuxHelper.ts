@@ -11,7 +11,6 @@ import {
     PartialBot,
     merge,
     AUX_BOT_VERSION,
-    calculateFormulaEvents,
     BotSandboxContext,
     PasteStateAction,
     getBotConfigDimensions,

@@ -2,7 +2,6 @@ import { Bot, BotsState } from './Bot';
 import {
     calculateBotValue,
     getActiveObjects,
-    calculateFormulaValue,
     isDestroyable,
     convertToCopiableValue,
 } from './BotCalculations';

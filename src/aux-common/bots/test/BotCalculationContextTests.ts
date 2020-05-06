@@ -3,7 +3,6 @@ import {
     createBot,
     objectsAtDimensionGridPosition,
     getBotShape,
-    calculateFormulaValue,
     calculateBotValue,
     filterBotsBySelection,
     isMergeable,
@@ -184,45 +183,6 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual([bot1]);
-        });
-    });
-
-    describe('calculateFormulaValue()', () => {
-        it('should return the formula result', () => {
-            const formula = '123.4567';
-            const context = createCalculationContext([]);
-            const result = calculateFormulaValue(context, formula);
-
-            expect(result.success).toBe(true);
-            expect(result.result).toBeCloseTo(123.4567);
-        });
-
-        it('should unwrap proxy values', () => {
-            const obj1 = createBot('test1', {
-                name: 'test',
-                num: 123,
-            });
-            const context = createCalculationContext([obj1]);
-
-            const formula = '=getTag(getBots("name", "test").first(), "#num")';
-            const result = calculateFormulaValue(context, formula);
-
-            expect(result.success).toBe(true);
-            expect(result.result).toBeCloseTo(123);
-        });
-
-        it('should calculate formulas in tags', () => {
-            const obj1 = createBot('test1', {
-                name: 'test',
-                formula: '=getTag(this, "#name")',
-            });
-            const context = createCalculationContext([obj1]);
-
-            const formula = '=getTag(getBot("#name", "test"), "#formula")';
-            const result = calculateFormulaValue(context, formula);
-
-            expect(result.success).toBe(true);
-            expect(result.result).toEqual('test');
         });
     });
 
