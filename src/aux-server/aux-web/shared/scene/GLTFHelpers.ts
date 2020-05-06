@@ -1,8 +1,13 @@
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { LegacyGLTFLoader } from 'three-legacy-gltf-loader';
 import { Scene, AnimationClip, Object3D, SkinnedMesh, Cache } from 'three';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
 const loader = new GLTFLoader();
+const draco = new DRACOLoader();
+draco.setDecoderPath('/gltf-draco');
+loader.setDRACOLoader(draco);
+
 const legacy = new LegacyGLTFLoader();
 const pools = new Map<string, GLTFPool>();
 

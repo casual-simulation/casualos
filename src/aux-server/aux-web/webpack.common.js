@@ -249,5 +249,11 @@ module.exports = {
                 context: path.resolve(__dirname, '..', '..', '..'),
             },
         ]),
+        new CopyPlugin([
+            {
+                from: path.resolve(__dirname, 'shared', 'public', 'draco'),
+                to: path.resolve(__dirname, 'dist', 'gltf-draco'),
+            },
+        ]),
     ],
 };
