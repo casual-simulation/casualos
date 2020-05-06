@@ -2808,6 +2808,54 @@ describe('AuxRuntime', () => {
             });
         });
 
+        it('should convert script bots into normal bots', () => {
+            const update = runtime.botsAdded([
+                createBot('test', {
+                    formula: '=getBot("id", "other")',
+                }),
+                createBot('other', {
+                    auxColor: 'red',
+                }),
+            ]);
+
+            expect(update).toEqual({
+                state: {
+                    test: createPrecalculatedBot(
+                        'test',
+                        {
+                            formula: createBot('other', {
+                                auxColor: 'red',
+                            }),
+                        },
+                        {
+                            formula: '=getBot("id", "other")',
+                        }
+                    ),
+                    other: createPrecalculatedBot('other', {
+                        auxColor: 'red',
+                    }),
+                },
+                addedBots: ['test', 'other'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
+        it('should return an object that is structure clonable', () => {
+            const update = runtime.botsAdded([
+                createBot('test', {
+                    formula: '=getBot("id", "other")',
+                }),
+                createBot('other', {
+                    auxColor: 'red',
+                }),
+            ]);
+
+            expect(
+                types.isProxy(update.state['test'].values['formula'].tags)
+            ).toBe(false);
+        });
+
         it('should support using the original error in formula references', () => {
             const update = runtime.botsAdded([
                 createBot('test', {

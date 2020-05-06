@@ -1,5 +1,4 @@
 import { AuxUser } from '@casual-simulation/aux-vm';
-import { getSandbox } from '../vm/VM2Sandbox';
 import {
     RemoteAuxChannel,
     RemoteSimulationImpl,
@@ -26,12 +25,7 @@ export function nodeSimulationForBranch(
                 client: client,
             },
         },
-        cfg =>
-            new AuxVMNode(
-                new RemoteAuxChannel(user, cfg, {
-                    sandboxFactory: lib => getSandbox(lib),
-                })
-            )
+        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }
 
@@ -44,12 +38,7 @@ export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
                 type: 'causal_repo',
             },
         },
-        cfg =>
-            new AuxVMNode(
-                new RemoteAuxChannel(user, cfg, {
-                    sandboxFactory: lib => getSandbox(lib),
-                })
-            )
+        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }
 
@@ -62,11 +51,6 @@ export function nodeSimulationWithConfig(
         id,
         config.config,
         config.partitions,
-        cfg =>
-            new AuxVMNode(
-                new RemoteAuxChannel(user, cfg, {
-                    sandboxFactory: lib => getSandbox(lib),
-                })
-            )
+        cfg => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
     );
 }

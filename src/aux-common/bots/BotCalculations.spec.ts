@@ -32,7 +32,7 @@ import {
     isScriptBot,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
-import { createCalculationContext } from './BotCalculationContextFactories';
+import { createPrecalculatedContext } from './BotCalculationContextFactories';
 import uuid from 'uuid/v4';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
@@ -261,7 +261,7 @@ describe('BotCalculations', () => {
                     [tag]: '@abc',
                 });
 
-                const calc = createCalculationContext([bot]);
+                const calc = createPrecalculatedContext([bot]);
                 const hasLod = botHasLOD(calc, bot);
 
                 expect(hasLod).toBe(true);
@@ -272,7 +272,7 @@ describe('BotCalculations', () => {
                     [tag]: 'abc',
                 });
 
-                const calc = createCalculationContext([bot]);
+                const calc = createPrecalculatedContext([bot]);
                 const hasLod = botHasLOD(calc, bot);
 
                 expect(hasLod).toBe(false);
@@ -1642,6 +1642,6 @@ describe('BotCalculations', () => {
     });
 
     botCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
-        createCalculationContext(bots, userId)
+        createPrecalculatedContext(bots)
     );
 });

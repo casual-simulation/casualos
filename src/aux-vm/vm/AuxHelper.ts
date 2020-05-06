@@ -3,7 +3,6 @@ import {
     LocalActions,
     BotsState,
     getActiveObjects,
-    createCalculationContext,
     BotAction,
     BotActions,
     createBot,
@@ -11,7 +10,6 @@ import {
     PartialBot,
     merge,
     AUX_BOT_VERSION,
-    BotSandboxContext,
     PasteStateAction,
     getBotConfigDimensions,
     createWorkspace,
@@ -563,122 +561,5 @@ export class AuxHelper extends BaseHelper<Bot> {
         if (deviceEvents.length > 0) {
             this._deviceEvents.next(deviceEvents);
         }
-    }
-
-    private _pasteState(event: PasteStateAction) {
-        // TODO: Cleanup this function to make it easier to understand
-        // const value = event.state;
-        // const botIds = Object.keys(value);
-        // let state: BotsState = {};
-        // const oldBots = botIds.map(id => value[id]);
-        // const oldCalc = createCalculationContext(
-        //     oldBots,
-        //     this.userId,
-        //     this._lib,
-        //     this._sandboxFactory
-        // );
-        // const newCalc = this.createContext();
-        // if (event.options.dimension) {
-        //     return this._pasteExistingWorksurface(
-        //         oldBots,
-        //         oldCalc,
-        //         event,
-        //         newCalc
-        //     );
-        // } else {
-        //     return this._pasteNewWorksurface(oldBots, oldCalc, event, newCalc);
-        // }
-    }
-
-    private _pasteExistingWorksurface(
-        oldBots: Bot[],
-        oldCalc: BotSandboxContext,
-        event: PasteStateAction,
-        newCalc: BotSandboxContext
-    ) {
-        let events: BotAction[] = [];
-
-        // Preserve positions from old dimension
-        for (let oldBot of oldBots) {
-            const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
-            const removedValues = tagsToRemove.map(t => [t, null]);
-            let newBot = duplicateBot(oldCalc, oldBot, {
-                tags: {
-                    ...fromPairs(removedValues),
-                    ...addToDimensionDiff(
-                        newCalc,
-                        event.options.dimension,
-                        event.options.x,
-                        event.options.y
-                    ),
-                    [`${event.options.dimension}Z`]: event.options.z,
-                },
-            });
-            events.push(botAdded(cleanBot(newBot)));
-        }
-
-        return events;
-    }
-
-    private _pasteNewWorksurface(
-        oldBots: Bot[],
-        oldCalc: BotSandboxContext,
-        event: PasteStateAction,
-        newCalc: BotSandboxContext
-    ) {
-        const oldDimensionBots = oldBots.filter(
-            f => getBotConfigDimensions(oldCalc, f).length > 0
-        );
-        const oldDimensionBot =
-            oldDimensionBots.length > 0 ? oldDimensionBots[0] : null;
-        const oldDimensions = oldDimensionBot
-            ? getBotConfigDimensions(oldCalc, oldDimensionBot)
-            : [];
-        let oldDimension = oldDimensions.length > 0 ? oldDimensions[0] : null;
-        let events: BotAction[] = [];
-        const dimension = createDimensionId();
-        let workspace: Bot;
-        if (oldDimensionBot) {
-            workspace = duplicateBot(oldCalc, oldDimensionBot, {
-                tags: {
-                    auxDimensionConfig: dimension,
-                },
-            });
-        } else {
-            workspace = createWorkspace(undefined, dimension);
-        }
-        workspace.tags['auxDimensionX'] = event.options.x;
-        workspace.tags['auxDimensionY'] = event.options.y;
-        workspace.tags['auxDimensionZ'] = event.options.z;
-        events.push(botAdded(workspace));
-        if (!oldDimension) {
-            oldDimension = dimension;
-        }
-
-        // Preserve positions from old dimension
-        for (let oldBot of oldBots) {
-            if (oldDimensionBot && oldBot.id === oldDimensionBot.id) {
-                continue;
-            }
-            const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
-            const removedValues = tagsToRemove.map(t => [t, null]);
-            let newBot = duplicateBot(oldCalc, oldBot, {
-                tags: {
-                    ...fromPairs(removedValues),
-                    ...addToDimensionDiff(
-                        newCalc,
-                        dimension,
-                        oldBot.tags[`${oldDimension}X`],
-                        oldBot.tags[`${oldDimension}Y`],
-                        oldBot.tags[`${oldDimension}SortOrder`]
-                    ),
-                    [`${dimension}Z`]: oldBot.tags[`${oldDimension}Z`],
-                },
-            });
-            events.push(botAdded(cleanBot(newBot)));
-        }
-        return events;
     }
 }

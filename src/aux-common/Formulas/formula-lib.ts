@@ -1,117 +1,66 @@
+import { ScriptBot, BOT_SPACE_TAG, BotsState } from '../bots/Bot';
 import {
-    GLOBALS_BOT_ID,
-    DEVICE_BOT_ID,
-    Bot as NormalBot,
-    ScriptBot,
-    BOT_SPACE_TAG,
-    CREATE_ACTION_NAME,
-    DESTROY_ACTION_NAME,
-    MOD_DROP_ACTION_NAME,
-    BotsState,
-    CREATE_ANY_ACTION_NAME,
-    KNOWN_PORTALS,
-} from '../bots/Bot';
-import {
-    UpdateBotAction,
     BotAction,
-    AddBotAction,
-    action,
-    RemoveBotAction,
-    botRemoved,
-    botAdded,
-    toast as toastMessage,
-    tweenTo as calcTweenTo,
-    openQRCodeScanner as calcOpenQRCodeScanner,
-    loadSimulation as calcLoadSimulation,
-    unloadSimulation as calcUnloadSimulation,
-    superShout as calcSuperShout,
-    showQRCode as calcShowQRCode,
-    goToDimension as calcGoToContext,
-    goToURL as calcGoToURL,
-    playSound as calcPlaySound,
-    openURL as calcOpenURL,
-    importAUX as calcImportAUX,
-    showInputForTag as calcShowInputForTag,
-    botUpdated,
-    shell as calcShell,
-    openConsole as calcOpenConsole,
-    backupToGithub as calcBackupToGithub,
-    backupAsDownload as calcBackupAsDownload,
-    openBarcodeScanner as calcOpenBarcodeScanner,
-    showBarcode as calcShowBarcode,
-    checkout as calcCheckout,
-    finishCheckout as calcFinishCheckout,
-    webhook as calcWebhook,
-    reject as calcReject,
-    html as htmlMessage,
-    hideHtml as hideHtmlMessage,
-    loadFile as calcLoadFile,
-    saveFile as calcSaveFile,
-    replaceDragBot as calcReplaceDragBot,
-    setupUniverse as calcSetupChannel,
-    setClipboard as calcSetClipboard,
-    showChat as calcShowRun,
-    hideChat as calcHideRun,
-    runScript,
-    download,
-    showUploadAuxFile as calcShowUploadAuxFile,
-    markHistory as calcMarkHistory,
-    browseHistory as calcBrowseHistory,
-    restoreHistoryMark as calcRestoreHistoryMark,
-    enableAR as calcEnableAR,
-    disableAR as calcDisableAR,
-    enableVR as calcEnableVR,
-    disableVR as calcDisableVR,
-    showJoinCode as calcShowJoinCode,
-    requestFullscreen,
-    exitFullscreen,
-    addState,
     LoadBotsAction,
     ClearSpaceAction,
     LocalFormAnimationAction,
     ShareAction,
+    SuperShoutAction,
+    ReplaceDragBotAction,
+    SetClipboardAction,
+    GoToDimensionAction,
+    GoToURLAction,
+    OpenURLAction,
+    ShowInputForTagAction,
+    ShowInputAction,
+    StartCheckoutAction,
+    MarkHistoryAction,
+    BrowseHistoryAction,
+    RestoreHistoryMarkAction,
+    LoadFileAction,
+    SaveFileAction,
+    ShowToastAction,
+    PlaySoundAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    TweenToAction,
+    OpenQRCodeScannerAction,
+    ShowQRCodeAction,
+    OpenBarcodeScannerAction,
+    ShowBarcodeAction,
+    ShowChatBarAction,
+    RunScriptAction,
+    DownloadAction,
+    ShowUploadAuxFileAction,
+    LoadUniverseAction,
+    UnloadUniverseAction,
+    ImportAUXAction,
+    ApplyStateAction,
+    SetupChannelAction,
+    ShellAction,
+    BackupToGithubAction,
+    BackupAsDownloadAction,
+    OpenConsoleAction,
+    EnableARAction,
+    EnableVRAction,
 } from '../bots/BotEvents';
 import {
-    calculateActionResultsUsingContext,
-    RanOutOfEnergyError,
-} from '../bots/BotsChannel';
-import uuid from 'uuid/v4';
-import every from 'lodash/every';
-import {
     isBot,
-    // isFormulaObject,
-    // unwrapProxy,
-    isBotInDimension,
     tagsOnBot,
-    isDestroyable,
-    trimTag,
-    trimEvent,
     hasValue,
-    createBot,
     isScriptBot,
-    getBotSpace,
     getPortalTag,
-    getOriginalObject,
-    getUploadState,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import {
-    getBotState,
-    getCalculationContext,
-    getActions,
-    getUserId,
-    getEnergy,
-    setEnergy,
-    addAction,
-    getCurrentBot,
-} from './formula-lib-globals';
-import {
     remote as calcRemote,
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
-import { dotCaseToCamelCase } from '../utils';
 
 /**
  * The list of possible barcode formats.
@@ -554,53 +503,10 @@ function random(min: number = 0, max?: number): number {
 }
 
 /**
- * Removes the given bot or bot ID from the simulation.
- * @param bot The bot or bot ID to remove from the simulation.
- */
-function destroyBot(bot: Bot | string) {
-    const calc = getCalculationContext();
-
-    let id: string;
-    if (typeof bot === 'object') {
-        id = bot.id;
-    } else if (typeof bot === 'string') {
-        id = bot;
-    }
-
-    if (typeof id === 'object') {
-        id = (<any>id).valueOf();
-    }
-
-    const realBot = getBotState()[id];
-    if (!realBot) {
-        return;
-    }
-
-    if (!isDestroyable(calc, realBot)) {
-        return;
-    }
-
-    if (id) {
-        event(DESTROY_ACTION_NAME, [id]);
-        let actions = getActions();
-        actions.push(botRemoved(id));
-        calc.sandbox.interface.removeBot(id);
-    }
-
-    destroyChildren(id);
-}
-
-/**
  * Destroys the given bot, bot ID, or list of bots.
  * @param bot The bot, bot ID, or list of bots to destroy.
  */
-function destroy(bot: Bot | string | Bot[]) {
-    if (typeof bot === 'object' && Array.isArray(bot)) {
-        bot.forEach(f => destroyBot(f));
-    } else {
-        destroyBot(bot);
-    }
-}
+function destroy(bot: Bot | string | Bot[]): void {}
 
 /**
  * Removes tags from the given list of bots.
@@ -617,162 +523,7 @@ function destroy(bot: Bot | string | Bot[]) {
  * removeTags(this, /^hello$/gi);
  *
  */
-function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
-    if (typeof bot === 'object' && Array.isArray(bot)) {
-        let botList: any[] = bot;
-
-        for (let h = 0; h < bot.length; h++) {
-            let currentBot = botList[h];
-            let tags = tagsOnBot(currentBot);
-
-            for (let i = tags.length - 1; i >= 0; i--) {
-                if (tagSection instanceof RegExp) {
-                    if (tagSection.test(tags[i])) {
-                        setTag(currentBot, tags[i], null);
-                    }
-                } else if (tags[i].indexOf(tagSection) === 0) {
-                    setTag(currentBot, tags[i], null);
-                }
-            }
-        }
-    } else {
-        let tags = tagsOnBot(bot);
-
-        for (let i = tags.length - 1; i >= 0; i--) {
-            // if the tag section is relevant to the curretn tag at all
-            if (tagSection instanceof RegExp) {
-                if (tagSection.test(tags[i])) {
-                    setTag(bot, tags[i], null);
-                }
-            } else if (tags[i].indexOf(tagSection) === 0) {
-                // if the tag starts with the tag section
-                setTag(bot, tags[i], null);
-            }
-        }
-    }
-}
-
-function renameTagsSingle(bot: Bot) {
-    for (let tag of tagsOnBot(bot)) {
-        let updated = dotCaseToCamelCase(tag);
-        if (updated !== tag) {
-            const val = getTag(bot, tag);
-            setTag(bot, updated, val);
-            setTag(bot, tag, null);
-        }
-    }
-}
-
-function destroyChildren(id: string) {
-    const calc = getCalculationContext();
-    const children: Bot[] = calc.sandbox.interface.listObjectsWithTag(
-        'auxCreator',
-        id
-    );
-    children.forEach(child => {
-        if (!isDestroyable(calc, child)) {
-            return;
-        }
-        let actions = getActions();
-        actions.push(botRemoved(child.id));
-        calc.sandbox.interface.removeBot(child.id);
-        destroyChildren(child.id);
-    });
-}
-
-/**
- * Creates a new bot that contains the given tags.
- * @param mods The mods that specify what tags to set on the bot.
- */
-function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
-    let variants: Mod[][] = new Array<Mod[]>(1);
-    variants[0] = [];
-
-    for (let i = 0; i < mods.length; i++) {
-        let diff = mods[i];
-        if (Array.isArray(diff)) {
-            let newVariants: Mod[][] = new Array<Mod[]>(
-                variants.length * diff.length
-            );
-
-            for (let b = 0; b < newVariants.length; b++) {
-                let diffIdx = Math.floor(b / variants.length);
-                let d = diff[diffIdx];
-                let variantIdx = b % variants.length;
-                let newVariant = variants[variantIdx].slice();
-                newVariant.push(d);
-                newVariants[b] = newVariant;
-            }
-
-            variants = newVariants;
-        } else if (typeof diff === 'object') {
-            for (let b = 0; b < variants.length; b++) {
-                variants[b].push(diff);
-            }
-        }
-    }
-
-    let bots: NormalBot[] = variants.map(v => {
-        let bot: NormalBot = {
-            id: idFactory(),
-            tags: {},
-        };
-        for (let i = v.length - 1; i >= 0; i--) {
-            const mod = v[i];
-            if (mod && BOT_SPACE_TAG in mod) {
-                const space = mod[BOT_SPACE_TAG];
-                if (hasValue(space)) {
-                    bot.space = space;
-                }
-                break;
-            }
-        }
-        applyMod(bot.tags, ...v);
-
-        if ('auxCreator' in bot.tags) {
-            const creatorId = bot.tags['auxCreator'];
-            const creator = getBot('id', creatorId);
-            let clearCreator = false;
-            if (!creator) {
-                clearCreator = true;
-            } else {
-                const creatorSpace = getBotSpace(creator);
-                const currentSpace = getBotSpace(bot);
-                if (creatorSpace !== currentSpace) {
-                    clearCreator = true;
-                }
-            }
-
-            if (clearCreator) {
-                applyMod(bot.tags, { auxCreator: null });
-            }
-        }
-
-        return bot;
-    });
-
-    let actions = getActions();
-    actions.push(...bots.map(f => botAdded(f)));
-
-    let ret = new Array<ScriptBot>(bots.length);
-    const calc = getCalculationContext();
-    for (let i = 0; i < bots.length; i++) {
-        ret[i] = calc.sandbox.interface.addBot(bots[i]);
-    }
-
-    event(CREATE_ACTION_NAME, ret);
-    for (let bot of ret) {
-        event(CREATE_ANY_ACTION_NAME, null, {
-            bot: bot,
-        });
-    }
-
-    if (ret.length === 1) {
-        return ret[0];
-    } else {
-        return ret;
-    }
-}
+function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void {}
 
 /**
  * Gets the ID from the given bot.
@@ -796,12 +547,6 @@ function getJSON(data: any): string {
     return JSON.stringify(data);
 }
 
-function createBase(idFactory: () => string, ...datas: Mod[]) {
-    let parent = getCurrentBot();
-    let parentDiff = parent ? { auxCreator: getID(parent) } : {};
-    return createFromMods(idFactory, parentDiff, ...datas);
-}
-
 /**
  * Creates a new bot and returns it.
  * @param parent The bot that should be the parent of the new bot.
@@ -820,8 +565,8 @@ function createBase(idFactory: () => string, ...datas: Mod[]) {
  * ]);
  *
  */
-function create(...mods: Mod[]) {
-    return createBase(() => uuid(), ...mods);
+function create(...mods: Mod[]): ScriptBot | ScriptBot[] {
+    return null;
 }
 
 /**
@@ -836,43 +581,22 @@ function event(
     bots: (Bot | string)[],
     arg?: any,
     sort?: boolean
-) {
-    const state = getBotState();
-    if (!!state) {
-        let ids = !!bots
-            ? bots.map(bot => {
-                  return typeof bot === 'string' ? bot : bot.id;
-              })
-            : null;
-
-        let result = calculateActionResultsUsingContext(
-            state,
-            action(trimEvent(name), ids, getUserId(), arg, sort),
-            getCalculationContext()
-        );
-
-        let actions = getActions();
-        actions.push(...result.actions);
-
-        return result.results;
-    }
-}
+) {}
 
 /**
  * Performs the given action.
  * @param action The action to perform.
  */
-function perform(action: any) {
-    return addAction(action);
+function perform(action: any): BotAction {
+    return null;
 }
 
 /**
  * Rejects the given action.
  * @param action The action to reject.
  */
-function reject(action: any) {
-    const event = calcReject(getOriginalObject(action));
-    return addAction(event);
+function reject(action: any): BotAction {
+    return null;
 }
 
 /**
@@ -895,8 +619,8 @@ function reject(action: any) {
  * // Tell every bot say "Hi" to you.
  * shout("sayHi()", "My Name");
  */
-function shout(name: string, arg?: any) {
-    return event(name, null, arg);
+function shout(name: string, arg?: any): any[] {
+    return null;
 }
 
 /**
@@ -904,9 +628,8 @@ function shout(name: string, arg?: any) {
  * @param eventName The name of the event to shout.
  * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
  */
-function superShout(eventName: string, arg?: any) {
-    const event = calcSuperShout(trimEvent(eventName), arg);
-    return addAction(event);
+function superShout(eventName: string, arg?: any): SuperShoutAction {
+    return null;
 }
 
 /**
@@ -943,9 +666,8 @@ let webhook: {
     post: (url: string, data?: any, options?: WebhookOptions) => BotAction;
 };
 
-webhook = <any>function(options: WebhookOptions) {
-    const event = calcWebhook(<any>options);
-    return addAction(event);
+webhook = <any>function(options: WebhookOptions): any {
+    return null;
 };
 webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
     return webhook({
@@ -1013,23 +735,7 @@ function remote(
     event: BotAction,
     selector?: SessionSelector,
     allowBatching?: boolean
-) {
-    if (!event) {
-        return;
-    }
-    let actions = getActions();
-    const r = calcRemote(
-        event,
-        convertSessionSelector(selector),
-        allowBatching
-    );
-    const index = actions.indexOf(event);
-    if (index >= 0) {
-        actions[index] = r;
-    } else {
-        actions.push(r);
-    }
-}
+) {}
 
 function convertSessionSelector(selector: SessionSelector): DeviceSelector {
     return selector
@@ -1046,18 +752,16 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
  * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
  * @param bot The bot or mod that should be dragged instead of the original.
  */
-function replaceDragBot(bot: Mod) {
-    const event = calcReplaceDragBot(unwrapBotOrMod(bot));
-    return addAction(event);
+function replaceDragBot(bot: Mod): ReplaceDragBotAction {
+    return null;
 }
 
 /**
  * Sets the text stored in the player's clipboard.
  * @param text The text to set to the clipboard.
  */
-function setClipboard(text: string) {
-    const event = calcSetClipboard(text);
-    return addAction(event);
+function setClipboard(text: string): SetClipboardAction {
+    return null;
 }
 
 /**
@@ -1068,9 +772,8 @@ function setClipboard(text: string) {
  * // Send the player to the "welcome" dimension.
  * player.goToDimension("welcome");
  */
-function goToDimension(dimension: string) {
-    const event = calcGoToContext(dimension);
-    return addAction(event);
+function goToDimension(dimension: string): GoToDimensionAction {
+    return null;
 }
 
 /**
@@ -1081,9 +784,8 @@ function goToDimension(dimension: string) {
  * // Send the player to wikipedia.
  * player.goToURL("https://wikipedia.org");
  */
-function goToURL(url: string) {
-    const event = calcGoToURL(url);
-    return addAction(event);
+function goToURL(url: string): GoToURLAction {
+    return null;
 }
 
 /**
@@ -1094,9 +796,8 @@ function goToURL(url: string) {
  * // Open wikipedia in a new tab.
  * player.openURL("https://wikipedia.org");
  */
-function openURL(url: string) {
-    const event = calcOpenURL(url);
-    return addAction(event);
+function openURL(url: string): OpenURLAction {
+    return null;
 }
 
 /**
@@ -1125,10 +826,8 @@ function showInputForTag(
     bot: Bot | string,
     tag: string,
     options?: Partial<ShowInputOptions>
-) {
-    const id = typeof bot === 'string' ? bot : bot.id;
-    const event = calcShowInputForTag(id, trimTag(tag), options);
-    return addAction(event);
+): ShowInputForTagAction {
+    return null;
 }
 
 /**
@@ -1147,7 +846,7 @@ function showInputForTag(
 function showInput(
     currentValue?: any,
     options?: Partial<ShowInputOptions>
-): Promise<any> {
+): Promise<ShowInputAction> {
     return null;
 }
 
@@ -1166,9 +865,8 @@ function showInput(
  * });
  *
  */
-function checkout(options: CheckoutOptions) {
-    const event = calcCheckout(options);
-    return addAction(event);
+function checkout(options: CheckoutOptions): StartCheckoutAction {
+    return null;
 }
 
 /**
@@ -1188,16 +886,8 @@ function checkout(options: CheckoutOptions) {
  *   description: 'Description for purchase'
  * });
  */
-function finishCheckout(options: FinishCheckoutOptions) {
-    const event = calcFinishCheckout(
-        options.secretKey,
-        options.token,
-        options.amount,
-        options.currency,
-        options.description,
-        options.extra
-    );
-    return addAction(event);
+function finishCheckout(options: FinishCheckoutOptions): FinishCheckoutOptions {
+    return null;
 }
 
 /**
@@ -1210,24 +900,23 @@ function finishCheckout(options: FinishCheckoutOptions) {
  *   message: "Save recent changes"
  * });
  */
-function markHistory(options: MarkHistoryOptions) {
-    return remote(calcMarkHistory(options), undefined, false);
+function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
+    return null;
 }
 
 /**
  * Loads the "history" space into the universe.
  */
-function browseHistory() {
-    return remote(calcBrowseHistory());
+function browseHistory(): BrowseHistoryAction {
+    return null;
 }
 
 /**
  * Restores the current state to the given mark.
  * @param mark The bot or bot ID that represents the mark that should be restored.
  */
-function restoreHistoryMark(mark: Bot | string) {
-    const id = getID(mark);
-    return remote(calcRestoreHistoryMark(id));
+function restoreHistoryMark(mark: Bot | string): RestoreHistoryMarkAction {
+    return null;
 }
 
 /**
@@ -1235,9 +924,11 @@ function restoreHistoryMark(mark: Bot | string) {
  * @param mark The bot or bot ID that represents the mark that should be restored.
  * @param universe The universe that the mark should be restored to.
  */
-function restoreHistoryMarkToUniverse(mark: Bot | string, universe: string) {
-    const id = getID(mark);
-    return remote(calcRestoreHistoryMark(id, universe));
+function restoreHistoryMarkToUniverse(
+    mark: Bot | string,
+    universe: string
+): RestoreHistoryMarkAction {
+    return null;
 }
 
 /**
@@ -1290,15 +981,6 @@ function getCurrentUniverse(): string {
  * @param dimension The dimension to check for.
  */
 function getDimensionalDepth(dimension: string): number {
-    const bot = getUser();
-    const calc = getCalculationContext();
-    if (isBotInDimension(calc, bot, dimension)) {
-        return 0;
-    } else if (
-        KNOWN_PORTALS.some(portal => getTag(bot, portal) === dimension)
-    ) {
-        return 1;
-    }
     return -1;
 }
 
@@ -1307,55 +989,14 @@ function getDimensionalDepth(dimension: string): number {
  * @param bots The bot or bots to check.
  */
 function hasBotInInventory(bots: Bot | Bot[]): boolean {
-    if (!Array.isArray(bots)) {
-        bots = [bots];
-    }
-
-    return every(bots, f =>
-        isBotInDimension(
-            getCalculationContext(),
-            <any>f,
-            getInventoryDimension()
-        )
-    );
+    return false;
 }
 
 /**
  * Gets the current user's bot.
  */
 function getUser(): Bot {
-    if (!getUserId()) {
-        return null;
-    }
-    const calc = getCalculationContext();
-    const user = calc.sandbox.interface.listObjectsWithTag('id', getUserId());
-    if (Array.isArray(user)) {
-        if (user.length === 1) {
-            return user[0];
-        } else {
-            return null;
-        }
-    }
-    return user || null;
-}
-
-/**
- * Gets the current globals bot.
- */
-function getGlobals(): Bot {
-    const calc = getCalculationContext();
-    const globals = calc.sandbox.interface.listObjectsWithTag(
-        'id',
-        GLOBALS_BOT_ID
-    );
-    if (Array.isArray(globals)) {
-        if (globals.length === 1) {
-            return globals[0];
-        } else {
-            return null;
-        }
-    }
-    return globals || null;
+    return null;
 }
 
 /**
@@ -1458,19 +1099,7 @@ function getBots(tag: string, filter?: any | TagFilter): Bot[];
  * let bots = getBots();
  */
 function getBots(): Bot[] {
-    const calc = getCalculationContext();
-    if (arguments.length > 0 && typeof arguments[0] === 'function') {
-        return calc.sandbox.interface.listObjects(...arguments);
-    } else {
-        const tag: string = arguments[0];
-        if (typeof tag === 'undefined') {
-            return calc.sandbox.interface.objects.slice();
-        } else if (!tag) {
-            return [];
-        }
-        const filter = arguments[1];
-        return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
-    }
+    return null;
 }
 
 /**
@@ -1479,8 +1108,7 @@ function getBots(): Bot[] {
  * @param filter THe optional filter to use for the values.
  */
 function getBotTagValues(tag: string, filter?: TagFilter): any[] {
-    const calc = getCalculationContext();
-    return calc.sandbox.interface.listTagValues(trimTag(tag), filter);
+    return null;
 }
 
 /**
@@ -1682,73 +1310,7 @@ function not(filter: BotFilterFunction): BotFilterFunction {
  * let color = getTag(this, "auxColor");
  */
 function getTag(bot: Bot, ...tags: string[]): any {
-    let current: any = bot;
-    for (let i = 0; i < tags.length; i++) {
-        const tag = trimTag(tags[i].toString());
-        if (isScriptBot(current)) {
-            const calc = getCalculationContext();
-            if (calc) {
-                current = calc.sandbox.interface.getTag(current, tag);
-            } else {
-                current = bot.tags[tag];
-            }
-        } else if (isBot(current)) {
-            const calc = getCalculationContext();
-            if (calc) {
-                const script = calc.sandbox.interface.getBot(current.id);
-                if (script) {
-                    current = calc.sandbox.interface.getTag(script, tag);
-                } else {
-                    current = bot.tags[tag];
-                }
-            } else {
-                current = bot.tags[tag];
-            }
-        } else {
-            return current;
-        }
-    }
-
-    return current;
-}
-
-/**
- * Gets weather the current tag exists on the given bot.
- * @param bot The bot.
- * @param tag The tag to check.
- *
- * @example
- * // Determine if the "auxLabel" tag exists on the `this` bot.
- * let hasLabel = hasTag(this, "auxLabel");
- * if (hasLabel) {
- *   // Do something...
- * }
- */
-function hasTag(bot: Bot, ...tags: string[]): boolean {
-    let current: any = bot;
-    const calc = getCalculationContext();
-    for (let i = 0; i < tags.length; i++) {
-        if (isScriptBot(current)) {
-            const tag = trimTag(tags[i]);
-            if (calc) {
-                current = calc.sandbox.interface.getTag(current, tag);
-            } else {
-                current = bot.tags[tag];
-            }
-        } else {
-            if (current != null && current != undefined && current != '') {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    if (current != null && current != undefined && current != '') {
-        return true;
-    } else {
-        return false;
-    }
+    return null;
 }
 
 /**
@@ -1762,26 +1324,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  * setTag(this, "auxColor", "green");
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
-    tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isScriptBot(bot[0])) {
-        const calc = getCalculationContext();
-        for (let i = 0; i < bot.length; i++) {
-            calc.sandbox.interface.setTag(bot[i] as ScriptBot, tag, value);
-        }
-        return value;
-    } else if (bot && isScriptBot(bot)) {
-        const calc = getCalculationContext();
-        return calc.sandbox.interface.setTag(bot, tag, value);
-    } else if (bot && isBot(bot)) {
-        const calc = getCalculationContext();
-        const b = calc.sandbox.interface.getBot(bot.id);
-        return calc.sandbox.interface.setTag(b, tag, value);
-    } else {
-        if (tag !== 'id' && tag !== BOT_SPACE_TAG) {
-            (<BotTags>bot)[tag] = value;
-        }
-        return value;
-    }
+    return null;
 }
 
 /**
@@ -1857,12 +1400,8 @@ function applyMod(bot: any, ...diffs: Mod[]) {
  * Loads a file from the given path.
  * @param path The path that the file should be loaded from.
  */
-function loadFile(path?: string, options?: LoadFileOptions) {
-    const action = calcLoadFile({
-        path: path,
-        ...(options || {}),
-    });
-    return addAction(action);
+function loadFile(path?: string, options?: LoadFileOptions): LoadFileAction {
+    return null;
 }
 
 /**
@@ -1871,13 +1410,12 @@ function loadFile(path?: string, options?: LoadFileOptions) {
  * @param data The data to save.
  * @param options The options to use.
  */
-function saveFile(path: string, data: string, options?: SaveFileOptions) {
-    const action = calcSaveFile({
-        path: path,
-        data: data,
-        ...(options || {}),
-    });
-    return addAction(action);
+function saveFile(
+    path: string,
+    data: string,
+    options?: SaveFileOptions
+): SaveFileAction {
+    return null;
 }
 
 /**
@@ -1943,9 +1481,8 @@ function subtractMods(bot: any, ...diffs: Mod[]) {
  * @param message The message to show.
  * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
  */
-function toast(message: string, duration: number = 2) {
-    const event = toastMessage(message, duration);
-    return addAction(event);
+function toast(message: string, duration: number = 2): ShowToastAction {
+    return null;
 }
 
 /**
@@ -1954,9 +1491,8 @@ function toast(message: string, duration: number = 2) {
  * // Send the player to the "welcome" dimension.
  * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
  */
-function playSound(url: string) {
-    const event = calcPlaySound(url);
-    return addAction(event);
+function playSound(url: string): PlaySoundAction {
+    return null;
 }
 
 /**
@@ -1964,26 +1500,26 @@ function playSound(url: string) {
  * @param universe The universe that should be joined. Defaults to the current universe.
  * @param dimension The dimension that should be joined. Defaults to the current dimension.
  */
-function showJoinCode(universe?: string, dimension?: string) {
-    const event = calcShowJoinCode(universe, dimension);
-    return addAction(event);
+function showJoinCode(
+    universe?: string,
+    dimension?: string
+): ShowJoinCodeAction {
+    return null;
 }
 
 /**
  * Requests that AUX enters fullscreen mode.
  * Depending on the web browser, this may ask the player for permission.
  */
-function requestFullscreenMode() {
-    const event = requestFullscreen();
-    return addAction(event);
+function requestFullscreenMode(): RequestFullscreenAction {
+    return null;
 }
 
 /**
  * Exits fullscreen mode.
  */
-function exitFullscreenMode() {
-    const event = exitFullscreen();
-    return addAction(event);
+function exitFullscreenMode(): ExitFullscreenAction {
+    return null;
 }
 
 /**
@@ -2019,17 +1555,15 @@ function share(options: ShareOptions): ShareAction {
  * Shows some HTML to the user.
  * @param html The HTML to show.
  */
-function showHtml(html: string) {
-    const event = htmlMessage(html);
-    return addAction(event);
+function showHtml(html: string): ShowHtmlAction {
+    return null;
 }
 
 /**
  * Hides the HTML from the user.
  */
-function hideHtml() {
-    const event = hideHtmlMessage();
-    return addAction(event);
+function hideHtml(): HideHtmlAction {
+    return null;
 }
 
 /**
@@ -2043,9 +1577,8 @@ function tweenTo(
     rotX?: number,
     rotY?: number,
     duration?: number
-) {
-    const event = calcTweenTo(getID(bot), zoomValue, rotX, rotY, duration);
-    return addAction(event);
+): TweenToAction {
+    return null;
 }
 
 /**
@@ -2068,51 +1601,45 @@ function moveTo(
  * Opens the QR Code Scanner.
  * @param camera The camera that should be used.
  */
-function openQRCodeScanner(camera?: CameraType) {
-    const event = calcOpenQRCodeScanner(true, camera);
-    return addAction(event);
+function openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction {
+    return null;
 }
 
 /**
  * Closes the QR Code Scanner.
  */
-function closeQRCodeScanner() {
-    const event = calcOpenQRCodeScanner(false);
-    return addAction(event);
+function closeQRCodeScanner(): OpenQRCodeScannerAction {
+    return null;
 }
 
 /**
  * Shows the given QR Code.
  * @param code The code to show.
  */
-function showQRCode(code: string) {
-    const event = calcShowQRCode(true, code);
-    return addAction(event);
+function showQRCode(code: string): ShowQRCodeAction {
+    return null;
 }
 
 /**
  * Hides the QR Code.
  */
-function hideQRCode() {
-    const event = calcShowQRCode(false);
-    return addAction(event);
+function hideQRCode(): ShowQRCodeAction {
+    return null;
 }
 
 /**
  * Opens the barcode scanner.
  * @param camera The camera that should be used.
  */
-function openBarcodeScanner(camera?: CameraType) {
-    const event = calcOpenBarcodeScanner(true, camera);
-    return addAction(event);
+function openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction {
+    return null;
 }
 
 /**
  * Closes the barcode scanner.
  */
-function closeBarcodeScanner() {
-    const event = calcOpenBarcodeScanner(false);
-    return addAction(event);
+function closeBarcodeScanner(): OpenBarcodeScannerAction {
+    return null;
 }
 
 /**
@@ -2120,17 +1647,15 @@ function closeBarcodeScanner() {
  * @param code The code that should be shown.
  * @param format The format that the barcode should be shown in.
  */
-function showBarcode(code: string, format?: BarcodeFormat) {
-    const event = calcShowBarcode(true, code, format);
-    return addAction(event);
+function showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction {
+    return null;
 }
 
 /**
  * Hides the barcode.
  */
-function hideBarcode() {
-    const event = calcShowBarcode(false);
-    return addAction(event);
+function hideBarcode(): ShowBarcodeAction {
+    return null;
 }
 
 /**
@@ -2169,30 +1694,25 @@ function showChat(options: ShowChatOptions): any;
  * Shows the run bar.
  * @param placeholderOrOptions The placeholder text or options. (optional)
  */
-function showChat(placeholderOrOptions?: string | ShowChatOptions) {
-    if (typeof placeholderOrOptions === 'string') {
-        return addAction(
-            calcShowRun({
-                placeholder: placeholderOrOptions,
-            })
-        );
-    }
-    return addAction(calcShowRun(placeholderOrOptions));
+function showChat(
+    placeholderOrOptions?: string | ShowChatOptions
+): ShowChatBarAction {
+    return null;
 }
 
 /**
  * Hides the run bar.
  */
-function hideChat() {
-    return addAction(calcHideRun());
+function hideChat(): ShowChatBarAction {
+    return null;
 }
 
 /**
  * Enqueues the given script to execute after this script is done running.
  * @param script The script that should be executed.
  */
-function run(script: string) {
-    return addAction(runScript(script));
+function run(script: string): RunScriptAction {
+    return null;
 }
 
 /**
@@ -2200,18 +1720,8 @@ function run(script: string) {
  * @param bots The bots that should be downloaded.
  * @param filename The name of the file that the bots should be downloaded as.
  */
-function downloadBots(bots: Bot[], filename: string) {
-    let state: BotsState = {};
-    for (let bot of bots) {
-        state[bot.id] = bot;
-    }
-    return addAction(
-        download(
-            JSON.stringify(getDownloadState(state)),
-            formatAuxFilename(filename),
-            'application/json'
-        )
-    );
+function downloadBots(bots: Bot[], filename: string): DownloadAction {
+    return null;
 }
 
 function formatAuxFilename(filename: string): string {
@@ -2238,26 +1748,24 @@ function getDownloadState(state: BotsState) {
 /**
  * Shows the "Upload Universe" dialog.
  */
-function showUploadAuxFile() {
-    return addAction(calcShowUploadAuxFile());
+function showUploadAuxFile(): ShowUploadAuxFileAction {
+    return null;
 }
 
 /**
  * Loads the universe with the given ID.
  * @param id The ID of the universe to load.
  */
-function loadUniverse(id: string) {
-    const event = calcLoadSimulation(id);
-    return addAction(event);
+function loadUniverse(id: string): LoadUniverseAction {
+    return null;
 }
 
 /**
  * Unloads the universe with the given ID.
  * @param id The ID of the universe to unload.
  */
-function unloadUniverse(id: string) {
-    const event = calcUnloadSimulation(id);
-    return addAction(event);
+function unloadUniverse(id: string): UnloadUniverseAction {
+    return null;
 }
 
 /**
@@ -2266,25 +1774,8 @@ function unloadUniverse(id: string) {
  *                  If given JSON, then it will be imported as if it was a .aux file.
  *                  If given a URL, then it will be downloaded and then imported.
  */
-function importAUX(urlOrJSON: string) {
-    try {
-        const data = JSON.parse(urlOrJSON);
-        const state = getUploadState(data);
-        const event = addState(state);
-        return addAction(event);
-    } catch {
-        const event = calcImportAUX(urlOrJSON);
-        return addAction(event);
-    }
-}
-
-function unwrapBotOrMod(botOrMod: Mod) {
-    if (isScriptBot(botOrMod)) {
-        const calc = getCalculationContext();
-        return calc.sandbox.interface.unwrapBot(botOrMod);
-    } else {
-        return botOrMod;
-    }
+function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
+    return null;
 }
 
 /**
@@ -2292,45 +1783,39 @@ function unwrapBotOrMod(botOrMod: Mod) {
  * @param universe The universe.
  * @param botOrMod The bot or mod that should be cloned into the new universe.
  */
-function setupUniverse(universe: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(universe, unwrapBotOrMod(botOrMod)));
+function setupUniverse(universe: string, botOrMod?: Mod): SetupChannelAction {
+    return null;
 }
 
 /**
  * Executes the given shell script on the server.
  * @param script The shell script  that should be executed.
  */
-function shell(script: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcShell(script)));
+function shell(script: string): ShellAction {
+    return null;
 }
 
 /**
  * Backs up all the AUX universes to a Github Gist.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
-function backupToGithub(auth: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcBackupToGithub(auth)));
+function backupToGithub(auth: string): BackupToGithubAction {
+    return null;
 }
 
 /**
  * Backs up all the AUX universes to a zip bot.
  */
-function backupAsDownload(target: SessionSelector) {
-    let actions = getActions();
-    actions.push(
-        calcRemote(calcBackupAsDownload(convertSessionSelector(target)))
-    );
+function backupAsDownload(target: SessionSelector): BackupAsDownloadAction {
+    return null;
 }
 
 /**
  * Instructs auxPlayer to open the built-in developer console.
  * The dev console provides easy access to error messages and debug logs for formulas and actions.
  */
-function openDevConsole() {
-    const event = calcOpenConsole();
-    return addAction(event);
+function openDevConsole(): OpenConsoleAction {
+    return null;
 }
 
 /**
@@ -2359,29 +1844,29 @@ function changeState(bot: Bot, stateName: string, groupName: string = 'state') {
 /**
  * Enables Augmented Reality features.
  */
-function enableAR() {
-    return addAction(calcEnableAR());
+function enableAR(): EnableARAction {
+    return null;
 }
 
 /**
  * Enables Virtual Reality features.
  */
-function enableVR() {
-    return addAction(calcEnableVR());
+function enableVR(): EnableVRAction {
+    return null;
 }
 
 /**
  * Disables Augmented Reality features.
  */
-function disableAR() {
-    return addAction(calcDisableAR());
+function disableAR(): EnableARAction {
+    return null;
 }
 
 /**
  * Disables Virtual Reality features.
  */
-function disableVR() {
-    return addAction(calcDisableVR());
+function disableVR(): EnableVRAction {
+    return null;
 }
 
 /**
@@ -2446,15 +1931,6 @@ function localFormAnimation(
     animation: string | number
 ): LocalFormAnimationAction {
     return null;
-}
-
-function __energyCheck() {
-    let current = getEnergy();
-    current -= 1;
-    setEnergy(current);
-    if (current <= 0) {
-        throw new RanOutOfEnergyError();
-    }
 }
 
 // NOTE: Make sure to add functions that don't
@@ -2608,7 +2084,4 @@ export default {
     getTag,
     setTag,
     removeTags,
-
-    // Engine functions
-    __energyCheck,
 };

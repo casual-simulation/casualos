@@ -12,7 +12,6 @@ import {
     BotsState,
     BOT_SPACE_TAG,
     StateUpdatedEvent,
-    PrecalculationManager,
     AuxPartitions,
     AuxPartition,
     PartitionConfig,
@@ -41,13 +40,10 @@ import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
 import { addDebugApi } from '../DebugHelpers';
 
-export interface AuxChannelOptions {
-    sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
-}
+export interface AuxChannelOptions {}
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
-    // protected _precalculation: PrecalculationManager;
     protected _runtime: AuxRuntime;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;

@@ -26,16 +26,6 @@ export interface BotCalculationContext {
 }
 
 /**
- * Defines an interface for objects that are able to run formulas via a sandbox.
- */
-export interface BotSandboxContext extends BotCalculationContext {
-    /**
-     * The sandbox that should be used to run JS.
-     */
-    sandbox: Sandbox;
-}
-
-/**
  * Calculates the result of the given function - caching it if needed.
  * @param name The name of the function.
  * @param func The function to cache.
