@@ -64,7 +64,6 @@ import { getBotsForAction, ActionResult } from '../BotsChannel';
 import {
     calculateActionResults,
     calculateDestroyBotEvents,
-    calculateFormulaEvents,
     resolveRejectedActions,
 } from '../BotActions';
 import { BotsState, DEVICE_BOT_ID, Bot, KNOWN_PORTALS } from '../Bot';
@@ -6233,88 +6232,6 @@ export function botActionsTests(
                 botRemoved('bot1'),
                 // bot2 and bot3 are not destroyed because they are not destroyable
                 botRemoved('bot4'),
-            ]);
-        });
-    });
-
-    describe('calculateFormulaEvents()', () => {
-        it('should return the list of events that the formula produced', () => {
-            const state: BotsState = {};
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const result = calculateFormulaEvents(
-                state,
-                'create(null, { name: "bob" })',
-                undefined,
-                undefined
-            );
-
-            expect(result).toEqual([
-                botAdded({
-                    id: 'uuid-0',
-                    tags: {
-                        name: 'bob',
-                    },
-                }),
-            ]);
-        });
-
-        it('should support updating bots', () => {
-            const state: BotsState = {
-                otherBot: {
-                    id: 'otherBot',
-                    tags: {
-                        name: 'bob',
-                        test: false,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const result = calculateFormulaEvents(
-                state,
-                'setTag(getBot("#name", "bob"), "#test", true)',
-                undefined,
-                undefined
-            );
-
-            expect(result).toEqual([
-                botUpdated('otherBot', {
-                    tags: {
-                        test: true,
-                    },
-                }),
-            ]);
-        });
-
-        it('should use the given user id', () => {
-            const state: BotsState = {
-                userBot: {
-                    id: 'userBot',
-                    tags: {
-                        test: true,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const result = calculateFormulaEvents(
-                state,
-                'create(null, player.getBot())',
-                'userBot',
-                undefined
-            );
-
-            expect(result).toEqual([
-                botAdded({
-                    id: 'uuid-0',
-                    tags: {
-                        test: true,
-                    },
-                }),
             ]);
         });
     });

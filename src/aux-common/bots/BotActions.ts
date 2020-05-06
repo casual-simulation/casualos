@@ -90,36 +90,6 @@ export function calculateActionResults(
 }
 
 /**
- * Calculates the set of events that should be run for the given formula.
- * @param state The current bot state.
- * @param formula The formula to run.
- * @param userId The ID of the user to run the script as.
- * @param argument The argument to include as the "that" variable.
- * @param sandboxFactory The factory that should be used for making sandboxes.
- * @param library The library that should be used for the calculation context.
- */
-export function calculateFormulaEvents(
-    state: BotsState,
-    formula: string,
-    userId: string = null,
-    argument: any = null,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary
-): BotAction[] {
-    const objects = getActiveObjects(state);
-    const context = createCalculationContext(
-        objects,
-        userId,
-        library,
-        sandboxFactory
-    );
-
-    let result = formulaActions(context, null, null, formula);
-
-    return [...result.actions, ...context.sandbox.interface.getBotUpdates()];
-}
-
-/**
  * Calculates the list of events needed to destroy the given bot and all of its decendents.
  * @param calc The bot calculation context.
  * @param bot The bot to destroy.
