@@ -27,7 +27,6 @@ import {
     botUpdated,
     filterWellKnownAndDimensionTags,
     tagsOnBot,
-    calculateActionResults,
     ON_ACTION_ACTION_NAME,
     action,
     GLOBALS_BOT_ID,
@@ -421,82 +420,6 @@ export class AuxHelper extends BaseHelper<Bot> {
             version: 1,
             state: withBots,
         };
-    }
-
-    // private _flattenEvents(events: BotAction[]): BotAction[] {
-    //     let resultEvents: BotAction[] = [];
-
-    //     const filteredEvents = this._rejectEvents(events);
-
-    //     for (let event of filteredEvents) {
-    //         if (event.type === 'update_bot') {
-    //             const bot = this.botsState[event.id];
-    //             // TODO:
-    //             updateBot(
-    //                 bot,
-    //                 this.userBot.id,
-    //                 event.update,
-    //                 () => <any>this.createContext()
-    //             );
-    //             resultEvents.push(event);
-    //         } else if (event.type === 'paste_state') {
-    //             // TODO:
-    //             // resultEvents.push(...this._pasteState(event));
-    //         } else if (event.type === 'apply_state') {
-    //             const events = breakIntoIndividualEvents(this.botsState, event);
-    //             resultEvents.push(...events);
-    //         } else {
-    //             resultEvents.push(event);
-    //         }
-    //     }
-
-    //     return resultEvents;
-    // }
-
-    private _rejectEvents(events: BotAction[]): BotAction[] {
-        const context = this.createContext();
-        let resultEvents: BotAction[] = events.slice();
-        for (let event of events) {
-            const actions = this._allowEvent(context, event);
-            resultEvents.push(...actions);
-        }
-        return resolveRejectedActions(resultEvents);
-    }
-
-    /**
-     * Resolves the list of events through the onUniverseAction() handler.
-     * @param events The events to resolve.
-     */
-    public resolveEvents(events: BotAction[]): BotAction[] {
-        return this._rejectEvents(events);
-    }
-
-    private _allowEvent(
-        context: BotCalculationContext,
-        event: BotAction
-    ): BotAction[] {
-        // TODO:
-        // try {
-        //     const results = calculateActionResults(
-        //         this.botsState,
-        //         action(ON_ACTION_ACTION_NAME, null, this.userId, {
-        //             action: event,
-        //         }),
-        //         undefined,
-        //         undefined,
-        //         context,
-        //         false
-        //     );
-
-        //     return results.actions;
-        // } catch (err) {
-        //     console.error(
-        //         '[AuxHelper] The onUniverseAction() handler errored:',
-        //         err
-        //     );
-        //     return [];
-        // }
-        return [];
     }
 
     private async _sendEvents(events: BotAction[]) {

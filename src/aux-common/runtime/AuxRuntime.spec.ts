@@ -71,7 +71,6 @@ import {
     asyncResult,
     asyncError,
 } from '../bots';
-import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';

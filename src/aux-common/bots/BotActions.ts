@@ -36,60 +36,6 @@ import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 
 /**
- * Calculates the results for the given action run with the given state.
- * @param state The state.
- * @param action The action.
- * @param sandboxFactory The factory that should be used to create a script sandbox.
- * @param library The library that should be used for sandbox scripts.
- * @param calc The calculation context.
- * @param executeOnShout Whether to run the onListen actions.
- */
-export function calculateActionResults(
-    state: BotsState,
-    action: ShoutAction,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary,
-    calc?: BotSandboxContext,
-    executeOnShout?: boolean
-): ActionResult {
-    const allObjects = values(state);
-    calc =
-        calc ||
-        createCalculationContext(
-            allObjects,
-            action.userId,
-            library,
-            sandboxFactory
-        );
-    const { bots, objects } = getBotsForAction(action, calc);
-    const context = createCalculationContext(
-        objects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-
-    const result = calculateBotActionEvents(
-        state,
-        action,
-        context,
-        bots,
-        executeOnShout
-    );
-    let events = [
-        ...result.actions,
-        ...context.sandbox.interface.getBotUpdates(),
-    ];
-
-    return {
-        actions: events,
-        errors: result.errors,
-        results: result.results,
-        listeners: result.listeners,
-    };
-}
-
-/**
  * Calculates the list of events needed to destroy the given bot and all of its decendents.
  * @param calc The bot calculation context.
  * @param bot The bot to destroy.
