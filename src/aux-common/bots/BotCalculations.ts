@@ -73,7 +73,8 @@ import {
 } from '../Formulas/formula-lib-globals';
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import { differenceBy, maxBy } from 'lodash';
+import differenceBy from 'lodash/differenceBy';
+import maxBy from 'lodash/maxBy';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 

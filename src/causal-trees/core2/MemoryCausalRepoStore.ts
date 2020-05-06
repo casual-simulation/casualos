@@ -4,7 +4,7 @@ import {
     CausalRepoObject,
     getObjectHash,
 } from './CausalRepoObject';
-import { sortedIndexBy, findIndex, sortBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
 
 export class MemoryCausalRepoStore implements CausalRepoStore {
     private _map: Map<string, CausalRepoObject>;
@@ -59,7 +59,7 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
     }
 
     async saveBranch(head: CausalRepoBranch): Promise<void> {
-        const index = findIndex(this._branches, b => b.name === head.name);
+        const index = this._branches.findIndex(b => b.name === head.name);
         if (index >= 0) {
             this._branches[index] = head;
         } else {
@@ -68,7 +68,7 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
     }
 
     async deleteBranch(head: CausalRepoBranch): Promise<void> {
-        const index = findIndex(this._branches, b => b.name === head.name);
+        const index = this._branches.findIndex(b => b.name === head.name);
         if (index >= 0) {
             this._branches.splice(index, 1);
         }

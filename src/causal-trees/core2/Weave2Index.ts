@@ -6,7 +6,7 @@ import {
 } from './Weave2';
 import { AtomIndexFullDiff, AtomHashList } from './AtomIndex';
 import { Atom, atomIdToString } from './Atom2';
-import { uniqBy, uniq } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 
 /**
  * Calculates the index diff from the given weave results.

@@ -71,7 +71,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
-import { pickBy } from 'lodash';
+import pickBy from 'lodash/pickBy';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
 import {

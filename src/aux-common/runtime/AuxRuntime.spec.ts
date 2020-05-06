@@ -78,7 +78,7 @@ import { types } from 'util';
 import { remote, device } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { AuxDevice, AuxVersion } from './AuxGlobalContext';
-import { values } from 'lodash';
+import values from 'lodash/values';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import { createDefaultLibrary } from './AuxLibrary';
