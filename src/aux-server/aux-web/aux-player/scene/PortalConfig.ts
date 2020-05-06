@@ -13,7 +13,6 @@ import {
     PortalPointerDragMode,
     DEFAULT_PORTAL_POINTER_DRAG_MODE,
     calculatePortalPointerDragMode,
-    DEFAULT_PORTAL_SHOW_FOCUS_POINT,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -46,6 +45,7 @@ export class PortalConfig implements SubscriptionLike {
     private _showFocusPoint: boolean = null;
     private _gridScale: number;
     private _raycastMode: PortalPointerDragMode = null;
+    private _disableCanvasTransparency: boolean = null;
     private _grid3D: BoundedGrid3D;
 
     private _onGridScaleUpdated: Subject<void>;
@@ -222,6 +222,14 @@ export class PortalConfig implements SubscriptionLike {
         }
     }
 
+    get disableCanvasTransparency() {
+        if (this._disableCanvasTransparency != null) {
+            return this._disableCanvasTransparency;
+        } else {
+            return null;
+        }
+    }
+
     get grid3D() {
         return this._grid3D;
     }
@@ -286,6 +294,7 @@ export class PortalConfig implements SubscriptionLike {
         this._playerRotationY = null;
         this._raycastMode = null;
         this._showFocusPoint = null;
+        this._disableCanvasTransparency = null;
         this.gridScale = this._getDefaultGridScale();
     }
 
@@ -382,6 +391,12 @@ export class PortalConfig implements SubscriptionLike {
             calc,
             bot,
             `auxPortalShowFocusPoint`,
+            null
+        );
+        this._disableCanvasTransparency = calculateBooleanTagValue(
+            calc,
+            bot,
+            'auxPortalDisableCanvasTransparency',
             null
         );
         this.gridScale = calculateGridScale(calc, bot);

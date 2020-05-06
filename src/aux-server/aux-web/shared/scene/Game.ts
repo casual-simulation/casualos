@@ -118,7 +118,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
 
         this.time = new Time();
         this.subs = [];
-        this.setupRenderer();
+        this.setupRendering();
         this.setupScenes();
         this.input = new Input(this);
         this.input.controllerAdded.subscribe(
@@ -428,11 +428,14 @@ export abstract class Game implements AuxBotVisualizerFinder {
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
         this.renderer.outputEncoding = sRGBEncoding;
+        this.gameView.gameView.appendChild(this.renderer.domElement);
+    }
+
+    protected setupRendering() {
+        this.setupRenderer();
 
         this.mainViewport = new Viewport('main', null, this.gameView.container);
         this.mainViewport.layer = 0;
-
-        this.gameView.gameView.appendChild(this.renderer.domElement);
     }
 
     protected setupScenes() {

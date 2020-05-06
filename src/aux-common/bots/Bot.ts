@@ -179,6 +179,7 @@ export interface BotTags {
     ['auxPortalRotatable']?: number | null;
     ['auxPortalPointerDragMode']?: PortalPointerDragMode;
     ['auxPortalShowFocusPoint']?: boolean | null;
+    ['auxPortalDisableCanvasTransparency']?: boolean;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -379,6 +380,11 @@ export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
  * The default portal raycast mode.
  */
 export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
+
+/**
+ * Whether canvas transparency is disabled by default.
+ */
+export const DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY: boolean = false;
 
 /**
  * The default height for workspaces.
@@ -890,6 +896,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationY`,
     'auxPortalPointerDragMode',
     'auxPortalShowFocusPoint',
+    'auxPortalDisableCanvasTransparency',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',
