@@ -90,8 +90,6 @@
                 v-bind:md-content="confirmDialogOptions.body"
                 v-bind:md-confirm-text="confirmDialogOptions.okText"
                 v-bind:md-cancel-text="confirmDialogOptions.cancelText"
-                @md-cancel="onConfirmDialogCancel"
-                @md-confirm="onConfirmDialogOk"
             />
 
             <md-dialog-alert
