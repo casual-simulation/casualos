@@ -421,6 +421,8 @@ export abstract class Game implements AuxBotVisualizerFinder {
     protected setupRenderer() {
         const webGlRenderer = (this.renderer = new WebGLRenderer({
             antialias: true,
+
+            // Alpha is required for CSS Renderer (HTML support)
             alpha: true,
         }));
         webGlRenderer.autoClear = false;
