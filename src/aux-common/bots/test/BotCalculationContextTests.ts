@@ -37,7 +37,6 @@ import {
     getChannelConnectedDevices,
     getConnectedDevices,
     getBotScale,
-    calculateCopiableValue,
     isUserActive,
     calculateStringTagValue,
     isMinimized,
@@ -337,44 +336,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('calculateCopiableValue()', () => {
-        it('should catch errors from calculateBotValue()', () => {
-            const bot1 = createBot('test1', {
-                formula: '=throw new Error("Test")',
-            });
-
-            const context = createPrecalculatedContext([bot1]);
-            const result = calculateCopiableValue(
-                context,
-                bot1,
-                'formula',
-                bot1.tags['formula']
-            );
-
-            expect(result).toEqual('Error: Test');
-        });
-
-        it('should unwrap ScriptBot objects', () => {
-            const bot1 = createBot('test1', {
-                formula: '=getBot("name", "bob")',
-            });
-            const bot2 = createBot('test1', {
-                name: 'bob',
-                formula: '=10',
-            });
-
-            const context = createPrecalculatedContext([bot1, bot2]);
-            const result = calculateCopiableValue(
-                context,
-                bot1,
-                'formula',
-                bot1.tags['formula']
-            );
-
-            expect(result).toEqual(bot2);
-        });
-    });
-
     describe('convertToCopiableValue()', () => {
         it('should leave strings alone', () => {
             const result = convertToCopiableValue('test');
@@ -610,8 +571,8 @@ export function botCalculationContextTests(
             ['', false],
             [null, false],
             [0, false],
-            ['=false', false],
-            ['=0', false],
+            ['false', false],
+            ['0', false],
             ['a', true],
             [1, true],
             [true, true],
@@ -805,14 +766,6 @@ export function botCalculationContextTests(
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return false when auxDraggable calculates to false', () => {
-            let bot = createBot('test', {
-                ['auxDraggable']: '=false',
-            });
-            const context = createPrecalculatedContext([bot]);
-            expect(isBotMovable(context, bot)).toBe(false);
-        });
-
         it('should return true when auxDraggable has any other value', () => {
             let bot = createBot('test', {
                 ['auxDraggable']: 'anything',
@@ -894,14 +847,6 @@ export function botCalculationContextTests(
         it('should return false when auxPositioningMode is absolute', () => {
             let bot = createBot('test', {
                 auxPositioningMode: 'absolute',
-            });
-            const context = createPrecalculatedContext([bot]);
-            expect(isBotStackable(context, bot)).toBe(false);
-        });
-
-        it('should return false when auxPositioningMode calculates to absolute', () => {
-            let bot = createBot('test', {
-                auxPositioningMode: '="absolute"',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
@@ -1440,7 +1385,7 @@ export function botCalculationContextTests(
                 'auxDimensionConfig.surface.grid.0:1': 1,
                 'auxDimensionConfig.surface.grid.1:1': 1,
                 'auxDimensionConfig.surface.grid.2:1': 2,
-                'auxDimensionConfig.surface.grid.2:2': '=3',
+                'auxDimensionConfig.surface.grid.2:2': '3',
             });
 
             const calc = createPrecalculatedContext([bot]);
@@ -1772,17 +1717,6 @@ export function botCalculationContextTests(
             expect(tags).toEqual(['abc']);
         });
 
-        it('should evalulate formulas', () => {
-            const bot = createBot('test', {
-                auxDimensionConfig: '="abc"',
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            const tags = getBotConfigDimensions(calc, bot);
-
-            expect(tags).toEqual(['abc']);
-        });
-
         it('should return the list of values when given a number', () => {
             const bot = createBot('test', {
                 abc: true,
@@ -1819,18 +1753,6 @@ export function botCalculationContextTests(
 
             expect(locked).toEqual(false);
         });
-
-        it('should evaluate formulas', () => {
-            const bot = createBot('test', {
-                auxDimensionConfig: 'abc',
-                auxPortalLocked: '=true',
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            const locked = isDimensionLocked(calc, bot);
-
-            expect(locked).toEqual(true);
-        });
     });
 
     describe('getBotLabelAnchor()', () => {
@@ -1862,17 +1784,6 @@ export function botCalculationContextTests(
 
             expect(a).toBe(expected);
         });
-
-        it('should support formulas', () => {
-            const bot = createBot('bot', {
-                auxLabelPosition: '="front"',
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            const anchor = getBotLabelAnchor(calc, bot);
-
-            expect(anchor).toBe('front');
-        });
     });
 
     describe('getBotLabelAlignment()', () => {
@@ -1901,17 +1812,6 @@ export function botCalculationContextTests(
 
             expect(a).toBe(expected);
         });
-
-        it('should support formulas', () => {
-            const bot = createBot('bot', {
-                auxLabelAlignment: '="left"',
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            const anchor = getBotLabelAlignment(calc, bot);
-
-            expect(anchor).toBe('left');
-        });
     });
 
     describe('getBotScaleMode()', () => {
@@ -1939,17 +1839,6 @@ export function botCalculationContextTests(
 
             expect(a).toBe(expected);
         });
-
-        it('should support formulas', () => {
-            const bot = createBot('bot', {
-                auxScaleMode: '="absolute"',
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            const anchor = getBotScaleMode(calc, bot);
-
-            expect(anchor).toBe('absolute');
-        });
     });
 
     describe('getBotVersion()', () => {
@@ -1971,82 +1860,6 @@ export function botCalculationContextTests(
             const calc = createPrecalculatedContext([bot]);
 
             expect(getBotVersion(calc, bot)).toBeUndefined();
-        });
-    });
-
-    describe('hasBotInInventory()', () => {
-        it('should return true if the given bot is in the users inventory dimension', () => {
-            const thisBot = createBot('thisBot', {
-                isInInventory:
-                    '=player.hasBotInInventory(getBots("name", "bob"))',
-            });
-            const thatBot = createBot('thatBot', {
-                name: 'bob',
-                test: true,
-            });
-            const user = createBot('userId', {
-                auxInventoryPortal: 'test',
-            });
-
-            const calc = createPrecalculatedContext(
-                [thisBot, thatBot, user],
-                'userId'
-            );
-            const result = calculateBotValue(calc, thisBot, 'isInInventory');
-
-            expect(result).toBe(true);
-        });
-
-        it('should return true if all the given bots are in the users inventory dimension', () => {
-            const thisBot = createBot('thisBot', {
-                isInInventory:
-                    '=player.hasBotInInventory(getBots("name", "bob"))',
-            });
-            const thatBot = createBot('thatBot', {
-                name: 'bob',
-                test: true,
-            });
-            const otherBot = createBot('otherBot', {
-                name: 'bob',
-                test: true,
-            });
-            const user = createBot('userId', {
-                auxInventoryPortal: 'test',
-            });
-
-            const calc = createPrecalculatedContext(
-                [thisBot, thatBot, otherBot, user],
-                'userId'
-            );
-            const result = calculateBotValue(calc, thisBot, 'isInInventory');
-
-            expect(result).toBe(true);
-        });
-
-        it('should return false if one of the given bots are not in the users inventory dimension', () => {
-            const thisBot = createBot('thisBot', {
-                isInInventory:
-                    '=player.hasBotInInventory(getBots("name", "bob"))',
-            });
-            const thatBot = createBot('thatBot', {
-                name: 'bob',
-                test: true,
-            });
-            const otherBot = createBot('otherBot', {
-                name: 'bob',
-                test: false,
-            });
-            const user = createBot('userId', {
-                auxInventoryPortal: 'test',
-            });
-
-            const calc = createPrecalculatedContext(
-                [thisBot, thatBot, otherBot, user],
-                'userId'
-            );
-            const result = calculateBotValue(calc, thisBot, 'isInInventory');
-
-            expect(result).toBe(false);
         });
     });
 

@@ -1,5 +1,9 @@
 'use strict';
 
+class GLTFLoader {
+    setDRACOLoader() {}
+}
+
 module.exports = {
-    GLTFLoader: jest.fn(),
+    GLTFLoader: GLTFLoader,
 };

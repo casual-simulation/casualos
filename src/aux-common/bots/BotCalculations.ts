@@ -2444,27 +2444,6 @@ export function calculateValue(
 }
 
 /**
- * Calculates the value of the given formula and ensures that the result is a transferrable value.
- * @param context The bot calculation context to use.
- * @param object The object that the formula was from.
- * @param tag The tag that the formula was from.
- * @param formula The formula to calculate the value of.
- */
-export function calculateCopiableValue(
-    context: BotCalculationContext,
-    object: any,
-    tag: keyof BotTags,
-    formula: string
-): any {
-    try {
-        const value = calculateValue(context, object, tag, formula);
-        return convertToCopiableValue(value);
-    } catch (err) {
-        return convertToCopiableValue(err);
-    }
-}
-
-/**
  * Converts the given value to a copiable value.
  * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
  * Non-copiable values are functions and errors.
