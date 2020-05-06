@@ -9,6 +9,7 @@
 -   :rocket: Improvements
 
     -   Added the ability to store universe data in CassandraDB.
+
         -   Note that support for CassandraDB is experimental and probably won't be supported in the future.
         -   If the required environment variables are not specified, then Cassandra support will be disabled.
         -   Use the following environment variables to enable Cassandra support:
@@ -18,6 +19,11 @@
             -   `CASSANDRA_KEYSPACE` - This is the name of the keyspace that should be used by the client. (Required for Cassandra)
             -   `CASSANDRA_CREATE_KEYSPACE` - This is a `true`/`false` value indicating whether the client should create the keyspace if it doesn't exist. (Optional)
             -   `CASSANDRA_CERTIFICATE_AUTHORITY` - This is the path to the public key file (PEM format) that should be used. Only required if connecting to a Cassandra server which uses a self-signed certificate.
+
+    -   Added the `#auxPortalDisableCanvasTransparency` tag to allow choosing between transparency for iframes and more correct 3D rendering.
+        -   Set this to `true` on the page portal config bot to disable transparency on the canvas element. This will make all 3D models that use alpha textures work better with alpha cutoff.
+        -   Note that setting to `true` will make all iframe forms unusable.
+        -   Defaults to `false`.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where loading a GLTF would error if the bot was destroyed while the GLTF was loading.
