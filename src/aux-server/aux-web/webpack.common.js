@@ -220,26 +220,12 @@ module.exports = {
         }),
         new OfflinePlugin({
             // chunks: ['player'],
-            appShell: '/',
+            appShell: '/player.html',
             AppCache: false,
             ServiceWorker: {
                 events: true,
                 entry: path.resolve(__dirname, 'shared', 'sw.ts'),
             },
-            // rewrites: function(asset) {
-            //     if (asset.endsWith('projector-index.html')) {
-            //         return '/';
-            //     } else if (asset.endsWith('player-index.html')) {
-            //         return '/';
-            //     }
-
-            //     return asset;
-            // },
-            cacheMaps: [
-                {
-                    requestTypes: ['navigate'],
-                },
-            ],
             externals: [],
         }),
         new CopyPlugin([
