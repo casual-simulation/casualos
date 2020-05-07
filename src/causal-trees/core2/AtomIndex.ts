@@ -1,6 +1,5 @@
 import { getHash } from '@casual-simulation/crypto';
 import { Atom, atomIdToString } from './Atom2';
-import { values } from 'lodash';
 
 /**
  * Defines a map of hashes to Atom IDs.

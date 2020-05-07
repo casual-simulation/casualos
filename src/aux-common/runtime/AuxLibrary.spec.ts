@@ -3,8 +3,6 @@ import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
-    AuxVersion,
-    AuxDevice,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -77,6 +75,8 @@ import {
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
 import { RuntimeBot } from './RuntimeBot';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -3414,68 +3414,6 @@ describe('AuxLibrary', () => {
             expect(enter).not.toBeCalled();
             expect(exit).not.toBeCalled();
         });
-
-        // it('should set the state tag on a bot from an argument to the given value', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: '@changeState(that, "abc")',
-        //             },
-        //         },
-        //         thatBot: {
-        //             id: 'thatBot',
-        //             tags: {},
-        //         },
-        //     };
-
-        //     // specify the UUID to use next
-        //     const botAction = action(
-        //         'test',
-        //         ['thisBot'],
-        //         null,
-        //         state['thatBot']
-        //     );
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([
-        //         botUpdated('thatBot', {
-        //             tags: {
-        //                 state: 'abc',
-        //             },
-        //         }),
-        //     ]);
-        // });
-
-        // it('should be possible to use changeState() while in onCreate()', () => {
-        //     const state: BotsState = {
-        //         thisBot: {
-        //             id: 'thisBot',
-        //             tags: {
-        //                 test: `@create({ onCreate: "@changeState(this, 'abc')" })`,
-        //             },
-        //         },
-        //     };
-
-        //     // specify the UUID to use next
-        //     uuidMock.mockReturnValue('newBot');
-        //     const botAction = action('test', ['thisBot'], null);
-        //     const result = calculateActionResults(state, botAction);
-
-        //     expect(result.actions).toEqual([
-        //         botAdded(
-        //             createBot('newBot', {
-        //                 auxCreator: 'thisBot',
-        //                 onCreate: "@changeState(this, 'abc')",
-        //             })
-        //         ),
-        //         botUpdated('newBot', {
-        //             tags: {
-        //                 state: 'abc',
-        //             },
-        //         }),
-        //     ]);
-        // });
     });
 
     describe('superShout()', () => {

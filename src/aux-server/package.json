@@ -51,6 +51,7 @@
         "@casual-simulation/causal-tree-server": "^1.0.26",
         "@casual-simulation/causal-tree-server-socketio": "^1.0.26",
         "@casual-simulation/causal-tree-store-mongodb": "^1.0.26",
+        "@casual-simulation/causal-tree-store-cassandradb": "^1.0.26",
         "@casual-simulation/causal-trees": "^1.0.26",
         "@casual-simulation/crypto": "^1.0.24",
         "@casual-simulation/crypto-browser": "^1.0.24",
@@ -108,6 +109,7 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6"
+        "vue-shortkey": "^3.1.6",
+        "cassandra-driver": "4.5.1"
     }
 }

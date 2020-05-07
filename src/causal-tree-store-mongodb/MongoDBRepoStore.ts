@@ -25,7 +25,10 @@ export class MongoDBRepoStore implements CausalRepoStore {
         await this._heads.createIndex({ name: 1 }, { unique: true });
     }
 
-    async getObjects(keys: string[]): Promise<CausalRepoObject[]> {
+    async getObjects(
+        head: string,
+        keys: string[]
+    ): Promise<CausalRepoObject[]> {
         const objs = await this._objects
             .find({
                 _id: { $in: keys },
@@ -36,11 +39,25 @@ export class MongoDBRepoStore implements CausalRepoStore {
         return objs;
     }
 
+    async getObject(key: string): Promise<CausalRepoObject> {
+        const obj = await this._objects.findOne({
+            _id: key,
+        });
+        if (obj) {
+            return obj.object;
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Stores the given objects.
      * @param objects The objects to store.
      */
-    async storeObjects(objects: CausalRepoObject[]): Promise<void> {
+    async storeObjects(
+        head: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
         const mongoObjects: MongoDBObject[] = objects.map(o => ({
             _id: getObjectHash(o),
             object: o,

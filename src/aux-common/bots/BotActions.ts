@@ -1,124 +1,17 @@
 import { Bot, BotsState } from './Bot';
+import { calculateBotValue, isDestroyable } from './BotCalculations';
+import { BotCalculationContext } from './BotCalculationContext';
 import {
-    calculateBotValue,
-    getActiveObjects,
-    calculateFormulaValue,
-    isDestroyable,
-    convertToCopiableValue,
-} from './BotCalculations';
-import {
-    BotCalculationContext,
-    BotSandboxContext,
-} from './BotCalculationContext';
-import {
-    ShoutAction,
     botRemoved,
     BotAction,
     ApplyStateAction,
-    BotActions,
     botAdded,
     botUpdated,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
 } from './BotEvents';
-import {
-    createCalculationContextFromState,
-    createCalculationContext,
-} from './BotCalculationContextFactories';
-import {
-    calculateBotActionEvents,
-    getBotsForAction,
-    formulaActions,
-    ActionResult,
-} from './BotsChannel';
-import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
-import values from 'lodash/values';
 import uniq from 'lodash/uniq';
-
-/**
- * Calculates the results for the given action run with the given state.
- * @param state The state.
- * @param action The action.
- * @param sandboxFactory The factory that should be used to create a script sandbox.
- * @param library The library that should be used for sandbox scripts.
- * @param calc The calculation context.
- * @param executeOnShout Whether to run the onListen actions.
- */
-export function calculateActionResults(
-    state: BotsState,
-    action: ShoutAction,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary,
-    calc?: BotSandboxContext,
-    executeOnShout?: boolean
-): ActionResult {
-    const allObjects = values(state);
-    calc =
-        calc ||
-        createCalculationContext(
-            allObjects,
-            action.userId,
-            library,
-            sandboxFactory
-        );
-    const { bots, objects } = getBotsForAction(action, calc);
-    const context = createCalculationContext(
-        objects,
-        action.userId,
-        library,
-        sandboxFactory
-    );
-
-    const result = calculateBotActionEvents(
-        state,
-        action,
-        context,
-        bots,
-        executeOnShout
-    );
-    let events = [
-        ...result.actions,
-        ...context.sandbox.interface.getBotUpdates(),
-    ];
-
-    return {
-        actions: events,
-        errors: result.errors,
-        results: result.results,
-        listeners: result.listeners,
-    };
-}
-
-/**
- * Calculates the set of events that should be run for the given formula.
- * @param state The current bot state.
- * @param formula The formula to run.
- * @param userId The ID of the user to run the script as.
- * @param argument The argument to include as the "that" variable.
- * @param sandboxFactory The factory that should be used for making sandboxes.
- * @param library The library that should be used for the calculation context.
- */
-export function calculateFormulaEvents(
-    state: BotsState,
-    formula: string,
-    userId: string = null,
-    argument: any = null,
-    sandboxFactory?: SandboxFactory,
-    library?: SandboxLibrary
-): BotAction[] {
-    const objects = getActiveObjects(state);
-    const context = createCalculationContext(
-        objects,
-        userId,
-        library,
-        sandboxFactory
-    );
-
-    let result = formulaActions(context, null, null, formula);
-
-    return [...result.actions, ...context.sandbox.interface.getBotUpdates()];
-}
 
 /**
  * Calculates the list of events needed to destroy the given bot and all of its decendents.

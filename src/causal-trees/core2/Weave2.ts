@@ -7,9 +7,7 @@ import {
     RejectedAtom,
     RejectionReason,
 } from './Atom2';
-import { keys } from 'lodash';
 import { createIndex, AtomIndex } from './AtomIndex';
-import { utcMillisecond } from 'd3';
 
 /**
  * Defines a possible result from manipulating the weave.

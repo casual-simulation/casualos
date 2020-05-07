@@ -209,6 +209,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.showFocusPoint;
     }
 
+    /**
+     * Gets whether the canvas transparency should be disabled.
+     */
+    get disableCanvasTransparency() {
+        return this.pageConfig.disableCanvasTransparency;
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         const input = this.game.getInput();

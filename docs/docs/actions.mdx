@@ -6,9 +6,6 @@ description: Actions affect the data in bots and also do things to the outside w
 ---
 
 import { 
-  InterfaceCode,
-  FunctionCode,
-  TypeAliasCode,
   TagLink,
   Alert,
   NormalCode,
@@ -22,7 +19,6 @@ import {
 
 ### `create(...mods)`
 
-<FunctionCode name='create' />
 
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
 By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
@@ -86,7 +82,6 @@ let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
 
 ### `destroy(bot)`
 
-<FunctionCode name='destroy' />
 
 Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='@onDestroy'/> for each of the destroyed bots.
 
@@ -118,7 +113,6 @@ destroy("config");
 
 ### `applyMod(bot, ...mods)`
 
-<FunctionCode name='applyMod' />
 
 Applies the given mods to the given bot.
 
@@ -138,7 +132,6 @@ applyMod(bot, {
 
 ### `subtractMods(bot, ...mods)`
 
-<FunctionCode name='subtractMods'/>
 
 Removes the tags contained in the given mod(s) from the given bot or mod.
 
@@ -169,7 +162,6 @@ subtractMods(this, {
 
 ### `removeTags(bot, tagSection)`
 
-<FunctionCode name='removeTags'/>
 
 Removes all the tags from the given bot that match the given tag section.
 
@@ -193,7 +185,6 @@ removeTags(this, /^hello$/gi)
 
 ### `changeState(bot, stateName, groupName?)`
 
-<FunctionCode name='changeState'/>
 
 Changes the state that the given bot occupies in the given group.
 If the state was changed, then the <TagLink tag='@[groupName][stateName]OnExit'/> and <TagLink tag='@[groupName][stateName]OnEnter'/> whispers are sent to the `bot`.
@@ -220,7 +211,6 @@ changeState(bot, "Playing", "playbackState");
 
 ### `getBots(..filters)`
 
-<FunctionCode name='getBots' />
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
@@ -241,7 +231,6 @@ let bots = getBots(byTag("#name", "bob"), inDimension("people"));
 
 ### `getBots(tag, value?)`
 
-<FunctionCode name='getBots' overload={1} />
 
 Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
@@ -273,7 +262,6 @@ let bots = getBots("#test");
 
 ### `getBot(...filters)`
 
-<FunctionCode name='getBot' />
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
@@ -294,7 +282,6 @@ let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
 
 ### `getBot(tag, filter?)`
 
-<FunctionCode name='getBot' overload={1} />
 
 Gets the first bot that matches the given tag and value. If multiple bots match the given tag and value, then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given tag and value, then `undefined` is returned.
 
@@ -326,7 +313,6 @@ let foundBot = getBot("#test");
 
 ### `getBotTagValues(tag, filter?)`
 
-<FunctionCode name='getBotTagValues'/>
 
 Gets a list of all the values in the universe for the given tag. Optionally accepts a filter for the tag values.
 
@@ -350,7 +336,6 @@ const agesOver10 = getBotTagValues("#age", age => age > 10);
 
 ### `getID(bot)`
 
-<FunctionCode name='getID'/>
 
 Gets the ID of the given bot.
 
@@ -371,7 +356,6 @@ let id = getID(getBot("#name", "bob"));
 
 ### `getJSON(data)`
 
-<FunctionCode name='getJSON'/>
 
 Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.
 
@@ -388,7 +372,6 @@ tags.savedBot = getJSON(bob);
 
 ### `getMod(bot)`
 
-<FunctionCode name='getMod'/>
 
 Gets a mod for the given bot and list of tags. The returned mod will only contain tags that are contained in the given list.
 
@@ -515,7 +498,6 @@ webhook.post('https://example.com', {
 
 ### `byTag(tag, value?)`
 
-<FunctionCode name='byTag' />
 
 Creates a bot filter that includes bots that have the given tag that matches the given value.
 
@@ -543,7 +525,6 @@ let bots = getBots(byTag("#test"));
 
 ### `inDimension(dimension)`
 
-<FunctionCode name='inDimension' />
 
 Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to `true`.
 
@@ -600,7 +581,6 @@ let bots = getBots(inStack(this, "test"));
 
 ### `byCreator(bot)`
 
-<FunctionCode name='byCreator' />
 
 Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
 
@@ -619,7 +599,6 @@ let bots = getBots(byCreator(this));
 
 ### `bySpace(space)`
 
-<FunctionCode name='bySpace'/>
 
 Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
 
@@ -638,7 +617,6 @@ let bots = getBots(bySpace("tempLocal"));
 
 ### `byMod(mod)`
 
-<FunctionCode name='byMod'/>
 
 Creates a bot filter that includes bots that match the given mod.
 
@@ -656,7 +634,6 @@ const bots = getBots(byMod({
 
 ### `neighboring(bot, dimension, direction)`
 
-<FunctionCode name='neighboring'/>
 
 Creates a bot filter that includes bots which are neighboring the given bot.
 Optionally takes a direction that the neighboring bots must be in.
@@ -709,7 +686,6 @@ const bots = getBots(not(inDimension("test")));
 
 ### `shout(name, arg?)`
 
-<FunctionCode name='shout' />
 
 Sends a shout to all bots that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
@@ -732,7 +708,6 @@ shout("hello", "Bob");
 
 ### `whisper(bot, name, arg?)`
 
-<FunctionCode name='whisper' />
 
 Sends a whisper to the specified bot(s) that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
@@ -758,7 +733,6 @@ whisper(this, "setColor", "red");
 
 ### `superShout(name, arg?)`
 
-<FunctionCode name='superShout' />
 
 Sends a shout to all of the other universes that are loaded.
 
@@ -775,7 +749,6 @@ superShout("hello");
 
 ### `remote(action, target?)`
 
-<FunctionCode name='remote'/>
 
 Sends the given action to another player.
 
@@ -814,7 +787,6 @@ remote(toastAction, {
 
 ### `action.perform(action)`
 
-<FunctionCode name='perform'/>
 
 Queues the given action to be performed at a later time.
 
@@ -833,7 +805,6 @@ action.perform({
 
 ### `action.reject(action)`
 
-<FunctionCode name='reject'/>
 
 Prevents a previous action from being performed.
 
@@ -851,7 +822,6 @@ action.reject(toastAction);
 
 ### `player.checkout(options)`
 
-<FunctionCode name='checkout'/>
 
 Shows a payment screen modal that lets the player purchase something.
 Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing universe.
@@ -877,7 +847,6 @@ player.checkout({
 
 ### `player.downloadBots(bots, filename)`
 
-<FunctionCode name='downloadBots'/>
 
 Downloads the given array of bots as a `.aux` file with the given filename.
 Useful for quickly backing up a set of bots.
@@ -901,7 +870,6 @@ player.downloadBots([bot], "currentBot");
 
 ### `player.run(script)`
 
-<FunctionCode name='run'/>
 
 Runs the given script.
 The script will be executed in a separate environment with no `bot`, `tags`, `this`, `data`, and `that` variables.
@@ -923,7 +891,6 @@ player.run(tags.script);
 
 ### `player.replaceDragBot(botOrMod)`
 
-<FunctionCode name='replaceDragBot'/>
 
 Replaces the bot that the user is dragging with the given bot or mod.
 Only works if called from inside a <TagLink tag='@onDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
@@ -948,7 +915,6 @@ player.replaceDragBot({
 
 ### `player.showChat(placeholder?)`
 
-<FunctionCode name='showChat'/>
 
 Shows the "chat bar" at the top of the screen in auxPlayer, optionally using the given text as the placeholder.
 Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
@@ -969,7 +935,6 @@ player.showChat("hello");
 
 ### `player.showChat(options)`
 
-<FunctionCode name='showChat' overload={2} />
 
 Shows the "chat bar" at the top of the screen in auxPlayer, using the given options.
 Typing in the chat bar will send <TagLink tag="@onChatTyping"/> shouts and pressing Enter will send a <TagLink tag="@onChat"/> shout and clear the chat bar.
@@ -1005,7 +970,6 @@ player.showChat({
 
 ### `player.hideChat()`
 
-<FunctionCode name='hideChat'/>
 
 Hides the "chat bar" at the top of the screen in auxPlayer.
 
@@ -1018,7 +982,6 @@ player.hideChat();
 
 ### `player.showHtml(html)`
 
-<FunctionCode name='showHtml'/>
 
 Shows some HTML to the player in a popup modal. This can be useful for loading a separate webpage or providing some formatted text.
 
@@ -1049,7 +1012,6 @@ player.showHtml(`
 
 ### `player.hideHtml()`
 
-<FunctionCode name='hideHtml'/>
 
 Closes the HTML popup modal.
 
@@ -1062,7 +1024,6 @@ player.hideHtml();
 
 ### `player.share(options)`
 
-<FunctionCode name='share'/>
 
 Shares the given URL or text via the device's social share capabilities.
 Returns a [Promise](https://web.dev/promises/) that resolves when sharing has succeeded or failed.
@@ -1090,7 +1051,6 @@ player.share({
 
 ### `player.toast(message, duration?)`
 
-<FunctionCode name='toast'/>
 
 Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
 Optionally accepts a duration parameter which is the number of seconds that the message should be on the screen.
@@ -1113,7 +1073,6 @@ player.toast("this is the code", 5);
 
 ### `player.tweenTo(bot, zoomValue?, rotX?, rotY?, duration?)`
 
-<FunctionCode name='tweenTo'/>
 
 Smoothly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
 Additionally, a duration can be specified for the length of the tween. If the target bot is in the page portal, then the page portal view will be moved. 
@@ -1139,7 +1098,6 @@ player.tweenTo(getBot("#name", "bob"))
 
 ### `player.moveTo(bot, zoomValue?, rotX?, rotY?)`
 
-<FunctionCode name='moveTo'/>
 
 Instantly moves the player's view to center on the given bot. Optionally accepts target values for the zoom, rotation X, and rotation Y.
 If the target bot is in the page portal, then the page portal view will be moved. If the bot is in the inventory portal, then the inventory portal view will be moved.
@@ -1165,7 +1123,6 @@ player.moveTo(getBot("#name", "bob"))
 
 ### `player.openQRCodeScanner(camera?)`
 
-<FunctionCode name='openQRCodeScanner'/>
 
 Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner. While open, each scanned QR Code will send a <TagLink tag='@onQRCodeScanned'/> shout.
 Optionally accepts which camera to use for scanning. (front/back)
@@ -1197,7 +1154,6 @@ player.openQRCodeScanner("front");
 
 ### `player.closeQRCodeScanner(camera?)`
 
-<FunctionCode name='closeQRCodeScanner'/>
 
 Closes the QR Code scanner.
 
@@ -1210,7 +1166,6 @@ player.closeQRCodeScanner();
 
 ### `player.showQRCode(code)`
 
-<FunctionCode name='showQRCode'/>
 
 Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data.
 
@@ -1225,7 +1180,6 @@ player.showQRCode("hello");
 
 ### `player.hideQRCode()`
 
-<FunctionCode name='hideQRCode'/>
 
 Closes the QR Code popup modal.
 
@@ -1238,7 +1192,6 @@ player.hideQRCode();
 
 ### `player.showJoinCode(universe?, dimension?)`
 
-<FunctionCode name='showJoinCode'/>
 
 Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given universe and dimension.
 If the universe and dimension are omitted, then the current universe and dimension will be used.
@@ -1261,7 +1214,6 @@ player.showJoinCode("universe", "dimension");
 
 ### `player.openBarcodeScanner(camera?)`
 
-<FunctionCode name='openBarcodeScanner'/>
 
 Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner. While open, each scanned Barcode will send a <TagLink tag='@onBarcodeScanned'/> shout.
 Optionally accepts which camera to use for scanning. (front/back)
@@ -1293,7 +1245,6 @@ player.openBarcodeScanner("front");
 
 ### `player.closeBarcodeScanner(camera?)`
 
-<FunctionCode name='closeBarcodeScanner'/>
 
 Closes the Barcode scanner.
 
@@ -1306,7 +1257,6 @@ player.closeBarcodeScanner();
 
 ### `player.showBarcode(code, format?)`
 
-<FunctionCode name='showBarcode'/>
 
 Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data. Optionally accepts the format that the barcode should be displayed in.
 
@@ -1358,7 +1308,6 @@ player.showBarcode("123456", 'upc');
 
 ### `player.hideBarcode()`
 
-<FunctionCode name='hideBarcode'/>
 
 Closes the Barcode popup modal.
 
@@ -1371,7 +1320,6 @@ player.hideBarcode();
 
 ### `player.showInput(value?, options?)`
 
-<FunctionCode name='showInput'/>
 
 Shows an input modal with the given value and options.
 When shown, the player will be able to change the value.
@@ -1418,7 +1366,6 @@ player.toast(name);
 
 ### `player.showInputForTag(bot, tag, options?)`
 
-<FunctionCode name='showInputForTag'/>
 
 Shows an input modal for the given bot and tag with the given options.
 When shown, the player will be able to change the value stored in the given tag.
@@ -1461,7 +1408,6 @@ player.showInputForTag(this, "auxColor", {
 
 ### `player.setClipboard(text)`
 
-<FunctionCode name='setClipboard'/>
 
 Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
 On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.
@@ -1477,7 +1423,6 @@ player.setClipboard("hello");
 
 ### `player.showUploadAuxFile()`
 
-<FunctionCode name='showUploadAuxFile'/>
 
 Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the universe.
 
@@ -1490,7 +1435,6 @@ player.showUploadAuxFile();
 
 ### `player.loadUniverse(universe)`
 
-<FunctionCode name='loadUniverse'/>
 
 Loads the given univese into the current browser tab. When the universe is loaded, the <TagLink tag='@onUniverseSubscribed'/> shout will be triggered.
 
@@ -1520,7 +1464,6 @@ player.unloadUniverse('fun');
 
 ### `player.downloadUniverse()`
 
-<FunctionCode name='downloadUniverse'/>
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
 The file will have the same name as the universe.
@@ -1537,7 +1480,6 @@ player.downloadUniverse();
 
 ### `player.enableAR()`
 
-<FunctionCode name='enableAR'/>
 
 Enables augmented reality on the device.
 
@@ -1550,7 +1492,6 @@ player.enableAR();
 
 ### `player.disableAR()`
 
-<FunctionCode name='disableAR'/>
 
 Disables augmented reality on the device.
 
@@ -1563,7 +1504,6 @@ player.disableAR();
 
 ### `player.enableVR()`
 
-<FunctionCode name='enableVR'/>
 
 Enables virtual reality on the device.
 
@@ -1576,7 +1516,6 @@ player.enableVR();
 
 ### `player.disableVR()`
 
-<FunctionCode name='disableVR'/>
 
 Disables virtual reality on the device.
 
@@ -1589,7 +1528,6 @@ player.disableVR();
 
 ### `player.getCurrentUniverse()`
 
-<FunctionCode name='getCurrentUniverse'/>
 
 Gets the universe that the player is in.
 
@@ -1603,7 +1541,6 @@ player.toast(universe);
 
 ### `player.getCurrentDimension()`
 
-<FunctionCode name='getCurrentDimension'/>
 
 Gets the dimension that is loaded into the <TagLink tag='auxPagePortal'/> portal.
 
@@ -1621,7 +1558,6 @@ player.toast(dimension);
 
 ### `player.getMenuDimension()`
 
-<FunctionCode name='getMenuDimension' />
 
 Gets the dimension that is loaded into the <TagLink tag='auxMenuPortal'/> portal.
 
@@ -1639,7 +1575,6 @@ player.toast(dimension);
 
 ### `player.getInventoryDimension()`
 
-<FunctionCode name='getInventoryDimension' />
 
 Gets the dimension that is loaded into the <TagLink tag='auxInventoryPortal'/> portal.
 
@@ -1657,7 +1592,6 @@ player.toast(dimension);
 
 ### `player.hasBotInInventory(bot)`
 
-<FunctionCode name='hasBotInInventory'/>
 
 Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='auxInventoryPortal'/> portal.
 
@@ -1675,7 +1609,6 @@ if (player.hasBotInInventory(bob)) {
 
 ### `player.getPortalDimension(portal)`
 
-<FunctionCode name='getPortalDimension'/>
 
 Gets the dimension that is loaded into the given portal.
 
@@ -1716,7 +1649,6 @@ const dimension = player.getPortalDimension('auxCustomPortal');
 
 ### `player.getDimensionalDepth(dimension)`
 
-<FunctionCode name='getDimensionalDepth'/>
 
 Gets the distance that the player bot is from the given dimension.
 
@@ -1752,7 +1684,6 @@ if (distance === 0) {
 
 ### `player.getBot()`
 
-<FunctionCode name='getUser'/>
 
 Gets the player bot. This is the bot that represents the player's browser tab.
 
@@ -1772,7 +1703,6 @@ playerBot.tags.auxSheetPortal = "testDimension";
 
 ### `player.goToDimension(dimension)`
 
-<FunctionCode name='goToDimension'/>
 
 Loads the given dimension into the <TagLink tag='auxPagePortal'/> portal.
 Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
@@ -1788,7 +1718,6 @@ player.goToDimension('abc');
 
 ### `player.goToURL(url)`
 
-<FunctionCode name='goToURL'/>
 
 Redirects the current tab to the given URL. Useful for sending the player to another webpage or ambient experience.
 
@@ -1803,7 +1732,6 @@ player.goToURL("https://example.com");
 
 ### `player.openURL(url)`
 
-<FunctionCode name='openURL'/>
 
 Opens a new tab with the given URL. Useful for opening another webpage without redirecting the current tab.
 
@@ -1818,7 +1746,6 @@ player.openURL("https://example.com");
 
 ### `player.openDevConsole()`
 
-<FunctionCode name='openDevConsole'/>
 
 Opens the developer console which contains a list of errors that scripts have issued.
 
@@ -1831,7 +1758,6 @@ player.openDevConsole();
 
 ### `player.playSound(url)`
 
-<FunctionCode name='playSound'/>
 
 Loads and plays the audio (MP3, WAV, etc.) from the given URL.
 
@@ -1846,7 +1772,6 @@ player.playSound("https://www.testsounds.com/track06.mp3");
 
 ### `player.isInDimension(dimension)`
 
-<FunctionCode name='isInDimension'/>
 
 Gets whether the given dimension is loaded into the <TagLink tag='auxPagePortal'/> portal.
 
@@ -1863,7 +1788,6 @@ if (player.isInDimension("abc")) {
 
 ### `player.inSheet()`
 
-<FunctionCode name='inSheet'/>
 
 Gets whether the player is in the sheet dimension.
 
@@ -1878,7 +1802,6 @@ if (player.inSheet()) {
 
 ### `player.importAUX(urlOrJSON)`
 
-<FunctionCode name='importAUX' />
 
 Imports an AUX file from the given string.
 
@@ -1914,7 +1837,6 @@ player.importAUX(`{
 
 ### `player.version()`
 
-<FunctionCode name='version'/>
 
 Gets information about the version of auxPlayer.
 
@@ -1940,7 +1862,6 @@ player.toast(info.version);
 
 ### `player.device()`
 
-<FunctionCode name='device'/>
 
 Gets information about the device that the player is using.
 
@@ -1963,7 +1884,6 @@ player.toast(info);
 
 ### `player.requestFullscreenMode()`
 
-<FunctionCode name='requestFullscreenMode'/>
 
 Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
 
@@ -1978,7 +1898,6 @@ player.requestFullscreenMode();
 
 ### `player.exitFullscreenMode()`
 
-<FunctionCode name='exitFullscreenMode'/>
 
 Exists fullscreen mode.
 
@@ -1993,7 +1912,6 @@ player.exitFullscreenMode();
 
 ### `server.backupToGithub(auth)`
 
-<FunctionCode name='backupToGithub'/>
 
 Saves all the universes to GitHub as a private Gist using the given authentication token.
 
@@ -2016,7 +1934,6 @@ server.backupToGithub('your auth token');
 
 ### `server.backupAsDownload(target)`
 
-<FunctionCode name='backupAsDownload'/>
 
 Saves all the universes to a zip file and downloads it to the session matching the given target.
 
@@ -2061,7 +1978,6 @@ server.finishCheckout({
 
 ### `server.setupUniverse(universe, botOrMod?)`
 
-<FunctionCode name='setupUniverse'/>
 
 Sends an action to the server that will create the given universe if it does not exist and places a clone of the given bot or mod in it.
 The new bot will only be added to the universe if the universe did not exist.
@@ -2124,7 +2040,6 @@ server.setupUniverse("test", {
 
 ### `server.browseHistory()`
 
-<FunctionCode name='browseHistory'/>
 
 Loads the `history` space into the current universe.
 The `history` space is read-only and contains all the marks that have been created for the universe.
@@ -2139,7 +2054,6 @@ server.browseHistory();
 
 ### `server.markHistory(options)`
 
-<FunctionCode name='markHistory'/>
 
 Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
 Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
@@ -2159,7 +2073,6 @@ server.markHistory({
 
 ### `server.restoreHistoryMark(mark)`
 
-<FunctionCode name='restoreHistoryMark'/>
 
 Restores the current state to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
@@ -2179,7 +2092,6 @@ server.restoreHistoryMark(mark);
 
 ### `server.restoreHistoryMarkToUniverse(mark, universe)`
 
-<FunctionCode name='restoreHistoryMarkToUniverse'/>
 
 Restores the state in the given universe to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes in the universe and another mark with the state that was saved by the given mark.
@@ -2201,7 +2113,6 @@ server.restoreHistoryMarkToUniverse(mark, "test");
 
 ### `server.shell(script)`
 
-<FunctionCode name='shell'/>
 
 Executes the given script on the server.
 
@@ -2214,7 +2125,6 @@ The **first parameter** is the shell script that should be executed.
 
 ### `server.loadFile(path, options?)`
 
-<FunctionCode name='serverLoadFile'/>
 
 Loads a file from the server at the given path.
 
@@ -2249,7 +2159,6 @@ server.loadFile('/2/book.txt', {
 
 ### `server.saveFile(path, data, options?)`
 
-<FunctionCode name='serverSaveFile'/>
 
 Saves a file at the given path with the given data.
 If the file already exists, then the options are used to determine if the file should be overwritten. By default the file will not be overwritten.
@@ -2288,7 +2197,6 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 
 ### `server.loadErrors(bot, tag)`
 
-<FunctionCode name='loadErrors'/>
 
 Loads the errors for the given bot and tag.
 Note that the bots don't load immediately. They will automatically be added to the universe state once they have been loaded.
@@ -2314,7 +2222,6 @@ server.loadErrors(this, tagName);
 
 ### `server.destroyErrors()`
 
-<FunctionCode name='destroyErrors'/>
 
 Destroys all the error bots.
 
@@ -2329,7 +2236,6 @@ server.destroyErrors();
 
 ### `setTag(bot, tag, value)`
 
-<FunctionCode name='setTag' />
 
 Sets the given tag to the given value on the given bot, list of bots, or mod.
 
@@ -2348,7 +2254,6 @@ setTag(this, "#auxColor", "green");
 
 ### `getTag(bot, tag)`
 
-<FunctionCode name='getTag'/>
 
 Gets the given tag value from the given bot.
 
@@ -2367,7 +2272,6 @@ const color = getTag(this, "#auxColor");
 
 ### `math.sum(list)`
 
-<FunctionCode name='sum'/>
 
 Calculates the numerical sum of the given values.
 
@@ -2389,7 +2293,6 @@ const totalAge = math.sum(getBotTagValues('#age'));
 
 ### `math.avg(list)`
 
-<FunctionCode name='avg'/>
 
 Calculates the arithmetic mean of the given list of values.
 That is, the sum of the values divided by the number of values.
@@ -2410,7 +2313,6 @@ const averageAge = math.avg(getBotTagValues('#age'));
 
 ### `math.sqrt(value)`
 
-<FunctionCode name='sqrt'/>
 
 Calculates the square root of the given value.
 
@@ -2425,7 +2327,6 @@ const rootOf4 = math.sqrt(4);
 
 ### `math.abs(number)`
 
-<FunctionCode name='abs'/>
 
 Calculates the absolute value of the given number.
 
@@ -2440,7 +2341,6 @@ const _42 = math.abs(-42);
 
 ### `math.stdDev(list)`
 
-<FunctionCode name='stdDev'/>
 
 Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) for the given list of values.
 
@@ -2460,7 +2360,6 @@ const ageDeviation = math.stdDev(getBotTagValues('#age'));
 
 ### `math.randomInt(min, max)`
 
-<FunctionCode name='randomInt'/>
 
 Generates a random integer number between the given minimum and maximum values.
 
@@ -2477,7 +2376,6 @@ const number = math.randomInt(5, 10);
 
 ### `math.random(min, max)`
 
-<FunctionCode name='random'/>
 
 Generates a random number between the given minimum and maximum values.
 
@@ -2496,7 +2394,6 @@ const number = math.random(0, Math.PI);
 
 ### `experiment.localFormAnimation(bot, animation)`
 
-<FunctionCode name='localFormAnimation'/>
 
 Locally plays the given animation on the given bot.
 

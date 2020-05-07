@@ -9,11 +9,9 @@ import {
     createAuxPartition,
     createMemoryPartition,
     createCausalRepoPartition,
-    PrecalculationManager,
     AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
-import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
 
 export class NodeAuxChannel extends BaseAuxChannel {
@@ -25,9 +23,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
     }
 
     constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
-        super(user, config, {
-            sandboxFactory: lib => getSandbox(lib),
-        });
+        super(user, config, {});
         this._device = device;
         this._remoteEvents = new Subject<RemoteAction[]>();
     }

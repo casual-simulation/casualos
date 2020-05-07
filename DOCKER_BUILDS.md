@@ -11,6 +11,12 @@ This document contains instructions on how to produce docker images for the proj
         1. `sudo groupadd docker`
         2. `sudo gpasswd -a $USER docker`
         3. Logout and log back in.
+3. Enable the Docker Service
+    - `sudo systemctl enable docker`
+4. Start the Docker Service
+    - `sudo systemctl start docker`
+5. Sign into Docker
+    - `docker login -u <username> -p <password>`
 
 ## Building an arm32v7 image on a Raspberry PI
 
@@ -54,6 +60,17 @@ Build the entire project on the Raspberry PI
     - `npm install -g lerna`
 6. Clone the aux repository
     - `git clone https://github.com/casual-simulation/casualos.git`
+7. Setup SSH
+    1. On Server:
+        1. `ssh-keygen -t rsa -b 4096 -C "your_email@example.com" -m PEM`
+        2. Name the key
+        3. Give Passphrase or Skip
+        4. Confirm Passphrase or Skip
+        5. `cat /path/to/your/key.pub`
+        6. Copy the key
+    2. On Agent (Pi):
+        1. `sudo nano ~/.ssh/authorized_keys`
+        2. Paste in your public key
 
 **Steps:**
 

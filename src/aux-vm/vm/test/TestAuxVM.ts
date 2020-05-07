@@ -7,13 +7,13 @@ import {
     BotAction,
     PrecalculatedBotsState,
     BotsState,
-    createCalculationContext,
+    createPrecalculatedContext,
     merge,
     getActiveObjects,
     tagsOnBot,
     StateUpdatedEvent,
-    PrecalculationManager,
     BotDependentInfo,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import values from 'lodash/values';
@@ -23,7 +23,7 @@ import { StoredAux } from '../../StoredAux';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _precalculator: PrecalculationManager;
+    private _runtime: AuxRuntime;
 
     events: BotAction[];
     formulas: string[];
@@ -49,10 +49,20 @@ export class TestAuxVM implements AuxVM {
 
         this.processEvents = false;
         this.state = {};
-        this._precalculator = new PrecalculationManager(
-            () => this.state,
-            () => createCalculationContext(values(this.state), userId)
+        this._runtime = new AuxRuntime(
+            {
+                hash: 'test',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
+            },
+            {
+                supportsAR: false,
+                supportsVR: false,
+            }
         );
+        this._runtime.userId = userId;
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
@@ -93,17 +103,13 @@ export class TestAuxVM implements AuxVM {
             }
 
             if (added.length > 0) {
-                this._stateUpdated.next(this._precalculator.botsAdded(added));
+                this._stateUpdated.next(this._runtime.botsAdded(added));
             }
             if (removed.length > 0) {
-                this._stateUpdated.next(
-                    this._precalculator.botsRemoved(removed)
-                );
+                this._stateUpdated.next(this._runtime.botsRemoved(removed));
             }
             if (updated.length > 0) {
-                this._stateUpdated.next(
-                    this._precalculator.botsUpdated(updated)
-                );
+                this._stateUpdated.next(this._runtime.botsUpdated(updated));
             }
         }
     }
@@ -131,7 +137,7 @@ export class TestAuxVM implements AuxVM {
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
-        return this._precalculator.dependencies.getDependents(tag);
+        return this._runtime.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {

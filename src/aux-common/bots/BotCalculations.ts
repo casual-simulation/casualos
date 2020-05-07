@@ -21,7 +21,6 @@ import {
     BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
-    ScriptBot,
     BotPositioningMode,
     BotSpace,
     BOT_SPACE_TAG,
@@ -40,11 +39,7 @@ import {
     DEFAULT_SCALE_MODE,
 } from './Bot';
 
-import {
-    BotCalculationContext,
-    BotSandboxContext,
-    cacheFunction,
-} from './BotCalculationContext';
+import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
 
 import uuid from 'uuid/v4';
 import flatMap from 'lodash/flatMap';
@@ -62,18 +57,11 @@ import difference from 'lodash/difference';
 import mapValues from 'lodash/mapValues';
 
 /// <reference path="../typings/global.d.ts" />
-import {
-    setCalculationContext,
-    getCalculationContext,
-    getActions,
-    getEnergy,
-    setEnergy,
-    getCurrentBot,
-    setCurrentBot,
-} from '../Formulas/formula-lib-globals';
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import { differenceBy, maxBy } from 'lodash';
+import differenceBy from 'lodash/differenceBy';
+import maxBy from 'lodash/maxBy';
+import { BotObjectsContext } from './BotObjectsContext';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -382,7 +370,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 }
 
 export function calculateBotValue(
-    context: BotCalculationContext,
+    context: BotObjectsContext,
     object: Object | PrecalculatedBot,
     tag: keyof BotTags,
     energy?: number
@@ -394,13 +382,7 @@ export function calculateBotValue(
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
-        return calculateValue(
-            <BotSandboxContext>context,
-            object,
-            tag,
-            object.tags[tag],
-            energy
-        );
+        return calculateValue(object, tag, object.tags[tag], energy);
     }
 }
 
@@ -499,22 +481,6 @@ export function isNumber(value: string): boolean {
 export function isBot(object: any): object is Bot {
     if (object) {
         return !!object.id && !!object.tags;
-    }
-    return false;
-}
-
-/**
- * Determines if the given object is a script bot.
- * @param object The object.
- */
-export function isScriptBot(object: any): object is ScriptBot {
-    if (object) {
-        return (
-            !!object.id &&
-            typeof object.tags === 'object' &&
-            typeof object.raw === 'object' &&
-            typeof object.tags.toJSON === 'function'
-        );
     }
     return false;
 }
@@ -2385,36 +2351,6 @@ export function botDimensionSortOrder(
     }
 }
 
-/**
- * Calculates the given formula and returns the result.
- * @param context The bot calculation context to run formulas with.
- * @param formula The formula to use.
- * @param extras The extra data to include in callbacks to the interface implementation.
- * @param thisObj The object that should be used for the this keyword in the formula.
- */
-export function calculateFormulaValue(
-    context: BotSandboxContext,
-    formula: string,
-    extras: any = {},
-    thisObj: any = null
-) {
-    const prevCalc = getCalculationContext();
-    const prevEnergy = getEnergy();
-    const prevBot = getCurrentBot();
-    setCalculationContext(context);
-
-    // TODO: Allow configuring energy per formula
-    setEnergy(DEFAULT_ENERGY);
-    setCurrentBot(null);
-
-    const result = context.sandbox.run(formula, extras, context);
-
-    setCalculationContext(prevCalc);
-    setEnergy(prevEnergy);
-    setCurrentBot(prevBot);
-    return result;
-}
-
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
     return calculateBooleanTagValue(calc, bot, `auxPlayerActive`, false);
 }
@@ -2462,40 +2398,20 @@ export function formatValue(value: any): string {
 
 /**
  * Calculates the value of the given formula as if it was on the given bot (object) and tag.
- * @param context The calculation context to use.
  * @param object The bot that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
  * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
-    context: BotSandboxContext,
     object: Bot,
     tag: keyof BotTags,
     formula: string,
     energy?: number
 ): any {
-    if (isFormula(formula)) {
-        if (!context || !context.sandbox) {
-            return formula;
-        }
-        const result = _calculateFormulaValue(
-            context,
-            object,
-            tag,
-            formula,
-            energy
-        );
-        if (result.success) {
-            return result.result;
-        } else {
-            throw result.error;
-        }
-    } else if (isArray(formula)) {
+    if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s =>
-            calculateValue(context, object, tag, s.trim(), energy)
-        );
+        return split.map(s => calculateValue(object, tag, s.trim(), energy));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {
@@ -2505,100 +2421,6 @@ export function calculateValue(
     } else {
         return formula;
     }
-}
-
-/**
- * Calculates the value of the given formula and ensures that the result is a transferrable value.
- * @param context The bot calculation context to use.
- * @param object The object that the formula was from.
- * @param tag The tag that the formula was from.
- * @param formula The formula to calculate the value of.
- */
-export function calculateCopiableValue(
-    context: BotSandboxContext,
-    object: any,
-    tag: keyof BotTags,
-    formula: string
-): any {
-    try {
-        const value = calculateValue(context, object, tag, formula);
-        return convertToCopiableValue(value);
-    } catch (err) {
-        return convertToCopiableValue(err);
-    }
-}
-
-/**
- * Converts the given value to a copiable value.
- * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
- * Non-copiable values are functions and errors.
- * @param value
- */
-export function convertToCopiableValue(value: any): any {
-    if (typeof value === 'function') {
-        return `[Function ${value.name}]`;
-    } else if (value instanceof Error) {
-        return `${value.name}: ${value.message}`;
-    } else if (typeof value === 'object') {
-        if (isScriptBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags.toJSON(),
-            };
-        } else if (isBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags,
-            };
-        } else if (Array.isArray(value)) {
-            return value.map(val => convertToCopiableValue(val));
-        } else {
-            return mapValues(value, val => convertToCopiableValue(val));
-        }
-    }
-    return value;
-}
-
-export function getCreatorVariable(context: BotSandboxContext, bot: ScriptBot) {
-    return getBotVariable(context, bot, 'auxCreator');
-}
-
-export function getConfigVariable(context: BotSandboxContext, bot: ScriptBot) {
-    return getBotVariable(context, bot, 'auxConfigBot');
-}
-
-export function getConfigTagVariable(
-    context: BotSandboxContext,
-    bot: ScriptBot,
-    tag: keyof BotTags,
-    config: ScriptBot
-) {
-    return config && tag ? config.tags[tag] : null;
-}
-
-export function getBotVariable(
-    context: BotSandboxContext,
-    bot: ScriptBot,
-    tag: string
-): ScriptBot {
-    if (!bot) {
-        return null;
-    }
-    let creatorId = context.sandbox.interface.getTag(bot, tag);
-    if (creatorId) {
-        let obj = context.sandbox.interface.getBot(creatorId);
-        if (obj) {
-            return obj;
-        }
-    }
-    return null;
-}
-
-export function getScriptBot(context: BotSandboxContext, bot: Bot) {
-    if (!bot) {
-        return null;
-    }
-    return context.sandbox.interface.getBot(bot.id);
 }
 
 /**
@@ -2617,48 +2439,4 @@ export function getOriginalObject(obj: any): any {
         return obj[ORIGINAL_OBJECT];
     }
     return obj;
-}
-
-function _calculateFormulaValue(
-    context: BotSandboxContext,
-    object: Bot,
-    tag: keyof BotTags,
-    formula: string,
-    energy?: number
-) {
-    const prevCalc = getCalculationContext();
-    const prevBot = getCurrentBot();
-    setCalculationContext(context);
-
-    const scriptBot = getScriptBot(context, object);
-    setCurrentBot(scriptBot);
-
-    const creator = getCreatorVariable(context, scriptBot);
-    const config = getConfigVariable(context, scriptBot);
-    let vars = {
-        bot: scriptBot,
-        tags: scriptBot ? scriptBot.tags : null,
-        raw: scriptBot ? scriptBot.raw : null,
-        tagName: tag || null,
-        creator: creator,
-        config: config,
-        configTag: getConfigTagVariable(context, scriptBot, tag, config),
-    };
-
-    // NOTE: The energy should not get reset
-    // here because then infinite formula loops would be possible.
-    const result = context.sandbox.run(
-        formula,
-        {
-            formula,
-            tag,
-            context,
-        },
-        scriptBot,
-        vars
-    );
-
-    setCalculationContext(prevCalc);
-    setCurrentBot(prevBot);
-    return result;
 }

@@ -1,6 +1,6 @@
 import {
     createBot,
-    createCalculationContext,
+    createPrecalculatedContext,
 } from '@casual-simulation/aux-common';
 import { calculateScale, createCube, percentOfScreen } from './SceneUtils';
 import {
@@ -22,7 +22,7 @@ describe('SceneUtils', () => {
                 auxScaleY: 3,
                 auxScaleZ: 4,
             });
-            const calc = createCalculationContext([bot]);
+            const calc = createPrecalculatedContext([bot]);
 
             const scale = calculateScale(calc, bot, 2);
             expect(scale.x).toEqual(4);

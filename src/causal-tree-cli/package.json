@@ -1,0 +1,59 @@
+{
+    "name": "@casual-simulation/causal-tree-cli",
+    "version": "1.0.24",
+    "description": "A CLI to manage causal trees",
+    "keywords": [
+        "cli",
+        "github",
+        "releases"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "/bin/*.js",
+        "/bin/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "webpack --config webpack.dev.js --watch",
+        "build": "webpack --config webpack.dev.js",
+        "build:prod": "webpack --config webpack.prod.js",
+        "start": "node bin/causal-tree-cli.js"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@casual-simulation/causal-trees": "1.0.26",
+        "@casual-simulation/causal-tree-store-mongodb": "1.0.26",
+        "@casual-simulation/causal-tree-store-cassandradb": "1.0.26",
+        "commander": "4.0.1",
+        "inquirer": "7.1.0",
+        "cli-progress": "3.8.1",
+        "colors": "1.4.0",
+        "cassandra-driver": "4.5.1",
+        "mongodb": "3.2.3"
+    },
+    "devDependencies": {
+        "typescript": "^3.8.3",
+        "webpack": "^4.25.1",
+        "webpack-cli": "^3.1.2",
+        "webpack-merge": "^4.1.4",
+        "webpack-node-externals": "^1.7.2",
+        "hard-source-webpack-plugin": "0.13.1"
+    }
+}

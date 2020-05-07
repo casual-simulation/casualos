@@ -1,7 +1,7 @@
 jest.useFakeTimers();
 
 import { MemoryPartition, createMemoryPartition } from '../partitions';
-import { AuxRuntime } from './AuxRuntime';
+import { AuxRuntime, convertToCopiableValue } from './AuxRuntime';
 import {
     BotAction,
     createBot,
@@ -11,7 +11,6 @@ import {
     botRemoved,
     BotsState,
     ShoutAction,
-    ActionResult,
     action,
     botUpdated,
     reject,
@@ -33,7 +32,6 @@ import {
     showChat,
     hideChat,
     runScript,
-    createFormulaLibrary,
     enableAR,
     disableAR,
     enableVR,
@@ -65,23 +63,23 @@ import {
     loadSimulation,
     unloadSimulation,
     BotSpace,
-    ScriptError,
     StateUpdatedEvent,
     showInput,
     asyncResult,
     asyncError,
 } from '../bots';
-import { botActionsTests } from '../bots/test/BotActionsTests';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
 import { remote, device } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
-import { AuxDevice, AuxVersion } from './AuxGlobalContext';
-import { values } from 'lodash';
+import values from 'lodash/values';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import { createDefaultLibrary } from './AuxLibrary';
+import { ActionResult, ScriptError } from './AuxResults';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -2807,6 +2805,54 @@ describe('AuxRuntime', () => {
                 removedBots: [],
                 updatedBots: [],
             });
+        });
+
+        it('should convert script bots into normal bots', () => {
+            const update = runtime.botsAdded([
+                createBot('test', {
+                    formula: '=getBot("id", "other")',
+                }),
+                createBot('other', {
+                    auxColor: 'red',
+                }),
+            ]);
+
+            expect(update).toEqual({
+                state: {
+                    test: createPrecalculatedBot(
+                        'test',
+                        {
+                            formula: createBot('other', {
+                                auxColor: 'red',
+                            }),
+                        },
+                        {
+                            formula: '=getBot("id", "other")',
+                        }
+                    ),
+                    other: createPrecalculatedBot('other', {
+                        auxColor: 'red',
+                    }),
+                },
+                addedBots: ['test', 'other'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
+        it('should return an object that is structure clonable', () => {
+            const update = runtime.botsAdded([
+                createBot('test', {
+                    formula: '=getBot("id", "other")',
+                }),
+                createBot('other', {
+                    auxColor: 'red',
+                }),
+            ]);
+
+            expect(
+                types.isProxy(update.state['test'].values['formula'].tags)
+            ).toBe(false);
         });
 
         it('should support using the original error in formula references', () => {
@@ -10251,4 +10297,119 @@ describe('original action tests', () => {
             });
         });
     }
+});
+
+describe('convertToCopiableValue()', () => {
+    it('should leave strings alone', () => {
+        const result = convertToCopiableValue('test');
+        expect(result).toBe('test');
+    });
+
+    it('should leave numbers alone', () => {
+        const result = convertToCopiableValue(0.23);
+        expect(result).toBe(0.23);
+    });
+
+    it('should leave booleans alone', () => {
+        const result = convertToCopiableValue(true);
+        expect(result).toBe(true);
+    });
+
+    it('should leave objects alone', () => {
+        const obj = {
+            test: 'abc',
+        };
+        const result = convertToCopiableValue(obj);
+        expect(result).toEqual(obj);
+    });
+
+    it('should leave arrays alone', () => {
+        const arr = ['abc'];
+        const result = convertToCopiableValue(arr);
+        expect(result).toEqual(arr);
+    });
+
+    it('should convert invalid properties in objects recursively', () => {
+        const obj = {
+            test: 'abc',
+            func: function abc() {},
+            err: new Error('qwerty'),
+            nested: {
+                func: function def() {},
+                err: new SyntaxError('syntax'),
+            },
+            arr: [function ghi() {}, new Error('other')],
+        };
+        const result = convertToCopiableValue(obj);
+        expect(result).toEqual({
+            test: 'abc',
+            func: '[Function abc]',
+            err: 'Error: qwerty',
+            nested: {
+                func: '[Function def]',
+                err: 'SyntaxError: syntax',
+            },
+            arr: ['[Function ghi]', 'Error: other'],
+        });
+    });
+
+    it('should convert invalid properties in arrays recursively', () => {
+        const arr = [
+            'abc',
+            function abc() {},
+            new Error('qwerty'),
+            {
+                func: function def() {},
+                err: new SyntaxError('syntax'),
+            },
+            [function ghi() {}, new Error('other')],
+        ];
+        const result = convertToCopiableValue(arr);
+        expect(result).toEqual([
+            'abc',
+            '[Function abc]',
+            'Error: qwerty',
+            {
+                func: '[Function def]',
+                err: 'SyntaxError: syntax',
+            },
+            ['[Function ghi]', 'Error: other'],
+        ]);
+    });
+
+    it('should remove the metadata property from bots', () => {
+        const obj: any = {
+            id: 'test',
+            metadata: {
+                ref: null,
+                tags: null,
+            },
+            tags: {},
+        };
+        const result = convertToCopiableValue(obj);
+        expect(result).toEqual({
+            id: 'test',
+            tags: {},
+        });
+    });
+
+    it('should convert functions to a string', () => {
+        function test() {}
+        const result = convertToCopiableValue(test);
+
+        expect(result).toBe('[Function test]');
+    });
+
+    const errorCases = [
+        ['Error', new Error('abcdef'), 'Error: abcdef'],
+        ['SyntaxError', new SyntaxError('xyz'), 'SyntaxError: xyz'],
+    ];
+
+    it.each(errorCases)(
+        'should convert %s to a string',
+        (desc, err, expected) => {
+            const result = convertToCopiableValue(err);
+            expect(result).toBe(expected);
+        }
+    );
 });

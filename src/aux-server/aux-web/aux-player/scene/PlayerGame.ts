@@ -29,6 +29,7 @@ import {
     clamp,
     DEFAULT_INVENTORY_VISIBLE,
     DEFAULT_PORTAL_SHOW_FOCUS_POINT,
+    DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -54,6 +55,7 @@ export class PlayerGame extends Game {
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
     showInventoryCameraRigHome: boolean = false;
+    disableCanvasTransparency: boolean = DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY;
 
     startZoom: number;
     startAspect: number;
@@ -227,6 +229,14 @@ export class PlayerGame extends Game {
             this.inventorySimulations,
             'showFocusPoint',
             DEFAULT_PORTAL_SHOW_FOCUS_POINT
+        );
+    }
+
+    getDisableCanvasTransparency(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'disableCanvasTransparency',
+            DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY
         );
     }
 
@@ -537,8 +547,8 @@ export class PlayerGame extends Game {
         this.inventoryScene.background = invColor;
     }
 
-    protected setupRenderer() {
-        super.setupRenderer();
+    protected setupRendering() {
+        super.setupRendering();
 
         this.inventoryViewport = new Viewport('inventory', this.mainViewport);
         console.log(
@@ -990,6 +1000,22 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderRight).style.display = 'block';
         }
 
+        this._updateInventorySize();
+
+        if (
+            this.disableCanvasTransparency !==
+            this.getDisableCanvasTransparency()
+        ) {
+            this.disableCanvasTransparency = this.getDisableCanvasTransparency();
+            if (this.disableCanvasTransparency) {
+                this.renderer.domElement.style.backgroundColor = '#000';
+            } else {
+                this.renderer.domElement.style.backgroundColor = null;
+            }
+        }
+    }
+
+    private _updateInventorySize() {
         if (!this.sliderPressed) return false;
 
         let invOffsetHeight: number = 40;

@@ -126,7 +126,7 @@ export class CausalRepoServer {
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
                             await this._stage.addAtoms(event.branch, added);
-                            await storeData(this._store, added);
+                            await storeData(this._store, event.branch, added);
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
@@ -244,9 +244,9 @@ export class CausalRepoServer {
                         }
 
                         const current = repo.currentCommit;
-                        const [oldCommit] = await this._store.getObjects([
-                            event.commit,
-                        ]);
+                        const oldCommit = await this._store.getObject(
+                            event.commit
+                        );
                         if (!oldCommit || oldCommit.type !== 'commit') {
                             console.log(
                                 `[CausalRepoServer] Could not restore to ${
@@ -261,7 +261,7 @@ export class CausalRepoServer {
                             oldCommit.index,
                             current ? current.commit : null
                         );
-                        await storeData(this._store, [newCommit]);
+                        await storeData(this._store, event.branch, [newCommit]);
                         await repo.reset(newCommit);
                         const after = repo.currentCommit;
 
@@ -478,22 +478,32 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
-            repo = new CausalRepo(this._store);
-            await repo.checkout(branch, {
-                createIfDoesntExist: createBranch
-                    ? {
-                          hash: null,
-                      }
-                    : null,
-            });
-            const stage = await this._stage.getStage(branch);
-            repo.addMany(stage.additions);
-            const hashes = Object.keys(stage.deletions);
-            repo.removeMany(hashes);
+            const startTime = process.hrtime();
+            try {
+                console.log(`[CausalRepoServer] Loading branch: ${branch}`);
+                repo = new CausalRepo(this._store);
+                await repo.checkout(branch, {
+                    createIfDoesntExist: createBranch
+                        ? {
+                              hash: null,
+                          }
+                        : null,
+                });
+                const stage = await this._stage.getStage(branch);
+                repo.addMany(stage.additions);
+                const hashes = Object.keys(stage.deletions);
+                repo.removeMany(hashes);
 
-            this._repos.set(branch, repo);
-            this._branchLoaded(branch);
+                this._repos.set(branch, repo);
+                this._branchLoaded(branch);
+            } finally {
+                const [seconds, nanoseconds] = process.hrtime(startTime);
+                console.log(
+                    `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
+                    seconds,
+                    nanoseconds
+                );
+            }
         }
 
         return repo;

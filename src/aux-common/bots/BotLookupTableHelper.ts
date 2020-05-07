@@ -4,7 +4,7 @@ import {
     buildLookupTable,
 } from './BotLookupTable';
 import { Bot } from './Bot';
-import { BotCalculationContext } from './BotCalculationContext';
+import { BotObjectsContext } from './BotObjectsContext';
 import zip from 'lodash/zip';
 import sortBy from 'lodash/sortBy';
 
@@ -27,7 +27,7 @@ export class BotLookupTableHelper {
      * @param defaulst The default values to use for missing tags.
      */
     query(
-        calc: BotCalculationContext,
+        calc: BotObjectsContext,
         tags: string[],
         values: any[],
         defaults?: any[]

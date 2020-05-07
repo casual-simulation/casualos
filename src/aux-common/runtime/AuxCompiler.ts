@@ -1,4 +1,4 @@
-import { Transpiler } from '../Formulas/Transpiler';
+import { Transpiler } from './Transpiler';
 import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import flatMap from 'lodash/flatMap';
 

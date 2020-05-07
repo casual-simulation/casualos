@@ -1,30 +1,16 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
+import { Provide } from 'vue-property-decorator';
 import { appManager } from '../../shared/AppManager';
 import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
-    BotsState,
-    Object,
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-    botsInDimension,
-    isSimulation,
-    getBotChannel,
-    calculateDestroyBotEvents,
-    merge,
-    BotCalculationContext,
     calculateBotValue,
-    calculateFormattedBotValue,
-    ShowInputForTagAction,
-    ShowInputOptions,
-    ShowInputType,
-    ShowInputSubtype,
-    Bot,
     BarcodeFormat,
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
@@ -33,7 +19,6 @@ import {
     ON_UNIVERSE_STREAMING_ACTION_NAME,
     ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
     ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
-    parseSimulationId,
     CameraType,
     onUniverseStreamingArg,
     onUniverseStreamLostArg,
@@ -49,17 +34,10 @@ import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import findIndex from 'lodash/findIndex';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import CubeIcon from '../../shared/public/icons/Cube.svg';
-import HexIcon from '../../shared/public/icons/Hexagon.svg';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
-import {
-    BrowserSimulation,
-    userBotChanged,
-    getUserBotAsync,
-} from '@casual-simulation/aux-vm-browser';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
-import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
@@ -75,7 +53,6 @@ import ClipboardModal from '../../shared/vue-components/ClipboardModal/Clipboard
 import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
-import { writeTextToClipboard } from '../../shared/ClipboardHelpers';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
 import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
@@ -323,7 +300,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, botManager) => {
+            appManager.whileLoggedIn(() => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -886,7 +863,7 @@ export default class PlayerApp extends Vue {
      * @param arg The argument to send.
      */
     private async _superAction(eventName: string, arg?: any) {
-        for (let [id, sim] of appManager.simulationManager.simulations) {
+        for (let [, sim] of appManager.simulationManager.simulations) {
             await sim.helper.action(eventName, null, arg);
         }
     }
@@ -897,14 +874,6 @@ export default class PlayerApp extends Vue {
             message: `Connection to ${
                 info.displayName
             } lost. You are now working offline.`,
-        };
-    }
-
-    private _showOffline() {
-        this.snackbar = {
-            visible: true,
-            message:
-                'You are offline. Changes will be synced to the server upon reconnection.',
         };
     }
 
@@ -925,13 +894,6 @@ export default class PlayerApp extends Vue {
             message: `Connection to ${
                 info.displayName
             } regained. You are connected to the channel.`,
-        };
-    }
-
-    private _showSynced() {
-        this.snackbar = {
-            visible: true,
-            message: 'Synced!',
         };
     }
 
@@ -981,21 +943,5 @@ export default class PlayerApp extends Vue {
                 ' ' +
                 JSON.stringify(this.alertDialogOptions)
         );
-    }
-
-    /**
-     * Click event from App.vue
-     */
-    private onConfirmDialogOk() {
-        if (this.confirmDialogOptions.okEvent != null)
-            EventBus.$emit(this.confirmDialogOptions.okEvent);
-    }
-
-    /**
-     * Click event from App.vue
-     */
-    private onConfirmDialogCancel() {
-        if (this.confirmDialogOptions.cancelEvent != null)
-            EventBus.$emit(this.confirmDialogOptions.cancelEvent);
     }
 }

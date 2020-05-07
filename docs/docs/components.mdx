@@ -1,7 +1,3 @@
-import {
-    source,
-    getInterfaceText 
-} from '../src/api/ApiGenerator';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 export const PossibleValuesTable = ({children}) => (
@@ -112,44 +108,3 @@ export const Alert = ({type, children}) => (
         {children}
     </div>
 );
-
-export const InterfaceCode = ({name}) => {
-  const int = source.getInterface(name);
-  return (<InterfaceNode int={int} />);
-};
-
-export const InterfaceNode = ({int}) => (
-  <pre>
-    <code className='typescript'>
-        {getInterfaceText(int)}
-    </code>
-  </pre>
-);
-
-export const FunctionCode = ({name, overload}) => {
-  const func = source.getFunction(name);
-  let declaration;
-  if (func && overload) {
-    declaration = func.getOverloads()[overload];
-  } else {
-    declaration = func;
-  }
-  return (
-    <pre>
-      <code className='typescript'>
-        {declaration ? declaration.getText() : 'CODE NOT AVAILABLE'}
-      </code>
-    </pre>
-  );
-};
-
-export const TypeAliasCode = ({name}) => {
-  const type = source.getTypeAlias(name);
-  return (
-    <pre>
-      <code className='typescript'>
-        {type.getText()}
-      </code>
-    </pre>
-  );
-};

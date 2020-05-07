@@ -1,9 +1,7 @@
 import {
-    SandboxLibrary,
     LocalActions,
     BotsState,
     getActiveObjects,
-    createCalculationContext,
     BotAction,
     BotActions,
     createBot,
@@ -11,39 +9,17 @@ import {
     PartialBot,
     merge,
     AUX_BOT_VERSION,
-    calculateFormulaEvents,
-    BotSandboxContext,
-    PasteStateAction,
     getBotConfigDimensions,
-    createWorkspace,
-    createDimensionId,
-    duplicateBot,
-    cleanBot,
-    Sandbox,
-    SandboxFactory,
-    createFormulaLibrary,
-    FormulaLibraryOptions,
-    addToDimensionDiff,
     botAdded,
     botUpdated,
-    filterWellKnownAndDimensionTags,
     tagsOnBot,
-    calculateActionResults,
-    ON_ACTION_ACTION_NAME,
-    action,
-    GLOBALS_BOT_ID,
-    resolveRejectedActions,
-    reject,
     USERS_DIMENSION,
     BotSpace,
     getBotSpace,
-    breakIntoIndividualEvents,
-    ON_RUN_ACTION_NAME,
     TEMPORARY_BOT_PARTITION_ID,
     hasValue,
     addState,
     calculateBotValue,
-    AddBotAction,
     AuxPartitions,
     AuxPartition,
     getPartitionState,
@@ -55,8 +31,6 @@ import {
 } from '@casual-simulation/aux-common';
 import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
-import flatMap from 'lodash/flatMap';
-import fromPairs from 'lodash/fromPairs';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
 import pick from 'lodash/pick';
@@ -424,82 +398,6 @@ export class AuxHelper extends BaseHelper<Bot> {
         };
     }
 
-    // private _flattenEvents(events: BotAction[]): BotAction[] {
-    //     let resultEvents: BotAction[] = [];
-
-    //     const filteredEvents = this._rejectEvents(events);
-
-    //     for (let event of filteredEvents) {
-    //         if (event.type === 'update_bot') {
-    //             const bot = this.botsState[event.id];
-    //             // TODO:
-    //             updateBot(
-    //                 bot,
-    //                 this.userBot.id,
-    //                 event.update,
-    //                 () => <any>this.createContext()
-    //             );
-    //             resultEvents.push(event);
-    //         } else if (event.type === 'paste_state') {
-    //             // TODO:
-    //             // resultEvents.push(...this._pasteState(event));
-    //         } else if (event.type === 'apply_state') {
-    //             const events = breakIntoIndividualEvents(this.botsState, event);
-    //             resultEvents.push(...events);
-    //         } else {
-    //             resultEvents.push(event);
-    //         }
-    //     }
-
-    //     return resultEvents;
-    // }
-
-    private _rejectEvents(events: BotAction[]): BotAction[] {
-        const context = this.createContext();
-        let resultEvents: BotAction[] = events.slice();
-        for (let event of events) {
-            const actions = this._allowEvent(context, event);
-            resultEvents.push(...actions);
-        }
-        return resolveRejectedActions(resultEvents);
-    }
-
-    /**
-     * Resolves the list of events through the onUniverseAction() handler.
-     * @param events The events to resolve.
-     */
-    public resolveEvents(events: BotAction[]): BotAction[] {
-        return this._rejectEvents(events);
-    }
-
-    private _allowEvent(
-        context: BotCalculationContext,
-        event: BotAction
-    ): BotAction[] {
-        // TODO:
-        // try {
-        //     const results = calculateActionResults(
-        //         this.botsState,
-        //         action(ON_ACTION_ACTION_NAME, null, this.userId, {
-        //             action: event,
-        //         }),
-        //         undefined,
-        //         undefined,
-        //         context,
-        //         false
-        //     );
-
-        //     return results.actions;
-        // } catch (err) {
-        //     console.error(
-        //         '[AuxHelper] The onUniverseAction() handler errored:',
-        //         err
-        //     );
-        //     return [];
-        // }
-        return [];
-    }
-
     private async _sendEvents(events: BotAction[]) {
         let map = new Map<AuxPartition, BotAction[]>();
         let newBotPartitions = new Map<string, AuxPartition>();
@@ -641,122 +539,5 @@ export class AuxHelper extends BaseHelper<Bot> {
         if (deviceEvents.length > 0) {
             this._deviceEvents.next(deviceEvents);
         }
-    }
-
-    private _pasteState(event: PasteStateAction) {
-        // TODO: Cleanup this function to make it easier to understand
-        // const value = event.state;
-        // const botIds = Object.keys(value);
-        // let state: BotsState = {};
-        // const oldBots = botIds.map(id => value[id]);
-        // const oldCalc = createCalculationContext(
-        //     oldBots,
-        //     this.userId,
-        //     this._lib,
-        //     this._sandboxFactory
-        // );
-        // const newCalc = this.createContext();
-        // if (event.options.dimension) {
-        //     return this._pasteExistingWorksurface(
-        //         oldBots,
-        //         oldCalc,
-        //         event,
-        //         newCalc
-        //     );
-        // } else {
-        //     return this._pasteNewWorksurface(oldBots, oldCalc, event, newCalc);
-        // }
-    }
-
-    private _pasteExistingWorksurface(
-        oldBots: Bot[],
-        oldCalc: BotSandboxContext,
-        event: PasteStateAction,
-        newCalc: BotSandboxContext
-    ) {
-        let events: BotAction[] = [];
-
-        // Preserve positions from old dimension
-        for (let oldBot of oldBots) {
-            const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
-            const removedValues = tagsToRemove.map(t => [t, null]);
-            let newBot = duplicateBot(oldCalc, oldBot, {
-                tags: {
-                    ...fromPairs(removedValues),
-                    ...addToDimensionDiff(
-                        newCalc,
-                        event.options.dimension,
-                        event.options.x,
-                        event.options.y
-                    ),
-                    [`${event.options.dimension}Z`]: event.options.z,
-                },
-            });
-            events.push(botAdded(cleanBot(newBot)));
-        }
-
-        return events;
-    }
-
-    private _pasteNewWorksurface(
-        oldBots: Bot[],
-        oldCalc: BotSandboxContext,
-        event: PasteStateAction,
-        newCalc: BotSandboxContext
-    ) {
-        const oldDimensionBots = oldBots.filter(
-            f => getBotConfigDimensions(oldCalc, f).length > 0
-        );
-        const oldDimensionBot =
-            oldDimensionBots.length > 0 ? oldDimensionBots[0] : null;
-        const oldDimensions = oldDimensionBot
-            ? getBotConfigDimensions(oldCalc, oldDimensionBot)
-            : [];
-        let oldDimension = oldDimensions.length > 0 ? oldDimensions[0] : null;
-        let events: BotAction[] = [];
-        const dimension = createDimensionId();
-        let workspace: Bot;
-        if (oldDimensionBot) {
-            workspace = duplicateBot(oldCalc, oldDimensionBot, {
-                tags: {
-                    auxDimensionConfig: dimension,
-                },
-            });
-        } else {
-            workspace = createWorkspace(undefined, dimension);
-        }
-        workspace.tags['auxDimensionX'] = event.options.x;
-        workspace.tags['auxDimensionY'] = event.options.y;
-        workspace.tags['auxDimensionZ'] = event.options.z;
-        events.push(botAdded(workspace));
-        if (!oldDimension) {
-            oldDimension = dimension;
-        }
-
-        // Preserve positions from old dimension
-        for (let oldBot of oldBots) {
-            if (oldDimensionBot && oldBot.id === oldDimensionBot.id) {
-                continue;
-            }
-            const tags = tagsOnBot(oldBot);
-            const tagsToRemove = filterWellKnownAndDimensionTags(newCalc, tags);
-            const removedValues = tagsToRemove.map(t => [t, null]);
-            let newBot = duplicateBot(oldCalc, oldBot, {
-                tags: {
-                    ...fromPairs(removedValues),
-                    ...addToDimensionDiff(
-                        newCalc,
-                        dimension,
-                        oldBot.tags[`${oldDimension}X`],
-                        oldBot.tags[`${oldDimension}Y`],
-                        oldBot.tags[`${oldDimension}SortOrder`]
-                    ),
-                    [`${dimension}Z`]: oldBot.tags[`${oldDimension}Z`],
-                },
-            });
-            events.push(botAdded(cleanBot(newBot)));
-        }
-        return events;
     }
 }

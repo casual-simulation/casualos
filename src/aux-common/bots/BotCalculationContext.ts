@@ -1,18 +1,12 @@
 import { Bot, PrecalculatedBot } from './Bot';
-import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
-import { BotIndex } from './BotIndex';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
+import { BotObjectsContext } from './BotObjectsContext';
 
 /**
  * Defines an interface for objects that are able to provide the necessary information required to calculate
  * formula values and actions.
  */
-export interface BotCalculationContext {
-    /**
-     * The objects in the context.
-     */
-    objects: (Bot | PrecalculatedBot)[];
-
+export interface BotCalculationContext extends BotObjectsContext {
     /**
      * The cache that is attached to the context.
      * Useful for saving the results of operations.
@@ -23,16 +17,6 @@ export interface BotCalculationContext {
      * The lookup table helper that can be used.
      */
     lookup: BotLookupTableHelper;
-}
-
-/**
- * Defines an interface for objects that are able to run formulas via a sandbox.
- */
-export interface BotSandboxContext extends BotCalculationContext {
-    /**
-     * The sandbox that should be used to run JS.
-     */
-    sandbox: Sandbox;
 }
 
 /**
@@ -59,19 +43,4 @@ export function cacheFunction<T>(
     const result = func();
     calc.cache.set(key, result);
     return result;
-}
-
-function hashCode(val: string | number | boolean) {
-    if (typeof val === 'string') {
-        let h = 0;
-        for (let i = 0; i < val.length; i++) {
-            h = (Math.imul(31, h) + val.charCodeAt(i)) | 0;
-        }
-
-        return h;
-    } else if (typeof val === 'number') {
-        return val;
-    } else {
-        return val ? 1 : 0;
-    }
 }

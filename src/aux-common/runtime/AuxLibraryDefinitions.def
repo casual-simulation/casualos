@@ -1,0 +1,2684 @@
+/**
+ * Contains information about the version of AUX that is running.
+ */
+export interface AuxVersion {
+    /**
+     * The commit of the hash that AUX was built from.
+     */
+    hash: string;
+
+    /**
+     * The full version number.
+     */
+    version: string;
+
+    /**
+     * The major portion of the version.
+     */
+    major: number;
+
+    /**
+     * The minor portion of the version.
+     */
+    minor: number;
+
+    /**
+     * The patch portion of the version.
+     */
+    patch: number;
+}
+
+/**
+ * Contains information about the device that AUX is running on.
+ */
+export interface AuxDevice {
+    /**
+     * Whether the device supports augmented reality features.
+     */
+    supportsAR: boolean;
+
+    /**
+     * Whether the device supports virtual reality features.
+     */
+    supportsVR: boolean;
+}
+
+/**
+ * An interface for an object that contains a set of roles that a user has.
+ */
+declare interface DeviceInfo {
+    /**
+     * The list of roles.
+     */
+    roles: string[];
+
+    /**
+     * The claims that the device contains.
+     * That is, information about the device which has been verified.
+     */
+    claims: {
+        username: string;
+        device_id: string;
+        session_id: string;
+        [key: string]: string;
+    };
+}
+
+/**
+ * Defines an interface that represents an event.
+ * That is, a time-ordered action in a channel.
+ * @deprecated
+ */
+declare interface Action {
+    /**
+     * The type of the event.
+     * This helps determine how the event should be applied to the state.
+     */
+    type: string;
+}
+
+/**
+ * An event that is used to indicate an event that was sent from a remote device.
+ */
+declare interface DeviceAction extends Action {
+    type: 'device';
+
+    /**
+     * The device which sent the event.
+     */
+    device: DeviceInfo;
+
+    /**
+     * The event.
+     */
+    event: Action;
+}
+
+/**
+ * An interface that is used to determine which device to send a remote event to.
+ */
+declare interface DeviceSelector {
+    /**
+     * The ID of the session that the event should be sent to.
+     */
+    sessionId?: string;
+
+    /**
+     * The ID of the device that the event should be sent to.
+     */
+    deviceId?: string;
+
+    /**
+     * The username of the user that the event should be sent to.
+     */
+    username?: string;
+}
+
+/**
+ * An event that is used to send events from this device to a remote device.
+ */
+declare interface RemoteAction extends Action, DeviceSelector {
+    type: 'remote';
+
+    /**
+     * The event that should be sent to the device.
+     */
+    event: Action;
+
+    /**
+     * Whether this action is allowed to be batched with other remote actions.
+     * Batching will preserve ordering between remote actions but may
+     * break ordering with respect to bot actions. Defaults to true.
+     */
+    allowBatching?: boolean;
+}
+
+declare type LocalActions = BotActions | ExtraActions | AsyncActions;
+
+/**
+ * Defines a union type for all the possible events that can be emitted from a bots channel.
+ */
+declare type BotAction =
+    | BotActions
+    | TransactionAction
+    | ExtraActions
+    | AsyncActions
+    | RemoteAction
+    | DeviceAction;
+
+/**
+ * Defines a union type for all the possible actions that manipulate the bot state.
+ */
+declare type BotActions =
+    | AddBotAction
+    | RemoveBotAction
+    | UpdateBotAction
+    | ApplyStateAction;
+``;
+
+/**
+ * Defines a set of possible local event types.
+ */
+declare type ExtraActions =
+    | ShoutAction
+    | RejectAction
+    | ShowToastAction
+    | ShowHtmlAction
+    | HideHtmlAction
+    | TweenToAction
+    | OpenQRCodeScannerAction
+    | OpenBarcodeScannerAction
+    | ShowQRCodeAction
+    | ShowBarcodeAction
+    | LoadUniverseAction
+    | UnloadUniverseAction
+    | SuperShoutAction
+    | SendWebhookAction
+    | LoadFileAction
+    | SaveFileAction
+    | GoToDimensionAction
+    | GoToURLAction
+    | PlaySoundAction
+    | OpenURLAction
+    | ImportAUXAction
+    | ShowInputForTagAction
+    | SetForcedOfflineAction
+    | ShellAction
+    | OpenConsoleAction
+    | DownloadAction
+    | BackupToGithubAction
+    | BackupAsDownloadAction
+    | StartCheckoutAction
+    | CheckoutSubmittedAction
+    | FinishCheckoutAction
+    | PasteStateAction
+    | ReplaceDragBotAction
+    | SetupChannelAction
+    | SetClipboardAction
+    | ShowChatBarAction
+    | RunScriptAction
+    | ShowUploadAuxFileAction
+    | MarkHistoryAction
+    | BrowseHistoryAction
+    | RestoreHistoryMarkAction
+    | LoadSpaceAction
+    | EnableARAction
+    | EnableVRAction
+    | ShowJoinCodeAction
+    | RequestFullscreenAction
+    | ExitFullscreenAction
+    | LoadBotsAction
+    | ClearSpaceAction
+    | LocalFormAnimationAction;
+
+/**
+ * Defines a set of possible async action types.
+ */
+declare type AsyncActions =
+    | AsyncResultAction
+    | AsyncErrorAction
+    | ShowInputAction
+    | ShareAction;
+
+/**
+ * Defines an interface for actions that represent asynchronous tasks.
+ */
+declare interface AsyncAction extends Action {
+    /**
+     * The ID of the async task.
+     */
+    taskId: number;
+}
+
+/**
+ * Defines an action that supplies a result for an AsyncRequestAction.
+ */
+declare interface AsyncResultAction extends AsyncAction {
+    type: 'async_result';
+
+    /**
+     * The result value.
+     */
+    result: any;
+}
+
+/**
+ * Defines an action that supplies an error for an AsyncRequestAction.
+ */
+declare interface AsyncErrorAction extends AsyncAction {
+    type: 'async_error';
+
+    /**
+     * The error.
+     */
+    error: any;
+}
+
+/**
+ * Defines a bot event that indicates a bot was added to the state.
+ */
+declare interface AddBotAction extends Action {
+    type: 'add_bot';
+    id: string;
+    bot: Bot;
+}
+
+/**
+ * Defines a bot event that indicates a bot was removed from the state.
+ */
+declare interface RemoveBotAction extends Action {
+    type: 'remove_bot';
+    id: string;
+}
+
+/**
+ * Defines a bot event that indicates a bot was updated.
+ */
+declare interface UpdateBotAction extends Action {
+    type: 'update_bot';
+    id: string;
+    update: Partial<Bot>;
+}
+
+/**
+ * A set of bot events in one.
+ */
+declare interface TransactionAction extends Action {
+    type: 'transaction';
+    events: BotAction[];
+}
+
+/**
+ * An eventBotsStatesome generic BotsState to the current state.
+ * This is useful when you have some generic bot state and want to just apply it to the
+ * current state. An example of doing this is from the automatic merge system.
+ */
+declare interface ApplyStateAction extends Action {
+    type: 'apply_state';
+    state: BotsState;
+}
+
+/**
+ * The options for pasting bots state into a channel.
+ */
+declare interface PasteStateOptions {
+    /**
+     * The dimension that the state should be pasted into.
+     */
+    dimension?: string;
+
+    /**
+     * The X position that the state should be pasted at.
+     * If a dimension is provided then this is the X position inside the dimension.
+     * If a dimension is not provided then this is the X position that the new dimension should be created at.
+     */
+    x: number;
+
+    /**
+     * The Y position that the state should be pasted at.
+     * If a dimension is provided then this is the Y position inside the dimension.
+     * If a dimension is not provided then this is the Y position that the new dimension should be created at.
+     */
+    y: number;
+
+    /**
+     * The Z position that the state should be pasted at.
+     * If a dimension is provided then this is the Z position inside the dimension.
+     * If a dimension is not provided then this is the Z position that the new dimension should be created at.
+     */
+    z: number;
+}
+
+/**
+ * An event to paste the given bots state as a new worksurface at a position.
+ */
+declare interface PasteStateAction extends Action {
+    type: 'paste_state';
+    state: BotsState;
+
+    /**
+     * The options for the event.
+     */
+    options: PasteStateOptions;
+}
+
+/**
+ * An event that is used to override dragging a bot.
+ */
+declare interface ReplaceDragBotAction extends Action {
+    type: 'replace_drag_bot';
+
+    /**
+     * The bot that should be used to drag.
+     */
+    bot: Bot | BotTags;
+}
+
+/**
+ * An event that is used to request that the server be backed up to github.
+ */
+declare interface BackupToGithubAction extends Action {
+    type: 'backup_to_github';
+
+    /**
+     * The authentication key to use.
+     */
+    auth: string;
+
+    /**
+     * The options that should be used for backing up.
+     */
+    options?: BackupOptions;
+}
+
+/**
+ * An event that is used to request that the server be backed up to a zip bot and downloaded.
+ */
+declare interface BackupAsDownloadAction extends Action {
+    type: 'backup_as_download';
+
+    /**
+     * The options that should be used for backing up.
+     */
+    options?: BackupOptions;
+
+    /**
+     * The device(s) that the download should be sent to.
+     */
+    target: DeviceSelector;
+}
+
+/**
+ * Defines the list of possible options for backing up a server.
+ */
+declare interface BackupOptions {
+    /**
+     * Whether to include archived atoms.
+     */
+    includeArchived?: boolean;
+}
+
+declare interface StartCheckoutOptions {
+    /**
+     * The publishable API key that should be used for interfacing with the Stripe API.
+     */
+    publishableKey: string;
+
+    /**
+     * The ID of the product that is being checked out.
+     */
+    productId: string;
+
+    /**
+     * The title of the product.
+     */
+    title: string;
+
+    /**
+     * The description of the product.
+     */
+    description: string;
+
+    /**
+     * The universe that the payment processing should occur in.
+     */
+    processingUniverse: string;
+
+    /**
+     * Whether to request the payer's billing address.
+     */
+    requestBillingAddress?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+declare interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
+}
+
+/**
+ * An event that is used to initiate the checkout flow.
+ */
+declare interface StartCheckoutAction extends Action, StartCheckoutOptions {
+    type: 'start_checkout';
+}
+
+/**
+ * An event that is used to indicate that the checkout was submitted.
+ */
+declare interface CheckoutSubmittedAction extends Action {
+    type: 'checkout_submitted';
+
+    /**
+     * The ID of the product that was checked out.
+     */
+    productId: string;
+
+    /**
+     * The token that allows payment.
+     */
+    token: string;
+
+    /**
+     * The channel that processing should happen in.
+     */
+    processingUniverse: string;
+}
+
+/**
+ * An event that is used to finish the checkout process by charging the user's card/account.
+ */
+declare interface FinishCheckoutAction extends Action {
+    type: 'finish_checkout';
+
+    /**
+     * The Secret API Key that should be used to finish the checkout process.
+     */
+    secretKey: string;
+
+    /**
+     * The token that was created from the checkout process.
+     * You should have recieved this from the onCheckout() event.
+     */
+    token: string;
+
+    /**
+     * The amount to charge in the smallest currency unit.
+     * For USD, this is cents. So an amount of 100 equals $1.00.
+     */
+    amount: number;
+
+    /**
+     * The currency that the amount is in.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
+
+    /**
+     * The extra info that this event contains.
+     */
+    extra: any;
+}
+
+/**
+ * An event that is used to run a shell script.
+ */
+declare interface ShellAction extends Action {
+    type: 'shell';
+
+    /**
+     * The script that should be run.
+     */
+    script: string;
+}
+
+/**
+ * An event that is used to show a toast message to the user.
+ */
+declare interface ShowToastAction extends Action {
+    type: 'show_toast';
+    message: string;
+    duration: number;
+}
+
+/**
+ * An event that is used to show some HTML to the user.
+ */
+declare interface ShowHtmlAction extends Action {
+    type: 'show_html';
+
+    /**
+     * Whether the HTML should be visible.
+     */
+    visible: true;
+
+    /**
+     * The HTML that should be shown.
+     */
+    html: string;
+}
+
+/**
+ * An event that is used to hide the HTML from the user.
+ */
+declare interface HideHtmlAction extends Action {
+    type: 'show_html';
+    visible: false;
+}
+
+/**
+ * An event that is used to tween the camera to the given bot's location.
+ */
+declare interface TweenToAction extends Action {
+    type: 'tween_to';
+
+    /**
+     * The ID of the bot to tween to.
+     */
+    botId: string;
+
+    /*
+     * The zoom value to use.
+     */
+    zoomValue: number;
+
+    /*
+     * The rotation spherical value to use.
+     */
+    rotationValue: {
+        x: number;
+        y: number;
+    };
+
+    /**
+     * The duration that the tween should take.
+     */
+    duration: number | null;
+}
+
+/**
+ * The possible camera types.
+ */
+declare type CameraType = 'front' | 'rear';
+
+/**
+ * An event that is used to show or hide the QR Code Scanner.
+ */
+declare interface OpenQRCodeScannerAction extends Action {
+    type: 'show_qr_code_scanner';
+
+    /**
+     * Whether the QR Code scanner should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The camera that should be used.
+     */
+    cameraType: CameraType;
+}
+
+/**
+ * An event that is used to show or hide the barcode scanner.
+ */
+declare interface OpenBarcodeScannerAction extends Action {
+    type: 'show_barcode_scanner';
+
+    /**
+     * Whether the barcode scanner should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The camera that should be used.
+     */
+    cameraType: CameraType;
+}
+
+/**
+ * An event that is used to toggle whether the console is open.
+ */
+declare interface OpenConsoleAction extends Action {
+    type: 'open_console';
+
+    /**
+     * Whether the console should be open.
+     */
+    open: boolean;
+}
+
+/**
+ * An event that is used to show or hide a QR Code on screen.
+ */
+declare interface ShowQRCodeAction extends Action {
+    type: 'show_qr_code';
+
+    /**
+     * Whether the QR Code should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The code to display.
+     */
+    code: string;
+}
+
+/**
+ * The list of possible barcode formats.
+ */
+declare type BarcodeFormat =
+    | 'code128'
+    | 'code39'
+    | 'ean13'
+    | 'ean8'
+    | 'upc'
+    | 'itf14'
+    | 'msi'
+    | 'pharmacode'
+    | 'codabar';
+
+/**
+ * An event that is used to show or hide a barcode on screen.
+ */
+declare interface ShowBarcodeAction extends Action {
+    type: 'show_barcode';
+
+    /**
+     * Whether the barcode should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The code to display.
+     */
+    code: string;
+
+    /**
+     * The format that the code should be displayed in.
+     */
+    format: BarcodeFormat;
+}
+
+/**
+ * An event that is used to load a simulation.
+ */
+declare interface LoadUniverseAction extends Action {
+    type: 'load_universe';
+
+    /**
+     * The ID of the simulation to load.
+     */
+    id: string;
+}
+
+/**
+ * An event that is used to unload a simulation.
+ */
+declare interface UnloadUniverseAction extends Action {
+    type: 'unload_universe';
+
+    /**
+     * The ID of the simulation to unload.
+     */
+    id: string;
+}
+
+/**
+ * An event that is used to load an AUX from a remote location.
+ */
+declare interface ImportAUXAction extends Action {
+    type: 'import_aux';
+
+    /**
+     * The URL to load.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event for actions that are shouted to every current loaded simulation.
+ */
+declare interface SuperShoutAction extends Action {
+    type: 'super_shout';
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The argument to pass as the "that" variable to scripts.
+     */
+    argument?: any;
+}
+
+/**
+ * Defines an event that sends a web request to a server.
+ */
+declare interface SendWebhookAction extends Action {
+    type: 'send_webhook';
+
+    /**
+     * The options for the webhook.
+     */
+    options: WebhookOptions;
+}
+
+/**
+ * Defines a set of options for a webhook.
+ */
+declare interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method?: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url?: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+}
+
+/**
+ * Defines an event that is used to load a file.
+ */
+declare interface LoadFileAction extends Action {
+    type: 'load_file';
+
+    /**
+     * The options for the action.
+     */
+    options: LoadFileOptions;
+}
+
+/**
+ * Options for loading a file.
+ */
+declare interface LoadFileOptions {
+    /**
+     * The file path that should be loaded.
+     */
+    path?: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+}
+
+/**
+ * Defines an event that is used to save a file to a drive.
+ */
+declare interface SaveFileAction extends Action {
+    type: 'save_file';
+
+    /**
+     * The options for the action.
+     */
+    options: SaveFileOptions;
+}
+
+/**
+ * Options for saving a file.
+ */
+declare interface SaveFileOptions {
+    /**
+     * The path that the mod should be saved.
+     */
+    path?: string;
+
+    /**
+     * The data to save to the file.
+     */
+    data?: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite existing files.
+     */
+    overwriteExistingFile?: boolean;
+}
+
+/**
+ * Defines an event that is used to send the player to a dimension.
+ */
+declare interface GoToDimensionAction extends Action {
+    type: 'go_to_dimension';
+
+    /**
+     * The dimension that should be loaded.
+     */
+    dimension: string;
+}
+
+/**
+ * Defines an event that is used to show an input box to edit a tag on a bot.
+ */
+declare interface ShowInputForTagAction extends Action {
+    type: 'show_input_for_tag';
+
+    /**
+     * The ID of the bot to edit.
+     */
+    botId: string;
+
+    /**
+     * The tag that should be edited on the bot.
+     */
+    tag: string;
+
+    /**
+     * The options for the input box.
+     */
+    options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an event that is used to show an input box.
+ */
+declare interface ShowInputAction extends AsyncAction {
+    type: 'show_input';
+
+    /**
+     * The value that should be in the input box.
+     */
+    currentValue?: any;
+
+    /**
+     * The options for the input box.
+     */
+    options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an event that is used to set whether the connection is forced to be offline.
+ */
+declare interface SetForcedOfflineAction extends Action {
+    type: 'set_offline_state';
+
+    /**
+     * Whether the connection should be offline.
+     */
+    offline: boolean;
+}
+
+/**
+ * Defines an event that is used to redirect the user to the given URL.
+ * This should be equivalent to clicking a link with rel="noreferrer".
+ */
+declare interface GoToURLAction extends Action {
+    type: 'go_to_url';
+
+    /**
+     * The URL to open.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to open the given URL.
+ * This should be equivalent to clicking a link with rel="noreferrer" and target="_blank".
+ */
+declare interface OpenURLAction extends Action {
+    type: 'open_url';
+
+    /**
+     * The URL to open.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to play a sound from the given url.
+ */
+declare interface PlaySoundAction extends Action {
+    type: 'play_sound';
+
+    /**
+     * The URL to open.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to download a file onto the device.
+ */
+declare interface DownloadAction extends Action {
+    type: 'download';
+
+    /**
+     * The data that should be included in the downloaded file.
+     */
+    data: any;
+
+    /**
+     * The name of the downloaded file. (includes the extension)
+     */
+    filename: string;
+
+    /**
+     * The MIME type of the downloaded file.
+     */
+    mimeType: string;
+}
+
+/**
+ * Defines an interface for options that a show input event can use.
+ */
+declare interface ShowInputOptions {
+    /**
+     * The type of input box to show.
+     */
+    type: ShowInputType;
+
+    /**
+     * The subtype of input box to show.
+     */
+    subtype: ShowInputSubtype;
+
+    /**
+     * The title that should be used for the input.
+     */
+    title: string;
+
+    /**
+     * The placeholder for the value.
+     */
+    placeholder: string;
+
+    /**
+     * The background color to use.
+     */
+    backgroundColor: string;
+
+    /**
+     * The foreground color to use.
+     */
+    foregroundColor: string;
+
+    /**
+     * Whether the text in the input box should be automatically selected.
+     */
+    autoSelect: boolean;
+}
+
+/**
+ * Defines the possible input types.
+ */
+declare type ShowInputType = 'text' | 'color';
+
+/**
+ * Defines the possible input types.
+ */
+declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+
+/**
+ * Defines an event for actions.
+ * Actions are basically user-defined events.
+ */
+declare interface ShoutAction {
+    type: 'action';
+
+    /**
+     * The IDs of the bots that the event is being sent to.
+     * If null, then the action is sent to every bot.
+     */
+    botIds: string[] | null;
+
+    /**
+     * The Bot ID of the user.
+     */
+    userId: string | null;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The argument to pass as the "that" variable to scripts.
+     */
+    argument?: any;
+
+    /**
+     * Whether the Bot IDs should be sorted before processing.
+     */
+    sortBotIds?: boolean;
+}
+
+/**
+ * Defines an event that prevents the execution of an action.
+ */
+declare interface RejectAction {
+    type: 'reject';
+
+    /**
+     * The action to prevent.
+     */
+    action: Action;
+}
+
+/**
+ * Defines an event that creates a channel if it doesn't exist.
+ */
+declare interface SetupChannelAction {
+    type: 'setup_universe';
+
+    /**
+     * The channel that should be created.
+     */
+    channel: string;
+
+    /**
+     * The bot or mod that should be cloned into the new channel.
+     */
+    botOrMod?: Bot | BotTags;
+}
+
+/**
+ * Defines an event that sets some text on the user's clipboard.
+ */
+declare interface SetClipboardAction {
+    type: 'set_clipboard';
+
+    /**
+     * The text that the clipboard should be set to.
+     */
+    text: string;
+}
+
+/**
+ * Defines an event that shows the chat bar.
+ */
+declare interface ShowChatBarAction {
+    type: 'show_chat_bar';
+
+    /**
+     * Whether the chat bar should be visible.
+     */
+    visible: boolean;
+
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Defines the possible options for showing the chat bar.
+ */
+declare interface ShowChatOptions {
+    /**
+     * The text that the bar should be filled with by default.
+     */
+    prefill?: string;
+
+    /**
+     * The text that the bar should have as the placeholder.
+     */
+    placeholder?: string;
+}
+
+/**
+ * Defines an event that executes a script.
+ */
+declare interface RunScriptAction {
+    type: 'run_script';
+
+    /**
+     * The script that should be executed.
+     */
+    script: string;
+}
+
+/**
+ * Defines an event that shows the "upload universe" dialog.
+ */
+declare interface ShowUploadAuxFileAction {
+    type: 'show_upload_aux_file';
+}
+
+/**
+ * Defines an event that marks a specific point in history.
+ */
+declare interface MarkHistoryAction {
+    type: 'mark_history';
+
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
+/**
+ * Defines an event that loads the history into the universe.
+ */
+declare interface BrowseHistoryAction {
+    type: 'browse_history';
+}
+
+/**
+ * Defines an event that restores the current state to a specific bookmark.
+ */
+declare interface RestoreHistoryMarkAction {
+    type: 'restore_history_mark';
+
+    /**
+     * The ID of the mark that should be restored.
+     */
+    mark: string;
+
+    /**
+     * The universe that the mark should be restored to.
+     * If not specified, then the current universe will be used.
+     */
+    universe?: string;
+}
+
+/**
+ * Defines an event that loads a space into the universe.
+ */
+declare interface LoadSpaceAction {
+    type: 'load_space';
+
+    /**
+     * The space that should be loaded.
+     */
+    space: BotSpace;
+
+    /**
+     * The config that should be used to load the space.
+     */
+    config: any;
+}
+
+/**
+ * Defines an event that loads bots from the given space that match the given tags and values.
+ */
+declare interface LoadBotsAction {
+    type: 'load_bots';
+
+    /**
+     * The space that should be searched.
+     */
+    space: BotSpace;
+
+    /**
+     * The tags that the loaded bots should have.
+     */
+    tags: LoadBotsTagFilter[];
+}
+
+/**
+ * Defines an interface for objects that specify a tag and value
+ * that a bot should have to be loaded.
+ */
+declare interface LoadBotsTagFilter {
+    /**
+     * The tag that the bot should have.
+     */
+    tag: string;
+
+    /**
+     * The value that the bot should have.
+     */
+    value?: any;
+}
+
+/**
+ * Defines an event that clears all bots from a space.
+ *
+ * Only supported for the following spaces:
+ * - error
+ */
+declare interface ClearSpaceAction {
+    type: 'clear_space';
+
+    /**
+     * The space to clear.
+     */
+    space: BotSpace;
+}
+
+/**
+ * Defines an event that runs an animation locally over
+ * whatever existing animations are playing.
+ */
+declare interface LocalFormAnimationAction {
+    type: 'local_form_animation';
+
+    /**
+     * The bot to run the animation on.
+     */
+    botId: string;
+
+    /**
+     * The animation to run.
+     */
+    animation: number | string;
+}
+
+/**
+ * Defines an event that enables AR on the device.
+ */
+declare interface EnableARAction {
+    type: 'enable_ar';
+
+    /**
+     * Whether AR features should be enabled.
+     */
+    enabled: boolean;
+}
+
+/**
+ * Defines an event that enables VR on the device.
+ */
+declare interface EnableVRAction {
+    type: 'enable_vr';
+
+    /**
+     * Whether VR features should be enabled.
+     */
+    enabled: boolean;
+}
+
+/**
+ * Defines an event that shows a QR code that is a link to a universe & dimension.
+ */
+declare interface ShowJoinCodeAction {
+    type: 'show_join_code';
+
+    /**
+     * The universe that should be joined.
+     */
+    universe?: string;
+
+    /**
+     * The dimension that should be joined.
+     */
+    dimension?: string;
+}
+
+/**
+ * Defines an event that requests that AUX enter fullscreen mode.
+ * This can be denied by the user.
+ */
+declare interface RequestFullscreenAction {
+    type: 'request_fullscreen_mode';
+}
+
+/**
+ * Defines an event that exits fullscreen mode.
+ */
+declare interface ExitFullscreenAction {
+    type: 'exit_fullscreen_mode';
+}
+
+/**
+ * Defines the options that a share action can have.
+ */
+declare interface ShareOptions {
+    /**
+     * The title of the document being shared.
+     */
+    title?: string;
+
+    /**
+     * The text that should be shared.
+     */
+    text?: string;
+
+    /**
+     * The URL of the document being shared.
+     */
+    url?: string;
+}
+
+/**
+ * Defines an event that shares the given information using the
+ * device's native social sharing capabilities.
+ */
+declare interface ShareAction extends AsyncAction, ShareOptions {
+    type: 'share';
+}
+
+/**
+ * Defines an interface for options that show a payment box.
+ */
+declare interface CheckoutOptions {
+    /**
+     * The publishable API Key that should be used to checkout with stripe.
+     */
+    publishableKey: string;
+
+    /**
+     * The ID of the product that is being purchased.
+     */
+    productId: string;
+
+    /**
+     * The title that should be shown for the product.
+     */
+    title: string;
+
+    /**
+     * The description that should be shown for the product.
+     */
+    description: string;
+
+    /**
+     * The universe that the payment should be processed on.
+     */
+    processingUniverse: string;
+
+    /**
+     * Whether to request the payer's billing address.
+     */
+    requestBillingAddress?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+declare interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
+}
+
+/**
+ * Defines an interface for options that complete payment for a product.
+ */
+declare interface FinishCheckoutOptions {
+    /**
+     * The secret API key that should be used to checkout with stripe.
+     */
+    secretKey: string;
+
+    /**
+     * The token that authorized payment from the user.
+     */
+    token: string;
+
+    /**
+     * The amount that should be charged in the currency's smallest unit. (cents, etc.)
+     */
+    amount: number;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
+
+    /**
+     * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
+     */
+    extra: any;
+}
+
+/**
+ * Defines an interface for options that mark a specific time in history.
+ */
+declare interface MarkHistoryOptions {
+    /**
+     * The message that the mark should contain.
+     */
+    message: string;
+}
+
+/**
+ * An interface that is used to say which user/device/session an event should be sent to.
+ */
+declare interface SessionSelector {
+    username?: string;
+    device?: string;
+    session?: string;
+}
+
+declare interface BotTags {
+    [key: string]: any;
+}
+
+/**
+ * Defines the basic structure of a bot.
+ */
+declare interface Bot {
+    /**
+     * The ID of the bot.
+     */
+    id: string;
+
+    /**
+     * The space the bot lives in.
+     */
+    space?: BotSpace;
+
+    /**
+     * The calculated tag values that the bot contains.
+     */
+    tags: BotTags;
+
+    /**
+     * The raw tag values that the bot contains.
+     * If you want to access the script code for a formula, use this.
+     * Otherwise, use the tags property.
+     */
+    raw: BotTags;
+
+    /**
+     * The tags that have been changed on this bot.
+     */
+    changes: BotTags;
+}
+
+/**
+ * Defines an interface for the state that an AUX bot can contain.
+ */
+declare interface BotsState {
+    [id: string]: Bot;
+}
+
+/**
+ * The possible bot spaces.
+ */
+declare type BotSpace = 'shared' | 'local' | 'tempLocal' | 'history' | 'error';
+
+/**
+ * The possible portal types.
+ */
+declare type PortalType =
+    | 'page'
+    | 'inventory'
+    | 'menu'
+    | 'sheet'
+    | 'universes'
+    | string;
+
+/**
+ * Defines a tag filter. It can be either a function that accepts a tag value and returns true/false or it can be the value that the tag value has to match.
+ */
+declare type TagFilter =
+    | ((value: any) => boolean)
+    | string
+    | number
+    | boolean
+    | null
+    | undefined;
+
+/**
+ * Defines a bot filter. It is a function that accepts a bot and returns true/false.
+ *
+ * Common bot filters are:
+ * - `byTag(tag, value)`
+ * - `inDimension(dimension)`
+ * - `atPosition(dimension, x, y)`
+ * - `inStack(bot, dimension)`
+ * - `neighboring(bot, dimension, direction)`
+ * - `either(filter1, filter2)`
+ * - `not(filter)`
+ */
+declare interface BotFilterFunction {
+    (bot: Bot): boolean;
+    sort?: (bot: Bot) => any;
+}
+
+/**
+ * Defines a type that represents a mod.
+ * That is, a set of tags that can be applied to another bot.
+ */
+declare type Mod = BotTags | Bot;
+
+declare global {
+
+    /**
+     * The Bot that this script is running in.
+     */
+    const bot: Bot;
+
+    /**
+     * The tags of the Bot that this script is running in.
+     */
+    const tags: BotTags;
+
+    /**
+     * The raw tags of the Bot that this script is running in.
+     */
+    const raw: BotTags;
+
+    /**
+     * The Bot that created this Bot.
+     */
+    const creator: Bot;
+
+    /**
+     * The config Bot for this Bot.
+     */
+    const config: Bot;
+
+    /**
+     * The name of the tag that this script is running in.
+     */
+    const tagName: string;
+
+    /**
+     * The value of the same tag in the config Bot.
+     */
+    const configTag: any;
+
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values.
+     * @returns The bot(s) that were created.
+     *
+     * @example
+     * // Create a red bot without a parent.
+     * let redBot = create(null, { "auxColor": "red" });
+     *
+     * @example
+     * // Create a red bot and a blue bot with `this` as the parent.
+     * let [redBot, blueBot] = create(this, [
+     *    { "auxColor": "red" },
+     *    { "auxColor": "blue" }
+     * ]);
+     *
+     */
+    function create(...mods: Mod[]): Bot | Bot[];
+
+    /**
+     * Destroys the given bot, bot ID, or list of bots.
+     * @param bot The bot, bot ID, or list of bots to destroy.
+     */
+    function destroy(bot: Bot | string | Bot[]): void;
+
+    /**
+     * Removes tags from the given list of bots.
+     * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
+     * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
+     *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+     *
+     * @example
+     * // Remove tags named starting with "abc" from the `this` bot.
+     * removeTags(this, "abc");
+     *
+     * @example
+     * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
+     * removeTags(this, /^hello$/gi);
+     *
+     */
+    function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
+
+    /**
+     * Gets the ID from the given bot.
+     * @param bot The bot or string.
+     */
+    function getID(bot: Bot | string): string;
+
+    /**
+     * Gets JSON for the given data.
+     * @param data The data.
+     */
+    function getJSON(data: any): string;
+
+    /**
+     * Asks every bot in the universe to run the given action.
+     * In effect, this is like shouting to a bunch of people in a room.
+     *
+     * @param name The event name.
+     * @param arg The optional argument to include in the shout.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell every bot to reset themselves.
+     * shout("reset()");
+     *
+     * @example
+     * // Ask every bot for its name.
+     * const names = shout("getName()");
+     *
+     * @example
+     * // Tell every bot say "Hi" to you.
+     * shout("sayHi()", "My Name");
+     */
+    function shout(name: string, arg?: any): any[];
+
+    /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell all the red bots to reset themselves.
+     * whisper(getBots("#auxColor", "red"), "reset()");
+     *
+     * @example
+     * // Ask all the tall bots for their names.
+     * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
+     *
+     * @example
+     * // Tell every friendly bot to say "Hi" to you.
+     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     */
+    function whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): any;
+
+    /**
+     * Shouts the given event to every bot in every loaded simulation.
+     * @param eventName The name of the event to shout.
+     * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+     */
+    function superShout(eventName: string, arg?: any): SuperShoutAction;
+
+    /**
+     * Sends a web request based on the given options.
+     * @param options The options that specify where and what to send in the web request.
+     *
+     * @example
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * webhook({
+     *   method: 'POST',
+     *   url: 'https://www.example.com/api/createThing',
+     *   data: {
+     *     hello: 'world'
+     *   },
+     *   responseShout: 'requestFinished'
+     * });
+     */
+    const webhook: {
+        /**
+         * Sends a web request based on the given options.
+         * @param options The options that specify where and what to send in the web request.
+         *
+         * @example
+         * // Send a HTTP POST request to https://www.example.com/api/createThing
+         * webhook({
+         *   method: 'POST',
+         *   url: 'https://www.example.com/api/createThing',
+         *   data: {
+         *     hello: 'world'
+         *   },
+         *   responseShout: 'requestFinished'
+         * });
+         */
+        (options: WebhookOptions): SendWebhookAction;
+
+        /**
+         * Sends a HTTP POST request to the given URL with the given data.
+         *
+         * @param url The URL that the request should be sent to.
+         * @param data That that should be sent.
+         * @param options The options that should be included in the request.
+         *
+         * @example
+         * // Send a HTTP POST request to https://www.example.com/api/createThing
+         * webhook.post('https://www.example.com/api/createThing', {
+         *   hello: 'world'
+         * }, { responseShout: 'requestFinished' });
+         */
+        post(url: string, data?: any, options?: WebhookOptions): SendWebhookAction;
+    };
+
+    /**
+     * Sends the given operation to all the devices that matches the given selector.
+     * In effect, this allows users to send each other events directly without having to edit tags.
+     *
+     * Note that currently, devices will only accept events sent from the server.
+     *
+     * @param event The event that should be executed in the remote session(s).
+     * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+     *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+     *                 If a selector is not specified, then the event is sent to the server.
+     * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
+     *                      with respect to other events. Defaults to true.
+     *
+     * @example
+     * // Send a toast to all sessions for the username "bob"
+     * remote(player.toast("Hello, Bob!"), { username: "bob" });
+     */
+    function remote(
+        event: BotAction,
+        selector?: SessionSelector,
+        allowBatching?: boolean
+    ): RemoteAction;
+
+    /**
+     * Gets the first bot which matches all of the given filters.
+     * @param filters The filter functions that the bot needs to match.
+     * @returns The first bot that matches all the given filters.
+     *
+     * @example
+     * // Get a bot by the "name" tag.
+     * let bot = getBot(byTag("name", "The bot's name"));
+     */
+    function getBot(...filters: BotFilterFunction[]): Bot;
+
+    /**
+     * Gets the first bot ordered by ID which matches the given tag and filter.
+     * @param tag The tag the bot should match.
+     * @param filter The optional value or filter the bot should match.
+     *
+     * @example
+     * // Get a bot with the "name" tag.
+     * // Shorthand for getBot(byTag("name"))
+     * let bot = getBot("name");
+     *
+     * @example
+     * // Get a bot by the "name" tag.
+     * // Shorthand for getBot(byTag("name", "The bot's name"))
+     * let bot = getBot("name", "The bot's name");
+     *
+     * @example
+     * // Get a bot where the "name" tag starts with the letter "N".
+     * // Shorthand for getBot(byTag("name", name => name.startsWith("N")))
+     * let bot = getBot("name", name => name.startsWith("N"));
+     */
+    function getBot(tag: string, filter?: any | TagFilter): Bot;
+
+    /**
+     * Gets the first bot ordered by ID.
+     * @returns The bot with the first ID when sorted alphebetically.
+     *
+     * @example
+     * let firstBot = getBot();
+     */
+    function getBot(): Bot;
+
+    /**
+     * Gets the list of bots which match all of the given filters.
+     * @param filters The filter functions that the bots need to match.
+     * @returns A list of bots that match all the given filters. If no bots match then an empty list is returned.
+     *
+     * @example
+     * // Get all the bots that are red.
+     * let bots = getBots(byTag("auxColor", "red"));
+     */
+    function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
+
+    /**
+     * Gets the list of bots that have the given tag matching the given filter value.
+     * @param tag The tag the bot should match.
+     * @param filter The value or filter the bot should match.
+     *
+     * @example
+     * // Get all the bots that are red.
+     * // Shorthand for getBots(byTag("auxColor", "red"))
+     * let bots = getBots("auxColor", "red");
+     */
+    function getBots(tag: string, filter?: any | TagFilter): Bot[];
+
+    /**
+     * Gets a list of all the bots.
+     *
+     * @example
+     * // Gets all the bots in the universe.
+     * let bots = getBots();
+     */
+    function getBots(): Bot[];
+
+    /**
+     * Gets the list of tag values from bots that have the given tag.
+     * @param tag The tag.
+     * @param filter THe optional filter to use for the values.
+     */
+    function getBotTagValues(tag: string, filter?: TagFilter): any[];
+
+    /**
+     * Creates a filter function that checks whether bots have the given tag and value.
+     * @param tag The tag to check.
+     * @param filter The value or filter that the tag should match.
+     *
+     * @example
+     * // Find all the bots with a "name" of "bob".
+     * let bobs = getBots(byTag("name", "bob"));
+     *
+     * @example
+     * // Find all bots with a height larger than 2.
+     * let bots = getBots(byTag("height", height => height > 2));
+     *
+     * @example
+     * // Find all the bots with the "test" tag.
+     * let bots = getBots(byTag("test"));
+     */
+    function byTag(tag: string, filter?: TagFilter): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots match the given mod.
+     * @param mod The mod that bots should be checked against.
+     *
+     * @example
+     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * let bots = getBots(byMod({
+     *      "auxColor": "red",
+     *      height: 1
+     * }));
+     */
+    function byMod(mod: Mod): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots are in the given dimension.
+     * @param dimension The dimension to check.
+     * @returns A function that returns true if the given bot is in the dimension and false if it is not.
+     *
+     * @example
+     * // Find all the bots in the "test" dimension.
+     * let bots = getBots(inDimension("test"));
+     */
+    function inDimension(dimension: string): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots are at the given position in the given dimension.
+     * @param dimension The dimension that the bots should be in.
+     * @param x The X position in the dimension that the bots should be at.
+     * @param y The Y position in the dimension that the bots should be at.
+     * @returns A function that returns true if the given bot is at the given position and false if it is not.
+     *
+     * @example
+     * // Find all the bots at (1, 2) in the "test" dimension.
+     * let bots = getBots(atPosition("test", 1, 2));
+     */
+    function atPosition(
+        dimension: string,
+        x: number,
+        y: number
+    ): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots were created by the given bot.
+     * @param bot The bot to determine weather the bots have been created by it or not.
+     * @returns A function that returns true if the bot was created by the given bot.
+     *
+     * @example
+     * // Find all the bots created by the yellow bot.
+     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     */
+    function byCreator(bot: Bot | string);
+
+    /**
+     * Creates a filter function that checks whether bots are in the same stack as the given bot.
+     * @param bot The bot that other bots should be checked against.
+     * @param dimension The dimension that other bots should be checked in.
+     * @returns A function that returns true if the given bot is in the same stack as the original bot.
+     *
+     * @example
+     * // Find all bots in the same stack as `this` in the "test" dimension.
+     * let bots = getBots(inStack(this, "test"));
+     *
+     */
+    function inStack(bot: Bot, dimension: string): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they are in the given space.
+     * @param space The space that the bots should be in.
+     */
+    function bySpace(space: string): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they are neighboring the given bot.
+     * @param bot The bot that other bots should be checked against.
+     * @param dimension The dimension that other bots should be checked in.
+     * @param direction The neighboring direction to check.
+     * @returns A function that returns true if the given bot is next to the original bot.
+     *
+     * @example
+     * // Find all bots in front of `this` bot in the "test" dimension.
+     * let bots = getBots(neighboring(this, "test", "front"));
+     */
+    function neighboring(
+        bot: Bot,
+        dimension: string,
+        direction: 'front' | 'left' | 'right' | 'back'
+    ): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they match any of the given filters.
+     * @param filters The filter functions that a bot should be tested against.
+     *
+     * @example
+     * // Find all bots with the name "bob" or height 2.
+     * let bots = getBots(
+     *   either(
+     *     byTag("name", "bob"),
+     *     byTag("height", height => height === 2)
+     *   )
+     * );
+     */
+    function either(...filters: BotFilterFunction[]): BotFilterFunction;
+
+    /**
+     * Creates a function that negates the result of the given function.
+     * @param filter The function whose results should be negated.
+     *
+     * @example
+     * // Find all bots that are not in the "test" dimension.
+     * let bots = getBots(not(inDimension("test")));
+     */
+    function not(filter: BotFilterFunction): BotFilterFunction;
+
+    /**
+     * Gets the value of the given tag stored in the given bot.
+     * @param bot The bot.
+     * @param tag The tag.
+     *
+     * @example
+     * // Get the "auxColor" tag from the `this` bot.
+     * let color = getTag(this, "auxColor");
+     */
+    function getTag(bot: Bot, ...tags: string[]): any;
+
+    /**
+     * Sets the value of the given tag stored in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     *
+     * @example
+     * // Set a bot's color to "green".
+     * setTag(this, "auxColor", "green");
+     */
+    function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
+
+    /**
+     * Creates a mod from declareed mod data.
+     * @param bot The mod data that should be loaded.
+     * @param tags The tags that should be included in the output mod.
+     * @returns The mod that was loaded from the data.
+     */
+    function getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
+
+    /**
+     * Applies the given diff to the given bot.
+     * @param bot The bot.
+     * @param diff The diff to apply.
+     */
+    function applyMod(bot: any, ...diffs: Mod[]): void;
+
+    /**
+     * subrtacts the given diff from the given bot.
+     * @param bot The bot.
+     * @param diff The diff to apply.
+     */
+    function subtractMods(bot: any, ...diffs: Mod[]): void;
+
+    /**
+     * Defines a set of functions that relate to common player operations.
+     */
+    const player: {
+
+        /**
+         * Derermines whether the player is in the given dimension.
+         * @param dimension The dimension.
+         */
+        isInDimension(dimension: string): string;
+
+        /**
+         * Redirects the user to the given dimension.
+         * @param dimension The dimension to go to.
+         *
+         * @example
+         * // Send the player to the "welcome" dimension.
+         * player.goToDimension("welcome");
+         */
+        goToDimension(dimension: string): GoToDimensionAction;
+
+        /**
+         * Instructs auxPlayer to open the built-in developer console.
+         * The dev console provides easy access to error messages and debug logs for formulas and actions.
+         */
+        openDevConsole(): OpenConsoleAction;
+
+        /**
+         * Changes the state that the given bot is in.
+         * @param bot The bot to change.
+         * @param stateName The state that the bot should move to.
+         * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+         */
+        changeState(bot: Bot, stateName: string, groupName?: string): void;
+
+        /**
+         * Enables Augmented Reality features.
+         */
+        enableAR(): EnableARAction;
+
+        /**
+         * Enables Virtual Reality features.
+         */
+        enableVR(): EnableVRAction;
+
+        /**
+         * Disables Augmented Reality features.
+         */
+        disableAR(): EnableARAction;
+
+        /**
+         * Disables Virtual Reality features.
+         */
+        disableVR(): EnableVRAction;
+
+        /**
+         * Gets the dimension that is loaded into the given portal for the player.
+         * If no dimension is loaded, then null is returned.
+         * @param portal The portal type.
+         */
+        getPortalDimension(portal: PortalType): string;
+
+        /**
+         * Gets information about the version of AUX that is running.
+         */
+        version(): AuxVersion;
+
+        /**
+         * Gets information about the device that the player is using.
+         */
+        device(): AuxDevice;
+
+        /**
+         * Gets whether the player is in the sheet dimension.
+         */
+        inSheet(): boolean;
+
+        /**
+         * Shows a toast message to the user.
+         * @param message The message to show.
+         * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
+         */
+        toast(message: string, duration?: number): ShowToastAction;
+
+        /**
+         *   Play given url's audio
+         * @example
+         * // Send the player to the "welcome" dimension.
+         * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+         */
+        playSound(url: string): PlaySoundAction;
+
+        /**
+         * Shows a QR Code that contains a link to a universe and dimension.
+         * @param universe The universe that should be joined. Defaults to the current universe.
+         * @param dimension The dimension that should be joined. Defaults to the current dimension.
+         */
+        showJoinCode(
+            universe?: string,
+            dimension?: string
+        ): ShowJoinCodeAction;
+
+        /**
+         * Requests that AUX enters fullscreen mode.
+         * Depending on the web browser, this may ask the player for permission.
+         */
+        requestFullscreenMode(): RequestFullscreenAction;
+
+        /**
+         * Exits fullscreen mode.
+         */
+        exitFullscreenMode(): ExitFullscreenAction;
+
+        /**
+         * Shares some information via the device's social sharing functionality.
+         * @param options The options.
+         */
+        share(options: ShareOptions): ShareAction;
+
+        /**
+         * Shows some HTML to the user.
+         * @param html The HTML to show.
+         */
+        showHtml(html: string): ShowHtmlAction;
+
+        /**
+         * Hides the HTML from the user.
+         */
+        hideHtml(): HideHtmlAction;
+
+        /**
+         * Tweens the user's camera to view the given bot.
+         * @param bot The bot to view.
+         * @param zoomValue The zoom value to use.
+         */
+        tweenTo(
+            bot: Bot | string,
+            zoomValue?: number,
+            rotX?: number,
+            rotY?: number,
+            duration?: number
+        ): TweenToAction;
+
+        /**
+         * Instantly moves the user's camera to view the given bot.
+         * @param bot The bot to view.
+         * @param zoomValue The zoom value to use.
+         * @param rotX The X rotation.
+         * @param rotY The Y rotation.
+         */
+        moveTo(
+            bot: Bot | string,
+            zoomValue?: number,
+            rotX?: number,
+            rotY?: number
+        ): TweenToAction;
+
+        /**
+         * Opens the QR Code Scanner.
+         * @param camera The camera that should be used.
+         */
+        openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction;
+
+        /**
+         * Closes the QR Code Scanner.
+         */
+        closeQRCodeScanner(): OpenQRCodeScannerAction;
+
+        /**
+         * Shows the given QR Code.
+         * @param code The code to show.
+         */
+        showQRCode(code: string): ShowQRCodeAction;
+
+        /**
+         * Hides the QR Code.
+         */
+        hideQRCode(): ShowQRCodeAction;
+
+        /**
+         * Opens the barcode scanner.
+         * @param camera The camera that should be used.
+         */
+        openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction;
+
+        /**
+         * Closes the barcode scanner.
+         */
+        closeBarcodeScanner(): OpenBarcodeScannerAction;
+
+        /**
+         * Shows the given barcode.
+         * @param code The code that should be shown.
+         * @param format The format that the barcode should be shown in.
+         */
+        showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction;
+
+        /**
+         * Hides the barcode.
+         */
+        hideBarcode(): ShowBarcodeAction;
+
+        /**
+         * Shows the chat bar.
+         */
+        showChat(): ShowChatBarAction;
+
+        /**
+         * Shows the chat bar with the given placeholder.
+         * @param placeholder The placeholder text that should be in the chat bar.
+         */
+        showChat(placeholder: string): ShowChatBarAction;
+
+        /**
+         * Shows the chat bar with the given options.
+         * @param options The options that should be used to show the chat bar.
+         */
+        showChat(options: ShowChatOptions): ShowChatBarAction;
+
+        /**
+         * Shows the run bar.
+         * @param placeholderOrOptions The placeholder text or options. (optional)
+         */
+        showChat(
+            placeholderOrOptions?: string | ShowChatOptions
+        ): ShowChatBarAction;
+
+        /**
+         * Hides the run bar.
+         */
+        hideChat(): ShowChatBarAction;
+
+        /**
+         * Enqueues the given script to execute after this script is done running.
+         * @param script The script that should be executed.
+         */
+        run(script: string): RunScriptAction;
+
+        /**
+         * Downloads the given list of bots.
+         * @param bots The bots that should be downloaded.
+         * @param filename The name of the file that the bots should be downloaded as.
+         */
+        downloadBots(bots: Bot[], filename: string): DownloadAction;
+
+        downloadUniverse(): DownloadAction;
+
+        /**
+         * Shows the "Upload Universe" dialog.
+         */
+        showUploadAuxFile(): ShowUploadAuxFileAction;
+
+        /**
+         * Loads the universe with the given ID.
+         * @param id The ID of the universe to load.
+         */
+        loadUniverse(id: string): LoadUniverseAction;
+
+        /**
+         * Unloads the universe with the given ID.
+         * @param id The ID of the universe to unload.
+         */
+        unloadUniverse(id: string): UnloadUniverseAction;
+
+        /**
+         * Imports the AUX from the given URL or JSON
+         * @param urlOrJSON The URL or JSON to load.
+         *                  If given JSON, then it will be imported as if it was a .aux file.
+         *                  If given a URL, then it will be downloaded and then imported.
+         */
+        importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
+
+        /**
+         * Replaces the bot that the user is beginning to drag.
+         * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
+         * @param bot The bot or mod that should be dragged instead of the original.
+         */
+        replaceDragBot(bot: Mod): ReplaceDragBotAction;
+
+        /**
+         * Sets the text stored in the player's clipboard.
+         * @param text The text to set to the clipboard.
+         */
+        setClipboard(text: string): SetClipboardAction;
+
+        /**
+         * Redirects the user to the given URL.
+         * @param url The URL to go to.
+         *
+         * @example
+         * // Send the player to wikipedia.
+         * player.goToURL("https://wikipedia.org");
+         */
+        goToURL(url: string): GoToURLAction;
+
+        /**
+         * Redirects the user to the given URL.
+         * @param url The URL to go to.
+         *
+         * @example
+         * // Open wikipedia in a new tab.
+         * player.openURL("https://wikipedia.org");
+         */
+        openURL(url: string): OpenURLAction;
+
+        /**
+         * Shows an input box to edit the given bot and tag.
+         *
+         * @param bot The bot or bot ID that should be edited.
+         * @param tag The tag which should be edited on the bot.
+         * @param options The options that indicate how the input box should be customized.
+         *
+         * @example
+         * // Show an input box for `this` bot's label.
+         * player.showInputForTag(this, "auxLabel", {
+         *            title: "Change the label",
+         *            type: "text"
+         * });
+         *
+         * @example
+         * // Show a color picker for the bot's color.
+         * player.showInputForTag(this, "auxColor", {
+         *            title: "Change the color",
+         *            type: "color",
+         *            subtype: "advanced"
+         * });
+         */
+        showInputForTag(
+            bot: Bot | string,
+            tag: string,
+            options?: Partial<ShowInputOptions>
+        ): ShowInputForTagAction;
+
+        /**
+         * Shows an input box. Returns a promise that resolves with the new value.
+         *
+         * @param currentValue The value that the input box should be prefilled with.
+         * @param options The options that indicate how the input box should be customized.
+         *
+         * @example
+         * // Show an input box.
+         * const result = await player.showInput({
+         *    title: "Change the label",
+         *    type: "text"
+         * });
+         */
+        showInput(
+            currentValue?: any,
+            options?: Partial<ShowInputOptions>
+        ): Promise<ShowInputAction>;
+
+        /**
+         * Shows a checkout screen that lets the user purchase something.
+         *
+         * @param options The options for the payment box.
+         *
+         * @example
+         * // Show a checkout box for 10 cookies
+         * player.checkout({
+         *   productId: '10_cookies',
+         *   title: '10 Cookies',
+         *   description: '$5.00',
+         *   processingUniverse: 'cookies_checkout'
+         * });
+         *
+         */
+        checkout(options: CheckoutOptions): StartCheckoutAction;
+
+        /**
+         * Gets the dimension that the player is currently viewing.
+         */
+        getCurrentDimension(): string;
+
+        /**
+         * Gets the universe that the player is currently in.
+         */
+        getCurrentUniverse(): string;
+
+        /**
+         * Gets the distance that the player bot is from the given dimension.
+         *
+         * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+         *
+         * @param dimension The dimension to check for.
+         */
+        getDimensionalDepth(dimension: string): number;
+
+        /**
+         * Determines whether the player has the given bot in their inventory.
+         * @param bots The bot or bots to check.
+         */
+        hasBotInInventory(bots: Bot | Bot[]): boolean;
+
+        /**
+         * Gets the current user's bot.
+         */
+        getBot(): Bot;
+
+        /**
+         * Gets the name of the dimension that is used for the current user's menu.
+         */
+        getMenuDimension(): string;
+
+        /**
+         * Gets the name of the dimension that is used for the current user's inventory.
+         */
+        getInventoryDimension(): string;
+    };
+
+    /**
+     * Defines a set of functions that relate to common server operations.
+     */
+    const server: {
+        /**
+         * Sends an event to the server to setup a new universe if it does not exist.
+         * @param universe The universe.
+         * @param botOrMod The bot or mod that should be cloned into the new universe.
+         */
+        setupUniverse(universe: string, botOrMod?: Mod): SetupChannelAction;
+    
+        /**
+         * Executes the given shell script on the server.
+         * @param script The shell script  that should be executed.
+         */
+        shell(script: string): ShellAction;
+    
+        /**
+         * Backs up all the AUX universes to a Github Gist.
+         * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+         */
+        backupToGithub(auth: string): BackupToGithubAction;
+    
+        /**
+         * Backs up all the AUX universes to a zip bot.
+         */
+        backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
+    
+        /**
+         * Clears all the errors in the universe.
+         */
+        destroyErrors(): ClearSpaceAction;
+    
+        /**
+         * Loads the errors for the given bot and tag.
+         * @param bot The bot that the errors should be loaded for.
+         * @param tag The tag that the errors should be loaded for.
+         */
+        loadErrors(bot: string | Bot, tag: string): LoadBotsAction;
+    
+        /**
+         * Loads a file from the server at the given path.
+         * @param path The path of the file.
+         * @param options The options.
+         */
+        loadFile(path: string, options?: LoadFileOptions): RemoteAction;
+    
+        /**
+         * Saves a file on the server at the given path.
+         * @param path The path of the file.
+         * @param options The options.
+         */
+        saveFile(path: string, data: string, options?: SaveFileOptions): RemoteAction;
+    
+        /**
+         * Finishes the checkout process by charging the payment fee to the user.
+         *
+         * @param options The options for finishing the checkout.
+         *
+         * @example
+         * // Finish the checkout process
+         * server.finishCheckout({
+         *   secretKey: 'YOUR_SECRET_API_KEY',
+         *   token: 'token from onCheckout',
+         *
+         *   // 1000 cents == $10.00
+         *   amount: 1000,
+         *   currency: 'usd',
+         *   description: 'Description for purchase'
+         * });
+         */
+        finishCheckout(options: FinishCheckoutOptions): FinishCheckoutOptions;
+    
+        /**
+         * Saves the current state as a history mark.
+         * @param options The options that describe what information the mark should contain.
+         *
+         * @example
+         * // Bookmark the current state with a message
+         * server.markHistory({
+         *   message: "Save recent changes"
+         * });
+         */
+        markHistory(options: MarkHistoryOptions): MarkHistoryAction;
+    
+        /**
+         * Loads the "history" space into the universe.
+         */
+        browseHistory(): BrowseHistoryAction;
+    
+        /**
+         * Restores the current state to the given mark.
+         * @param mark The bot or bot ID that represents the mark that should be restored.
+         */
+        restoreHistoryMark(mark: Bot | string): RestoreHistoryMarkAction;
+    
+        /**
+         * Restores the current state to the given mark.
+         * @param mark The bot or bot ID that represents the mark that should be restored.
+         * @param universe The universe that the mark should be restored to.
+         */
+        restoreHistoryMarkToUniverse(
+            mark: Bot | string,
+            universe: string
+        ): RestoreHistoryMarkAction;
+    };
+
+    /**
+     * Defines a set of functions that handle actions.
+     */
+    const action: {
+        /**
+         * Performs the given action.
+         * @param action The action to perform.
+         */
+        perform(action: any): BotAction;
+    
+        /**
+         * Rejects the given action.
+         * @param action The action to reject.
+         */
+        reject(action: any): BotAction;
+    };
+
+    /**
+     * Defines a set of functions that relate to common math operations.
+     */
+    const math: {
+        /**
+         * Sums the given array of numbers and returns the result.
+         * If any value in the list is not a number, it will be converted to one.
+         * If the given value is not an array, then it will be converted to a number and returned.
+         *
+         * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
+         *             If it is not a list, then the result will be the value converted to a number.
+         */
+        sum(list: any): number;
+
+        /**
+         * Calculates the average of the numbers in the given list and returns the result.
+         * @param list The value that should be averaged.
+         *             If it is a list, then the result will be sum(list)/list.length.
+         *             If it is not a list, then the result will be the value converted to a number.
+         */
+        avg(list: any): number;
+
+        /**
+         * Calculates the square root of the given number.
+         * @param value The number.
+         */
+        sqrt(value: any): number;
+
+        /**
+         * Calculates the absolute value of a number.
+         * @param number The number to get the absolute value of.
+         */
+        abs(number: any): number;
+
+        /**
+         * Calculates the standard deviation of the numbers in the given list and returns the result.
+         *
+         * @param list The value that the standard deviation should be calculated for.
+         */
+        stdDev(list: any): number;
+
+        /**
+         * Generates a random integer number between min and max.
+         * @param min The smallest allowed value.
+         * @param max The largest allowed value.
+         */
+        randomInt(min?: number, max?: number): number;
+
+        /**
+         * Generates a random number between min and max.
+         * @param min The smallest allowed value.
+         * @param max The largest allowed value.
+         */
+        random(min?: number, max?: number): number;
+    };
+
+    /**
+     * Defines a set of experimental functions.
+     */
+    const experiment: {
+        /**
+         * Plays the given animation on the given bot locally.
+         * Reverts back to the original animation when done playing.
+         * @param bot The bot.
+         * @param animation The animation to play.
+         */
+        localFormAnimation(
+            bot: Bot | string,
+            animation: string | number
+        ): LocalFormAnimationAction;
+    };
+}

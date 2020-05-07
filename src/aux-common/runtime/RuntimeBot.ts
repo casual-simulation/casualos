@@ -72,7 +72,7 @@ export interface RuntimeBotsState {
  * @param bot The bot to check.
  */
 export function isRuntimeBot(bot: any): bot is RuntimeBot {
-    if (typeof bot === 'object') {
+    if (!!bot && typeof bot === 'object') {
         return (
             !!bot.id &&
             typeof bot.tags === 'object' &&

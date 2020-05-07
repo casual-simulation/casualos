@@ -1,58 +1,6 @@
-import { parseVersionNumber, buildFormulaLibraryOptions } from './AuxConfig';
+import { parseVersionNumber } from './AuxConfig';
 
 describe('AuxConfig', () => {
-    describe('buildFormulaLibraryOptions()', () => {
-        it('should produce a formula lib config', () => {
-            const config = buildFormulaLibraryOptions({
-                version: 'v1.0.0',
-                versionHash: 'abc',
-            });
-
-            expect(config).toEqual({
-                config: {},
-                version: {
-                    version: 'v1.0.0',
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                    hash: 'abc',
-                },
-            });
-        });
-
-        it('should include device info if specified', () => {
-            const config = buildFormulaLibraryOptions({
-                version: 'v1.0.0',
-                versionHash: 'abc',
-                device: {
-                    supportsVR: true,
-                    supportsAR: false,
-                },
-            });
-
-            expect(config).toEqual({
-                config: {},
-                version: {
-                    version: 'v1.0.0',
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                    hash: 'abc',
-                },
-                device: {
-                    supportsVR: true,
-                    supportsAR: false,
-                },
-            });
-        });
-
-        it('should return null if given null', () => {
-            const config = buildFormulaLibraryOptions(null);
-
-            expect(config).toEqual(null);
-        });
-    });
-
     describe('parseVersionNumber()', () => {
         const cases = [
             ['v1.0.0', { version: 'v1.0.0', major: 1, minor: 0, patch: 0 }],

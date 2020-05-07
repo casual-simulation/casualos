@@ -11,11 +11,10 @@ import {
     hasValue,
     toast,
     StartCheckoutAction,
+    PaymentRequestOptions,
 } from '@casual-simulation/aux-common';
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
 import { loadStripe } from '../../shared/checkout/utils';
-import { remote } from '@casual-simulation/causal-trees';
-import { PaymentRequestOptions } from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 @Component({
     components: {

@@ -39,7 +39,7 @@ export function booleanTagValueTests(
         ['', defaultValue],
         [null, defaultValue],
         [0, defaultValue],
-        ['=false', false],
+        ['=false', defaultValue],
         ['=0', defaultValue],
         ['a', defaultValue],
         [1, defaultValue],
@@ -65,7 +65,7 @@ export function numericalTagValueTests(
         [null, defaultValue],
         [0, 0],
         ['=false', defaultValue],
-        ['=0', 0],
+        ['=0', defaultValue],
         ['a', defaultValue],
         [1, 1],
         [-10, -10],
@@ -75,7 +75,7 @@ export function numericalTagValueTests(
         ['false', defaultValue],
         [true, defaultValue],
         ['true', defaultValue],
-        ['=1', 1],
+        ['=1', defaultValue],
         ['="hello"', defaultValue],
     ];
 
@@ -90,8 +90,8 @@ export function stringTagValueTests(
         ['', ''],
         [null, defaultValue],
         [0, defaultValue],
-        ['=false', defaultValue],
-        ['=0', defaultValue],
+        ['=false', '=false'],
+        ['=0', '=0'],
         ['a', 'a'],
         [1, defaultValue],
         ['1', defaultValue],
@@ -100,8 +100,8 @@ export function stringTagValueTests(
         ['false', defaultValue],
         [true, defaultValue],
         ['true', defaultValue],
-        ['=1', defaultValue],
-        ['="hello"', 'hello'],
+        ['=1', '=1'],
+        ['="hello"', '="hello"'],
     ];
 
     it.each(cases)('should map %s to %s', testFunc);

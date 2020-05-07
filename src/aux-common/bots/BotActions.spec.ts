@@ -6,7 +6,6 @@ import {
     botUpdated,
 } from './BotEvents';
 import uuid from 'uuid/v4';
-import { botCalculationContextActionsTests } from './test/BotActionsTests';
 import { BotsState } from './Bot';
 import { createBot } from './BotCalculations';
 import { breakIntoIndividualEvents } from './BotActions';
@@ -17,8 +16,6 @@ jest.mock('uuid/v4');
 console.error = jest.fn();
 
 describe('BotActions', () => {
-    botCalculationContextActionsTests(uuidMock);
-
     describe('goToDimension()', () => {
         it('should use the first parameter as the dimension if only one argument is provided', () => {
             const event = goToDimension('dimension');

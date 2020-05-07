@@ -6,13 +6,9 @@ import {
     LocalActions,
     BotAction,
     GLOBALS_BOT_ID,
-    convertToCopiableValue,
-    SandboxLibrary,
-    Sandbox,
     BotsState,
     BOT_SPACE_TAG,
     StateUpdatedEvent,
-    PrecalculationManager,
     AuxPartitions,
     AuxPartition,
     PartitionConfig,
@@ -21,11 +17,7 @@ import {
     AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
-import {
-    AuxConfig,
-    buildFormulaLibraryOptions,
-    buildVersionNumber,
-} from './AuxConfig';
+import { AuxConfig, buildVersionNumber } from './AuxConfig';
 import {
     StatusUpdate,
     remapProgressPercent,
@@ -41,13 +33,10 @@ import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
 import { addDebugApi } from '../DebugHelpers';
 
-export interface AuxChannelOptions {
-    sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
-}
+export interface AuxChannelOptions {}
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
-    // protected _precalculation: PrecalculationManager;
     protected _runtime: AuxRuntime;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;

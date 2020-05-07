@@ -1,31 +1,18 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
 import {
-    LocalActions,
-    EvalSandbox,
     BotAction,
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
 } from '@casual-simulation/aux-common';
-import {
-    RemoteAction,
-    SERVER_ROLE,
-    DeviceAction,
-    Action,
-} from '@casual-simulation/causal-trees';
+import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
-        super(user, config, {
-            sandboxFactory: lib => new EvalSandbox(lib),
-        });
-
-        EvalSandbox.messages.subscribe(m => {
-            this._handleStatusUpdated(m);
-        });
+        super(user, config, {});
     }
 
     // TODO: Move this logic to an AuxModule

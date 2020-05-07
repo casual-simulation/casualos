@@ -7,9 +7,10 @@ import {
     createDummyRuntimeBot,
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
-import { RanOutOfEnergyError, createBot, botAdded, botRemoved } from '../bots';
+import { createBot, botAdded, botRemoved } from '../bots';
 import { RealtimeEditMode } from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
+import { RanOutOfEnergyError } from './AuxResults';
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;

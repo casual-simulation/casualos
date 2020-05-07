@@ -1,8 +1,7 @@
 import {
     createPrecalculatedBot,
-    createCalculationContext,
-    createPrecalculatedContext,
     cacheFunction,
+    createPrecalculatedContext,
 } from '.';
 
 describe('BotCalculationContext', () => {

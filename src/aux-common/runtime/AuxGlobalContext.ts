@@ -7,8 +7,6 @@ import {
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
-    ScriptError,
-    RanOutOfEnergyError,
 } from '../bots';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import {
@@ -17,6 +15,9 @@ import {
     RuntimeBotsState,
     RealtimeEditMode,
 } from './RuntimeBot';
+import { AuxVersion } from './AuxVersion';
+import { AuxDevice } from './AuxDevice';
+import { ScriptError, RanOutOfEnergyError } from './AuxResults';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -120,51 +121,6 @@ export interface AuxGlobalContext {
      * @param error The error.
      */
     rejectTask(taskId: number, error: any): void;
-}
-
-/**
- * Contains information about the version of AUX that is running.
- */
-export interface AuxVersion {
-    /**
-     * The commit of the hash that AUX was built from.
-     */
-    hash: string;
-
-    /**
-     * The full version number.
-     */
-    version: string;
-
-    /**
-     * The major portion of the version.
-     */
-    major: number;
-
-    /**
-     * The minor portion of the version.
-     */
-    minor: number;
-
-    /**
-     * The patch portion of the version.
-     */
-    patch: number;
-}
-
-/**
- * Contains information about the device that AUX is running on.
- */
-export interface AuxDevice {
-    /**
-     * Whether the device supports augmented reality features.
-     */
-    supportsAR: boolean;
-
-    /**
-     * Whether the device supports virtual reality features.
-     */
-    supportsVR: boolean;
 }
 
 /**

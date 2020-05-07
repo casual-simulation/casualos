@@ -1,0 +1,9 @@
+*.js
+*.js.map
+*.d.ts
+!gulpfile.js
+!typings/**/*
+docs
+!webpack.common.js
+!webpack.dev.js
+!webpack.prod.js

@@ -74,23 +74,6 @@ export type PortalType =
     | 'universes'
     | string;
 
-/**
- * Defines an interface for a bot in a script/formula.
- *
- * The difference between this and Bot is that the tags
- * are calculated values and raw is the original tag values.
- *
- * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
- */
-export interface ScriptBot {
-    id: string;
-    space?: BotSpace;
-
-    tags: ScriptTags;
-    raw: BotTags;
-    changes: BotTags;
-}
-
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
 }
@@ -196,6 +179,7 @@ export interface BotTags {
     ['auxPortalRotatable']?: number | null;
     ['auxPortalPointerDragMode']?: PortalPointerDragMode;
     ['auxPortalShowFocusPoint']?: boolean | null;
+    ['auxPortalDisableCanvasTransparency']?: boolean;
     ['auxInventoryPortalHeight']?: unknown;
     ['auxInventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
@@ -396,6 +380,11 @@ export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
  * The default portal raycast mode.
  */
 export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
+
+/**
+ * Whether canvas transparency is disabled by default.
+ */
+export const DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY: boolean = false;
 
 /**
  * The default height for workspaces.
@@ -907,6 +896,7 @@ export const KNOWN_TAGS: string[] = [
     `auxPortalPlayerRotationY`,
     'auxPortalPointerDragMode',
     'auxPortalShowFocusPoint',
+    'auxPortalDisableCanvasTransparency',
     'auxInventoryPortalHeight',
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',

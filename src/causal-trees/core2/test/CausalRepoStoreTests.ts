@@ -16,9 +16,9 @@ export default function causalRepoStoreTests(
             const a2 = atom(atomId('a', 2), a1, {});
             const objs = [repoAtom(a1), repoAtom(a2)];
 
-            await store.storeObjects(objs);
+            await store.storeObjects('head', objs);
 
-            const results = await store.getObjects([a2.hash, a1.hash]);
+            const results = await store.getObjects('head', [a2.hash, a1.hash]);
 
             expect(results).toEqual([repoAtom(a2), repoAtom(a1)]);
         });
@@ -32,11 +32,23 @@ export default function causalRepoStoreTests(
             );
             const objs = [commit];
 
-            await store.storeObjects(objs);
+            await store.storeObjects('head', objs);
 
-            const results = await store.getObjects([commit.hash]);
+            const results = await store.getObjects('head', [commit.hash]);
 
             expect(results).toEqual([commit]);
+        });
+
+        it('should only load atoms that were stored with the right head', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const objs = [repoAtom(a1), repoAtom(a2)];
+
+            await store.storeObjects('head', objs);
+
+            const results = await store.getObjects('wrong', [a2.hash, a1.hash]);
+
+            expect(results).toEqual([undefined, undefined]);
         });
     });
 

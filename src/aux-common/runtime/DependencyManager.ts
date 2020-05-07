@@ -5,7 +5,7 @@ import {
     Dependencies,
     AuxScriptExternalDependency,
     tagNameSymbol,
-} from '../Formulas/Dependencies';
+} from './Dependencies';
 import { tagsOnBot, isFormula, hasValue } from '../bots/BotCalculations';
 
 /**
