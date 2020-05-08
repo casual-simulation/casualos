@@ -126,7 +126,12 @@ export class CausalRepoServer {
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
                             await this._stage.addAtoms(event.branch, added);
-                            await storeData(this._store, event.branch, added);
+                            await storeData(
+                                this._store,
+                                event.branch,
+                                null,
+                                added
+                            );
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
@@ -261,7 +266,9 @@ export class CausalRepoServer {
                             oldCommit.index,
                             current ? current.commit : null
                         );
-                        await storeData(this._store, event.branch, [newCommit]);
+                        await storeData(this._store, event.branch, null, [
+                            newCommit,
+                        ]);
                         await repo.reset(newCommit);
                         const after = repo.currentCommit;
 

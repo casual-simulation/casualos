@@ -4,6 +4,8 @@ import {
     CausalRepoObject,
     CausalRepoBranch,
     getObjectHash,
+    CausalRepoIndex,
+    getAtomHashes,
 } from '@casual-simulation/causal-trees/core2';
 
 /**
@@ -12,17 +14,54 @@ import {
 export class MongoDBRepoStore implements CausalRepoStore {
     private _objects: Collection<MongoDBObject>;
     private _heads: Collection<MongoDBHead>;
+    private _indexes: Collection<MongoDBIndex>;
 
     constructor(
         objectsCollection: Collection<MongoDBObject>,
-        headsCollection: Collection<MongoDBHead>
+        headsCollection: Collection<MongoDBHead>,
+        indexesCollection: Collection<MongoDBIndex>
     ) {
         this._objects = objectsCollection;
         this._heads = headsCollection;
+        this._indexes = indexesCollection;
     }
 
     async init() {
         await this._heads.createIndex({ name: 1 }, { unique: true });
+    }
+
+    async loadIndex(
+        head: string,
+        index: CausalRepoIndex
+    ): Promise<CausalRepoObject[]> {
+        let idx = await this._indexes.findOne({
+            _id: index,
+        });
+        if (!idx) {
+            return await this.getObjects(head, getAtomHashes(index.data.atoms));
+        }
+
+        return idx.objects;
+    }
+
+    async storeIndex(
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
+        const idx: MongoDBIndex = {
+            _id: index,
+            objects,
+        };
+
+        await this._indexes.updateOne(
+            { _id: index },
+            {
+                $set: idx,
+            },
+            { upsert: true }
+        );
+        await this.storeObjects(head, objects);
     }
 
     async getObjects(
@@ -134,6 +173,11 @@ export interface MongoDBHead extends CausalRepoBranch {}
 export interface MongoDBObject {
     _id: string;
     object: CausalRepoObject;
+}
+
+export interface MongoDBIndex {
+    _id: string;
+    objects: CausalRepoObject[];
 }
 
 export function escapeRegex(value: string): string {

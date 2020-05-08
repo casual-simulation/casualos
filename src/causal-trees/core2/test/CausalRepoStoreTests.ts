@@ -1,6 +1,13 @@
 import { atom, atomId } from '../Atom2';
-import { repoAtom, repoCommit, repoBranch } from '../CausalRepoObject';
+import {
+    repoAtom,
+    repoCommit,
+    repoBranch,
+    index,
+    branch,
+} from '../CausalRepoObject';
 import { CausalRepoStore } from '../CausalRepoStore';
+import { storeData, loadBranch } from '../CausalRepo';
 
 export default function causalRepoStoreTests(
     createStore: () => CausalRepoStore
@@ -115,5 +122,22 @@ export default function causalRepoStoreTests(
             // should be sorted by name
             expect(branches).toEqual([b4, b3, b1, b2]);
         });
+    });
+
+    it('should be able to load atoms from a store that doesnt implement loadIndex()', async () => {
+        store.loadIndex = null;
+
+        const a1 = atom(atomId('a', 1), null, {});
+        const a2 = atom(atomId('a', 2), null, {});
+        const a3 = atom(atomId('a', 3), null, {});
+        const idx = index(a1, a2, a3);
+
+        await storeData(store, 'abc', idx.data.hash, [idx, a3, a1, a2]);
+
+        const data = await loadBranch(store, branch('abc', idx.data.hash));
+
+        expect(data.atoms).toEqual(
+            new Map([[a1.hash, a1], [a2.hash, a2], [a3.hash, a3]])
+        );
     });
 }

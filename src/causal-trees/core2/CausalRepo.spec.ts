@@ -47,7 +47,7 @@ describe('CausalRepo', () => {
 
             const c = commit('message', new Date(2019, 9, 4), idx, null);
 
-            await storeData(store, 'head', [a1, c, idx, a2]);
+            await storeData(store, 'head', idx.data.hash, [a1, c, idx, a2]);
 
             const loaded = await store.getObjects('head', [
                 a1.hash,
@@ -69,7 +69,12 @@ describe('CausalRepo', () => {
 
             const c = commit('message', new Date(2019, 9, 4), idx, null);
 
-            await storeData(store, 'my-repo/master', [a1, a2, idx, c]);
+            await storeData(store, 'my-repo/master', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
 
             const b = branch('my-repo/master', c);
 
@@ -88,7 +93,11 @@ describe('CausalRepo', () => {
 
             const idx = index(a1, a2);
 
-            await storeData(store, 'my-repo/master', [a1, a2, idx]);
+            await storeData(store, 'my-repo/master', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+            ]);
 
             const b = branch('my-repo/master', idx);
 
@@ -107,7 +116,7 @@ describe('CausalRepo', () => {
 
             const idx = index(a1, a2);
 
-            await storeData(store, 'test', [a1, a2, idx]);
+            await storeData(store, 'test', idx.data.hash, [a1, a2, idx]);
 
             const b: CausalRepoBranch = {
                 type: 'branch',
@@ -126,7 +135,7 @@ describe('CausalRepo', () => {
 
             const idx = index(a1, a2);
 
-            await storeData(store, 'test', [a1, a2, idx]);
+            await storeData(store, 'test', idx.data.hash, [a1, a2, idx]);
 
             const b: CausalRepoBranch = {
                 type: 'branch',
@@ -149,7 +158,12 @@ describe('CausalRepo', () => {
 
             const c = commit('message', new Date(2019, 9, 4), idx, null);
 
-            await storeData(store, 'my-repo/master', [a1, a2, idx, c]);
+            await storeData(store, 'my-repo/master', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
 
             const b = branch('my-repo/master', c);
 
@@ -169,7 +183,12 @@ describe('CausalRepo', () => {
 
             const c = commit('message', new Date(2019, 9, 4), idx, null);
 
-            await storeData(store, 'my-repo/master', [a1, a2, idx, c]);
+            await storeData(store, 'my-repo/master', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
 
             const b = branch('my-repo/master', c);
 
@@ -179,7 +198,11 @@ describe('CausalRepo', () => {
 
             const c2 = commit('other', new Date(2019, 9, 4), idx2, c);
 
-            await storeData(store, 'my-repo/master', [a3, idx2, c2]);
+            await storeData(store, 'my-repo/master', idx.data.hash, [
+                a3,
+                idx2,
+                c2,
+            ]);
 
             const b2 = branch(b.name, c2);
 
@@ -218,7 +241,7 @@ describe('CausalRepo', () => {
 
             const diff = calculateDiff(index, index2);
 
-            await storeData(store, 'head', [a1, a2, a3, a4, otherA3]);
+            await storeData(store, 'head', null, [a1, a2, a3, a4, otherA3]);
 
             const final = await loadDiff(store, diff);
 
@@ -286,16 +309,15 @@ describe('CausalRepo', () => {
             const c1 = commit('message1', new Date(2001, 1, 1), idx1, null);
             const c2 = commit('message2', new Date(2001, 1, 2), idx2, c1);
 
-            await storeData(store, 'head', [
+            await storeData(store, 'head', idx1.data.hash, [a1, a2, idx1]);
+            await storeData(store, 'head', idx2.data.hash, [
                 a1,
                 a2,
                 a3,
                 a4,
-                idx1,
                 idx2,
-                c1,
-                c2,
             ]);
+            await storeData(store, 'head', null, [c1, c2]);
 
             const commits = await listCommits(store, c2.hash);
 
@@ -315,7 +337,14 @@ describe('CausalRepo', () => {
 
             const c2 = commit('commit', new Date(1900, 1, 1), idx2, null);
 
-            await storeData(store, 'head', [a1, a2, a3, a4, idx2, c2]);
+            await storeData(store, 'head', idx2.data.hash, [
+                a1,
+                a2,
+                a3,
+                a4,
+                idx2,
+                c2,
+            ]);
 
             const commit1: CommitData = null;
             const commit2 = await loadCommit(store, 'head', c2);
@@ -338,7 +367,14 @@ describe('CausalRepo', () => {
 
             const c2 = commit('commit', new Date(1900, 1, 1), idx2, null);
 
-            await storeData(store, 'head', [a1, a2, a3, a4, idx2, c2]);
+            await storeData(store, 'head', idx2.data.hash, [
+                a1,
+                a2,
+                a3,
+                a4,
+                idx2,
+                c2,
+            ]);
 
             const commit1 = await loadCommit(store, 'head', c2);
             const commit2: CommitData = null;
@@ -363,16 +399,15 @@ describe('CausalRepo', () => {
             const c1 = commit('commit1', new Date(1900, 1, 1), idx1, null);
             const c2 = commit('commit2', new Date(1900, 1, 1), idx2, null);
 
-            await storeData(store, 'head', [
+            await storeData(store, 'head', idx1.data.hash, [a1, a2, idx1]);
+            await storeData(store, 'head', idx2.data.hash, [
                 a1,
                 a2,
                 a3,
                 a4,
-                idx1,
-                c1,
                 idx2,
-                c2,
             ]);
+            await storeData(store, 'head', null, [c1, c2]);
 
             const commit1 = await loadCommit(store, 'head', c1);
             const commit2 = await loadCommit(store, 'head', c2);
@@ -398,7 +433,7 @@ describe('CausalRepo', () => {
             store = new MemoryCausalRepoStore();
             repo = new CausalRepo(store);
 
-            await storeData(store, 'master', [idx, a1, a2]);
+            await storeData(store, 'master', idx.data.hash, [idx, a1, a2]);
         });
 
         it('should start without a head', () => {
@@ -684,7 +719,7 @@ describe('CausalRepo', () => {
                 );
                 const b = branch('master', prevCommit);
 
-                await storeData(store, 'master', [prevCommit]);
+                await storeData(store, 'master', null, [prevCommit]);
                 await store.saveBranch(b);
                 await repo.checkout('master');
                 const b1 = atom(atomId('b', 1), null, {});
@@ -715,7 +750,7 @@ describe('CausalRepo', () => {
                 );
                 const b = branch('master', prevCommit);
 
-                await storeData(store, 'master', [prevCommit]);
+                await storeData(store, 'master', null, [prevCommit]);
                 await store.saveBranch(b);
                 await repo.checkout('master');
 
@@ -742,7 +777,7 @@ describe('CausalRepo', () => {
                 );
                 const b = branch('master', prevCommit);
 
-                await storeData(store, 'master', [prevCommit]);
+                await storeData(store, 'master', null, [prevCommit]);
                 await store.saveBranch(b);
                 await repo.checkout('master');
 
@@ -759,7 +794,7 @@ describe('CausalRepo', () => {
         describe('reset()', () => {
             it('should throw if there is no current head', async () => {
                 const c1 = commit('commit', new Date(1900, 1, 1), idx, null);
-                await storeData(store, 'master', [c1]);
+                await storeData(store, 'master', null, [c1]);
 
                 const promise = repo.reset(c1.hash);
                 await expect(promise).rejects.toThrow();
@@ -767,7 +802,7 @@ describe('CausalRepo', () => {
 
             it('should move the current branch to point to the given commit hash', async () => {
                 const c1 = commit('commit', new Date(1900, 1, 1), idx, null);
-                await storeData(store, 'master', [c1]);
+                await storeData(store, 'master', null, [c1]);
 
                 const b = branch('master', idx);
 

@@ -888,9 +888,11 @@ export class Server {
         const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
         const objectsCollection = db.collection('objects');
         const headsCollection = db.collection('heads');
+        const indexesCollection = db.collection('indexes');
         const mongoStore = new MongoDBRepoStore(
             objectsCollection,
-            headsCollection
+            headsCollection,
+            indexesCollection
         );
         await mongoStore.init();
 
