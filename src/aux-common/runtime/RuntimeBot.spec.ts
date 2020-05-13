@@ -22,6 +22,7 @@ describe('RuntimeBot', () => {
     let manager: RuntimeBotInterface;
     let updateTagMock: jest.Mock;
     let getListenerMock: jest.Mock;
+    let getRawValueMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -51,11 +52,16 @@ describe('RuntimeBot', () => {
         getListenerMock = jest.fn(
             (bot: CompiledBot, tag: string) => bot.listeners[tag]
         );
+
+        getRawValueMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
+            return bot.tags[tag];
+        });
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
                 return bot.values[tag];
             },
+            getRawValue: getRawValueMock,
             getListener: getListenerMock,
         };
 
@@ -323,6 +329,11 @@ describe('RuntimeBot', () => {
                 'otherNewTag',
             ]);
         });
+
+        it('should get the raw value from the manager', () => {
+            const fun = script.raw.fun;
+            expect(manager.getRawValue).toHaveBeenCalledWith(precalc, 'fun');
+        });
     });
 
     describe('listeners', () => {
@@ -336,7 +347,6 @@ describe('RuntimeBot', () => {
 
     describe('clear_changes', () => {
         it('should be able to clear changes from the script bot', () => {
-            updateTagMock.mockReturnValue(RealtimeEditMode.Immediate);
             script.tags.abc = 123;
             script.tags.def = 'hello';
 

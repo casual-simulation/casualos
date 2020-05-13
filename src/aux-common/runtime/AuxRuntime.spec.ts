@@ -845,6 +845,39 @@ describe('AuxRuntime', () => {
             });
         });
 
+        it('should update raw tags', () => {
+            const update1 = runtime.botsAdded([
+                createBot('test', {
+                    abc: 'def',
+                    script: '@create(bot)',
+                }),
+            ]);
+
+            const update2 = runtime.botsUpdated([
+                {
+                    bot: createBot('test', {
+                        abc: 'def',
+                        other: true,
+                    }),
+                    tags: ['other'],
+                },
+            ]);
+
+            uuidMock.mockReturnValueOnce('test2');
+            const result = runtime.shout('script');
+
+            expect(result.actions).toEqual([
+                botAdded(
+                    createBot('test2', {
+                        abc: 'def',
+                        script: '@create(bot)',
+                        auxCreator: 'test',
+                        other: true,
+                    })
+                ),
+            ]);
+        });
+
         describe('numbers', () => {
             it('should calculate number values', () => {
                 runtime.botsAdded([
