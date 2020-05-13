@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.2
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where updating a bot would not update its raw tags.
+
 ## V1.1.1
 
 ### Date: 5/7/2020
