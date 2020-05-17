@@ -72,7 +72,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
 
         if (label) {
             if (!this.text3D) {
-                this.text3D = new Text3D(botWidth * 100);
+                this.text3D = new Text3D(botWidth);
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
@@ -108,7 +108,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
-            this.text3D.setPositionForBounds(this.bot3D.boundingBox);
+            this.text3D.setPositionForObject(this.bot3D.scaleContainer);
 
             if (this._oldLabel === undefined) {
                 this._oldLabel = label;
@@ -125,7 +125,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
                 this.bot3D.forceComputeBoundingObjects();
-                this.text3D.setPositionForBounds(this.bot3D.boundingBox);
+                this.text3D.setPositionForObject(this.bot3D.scaleContainer);
             }
         }
     }
@@ -152,7 +152,8 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
 
     shouldUpdateWorldBubbleThisFrame(): boolean {
         // Should update word bubble every frame if the label is in auto size mode.
-        return this._autoSizeMode;
+        let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
+        return this._autoSizeMode || rendered;
     }
 
     private _updateLabelSize(calc: BotCalculationContext) {

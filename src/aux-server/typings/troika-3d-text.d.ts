@@ -1,10 +1,10 @@
 declare module 'troika-3d-text/dist/textmesh-standalone.esm' {
-    import { Object3D, Color, Material } from 'three';
+    import { Color, Material, Mesh } from 'three';
 
     /**
      * Defines a class that is able to render some text as a Three.js mesh.
      */
-    export class TextMesh extends Object3D {
+    export class TextMesh extends Mesh {
         /**
          * The text rendered by the mesh.
          */
@@ -61,7 +61,7 @@ declare module 'troika-3d-text/dist/textmesh-standalone.esm' {
         font: string;
 
         /**
-         * The font size.
+         * The em-height at which to render the font, in local world units.
          *
          * Defaults to 0.1.
          */
@@ -126,6 +126,6 @@ declare module 'troika-3d-text/dist/textmesh-standalone.esm' {
         /**
          * Updates the mesh with the correct font  color, and more.
          */
-        sync(): void;
+        sync(callback?: Function): void;
     }
 }
