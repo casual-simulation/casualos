@@ -112,17 +112,12 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
 
             if (this._oldLabel === undefined) {
                 this._oldLabel = label;
-                this.text3D.setPositionForBounds(this.bot3D.boundingBox);
             }
         } else {
             this.disposeText3D();
         }
 
         this._oldLabel = label;
-
-        if (label) {
-            this.text3D.setPositionForBounds(this.bot3D.boundingBox);
-        }
     }
 
     frameUpdate(calc: BotCalculationContext): void {
@@ -209,16 +204,14 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                     'auxLabelColor'
                 );
 
-                // Don't convert sRGB to linear
-                // because labels ignore the renderer's output encoding.
-                let color = new Color(calculatedValue);
+                let color = buildSRGBColor(calculatedValue);
                 if (color) {
                     this.text3D.setColor(color);
                 } else {
                     this.text3D.setColor(new Color('#000'));
                 }
             } else {
-                let color = new Color(<string>labelColor);
+                let color = buildSRGBColor(<string>labelColor);
                 if (color) {
                     this.text3D.setColor(color);
                 } else {
