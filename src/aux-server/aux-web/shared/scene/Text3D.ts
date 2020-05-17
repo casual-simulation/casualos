@@ -26,6 +26,7 @@ import {
     BotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { TextMesh } from 'troika-3d-text/dist/textmesh-standalone.esm';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -50,16 +51,12 @@ export class Text3D extends Object3D {
     public static readonly defaultWidth: number = 200;
     public static readonly extraSpace: number = 0.001;
     public static readonly floatingExtraSpace: number = 0.3;
-    public static readonly defaultScale: number = 0.01;
+    public static readonly defaultScale: number = 1;
 
     public currentWidth: number = 200;
 
-    // The text geometry created with 'three-bmfont-text'
-    // To change text, run textGeometry.update and include the proper options.
-    private _geometry: TextGeometry;
-
-    // The text mesh that is holding onto the text geometry that gets rendered by three.
-    private _mesh: Mesh;
+    // The TextMesh that this object wraps.
+    private _mesh: TextMesh;
 
     // the text that was last set on this text3d.
     private _unprocessedText: string;
@@ -120,31 +117,17 @@ export class Text3D extends Object3D {
 
         this.currentWidth = width;
 
-        this._geometry = createBMFont({
-            font: font.dataPath,
-            text: '',
-            flipY: true,
-            align: 'center',
-            width: width,
-        });
+        this._mesh = new TextMesh();
 
-        var material = new RawShaderMaterial(
-            sdfShader({
-                map: texture,
-                side: DoubleSide,
-                transparent: true,
-                // depthTest: false,
-                // depthWrite: false,
-                color: buildSRGBColor(0, 0, 0),
-            })
-        );
+        this._mesh.text = '';
+        this._mesh.textAlign = 'center';
+        this._mesh.maxWidth = width;
+        this._mesh.anchorX = 'center';
+        this._mesh.anchorY = 'middle';
 
-        this._mesh = new Mesh(this._geometry, material);
         this.add(this._mesh);
         this.setScale(Text3D.defaultScale);
 
-        // Rotate the text mesh so that it is upright when rendered.
-        this._mesh.rotateX(ThreeMath.degToRad(180));
         this._mesh.position.set(0, 0, 0);
 
         this.updateBoundingBox();
@@ -183,9 +166,10 @@ export class Text3D extends Object3D {
         this.parent.localToWorld(worldPos);
 
         this.position.copy(pos);
+        DebugObjectManager.drawPoint(worldPos, 1, new Color(0, 255, 0), 5);
         this._mesh.rotation.copy(
             new Euler(
-                rotation.x + ThreeMath.degToRad(90),
+                rotation.x + ThreeMath.degToRad(-90),
                 rotation.y,
                 rotation.z
             )
@@ -220,8 +204,8 @@ export class Text3D extends Object3D {
      */
     public updateBoundingBox(): void {
         this.updateMatrixWorld(true);
-        this._geometry.computeBoundingBox();
-        let box = this._geometry.boundingBox.clone();
+        let box = new Box3();
+        box.expandByObject(this._mesh);
         box.min.z = -1;
         box.max.z = 1;
 
@@ -232,8 +216,6 @@ export class Text3D extends Object3D {
         if (!this._boundingBox) {
             this._boundingBox = new Box3();
         }
-
-        this._boundingBox.copy(box);
     }
 
     /**
@@ -254,10 +236,9 @@ export class Text3D extends Object3D {
 
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
-            this._geometry.update(<any>(<Partial<TextGeometryOptions>>{
-                text: text.toString(),
-                align: alignment || 'center',
-            }));
+            this._mesh.text = text;
+            this._mesh.textAlign = alignment;
+            this._mesh.sync();
             this.updateBoundingBox();
         } else {
             // Disable the text's rendering.
@@ -270,26 +251,7 @@ export class Text3D extends Object3D {
      * @param color The color value either in string or THREE.Color.
      */
     public setColor(color: Color) {
-        var material = <RawShaderMaterial>this._mesh.material;
-        material.uniforms.color.value = color;
-    }
-
-    /**
-     * Set the options for the text geometry used by this text 3d.
-     * @param opt The options to set on the text geometry.
-     */
-    public setOptions(opt: TextGeometryOptions) {
-        this._geometry.update(opt);
-        this._unprocessedText = opt.text;
-
-        if (opt.text) {
-            // Text has value, enable the mesh.
-            this.visible = true;
-            this.updateBoundingBox();
-        } else {
-            // Disable the text's rendering.
-            this.visible = false;
-        }
+        this._mesh.color = color;
     }
 
     /**
