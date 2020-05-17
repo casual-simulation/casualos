@@ -6,7 +6,6 @@ import {
     getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
 } from '@casual-simulation/aux-common';
-import { Text3D } from '../Text3D';
 import { calculateScale } from '../SceneUtils';
 
 export class ScaleDecorator extends AuxBot3DDecoratorBase {
