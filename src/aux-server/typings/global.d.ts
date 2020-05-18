@@ -34,6 +34,16 @@ declare module '*.pem' {
     export default content;
 }
 
+declare module '*.ttf' {
+    const url: string;
+    export default url;
+}
+
+declare module '*.otf' {
+    const url: string;
+    export default url;
+}
+
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 
 declare module 'downloadjs' {
