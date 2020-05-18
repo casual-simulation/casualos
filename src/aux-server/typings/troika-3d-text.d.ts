@@ -127,5 +127,10 @@ declare module 'troika-3d-text/dist/textmesh-standalone.esm' {
          * Updates the mesh with the correct font  color, and more.
          */
         sync(callback?: Function): void;
+
+        /**
+         * Disposes the 3D text.
+         */
+        dispose(): void;
     }
 }

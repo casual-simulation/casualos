@@ -296,9 +296,15 @@ export class Text3D extends Object3D {
         this._mesh.sync(() => this._onSync());
     }
 
-    public dispose(): void {}
+    public dispose(): void {
+        this._mesh.dispose();
+        this._mesh = null;
+    }
 
     private _onSync() {
+        if (!this._mesh) {
+            return;
+        }
         this.updateBoundingBox();
         this._renderedThisFrame = true;
     }
