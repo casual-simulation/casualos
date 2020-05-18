@@ -15,21 +15,13 @@ import {
     Quaternion,
 } from 'three';
 
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
-import createBMFont, {
-    TextGeometry,
-    TextGeometryOptions,
-} from 'three-bmfont-text';
-import { calculateAnchorPosition, buildSRGBColor } from './SceneUtils';
 import {
     BotLabelAnchor,
     BotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { TextMesh } from 'troika-3d-text/dist/textmesh-standalone.esm';
-
-var sdfShader = require('three-bmfont-text/shaders/sdf');
+import Roboto from '../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export interface Text3DFont {
     /**
@@ -107,27 +99,8 @@ export class Text3D extends Object3D {
      * Create text 3d.
      * @param font what font to use for the text3d.
      */
-    constructor(width?: number, font?: Text3DFont) {
+    constructor(width?: number) {
         super();
-
-        if (!font)
-            font = { dataPath: robotoFont, texturePath: robotoTexturePath };
-
-        if (!Text3D.FontTextures[font.texturePath]) {
-            // Load font texture and store it for other 3d texts to use.
-            Text3D.FontTextures[font.texturePath] = new TextureLoader().load(
-                font.texturePath
-            );
-        }
-
-        var texture = Text3D.FontTextures[font.texturePath];
-
-        // Modify filtering of texture for optimal SDF rendering.
-        // This effectively disables the use of any mip maps, allowing the SDF shader to continue
-        // to draw the text when view from a long distance. Otherwise, the SDF shader tends to 'fizzle'
-        // out when the text is viewed from long distances.
-        texture.minFilter = LinearFilter;
-        texture.magFilter = LinearFilter;
 
         if (width === undefined || width < Text3D.defaultWidth) {
             width = Text3D.defaultWidth;
@@ -139,6 +112,7 @@ export class Text3D extends Object3D {
 
         this._mesh.text = '';
         this._mesh.textAlign = 'center';
+        this._mesh.font = Roboto;
         this._mesh.fontSize = 0.325;
         this._mesh.maxWidth = width;
         this._mesh.anchorX = 'center';
@@ -163,17 +137,7 @@ export class Text3D extends Object3D {
         const worldScale = new Vector3();
         obj.matrixWorld.decompose(tempPos, tempRot, worldScale);
 
-        const [pos, rotation] = this._calculateAnchorPosition(
-            worldScale
-            // targetLocalBounds,
-            // this._anchor,
-            // this,
-            // thisLocalBounds,
-            // Text3D.defaultScale,
-            // this._anchor === 'floating'
-            //     ? Text3D.floatingExtraSpace
-            //     : Text3D.extraSpace
-        );
+        const [pos, rotation] = this._calculateAnchorPosition(worldScale);
 
         const worldPos = pos.clone();
         this.parent.localToWorld(worldPos);
@@ -275,6 +239,15 @@ export class Text3D extends Object3D {
      */
     public setColor(color: Color) {
         this._mesh.color = color;
+    }
+
+    /**
+     * Sets the text's font.
+     * @param fontUrl The URL to the font file that should be used. Supports .otf and .woff.
+     */
+    public setFont(fontUrl: string) {
+        this._mesh.font = fontUrl;
+        this._mesh.sync(() => this._onSync());
     }
 
     /**

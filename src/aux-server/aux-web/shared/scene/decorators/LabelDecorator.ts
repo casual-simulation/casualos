@@ -10,6 +10,8 @@ import {
     BotLabelAnchor,
     getBotScale,
     getBotLabelAlignment,
+    calculateStringTagValue,
+    DEFAULT_LABEL_FONT_ADDRESS,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -17,6 +19,8 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
+import NotoSansKR from '../../public/fonts/NotoSansKR/NotoSansKR-Regular.otf';
+import Roboto from '../../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export class LabelDecorator extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
@@ -101,6 +105,30 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                 this._autoSizeMode = mode === 'auto';
             } else {
                 this._autoSizeMode = false;
+            }
+
+            let fontAddress = calculateStringTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxLabelFontAddress',
+                DEFAULT_LABEL_FONT_ADDRESS
+            );
+
+            if (fontAddress) {
+                let url: URL;
+                try {
+                    url = new URL(fontAddress);
+                } catch {
+                    switch (fontAddress) {
+                        case 'noto-sans-kr':
+                            url = new URL(NotoSansKR, location.origin);
+                            break;
+                        default:
+                            url = new URL(Roboto, location.origin);
+                    }
+                }
+
+                this.text3D.setFont(url.href);
             }
 
             this._updateLabelSize(calc);
