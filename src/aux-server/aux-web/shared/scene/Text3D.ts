@@ -212,7 +212,11 @@ export class Text3D extends Object3D {
      */
     public setText(text: string, alignment?: BotLabelAlignment) {
         // Ignore if the text is already set to provided value.
-        if (this._unprocessedText === text) return;
+        if (
+            this._unprocessedText === text &&
+            this._mesh.textAlign === alignment
+        )
+            return;
 
         this._unprocessedText = text;
 
