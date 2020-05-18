@@ -167,41 +167,6 @@
                         </div>
                     </template>
                 </div>
-                <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
-                    <div class="bot-section-holder-inner">
-                        <div
-                            v-for="(tagWhitelist, index) in getTagWhitelist()"
-                            :key="index"
-                            class="bot-section"
-                        >
-                            <md-button
-                                v-if="isWhitelistTagActive(index)"
-                                class="bot-section active"
-                                @click="toggleWhitelistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
-                                <span v-else-if="isSpecialTag(tagWhitelist)">
-                                    {{ tagWhitelist }}</span
-                                >
-                                <span v-else>{{ getVisualTagWhitelist(index) }}</span>
-                            </md-button>
-                            <md-button
-                                v-else
-                                class="bot-section inactive"
-                                @click="toggleWhitelistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
-                                <span v-else-if="isSpecialTag(tagWhitelist)">
-                                    {{ tagWhitelist }} {{ getWhitelistCount(index) }}</span
-                                >
-                                <span v-else
-                                    >{{ getVisualTagWhitelist(index) }}
-                                    {{ getWhitelistCount(index) }}</span
-                                >
-                            </md-button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
                 <tag-value-editor
