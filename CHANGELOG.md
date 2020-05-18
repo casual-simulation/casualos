@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.3
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed inconsistent menu item names in Builder.
+
 ## V1.1.2
 
 ### Date: 5/18/2020
