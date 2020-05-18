@@ -714,6 +714,10 @@ export class AuxRuntime
         return this._updateTag(bot, tag, false);
     }
 
+    getRawValue(bot: CompiledBot, tag: string): any {
+        return bot.tags[tag];
+    }
+
     getListener(bot: CompiledBot, tag: string): CompiledBotListener {
         const listener = bot.listeners[tag];
         if (listener) {

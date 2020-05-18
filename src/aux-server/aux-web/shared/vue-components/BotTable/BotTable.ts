@@ -87,9 +87,6 @@ export default class BotTable extends Vue {
     dimension: string;
 
     @Prop({ required: true })
-    showExitSheet: boolean;
-
-    @Prop({ required: true })
     showNewBot: boolean;
 
     tags: string[] = [];
@@ -122,14 +119,6 @@ export default class BotTable extends Vue {
     deletedBotId: string = '';
     showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
-
-    get exitButtonText() {
-        if (this.showExitSheet) {
-            return 'Close sheet';
-        } else {
-            return `Open ${this.dimension} in auxPlayer`;
-        }
-    }
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {

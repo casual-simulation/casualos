@@ -11,10 +11,6 @@
                     <!-- New Tag and New Bot buttons -->
                     <div class="bot-cell header">
                         <div v-show="!isMakingNewTag">
-                            <md-button class="md-icon-button exit-sheet" @click="exitSheet()">
-                                <md-icon>cancel_presentation</md-icon>
-                                <md-tooltip>{{ exitButtonText }}</md-tooltip>
-                            </md-button>
                             <!-- keep place here so it shows up as empty-->
                             <md-button
                                 v-show="hasBots"
@@ -46,8 +42,8 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div v-if="showID" class="bot-cell header" @click="searchForTag(null)">
-                        <bot-tag tag="id" :allowCloning="true"></bot-tag>
+                    <div v-if="showID" class="bot-cell header">
+                        <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
                     <!-- Read only tags -->
@@ -167,41 +163,12 @@
                         </div>
                     </template>
                 </div>
-                <div class="bot-section-holder-outer" v-if="getTagWhitelist().length > 0">
-                    <div class="bot-section-holder-inner">
-                        <div
-                            v-for="(tagWhitelist, index) in getTagWhitelist()"
-                            :key="index"
-                            class="bot-section"
-                        >
-                            <md-button
-                                v-if="isWhitelistTagActive(index)"
-                                class="bot-section active"
-                                @click="toggleWhitelistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
-                                <span v-else-if="isSpecialTag(tagWhitelist)">
-                                    {{ tagWhitelist }}</span
-                                >
-                                <span v-else>{{ getVisualTagWhitelist(index) }}</span>
-                            </md-button>
-                            <md-button
-                                v-else
-                                class="bot-section inactive"
-                                @click="toggleWhitelistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagWhitelist)"> {{ tagWhitelist }}</span>
-                                <span v-else-if="isSpecialTag(tagWhitelist)">
-                                    {{ tagWhitelist }} {{ getWhitelistCount(index) }}</span
-                                >
-                                <span v-else
-                                    >{{ getVisualTagWhitelist(index) }}
-                                    {{ getWhitelistCount(index) }}</span
-                                >
-                            </md-button>
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="bot-table-middle">
+                <md-button class="md-fab exit-sheet" @click="exitSheet()">
+                    <md-icon>web_asset</md-icon>
+                    <md-tooltip>Page Portal</md-tooltip>
+                </md-button>
             </div>
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
                 <tag-value-editor

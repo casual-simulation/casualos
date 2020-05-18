@@ -12,22 +12,16 @@ import {
     LinearFilter,
     Euler,
     Matrix4,
+    Quaternion,
 } from 'three';
 
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
-import createBMFont, {
-    TextGeometry,
-    TextGeometryOptions,
-} from 'three-bmfont-text';
-import { calculateAnchorPosition, buildSRGBColor } from './SceneUtils';
 import {
     BotLabelAnchor,
     BotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-
-var sdfShader = require('three-bmfont-text/shaders/sdf');
+import { TextMesh } from 'troika-3d-text/dist/textmesh-standalone.esm';
+import Roboto from '../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export interface Text3DFont {
     /**
@@ -47,19 +41,21 @@ export class Text3D extends Object3D {
         [texturePath: string]: Texture;
     } = {};
 
-    public static readonly defaultWidth: number = 200;
     public static readonly extraSpace: number = 0.001;
-    public static readonly floatingExtraSpace: number = 0.3;
-    public static readonly defaultScale: number = 0.01;
+    public static readonly floatingExtraSpace: number = 0.4;
+
+    /**
+     * Number chosen by expirementation to place 5-6 characters on a bot.
+     */
+    public static readonly defaultFontSize: number = 0.325;
+    public static readonly defaultWidth: number = Text3D.defaultFontSize * 6;
+
+    public static readonly defaultScale: number = 1;
 
     public currentWidth: number = 200;
 
-    // The text geometry created with 'three-bmfont-text'
-    // To change text, run textGeometry.update and include the proper options.
-    private _geometry: TextGeometry;
-
-    // The text mesh that is holding onto the text geometry that gets rendered by three.
-    private _mesh: Mesh;
+    // The TextMesh that this object wraps.
+    private _mesh: TextMesh;
 
     // the text that was last set on this text3d.
     private _unprocessedText: string;
@@ -70,7 +66,18 @@ export class Text3D extends Object3D {
     // The anchor position for the text 3d.
     private _anchor: BotLabelAnchor = 'top';
 
+    private _renderedThisFrame: boolean = false;
+
     // The anchor position for the text 3d.
+
+    /**
+     * Gets whether this Text3D has been rendered since the last time this property was checked.
+     */
+    renderedThisFrame() {
+        const rendered = this._renderedThisFrame;
+        this._renderedThisFrame = false;
+        return rendered;
+    }
 
     /**
      * the text that was last set on this text3d.
@@ -92,27 +99,8 @@ export class Text3D extends Object3D {
      * Create text 3d.
      * @param font what font to use for the text3d.
      */
-    constructor(width?: number, font?: Text3DFont) {
+    constructor(width?: number) {
         super();
-
-        if (!font)
-            font = { dataPath: robotoFont, texturePath: robotoTexturePath };
-
-        if (!Text3D.FontTextures[font.texturePath]) {
-            // Load font texture and store it for other 3d texts to use.
-            Text3D.FontTextures[font.texturePath] = new TextureLoader().load(
-                font.texturePath
-            );
-        }
-
-        var texture = Text3D.FontTextures[font.texturePath];
-
-        // Modify filtering of texture for optimal SDF rendering.
-        // This effectively disables the use of any mip maps, allowing the SDF shader to continue
-        // to draw the text when view from a long distance. Otherwise, the SDF shader tends to 'fizzle'
-        // out when the text is viewed from long distances.
-        texture.minFilter = LinearFilter;
-        texture.magFilter = LinearFilter;
 
         if (width === undefined || width < Text3D.defaultWidth) {
             width = Text3D.defaultWidth;
@@ -120,31 +108,19 @@ export class Text3D extends Object3D {
 
         this.currentWidth = width;
 
-        this._geometry = createBMFont({
-            font: font.dataPath,
-            text: '',
-            flipY: true,
-            align: 'center',
-            width: width,
-        });
+        this._mesh = new TextMesh();
 
-        var material = new RawShaderMaterial(
-            sdfShader({
-                map: texture,
-                side: DoubleSide,
-                transparent: true,
-                // depthTest: false,
-                // depthWrite: false,
-                color: buildSRGBColor(0, 0, 0),
-            })
-        );
+        this._mesh.text = '';
+        this._mesh.textAlign = 'center';
+        this._mesh.font = Roboto;
+        this._mesh.fontSize = 0.325;
+        this._mesh.maxWidth = width;
+        this._mesh.anchorX = 'center';
+        this._mesh.anchorY = 'middle';
 
-        this._mesh = new Mesh(this._geometry, material);
         this.add(this._mesh);
         this.setScale(Text3D.defaultScale);
 
-        // Rotate the text mesh so that it is upright when rendered.
-        this._mesh.rotateX(ThreeMath.degToRad(180));
         this._mesh.position.set(0, 0, 0);
 
         this.updateBoundingBox();
@@ -153,42 +129,35 @@ export class Text3D extends Object3D {
     /**
      * Sets the position of the text based on the size of the given bounding box.
      */
-    public setPositionForBounds(bounds: Box3) {
-        if (!bounds || bounds.isEmpty()) {
-            return;
-        }
-
+    public setPositionForObject(obj: Object3D) {
         this.updateBoundingBox();
 
-        const thisLocalBounds = this._boundingBox.clone();
-        const worldToLocal = new Matrix4();
-        worldToLocal.getInverse(this.parent.matrixWorld);
-        thisLocalBounds.applyMatrix4(worldToLocal);
+        const tempPos = new Vector3();
+        const tempRot = new Quaternion();
+        const worldScale = new Vector3();
+        obj.matrixWorld.decompose(tempPos, tempRot, worldScale);
 
-        const targetLocalBounds = bounds.clone();
-        targetLocalBounds.applyMatrix4(worldToLocal);
-
-        const [pos, rotation] = calculateAnchorPosition(
-            targetLocalBounds,
-            this._anchor,
-            this,
-            thisLocalBounds,
-            Text3D.defaultScale,
-            this._anchor === 'floating'
-                ? Text3D.floatingExtraSpace
-                : Text3D.extraSpace
-        );
+        const [pos, rotation] = this._calculateAnchorPosition(worldScale);
 
         const worldPos = pos.clone();
         this.parent.localToWorld(worldPos);
 
         this.position.copy(pos);
-        this._mesh.rotation.copy(
-            new Euler(
-                rotation.x + ThreeMath.degToRad(90),
-                rotation.y,
-                rotation.z
-            )
+        this._mesh.rotation.copy(new Euler(rotation.x, rotation.y, rotation.z));
+
+        DebugObjectManager.drawBox3(
+            this._boundingBox.clone(),
+            new Color(255, 0, 0),
+            3
+        );
+        // DebugObjectManager.drawBox3(targetLocalBounds.clone(), new Color(0, 255, 0), 3);
+        // DebugObjectManager.drawBox3(thisLocalBounds.clone(), new Color(255, 255, 0), 3);
+        DebugObjectManager.drawPoint(pos.clone(), 1, new Color(0, 255, 255), 3);
+        DebugObjectManager.drawPoint(
+            worldPos.clone(),
+            1,
+            new Color(255, 0, 255),
+            3
         );
 
         this.updateBoundingBox();
@@ -220,10 +189,11 @@ export class Text3D extends Object3D {
      */
     public updateBoundingBox(): void {
         this.updateMatrixWorld(true);
-        this._geometry.computeBoundingBox();
-        let box = this._geometry.boundingBox.clone();
-        box.min.z = -1;
-        box.max.z = 1;
+        this._mesh.geometry.computeBoundingSphere();
+        let box = new Box3();
+        this._mesh.geometry.boundingSphere.getBoundingBox(box);
+        // box.min.z = -1;
+        // box.max.z = 1;
 
         // Apply the matrix to the bounding box.
         let matrix = this._mesh.matrixWorld;
@@ -232,7 +202,6 @@ export class Text3D extends Object3D {
         if (!this._boundingBox) {
             this._boundingBox = new Box3();
         }
-
         this._boundingBox.copy(box);
     }
 
@@ -243,7 +212,11 @@ export class Text3D extends Object3D {
      */
     public setText(text: string, alignment?: BotLabelAlignment) {
         // Ignore if the text is already set to provided value.
-        if (this._unprocessedText === text) return;
+        if (
+            this._unprocessedText === text &&
+            this._mesh.textAlign === alignment
+        )
+            return;
 
         this._unprocessedText = text;
 
@@ -254,10 +227,9 @@ export class Text3D extends Object3D {
 
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
-            this._geometry.update(<any>(<Partial<TextGeometryOptions>>{
-                text: text.toString(),
-                align: alignment || 'center',
-            }));
+            this._mesh.text = text;
+            this._mesh.textAlign = alignment;
+            this._mesh.sync(() => this._onSync());
             this.updateBoundingBox();
         } else {
             // Disable the text's rendering.
@@ -270,26 +242,16 @@ export class Text3D extends Object3D {
      * @param color The color value either in string or THREE.Color.
      */
     public setColor(color: Color) {
-        var material = <RawShaderMaterial>this._mesh.material;
-        material.uniforms.color.value = color;
+        this._mesh.color = color;
     }
 
     /**
-     * Set the options for the text geometry used by this text 3d.
-     * @param opt The options to set on the text geometry.
+     * Sets the text's font.
+     * @param fontUrl The URL to the font file that should be used. Supports .otf and .woff.
      */
-    public setOptions(opt: TextGeometryOptions) {
-        this._geometry.update(opt);
-        this._unprocessedText = opt.text;
-
-        if (opt.text) {
-            // Text has value, enable the mesh.
-            this.visible = true;
-            this.updateBoundingBox();
-        } else {
-            // Disable the text's rendering.
-            this.visible = false;
-        }
+    public setFont(fontUrl: string) {
+        this._mesh.font = fontUrl;
+        this._mesh.sync(() => this._onSync());
     }
 
     /**
@@ -326,7 +288,95 @@ export class Text3D extends Object3D {
      */
     public setAnchor(anchor: BotLabelAnchor) {
         this._anchor = anchor;
+
+        if (anchor === 'floating') {
+            this._mesh.anchorX = 'center';
+            this._mesh.anchorY = 'bottom';
+        } else {
+            this._mesh.anchorX = 'center';
+            this._mesh.anchorY = 'middle';
+        }
+
+        this._mesh.sync(() => this._onSync());
     }
 
-    public dispose(): void {}
+    public dispose(): void {
+        this._mesh.dispose();
+        this._mesh = null;
+    }
+
+    private _onSync() {
+        if (!this._mesh) {
+            return;
+        }
+        this.updateBoundingBox();
+        this._renderedThisFrame = true;
+    }
+
+    private _calculateAnchorPosition(scale: Vector3): [Vector3, Euler] {
+        // // Position the mesh some distance above the given object's bounding box.
+        let targetSize = scale;
+        let targetCenter = new Vector3(0, targetSize.y * 0.5, 0);
+
+        const positionMultiplier = 0.5;
+
+        if (this._anchor === 'floating') {
+            //let posOffset = this.container.position.clone().sub(bottomCenter);
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y +
+                    targetSize.y * positionMultiplier +
+                    Text3D.floatingExtraSpace,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+        } else if (this._anchor === 'front') {
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y,
+                targetCenter.z + targetSize.z * positionMultiplier
+            );
+
+            return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
+        } else if (this._anchor === 'back') {
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y,
+                targetCenter.z - targetSize.z * positionMultiplier
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
+        } else if (this._anchor === 'left') {
+            let pos = new Vector3(
+                targetCenter.x + targetSize.x * positionMultiplier,
+                targetCenter.y,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
+        } else if (this._anchor === 'right') {
+            let pos = new Vector3(
+                targetCenter.x - targetSize.x * positionMultiplier,
+                targetCenter.y,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(-90), 0)];
+        } else {
+            // default to top
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y +
+                    targetSize.y * positionMultiplier +
+                    Text3D.extraSpace,
+                targetCenter.z
+            );
+
+            return [
+                pos,
+                new Euler(ThreeMath.degToRad(-90), ThreeMath.degToRad(0), 0),
+            ];
+        }
+    }
 }

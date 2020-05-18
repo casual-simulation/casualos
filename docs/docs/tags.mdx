@@ -380,6 +380,28 @@ The text alignment for the label.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `auxLabelFontAddress`
+
+The address of the font that the label should use.
+
+If the current font does not support a specific character, the character will be displayed as a crossed out box (i.e. `☒`).
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='roboto'>
+    Specifies that the <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> font should be used. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='noto-sans-kr'>
+    Specifies that the <a href="https://fonts.google.com/specimen/Noto+Sans+KR">Noto Sans KR</a> font should be used.
+    This is a font with support for the Korean language.
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the font to be used should be downloaded from the given URL.
+    Currently supports <a href="https://en.wikipedia.org/wiki/Web_Open_Font_Format">WOFF</a> and <a href="https://en.wikipedia.org/wiki/OpenType">OTF</a> fonts.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `auxScale`
 
 <Badges>
