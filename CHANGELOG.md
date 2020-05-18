@@ -13,6 +13,11 @@
             -   `roboto` - Specifies that the Roboto font should be used. (default)
             -   `noto-sans-kr` - Specifies that the Noto Sans KR font should be used. This is a Korean-specific font.
         -   Supports [WOFF](https://en.wikipedia.org/wiki/Web_Open_Font_Format) and [OTF](https://en.wikipedia.org/wiki/OpenType) files.
+    -   Sheet Changes
+        -   Removed the tag filters.
+        -   Moved the "Close Sheet" button to be a floating button that is at the lower right corner of the sheet.
+        -   Changed the "Close Sheet" button icon and changed the tooltip text to "Page Portal".
+        -   Made the `#id` tag not clickable.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where updating a bot would not update its raw tags.
