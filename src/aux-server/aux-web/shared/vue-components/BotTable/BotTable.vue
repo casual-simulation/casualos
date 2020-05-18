@@ -42,8 +42,8 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div v-if="showID" class="bot-cell header" @click="searchForTag(null)">
-                        <bot-tag tag="id" :allowCloning="true"></bot-tag>
+                    <div v-if="showID" class="bot-cell header">
+                        <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
                     <!-- Read only tags -->
