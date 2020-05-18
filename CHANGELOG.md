@@ -18,6 +18,9 @@
         -   Moved the "Close Sheet" button to be a floating button that is at the lower right corner of the sheet.
         -   Changed the "Close Sheet" button icon and changed the tooltip text to "Page Portal".
         -   Made the `#id` tag not clickable.
+    -   Builder Changes
+        -   Renamed the "Sheet" and "Sheet New Tab" menu items to "Sheet Portal" and "Sheet Portal New Tab".
+        -   Made the chat bar not automatically show when opening a menu.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where updating a bot would not update its raw tags.
