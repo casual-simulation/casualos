@@ -55,6 +55,7 @@ import VueShortkey from 'vue-shortkey';
 
 import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
 import '../shared/public/fonts/Roboto/Roboto.css';
+import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
 
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';

@@ -6,6 +6,14 @@
 
 ### Changes:
 
+-   :rocket: Improvements
+
+    -   Added the `#auxLabelFontAddress` tag to allow specifying a custom font for a label.
+        -   Supports any URL and also the following values:
+            -   `roboto` - Specifies that the Roboto font should be used. (default)
+            -   `noto-sans-kr` - Specifies that the Noto Sans KR font should be used. This is a Korean-specific font.
+        -   Supports [WOFF](https://en.wikipedia.org/wiki/Web_Open_Font_Format) and [OTF](https://en.wikipedia.org/wiki/OpenType) files.
+
 -   :bug: Bug Fixes
     -   Fixed an issue where updating a bot would not update its raw tags.
 

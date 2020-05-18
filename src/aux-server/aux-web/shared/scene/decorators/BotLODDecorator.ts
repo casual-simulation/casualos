@@ -23,7 +23,6 @@ import {
     ON_ANY_MIN_LOD_ENTER_ACTION_NAME,
     ON_ANY_MAX_LOD_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import { Text3D } from '../Text3D';
 import { calculateScale, percentOfScreen } from '../SceneUtils';
 import { Camera } from 'three';
 import { Simulation } from '@casual-simulation/aux-vm';

@@ -10,6 +10,8 @@ import {
     BotLabelAnchor,
     getBotScale,
     getBotLabelAlignment,
+    calculateStringTagValue,
+    DEFAULT_LABEL_FONT_ADDRESS,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -17,6 +19,8 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
+import NotoSansKR from '../../public/fonts/NotoSansKR/NotoSansKR-Regular.otf';
+import Roboto from '../../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export class LabelDecorator extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
@@ -72,7 +76,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
 
         if (label) {
             if (!this.text3D) {
-                this.text3D = new Text3D(botWidth * 100);
+                this.text3D = new Text3D(botWidth);
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxBot3D scale is etc.
@@ -103,26 +107,45 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                 this._autoSizeMode = false;
             }
 
+            let fontAddress = calculateStringTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxLabelFontAddress',
+                DEFAULT_LABEL_FONT_ADDRESS
+            );
+
+            if (fontAddress) {
+                let url: URL;
+                try {
+                    url = new URL(fontAddress);
+                } catch {
+                    switch (fontAddress) {
+                        case 'noto-sans-kr':
+                            url = new URL(NotoSansKR, location.origin);
+                            break;
+                        default:
+                            url = new URL(Roboto, location.origin);
+                    }
+                }
+
+                this.text3D.setFont(url.href);
+            }
+
             this._updateLabelSize(calc);
             this._updateLabelAnchor(calc);
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
-            this.text3D.setPositionForBounds(this.bot3D.boundingBox);
+            this.text3D.setPositionForObject(this.bot3D.scaleContainer);
 
             if (this._oldLabel === undefined) {
                 this._oldLabel = label;
-                this.text3D.setPositionForBounds(this.bot3D.boundingBox);
             }
         } else {
             this.disposeText3D();
         }
 
         this._oldLabel = label;
-
-        if (label) {
-            this.text3D.setPositionForBounds(this.bot3D.boundingBox);
-        }
     }
 
     frameUpdate(calc: BotCalculationContext): void {
@@ -130,7 +153,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
                 this.bot3D.forceComputeBoundingObjects();
-                this.text3D.setPositionForBounds(this.bot3D.boundingBox);
+                this.text3D.setPositionForObject(this.bot3D.scaleContainer);
             }
         }
     }
@@ -157,7 +180,8 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
 
     shouldUpdateWorldBubbleThisFrame(): boolean {
         // Should update word bubble every frame if the label is in auto size mode.
-        return this._autoSizeMode;
+        let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
+        return this._autoSizeMode || rendered;
     }
 
     private _updateLabelSize(calc: BotCalculationContext) {
@@ -209,16 +233,14 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                     'auxLabelColor'
                 );
 
-                // Don't convert sRGB to linear
-                // because labels ignore the renderer's output encoding.
-                let color = new Color(calculatedValue);
+                let color = buildSRGBColor(calculatedValue);
                 if (color) {
                     this.text3D.setColor(color);
                 } else {
                     this.text3D.setColor(new Color('#000'));
                 }
             } else {
-                let color = new Color(<string>labelColor);
+                let color = buildSRGBColor(<string>labelColor);
                 if (color) {
                     this.text3D.setColor(color);
                 } else {

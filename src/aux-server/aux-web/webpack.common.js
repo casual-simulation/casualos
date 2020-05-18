@@ -93,7 +93,7 @@ module.exports = {
                 ],
             },
             {
-                test: /\.(ttf|woff|woff2)$/,
+                test: /\.(ttf|woff|woff2|otf)$/,
                 use: [
                     {
                         loader: 'file-loader',

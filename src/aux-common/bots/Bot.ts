@@ -110,6 +110,7 @@ export interface BotTags {
     ['auxLabelSizeMode']?: 'auto' | null;
     ['auxLabelPosition']?: BotLabelAnchor | null | string;
     ['auxLabelAlignment']?: BotLabelAlignment | null | string;
+    ['auxLabelFontAddress']?: BotLabelFontAddress;
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
     ['auxFormAnimation']?: string;
@@ -301,6 +302,11 @@ export type BotLabelAnchor =
 export type BotLabelAlignment = 'center' | 'left' | 'right';
 
 /**
+ * Defines the possible label font addresses.
+ */
+export type BotLabelFontAddress = 'roboto' | 'noto-sans-kr' | string;
+
+/**
  * Defines the possible bot orientation modes.
  */
 export type BotOrientationMode =
@@ -380,6 +386,11 @@ export const DEFAULT_ANCHOR_POINT: BotAnchorPoint = 'bottom';
  * The default portal raycast mode.
  */
 export const DEFAULT_PORTAL_POINTER_DRAG_MODE: PortalPointerDragMode = 'world';
+
+/**
+ * The default bot label font address.
+ */
+export const DEFAULT_LABEL_FONT_ADDRESS: BotLabelFontAddress = 'rotobo';
 
 /**
  * Whether canvas transparency is disabled by default.
@@ -926,6 +937,7 @@ export const KNOWN_TAGS: string[] = [
     'auxLabelSizeMode',
     'auxLabelPosition',
     'auxLabelAlignment',
+    'auxLabelFontAddress',
     'auxListening',
     'auxScale',
     'auxScaleX',
