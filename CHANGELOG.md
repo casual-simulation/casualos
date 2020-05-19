@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.4
+
+### Date: 5/18/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where Builder could not be created/updated due to being unable to load .aux files with a version field.
+
 ## V1.1.3
 
 ### Date: 5/18/2020
