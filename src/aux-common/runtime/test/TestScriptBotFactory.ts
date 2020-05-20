@@ -56,6 +56,9 @@ export const testScriptBotInterface: RuntimeBotInterface = {
     getValue(bot: PrecalculatedBot, tag: string) {
         return bot.values[tag];
     },
+    getRawValue(bot: PrecalculatedBot, tag: string) {
+        return bot.tags[tag];
+    },
     getListener(bot: CompiledBot, tag: string) {
         return bot.listeners[tag];
     },

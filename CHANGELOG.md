@@ -1,5 +1,48 @@
 # CasualOS Changelog
 
+## V1.1.4
+
+### Date: 5/18/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where Builder could not be created/updated due to being unable to load .aux files with a version field.
+
+## V1.1.3
+
+### Date: 5/18/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed inconsistent menu item names in Builder.
+
+## V1.1.2
+
+### Date: 5/18/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `#auxLabelFontAddress` tag to allow specifying a custom font for a label.
+        -   Supports any URL and also the following values:
+            -   `roboto` - Specifies that the Roboto font should be used. (default)
+            -   `noto-sans-kr` - Specifies that the Noto Sans KR font should be used. This is a Korean-specific font.
+        -   Supports [WOFF](https://en.wikipedia.org/wiki/Web_Open_Font_Format) and [OTF](https://en.wikipedia.org/wiki/OpenType) files.
+    -   Sheet Changes
+        -   Removed the tag filters.
+        -   Moved the "Close Sheet" button to be a floating button that is at the lower right corner of the sheet.
+        -   Changed the "Close Sheet" button icon and changed the tooltip text to "Page Portal".
+        -   Made the `#id` tag not clickable.
+    -   Builder Changes
+        -   Renamed the "Sheet" and "Sheet New Tab" menu items to "Sheet Portal" and "Sheet Portal New Tab".
+        -   Made the chat bar not automatically show when opening a menu.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where updating a bot would not update its raw tags.
+
 ## V1.1.1
 
 ### Date: 5/7/2020

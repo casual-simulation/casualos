@@ -164,7 +164,7 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return constantTags[<keyof typeof constantTags>key];
             }
-            return Reflect.get(target, key, proxy);
+            return manager.getRawValue(bot, key);
         },
         set(target, key: string, value, receiver) {
             if (key in constantTags) {
@@ -303,6 +303,13 @@ export interface RuntimeBotInterface {
      * @param tag The tag.
      */
     getValue(bot: CompiledBot, tag: string): any;
+
+    /**
+     * Gets the raw value for the given tag on the given bot.
+     * @param bot The bot.
+     * @param tag The tag.
+     */
+    getRawValue(bot: CompiledBot, tag: string): any;
 
     /**
      * Gets the listener for the given bot and tag, resolving any formulas that may be present.

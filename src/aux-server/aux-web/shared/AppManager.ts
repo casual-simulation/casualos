@@ -157,7 +157,7 @@ export class AppManager {
     async uploadState(file: File): Promise<void> {
         const json = await readFileText(file);
         const stored: StoredAux = JSON.parse(json);
-        const value = await getBotsStateFromStoredAux(stored);
+        const value = getBotsStateFromStoredAux(stored);
         await this.simulationManager.primary.helper.addState(value);
     }
 

@@ -36,7 +36,7 @@ import sortBy from 'lodash/sortBy';
 import pick from 'lodash/pick';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
-import { StoredAux } from '../StoredAux';
+import { StoredAux, getBotsStateFromStoredAux } from '../StoredAux';
 import transform from 'lodash/transform';
 import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
 import { tap } from 'rxjs/operators';
@@ -318,7 +318,8 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     async createOrUpdateBuilderBots(builder: string) {
-        let state = JSON.parse(builder);
+        let parsed: StoredAux = JSON.parse(builder);
+        let state = getBotsStateFromStoredAux(parsed);
         const objects = getActiveObjects(state);
         const stateCalc = createPrecalculatedContext(<PrecalculatedBot[]>(
             objects

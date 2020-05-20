@@ -472,7 +472,7 @@ export class PlayerGame extends Game {
 
     private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getBotsStateFromStoredAux(stored);
+        const state = getBotsStateFromStoredAux(stored);
         await sim.helper.addState(state);
     }
 

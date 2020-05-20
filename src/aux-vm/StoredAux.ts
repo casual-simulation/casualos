@@ -11,6 +11,6 @@ export interface StoredAuxVersion1 {
  * Gets the bot state from the given stored causal tree.
  * @param stored The stored tree to load.
  */
-export async function getBotsStateFromStoredAux(stored: StoredAux) {
+export function getBotsStateFromStoredAux(stored: StoredAux) {
     return getUploadState(stored);
 }
