@@ -11,6 +11,7 @@
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
     -   Fixed an issue where using `player.run()` to execute an invalid script would cause other actions to fail.
+    -   Added some extra spacing to labels to help prevent Z-fighting.
 
 ## V1.1.4
 
