@@ -1568,6 +1568,14 @@ describe('AuxRuntime', () => {
 
             expect(events.slice(1)).toEqual([[], [toast('abc')]]);
         });
+
+        it('should not crash if given a run_script that doesnt compile', async () => {
+            runtime.process([runScript('player.toast('), toast('abc')]);
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('abc')]]);
+        });
     });
 
     describe('execute()', () => {
@@ -1594,6 +1602,25 @@ describe('AuxRuntime', () => {
                     },
                 ],
             ]);
+        });
+
+        it('should return the compiler error if the script was unable to be compiled', async () => {
+            const result = runtime.execute('player.toast(');
+
+            await waitAsync();
+
+            expect(result).toEqual({
+                result: undefined,
+                actions: [],
+                errors: [
+                    {
+                        error: expect.any(SyntaxError),
+                        script: 'player.toast(',
+                        bot: null,
+                        tag: null,
+                    },
+                ],
+            });
         });
     });
 

@@ -387,19 +387,23 @@ export class AuxRuntime
                 allowsEditing: true,
             });
         } catch (ex) {
-            this._onErrors.next([
+            let errors = [
                 {
                     error: ex,
                     bot: null,
                     tag: null,
                     script: script,
                 },
-            ]);
+            ] as ScriptError[];
+            this._onErrors.next(errors);
+
+            return {
+                result: undefined,
+                actions: [],
+                errors,
+            };
         }
 
-        if (!fn) {
-            return;
-        }
         return this._batchScriptResults(() => {
             try {
                 return fn();
