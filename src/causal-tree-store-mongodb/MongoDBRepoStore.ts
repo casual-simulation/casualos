@@ -35,7 +35,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
         index: CausalRepoIndex
     ): Promise<CausalRepoObject[]> {
         let idx = await this._indexes.findOne({
-            _id: index,
+            _id: index.data.hash,
         });
         if (!idx) {
             return await this.getObjects(head, getAtomHashes(index.data.atoms));
