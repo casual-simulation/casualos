@@ -335,7 +335,9 @@ export class Text3D extends Object3D {
             let pos = new Vector3(
                 targetCenter.x,
                 targetCenter.y,
-                targetCenter.z + targetSize.z * positionMultiplier
+                targetCenter.z +
+                    targetSize.z * positionMultiplier +
+                    Text3D.extraSpace
             );
 
             return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
@@ -343,13 +345,17 @@ export class Text3D extends Object3D {
             let pos = new Vector3(
                 targetCenter.x,
                 targetCenter.y,
-                targetCenter.z - targetSize.z * positionMultiplier
+                targetCenter.z -
+                    targetSize.z * positionMultiplier -
+                    Text3D.extraSpace
             );
 
             return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
         } else if (this._anchor === 'left') {
             let pos = new Vector3(
-                targetCenter.x + targetSize.x * positionMultiplier,
+                targetCenter.x +
+                    targetSize.x * positionMultiplier +
+                    Text3D.extraSpace,
                 targetCenter.y,
                 targetCenter.z
             );
@@ -357,7 +363,9 @@ export class Text3D extends Object3D {
             return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
         } else if (this._anchor === 'right') {
             let pos = new Vector3(
-                targetCenter.x - targetSize.x * positionMultiplier,
+                targetCenter.x -
+                    targetSize.x * positionMultiplier -
+                    Text3D.extraSpace,
                 targetCenter.y,
                 targetCenter.z
             );
