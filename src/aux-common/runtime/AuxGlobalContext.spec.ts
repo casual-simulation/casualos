@@ -2,6 +2,7 @@ import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
+    removeFromContext,
 } from './AuxGlobalContext';
 import {
     createDummyRuntimeBot,
@@ -42,6 +43,30 @@ describe('AuxGlobalContext', () => {
             addToContext(context, bot1, bot3, bot2);
 
             expect(context.bots).toEqual([bot1, bot2, bot3]);
+        });
+    });
+
+    describe('removeFromContext()', () => {
+        it('should remove the given bot', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
+            addToContext(context, bot1, bot3, bot2);
+
+            removeFromContext(context, bot2);
+
+            expect(context.bots).toEqual([bot1, bot3]);
+        });
+
+        it('should not remove a bot if given a bot that is not in the context', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
+            addToContext(context, bot1, bot3);
+
+            removeFromContext(context, bot2);
+
+            expect(context.bots).toEqual([bot1, bot3]);
         });
     });
 
@@ -128,6 +153,21 @@ describe('AuxGlobalContext', () => {
             // Should still enqueue a bot removed action
             const actions = context.dequeueActions();
             expect(actions).toEqual([botRemoved('test1')]);
+        });
+
+        it('should not remove the bot from the context if the given bot is not in the context', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+            const bot3 = createDummyRuntimeBot('test3');
+            addToContext(context, bot1, bot3);
+
+            context.destroyBot(bot2);
+
+            expect(context.bots).toEqual([bot1, bot3]);
+
+            // Should still enqueue a bot removed action
+            const actions = context.dequeueActions();
+            expect(actions).toEqual([]);
         });
     });
 
