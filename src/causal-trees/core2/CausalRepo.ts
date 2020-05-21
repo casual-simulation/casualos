@@ -19,6 +19,7 @@ import {
     index,
     commit,
     branch,
+    CausalRepoAtom,
 } from './CausalRepoObject';
 import {
     CausalRepoStore,
@@ -61,19 +62,29 @@ export interface CommitData extends IndexData {
 
 /**
  * Stores the given data in the given store.
+ * If given an index, then all the atoms in the given data array
+ * will be stored with the index for quick lookup.
  * @param store The store that the data should be saved in.
  * @param head The head that the data is being stored for.
+ * @param index The index that the data is being stored for.
  * @param data The data to store.
  */
 export async function storeData(
     store: CausalObjectStore,
     head: string,
+    index: string,
     data: Storable[]
 ): Promise<void> {
     let objs: CausalRepoObject[] = [];
+    let atoms: CausalRepoObject[] = [];
     for (let storable of data) {
         if (isAtom(storable)) {
-            objs.push(repoAtom(storable));
+            let atom = repoAtom(storable);
+            if (index) {
+                atoms.push(atom);
+            } else {
+                objs.push(atom);
+            }
         } else if (isAtomIndex(storable)) {
             objs.push(repoIndex(storable));
         } else {
@@ -81,6 +92,9 @@ export async function storeData(
         }
     }
 
+    if (index) {
+        await store.storeIndex(head, index, atoms);
+    }
     await store.storeObjects(head, objs);
 }
 
@@ -150,7 +164,7 @@ export async function loadIndex(
 ): Promise<IndexData> {
     return {
         index: index,
-        atoms: await loadAtomsForHead(store, head, index.data.atoms),
+        atoms: await loadAtomsForHeadOrIndex(store, head, index),
     };
 }
 
@@ -196,13 +210,14 @@ export function applyDiff<T>(weave: Weave<T>, diff: AtomIndexFullDiff) {
  * @param head The head that the atoms should be loaded for.
  * @param hashList The list of atom hashes to load.
  */
-async function loadAtomsForHead(
+async function loadAtomsForHeadOrIndex(
     store: CausalObjectStore,
     head: string,
-    hashList: AtomHashList
+    index: CausalRepoIndex
 ): Promise<Map<string, Atom<any>>> {
-    const hashes = getAtomHashes(hashList);
-    const repoAtoms = await store.getObjects(head, hashes);
+    const repoAtoms = store.loadIndex
+        ? await store.loadIndex(head, index)
+        : await store.getObjects(head, getAtomHashes(index.data.atoms));
 
     const atoms = repoAtoms.map(a => {
         if (a.type !== 'atom') {
@@ -482,15 +497,19 @@ export class CausalRepo {
         if (!this.hasChanges()) {
             return null;
         }
-        const addedAtoms = this.stage.additions;
-        const idx = index(...this.getAtoms());
+        const atoms = this.getAtoms();
+        const idx = index(...atoms);
         const c = commit(
             message,
             time,
             idx,
             this.currentCommit ? this.currentCommit.commit : null
         );
-        await storeData(this._store, this._head.name, [...addedAtoms, idx, c]);
+        await storeData(this._store, this._head.name, idx.data.hash, [
+            ...atoms,
+            idx,
+            c,
+        ]);
         await this._updateHead(c);
         await this._checkoutHead();
 

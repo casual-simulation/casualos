@@ -3,18 +3,42 @@ import {
     CausalRepoBranch,
     CausalRepoObject,
     getObjectHash,
+    CausalRepoIndex,
 } from './CausalRepoObject';
 import sortBy from 'lodash/sortBy';
+import { getAtomHashes } from './AtomIndex';
 
 export class MemoryCausalRepoStore implements CausalRepoStore {
     private _map: Map<string, CausalRepoObject>;
     private _headsMap: Map<string, Map<string, CausalRepoObject>>;
+    private _indexes: Map<string, CausalRepoObject[]>;
     private _branches: CausalRepoBranch[];
 
     constructor() {
         this._map = new Map();
         this._headsMap = new Map();
+        this._indexes = new Map();
         this._branches = [];
+    }
+
+    async loadIndex(
+        head: string,
+        index: CausalRepoIndex
+    ): Promise<CausalRepoObject[]> {
+        let data = this._indexes.get(index.data.hash);
+        if (!data) {
+            return await this.getObjects(head, getAtomHashes(index.data.atoms));
+        }
+        return data.slice();
+    }
+
+    async storeIndex(
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
+        this._indexes.set(index, objects);
+        await this.storeObjects(head, objects);
     }
 
     async getObjects(

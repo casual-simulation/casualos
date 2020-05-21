@@ -6,6 +6,8 @@
 
 ### Changes:
 
+-   :rocket: Improvements
+    -   Improved MongoDB to store all atoms for a commit inside the same document. This should improve loading performance since MongoDB will only need to make 1 lookup per universe instead of 1 lookup per atom per universe.
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
 
