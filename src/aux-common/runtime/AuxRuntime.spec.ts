@@ -1750,6 +1750,55 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([[], [toast('abc')], [toast('abc2')]]);
         });
 
+        it('should handle a bot getting destroyed twice due to a setTimeout() callback', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@setTimeout(() => destroy(this), 100)',
+                    destroy: '@destroy(this)',
+                }),
+            ]);
+            runtime.shout('hello');
+            runtime.shout('destroy');
+
+            await waitAsync();
+
+            expect(events).toEqual([[], [botRemoved('test1')]]);
+
+            jest.advanceTimersByTime(200);
+
+            await waitAsync();
+
+            expect(events).toEqual([[], [botRemoved('test1')], []]);
+        });
+
+        it('should handle a bot getting destroyed twice', async () => {
+            runtime.botsAdded([
+                createBot('test1', {}),
+                createBot('test2', {
+                    destroyBot1: '@destroy("test1")',
+                }),
+            ]);
+            runtime.shout('destroyBot1');
+            runtime.shout('destroyBot1');
+
+            await waitAsync();
+
+            expect(events).toEqual([[botRemoved('test1')], []]);
+        });
+
+        it('should handle a bot destroying itself twice', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    destroy: '@destroy(this);destroy(this)',
+                }),
+            ]);
+            runtime.shout('destroy');
+
+            await waitAsync();
+
+            expect(events).toEqual([[botRemoved('test1')]]);
+        });
+
         describe('bot_added', () => {
             it('should produce an event when a bot is created', async () => {
                 uuidMock.mockReturnValueOnce('uuid');

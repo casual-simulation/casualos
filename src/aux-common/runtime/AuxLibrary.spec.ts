@@ -3347,6 +3347,14 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
         });
 
+        it('should not destroy other bots when destroying a bot that was already removed', () => {
+            library.api.destroy(bot2);
+            library.api.destroy(bot2);
+
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot3, bot4]);
+        });
+
         it('should not destroy all auxCreator bots when given a non-bot object', () => {
             bot1.tags.auxCreator = 'a';
             bot2.tags.auxCreator = 'b';

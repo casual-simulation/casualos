@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.5
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
+
 ## V1.1.4
 
 ### Date: 5/18/2020
