@@ -2159,7 +2159,7 @@ declare global {
          * @param message The message to show.
          * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
          */
-        toast(message: string, duration?: number): ShowToastAction;
+        toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
 
         /**
          *   Play given url's audio

@@ -91,6 +91,7 @@ import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
+import { convertToCopiableValue } from './Utils';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -744,8 +745,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param message The message to show.
      * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
      */
-    function toast(message: string, duration: number = 2) {
-        return addAction(toastMessage(message, duration));
+    function toast(
+        message: string | number | boolean | object | Array<any> | null,
+        duration: number = 2
+    ) {
+        return addAction(
+            toastMessage(convertToCopiableValue(message), duration)
+        );
     }
 
     /**

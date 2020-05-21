@@ -62,7 +62,7 @@ import { CleanupZoneSpec } from './CleanupZoneSpec';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import mapValues from 'lodash/mapValues';
+import { convertToCopiableValue } from './Utils';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -997,35 +997,4 @@ interface CompileOptions {
      * If false, then the script will set the bot's editable value to false for the duration of the script.
      */
     allowsEditing: boolean;
-}
-
-/**
- * Converts the given value to a copiable value.
- * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
- * Non-copiable values are functions and errors.
- * @param value
- */
-export function convertToCopiableValue(value: any): any {
-    if (typeof value === 'function') {
-        return `[Function ${value.name}]`;
-    } else if (value instanceof Error) {
-        return `${value.name}: ${value.message}`;
-    } else if (typeof value === 'object') {
-        if (isRuntimeBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags.toJSON(),
-            };
-        } else if (isBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags,
-            };
-        } else if (Array.isArray(value)) {
-            return value.map(val => convertToCopiableValue(val));
-        } else {
-            return mapValues(value, val => convertToCopiableValue(val));
-        }
-    }
-    return value;
 }

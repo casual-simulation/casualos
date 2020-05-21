@@ -425,7 +425,7 @@ export interface ShellAction extends Action {
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
-    message: string;
+    message: string | number | boolean | object | Array<any> | null;
     duration: number;
 }
 
@@ -1371,7 +1371,10 @@ export function pasteState(
  * Creates a new ShowToastAction.
  * @param message The message to show with the event.
  */
-export function toast(message: string, duration?: number): ShowToastAction {
+export function toast(
+    message: string | number | boolean | object | Array<any> | null,
+    duration?: number
+): ShowToastAction {
     if (duration != null) {
         return {
             type: 'show_toast',

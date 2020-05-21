@@ -1179,6 +1179,19 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(toast('hello, world!'));
                 expect(context.actions).toEqual([toast('hello, world!')]);
             });
+
+            it('should convert bots to copiable values', () => {
+                let action = library.api.player.toast(bot1 as any);
+
+                expect(action).toEqual(
+                    toast({
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    } as any)
+                );
+            });
         });
 
         describe('player.showJoinCode()', () => {

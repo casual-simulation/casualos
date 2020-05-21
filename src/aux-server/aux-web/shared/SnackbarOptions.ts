@@ -3,7 +3,7 @@
  */
 export default interface SnackbarOptions {
     visible: boolean;
-    message: string;
+    message: any;
     duration?: number;
     action?: {
         type: string;
