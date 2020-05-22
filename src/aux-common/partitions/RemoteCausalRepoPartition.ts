@@ -73,6 +73,12 @@ export class RemoteCausalRepoPartitionImpl
     private _user: User;
     private _branch: string;
     private _readOnly: boolean;
+    private _static: boolean;
+
+    /**
+     * Whether the partition is watching the branch.
+     */
+    private _watchingBranch: boolean = false;
 
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
@@ -81,7 +87,7 @@ export class RemoteCausalRepoPartitionImpl
     private: boolean;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
-        return 'immediate';
+        return this._static ? 'delayed' : 'immediate';
     }
 
     get onBotsAdded(): Observable<Bot[]> {
@@ -143,7 +149,11 @@ export class RemoteCausalRepoPartitionImpl
         this._branch = config.branch;
         this._client = client;
         this.private = config.private;
-        this._readOnly = config.readOnly || false;
+        this._static = config.static || false;
+
+        // static implies read only
+        this._readOnly = config.readOnly || this._static || false;
+
         this._synced = false;
     }
 
@@ -172,6 +182,10 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
+        if (this._static) {
+            return [];
+        }
+
         const finalEvents = flatMap(events, e => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
@@ -194,6 +208,42 @@ export class RemoteCausalRepoPartitionImpl
     async init(): Promise<void> {}
 
     connect(): void {
+        if (this._static) {
+            this._requestBranch();
+        } else {
+            this._watchBranch();
+        }
+    }
+
+    /**
+     * Requests the current state from the configured branch.
+     */
+    private _requestBranch() {
+        this._client.getBranch(this._branch).subscribe(atoms => {
+            this._onStatusUpdated.next({
+                type: 'connection',
+                connected: true,
+            });
+            this._onStatusUpdated.next({
+                type: 'authentication',
+                authenticated: true,
+                user: this._user,
+            });
+            this._onStatusUpdated.next({
+                type: 'authorization',
+                authorized: true,
+            });
+
+            this._updateSynced(true);
+            this._applyAtoms(atoms, []);
+        });
+    }
+
+    /**
+     * Subscribes to the configured branch for persistent updates.
+     */
+    private _watchBranch() {
+        this._watchingBranch = true;
         this._sub.add(
             this._client.connection.connectionState.subscribe(state => {
                 const connected = state.connected;
@@ -201,7 +251,6 @@ export class RemoteCausalRepoPartitionImpl
                     type: 'connection',
                     connected: !!connected,
                 });
-
                 if (connected) {
                     this._onStatusUpdated.next({
                         type: 'authentication',
@@ -209,7 +258,6 @@ export class RemoteCausalRepoPartitionImpl
                         user: this._user,
                         info: state.info,
                     });
-
                     this._onStatusUpdated.next({
                         type: 'authorization',
                         authorized: true,
@@ -219,7 +267,6 @@ export class RemoteCausalRepoPartitionImpl
                 }
             })
         );
-
         this._sub.add(
             this._client.watchBranch(this._branch).subscribe(event => {
                 if (!this._synced) {
