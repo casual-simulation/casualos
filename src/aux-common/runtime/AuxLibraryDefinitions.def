@@ -209,6 +209,7 @@ declare type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
+    | UnlockSpaceAction
     | LocalFormAnimationAction;
 
 /**
@@ -1278,6 +1279,27 @@ declare interface ClearSpaceAction {
      * The space to clear.
      */
     space: BotSpace;
+}
+
+/**
+ * Defines an event that unlocks the given space for editing.
+ * Once a space is unlocked, it cannot be locked for the remainder of the session.
+ * 
+ * Only supported for the following spaces:
+ * - admin
+ */
+export interface UnlockSpaceAction {
+    type: 'unlock_space';
+
+    /**
+     * The space to unlock.
+     */
+    space: BotSpace;
+
+    /**
+     * The password to use to unlock the space.
+     */
+    password: string;
 }
 
 /**
@@ -2608,6 +2630,17 @@ declare global {
          * @param action The action to reject.
          */
         reject(action: any): BotAction;
+    };
+
+    /**
+     * Defines a set of functions that manage admin space.
+     */
+    const adminSpace: {
+        /**
+         * Unlocks admin space using the given password.
+         * @param password The password to use to unlock admin space.
+         */
+        unlock(): UnlockSpaceAction;
     };
 
     /**

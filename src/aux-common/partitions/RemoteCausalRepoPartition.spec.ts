@@ -15,6 +15,7 @@ import {
     COMMIT,
     WATCH_COMMITS,
     GET_BRANCH,
+    WATCH_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -25,8 +26,15 @@ import {
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
-import { botAdded, createBot, botUpdated, Bot, UpdatedBot } from '../bots';
-import { AuxOpType, bot, tag, value } from '../aux-format-2';
+import {
+    botAdded,
+    createBot,
+    botUpdated,
+    Bot,
+    UpdatedBot,
+    unlockSpace,
+} from '../bots';
+import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
 
 console.log = jest.fn();
@@ -485,6 +493,180 @@ describe('RemoteCausalRepoPartition', () => {
                         tag1: 'abc',
                     }),
                 });
+            });
+
+            it('should transition to non static when a unlock_space event is sent', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await partition.applyEvents([
+                    unlockSpace(<any>'admin', '3342'),
+                    botAdded(
+                        createBot('test1', {
+                            hello: 'world',
+                        })
+                    ),
+                ]);
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                    test1: createBot('test1', {
+                        hello: 'world',
+                    }),
+                });
+            });
+
+            it('should transition to non read only when a unlock_space event is sent', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                const tree = (<any>partition)._tree as AuxCausalTree;
+                const test1 = atom(atomId(tree.site.id, 5), null, bot('test1'));
+                const helloTag = atom(
+                    atomId(tree.site.id, 6),
+                    test1,
+                    tag('hello')
+                );
+                const worldValue = atom(
+                    atomId(tree.site.id, 7),
+                    helloTag,
+                    value('world')
+                );
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await partition.applyEvents([
+                    unlockSpace('admin', '3342'),
+                    botAdded(
+                        createBot('test1', {
+                            hello: 'world',
+                        })
+                    ),
+                ]);
+
+                expect(connection.sentMessages.slice(2)).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: 'testBranch',
+                            atoms: [test1, helloTag, worldValue],
+                        },
+                    },
+                ]);
+            });
+
+            it('should not transition when a unlock_space event is sent with the wrong password', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await partition.applyEvents([
+                    unlockSpace('admin', 'wrong'),
+                    botAdded(
+                        createBot('test1', {
+                            hello: 'world',
+                        })
+                    ),
+                ]);
+
+                expect(connection.sentMessages.slice(2)).toEqual([]);
+            });
+
+            it('should not try to connect if it is not already connected', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                await partition.applyEvents([unlockSpace('admin', '3342')]);
+
+                expect(connection.sentMessages.length).toEqual(0);
+            });
+
+            it('should be able to unlock while waiting for the initial connection to finish', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                await partition.applyEvents([unlockSpace('admin', '3342')]);
+
+                expect(connection.sentMessages).toEqual([
+                    {
+                        name: GET_BRANCH,
+                        data: 'testBranch',
+                    },
+                ]);
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: WATCH_BRANCH,
+                        data: 'testBranch',
+                    },
+                ]);
             });
         });
 

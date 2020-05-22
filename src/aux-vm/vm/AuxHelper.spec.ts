@@ -21,17 +21,32 @@ import {
     AuxPartitions,
     iteratePartitions,
     clearSpace,
+    createCausalRepoClientPartition,
+    unlockSpace,
 } from '@casual-simulation/aux-common';
+import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
 import {
     DeviceAction,
     RemoteAction,
     remote,
+    CausalRepoClient,
+    deviceInfo,
+    MemoryConnectionClient,
+    WATCH_BRANCH,
+    AddAtomsEvent,
+    ADD_ATOMS,
+    atom,
+    atomId,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { SubscriptionLike } from 'rxjs';
+import {
+    waitAsync,
+    wait,
+} from '@casual-simulation/aux-common/test/TestHelpers';
+import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -771,6 +786,64 @@ describe('AuxHelper', () => {
                 await waitAsync();
 
                 expect(searchClient.universes['universe']).toEqual({});
+            });
+        });
+
+        describe('unlock_space', () => {
+            it('should be able to unlock a space', async () => {
+                let connection = new MemoryConnectionClient();
+                let client = new CausalRepoClient(connection);
+                let addAtoms = new Subject<AddAtomsEvent>();
+                connection.events.set(ADD_ATOMS, addAtoms);
+
+                let admin = await createCausalRepoClientPartition(
+                    {
+                        type: 'causal_repo_client',
+                        branch: 'universe',
+                        client: client,
+                        static: true,
+                    },
+                    {
+                        id: userId,
+                        username: 'username',
+                        name: 'name',
+                        token: 'token',
+                    }
+                );
+
+                helper = createHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    admin: admin,
+                });
+                helper.userId = userId;
+
+                connection.connect();
+                admin.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                addAtoms.next({
+                    branch: 'universe',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await waitAsync();
+
+                await helper.transaction(unlockSpace('admin', '3342'));
+
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: WATCH_BRANCH,
+                        data: 'universe',
+                    },
+                ]);
             });
         });
 

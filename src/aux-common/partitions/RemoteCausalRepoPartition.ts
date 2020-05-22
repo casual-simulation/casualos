@@ -183,6 +183,14 @@ export class RemoteCausalRepoPartitionImpl
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         if (this._static) {
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                if (event.type === 'unlock_space') {
+                    if (this._unlockSpace(event.password)) {
+                        return this.applyEvents(events.slice(i));
+                    }
+                }
+            }
             return [];
         }
 
@@ -203,6 +211,18 @@ export class RemoteCausalRepoPartitionImpl
         this._applyEvents(finalEvents);
 
         return [];
+    }
+
+    private _unlockSpace(password: string) {
+        if (password !== '3342') {
+            return false;
+        }
+        this._static = false;
+        this._readOnly = false;
+        if (this._synced) {
+            this._watchBranch();
+        }
+        return true;
     }
 
     async init(): Promise<void> {}
@@ -236,6 +256,11 @@ export class RemoteCausalRepoPartitionImpl
 
             this._updateSynced(true);
             this._applyAtoms(atoms, []);
+
+            if (!this._static) {
+                // the partition has been unlocked while getting the branch
+                this._watchBranch();
+            }
         });
     }
 
@@ -243,6 +268,9 @@ export class RemoteCausalRepoPartitionImpl
      * Subscribes to the configured branch for persistent updates.
      */
     private _watchBranch() {
+        if (this._watchingBranch) {
+            return;
+        }
         this._watchingBranch = true;
         this._sub.add(
             this._client.connection.connectionState.subscribe(state => {

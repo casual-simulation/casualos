@@ -476,6 +476,8 @@ export class AuxHelper extends BaseHelper<Bot> {
             return this._partitionForBotType(event.space);
         } else if (event.type === 'clear_space') {
             return this._partitionForBotType(event.space);
+        } else if (event.type === 'unlock_space') {
+            return this._partitionForBotType(event.space);
         } else {
             return null;
         }

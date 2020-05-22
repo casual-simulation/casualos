@@ -62,6 +62,7 @@ import {
     localFormAnimation,
     showInput,
     share,
+    unlockSpace,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2557,6 +2558,15 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
                 expect(action.action).toBe(original);
+            });
+        });
+
+        describe('adminSpace.unlock()', () => {
+            it('should issue a unlock_space event with the given password', () => {
+                const action = library.api.adminSpace.unlock('password');
+                const expected = unlockSpace('admin', 'password');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

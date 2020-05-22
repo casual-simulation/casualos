@@ -84,6 +84,7 @@ export type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
+    | UnlockSpaceAction
     | LocalFormAnimationAction;
 
 /**
@@ -1156,6 +1157,27 @@ export interface ClearSpaceAction {
 }
 
 /**
+ * Defines an event that unlocks the given space for editing.
+ * Once a space is unlocked, it cannot be locked for the remainder of the session.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ */
+export interface UnlockSpaceAction {
+    type: 'unlock_space';
+
+    /**
+     * The space to unlock.
+     */
+    space: BotSpace;
+
+    /**
+     * The password to use to unlock the space.
+     */
+    password: string;
+}
+
+/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  */
@@ -2062,6 +2084,26 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+    };
+}
+
+/**
+ * Requests that the given space be unlocked for editing.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ *
+ * @param space The space to unlock.
+ * @param password The password to use to unlock the space.
+ */
+export function unlockSpace(
+    space: BotSpace,
+    password: string
+): UnlockSpaceAction {
+    return {
+        type: 'unlock_space',
+        space,
+        password,
     };
 }
 
