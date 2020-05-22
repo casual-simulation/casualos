@@ -1498,7 +1498,8 @@ describe('AuxLibrary', () => {
                 const bot5 = createDummyRuntimeBot('test5', {}, 'local');
                 const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
                 const bot7 = createDummyRuntimeBot('test7', {}, 'error');
-                addToContext(context, bot4, bot5, bot6, bot7);
+                const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
+                addToContext(context, bot4, bot5, bot6, bot7, bot8);
 
                 const action = library.api.player.downloadUniverse();
                 const expected = download(
