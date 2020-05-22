@@ -45,6 +45,7 @@ import {
     CHECKOUT,
     RestoreEvent,
     RESTORE,
+    GET_BRANCH,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -159,6 +160,25 @@ export class CausalRepoClient {
             finalize(() => {
                 this._client.send(UNWATCH_BRANCH, name);
             })
+        );
+    }
+
+    /**
+     * Gets the atoms stored on the given branch.
+     * @param name The name of the branch to get.
+     */
+    getBranch(name: string) {
+        return this._whenConnected().pipe(
+            first(connected => connected),
+            tap(connected => {
+                this._client.send(GET_BRANCH, name);
+            }),
+            switchMap(connected =>
+                this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
+                    first(event => event.branch === name),
+                    map(event => event.atoms)
+                )
+            )
         );
     }
 
