@@ -106,6 +106,8 @@ export class AuxRuntime
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
+
+        // TODO: Improve to support changing realtime edit modes for a partition while in action.
         editModesMap: SpaceRealtimeEditModeMap = DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);

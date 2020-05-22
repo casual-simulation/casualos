@@ -214,6 +214,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _unlockSpace(password: string) {
+        // TODO: Improve with a better mechanism
         if (password !== '3342') {
             return false;
         }
