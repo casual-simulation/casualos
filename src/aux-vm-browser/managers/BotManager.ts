@@ -14,6 +14,8 @@ import {
     isBot,
     ERROR_BOT_PARTITION_ID,
     AuxPartitionConfig,
+    ADMIN_PARTITION_ID,
+    ADMIN_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -98,6 +100,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'remote_causal_repo',
                     branch: parsedId.channel,
                     host: host,
+                },
+                [ADMIN_PARTITION_ID]: {
+                    type: 'remote_causal_repo',
+                    branch: ADMIN_BRANCH_NAME,
+                    host: host,
+                    private: true,
+                    static: true,
                 },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'proxy',

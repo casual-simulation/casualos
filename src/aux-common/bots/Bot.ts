@@ -572,6 +572,16 @@ export const TEMPORARY_BOT_PARTITION_ID = 'tempLocal';
 export const ERROR_BOT_PARTITION_ID = 'error';
 
 /**
+ * The partition ID for admin bots.
+ */
+export const ADMIN_PARTITION_ID = 'admin';
+
+/**
+ * The name of the branch that contains admin space.
+ */
+export const ADMIN_BRANCH_NAME = '$admin';
+
+/**
  * The dimension ID that all users should be placed in.
  */
 export const USERS_DIMENSION = 'aux-users';
