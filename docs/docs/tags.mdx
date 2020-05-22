@@ -73,6 +73,11 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Whenever an error occurs in a script, a new bot is created and placed in error space.
     Note that once a bot is added to error space it is unable to be changed.
   </PossibleValueCode>
+  <PossibleValueCode value='admin'>
+    The bot is saved on the AUXPlayer and is shared across all universes.
+    Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
+    You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `auxCreator`

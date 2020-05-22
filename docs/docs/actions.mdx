@@ -2390,10 +2390,26 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+## Admin Actions
+
+### `adminSpace.unlock(password)`
+
+Unlocks the admin space using the given password.
+
+If given the correct password, admin space will be unlocked and become editable.
+
+The **first parameter** is the password that should be used to unlock admin space.
+
+#### Examples
+
+1. Unlock admin space.
+```typescript
+adminSpace.unlock("my-password");
+```
+
 ## Experimental Actions
 
 ### `experiment.localFormAnimation(bot, animation)`
-
 
 Locally plays the given animation on the given bot.
 
