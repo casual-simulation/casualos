@@ -1,6 +1,7 @@
 import mapValues from 'lodash/mapValues';
-import { isRuntimeBot } from './RuntimeBot';
+import { isRuntimeBot, RealtimeEditMode } from './RuntimeBot';
 import { isBot } from '../bots/BotCalculations';
+import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 
 /**
  * Converts the given value to a copiable value.
@@ -26,9 +27,19 @@ export function convertToCopiableValue(value: any): any {
             };
         } else if (Array.isArray(value)) {
             return value.map(val => convertToCopiableValue(val));
+        } else if (value === null || value === undefined) {
+            return value;
         } else {
             return mapValues(value, val => convertToCopiableValue(val));
         }
     }
     return value;
+}
+
+export function realtimeStrategyToRealtimeEditMode(
+    strategy: AuxPartitionRealtimeStrategy
+): RealtimeEditMode {
+    return strategy === 'immediate'
+        ? RealtimeEditMode.Immediate
+        : RealtimeEditMode.Delayed;
 }

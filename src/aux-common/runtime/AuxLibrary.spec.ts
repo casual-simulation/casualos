@@ -1193,6 +1193,12 @@ describe('AuxLibrary', () => {
                     } as any)
                 );
             });
+
+            it('should preserve null', () => {
+                let action = library.api.player.toast(null);
+
+                expect(action).toEqual(toast(null));
+            });
         });
 
         describe('player.showJoinCode()', () => {
