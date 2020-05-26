@@ -44,9 +44,6 @@ import {
     createRuntimeBot,
     RuntimeBot,
     RealtimeEditMode,
-    getRealtimeEditMode,
-    SpaceRealtimeEditModeMap,
-    DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
 } from './RuntimeBot';
@@ -63,6 +60,11 @@ import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { convertToCopiableValue } from './Utils';
+import {
+    AuxRealtimeEditModeProvider,
+    SpaceRealtimeEditModeMap,
+    DefaultRealtimeEditModeProvider,
+} from './AuxRealtimeEditModeProvider';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -94,7 +96,7 @@ export class AuxRuntime
     private _globalContext: AuxGlobalContext;
 
     private _library: AuxLibrary;
-    private _editModesMap: SpaceRealtimeEditModeMap;
+    private _editModeProvider: AuxRealtimeEditModeProvider;
 
     /**
      * Creates a new AuxRuntime using the given library factory.
@@ -106,13 +108,11 @@ export class AuxRuntime
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
-
-        // TODO: Improve to support changing realtime edit modes for a partition while in action.
-        editModesMap: SpaceRealtimeEditModeMap = DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP
+        editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider()
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
-        this._editModesMap = editModesMap;
+        this._editModeProvider = editModeProvider;
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
@@ -548,7 +548,7 @@ export class AuxRuntime
 
     createRuntimeBot(bot: Bot): RuntimeBot {
         const space = getBotSpace(bot);
-        const mode = getRealtimeEditMode(this._editModesMap, space);
+        const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
             const compiled = this._createCompiledBot(bot, true);
             this._newBots.set(bot.id, compiled.script);
@@ -559,7 +559,7 @@ export class AuxRuntime
 
     destroyScriptBot(bot: RuntimeBot) {
         const space = getBotSpace(bot);
-        const mode = getRealtimeEditMode(this._editModesMap, space);
+        const mode = this._editModeProvider.getEditMode(space);
 
         if (mode === RealtimeEditMode.Immediate) {
             delete this._compiledState[bot.id];
@@ -706,7 +706,7 @@ export class AuxRuntime
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
         if (this._globalContext.allowsEditing) {
             const space = getBotSpace(bot);
-            const mode = getRealtimeEditMode(this._editModesMap, space);
+            const mode = this._editModeProvider.getEditMode(space);
             if (mode === RealtimeEditMode.Immediate) {
                 this._compileTag(bot, tag, newValue);
             }
