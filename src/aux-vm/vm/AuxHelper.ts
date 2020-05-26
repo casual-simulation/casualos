@@ -28,6 +28,8 @@ import {
     PrecalculatedBot,
     BotCalculationContext,
     runScript,
+    AsyncActions,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
@@ -418,6 +420,16 @@ export class AuxHelper extends BaseHelper<Bot> {
             }
             if (typeof partition === 'undefined') {
                 console.warn('[AuxHelper] No partition for event', event);
+                if ('taskId' in event) {
+                    events.push(
+                        asyncError(
+                            event.taskId,
+                            new Error(
+                                `The action was sent to a space that was not found.`
+                            )
+                        )
+                    );
+                }
                 continue;
             } else if (
                 partition === null &&
@@ -457,6 +469,12 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
     }
 
+    /**
+     * Gets the partition that the given event should be sent to.
+     * Returns the partition or null if the event should be sent as a local/remote/device event.
+     * If undefined is returned, then the event should not be sent anywhere.
+     * @param event
+     */
     private _partitionForEvent(event: BotAction): AuxPartition {
         if (event.type === 'remote') {
             return null;
@@ -477,7 +495,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         } else if (event.type === 'clear_space') {
             return this._partitionForBotType(event.space);
         } else if (event.type === 'unlock_space') {
-            return this._partitionForBotType(event.space);
+            return this._partitionForBotType(event.space) || undefined;
         } else {
             return null;
         }

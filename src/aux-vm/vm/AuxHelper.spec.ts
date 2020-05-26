@@ -23,6 +23,7 @@ import {
     clearSpace,
     createCausalRepoClientPartition,
     unlockSpace,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -844,6 +845,26 @@ describe('AuxHelper', () => {
                         data: 'universe',
                     },
                 ]);
+            });
+
+            it('should be rejected if sent to a non-existant space', async () => {
+                let events = [] as BotAction[];
+
+                helper.localEvents.subscribe(e => events.push(...e));
+                await helper.transaction(
+                    unlockSpace(<any>'missing', 'passcode', 123)
+                );
+
+                await waitAsync();
+
+                expect(events).toContainEqual(
+                    asyncError(
+                        123,
+                        new Error(
+                            `The action was sent to a space that was not found.`
+                        )
+                    )
+                );
             });
         });
 
