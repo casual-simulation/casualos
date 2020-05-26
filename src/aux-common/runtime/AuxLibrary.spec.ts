@@ -62,6 +62,7 @@ import {
     localFormAnimation,
     showInput,
     share,
+    unlockSpace,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1192,6 +1193,12 @@ describe('AuxLibrary', () => {
                     } as any)
                 );
             });
+
+            it('should preserve null', () => {
+                let action = library.api.player.toast(null);
+
+                expect(action).toEqual(toast(null));
+            });
         });
 
         describe('player.showJoinCode()', () => {
@@ -1497,7 +1504,8 @@ describe('AuxLibrary', () => {
                 const bot5 = createDummyRuntimeBot('test5', {}, 'local');
                 const bot6 = createDummyRuntimeBot('test6', {}, 'tempLocal');
                 const bot7 = createDummyRuntimeBot('test7', {}, 'error');
-                addToContext(context, bot4, bot5, bot6, bot7);
+                const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
+                addToContext(context, bot4, bot5, bot6, bot7, bot8);
 
                 const action = library.api.player.downloadUniverse();
                 const expected = download(
@@ -2557,6 +2565,19 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
                 expect(action.action).toBe(original);
+            });
+        });
+
+        describe('adminSpace.unlock()', () => {
+            it('should issue a unlock_space event with the given password', () => {
+                const promise: any = library.api.adminSpace.unlock('password');
+                const expected = unlockSpace(
+                    'admin',
+                    'password',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

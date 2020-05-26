@@ -30,6 +30,16 @@ describe('convertToCopiableValue()', () => {
         expect(result).toEqual(arr);
     });
 
+    it('should leave nulls alone', () => {
+        const result = convertToCopiableValue(null);
+        expect(result).toBe(null);
+    });
+
+    it('should leave undefined alone', () => {
+        const result = convertToCopiableValue(undefined);
+        expect(result).toBeUndefined();
+    });
+
     it('should convert invalid properties in objects recursively', () => {
         const obj = {
             test: 'abc',

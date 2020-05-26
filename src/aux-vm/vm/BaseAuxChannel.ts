@@ -15,6 +15,9 @@ import {
     iteratePartitions,
     BotDependentInfo,
     AuxRuntime,
+    BotSpace,
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -32,6 +35,7 @@ import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
 import { addDebugApi } from '../DebugHelpers';
+import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeBot';
 
 export interface AuxChannelOptions {}
 
@@ -42,6 +46,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     protected _deviceInfo: DeviceInfo;
+    protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
@@ -177,6 +182,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         });
 
         this._partitions = <any>{};
+        this._partitionEditModeProvider = new AuxPartitionRealtimeEditModeProvider(
+            this._partitions
+        );
         let partitions: AuxPartition[] = [];
         for (let key in this._config.partitions) {
             if (!this._config.partitions.hasOwnProperty(key)) {
@@ -383,6 +391,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected async _ensureSetup() {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._runtime) {
+            this._partitions;
             this._runtime = this._createRuntime();
             this._subs.push(this._runtime);
         }
@@ -458,7 +467,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _createRuntime(): AuxRuntime {
         const runtime = new AuxRuntime(
             buildVersionNumber(this._config.config),
-            this._config.config ? this._config.config.device : null
+            this._config.config ? this._config.config.device : null,
+            undefined,
+            this._partitionEditModeProvider
         );
         runtime.userId = this.user ? this.user.id : null;
         return runtime;

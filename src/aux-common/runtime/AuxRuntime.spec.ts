@@ -80,6 +80,7 @@ import { createDefaultLibrary } from './AuxLibrary';
 import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
+import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -115,10 +116,12 @@ describe('AuxRuntime', () => {
             version,
             auxDevice,
             undefined,
-            new Map<BotSpace, RealtimeEditMode>([
-                ['shared', RealtimeEditMode.Immediate],
-                [<any>'delayed', RealtimeEditMode.Delayed],
-            ])
+            new DefaultRealtimeEditModeProvider(
+                new Map<BotSpace, RealtimeEditMode>([
+                    ['shared', RealtimeEditMode.Immediate],
+                    [<any>'delayed', RealtimeEditMode.Delayed],
+                ])
+            )
         );
 
         events = [];
@@ -3241,6 +3244,131 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([[botRemoved('test2')]]);
             });
         });
+
+        it('should use updated edit modes from the given edit mode map', async () => {
+            let map = new Map<BotSpace, RealtimeEditMode>([
+                ['shared', RealtimeEditMode.Immediate],
+                [<any>'delayed', RealtimeEditMode.Delayed],
+            ]);
+            let provider = new DefaultRealtimeEditModeProvider(map);
+            runtime = new AuxRuntime(version, auxDevice, undefined, provider);
+            runtime.onActions.subscribe(a => events.push(a));
+
+            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
+            runtime.botsAdded([
+                createBot('test1', {
+                    create: `@
+                        let b = create({ space: 'delayed', value: 123 });
+                        expect(b).toBe(null);
+                    `,
+                    create2: `@
+                        let b = create({ space: 'delayed', value: 123 });
+                        expect(b).not.toBe(null);
+                    `,
+                }),
+            ]);
+            const result = runtime.shout('create');
+
+            await waitAsync();
+
+            expect(result.errors).toEqual([]);
+            expect(events).toEqual([
+                [
+                    botAdded(
+                        createBot(
+                            'uuid',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ],
+            ]);
+
+            map.set(<any>'delayed', RealtimeEditMode.Immediate);
+
+            const result2 = runtime.shout('create2');
+
+            await waitAsync();
+
+            expect(result2.errors).toEqual([]);
+            expect(events.slice(1)).toEqual([
+                [
+                    botAdded(
+                        createBot(
+                            'uuid2',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ],
+            ]);
+        });
+
+        it('should use the given provider', async () => {
+            let provider = {
+                getEditMode: jest.fn(),
+            };
+            runtime = new AuxRuntime(version, auxDevice, undefined, provider);
+            runtime.onActions.subscribe(a => events.push(a));
+
+            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
+            provider.getEditMode
+                .mockReturnValueOnce(RealtimeEditMode.Delayed)
+                .mockReturnValueOnce(RealtimeEditMode.Immediate);
+            runtime.botsAdded([
+                createBot('test1', {
+                    create: `@
+                        let b = create({ space: 'delayed', value: 123 });
+                        expect(b).toBe(null);
+                    `,
+                    create2: `@
+                        let b = create({ space: 'delayed', value: 123 });
+                        expect(b).not.toBe(null);
+                    `,
+                }),
+            ]);
+            const result = runtime.shout('create');
+
+            await waitAsync();
+
+            expect(result.errors).toEqual([]);
+            expect(events).toEqual([
+                [
+                    botAdded(
+                        createBot(
+                            'uuid',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ],
+            ]);
+
+            const result2 = runtime.shout('create2');
+
+            await waitAsync();
+
+            expect(result2.errors).toEqual([]);
+            expect(events.slice(1)).toEqual([
+                [
+                    botAdded(
+                        createBot(
+                            'uuid2',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ],
+            ]);
+        });
     });
 
     describe('errors', () => {
@@ -3283,10 +3411,12 @@ describe('AuxRuntime', () => {
                         test: test,
                     },
                 }),
-                new Map<BotSpace, RealtimeEditMode>([
-                    ['shared', RealtimeEditMode.Immediate],
-                    [<any>'delayed', RealtimeEditMode.Delayed],
-                ])
+                new DefaultRealtimeEditModeProvider(
+                    new Map<BotSpace, RealtimeEditMode>([
+                        ['shared', RealtimeEditMode.Immediate],
+                        [<any>'delayed', RealtimeEditMode.Delayed],
+                    ])
+                )
             );
 
             runtime.botsAdded([

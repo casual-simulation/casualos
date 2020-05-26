@@ -93,7 +93,8 @@ export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
-    | ShareAction;
+    | ShareAction
+    | UnlockSpaceAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1156,6 +1157,27 @@ export interface ClearSpaceAction {
 }
 
 /**
+ * Defines an event that unlocks the given space for editing.
+ * Once a space is unlocked, it cannot be locked for the remainder of the session.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ */
+export interface UnlockSpaceAction extends AsyncAction {
+    type: 'unlock_space';
+
+    /**
+     * The space to unlock.
+     */
+    space: BotSpace;
+
+    /**
+     * The password to use to unlock the space.
+     */
+    password: string;
+}
+
+/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  */
@@ -2062,6 +2084,29 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+    };
+}
+
+/**
+ * Requests that the given space be unlocked for editing.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ *
+ * @param space The space to unlock.
+ * @param password The password to use to unlock the space.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function unlockSpace(
+    space: BotSpace,
+    password: string,
+    taskId?: number
+): UnlockSpaceAction {
+    return {
+        type: 'unlock_space',
+        space,
+        password,
+        taskId,
     };
 }
 

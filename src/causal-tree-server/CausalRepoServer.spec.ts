@@ -42,6 +42,7 @@ import {
     RESTORE,
     RestoreEvent,
     CausalRepoCommit,
+    GET_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -233,6 +234,124 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(GET_BRANCH, () => {
+        it('should load the given branch and send the current atoms', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const getBranch = new Subject<string>();
+            device.events.set(GET_BRANCH, getBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            getBranch.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+
+        it('should create a new orphan branch if the branch name does not exist', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const getBranch = new Subject<string>();
+            device.events.set(GET_BRANCH, getBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            getBranch.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+        });
+
+        it('should not send additional atoms that were added after the GET_BRANCH call', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const getBranch = new Subject<string>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(GET_BRANCH, getBranch);
+            device2.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const b1 = atom(atomId('b', 1), null, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            getBranch.next('testBranch');
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [b1],
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2],
                     },
                 },
             ]);

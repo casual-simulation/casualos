@@ -79,6 +79,7 @@ import {
     ORIGINAL_OBJECT,
     AsyncActions,
     ShareOptions,
+    unlockSpace,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -366,6 +367,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             action: {
                 perform,
                 reject,
+            },
+
+            adminSpace: {
+                unlock: unlockAdminSpace,
             },
 
             experiment: {
@@ -1590,6 +1595,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function reject(action: any) {
         const event = calcReject(getOriginalObject(action));
         return addAction(event);
+    }
+
+    /**
+     * Unlocks admin space using the given password.
+     * Returns a promise that resolves when the space is unlocked.
+     * @param password The password to use to unlock admin space.
+     */
+    function unlockAdminSpace(password: string) {
+        const task = context.createTask();
+        const event = unlockSpace('admin', password, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

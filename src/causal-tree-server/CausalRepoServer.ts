@@ -53,6 +53,7 @@ import {
     UNWATCH_BRANCHES,
     UNWATCH_DEVICES,
     UNWATCH_COMMITS,
+    GET_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -113,6 +114,16 @@ export class CausalRepoServer {
                             branch: branch,
                             atoms: atoms,
                         });
+                    },
+                    [GET_BRANCH]: async branch => {
+                        const info = infoForBranch(branch);
+                        const repo = await this._getOrLoadRepo(branch, true);
+                        const atoms = repo.getAtoms();
+                        conn.send(ADD_ATOMS, {
+                            branch: branch,
+                            atoms: atoms,
+                        });
+                        await this._tryUnloadBranch(info);
                     },
                     [ADD_ATOMS]: async event => {
                         const repo = await this._getOrLoadRepo(
