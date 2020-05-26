@@ -691,9 +691,13 @@ describe('RemoteCausalRepoPartition', () => {
                     atoms: [bot1, tag1, value1],
                 });
 
-                const events = await partition.applyEvents([
+                let events = [] as Action[];
+                partition.onEvents.subscribe(e => events.push(...e));
+                await partition.applyEvents([
                     unlockSpace('admin', '3342', 123),
                 ]);
+
+                await waitAsync();
 
                 expect(events).toEqual([asyncResult(123, undefined)]);
             });
@@ -718,9 +722,14 @@ describe('RemoteCausalRepoPartition', () => {
                     atoms: [bot1, tag1, value1],
                 });
 
-                const events = await partition.applyEvents([
+                let events = [] as Action[];
+                partition.onEvents.subscribe(e => events.push(...e));
+
+                await partition.applyEvents([
                     unlockSpace('admin', 'wrong', 123),
                 ]);
+
+                await waitAsync();
 
                 expect(events).toEqual([
                     asyncError(

@@ -189,23 +189,26 @@ export class RemoteCausalRepoPartitionImpl
                 const event = events[i];
                 if (event.type === 'unlock_space') {
                     if (this._unlockSpace(event.password)) {
-                        return [
-                            // Resolve the unlock_space task
-                            asyncResult(event.taskId, undefined),
+                        const extraEvents = await this.applyEvents(
+                            events.slice(i)
+                        );
 
-                            // Include other actions
-                            ...(await this.applyEvents(events.slice(i))),
-                        ];
+                        // Resolve the unlock_space task
+                        this._onEvents.next([
+                            asyncResult(event.taskId, undefined),
+                        ]);
+
+                        return extraEvents;
                     } else {
-                        return [
-                            // Reject the unlock_space task
+                        // Reject the unlock_space task
+                        this._onEvents.next([
                             asyncError(
                                 event.taskId,
                                 new Error(
                                     'Unable to unlock the space because the passcode is incorrect.'
                                 )
                             ),
-                        ];
+                        ]);
                     }
                 }
             }
