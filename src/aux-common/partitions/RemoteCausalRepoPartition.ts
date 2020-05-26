@@ -190,7 +190,7 @@ export class RemoteCausalRepoPartitionImpl
                 if (event.type === 'unlock_space') {
                     if (this._unlockSpace(event.password)) {
                         const extraEvents = await this.applyEvents(
-                            events.slice(i)
+                            events.slice(i + 1)
                         );
 
                         // Resolve the unlock_space task
@@ -215,19 +215,24 @@ export class RemoteCausalRepoPartitionImpl
             return [];
         }
 
-        const finalEvents = flatMap(events, e => {
+        let finalEvents = [] as (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction)[];
+        for (let e of events) {
             if (e.type === 'apply_state') {
-                return breakIntoIndividualEvents(this.state, e);
+                finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
                 e.type === 'update_bot'
             ) {
-                return [e] as const;
-            } else {
-                return [];
+                finalEvents.push(e);
+            } else if (e.type === 'unlock_space') {
+                // Resolve the unlock_space task
+                this._onEvents.next([asyncResult(e.taskId, undefined)]);
             }
-        });
+        }
 
         this._applyEvents(finalEvents);
 

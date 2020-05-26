@@ -702,6 +702,35 @@ describe('RemoteCausalRepoPartition', () => {
                 expect(events).toEqual([asyncResult(123, undefined)]);
             });
 
+            it('should resolve the async task if already unlocked', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                let events = [] as Action[];
+                partition.onEvents.subscribe(e => events.push(...e));
+                await partition.applyEvents([
+                    unlockSpace('admin', '3342', 123),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult(123, undefined)]);
+            });
+
             it('should reject the async task if given the wrong password', async () => {
                 setupPartition({
                     type: 'remote_causal_repo',
