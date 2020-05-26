@@ -2395,6 +2395,8 @@ const number = math.random(0, Math.PI);
 ### `adminSpace.unlock(password)`
 
 Unlocks the admin space using the given password.
+Returns a Promise that resolves once the space is unlocked.
+The promise will be rejected if the space was unable to be unlocked.
 
 If given the correct password, admin space will be unlocked and become editable.
 
@@ -2404,7 +2406,12 @@ The **first parameter** is the password that should be used to unlock admin spac
 
 1. Unlock admin space.
 ```typescript
-adminSpace.unlock("my-password");
+try {
+    await adminSpace.unlock("my-password");
+    player.toast("Admin Space Unlocked!");
+} catch(err) {
+    player.toast("Failed to unlock admin space " + err);
+}
 ```
 
 ## Experimental Actions
