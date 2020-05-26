@@ -33,6 +33,8 @@ import {
     Bot,
     UpdatedBot,
     unlockSpace,
+    asyncResult,
+    asyncError,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -666,6 +668,67 @@ describe('RemoteCausalRepoPartition', () => {
                         name: WATCH_BRANCH,
                         data: 'testBranch',
                     },
+                ]);
+            });
+
+            it('should resolve the async task when unlocked', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                const events = await partition.applyEvents([
+                    unlockSpace('admin', '3342', 123),
+                ]);
+
+                expect(events).toEqual([asyncResult(123, undefined)]);
+            });
+
+            it('should reject the async task if given the wrong password', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                    readOnly: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                const events = await partition.applyEvents([
+                    unlockSpace('admin', 'wrong', 123),
+                ]);
+
+                expect(events).toEqual([
+                    asyncError(
+                        123,
+                        new Error(
+                            'Unable to unlock the space because the passcode is incorrect.'
+                        )
+                    ),
                 ]);
             });
         });

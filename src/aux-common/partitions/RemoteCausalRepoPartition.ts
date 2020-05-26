@@ -30,6 +30,8 @@ import {
     breakIntoIndividualEvents,
     MarkHistoryAction,
     loadSpace,
+    asyncError,
+    asyncResult,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -187,7 +189,23 @@ export class RemoteCausalRepoPartitionImpl
                 const event = events[i];
                 if (event.type === 'unlock_space') {
                     if (this._unlockSpace(event.password)) {
-                        return this.applyEvents(events.slice(i));
+                        return [
+                            // Resolve the unlock_space task
+                            asyncResult(event.taskId, undefined),
+
+                            // Include other actions
+                            ...(await this.applyEvents(events.slice(i))),
+                        ];
+                    } else {
+                        return [
+                            // Reject the unlock_space task
+                            asyncError(
+                                event.taskId,
+                                new Error(
+                                    'Unable to unlock the space because the passcode is incorrect.'
+                                )
+                            ),
+                        ];
                     }
                 }
             }

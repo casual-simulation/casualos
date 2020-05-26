@@ -2570,9 +2570,13 @@ describe('AuxLibrary', () => {
 
         describe('adminSpace.unlock()', () => {
             it('should issue a unlock_space event with the given password', () => {
-                const action = library.api.adminSpace.unlock('password');
-                const expected = unlockSpace('admin', 'password');
-                expect(action).toEqual(expected);
+                const promise: any = library.api.adminSpace.unlock('password');
+                const expected = unlockSpace(
+                    'admin',
+                    'password',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

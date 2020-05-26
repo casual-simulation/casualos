@@ -2638,9 +2638,10 @@ declare global {
     const adminSpace: {
         /**
          * Unlocks admin space using the given password.
+         * Returns a promise that resolves when the space is unlocked.
          * @param password The password to use to unlock admin space.
          */
-        unlock(): UnlockSpaceAction;
+        unlock(): Promise<void>;
     };
 
     /**

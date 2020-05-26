@@ -1599,11 +1599,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Unlocks admin space using the given password.
+     * Returns a promise that resolves when the space is unlocked.
      * @param password The password to use to unlock admin space.
      */
     function unlockAdminSpace(password: string) {
-        const event = unlockSpace('admin', password);
-        return addAction(event);
+        const task = context.createTask();
+        const event = unlockSpace('admin', password, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

@@ -84,7 +84,6 @@ export type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | UnlockSpaceAction
     | LocalFormAnimationAction;
 
 /**
@@ -94,7 +93,8 @@ export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
-    | ShareAction;
+    | ShareAction
+    | UnlockSpaceAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1163,7 +1163,7 @@ export interface ClearSpaceAction {
  * Only supported for the following spaces:
  * - admin
  */
-export interface UnlockSpaceAction {
+export interface UnlockSpaceAction extends AsyncAction {
     type: 'unlock_space';
 
     /**
@@ -2095,15 +2095,18 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
  *
  * @param space The space to unlock.
  * @param password The password to use to unlock the space.
+ * @param taskId The ID of the task that this event represents.
  */
 export function unlockSpace(
     space: BotSpace,
-    password: string
+    password: string,
+    taskId?: number
 ): UnlockSpaceAction {
     return {
         type: 'unlock_space',
         space,
         password,
+        taskId,
     };
 }
 
