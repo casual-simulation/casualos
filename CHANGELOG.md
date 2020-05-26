@@ -13,6 +13,7 @@
         -   Admin space is a space that is shared between all universes on the same auxPlayer.
         -   It is locked by default, which means that bots that are in it cannot be created, updated, or destroyed.
         -   You can unlock admin space by using the `adminSpace.unlock(password)` function.
+            -   It returns a Promise that resolves once the space is unlocked. If the space was unable to be unlocked, then the promise will reject with an error.
             -   `password` is the password that should be used to unlock the admin space. If incorrect, admin space will remain locked.
 
 -   :bug: Bug Fixes
