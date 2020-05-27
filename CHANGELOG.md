@@ -15,6 +15,7 @@
         -   You can unlock admin space by using the `adminSpace.unlock(password)` function.
             -   It returns a Promise that resolves once the space is unlocked. If the space was unable to be unlocked, then the promise will reject with an error.
             -   `password` is the password that should be used to unlock the admin space. If incorrect, admin space will remain locked.
+    -   Removed the CasualOS tagline from the loading popup.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
