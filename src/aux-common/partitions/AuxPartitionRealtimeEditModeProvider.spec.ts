@@ -5,13 +5,6 @@ import { createMemoryPartition } from './MemoryPartition';
 import { createBot } from '../bots/BotCalculations';
 import { createBotClientPartition } from './BotPartition';
 import { MemoryBotClient } from './MemoryBotClient';
-import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
-import {
-    CausalRepoClient,
-    deviceInfo,
-    MemoryConnectionClient,
-} from '@casual-simulation/causal-trees';
-import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
 
 describe('AuxPartitionRealtimeEditModeProvider', () => {
     let partitions: AuxPartitions;
