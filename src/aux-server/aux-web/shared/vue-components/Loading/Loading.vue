@@ -19,11 +19,6 @@
                     </div>
                 </div>
                 <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
-                <div class="loading-text-content">
-                    <div class="loading-title">
-                        <tagline></tagline>
-                    </div>
-                </div>
                 <div class="version">{{ version }}</div>
             </div>
             <div v-else class="loading-error">
