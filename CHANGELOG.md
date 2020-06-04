@@ -32,6 +32,7 @@
     -   Fixed an issue where using `player.run()` to execute an invalid script would cause other actions to fail.
     -   Added some extra spacing to labels to help prevent Z-fighting.
     -   Fixed toasting bots by converting them to copiable values. This will also allow toasting unconventional arguments like function and error objects.
+    -   Fixed an issue where the menu would stop repositioning after the inventory portal had been hidden.
 
 ## V1.1.4
 
