@@ -20,6 +20,27 @@
 
 .hero.hero--primary {
   --ifm-hero-background-color: #1c1c1c;
+  --ifm-hero-text-color: var(--ifm-font-base-color-inverse);
+}
+
+div.markdown > h2 > a.hash-link {
+    float: left;
+    padding-left: 0;
+    padding-right: 0.5rem;
+}
+
+div.markdown > h2 {
+    margin-left: -26.95px;
+}
+
+div.markdown > h3 > a.hash-link {
+    float: left;
+    padding-left: 0;
+    padding-right: 0.5rem;
+}
+
+div.markdown > h3 {
+    margin-left: -22.22px;
 }
 
 html[data-theme=dark] {
