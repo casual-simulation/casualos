@@ -1616,6 +1616,35 @@ declare interface BotFilterFunction {
 }
 
 /**
+ * Defines a result from a webhook.
+ */
+declare interface WebhookResult {
+    /**
+     * The data returned from the webhook.
+     * If the returned data was JSON, then this will be an object.
+     * Otherwise, it will be a string.
+     */
+    data: any;
+
+    /**
+     * The HTTP status code number that was returned.
+     */
+    status: number;
+
+    /**
+     * The name of the status code that was returned.
+     */
+    statusText: string;
+
+    /**
+     * The HTTP headers that were returned with the response.
+     */
+    headers: {
+        [key: string]: string
+    }
+}
+
+/**
  * Defines a type that represents a mod.
  * That is, a set of tags that can be applied to another bot.
  */
@@ -1790,17 +1819,16 @@ declare global {
          * @param options The options that specify where and what to send in the web request.
          *
          * @example
-         * // Send a HTTP POST request to https://www.example.com/api/createThing
-         * webhook({
-         *   method: 'POST',
-         *   url: 'https://www.example.com/api/createThing',
-         *   data: {
-         *     hello: 'world'
-         *   },
-         *   responseShout: 'requestFinished'
+         * 
+         * // Send a HTTP GET request to https://auxplayer.com
+         * const result = await webhook({
+         *   method: 'GET',
+         *   url: 'https://auxplayer.com'
          * });
+         * 
+         * player.toast(result);
          */
-        (options: WebhookOptions): SendWebhookAction;
+        (options: WebhookOptions): Promise<WebhookResult>;
 
         /**
          * Sends a HTTP POST request to the given URL with the given data.
@@ -1810,12 +1838,14 @@ declare global {
          * @param options The options that should be included in the request.
          *
          * @example
+         * 
          * // Send a HTTP POST request to https://www.example.com/api/createThing
-         * webhook.post('https://www.example.com/api/createThing', {
+         * const result = await webhook.post('https://www.example.com/api/createThing', {
          *   hello: 'world'
-         * }, { responseShout: 'requestFinished' });
+         * });
+         * 
          */
-        post(url: string, data?: any, options?: WebhookOptions): SendWebhookAction;
+        post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
     };
 
     /**

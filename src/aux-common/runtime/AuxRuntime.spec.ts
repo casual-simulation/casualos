@@ -6169,14 +6169,17 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                webhook({
-                    method: 'POST',
-                    url: 'https://example.com',
-                    data: {
-                        test: 'abc',
+                webhook(
+                    {
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
                     },
-                    responseShout: 'test.response()',
-                }),
+                    1
+                ),
             ]);
         });
     });
@@ -6200,14 +6203,17 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                webhook({
-                    method: 'POST',
-                    url: 'https://example.com',
-                    data: {
-                        test: 'abc',
+                webhook(
+                    {
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
                     },
-                    responseShout: 'test.response()',
-                }),
+                    1
+                ),
             ]);
         });
     });

@@ -1542,8 +1542,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function webhook(options: WebhookOptions) {
-        const event = calcWebhook(<any>options);
-        return addAction(event);
+        const task = context.createTask();
+        const event = calcWebhook(<any>options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     // /**

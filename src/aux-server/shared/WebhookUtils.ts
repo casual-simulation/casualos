@@ -1,4 +1,9 @@
-import { SendWebhookAction } from '@casual-simulation/aux-common';
+import {
+    SendWebhookAction,
+    BotAction,
+    asyncResult,
+    asyncError,
+} from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import axios from 'axios';
 
@@ -15,23 +20,43 @@ export async function sendWebhook(
 
     try {
         const response = await axios(axiosOptions);
+        const { request, config, ...responseData } = response;
+        let actions: BotAction[] = [asyncResult(event.taskId, responseData)];
         if (responseShout) {
-            const { request, config, ...responseData } = response;
-            await simulation.helper.action(responseShout, null, {
-                request: axiosOptions,
-                response: responseData,
-                success: true,
-            });
+            actions.push(
+                ...simulation.helper.actions([
+                    {
+                        eventName: responseShout,
+                        bots: null,
+                        arg: {
+                            request: axiosOptions,
+                            response: responseData,
+                            success: true,
+                        },
+                    },
+                ])
+            );
         }
+        await simulation.helper.transaction(...actions);
     } catch (err) {
+        let actions: BotAction[] = [asyncError(event.taskId, err)];
         if (responseShout) {
-            await simulation.helper.action(responseShout, null, {
-                request: axiosOptions,
-                error: err,
-                success: false,
-            });
+            actions.push(
+                ...simulation.helper.actions([
+                    {
+                        eventName: responseShout,
+                        bots: null,
+                        arg: {
+                            request: axiosOptions,
+                            error: err,
+                            success: false,
+                        },
+                    },
+                ])
+            );
         } else {
             console.error(err);
         }
+        await simulation.helper.transaction(...actions);
     }
 }

@@ -94,6 +94,7 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | SendWebhookAction
     | UnlockSpaceAction;
 
 /**
@@ -645,7 +646,7 @@ export interface SuperShoutAction extends Action {
 /**
  * Defines an event that sends a web request to a server.
  */
-export interface SendWebhookAction extends Action {
+export interface SendWebhookAction extends AsyncAction {
     type: 'send_webhook';
 
     /**
@@ -1837,11 +1838,16 @@ export function finishCheckout(
 /**
  * Creates a new SendWebhookAction.
  * @param options The options for the webhook.
+ * @param taskId The ID of the task.
  */
-export function webhook(options: WebhookOptions): SendWebhookAction {
+export function webhook(
+    options: WebhookOptions,
+    taskId?: number
+): SendWebhookAction {
     return {
         type: 'send_webhook',
         options: options,
+        taskId,
     };
 }
 
