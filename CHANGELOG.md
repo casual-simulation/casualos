@@ -22,6 +22,10 @@
             -   `status` - The numerical HTTP status code that was returned.
             -   `statusText` - The name of the HTTP status code that was returned.
             -   `headers` - The HTTP headers that were included in the response.
+    -   Improved the `neighboring()` function to allow omitting the `direction` parameter.
+        -   When omitted, all supported directions will be included.
+        -   Currently, the supported directions are `front`, `right`, `back`, and `left`.
+        -   If an unsupported direction is given, then no bots will be included.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
