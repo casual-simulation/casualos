@@ -666,13 +666,19 @@ The **first parameter** is the bot that the other bots need to be neighboring.
 
 The **second parameter** is the dimension that the other bots need to be in.
 
-The **third parameter** is the neighboring direction to check.
+The **third parameter** is optional and is the neighboring direction to check. If not specified, then all of the supported directions will be checked.
+Currently, the supported directions are `front`, `right`, `back`, and `left`. If an unsupported direction is specified, then no bots will be included.
 
 #### Examples:
 
 1. Find all bots in front of `this` bot in the `test` dimension.
 ```typescript
 const bots = getBots(neighboring(this, "test", "front"));
+```
+
+1. Find all bots around `this` bot in the `test` dimension.
+```typescript
+const bots = getBots(neighboring(this, "test"));
 ```
 
 ### `either(...filters)`
