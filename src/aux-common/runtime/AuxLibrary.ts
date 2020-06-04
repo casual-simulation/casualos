@@ -625,7 +625,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Creates a function that filters bots by whether they are neighboring the given bot.
      * @param bot The bot that other bots should be checked against.
      * @param dimension The dimension that other bots should be checked in.
-     * @param direction The neighboring direction to check.
+     * @param direction The neighboring direction to check. If not specified, then bots from all directions will be included.
      * @returns A function that returns true if the given bot is next to the original bot.
      *
      * @example
@@ -635,8 +635,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function neighboring(
         bot: Bot,
         dimension: string,
-        direction: 'front' | 'left' | 'right' | 'back'
+        direction?: 'front' | 'left' | 'right' | 'back'
     ): BotFilterFunction {
+        if (!hasValue(direction)) {
+            return either(
+                neighboring(bot, dimension, 'front'),
+                neighboring(bot, dimension, 'right'),
+                neighboring(bot, dimension, 'back'),
+                neighboring(bot, dimension, 'left')
+            );
+        } else if (
+            direction !== 'left' &&
+            direction !== 'right' &&
+            direction !== 'front' &&
+            direction !== 'back'
+        ) {
+            return () => false;
+        }
+
         const offsetX =
             direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
         const offsetY =

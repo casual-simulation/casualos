@@ -839,6 +839,102 @@ describe('AuxLibrary', () => {
                     expect(filter.sort(bot2)).toEqual(100);
                 });
             });
+
+            describe('all directions', () => {
+                let bot3: RuntimeBot;
+                let bot4: RuntimeBot;
+                let bot5: RuntimeBot;
+
+                beforeEach(() => {
+                    bot3 = createDummyRuntimeBot('test3');
+                    bot4 = createDummyRuntimeBot('test4');
+                    bot5 = createDummyRuntimeBot('test5');
+
+                    addToContext(context, bot3, bot4, bot5);
+
+                    bot1.tags.red = true;
+                    bot1.tags.redX = 0;
+                    bot1.tags.redY = 0;
+
+                    bot2.tags.red = true;
+                    bot2.tags.redX = 1;
+                    bot2.tags.redY = 0;
+
+                    bot3.tags.red = true;
+                    bot3.tags.redX = -1;
+                    bot3.tags.redY = 0;
+
+                    bot4.tags.red = true;
+                    bot4.tags.redX = 0;
+                    bot4.tags.redY = 1;
+
+                    bot5.tags.red = true;
+                    bot5.tags.redX = 0;
+                    bot5.tags.redY = -1;
+                });
+
+                it('should return a function that returns true if the given bot is at the correct position', () => {
+                    const filter = library.api.neighboring(bot1, 'red');
+
+                    expect(filter(bot2)).toEqual(true);
+                    expect(filter(bot3)).toEqual(true);
+                    expect(filter(bot4)).toEqual(true);
+                    expect(filter(bot5)).toEqual(true);
+                });
+
+                it('should work when given null', () => {
+                    const filter = library.api.neighboring(bot1, 'red', null);
+
+                    expect(filter(bot2)).toEqual(true);
+                    expect(filter(bot3)).toEqual(true);
+                    expect(filter(bot4)).toEqual(true);
+                    expect(filter(bot5)).toEqual(true);
+                });
+
+                it('should work when given undefined', () => {
+                    const filter = library.api.neighboring(
+                        bot1,
+                        'red',
+                        undefined
+                    );
+
+                    expect(filter(bot2)).toEqual(true);
+                    expect(filter(bot3)).toEqual(true);
+                    expect(filter(bot4)).toEqual(true);
+                    expect(filter(bot5)).toEqual(true);
+                });
+
+                it('should not work when given a direction other than the supported ones', () => {
+                    const filter = library.api.neighboring(bot1, 'red', <any>(
+                        'wrong'
+                    ));
+
+                    expect(filter(bot2)).toEqual(false);
+                    expect(filter(bot3)).toEqual(false);
+                    expect(filter(bot4)).toEqual(false);
+                    expect(filter(bot5)).toEqual(false);
+                });
+
+                it('should return a function that returns false if the given bot is not at the correct position', () => {
+                    const filter = library.api.neighboring(bot1, 'red');
+
+                    bot2.tags.redX = 2;
+                    bot3.tags.redX = -2;
+                    bot4.tags.redY = 2;
+                    bot5.tags.redY = -2;
+
+                    expect(filter(bot2)).toEqual(false);
+                    expect(filter(bot3)).toEqual(false);
+                    expect(filter(bot4)).toEqual(false);
+                    expect(filter(bot5)).toEqual(false);
+                });
+
+                it('should return a function without a sort function', () => {
+                    const filter = library.api.neighboring(bot1, 'red');
+
+                    expect(typeof filter.sort).toEqual('undefined');
+                });
+            });
         });
 
         describe('bySpace()', () => {
