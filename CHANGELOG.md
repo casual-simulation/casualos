@@ -33,6 +33,7 @@
     -   Added some extra spacing to labels to help prevent Z-fighting.
     -   Fixed toasting bots by converting them to copiable values. This will also allow toasting unconventional arguments like function and error objects.
     -   Fixed an issue where the menu would stop repositioning after the inventory portal had been hidden.
+    -   Fixed an issue where tapping on the screen while in AR would crash the session.
 
 ## V1.1.4
 
