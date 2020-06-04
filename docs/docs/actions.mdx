@@ -402,6 +402,17 @@ let mod = getMod(bot, /^on/g);
 
 Sends a webhook using the given options.
 
+Returns a Promise that resolves with the following properties:
+
+```typescript
+{
+    data: any,
+    status: number,
+    statusText: string,
+    headers: any
+}
+```
+
 The **first parameter** is an object with the following properties:
 
 ```typescript
@@ -430,6 +441,7 @@ let options: {
 
     /**
      * The shout that should be made when the request finishes.
+     * This is for legacy code. New code should await the returned promise.
      */
     responseShout?: string;
 };
@@ -437,13 +449,14 @@ let options: {
 
 #### Examples:
 
-1. Send a HTTP GET request to `https://example.com`.
+1. Send a HTTP GET request to `https://auxplayer.com` and toast the result.
 ```typescript
-webhook({
+const response = await webhook({
     method: 'GET',
     url: 'https://example.com',
-    responseShout: 'onResponse'
 });
+
+player.toast(response);
 ```
 
 2. Send a HTTP PUT request to `https://example.com` with some data.
@@ -460,6 +473,17 @@ webhook({
 ### `webhook.post(url, data?, options?)`
 
 Sends a HTTP POST request using the given options.
+
+Returns a Promise that resolves with the following properties:
+
+```typescript
+{
+    data: any,
+    status: number,
+    statusText: string,
+    headers: any
+}
+```
 
 The **first parameter** is the URL that the request should be sent to.
 
@@ -485,13 +509,13 @@ let options: {
 
 #### Examples:
 
-1. Send a HTTP POST request to `https://example.com`.
+1. Send a HTTP POST request to `https://example.com` and toast the result.
 ```typescript
-webhook.post('https://example.com', {
+const response = await webhook.post('https://example.com', {
     some: 'data'
-}, {
-    responseShout: 'onResponse'
 });
+
+player.toast(response);
 ```
 
 ## Bot Filters
