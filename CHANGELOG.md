@@ -16,6 +16,12 @@
             -   It returns a Promise that resolves once the space is unlocked. If the space was unable to be unlocked, then the promise will reject with an error.
             -   `password` is the password that should be used to unlock the admin space. If incorrect, admin space will remain locked.
     -   Removed the CasualOS tagline from the loading popup.
+    -   Improved the `webhook()` and `webhook.post()` functions to return promises.
+        -   The promise can be awaited and resolves with the an an object with the following properties:
+            -   `data` - The data returned from the webhook. If the returned data was JSON, then this will be an object. Otherwise, it will be a string.
+            -   `status` - The numerical HTTP status code that was returned.
+            -   `statusText` - The name of the HTTP status code that was returned.
+            -   `headers` - The HTTP headers that were included in the response.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
