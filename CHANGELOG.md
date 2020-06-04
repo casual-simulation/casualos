@@ -26,6 +26,7 @@
         -   When omitted, all supported directions will be included.
         -   Currently, the supported directions are `front`, `right`, `back`, and `left`.
         -   If an unsupported direction is given, then no bots will be included.
+    -   Updated the Documentation website to the [latest version of Docusaurus](https://github.com/facebook/docusaurus/releases/tag/v2.0.0-alpha.56).
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
