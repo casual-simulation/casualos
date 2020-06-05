@@ -2036,7 +2036,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return;
         }
 
-        const destroyable = realBot.tags.auxDestroyable;
+        let destroyable = realBot.tags.auxDestroyable;
+        if (hasValue(destroyable) && destroyable !== true) {
+            return;
+        }
+
+        destroyable = realBot.tags.destroyable;
         if (hasValue(destroyable) && destroyable !== true) {
             return;
         }

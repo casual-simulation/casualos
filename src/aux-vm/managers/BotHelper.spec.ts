@@ -124,7 +124,7 @@ describe('BotHelper', () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1', {
-                    auxDestroyable: false,
+                    destroyable: false,
                 }),
             };
 

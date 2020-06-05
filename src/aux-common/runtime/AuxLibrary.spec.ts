@@ -3426,13 +3426,13 @@ describe('AuxLibrary', () => {
         });
 
         it('should not destroy bots that are not destroyable', () => {
-            bot2.tags.auxDestroyable = false;
+            bot2.tags.destroyable = false;
             library.api.destroy(context.bots.slice());
             expect(context.bots).toEqual([bot2]);
         });
 
         it('should short-circut destroying child bots', () => {
-            bot2.tags.auxDestroyable = false;
+            bot2.tags.destroyable = false;
             bot3.tags.auxCreator = 'test2';
             library.api.destroy([bot1, bot2, bot4]);
             expect(context.bots).toEqual([bot2, bot3]);
@@ -3465,8 +3465,16 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+        it('should not destroy bots that have auxDestroyable set to false', () => {
             bot2.tags.auxDestroyable = false;
+            library.api.destroy(bot2);
+
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
+
+        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+            bot2.tags.destroyable = false;
             library.api.destroy({ id: bot2.id, tags: {} });
 
             const results = library.api.getBots();

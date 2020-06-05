@@ -6451,7 +6451,7 @@ describe('original action tests', () => {
                         test: '@destroy(this)',
                         onDestroy:
                             '@setTag(getBot("abc", "def"), "name", "bob")',
-                        auxDestroyable: false,
+                        destroyable: false,
                     },
                 },
                 otherBot: {
@@ -6485,7 +6485,7 @@ describe('original action tests', () => {
                     id: 'childBot',
                     tags: {
                         auxCreator: 'thisBot',
-                        auxDestroyable: false,
+                        destroyable: false,
                     },
                 },
                 grandChildBot: {

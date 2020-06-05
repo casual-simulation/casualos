@@ -922,7 +922,7 @@ export const KNOWN_TAGS: string[] = [
     'draggable',
     'draggableMode',
     'positioningMode',
-    'auxDestroyable',
+    'destroyable',
     'auxEditable',
     'auxStrokeColor',
     'auxStrokeWidth',

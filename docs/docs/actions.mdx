@@ -86,7 +86,7 @@ let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
 Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='@onDestroy'/> for each of the destroyed bots.
 
 Note that only destroyable bots will be destroyed.
-Bots that have <TagLink tag='auxDestroyable'/> set to `false` will not be destroyed.
+Bots that have <TagLink tag='destroyable'/> set to `false` will not be destroyed.
 
 Also note that all bots that have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
 This happens recursively until there are no more bots to destroy.
