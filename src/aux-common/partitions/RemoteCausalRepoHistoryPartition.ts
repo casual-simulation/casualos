@@ -146,10 +146,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
                     continue;
                 }
                 const hash = bot.tags.auxMarkHash;
-                this._client.restore(
-                    restoreMark.universe || this._branch,
-                    hash
-                );
+                this._client.restore(restoreMark.story || this._branch, hash);
             }
         }
     }

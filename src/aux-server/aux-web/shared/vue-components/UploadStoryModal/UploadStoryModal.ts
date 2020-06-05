@@ -14,7 +14,7 @@ const BotPond = vueBotPond();
         'bot-pond': BotPond,
     },
 })
-export default class UploadUniverseModal extends Vue {
+export default class UploadStoryModal extends Vue {
     isOpen: boolean = false;
 
     /**

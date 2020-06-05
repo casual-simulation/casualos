@@ -41,7 +41,7 @@ import {
     openConsole,
     checkout,
     playSound,
-    setupUniverse,
+    setupStory,
     shell,
     backupToGithub,
     backupAsDownload,
@@ -1304,14 +1304,14 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
-            it('should allow linking to a specific universe and dimension', () => {
+            it('should allow linking to a specific story and dimension', () => {
                 const action = library.api.player.showJoinCode(
-                    'universe',
+                    'story',
                     'dimension'
                 );
-                expect(action).toEqual(showJoinCode('universe', 'dimension'));
+                expect(action).toEqual(showJoinCode('story', 'dimension'));
                 expect(context.actions).toEqual([
-                    showJoinCode('universe', 'dimension'),
+                    showJoinCode('story', 'dimension'),
                 ]);
             });
         });
@@ -1560,7 +1560,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.downloadUniverse()', () => {
+        describe('player.downloadStory()', () => {
             let bot3: RuntimeBot;
             let player: RuntimeBot;
 
@@ -1569,7 +1569,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        auxStory: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1577,8 +1577,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should emit a DownloadAction with the current state and universe name', () => {
-                const action = library.api.player.downloadUniverse();
+            it('should emit a DownloadAction with the current state and story name', () => {
+                const action = library.api.player.downloadStory();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1603,7 +1603,7 @@ describe('AuxLibrary', () => {
                 const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
                 addToContext(context, bot4, bot5, bot6, bot7, bot8);
 
-                const action = library.api.player.downloadUniverse();
+                const action = library.api.player.downloadStory();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1721,17 +1721,17 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.loadUniverse()', () => {
-            it('should emit a LoadUniverseAction', () => {
-                const action = library.api.player.loadUniverse('abc');
+        describe('player.loadStory()', () => {
+            it('should emit a LoadStoryAction', () => {
+                const action = library.api.player.loadStory('abc');
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
-        describe('player.unloadUniverse()', () => {
-            it('should emit a UnloadUniverseAction', () => {
-                const action = library.api.player.unloadUniverse('abc');
+        describe('player.unloadStory()', () => {
+            it('should emit a UnloadStoryAction', () => {
+                const action = library.api.player.unloadStory('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
@@ -1814,7 +1814,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        auxStory: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1856,7 +1856,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        auxStory: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1885,7 +1885,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('player.getCurrentUniverse()', () => {
+        describe('player.getCurrentStory()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -1894,22 +1894,22 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxUniverse', () => {
-                player.tags.auxUniverse = 'universe';
-                const result = library.api.player.getCurrentUniverse();
-                expect(result).toEqual('universe');
+            it('should return auxStory', () => {
+                player.tags.auxStory = 'story';
+                const result = library.api.player.getCurrentStory();
+                expect(result).toEqual('story');
             });
 
-            it('should return undefined when auxUniverse is not set', () => {
-                const result = library.api.player.getCurrentUniverse();
+            it('should return undefined when auxStory is not set', () => {
+                const result = library.api.player.getCurrentStory();
                 expect(result).toBeUndefined();
             });
 
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxUniverse = given;
-                    const result = library.api.player.getCurrentUniverse();
+                    player.tags.auxStory = given;
+                    const result = library.api.player.getCurrentStory();
                     expect(result).toEqual(expected);
                 }
             );
@@ -2212,14 +2212,14 @@ describe('AuxLibrary', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 });
                 const expected = checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2301,15 +2301,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.setupUniverse()', () => {
+        describe('server.setupStory()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
                 bot1.tags.abc = true;
-                const action = library.api.server.setupUniverse(
-                    'channel',
-                    bot1
-                );
+                const action = library.api.server.setupStory('channel', bot1);
                 const expected = remote(
-                    setupUniverse('channel', createBot(bot1.id, bot1.tags))
+                    setupStory('channel', createBot(bot1.id, bot1.tags))
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2434,13 +2431,13 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.restoreHistoryMarkToUniverse()', () => {
+        describe('server.restoreHistoryMarkToStory()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMarkToUniverse(
+                const action = library.api.server.restoreHistoryMarkToStory(
                     'mark',
-                    'universe'
+                    'story'
                 );
-                const expected = remote(restoreHistoryMark('mark', 'universe'));
+                const expected = remote(restoreHistoryMark('mark', 'story'));
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

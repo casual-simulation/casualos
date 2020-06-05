@@ -50,7 +50,7 @@ import {
     goToURL,
     openURL,
     openConsole,
-    setupUniverse,
+    setupStory,
     shell,
     backupToGithub,
     backupAsDownload,
@@ -1309,10 +1309,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should send onUniverseAction() shouts for each event', async () => {
+        it('should send onStoryAction() shouts for each event', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: '@player.toast(that.action.message)',
+                    onStoryAction: '@player.toast(that.action.message)',
                 }),
             ]);
             runtime.process([
@@ -1339,7 +1339,7 @@ describe('AuxRuntime', () => {
         it('should resolve rejected events', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: '@action.reject(that.action)',
+                    onStoryAction: '@action.reject(that.action)',
                 }),
             ]);
             runtime.process([
@@ -1353,10 +1353,10 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([[]]);
         });
 
-        it('should call onUniverseAction() once per action in a batch', async () => {
+        it('should call onStoryAction() once per action in a batch', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: '@tags.count += 1',
+                    onStoryAction: '@tags.count += 1',
                     wow: '@player.toast("hi")',
                     count: 0,
                 }),
@@ -1418,7 +1418,7 @@ describe('AuxRuntime', () => {
         it('should be able to filter actions before they are executed', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: `@if(that.action.type === "action") action.reject(that.action);`,
+                    onStoryAction: `@if(that.action.type === "action") action.reject(that.action);`,
                     test: '@player.toast("hi")',
                 }),
             ]);
@@ -1432,7 +1432,7 @@ describe('AuxRuntime', () => {
         it('should be able to filter runScript actions before they are executed', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
+                    onStoryAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
                 }),
             ]);
             runtime.process([runScript('player.toast("hi")')]);
@@ -1460,10 +1460,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new shout from inside onUniverseAction()', async () => {
+        it('should support dispatching a new shout from inside onStoryAction()', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                    onStoryAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                     test: '@tags.hit = true',
                 }),
             ]);
@@ -1473,7 +1473,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onUniverseAction is executed before
+                    // onStoryAction is executed before
                     // the device action is executed
                     botUpdated('test1', {
                         tags: {
@@ -1485,10 +1485,10 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should support dispatching a new script from inside onUniverseAction()', async () => {
+        it('should support dispatching a new script from inside onStoryAction()', async () => {
             runtime.botsAdded([
                 createBot('test1', {
-                    onUniverseAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                    onStoryAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
                 }),
             ]);
             runtime.process([device(<any>{}, runScript('player.toast("hi")'))]);
@@ -1497,7 +1497,7 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([
                 [
-                    // onUniverseAction is executed before
+                    // onStoryAction is executed before
                     // the device action is executed
                     toast('hi'),
                     device(<any>{}, runScript('player.toast("hi")')),
@@ -7215,12 +7215,12 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([showJoinCode()]);
         });
 
-        it('should allow linking to a specific universe and dimension', () => {
+        it('should allow linking to a specific story and dimension', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.showJoinCode("universe", "dimension")',
+                        test: '@player.showJoinCode("story", "dimension")',
                     },
                 },
             };
@@ -7231,7 +7231,7 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                showJoinCode('universe', 'dimension'),
+                showJoinCode('story', 'dimension'),
             ]);
         });
     });
@@ -7820,19 +7820,19 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.downloadUniverse()', () => {
-        it('should emit a DownloadAction with the current state and universe name', () => {
+    describe('player.downloadStory()', () => {
+        it('should emit a DownloadAction with the current state and story name', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadUniverse()',
+                        test: '@player.downloadStory()',
                     },
                 },
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxUniverse: 'channel',
+                        auxStory: 'channel',
                     },
                 },
             };
@@ -7859,7 +7859,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.downloadUniverse()',
+                        test: '@player.downloadStory()',
                     },
                 },
                 thatBot: {
@@ -7873,7 +7873,7 @@ describe('original action tests', () => {
                     id: 'userBot',
                     space: 'tempLocal',
                     tags: {
-                        auxUniverse: 'channel',
+                        auxStory: 'channel',
                     },
                 },
                 otherBot: {
@@ -8129,13 +8129,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('loadUniverse()', () => {
-        it('should emit a LoadUniverseAction', () => {
+    describe('loadStory()', () => {
+        it('should emit a LoadStoryAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.loadUniverse("abc")',
+                        test: '@player.loadStory("abc")',
                     },
                 },
             };
@@ -8149,13 +8149,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('unloadUniverse()', () => {
-        it('should emit a UnloadUniverseAction', () => {
+    describe('unloadStory()', () => {
+        it('should emit a UnloadStoryAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@player.unloadUniverse("abc")',
+                        test: '@player.unloadStory("abc")',
                     },
                 },
             };
@@ -8374,20 +8374,20 @@ describe('original action tests', () => {
         });
     });
 
-    describe('player.getCurrentUniverse()', () => {
-        it('should return auxUniverse', () => {
+    describe('player.getCurrentStory()', () => {
+        it('should return auxStory', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentUniverse())',
+                            '@setTag(this, "#dimension", player.getCurrentStory())',
                     },
                 },
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxUniverse: 'dimension',
+                        auxStory: 'dimension',
                     },
                 },
             };
@@ -8406,13 +8406,13 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return undefined when auxUniverse is not set', () => {
+        it('should return undefined when auxStory is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         test:
-                            '@setTag(this, "#dimension", player.getCurrentUniverse())',
+                            '@setTag(this, "#dimension", player.getCurrentStory())',
                     },
                 },
                 userBot: {
@@ -8446,13 +8446,13 @@ describe('original action tests', () => {
                         id: 'thisBot',
                         tags: {
                             test:
-                                '@setTag(this, "#dimension", player.getCurrentUniverse())',
+                                '@setTag(this, "#dimension", player.getCurrentStory())',
                         },
                     },
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            auxUniverse: given,
+                            auxStory: given,
                         },
                     },
                 };
@@ -9055,13 +9055,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.setupUniverse()', () => {
+    describe('server.setupStory()', () => {
         it('should send a SetupChannelAction in a RemoteAction', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: '@server.setupUniverse("channel", this)',
+                        test: '@server.setupStory("channel", this)',
                     },
                 },
                 userBot: {
@@ -9079,10 +9079,10 @@ describe('original action tests', () => {
 
             expect(result.actions).toEqual([
                 remote(
-                    setupUniverse(
+                    setupStory(
                         'channel',
                         createBot('thisBot', {
-                            test: '@server.setupUniverse("channel", this)',
+                            test: '@server.setupStory("channel", this)',
                         })
                     )
                 ),
@@ -9170,7 +9170,7 @@ describe('original action tests', () => {
                             productId: 'ID1',
                             title: 'Product 1',
                             description: '$50.43',
-                            processingUniverse: 'channel2'
+                            processingStory: 'channel2'
                         })`,
                     },
                 },
@@ -9187,7 +9187,7 @@ describe('original action tests', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 }),
             ]);
         });
@@ -9324,13 +9324,13 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.restoreHistoryMarkToUniverse()', () => {
+    describe('server.restoreHistoryMarkToStory()', () => {
         it('should emit a restore_history_mark event', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        test: `@server.restoreHistoryMarkToUniverse("mark", "universe")`,
+                        test: `@server.restoreHistoryMarkToStory("mark", "story")`,
                     },
                 },
             };
@@ -9344,7 +9344,7 @@ describe('original action tests', () => {
                 remote(<RestoreHistoryMarkAction>{
                     type: 'restore_history_mark',
                     mark: 'mark',
-                    universe: 'universe',
+                    story: 'story',
                 }),
             ]);
         });
@@ -9364,8 +9364,8 @@ describe('original action tests', () => {
             ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
             ['player.showBarcode("code")', showBarcode(true, 'code')],
             ['player.hideBarcode()', showBarcode(false)],
-            ['player.loadUniverse("channel")', loadSimulation('channel')],
-            ['player.unloadUniverse("channel")', unloadSimulation('channel')],
+            ['player.loadStory("channel")', loadSimulation('channel')],
+            ['player.unloadStory("channel")', unloadSimulation('channel')],
             ['player.importAUX("aux")', importAUX('aux')],
             ['player.showQRCode("code")', showQRCode(true, 'code')],
             ['player.hideQRCode()', showQRCode(false)],
@@ -9379,14 +9379,14 @@ describe('original action tests', () => {
                 productId: 'ID1',
                 title: 'Product 1',
                 description: '$50.43',
-                processingUniverse: 'channel2'
+                processingStory: 'channel2'
             })`,
                 checkout({
                     publishableKey: 'my_key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 }),
             ],
             ['player.openDevConsole()', openConsole()],

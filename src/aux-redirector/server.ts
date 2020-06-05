@@ -33,25 +33,25 @@ export class Server {
         }
 
         this._app.use(bodyParser.json());
-        this._app.all('/:dimension/:universe', (req, res) => {
-            const universe: string = req.params.universe;
+        this._app.all('/:dimension/:story', (req, res) => {
+            const story: string = req.params.story;
             const dimension: string = req.params.dimension;
-            const universeEncoded = encodeURIComponent(universe);
-            console.log('Redirecting to player:', universe, dimension);
+            const storyEncoded = encodeURIComponent(story);
+            console.log('Redirecting to player:', story, dimension);
 
             if (dimension.startsWith('*')) {
                 const dimensionEncoded = encodeURIComponent(dimension.slice(1));
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxUniverse=${universeEncoded}&auxSheetPortal=${dimensionEncoded}`
+                    }?auxStory=${storyEncoded}&auxSheetPortal=${dimensionEncoded}`
                 );
             } else {
                 const dimensionEncoded = encodeURIComponent(dimension);
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxUniverse=${universeEncoded}&auxPagePortal=${dimensionEncoded}`
+                    }?auxStory=${storyEncoded}&auxPagePortal=${dimensionEncoded}`
                 );
             }
         });

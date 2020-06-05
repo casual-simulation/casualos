@@ -60,7 +60,7 @@ export interface UpdatedBot {
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
  * - "error" means that the bot represents an error.
- * - "admin" means that the bot is shared across all universes.
+ * - "admin" means that the bot is shared across all stories.
  */
 export type BotSpace =
     | 'shared'
@@ -78,7 +78,7 @@ export type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'universes'
+    | 'stories'
     | string;
 
 export interface ScriptTags extends PrecalculatedTags {
@@ -87,9 +87,6 @@ export interface ScriptTags extends PrecalculatedTags {
 
 export interface BotTags {
     // Global bot tags
-    ['auxUniverseColor']?: string;
-    ['auxUniverseUserPlayerColor']?: unknown;
-    ['auxUniverseUserBuilderColor']?: unknown;
     ['auxInventoryHeight']?: unknown;
     ['auxVersion']?: unknown;
 
@@ -137,7 +134,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['auxPagePortal']?: string | boolean;
     ['auxSheetPortal']?: string | boolean;
-    ['auxUniverse']?: string | string[];
+    ['auxStory']?: string | string[];
     ['auxInventoryPortal']?: string;
     ['auxMenuPortal']?: string;
     ['auxLeftWristPortal']?: string;
@@ -149,9 +146,6 @@ export interface BotTags {
     ['auxLeftWristPortalConfigBot']?: string;
     ['auxRightWristPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
-
-    // Admin channel bot-channel tags
-    ['auxUniverseConnectedSessions']?: number;
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
@@ -724,30 +718,27 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onUniverseAction';
+export const ON_ACTION_ACTION_NAME: string = 'onStoryAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_UNIVERSE_STREAMING_ACTION_NAME: string = 'onUniverseStreaming';
+export const ON_STORY_STREAMING_ACTION_NAME: string = 'onStoryStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_UNIVERSE_STREAM_LOST_ACTION_NAME: string =
-    'onUniverseStreamLost';
+export const ON_STORY_STREAM_LOST_ACTION_NAME: string = 'onStoryStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_UNIVERSE_SUBSCRIBED_ACTION_NAME: string =
-    'onUniverseSubscribed';
+export const ON_STORY_SUBSCRIBED_ACTION_NAME: string = 'onStorySubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
-    'onUniverseUnsubscribed';
+export const ON_STORY_UNSUBSCRIBED_ACTION_NAME: string = 'onStoryUnsubscribed';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the player.
@@ -887,7 +878,7 @@ export const KNOWN_TAGS: string[] = [
     'auxPlayerActive',
     'auxPagePortal',
     'auxSheetPortal',
-    'auxUniverse',
+    'auxStory',
     'auxInventoryPortal',
     'auxMenuPortal',
     'auxLeftWristPortal',
@@ -924,10 +915,6 @@ export const KNOWN_TAGS: string[] = [
     'auxInventoryPortalResizable',
     'auxWristPortalHeight',
     'auxWristPortalWidth',
-
-    'auxUniverseColor',
-    'auxUniverseUserPlayerColor',
-    'auxUniverseUserBuilderColor',
 
     'auxColor',
     'auxCreator',
@@ -969,7 +956,6 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarPosition',
     'auxMaxLODThreshold',
     'auxMinLODThreshold',
-    'auxUniverseConnectedSessions',
     'auxPointable',
     'auxFocusable',
 
@@ -1033,10 +1019,10 @@ export const KNOWN_TAGS: string[] = [
     'onPointerExit',
     'onPointerDown',
     'onPointerUp',
-    ON_UNIVERSE_STREAMING_ACTION_NAME,
-    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+    ON_STORY_STREAMING_ACTION_NAME,
+    ON_STORY_STREAM_LOST_ACTION_NAME,
+    ON_STORY_SUBSCRIBED_ACTION_NAME,
+    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
@@ -1111,27 +1097,27 @@ export function onDropArg(
     };
 }
 
-export function onUniverseStreamingArg(universe: string) {
+export function onStoryStreamingArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseStreamLostArg(universe: string) {
+export function onStoryStreamLostArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseSubscribedArg(universe: string) {
+export function onStorySubscribedArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseUnsubscribedArg(universe: string) {
+export function onStoryUnsubscribedArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 

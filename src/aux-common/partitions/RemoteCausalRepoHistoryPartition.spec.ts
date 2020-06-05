@@ -138,7 +138,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     ]);
                 });
 
-                it('should send a restore event to the server with the universe if specified', async () => {
+                it('should send a restore event to the server with the story if specified', async () => {
                     const addCommits = new Subject<AddCommitsEvent>();
                     connection.events.set(ADD_COMMITS, addCommits);
 
@@ -174,7 +174,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         remote(
                             restoreHistoryMark(
                                 uuid(c1.hash, COMMIT_ID_NAMESPACE),
-                                'universe'
+                                'story'
                             )
                         ),
                     ]);
@@ -185,7 +185,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         {
                             name: RESTORE,
                             data: {
-                                branch: 'universe',
+                                branch: 'story',
                                 commit: c1.hash,
                             },
                         },

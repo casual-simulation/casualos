@@ -53,9 +53,7 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        await this._setUniverse(this.query['auxUniverse'] as (
-            | string
-            | string[]));
+        await this._setStory(this.query['auxStory'] as (string | string[]));
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 bot => {
@@ -87,7 +85,7 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            this._setUniverse(this.query['auxUniverse'] as (string | string[]));
+            this._setStory(this.query['auxStory'] as (string | string[]));
         }
     }
 
@@ -101,17 +99,17 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (update.tags.has('auxUniverse')) {
-                            // Universe changed - update it
+                        if (update.tags.has('auxStory')) {
+                            // Story changed - update it
                             const calc = sim.helper.createContext();
-                            const universe = calculateStringListTagValue(
+                            const story = calculateStringListTagValue(
                                 calc,
                                 update.bot,
-                                'auxUniverse',
+                                'auxStory',
                                 null
                             );
-                            if (hasValue(universe)) {
-                                this._setUniverse(universe);
+                            if (hasValue(story)) {
+                                this._setStory(story);
                             }
                         }
                     }
@@ -152,19 +150,19 @@ export default class PlayerHome extends Vue {
         }
     }
 
-    private async _setUniverse(newUniverse: string | string[]) {
-        if (typeof newUniverse === 'string') {
-            await this._loadPrimarySimulation(newUniverse);
+    private async _setStory(newStory: string | string[]) {
+        if (typeof newStory === 'string') {
+            await this._loadPrimarySimulation(newStory);
         } else {
             if (!appManager.simulationManager.primary) {
-                await this._loadPrimarySimulation(newUniverse[0]);
+                await this._loadPrimarySimulation(newStory[0]);
             }
-            await appManager.simulationManager.updateSimulations(newUniverse);
+            await appManager.simulationManager.updateSimulations(newStory);
         }
     }
 
-    private async _loadPrimarySimulation(newUniverse: string) {
-        const sim = await appManager.setPrimarySimulation(newUniverse);
+    private async _loadPrimarySimulation(newStory: string) {
+        const sim = await appManager.setPrimarySimulation(newStory);
         sim.connection.syncStateChanged
             .pipe(first(synced => synced))
             .subscribe(() => {

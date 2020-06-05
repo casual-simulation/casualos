@@ -74,7 +74,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Note that once a bot is added to error space it is unable to be changed.
   </PossibleValueCode>
   <PossibleValueCode value='admin'>
-    The bot is saved on the AUXPlayer and is shared across all universes.
+    The bot is saved on the AUXPlayer and is shared across all stories.
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
     You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
   </PossibleValueCode>
@@ -1107,7 +1107,7 @@ The number of grid spaces that the wrist portal should have in the X direction.
 
 ## Channel Config Tags
 
-These tags are set on the config bot and affect the entire universe.
+These tags are set on the config bot and affect the entire story.
 
 ### `auxSceneColor`
 
@@ -1230,13 +1230,13 @@ All tags on the player bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `auxInventoryPortal=myDimension` into the query string will set the <TagLink tag='auxInventoryPortal'/> tag to `myDimension`.
 
-### `auxUniverse`
+### `auxStory`
 
 <Badges>
   <UserBotBadge/>
 </Badges>
 
-The universe that is loaded into auxPlayer.
+The story that is loaded into auxPlayer.
 
 ### `auxPagePortal`
 

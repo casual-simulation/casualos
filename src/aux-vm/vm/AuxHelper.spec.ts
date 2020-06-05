@@ -717,7 +717,7 @@ describe('AuxHelper', () => {
                 let searchClient = new MemoryBotClient();
                 let error = createBotClientPartition({
                     type: 'bot_client',
-                    universe: 'universe',
+                    story: 'story',
                     client: searchClient,
                 });
                 helper = createHelper({
@@ -729,7 +729,7 @@ describe('AuxHelper', () => {
                 });
                 helper.userId = userId;
 
-                await searchClient.addBots('universe', [
+                await searchClient.addBots('story', [
                     createBot('test1', {
                         abc: 'def',
                     }),
@@ -763,7 +763,7 @@ describe('AuxHelper', () => {
                 let searchClient = new MemoryBotClient();
                 let error = createBotClientPartition({
                     type: 'bot_client',
-                    universe: 'universe',
+                    story: 'story',
                     client: searchClient,
                 });
                 helper = createHelper({
@@ -775,7 +775,7 @@ describe('AuxHelper', () => {
                 });
                 helper.userId = userId;
 
-                await searchClient.addBots('universe', [
+                await searchClient.addBots('story', [
                     createBot('test1', {
                         abc: 'def',
                     }),
@@ -785,7 +785,7 @@ describe('AuxHelper', () => {
 
                 await waitAsync();
 
-                expect(searchClient.universes['universe']).toEqual({});
+                expect(searchClient.stories['story']).toEqual({});
             });
         });
 
@@ -799,7 +799,7 @@ describe('AuxHelper', () => {
                 let admin = await createCausalRepoClientPartition(
                     {
                         type: 'causal_repo_client',
-                        branch: 'universe',
+                        branch: 'story',
                         client: client,
                         static: true,
                     },
@@ -828,7 +828,7 @@ describe('AuxHelper', () => {
                 const value1 = atom(atomId('a', 3), tag1, value('abc'));
 
                 addAtoms.next({
-                    branch: 'universe',
+                    branch: 'story',
                     atoms: [bot1, tag1, value1],
                 });
 
@@ -841,7 +841,7 @@ describe('AuxHelper', () => {
                 expect(connection.sentMessages.slice(1)).toEqual([
                     {
                         name: WATCH_BRANCH,
-                        data: 'universe',
+                        data: 'story',
                     },
                 ]);
             });
@@ -867,10 +867,10 @@ describe('AuxHelper', () => {
             });
         });
 
-        describe('onUniverseAction()', () => {
-            it('should shout an onUniverseAction() call', async () => {
+        describe('onStoryAction()', () => {
+            it('should shout an onStoryAction() call', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: '@setTag(this, "hit", true)',
+                    onStoryAction: '@setTag(this, "hit", true)',
                 });
 
                 await helper.transaction({
@@ -883,15 +883,15 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: {
-                        onUniverseAction: '@setTag(this, "hit", true)',
+                        onStoryAction: '@setTag(this, "hit", true)',
                         hit: true,
                     },
                 });
             });
 
-            it('should skip actions that onUniverseAction() rejects', async () => {
+            it('should skip actions that onStoryAction() rejects', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: '@action.reject(that.action)',
+                    onStoryAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -914,7 +914,7 @@ describe('AuxHelper', () => {
 
             it('should allow rejecting rejections', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: '@action.reject(that.action)',
+                    onStoryAction: '@action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -944,10 +944,10 @@ describe('AuxHelper', () => {
             ];
 
             it.each(falsyTests)(
-                'should allow actions that onUniverseAction() returns %s for',
+                'should allow actions that onStoryAction() returns %s for',
                 async val => {
                     await helper.createBot('abc', {
-                        onUniverseAction: `@return ${val};`,
+                        onStoryAction: `@return ${val};`,
                     });
 
                     await helper.createBot('test', {});
@@ -969,9 +969,9 @@ describe('AuxHelper', () => {
                 }
             );
 
-            it('should allow actions that onUniverseAction() returns true for', async () => {
+            it('should allow actions that onStoryAction() returns true for', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: '@return true',
+                    onStoryAction: '@return true',
                 });
 
                 await helper.createBot('test', {});
@@ -992,9 +992,9 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow actions when onUniverseAction() errors out', async () => {
+            it('should allow actions when onStoryAction() errors out', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: '@throw new Error("Error")',
+                    onStoryAction: '@throw new Error("Error")',
                 });
 
                 await helper.createBot('test', {});
@@ -1017,7 +1017,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter based on action type', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -1045,7 +1045,7 @@ describe('AuxHelper', () => {
 
             it('should filter actions from inside shouts', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -1068,7 +1068,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter out actions before they are run', async () => {
                 await helper.createBot('abc', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                         if (that.action.type === 'action') {
                             action.reject(that.action);
                         }
@@ -1089,13 +1089,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow updates to the onUniverseAction() handler by default', async () => {
+            it('should allow updates to the onStoryAction() handler by default', async () => {
                 await helper.createBot('abc', {});
 
                 await helper.transaction(
                     botUpdated('abc', {
                         tags: {
-                            onUniverseAction: `@
+                            onStoryAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1108,7 +1108,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: expect.objectContaining({
-                        onUniverseAction: `@
+                        onStoryAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1118,13 +1118,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow the entire update and not just the onUniverseAction() part', async () => {
+            it('should allow the entire update and not just the onStoryAction() part', async () => {
                 await helper.createBot('abc', {});
 
                 await helper.transaction(
                     botUpdated('abc', {
                         tags: {
-                            onUniverseAction: `@
+                            onStoryAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1138,7 +1138,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState['abc']).toMatchObject({
                     id: 'abc',
                     tags: expect.objectContaining({
-                        onUniverseAction: `@
+                        onStoryAction: `@
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -1155,7 +1155,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot('abc', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                         if (that.action.type === 'action') {
                             create(null, {
                                 test: true
@@ -1180,7 +1180,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot('abc', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                         if (that.action.type === 'update_bot') {
                             create(null, {
                                 test: true

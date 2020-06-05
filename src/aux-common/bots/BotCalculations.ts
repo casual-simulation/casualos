@@ -1995,7 +1995,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     if (id.host) {
         let str = id.host;
         if (id.channel) {
-            str += `?auxUniverse=${encodeURIComponent(id.channel)}`;
+            str += `?auxStory=${encodeURIComponent(id.channel)}`;
         }
         return str;
     }
@@ -2006,7 +2006,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.searchParams.get('auxUniverse');
+        const channel = uri.searchParams.get('auxStory');
         if (channel) {
             return {
                 success: true,
@@ -2203,7 +2203,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the auxUniverse tag from the given bot.
+ * Gets the auxStory tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2211,11 +2211,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'auxUniverse');
+    return calculateBotValue(calc, bot, 'auxStory');
 }
 
 /**
- * Gets the first bot which is in the aux.channels dimension that has the auxUniverse tag set to the given ID.
+ * Gets the first bot which is in the aux.channels dimension that has the auxStory tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2223,7 +2223,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'auxUniverse') === id
+            calculateBotValue(calc, o, 'auxStory') === id
         );
     });
 
@@ -2232,24 +2232,6 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     } else {
         return null;
     }
-}
-
-/**
- * Gets the number of connected devices that are connected to the channel that
- * the given bot is for.
- * @param calc The bot calculation context.
- * @param bot The bot.
- */
-export function getChannelConnectedDevices(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'auxUniverseConnectedSessions',
-        0
-    );
 }
 
 /**

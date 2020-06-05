@@ -34,7 +34,6 @@ import {
     getChannelBotById,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
-    getChannelConnectedDevices,
     getConnectedDevices,
     getBotScale,
     isUserActive,
@@ -459,10 +458,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map auxUniverse:%s to %s',
+            'should map auxStory:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    auxUniverse: value,
+                    auxStory: value,
                 });
 
                 const calc = createPrecalculatedContext([bot]);
@@ -1110,7 +1109,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                auxUniverse: 'test',
+                auxStory: 'test',
                 'aux.channels': true,
             });
 
@@ -1122,7 +1121,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                auxUniverse: 'test',
+                auxStory: 'test',
                 'aux.channels': true,
             });
 
@@ -1130,17 +1129,6 @@ export function botCalculationContextTests(
             const bot = getChannelBotById(calc, 'other');
 
             expect(bot).toEqual(null);
-        });
-    });
-
-    describe('getChannelConnectedDevices()', () => {
-        numericalTagValueTests(0, (value, expected) => {
-            let bot = createBot('test', {
-                auxUniverseConnectedSessions: value,
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            expect(getChannelConnectedDevices(calc, bot)).toBe(expected);
         });
     });
 

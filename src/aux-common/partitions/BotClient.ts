@@ -5,22 +5,22 @@ import { Bot, TagFilter } from '../bots';
  */
 export interface BotClient {
     /**
-     * Adds the given bots to the given universe.
-     * @param universe The universe the bots should be accociated with.
+     * Adds the given bots to the given story.
+     * @param story The story the bots should be accociated with.
      * @param added The bots that should be added.
      */
-    addBots(universe: string, added: Bot[]): Promise<void>;
+    addBots(story: string, added: Bot[]): Promise<void>;
 
     /**
-     * Clears all the bots in the given universe.
-     * @param universe The universe to clear.
+     * Clears all the bots in the given story.
+     * @param story The story to clear.
      */
-    clearBots(universe: string): Promise<void>;
+    clearBots(story: string): Promise<void>;
 
     /**
-     * Searches for bots matching the given tags in the given universe.
-     * @param universe The universe.
+     * Searches for bots matching the given tags in the given story.
+     * @param story The story.
      * @param tags The tags to search for.
      */
-    lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]>;
+    lookupBots(story: string, tags: TagFilter[]): Promise<Bot[]>;
 }

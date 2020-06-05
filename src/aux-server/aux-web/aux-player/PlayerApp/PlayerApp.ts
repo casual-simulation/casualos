@@ -15,15 +15,15 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
-    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-    ON_UNIVERSE_STREAMING_ACTION_NAME,
-    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+    ON_STORY_SUBSCRIBED_ACTION_NAME,
+    ON_STORY_STREAMING_ACTION_NAME,
+    ON_STORY_STREAM_LOST_ACTION_NAME,
+    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
     CameraType,
-    onUniverseStreamingArg,
-    onUniverseStreamLostArg,
-    onUniverseSubscribedArg,
-    onUniverseUnsubscribedArg,
+    onStoryStreamingArg,
+    onStoryStreamLostArg,
+    onStorySubscribedArg,
+    onStoryUnsubscribedArg,
     calculateStringListTagValue,
     asyncError,
     asyncResult,
@@ -50,7 +50,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
-import UploadUniverseModal from '../../shared/vue-components/UploadUniverseModal/UploadUniverseModal';
+import UploadStoryModal from '../../shared/vue-components/UploadStoryModal/UploadStoryModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
@@ -68,7 +68,7 @@ import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInput
         barcode: VueBarcode,
         'barcode-stream': BarcodeScanner,
         'html-modal': HtmlModal,
-        'upload-universe-modal': UploadUniverseModal,
+        'upload-story-modal': UploadStoryModal,
         'clipboard-modal': ClipboardModal,
         'bot-chat': BotChat,
         'bot-sheet': BotSheet,
@@ -417,33 +417,33 @@ export default class PlayerApp extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[PlayerApp] Add simulation!');
-        this._addUniverseToSimulation(appManager.simulationManager.primary, id);
+        this._addStoryToSimulation(appManager.simulationManager.primary, id);
     }
 
-    private _addUniverseToSimulation(sim: BrowserSimulation, id: string) {
+    private _addStoryToSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'auxUniverse',
+            'auxStory',
             []
         );
         if (list.indexOf(id) < 0) {
             list.push(id);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    auxUniverse: list,
+                    auxStory: list,
                 },
             });
         }
     }
 
-    private _removeUniverseFromSimulation(sim: BrowserSimulation, id: string) {
+    private _removeStoryFromSimulation(sim: BrowserSimulation, id: string) {
         const calc = sim.helper.createContext();
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'auxUniverse',
+            'auxStory',
             []
         );
         const index = list.indexOf(id);
@@ -451,7 +451,7 @@ export default class PlayerApp extends Vue {
             list.splice(index, 1);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    auxUniverse: list,
+                    auxStory: list,
                 },
             });
         }
@@ -474,7 +474,7 @@ export default class PlayerApp extends Vue {
     }
 
     removeSimulationById(id: string) {
-        this._removeUniverseFromSimulation(
+        this._removeStoryFromSimulation(
             appManager.simulationManager.primary,
             id
         );
@@ -578,9 +578,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.type === 'load_universe') {
+                } else if (e.type === 'load_story') {
                     this.finishAddSimulation(e.id);
-                } else if (e.type === 'unload_universe') {
+                } else if (e.type === 'unload_story') {
                     this.removeSimulationById(e.id);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
@@ -621,16 +621,15 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'show_join_code') {
                     const player = simulation.helper.userBot;
                     const calc = simulation.helper.createContext();
-                    const universe =
-                        e.universe ||
-                        calculateBotValue(calc, player, 'auxUniverse');
+                    const story =
+                        e.story || calculateBotValue(calc, player, 'auxStory');
                     const dimension =
                         e.dimension ||
                         calculateBotValue(calc, player, 'auxPagePortal');
                     const code = `${location.protocol}//${
                         location.host
-                    }?auxUniverse=${encodeURIComponent(
-                        universe
+                    }?auxStory=${encodeURIComponent(
+                        story
                     )}&auxPagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);
                 } else if (e.type === 'request_fullscreen_mode') {
@@ -736,8 +735,8 @@ export default class PlayerApp extends Vue {
                         if (info.subscribed) {
                             info.lostConnection = true;
                             await this._superAction(
-                                ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-                                onUniverseStreamLostArg(simulation.id)
+                                ON_STORY_STREAM_LOST_ACTION_NAME,
+                                onStoryStreamLostArg(simulation.id)
                             );
                         }
                     } else {
@@ -746,8 +745,8 @@ export default class PlayerApp extends Vue {
                         if (!info.subscribed) {
                             info.subscribed = true;
                             await this._superAction(
-                                ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-                                onUniverseSubscribedArg(simulation.id)
+                                ON_STORY_SUBSCRIBED_ACTION_NAME,
+                                onStorySubscribedArg(simulation.id)
                             );
 
                             for (let info of this.simulations) {
@@ -758,16 +757,16 @@ export default class PlayerApp extends Vue {
                                     continue;
                                 }
                                 await simulation.helper.action(
-                                    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
+                                    ON_STORY_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onUniverseSubscribedArg(info.id)
+                                    onStorySubscribedArg(info.id)
                                 );
                             }
                         }
 
                         await this._superAction(
-                            ON_UNIVERSE_STREAMING_ACTION_NAME,
-                            onUniverseStreamingArg(simulation.id)
+                            ON_STORY_STREAMING_ACTION_NAME,
+                            onStoryStreamingArg(simulation.id)
                         );
                     }
                 }
@@ -780,8 +779,8 @@ export default class PlayerApp extends Vue {
             }),
             new Subscription(async () => {
                 await this._superAction(
-                    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
-                    onUniverseUnsubscribedArg(simulation.id)
+                    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
+                    onStoryUnsubscribedArg(simulation.id)
                 );
             })
         );

@@ -36,7 +36,7 @@ import {
     openURL as calcOpenURL,
     checkout as calcCheckout,
     playSound as calcPlaySound,
-    setupUniverse as calcSetupUniverse,
+    setupStory as calcSetupStory,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
@@ -312,7 +312,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
-                downloadUniverse,
+                downloadStory,
                 showUploadAuxFile,
                 openQRCodeScanner,
                 closeQRCodeScanner,
@@ -322,15 +322,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
-                loadUniverse,
-                unloadUniverse,
+                loadStory,
+                unloadStory,
                 importAUX,
                 replaceDragBot,
 
                 getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
-                getCurrentUniverse,
+                getCurrentStory,
                 getMenuDimension,
                 getInventoryDimension,
                 getPortalDimension,
@@ -349,7 +349,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             server: {
-                setupUniverse,
+                setupStory,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -357,7 +357,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 markHistory,
                 browseHistory,
                 restoreHistoryMark,
-                restoreHistoryMarkToUniverse,
+                restoreHistoryMarkToStory,
                 loadFile,
                 saveFile,
                 destroyErrors,
@@ -393,7 +393,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the universe.
+     * // Gets all the bots in the story.
      * let bots = getBots();
      */
     function getBots(...args: any[]): RuntimeBot[] {
@@ -776,12 +776,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a universe and dimension.
-     * @param universe The universe that should be joined. Defaults to the current universe.
+     * Shows a QR Code that contains a link to a story and dimension.
+     * @param story The story that should be joined. Defaults to the current story.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    function showJoinCode(universe?: string, dimension?: string) {
-        return addAction(calcShowJoinCode(universe, dimension));
+    function showJoinCode(story?: string, dimension?: string) {
+        return addAction(calcShowJoinCode(story, dimension));
     }
 
     /**
@@ -951,15 +951,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
-    function downloadUniverse() {
+    function downloadStory() {
         return downloadBots(
             getBots(bySpace('shared')),
-            `${getCurrentUniverse()}.aux`
+            `${getCurrentStory()}.aux`
         );
     }
 
     /**
-     * Shows the "Upload Universe" dialog.
+     * Shows the "Upload AUX File" dialog.
      */
     function showUploadAuxFile() {
         return addAction(calcShowUploadAuxFile());
@@ -1035,19 +1035,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the universe with the given ID.
-     * @param id The ID of the universe to load.
+     * Loads the story with the given ID.
+     * @param id The ID of the story to load.
      */
-    function loadUniverse(id: string) {
+    function loadStory(id: string) {
         const event = loadSimulation(id);
         return addAction(event);
     }
 
     /**
-     * Unloads the universe with the given ID.
-     * @param id The ID of the universe to unload.
+     * Unloads the story with the given ID.
+     * @param id The ID of the story to unload.
      */
-    function unloadUniverse(id: string) {
+    function unloadStory(id: string) {
         const event = unloadSimulation(id);
         return addAction(event);
     }
@@ -1114,14 +1114,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the universe that the player is currently in.
+     * Gets the story that the player is currently in.
      */
-    function getCurrentUniverse(): string {
+    function getCurrentStory(): string {
         const user = context.playerBot;
         if (user) {
-            let universe = getTag(user, 'auxUniverse');
-            if (hasValue(universe)) {
-                return universe.toString();
+            let story = getTag(user, 'auxStory');
+            if (hasValue(story)) {
+                return story.toString();
             }
             return undefined;
         }
@@ -1314,7 +1314,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   productId: '10_cookies',
      *   title: '10 Cookies',
      *   description: '$5.00',
-     *   processingUniverse: 'cookies_checkout'
+     *   processingStory: 'cookies_checkout'
      * });
      *
      */
@@ -1360,12 +1360,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new universe if it does not exist.
-     * @param universe The universe.
-     * @param botOrMod The bot or mod that should be cloned into the new universe.
+     * Sends an event to the server to setup a new story if it does not exist.
+     * @param story The story.
+     * @param botOrMod The bot or mod that should be cloned into the new story.
      */
-    function setupUniverse(universe: string, botOrMod?: Mod) {
-        return remote(calcSetupUniverse(universe, context.unwrapBot(botOrMod)));
+    function setupStory(story: string, botOrMod?: Mod) {
+        return remote(calcSetupStory(story, context.unwrapBot(botOrMod)));
     }
 
     /**
@@ -1377,7 +1377,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX universes to a Github Gist.
+     * Backs up all the AUX stories to a Github Gist.
      * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
      */
     function backupToGithub(auth: string) {
@@ -1385,7 +1385,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX universes to a zip bot.
+     * Backs up all the AUX stories to a zip bot.
      */
     function backupAsDownload(target: SessionSelector) {
         return remote(calcBackupAsDownload(convertSessionSelector(target)));
@@ -1435,7 +1435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the "history" space into the universe.
+     * Loads the "history" space into the story.
      */
     function browseHistory() {
         return remote(calcBrowseHistory());
@@ -1453,14 +1453,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param universe The universe that the mark should be restored to.
+     * @param story The story that the mark should be restored to.
      */
-    function restoreHistoryMarkToUniverse(
-        mark: Bot | string,
-        universe: string
-    ) {
+    function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id, universe));
+        return remote(calcRestoreHistoryMark(id, story));
     }
 
     /**
@@ -1494,7 +1491,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Destroys all the errors in the universe.
+     * Destroys all the errors in the story.
      */
     function destroyErrors() {
         return addAction(clearSpace('error'));
@@ -2097,7 +2094,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the universe to run the given action.
+     * Asks every bot in the story to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.

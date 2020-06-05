@@ -214,7 +214,7 @@ changeState(bot, "Playing", "playbackState");
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the universe are returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the story are returned.
 If multiple filters are specified, then only the bots that match all of the filters are returned.
 
 #### Examples
@@ -265,7 +265,7 @@ let bots = getBots("#test");
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the universe is returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the story is returned.
 If multiple filters are specified, then the first bot that matches all of the filters is returned.
 
 #### Examples
@@ -314,7 +314,7 @@ let foundBot = getBot("#test");
 ### `getBotTagValues(tag, filter?)`
 
 
-Gets a list of all the values in the universe for the given tag. Optionally accepts a filter for the tag values.
+Gets a list of all the values in the story for the given tag. Optionally accepts a filter for the tag values.
 
 The **first parameter** is the name of the tag to search for.
 
@@ -764,7 +764,7 @@ whisper(this, "setColor", "red");
 ### `superShout(name, arg?)`
 
 
-Sends a shout to all of the other universes that are loaded.
+Sends a shout to all of the other stories that are loaded.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
 
@@ -772,7 +772,7 @@ The **second parameter** is the optional `that` argument to include with the sho
 
 #### Examples:
 
-1. Send a `hello` super shout to all the loaded universes.
+1. Send a `hello` super shout to all the loaded stories.
 ```typescript
 superShout("hello");
 ```
@@ -785,11 +785,11 @@ Sends the given action to another player.
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
 For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
-However, before any action is performed, it is run through the <TagLink tag='@onUniverseAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+However, before any action is performed, it is run through the <TagLink tag='@onStoryAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
 This lets you write rules for what actions each player is allowed to take.
 
 There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
-Instead it is wrapped as a `device` action and sent to <TagLink tag='@onUniverseAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onStoryAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
 If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
 
 The **first parameter** is the action to send.
@@ -838,7 +838,7 @@ action.perform({
 
 Prevents a previous action from being performed.
 
-This is especially useful when used in a <TagLink tag='@onUniverseAction'/> listener since it lets you reject actions before they are performed.
+This is especially useful when used in a <TagLink tag='@onStoryAction'/> listener since it lets you reject actions before they are performed.
 
 The **first parameter** is the action that should be prevented/rejected.
 
@@ -854,7 +854,7 @@ action.reject(toastAction);
 
 
 Shows a payment screen modal that lets the player purchase something.
-Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing universe.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing story.
 
 The **first parameter** is the options to use to setup the checkout screen.
 
@@ -871,7 +871,7 @@ player.checkout({
     productId: '10_cookies',
     title: '10 Cookies',
     description: '$5.00',
-    processingUniverse: 'cookies_checkout'
+    processingStory: 'cookies_checkout'
 });
 ```
 
@@ -1220,13 +1220,13 @@ Closes the QR Code popup modal.
 player.hideQRCode();
 ```
 
-### `player.showJoinCode(universe?, dimension?)`
+### `player.showJoinCode(story?, dimension?)`
 
 
-Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given universe and dimension.
-If the universe and dimension are omitted, then the current universe and dimension will be used.
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given story and dimension.
+If the story and dimension are omitted, then the current story and dimension will be used.
 
-The **first parameter** is the universe that the code should be shown for.
+The **first parameter** is the story that the code should be shown for.
 
 The **second parameter** is the dimension that the code should be shown for.
 
@@ -1237,9 +1237,9 @@ The **second parameter** is the dimension that the code should be shown for.
 player.showJoinCode();
 ```
 
-2. Show a join QR Code for a universe and dimension.
+2. Show a join QR Code for a story and dimension.
 ```typescript
-player.showJoinCode("universe", "dimension");
+player.showJoinCode("story", "dimension");
 ```
 
 ### `player.openBarcodeScanner(camera?)`
@@ -1454,7 +1454,7 @@ player.setClipboard("hello");
 ### `player.showUploadAuxFile()`
 
 
-Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the universe.
+Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the story.
 
 #### Examples:
 
@@ -1463,49 +1463,49 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 player.showUploadAuxFile();
 ```
 
-### `player.loadUniverse(universe)`
+### `player.loadStory(story)`
 
 
-Loads the given univese into the current browser tab. When the universe is loaded, the <TagLink tag='@onUniverseSubscribed'/> shout will be triggered.
+Loads the given univese into the current browser tab. When the story is loaded, the <TagLink tag='@onStorySubscribed'/> shout will be triggered.
 
-Note that separate universes cannot interact directly. They must instead interact via super shouts.
+Note that separate stories cannot interact directly. They must instead interact via super shouts.
 
-The **first parameter** is the name of the universe to load.
-
-#### Examples:
-
-1. Load the `fun` universe.
-```typescript
-player.loadUniverse("fun");
-```
-
-### `player.unloadUniverse()`
-
-Unloads the given universe from the current browser tab. When the universe is unloaded, the <TagLink tag='@onUniverseUnsubscribed'/> shout will be triggered.
-
-The **first parameter** is the name of the universe to unload.
+The **first parameter** is the name of the story to load.
 
 #### Examples:
 
-1. Unload the `fun` universe.
+1. Load the `fun` story.
 ```typescript
-player.unloadUniverse('fun');
+player.loadStory("fun");
 ```
 
-### `player.downloadUniverse()`
+### `player.unloadStory()`
+
+Unloads the given story from the current browser tab. When the story is unloaded, the <TagLink tag='@onStoryUnsubscribed'/> shout will be triggered.
+
+The **first parameter** is the name of the story to unload.
+
+#### Examples:
+
+1. Unload the `fun` story.
+```typescript
+player.unloadStory('fun');
+```
+
+### `player.downloadStory()`
 
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
-The file will have the same name as the universe.
+The file will have the same name as the story.
 
 Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
 The only difference is that all bots in the shared space are included and the file is named for you automatically.
 
 #### Examples:
 
-1. Download the entire universe.
+1. Download the entire story.
 ```typescript
-player.downloadUniverse();
+player.downloadStory();
 ```
 
 ### `player.enableAR()`
@@ -1556,17 +1556,17 @@ Disables virtual reality on the device.
 player.disableVR();
 ```
 
-### `player.getCurrentUniverse()`
+### `player.getCurrentStory()`
 
 
-Gets the universe that the player is in.
+Gets the story that the player is in.
 
 #### Examples:
 
-1. Show a message of the current universe.
+1. Show a message of the current story.
 ```typescript
-const universe = player.getCurrentUniverse();
-player.toast(universe);
+const story = player.getCurrentStory();
+player.toast(story);
 ```
 
 ### `player.getCurrentDimension()`
@@ -1838,7 +1838,7 @@ Imports an AUX file from the given string.
 If the string contains JSON, then the JSON will be imported as if it was a .aux file.
 If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
 
-This is useful to quickly download a AUX file and load it into the current universe from a site such as https://gist.github.com/.
+This is useful to quickly download a AUX file and load it into the current story from a site such as https://gist.github.com/.
 
 The **first parameter** is the JSON or URL that the AUX file should be imported from.
 
@@ -1943,7 +1943,7 @@ player.exitFullscreenMode();
 ### `server.backupToGithub(auth)`
 
 
-Saves all the universes to GitHub as a private Gist using the given authentication token.
+Saves all the stories to GitHub as a private Gist using the given authentication token.
 
 Just like <ActionLink action='server.shell(script)'/>, you need 
 
@@ -1951,13 +1951,13 @@ The **first parameter** is the Github Personal Access Token that should be used 
 See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
 
 <Alert type='info'>
-    By default, backing up to GitHub is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up to GitHub is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
 
-1. Backup all the universes to a Github Gist.
+1. Backup all the stories to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
 ```
@@ -1965,13 +1965,13 @@ server.backupToGithub('your auth token');
 ### `server.backupAsDownload(target)`
 
 
-Saves all the universes to a zip file and downloads it to the session matching the given target.
+Saves all the stories to a zip file and downloads it to the session matching the given target.
 
 The **first parameter** is an object that indicates which session the zip file should be downloaded to.
 
 <Alert type='info'>
-    By default, backing up as a download is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up as a download is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2006,55 +2006,55 @@ server.finishCheckout({
 });
 ```
 
-### `server.setupUniverse(universe, botOrMod?)`
+### `server.setupStory(story, botOrMod?)`
 
 
-Sends an action to the server that will create the given universe if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the universe if the universe did not exist.
-The action is only executed if <TagLink tag='@onUniverseAction'/> has been configured to perform events in `device` actions.
+Sends an action to the server that will create the given story if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the story if the story did not exist.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-The **first parameter** is the ID of the universe that should be setup.
+The **first parameter** is the ID of the story that should be setup.
 
-The **second parameter** is optional and is the bot or mod that should be cloned into the new universe. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+The **second parameter** is optional and is the bot or mod that should be cloned into the new story. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
 
 #### Examples:
 
-Before `server.setupUniverse()` will work, you need to setup the <TagLink tag='@onUniverseAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupUniverse()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new universe.
+Before `server.setupStory()` will work, you need to setup the <TagLink tag='@onStoryAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupStory()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new story.
 By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
-Ensure that <TagLink tag='@onUniverseAction'/> is setup properly.
-The following script will execute `setup_universe` events that were sent from other devices:
+Ensure that <TagLink tag='@onStoryAction'/> is setup properly.
+The following script will execute `setup_story` events that were sent from other devices:
 ```typescript
 // Device actions are actions that were sent to this computer from another device
 if (that.action.type === 'device') {
 
-    // The setup_universe action is the action that is created
-    // from server.setupUniverse()
-    if (that.action.event.type === 'setup_universe') {
+    // The setup_story action is the action that is created
+    // from server.setupStory()
+    if (that.action.event.type === 'setup_story') {
 
-        // Execute the setup_universe action
+        // Execute the setup_story action
         action.perform(that.action.event);
     }
 }
 ```
 
-1. Create the "test" universe:
+1. Create the "test" story:
 ```typescript
-server.setupUniverse("test");
+server.setupStory("test");
 ```
 
-2. Create the "test" universe with a bot inside it:
+2. Create the "test" story with a bot inside it:
 ```typescript
-server.setupUniverse("test", {
+server.setupStory("test", {
     "name": "bob",
     "auxColor": "red"
 });
 ```
 
-3. Create the "test" universe with a bot that places a bot in the "abc" dimension:
+3. Create the "test" story with a bot that places a bot in the "abc" dimension:
 ```typescript
-server.setupUniverse("test", {
+server.setupStory("test", {
     "onCreate": `@
         create({
             auxCreator: null,
@@ -2071,8 +2071,8 @@ server.setupUniverse("test", {
 ### `server.browseHistory()`
 
 
-Loads the `history` space into the current universe.
-The `history` space is read-only and contains all the marks that have been created for the universe.
+Loads the `history` space into the current story.
+The `history` space is read-only and contains all the marks that have been created for the story.
 Each mark is a bot that is placed in the `#auxHistory` dimension.
 
 #### Examples:
@@ -2107,7 +2107,7 @@ server.markHistory({
 Restores the current state to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
 #### Examples:
 
@@ -2120,25 +2120,25 @@ let mark = getBot(byTag("#auxHistory", true));
 server.restoreHistoryMark(mark);
 ```
 
-### `server.restoreHistoryMarkToUniverse(mark, universe)`
+### `server.restoreHistoryMarkToStory(mark, story)`
 
 
-Restores the state in the given universe to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes in the universe and another mark with the state that was saved by the given mark.
+Restores the state in the given story to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the story and another mark with the state that was saved by the given mark.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
-The **second parameter** is the universe that the state should be restored to. If `null` or an empty string, then the current universe will be restored.
+The **second parameter** is the story that the state should be restored to. If `null` or an empty string, then the current story will be restored.
 
 #### Examples:
 
-1. Restore the state of the `test` universe to a given mark.
+1. Restore the state of the `test` story to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
 let mark = getBot(byTag("#auxHistory", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMarkToUniverse(mark, "test");
+server.restoreHistoryMarkToStory(mark, "test");
 ```
 
 ### `server.shell(script)`
@@ -2149,8 +2149,8 @@ Executes the given script on the server.
 The **first parameter** is the shell script that should be executed.
 
 <Alert type='info'>
-    By default, shell scripts are disabled on a universe.
-    To enable them, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, shell scripts are disabled on a story.
+    To enable them, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 ### `server.loadFile(path, options?)`
@@ -2167,8 +2167,8 @@ The **first parameter** is the path that the file should be loaded from. This is
 The **second parameter** are the options that should be used for loading the file.
 
 <Alert type='info'>
-    By default, loading files is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, loading files is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2204,8 +2204,8 @@ The **second parameter** is the data that should be saved into the file.
 The **third parameter** are the options that should be used for saving the file.
 
 <Alert type='info'>
-    By default, saving files is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, saving files is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2229,7 +2229,7 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 
 
 Loads the errors for the given bot and tag.
-Note that the bots don't load immediately. They will automatically be added to the universe state once they have been loaded.
+Note that the bots don't load immediately. They will automatically be added to the story state once they have been loaded.
 
 Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
 
@@ -2257,7 +2257,7 @@ Destroys all the error bots.
 
 #### Examples:
 
-1. Destroy all the error bots in this universe:
+1. Destroy all the error bots in this story:
 ```typescript
 server.destroyErrors();
 ```

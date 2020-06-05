@@ -30,7 +30,7 @@ export class SetupChannelModule2 implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     flatMap(async event => {
-                        if (event.type === 'setup_universe') {
+                        if (event.type === 'setup_story') {
                             await this._setupChannel(event);
                         }
                     })

@@ -629,14 +629,14 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getCurrentUniverse': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'auxUniverse',
+                    name: 'auxStory',
                     dependencies: [],
                 },
             ];

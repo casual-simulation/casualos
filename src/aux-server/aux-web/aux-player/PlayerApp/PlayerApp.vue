@@ -122,7 +122,7 @@
 
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
-            <upload-universe-modal></upload-universe-modal>
+            <upload-story-modal></upload-story-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>

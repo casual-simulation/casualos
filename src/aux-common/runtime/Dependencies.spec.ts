@@ -1498,16 +1498,16 @@ describe('Dependencies', () => {
 
         it('should work on complicated formulas', () => {
             const tree = dependencies.dependencyTree(
-                'getBotTagValues("name").filter(a => a == "bob" || a == "alice").length + (player.getCurrentUniverse() ? 0 : 1)'
+                'getBotTagValues("name").filter(a => a == "bob" || a == "alice").length + (player.getCurrentStory() ? 0 : 1)'
             );
             const simple = dependencies.simplify(tree);
             const replacements: AuxScriptReplacements = {
-                'player.getCurrentUniverse': (
+                'player.getCurrentStory': (
                     node: AuxScriptSimpleFunctionDependency
                 ) => [
                     {
                         type: 'tag',
-                        name: 'auxUniverse',
+                        name: 'auxStory',
                         dependencies: [],
                     },
                 ],
@@ -1550,7 +1550,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: 'auxUniverse',
+                    name: 'auxStory',
                     dependencies: [],
                 },
                 {
