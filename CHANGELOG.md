@@ -6,6 +6,35 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   Renamed "universe" to "story". The following tags and functions have been affected:
+        -   `auxUniverse` -> `auxStory`
+        -   `onUniverseAction` -> `onStoryAction`
+        -   `onUniverseStreaming` -> `onStoryStreaming`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseStreamLost` -> `onStoryStreamLost`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseSubscribed` -> `onStorySubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseUnsubscribed` -> `onStoryUnsubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `player.downloadUniverse()` -> `player.downloadStory()`
+        -   `player.loadUniverse()` -> `player.loadStory()`
+            -   The action type has been renamed from `load_universe` to `load_story`.
+        -   `player.unloadUniverse()` -> `player.unloadStory()`
+            -   The action type has been renamed from `unload_universe` to `unload_story`.
+        -   `player.getCurrentUniverse()` -> `player.getCurrentStory()`
+        -   `player.checkout()`
+            -   The `processingUniverse` property has been renamed to `processingStory`.
+        -   `player.showJoinCode()`
+            -   The `universe` property on the `show_join_code` action has been renamed to `story`
+        -   `server.restoreHistoryMark()`
+            -   The `universe` property on the `restore_history_mark` action has been renamed to `story`.
+        -   `server.restoryHistoryMarkToUniverse()` -> `server.restoreHistoryMarkToStory()`
+        -   `server.setupUniverse()` -> `server.setupStory()`
+            -   The action type has been renamed from `setup_universe` to `setup_story`.
+
 -   :rocket: Improvements
 
     -   Improved MongoDB to store all atoms for a commit inside the same document. This should improve loading performance since MongoDB will only need to make 1 lookup per universe instead of 1 lookup per atom per universe.
