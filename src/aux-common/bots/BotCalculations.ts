@@ -372,8 +372,26 @@ export function getBotSpace(bot: Bot): BotSpace {
 export function calculateBotValue(
     context: BotObjectsContext,
     object: Object | PrecalculatedBot,
-    tag: keyof BotTags,
-    energy?: number
+    tag: keyof BotTags
+) {
+    const value = calculateBotTagValue(object, tag);
+    if (
+        typeof value === 'undefined' &&
+        typeof tag === 'string' &&
+        tag.startsWith('aux') &&
+        tag.length >= 4
+    ) {
+        const firstChar = tag.substring(3, 4);
+        const rest = tag.substring(4);
+        const newTag = firstChar.toLowerCase() + rest;
+        return calculateBotTagValue(object, newTag);
+    }
+    return value;
+}
+
+function calculateBotTagValue(
+    object: Object | PrecalculatedBot,
+    tag: keyof BotTags
 ) {
     if (tag === 'id') {
         return object.id;
@@ -382,7 +400,7 @@ export function calculateBotValue(
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
-        return calculateValue(object, tag, object.tags[tag], energy);
+        return calculateValue(object, tag, object.tags[tag]);
     }
 }
 
@@ -2115,11 +2133,9 @@ export function calculateNumericalTagValue(
     tag: string,
     defaultValue: number
 ): number {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'number' && result !== null) {
-            return result;
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'number' && result !== null) {
+        return result;
     }
     return defaultValue;
 }
@@ -2137,13 +2153,11 @@ export function calculateBooleanTagValue(
     tag: string,
     defaultValue: boolean
 ): boolean {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'boolean' && result !== null) {
-            return result;
-        } else if (typeof result === 'object' && result instanceof Boolean) {
-            return result.valueOf();
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'boolean' && result !== null) {
+        return result;
+    } else if (typeof result === 'object' && result instanceof Boolean) {
+        return result.valueOf();
     }
     return defaultValue;
 }
@@ -2161,11 +2175,9 @@ export function calculateStringTagValue(
     tag: string,
     defaultValue: string
 ): string {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'string' && result !== null) {
-            return result;
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'string' && result !== null) {
+        return result;
     }
     return defaultValue;
 }
@@ -2373,17 +2385,15 @@ export function formatValue(value: any): string {
  * @param object The bot that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
- * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
     object: Bot,
     tag: keyof BotTags,
-    formula: string,
-    energy?: number
+    formula: string
 ): any {
     if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => calculateValue(object, tag, s.trim(), energy));
+        return split.map(s => calculateValue(object, tag, s.trim()));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {

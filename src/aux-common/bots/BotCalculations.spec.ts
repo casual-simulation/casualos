@@ -711,6 +711,29 @@ describe('BotCalculations', () => {
 
             expect(result).toEqual('="haha"');
         });
+
+        it('should fallback to the prefix-less tag name when getting an AUX tag', () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                auxAbc: '123',
+            });
+
+            const result1 = calculateBotValue(null, bot1, 'auxAbc');
+            const result2 = calculateBotValue(null, bot2, 'auxAbc');
+            expect(result1).toEqual('def');
+            expect(result2).toEqual(123);
+        });
+
+        it('should handle fallback with characters that are surrogate pairs', () => {
+            const bot1 = createBot('test1', {
+                '😀': '123',
+            });
+
+            const result1 = calculateBotValue(null, bot1, 'aux😀');
+            expect(result1).toEqual(123);
+        });
     });
 
     describe('tagsOnBot()', () => {
