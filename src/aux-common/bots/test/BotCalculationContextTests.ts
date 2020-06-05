@@ -402,7 +402,7 @@ export function botCalculationContextTests(
 
     describe('isMergeable()', () => {
         it('should return true if the bot is stackable', () => {
-            const bot1 = createBot(undefined, { auxPositioningMode: 'stack' });
+            const bot1 = createBot(undefined, { positioningMode: 'stack' });
             const update1 = isMergeable(
                 createPrecalculatedContext([bot1]),
                 bot1
@@ -413,7 +413,7 @@ export function botCalculationContextTests(
 
         it('should return true if the bot is not stackable', () => {
             const bot1 = createBot(undefined, {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const update1 = isMergeable(
                 createPrecalculatedContext([bot1]),
@@ -751,23 +751,23 @@ export function botCalculationContextTests(
     });
 
     describe('isBotStackable()', () => {
-        it('should return true when auxPositioningMode is stackable', () => {
+        it('should return true when positioningMode is stackable', () => {
             let bot = createBot('test', {});
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
         });
 
-        it('should return false when auxPositioningMode is absolute', () => {
+        it('should return false when positioningMode is absolute', () => {
             let bot = createBot('test', {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return true when auxPositioningMode has any other value', () => {
+        it('should return true when positioningMode has any other value', () => {
             let bot = createBot('test', {
-                auxPositioningMode: 'anything',
+                positioningMode: 'anything',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
@@ -775,7 +775,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotPositioningMode()', () => {
-        it('should return stack when auxPositioningMode is not set', () => {
+        it('should return stack when positioningMode is not set', () => {
             const bot1 = createBot('bot1', {});
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -785,9 +785,9 @@ export function botCalculationContextTests(
             expect(result).toBe('stack');
         });
 
-        it('should return absolute when auxPositioningMode is set to it', () => {
+        it('should return absolute when positioningMode is set to it', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -797,9 +797,9 @@ export function botCalculationContextTests(
             expect(result).toBe('absolute');
         });
 
-        it('should return stack when auxPositioningMode is set to it', () => {
+        it('should return stack when positioningMode is set to it', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: 'stack',
+                positioningMode: 'stack',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -809,9 +809,9 @@ export function botCalculationContextTests(
             expect(result).toBe('stack');
         });
 
-        it('should return stack when auxPositioningMode is set to a random value', () => {
+        it('should return stack when positioningMode is set to a random value', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: <any>'abc',
+                positioningMode: <any>'abc',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
