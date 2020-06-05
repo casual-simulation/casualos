@@ -920,7 +920,7 @@ export const KNOWN_TAGS: string[] = [
     'auxCreator',
     'auxConfigBot',
     'draggable',
-    'auxDraggableMode',
+    'draggableMode',
     'auxPositioningMode',
     'auxDestroyable',
     'auxEditable',
