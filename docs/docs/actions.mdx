@@ -39,7 +39,7 @@ let myNewBot = create();
 2. Create a red bot:
 ```typescript
 let myRedBot = create({
-    auxColor: "red"
+    color: "red"
 });
 ```
 
@@ -64,7 +64,7 @@ let myBot = create({ space: "tempLocal" });
 ```typescript
 // myBot is placed in the "myDimension" dimension and is colored green
 let myBot = create({ myDimension: true }, {
-    auxColor: "green"
+    color: "green"
 });
 ```
 
@@ -72,10 +72,10 @@ let myBot = create({ myDimension: true }, {
 ```typescript
 let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
     {
-        "auxColor": "red"
+        "color": "red"
     },
     {
-        "auxColor": "blue"
+        "color": "blue"
     }
 ]);
 ```
@@ -101,8 +101,8 @@ destroy(getBot("#name", "bob"));
 
 2. Destroying a list of bots:
 ```typescript
-// Destroy all the bots that have #auxColor set to "red"
-destroy(getBots("#auxColor", "red"));
+// Destroy all the bots that have #color set to "red"
+destroy(getBots("#color", "red"));
 ```
 
 3. Destroying a bot by its id
@@ -144,7 +144,7 @@ The **other parameters** are the bots or mods that contain the tags which should
 1. Remove a mod from this bot.
 ```typescript
 const mod = {
-    auxColor: 'red',
+    color: 'red',
     name: 'bob'
 };
 
@@ -154,7 +154,7 @@ subtractMods(this, mod);
 2. Remove multiple mods from this bot.
 ```typescript
 subtractMods(this, {
-    auxColor: 'red'
+    color: 'red'
 }, {
     name: 'bob'
 });
@@ -388,9 +388,9 @@ If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en
 let mod = getMod(bot);
 ```
 
-2. Get a mod with only the <TagLink tag='auxColor'/> and <TagLink tag='auxLabel'/> tags.
+2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='auxLabel'/> tags.
 ```typescript
-let mod = getMod(bot, "auxColor", "auxLabel");
+let mod = getMod(bot, "color", "auxLabel");
 ```
 
 3. Get a mod with every tag that starts with "on".
@@ -648,11 +648,11 @@ The **first parameter** is the bot or mod that the other bots should match.
 
 #### Examples:
 
-1. Find all the bots with `#height` set to `1` and `#auxColor` set to `red`.
+1. Find all the bots with `#height` set to `1` and `#color` set to `red`.
 ```typescript
 const bots = getBots(byMod({
     height: 1,
-    auxColor: "red"
+    color: "red"
 }));
 ```
 
@@ -939,7 +939,7 @@ player.replaceDragBot(clone);
 2. Drag a mod that makes other bots red.
 ```typescript
 player.replaceDragBot({
-    "auxColor": "red"
+    "color": "red"
 });
 ```
 
@@ -1430,7 +1430,7 @@ player.showInputForTag(this, "name", {
 
 4. Show a color input modal with a custom title.
 ```typescript
-player.showInputForTag(this, "auxColor", {
+player.showInputForTag(this, "color", {
     type: 'color',
     title: 'Enter a custom color'
 });
@@ -1858,7 +1858,7 @@ player.importAUX(`{
         "079847e4-6a58-423d-9a86-8d4ef8be5970": {
             "id": "079847e4-6a58-423d-9a86-8d4ef8be5970",
             "tags": {
-                "auxColor": "red"
+                "color": "red"
             }
         }
     }
@@ -2048,7 +2048,7 @@ server.setupStory("test");
 ```typescript
 server.setupStory("test", {
     "name": "bob",
-    "auxColor": "red"
+    "color": "red"
 });
 ```
 
@@ -2059,7 +2059,7 @@ server.setupStory("test", {
         create({
             auxCreator: null,
             auxLabel: "This is in the dimension!",
-            auxColor: "blue",
+            color: "blue",
             abc: true
         });
 
@@ -2277,9 +2277,9 @@ The **third parameter** is the value that should be placed into the tag(s).
 
 #### Examples:
 
-1. Set a bot's <TagLink tag='auxColor'/> to `green`.
+1. Set a bot's <TagLink tag='color'/> to `green`.
 ```typescript
-setTag(this, "#auxColor", "green");
+setTag(this, "#color", "green");
 ```
 
 ### `getTag(bot, tag)`
@@ -2293,9 +2293,9 @@ The **second parameter** is the tag that should be retrieved.
 
 #### Examples:
 
-1. Get the <TagLink tag='auxColor'/> tag from `this` bot.
+1. Get the <TagLink tag='color'/> tag from `this` bot.
 ```typescript
-const color = getTag(this, "#auxColor");
+const color = getTag(this, "#color");
 ```
 
 ## Math Actions

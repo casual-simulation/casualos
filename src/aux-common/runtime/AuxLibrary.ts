@@ -553,9 +553,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param mod The mod that bots should be checked against.
      *
      * @example
-     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * // Find all the bots with a height set to 1 and color set to "red".
      * let bots = getBots(byMod({
-     *      "auxColor": "red",
+     *      "color": "red",
      *      height: 1
      * }));
      */
@@ -679,7 +679,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Find all the bots created by the yellow bot.
-     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     * let bots = getBots(byCreator(getBot('color','yellow')));
      */
     function byCreator(bot: Bot | string) {
         return byTag('auxCreator', getID(bot));
@@ -720,8 +720,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tag The tag.
      *
      * @example
-     * // Get the "auxColor" tag from the `this` bot.
-     * let color = getTag(this, "auxColor");
+     * // Get the "color" tag from the `this` bot.
+     * let color = getTag(this, "color");
      */
     function getTag(bot: Bot, ...tags: string[]): any {
         let current: any = bot;
@@ -1217,7 +1217,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show a color picker for the bot's color.
-     * player.showInputForTag(this, "auxColor", {
+     * player.showInputForTag(this, "color", {
      *            title: "Change the color",
      *            type: "color",
      *            subtype: "advanced"
@@ -1747,7 +1747,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Set a bot's color to "green".
-     * setTag(this, "auxColor", "green");
+     * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         tag = trimTag(tag);
@@ -1876,13 +1876,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Create a red bot without a parent.
-     * let redBot = create(null, { "auxColor": "red" });
+     * let redBot = create(null, { "color": "red" });
      *
      * @example
      * // Create a red bot and a blue bot with `this` as the parent.
      * let [redBot, blueBot] = create(this, [
-     *    { "auxColor": "red" },
-     *    { "auxColor": "blue" }
+     *    { "color": "red" },
+     *    { "color": "blue" }
      * ]);
      *
      */
@@ -2128,7 +2128,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#auxColor", "red"), "reset()");
+     * whisper(getBots("#color", "red"), "reset()");
      *
      * @example
      * // Ask all the tall bots for their names.

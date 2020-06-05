@@ -546,11 +546,11 @@ describe('AuxLibrary', () => {
 
             it('should match bots with all of the same tags and values', () => {
                 const filter = library.api.byMod({
-                    auxColor: 'red',
+                    color: 'red',
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
                 bot1.tags.number = 123;
                 bot1.tags.other = true;
 
@@ -559,11 +559,11 @@ describe('AuxLibrary', () => {
 
             it('should not match bots with wrong tag values', () => {
                 const filter = library.api.byMod({
-                    auxColor: 'red',
+                    color: 'red',
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
                 bot1.tags.number = 999;
                 bot1.tags.other = true;
 
@@ -572,11 +572,11 @@ describe('AuxLibrary', () => {
 
             it('should match tags using the given filter', () => {
                 const filter = library.api.byMod({
-                    auxColor: (x: string) => x.startsWith('r'),
+                    color: (x: string) => x.startsWith('r'),
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'rubble';
+                bot1.tags.color = 'rubble';
                 bot1.tags.number = 123;
                 bot1.tags.other = true;
 
@@ -585,7 +585,7 @@ describe('AuxLibrary', () => {
 
             it('should match tags with null', () => {
                 const filter = library.api.byMod({
-                    auxColor: null,
+                    color: null,
                     number: 123,
                 });
 
@@ -594,7 +594,7 @@ describe('AuxLibrary', () => {
 
                 expect(filter(bot1)).toEqual(true);
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
 
                 expect(filter(bot1)).toEqual(false);
             });

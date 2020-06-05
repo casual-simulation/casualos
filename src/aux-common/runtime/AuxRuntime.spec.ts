@@ -2925,7 +2925,7 @@ describe('AuxRuntime', () => {
                     formula: '=getBot("id", "other")',
                 }),
                 createBot('other', {
-                    auxColor: 'red',
+                    color: 'red',
                 }),
             ]);
 
@@ -2935,7 +2935,7 @@ describe('AuxRuntime', () => {
                         'test',
                         {
                             formula: createBot('other', {
-                                auxColor: 'red',
+                                color: 'red',
                             }),
                         },
                         {
@@ -2943,7 +2943,7 @@ describe('AuxRuntime', () => {
                         }
                     ),
                     other: createPrecalculatedBot('other', {
-                        auxColor: 'red',
+                        color: 'red',
                     }),
                 },
                 addedBots: ['test', 'other'],
@@ -2958,7 +2958,7 @@ describe('AuxRuntime', () => {
                     formula: '=getBot("id", "other")',
                 }),
                 createBot('other', {
-                    auxColor: 'red',
+                    color: 'red',
                 }),
             ]);
 
@@ -3632,7 +3632,7 @@ describe('original action tests', () => {
             thisBot: {
                 id: 'thisBot',
                 tags: {
-                    auxColor: 'red',
+                    color: 'red',
                     test: '@setTag(this, "equal", tags === this.tags)',
                 },
             },
@@ -3663,9 +3663,9 @@ describe('original action tests', () => {
             thisBot: {
                 id: 'thisBot',
                 tags: {
-                    auxColor: 'red',
+                    color: 'red',
                     test: `@
-                        setTag(this, "other", tags.auxColor);
+                        setTag(this, "other", tags.color);
                         setTag(this, "final", tags.other);
                     `,
                 },
@@ -3698,9 +3698,9 @@ describe('original action tests', () => {
             thisBot: {
                 id: 'thisBot',
                 tags: {
-                    auxColor: 'red',
+                    color: 'red',
                     test: `@
-                        tags.auxColor = 'blue';
+                        tags.color = 'blue';
                     `,
                 },
             },
@@ -3720,7 +3720,7 @@ describe('original action tests', () => {
         expect(result.actions).toEqual([
             botUpdated('thisBot', {
                 tags: {
-                    auxColor: 'blue',
+                    color: 'blue',
                 },
             }),
         ]);

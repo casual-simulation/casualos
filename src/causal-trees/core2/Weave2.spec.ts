@@ -431,22 +431,22 @@ describe('Weave2', () => {
                     atom: root,
                 });
 
-                const auxColor = atom(atomId(site1, 1996, null), root, {
+                const color = atom(atomId(site1, 1996, null), root, {
                     type: 2,
-                    name: 'auxColor',
+                    name: 'color',
                 });
-                expect(auxColor.hash).toEqual(
+                expect(color.hash).toEqual(
                     '5f02d0e3e44f1b4766eb5b31741c655edd025215d691f6b722e707e52eb19cee'
                 );
 
-                result = weave.insert(auxColor);
+                result = weave.insert(color);
                 expect(result).toEqual({
                     type: 'atom_added',
-                    atom: auxColor,
+                    atom: color,
                 });
 
                 const site2 = '6999e06b-7a56-4ea8-9e94-b9b104ee9360';
-                const first = atom(atomId(site2, 2091), auxColor, {
+                const first = atom(atomId(site2, 2091), color, {
                     type: 3,
                     value: '#89ead4',
                 });
@@ -461,7 +461,7 @@ describe('Weave2', () => {
                 });
 
                 const site3 = '63b35cc1-b05e-4cbe-a25a-3e0262a36f6a';
-                const second = atom(atomId(site3, 3431), auxColor, {
+                const second = atom(atomId(site3, 3431), color, {
                     type: 3,
                     value: '#89e',
                 });
@@ -474,12 +474,7 @@ describe('Weave2', () => {
                     atom: second,
                 });
 
-                expect(weave.getAtoms()).toEqual([
-                    root,
-                    auxColor,
-                    second,
-                    first,
-                ]);
+                expect(weave.getAtoms()).toEqual([root, color, second, first]);
             });
         });
     });

@@ -875,7 +875,7 @@ export const QUERY_PORTALS: string[] = ['auxPagePortal', 'auxSheetPortal'];
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    'auxPlayerActive',
+    'playerActive',
     'auxPagePortal',
     'auxSheetPortal',
     'auxStory',
@@ -916,7 +916,7 @@ export const KNOWN_TAGS: string[] = [
     'auxWristPortalHeight',
     'auxWristPortalWidth',
 
-    'auxColor',
+    'color',
     'auxCreator',
     'auxConfigBot',
     'auxDraggable',

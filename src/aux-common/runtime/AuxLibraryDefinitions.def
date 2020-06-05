@@ -1695,13 +1695,13 @@ declare global {
      *
      * @example
      * // Create a red bot without a parent.
-     * let redBot = create(null, { "auxColor": "red" });
+     * let redBot = create(null, { "color": "red" });
      *
      * @example
      * // Create a red bot and a blue bot with `this` as the parent.
      * let [redBot, blueBot] = create(this, [
-     *    { "auxColor": "red" },
-     *    { "auxColor": "blue" }
+     *    { "color": "red" },
+     *    { "color": "blue" }
      * ]);
      *
      */
@@ -1775,7 +1775,7 @@ declare global {
      *
      * @example
      * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#auxColor", "red"), "reset()");
+     * whisper(getBots("#color", "red"), "reset()");
      *
      * @example
      * // Ask all the tall bots for their names.
@@ -1920,7 +1920,7 @@ declare global {
      *
      * @example
      * // Get all the bots that are red.
-     * let bots = getBots(byTag("auxColor", "red"));
+     * let bots = getBots(byTag("color", "red"));
      */
     function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
 
@@ -1931,8 +1931,8 @@ declare global {
      *
      * @example
      * // Get all the bots that are red.
-     * // Shorthand for getBots(byTag("auxColor", "red"))
-     * let bots = getBots("auxColor", "red");
+     * // Shorthand for getBots(byTag("color", "red"))
+     * let bots = getBots("color", "red");
      */
     function getBots(tag: string, filter?: any | TagFilter): Bot[];
 
@@ -1976,9 +1976,9 @@ declare global {
      * @param mod The mod that bots should be checked against.
      *
      * @example
-     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * // Find all the bots with a height set to 1 and color set to "red".
      * let bots = getBots(byMod({
-     *      "auxColor": "red",
+     *      "color": "red",
      *      height: 1
      * }));
      */
@@ -2019,7 +2019,7 @@ declare global {
      *
      * @example
      * // Find all the bots created by the yellow bot.
-     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     * let bots = getBots(byCreator(getBot('color','yellow')));
      */
     function byCreator(bot: Bot | string);
 
@@ -2090,8 +2090,8 @@ declare global {
      * @param tag The tag.
      *
      * @example
-     * // Get the "auxColor" tag from the `this` bot.
-     * let color = getTag(this, "auxColor");
+     * // Get the "color" tag from the `this` bot.
+     * let color = getTag(this, "color");
      */
     function getTag(bot: Bot, ...tags: string[]): any;
 
@@ -2103,7 +2103,7 @@ declare global {
      *
      * @example
      * // Set a bot's color to "green".
-     * setTag(this, "auxColor", "green");
+     * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
 
@@ -2450,7 +2450,7 @@ declare global {
          *
          * @example
          * // Show a color picker for the bot's color.
-         * player.showInputForTag(this, "auxColor", {
+         * player.showInputForTag(this, "color", {
          *            title: "Change the color",
          *            type: "color",
          *            subtype: "advanced"

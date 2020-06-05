@@ -13,6 +13,7 @@ import {
     onClickArg,
     ANY_CLICK_ACTION_NAME,
     onAnyClickArg,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -71,9 +72,8 @@ export default class MenuBot extends Vue {
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
-        if (bot.tags['auxColor']) {
-            this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
-        } else {
+        this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
+        if (!hasValue(this.backgroundColor)) {
             this.backgroundColor = '#FFF';
         }
     }

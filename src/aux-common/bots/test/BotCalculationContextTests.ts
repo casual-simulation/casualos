@@ -339,6 +339,17 @@ export function botCalculationContextTests(
                 expected
             );
         });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: true,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBooleanTagValue(calc, bot, 'auxTag', false)).toBe(
+                true
+            );
+        });
     });
 
     describe('calculateStringTagValue()', () => {
@@ -352,6 +363,17 @@ export function botCalculationContextTests(
                 expected
             );
         });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 'abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateStringTagValue(calc, bot, 'auxTag', 'empty')).toBe(
+                'abc'
+            );
+        });
     });
 
     describe('calculateNumericalTagValue()', () => {
@@ -363,6 +385,17 @@ export function botCalculationContextTests(
             const calc = createPrecalculatedContext([bot]);
             expect(calculateNumericalTagValue(calc, bot, 'tag', null)).toBe(
                 expected
+            );
+        });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 123,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateNumericalTagValue(calc, bot, 'auxTag', 0)).toBe(
+                123
             );
         });
     });
@@ -420,26 +453,30 @@ export function botCalculationContextTests(
     });
 
     describe('isUserActive()', () => {
-        it('should return true if the auxPlayerActive tag is true', () => {
-            dateNowMock.mockReturnValue(1000 * 60 + 999);
-            const bot1 = createBot(undefined, {
-                auxPlayerActive: true,
+        const tags = ['auxPlayerActive', 'playerActive'];
+
+        describe.each(tags)('%s', tag => {
+            it(`should return true if the ${tag} tag is true`, () => {
+                dateNowMock.mockReturnValue(1000 * 60 + 999);
+                const bot1 = createBot(undefined, {
+                    [tag]: true,
+                });
+                const calc = createPrecalculatedContext([bot1]);
+                const update1 = isUserActive(calc, bot1);
+
+                expect(update1).toBe(true);
             });
-            const calc = createPrecalculatedContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
 
-            expect(update1).toBe(true);
-        });
+            it('should return false if the user is not active', () => {
+                dateNowMock.mockReturnValue(1000);
+                const bot1 = createBot(undefined, {
+                    [tag]: false,
+                });
+                const calc = createPrecalculatedContext([bot1]);
+                const update1 = isUserActive(calc, bot1);
 
-        it('should return false if the user is not active', () => {
-            dateNowMock.mockReturnValue(1000);
-            const bot1 = createBot(undefined, {
-                auxPlayerActive: false,
+                expect(update1).toBe(false);
             });
-            const calc = createPrecalculatedContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
-
-            expect(update1).toBe(false);
         });
     });
 
