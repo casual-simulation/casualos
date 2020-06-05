@@ -267,24 +267,6 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     /**
-     * Creates a new globals bot.
-     * @param botId The ID of the bot to create. If not specified a new ID will be generated.
-     */
-    async createGlobalsBot(botId?: string) {
-        const workspace = createBot(botId, {});
-
-        const final = merge(workspace, {
-            tags: {
-                auxVersion: AUX_BOT_VERSION,
-                auxDestroyable: false,
-            },
-        });
-
-        await this._sendEvents([botAdded(final)]);
-        // await this._tree.addBot(final);
-    }
-
-    /**
      * Creates or updates the user bot for the given user.
      * @param user The user that the bot is for.
      * @param userBot The bot to update. If null or undefined then a bot will be created.

@@ -3,7 +3,6 @@ import {
     botAdded,
     createBot,
     botUpdated,
-    GLOBALS_BOT_ID,
     LocalActions,
     action,
     toast,
@@ -1148,14 +1147,6 @@ describe('AuxHelper', () => {
                         test: true,
                     }),
                 });
-            });
-
-            it('should not prevent deleting the globals bot by default', async () => {
-                await helper.createBot(GLOBALS_BOT_ID, {});
-
-                await helper.transaction(botRemoved(GLOBALS_BOT_ID));
-
-                expect(helper.botsState[GLOBALS_BOT_ID]).toBeFalsy();
             });
 
             it('should run once per action event', async () => {

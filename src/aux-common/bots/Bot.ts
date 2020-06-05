@@ -537,11 +537,6 @@ export const DEFAULT_BOT_LOD_MIN_THRESHOLD = 0.0005;
 export const DEFAULT_BOT_LOD_MAX_THRESHOLD = 0.03;
 
 /**
- * The ID of the global configuration bot.
- */
-export const GLOBALS_BOT_ID = 'config';
-
-/**
  * The ID of the device configuration bot.
  */
 export const DEVICE_BOT_ID = 'device';

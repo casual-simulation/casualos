@@ -2,7 +2,6 @@ import {
     botAdded,
     createBot,
     shell,
-    GLOBALS_BOT_ID,
     action,
 } from '@casual-simulation/aux-common';
 import {
@@ -150,9 +149,6 @@ describe('AdminModule2', () => {
 
     describe('deviceConnected()', () => {
         it('should set the auxPlayerActive tag based on the session ID', async () => {
-            await simulation.helper.transaction(
-                botAdded(createBot(GLOBALS_BOT_ID, {}))
-            );
             await simulation.helper.createBot('sessionId', {});
 
             let testDevice1: DeviceInfo = {

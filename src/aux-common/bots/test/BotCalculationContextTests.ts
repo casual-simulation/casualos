@@ -63,7 +63,6 @@ import {
     Bot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
 } from '../Bot';
@@ -1838,32 +1837,10 @@ export function botCalculationContextTests(
             'should default to %s when in %s',
             (expected: any, domain: AuxDomain) => {
                 const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_BOT_ID, {});
 
-                const calc = createPrecalculatedContext([globals, bot]);
+                const calc = createPrecalculatedContext([bot]);
 
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe(
-                    expected
-                );
-            }
-        );
-
-        const globalsCases = [
-            ['auxUniverseUserPlayerColor', 'player', '#40A287'],
-            ['auxUniverseUserBuilderColor', 'builder', '#AAAAAA'],
-        ];
-
-        it.each(globalsCases)(
-            'should use %s when in %s',
-            (tag: string, domain: AuxDomain, value: any) => {
-                const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_BOT_ID, {
-                    [tag]: value,
-                });
-
-                const calc = createPrecalculatedContext([globals, bot]);
-
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe(value);
+                expect(getUserBotColor(calc, bot, domain)).toBe(expected);
             }
         );
 
@@ -1875,11 +1852,10 @@ export function botCalculationContextTests(
                 const bot = createBot('test', {
                     auxColor: 'red',
                 });
-                const globals = createBot(GLOBALS_BOT_ID, {});
 
-                const calc = createPrecalculatedContext([globals, bot]);
+                const calc = createPrecalculatedContext([bot]);
 
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe('red');
+                expect(getUserBotColor(calc, bot, domain)).toBe('red');
             }
         );
     });

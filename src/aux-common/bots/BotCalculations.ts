@@ -616,7 +616,6 @@ export function toggleBotSelection(
 export function getUserBotColor(
     calc: BotCalculationContext,
     userBot: Bot,
-    globalsBot: Bot,
     domain: AuxDomain
 ): string {
     if (userBot.tags['auxColor']) {
@@ -624,18 +623,9 @@ export function getUserBotColor(
     }
 
     if (domain === 'builder') {
-        return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'auxUniverseUserBuilderColor'
-            ) || DEFAULT_BUILDER_USER_COLOR
-        );
+        return DEFAULT_BUILDER_USER_COLOR;
     } else {
-        return (
-            calculateBotValue(calc, globalsBot, 'auxUniverseUserPlayerColor') ||
-            DEFAULT_PLAYER_USER_COLOR
-        );
+        return DEFAULT_PLAYER_USER_COLOR;
     }
 }
 

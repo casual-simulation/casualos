@@ -2,7 +2,6 @@ import {
     BotsState,
     getActiveObjects,
     Bot,
-    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 
 /**
