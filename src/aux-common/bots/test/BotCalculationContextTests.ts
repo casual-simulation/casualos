@@ -440,7 +440,7 @@ export function botCalculationContextTests(
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
             const bot1 = createBot(undefined, {
-                auxDraggable: true,
+                draggable: true,
                 auxDraggableMode: value,
             });
             const update1 = isPickupable(
@@ -665,23 +665,23 @@ export function botCalculationContextTests(
     });
 
     describe('isBotMovable()', () => {
-        it('should return true when auxDraggable has no value', () => {
+        it('should return true when draggable has no value', () => {
             let bot = createBot('test', {});
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
         });
 
-        it('should return false when auxDraggable is false', () => {
+        it('should return false when draggable is false', () => {
             let bot = createBot('test', {
-                ['auxDraggable']: false,
+                ['draggable']: false,
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return true when auxDraggable has any other value', () => {
+        it('should return true when draggable has any other value', () => {
             let bot = createBot('test', {
-                ['auxDraggable']: 'anything',
+                ['draggable']: 'anything',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
@@ -705,7 +705,7 @@ export function botCalculationContextTests(
 
         it.each(cases)('should return %s for %s', (expected, val) => {
             const bot1 = createBot('bot1', {
-                auxDraggable: true,
+                draggable: true,
                 auxDraggableMode: val,
             });
             const result = getBotDragMode(
@@ -716,9 +716,9 @@ export function botCalculationContextTests(
             expect(result).toBe(expected);
         });
 
-        it('should return none when auxDraggable is false', () => {
+        it('should return none when draggable is false', () => {
             const bot1 = createBot('bot1', {
-                auxDraggable: false,
+                draggable: false,
                 auxDraggableMode: 'all',
             });
             const result = getBotDragMode(
@@ -740,7 +740,7 @@ export function botCalculationContextTests(
         });
 
         it('should return the default when given an invalid value', () => {
-            const bot1 = createBot('bot1', { auxDraggable: <any>'test' });
+            const bot1 = createBot('bot1', { draggable: <any>'test' });
             const result = getBotDragMode(
                 createPrecalculatedContext([bot1]),
                 bot1

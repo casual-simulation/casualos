@@ -523,7 +523,7 @@ export function isTagWellKnown(tag: string): boolean {
  * Determines if the bots are equal disregarding well-known hidden tags
  * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like auxDraggable but not _position, _index _selection, etc.
+ * We also care about things like draggable but not _position, _index _selection, etc.
  *
  * You can determine if a tag is "well-known" by using isTagWellKnown().
  * @param first The first bot.
