@@ -117,7 +117,7 @@ export interface BotTags {
     ['labelFontAddress']?: BotLabelFontAddress;
     ['listening']?: unknown;
     ['form']?: BotShape;
-    ['auxFormAnimation']?: string;
+    ['formAnimation']?: string;
     ['formAddress']?: string;
     ['auxOrientationMode']?: string;
     ['auxAnchorPoint']?: string;
@@ -946,7 +946,7 @@ export const KNOWN_TAGS: string[] = [
     'formAddress',
     'formSubtype',
     'form',
-    'auxFormAnimation',
+    'formAnimation',
     'auxOrientationMode',
     'auxAnchorPoint',
     'auxGLTFVersion',
