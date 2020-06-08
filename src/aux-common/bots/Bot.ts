@@ -125,7 +125,7 @@ export interface BotTags {
     ['configBot']?: string;
     ['progressBar']?: unknown;
     ['progressBarColor']?: unknown;
-    ['auxProgressBarBackgroundColor']?: unknown;
+    ['progressBarBackgroundColor']?: unknown;
     ['auxProgressBarPosition']?: unknown;
     ['auxPointable']?: unknown;
     ['auxFocusable']?: unknown;
@@ -952,7 +952,7 @@ export const KNOWN_TAGS: string[] = [
     'gltfVersion',
     'progressBar',
     'progressBarColor',
-    'auxProgressBarBackgroundColor',
+    'progressBarBackgroundColor',
     'auxProgressBarPosition',
     'auxMaxLODThreshold',
     'auxMinLODThreshold',
