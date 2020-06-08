@@ -181,7 +181,7 @@ export interface BotTags {
     ['portalDisableCanvasTransparency']?: boolean;
     ['inventoryPortalHeight']?: unknown;
     ['inventoryPortalResizable']?: boolean;
-    ['auxWristPortalHeight']?: number;
+    ['wristPortalHeight']?: number;
     ['auxWristPortalWidth']?: number;
 
     // Stripe tags
@@ -909,7 +909,7 @@ export const KNOWN_TAGS: string[] = [
     'portalDisableCanvasTransparency',
     'inventoryPortalHeight',
     'inventoryPortalResizable',
-    'auxWristPortalHeight',
+    'wristPortalHeight',
     'auxWristPortalWidth',
 
     'color',
