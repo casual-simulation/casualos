@@ -150,7 +150,11 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             }
         }
 
+        // TODO: Replace with direct calls to calculateBotValue
         let style = this.bot3D.bot.tags['auxLineStyle'];
+        if (!hasValue(style)) {
+            style = this.bot3D.bot.tags['lineStyle'];
+        }
         let styleValue: string;
 
         if (isFormula(style)) {
