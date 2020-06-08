@@ -483,7 +483,7 @@ This means that if you have a really large mesh the collider will scale up to su
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxForm`
+### `form`
 
 The shape that the bot should be displayed as.
 
@@ -521,10 +521,10 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
   <PossibleValueCode value='html'>
-    The HTML code that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe. (Default when <TagLink tag="auxForm"/> is set to iframe)
+    The HTML code that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe. (Default when <TagLink tag="form"/> is set to iframe)
   </PossibleValueCode>
   <PossibleValueCode value='src'>
-    The URL that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe.
+    The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -532,13 +532,13 @@ The subtype that the form should use. Useful for specifying how a mesh should be
 
 The address that the bot should represent data from.
 
-When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+When <TagLink tag='form'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
-When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 ### `auxFormAnimation`
 

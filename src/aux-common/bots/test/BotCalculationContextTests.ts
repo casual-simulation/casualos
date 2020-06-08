@@ -857,14 +857,28 @@ export function botCalculationContextTests(
             ['iframe'],
             ['nothing'],
         ];
-        it.each(cases)('should return %s', (shape: string) => {
-            const bot = createBot('test', {
-                auxForm: <any>shape,
+        const tagCases = ['auxForm', 'form'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotShape(calc, bot)).toBe(shape);
             });
 
-            const calc = createPrecalculatedContext([bot]);
+            it('should return the shape from the tag', () => {
+                let bot = createBot();
+                bot.tags[tag] = 'sphere';
 
-            expect(getBotShape(calc, bot)).toBe(shape);
+                const calc = createPrecalculatedContext([bot]);
+                const shape = getBotShape(calc, bot);
+
+                expect(shape).toBe('sphere');
+            });
         });
 
         it('should default to cube', () => {
@@ -874,16 +888,6 @@ export function botCalculationContextTests(
             const shape = getBotShape(calc, bot);
 
             expect(shape).toBe('cube');
-        });
-
-        it('should return the shape from auxForm', () => {
-            let bot = createBot();
-            bot.tags['auxForm'] = 'sphere';
-
-            const calc = createPrecalculatedContext([bot]);
-            const shape = getBotShape(calc, bot);
-
-            expect(shape).toBe('sphere');
         });
     });
 

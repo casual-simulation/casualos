@@ -116,7 +116,7 @@ export interface BotTags {
     ['labelAlignment']?: BotLabelAlignment | null | string;
     ['labelFontAddress']?: BotLabelFontAddress;
     ['listening']?: unknown;
-    ['auxForm']?: BotShape;
+    ['form']?: BotShape;
     ['auxFormAnimation']?: string;
     ['formAddress']?: string;
     ['auxOrientationMode']?: string;
@@ -945,7 +945,7 @@ export const KNOWN_TAGS: string[] = [
     'scaleMode',
     'formAddress',
     'formSubtype',
-    'auxForm',
+    'form',
     'auxFormAnimation',
     'auxOrientationMode',
     'auxAnchorPoint',
