@@ -924,14 +924,17 @@ export function botCalculationContextTests(
             ['billboardTop'],
             ['billboardFront'],
         ];
-        it.each(cases)('should return %s', (mode: string) => {
-            const bot = createBot('test', {
-                auxOrientationMode: <any>mode,
+        const tagCases = ['auxOrientationMode', 'orientationMode'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotOrientationMode(calc, bot)).toBe(mode);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(getBotOrientationMode(calc, bot)).toBe(mode);
         });
 
         it('should default to absolute', () => {

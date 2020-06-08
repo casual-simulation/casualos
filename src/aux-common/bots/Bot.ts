@@ -119,7 +119,7 @@ export interface BotTags {
     ['form']?: BotShape;
     ['formAnimation']?: string;
     ['formAddress']?: string;
-    ['auxOrientationMode']?: string;
+    ['orientationMode']?: string;
     ['auxAnchorPoint']?: string;
     ['creator']?: string;
     ['configBot']?: string;
@@ -947,7 +947,7 @@ export const KNOWN_TAGS: string[] = [
     'formSubtype',
     'form',
     'formAnimation',
-    'auxOrientationMode',
+    'orientationMode',
     'auxAnchorPoint',
     'auxGLTFVersion',
     'auxProgressBar',
