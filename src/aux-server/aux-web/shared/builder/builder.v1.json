@@ -56,7 +56,7 @@
                 "commandScan": "@shout('builderBeginScanning');\nplayer.openQRCodeScanner();",
                 "commandShowSheetNewTab": "@let [dimensionArg] = that || [];\r\nlet dimension = dimensionArg ? dimensionArg : player.getCurrentDimension();\r\nlet story = player.getCurrentStory();\r\n\r\nplayer.openURL(`/?story=${encodeURIComponent(story)}&sheetPortal=${encodeURIComponent(dimension)}`);",
                 "commandClearStory": "@const day = new Date();\r\nserver.markHistory({\r\n    message: `Save before clear story on ${day.getFullYear()}/${day.getMonth()}/${day.getDate()}`\r\n});\r\nlet bots = getBots();\r\nfor(let b of bots) {\r\n    b.tags.auxDestroyable = true;\r\n}\r\ndestroy(bots);",
-                "builderVersion": "39",
+                "builderVersion": "40",
                 "commandNewBot": "@const mod = that || { \r\n    [player.getCurrentDimension()]: true,\r\n    [`${player.getCurrentDimension()}X`]: 0,\r\n    [`${player.getCurrentDimension()}Y`]: 0,\r\n}\r\nshout(\"builderCopyBot\", { bot: mod });"
             }
         },
