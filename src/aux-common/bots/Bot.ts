@@ -123,7 +123,7 @@ export interface BotTags {
     ['anchorPoint']?: string;
     ['creator']?: string;
     ['configBot']?: string;
-    ['auxProgressBar']?: unknown;
+    ['progressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
     ['auxProgressBarBackgroundColor']?: unknown;
     ['auxProgressBarPosition']?: unknown;
@@ -950,7 +950,7 @@ export const KNOWN_TAGS: string[] = [
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
-    'auxProgressBar',
+    'progressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
     'auxProgressBarPosition',

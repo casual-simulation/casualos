@@ -115,7 +115,7 @@ async function backupAsDownload(
         auxTaskBackup: true,
         auxTaskBackupType: 'download',
         auxTaskOutput: 'Preparing...',
-        auxProgressBar: 0,
+        progressBar: 0,
         auxProgressBarColor: '#FCE24C',
         auxTaskTime: time,
     });
@@ -137,7 +137,7 @@ async function backupAsDownload(
                 let percent = (index / branches.length) * 0.8;
                 await simulation.helper.updateBot(bot, {
                     tags: {
-                        auxProgressBar: percent,
+                        progressBar: percent,
                     },
                 });
             } finally {
@@ -158,7 +158,7 @@ async function backupAsDownload(
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
                 auxTaskOutput: `Downloaded ${branches.length} channels.`,
-                auxProgressBar: 1,
+                progressBar: 1,
                 auxProgressBarColor: '#00FF00',
             },
         });
@@ -177,7 +177,7 @@ async function backupAsDownload(
                 auxFinishedTasks: true,
                 auxTaskOutput: 'The task failed.',
                 auxTaskError: err.toString(),
-                auxProgressBar: 1,
+                progressBar: 1,
                 auxProgressBarColor: '#FF0000',
             },
         });
@@ -204,7 +204,7 @@ async function backupToGithub(
         auxTaskBackup: true,
         auxTaskBackupType: 'github',
         auxTaskOutput: 'Uploading...',
-        auxProgressBar: 0,
+        progressBar: 0,
         auxProgressBarColor: '#FCE24C',
         auxTaskTime: time,
     });
@@ -226,7 +226,7 @@ async function backupToGithub(
             let percent = (index / branches.length) * 0.8;
             await simulation.helper.updateBot(bot, {
                 tags: {
-                    auxProgressBar: percent,
+                    progressBar: percent,
                 },
             });
         } finally {
@@ -247,7 +247,7 @@ async function backupToGithub(
                 auxFinishedTasks: true,
                 auxTaskOutput: `Uploaded ${branches.length} channels.`,
                 auxTaskBackupUrl: response.data.html_url,
-                auxProgressBar: 1,
+                progressBar: 1,
                 auxProgressBarColor: '#00FF00',
             },
         });
@@ -261,7 +261,7 @@ async function backupToGithub(
                 auxFinishedTasks: true,
                 auxTaskOutput: 'The task failed.',
                 auxTaskError: err.toString(),
-                auxProgressBar: 1,
+                progressBar: 1,
                 auxProgressBarColor: '#FF0000',
             },
         });
