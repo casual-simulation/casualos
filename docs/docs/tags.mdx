@@ -500,14 +500,14 @@ The shape that the bot should be displayed as.
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
   <PossibleValueCode value='mesh'>
-    A mesh loaded from the web. See <TagLink tag="auxFormSubtype"/> for additional options.
+    A mesh loaded from the web. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
-    A webpage loaded into a 3D iframe. See <TagLink tag="auxFormSubtype"/> for additional options.
+    A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxFormSubtype`
+### `formSubtype`
 
 The subtype that the form should use. Useful for specifying how a mesh should be loaded.
 
@@ -534,11 +534,11 @@ The address that the bot should represent data from.
 
 When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
-When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
+When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
 ### `auxFormAnimation`
 

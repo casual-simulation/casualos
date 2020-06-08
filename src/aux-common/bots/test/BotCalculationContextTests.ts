@@ -889,14 +889,18 @@ export function botCalculationContextTests(
 
     describe('getBotSubShape()', () => {
         const cases = [['gltf'], ['src'], ['html']];
-        it.each(cases)('should return %s', (shape: string) => {
-            const bot = createBot('test', {
-                auxFormSubtype: <any>shape,
+        const tagCases = ['auxFormSubtype', 'formSubtype'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotSubShape(calc, bot)).toBe(shape);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(getBotSubShape(calc, bot)).toBe(shape);
         });
 
         it('should default to null', () => {
