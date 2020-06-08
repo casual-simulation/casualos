@@ -1926,15 +1926,18 @@ export function botCalculationContextTests(
     });
 
     describe('isBotPointable()', () => {
-        booleanTagValueTests(true, (given, expected) => {
-            const thisBot = createBot('thisBot', {
-                auxPointable: given,
+        const tagCases = ['auxPointable', 'pointable'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            booleanTagValueTests(true, (given, expected) => {
+                const thisBot = createBot('thisBot', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([thisBot]);
+                const result = isBotPointable(calc, thisBot);
+
+                expect(result).toBe(expected);
             });
-
-            const calc = createPrecalculatedContext([thisBot]);
-            const result = isBotPointable(calc, thisBot);
-
-            expect(result).toBe(expected);
         });
     });
 
