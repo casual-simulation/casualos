@@ -182,7 +182,7 @@ describe('BotCalculations', () => {
             ['inventory', 'inventoryPortal'],
             ['menu', 'menuPortal'],
             ['sheet', 'sheetPortal'],
-            ['other', 'auxOtherPortal'],
+            ['other', 'otherPortal'],
             ['page', 'pagePortal'],
             ['inventoryPortal', 'inventoryPortal'],
             ['menuPortal', 'menuPortal'],

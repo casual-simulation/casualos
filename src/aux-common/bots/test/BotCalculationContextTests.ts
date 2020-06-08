@@ -34,7 +34,6 @@ import {
     getChannelBotById,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
-    getConnectedDevices,
     getBotScale,
     isUserActive,
     calculateStringTagValue,
