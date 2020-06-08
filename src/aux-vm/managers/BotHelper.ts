@@ -5,10 +5,8 @@ import {
     BotsState,
     BotCalculationContext,
     createBot,
-    createWorkspace,
     action,
     addState,
-    Workspace,
     calculateFormattedBotValue,
     calculateBotValue,
     calculateDestroyBotEvents,
@@ -117,52 +115,6 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         await this._vm.sendEvents(events);
 
         return bot.id;
-    }
-
-    /**
-     * Creates a new workspace bot.
-     * @param botId The ID of the bot to create. If not specified a new ID will be generated.
-     * @param builderDimensionId The ID of the dimension to create for the bot. If not specified a new dimension ID will be generated.
-     * @param locked Whether the dimension should be accessible in AUX Player.
-     */
-    async createWorkspace(
-        botId?: string,
-        builderDimensionId?: string,
-        locked?: boolean,
-        visible?: boolean,
-        x?: number,
-        y?: number
-    ): Promise<PrecalculatedBot> {
-        if (BotHelper._debug) {
-            console.log('[BotManager] Create Workspace');
-        }
-
-        const workspace: Workspace = createWorkspace(
-            botId,
-            builderDimensionId,
-            locked
-        );
-
-        let visType;
-
-        if (visible) {
-            visType = 'surface';
-        } else {
-            visType = false;
-        }
-
-        const updated = merge(workspace, {
-            tags: {
-                auxDimensionX: x || 0,
-                auxDimensionY: y || 0,
-                auxDimensionVisualize: visType || false,
-            },
-        });
-
-        await this._vm.sendEvents([botAdded(updated)]);
-        // await this._tree.addBot(updated);
-
-        return this.botsState[workspace.id];
     }
 
     /**

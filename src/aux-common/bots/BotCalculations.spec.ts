@@ -13,7 +13,6 @@ import {
     isTagWellKnown,
     calculateStateDiff,
     tagsOnBot,
-    createWorkspace,
     isBot,
     createDimensionId,
     formatValue,
@@ -753,16 +752,6 @@ describe('BotCalculations', () => {
                 )
             ).toEqual(['_position', '_workspace', 'test', 'abc']);
         });
-
-        it('should return the property names that are on workspaces', () => {
-            expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
-                'auxDimensionX',
-                'auxDimensionY',
-                'auxDimensionZ',
-                'auxDimensionVisualize',
-                'auxDimensionConfig',
-            ]);
-        });
     });
 
     describe('getActiveObjects()', () => {
@@ -803,51 +792,6 @@ describe('BotCalculations', () => {
                 state['second'],
                 state['workspace'],
             ]);
-        });
-    });
-
-    describe('createWorkspace()', () => {
-        it('should create new random dimension id if empty', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', '');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should create new random dimension id if undefined', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', undefined);
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should create new random dimension id if whitespace', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', ' ');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should use input dimension id if given', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('userSetID');
-        });
-
-        // Test for the dimension type changes
-        it('should lock the workspace by default', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID');
-
-            expect(workspace.tags['portalLocked']).toEqual(undefined);
-        });
-
-        it('should allow setting the workspace to be unlocked', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID', false);
-
-            expect(workspace.tags['portalLocked']).toEqual(undefined);
         });
     });
 

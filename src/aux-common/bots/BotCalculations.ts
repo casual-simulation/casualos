@@ -884,48 +884,6 @@ export function createPrecalculatedBot(
 }
 
 /**
- * Creates a new Workspace with default values.
- * @param id The ID of the new workspace.
- * @param builderDimensionId The tag that should be used for contexts stored on this workspace.
- * @param locked Whether the dimension is allowed to be accessed via AUX Player.
- */
-export function createWorkspace(
-    id = uuid(),
-    builderDimensionId: string = createDimensionId(),
-    locked: boolean = false
-): Workspace {
-    // checks if given dimension string is empty or just whitespace
-    if (builderDimensionId.length === 0 || /^\s*$/.test(builderDimensionId)) {
-        builderDimensionId = createDimensionId();
-    }
-
-    if (locked) {
-        return {
-            id: id,
-            tags: {
-                auxDimensionX: 0,
-                auxDimensionY: 0,
-                auxDimensionZ: 0,
-                auxDimensionVisualize: 'surface',
-                portalLocked: true,
-                auxDimensionConfig: builderDimensionId,
-            },
-        };
-    } else {
-        return {
-            id: id,
-            tags: {
-                auxDimensionX: 0,
-                auxDimensionY: 0,
-                auxDimensionZ: 0,
-                auxDimensionVisualize: 'surface',
-                auxDimensionConfig: builderDimensionId,
-            },
-        };
-    }
-}
-
-/**
  * Calculates the grid scale for the given workspace.
  * @param workspace
  */

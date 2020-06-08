@@ -86,10 +86,6 @@ export interface ScriptTags extends PrecalculatedTags {
 }
 
 export interface BotTags {
-    // Global bot tags
-    ['auxInventoryHeight']?: unknown;
-    ['auxVersion']?: unknown;
-
     // Normal bot tags
     ['auxColor']?: unknown;
     ['auxDraggable']?: unknown;
@@ -159,7 +155,6 @@ export interface BotTags {
     ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['auxDimensionConfig']?: string | number | boolean;
     ['portalColor']?: string;
     ['portalLocked']?: unknown;
     ['portalGridScale']?: number;
