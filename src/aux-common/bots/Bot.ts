@@ -145,7 +145,7 @@ export interface BotTags {
     ['menuPortalConfigBot']?: string;
     ['leftWristPortalConfigBot']?: string;
     ['rightWristPortalConfigBot']?: string;
-    ['_auxEditingBot']?: string;
+    ['_editingBot']?: string;
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
@@ -889,7 +889,7 @@ export const KNOWN_TAGS: string[] = [
     'menuPortalConfigBot',
     'leftWristPortalConfigBot',
     'rightWristPortalConfigBot',
-    '_auxEditingBot',
+    '_editingBot',
     'auxConnectedSessions',
 
     'auxPortalColor',

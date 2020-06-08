@@ -269,7 +269,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     setEditingBot(bot: Bot) {
         return this.updateBot(this.userBot, {
             tags: {
-                _auxEditingBot: bot.id,
+                _editingBot: bot.id,
             },
         });
     }

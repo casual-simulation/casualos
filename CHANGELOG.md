@@ -25,6 +25,7 @@
         -   Renamed `auxMenuPortalConfigBot` to `menuPortalConfigBot`.
         -   Renamed `auxLeftWristPortalConfigBot` to `leftWristPortalConfigBot`.
         -   Renamed `auxRightWristPortalConfigBot` to `rightWristPortalConfigBot`.
+        -   Renamed `_auxEditingBot` to `_editingBot`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
         -   `auxUniverse` -> `auxStory`
         -   `onUniverseAction` -> `onStoryAction`
