@@ -180,7 +180,7 @@ export interface BotTags {
     ['portalShowFocusPoint']?: boolean | null;
     ['portalDisableCanvasTransparency']?: boolean;
     ['inventoryPortalHeight']?: unknown;
-    ['auxInventoryPortalResizable']?: boolean;
+    ['inventoryPortalResizable']?: boolean;
     ['auxWristPortalHeight']?: number;
     ['auxWristPortalWidth']?: number;
 
@@ -908,7 +908,7 @@ export const KNOWN_TAGS: string[] = [
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
     'inventoryPortalHeight',
-    'auxInventoryPortalResizable',
+    'inventoryPortalResizable',
     'auxWristPortalHeight',
     'auxWristPortalWidth',
 
