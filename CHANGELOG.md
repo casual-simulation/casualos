@@ -18,6 +18,7 @@
         -   Renamed `auxInventoryPortal` to `inventoryPortal`.
         -   Renamed `auxMenuPortal` to `menuPortal`.
         -   Renamed `auxLeftWristPortal` to `leftWristPortal`.
+        -   Renamed `auxRightWristPortal` to `rightWristPortal`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
         -   `auxUniverse` -> `auxStory`
         -   `onUniverseAction` -> `onStoryAction`

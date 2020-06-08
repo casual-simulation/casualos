@@ -37,14 +37,14 @@ export function handToPortal(hand: XRHandedness) {
     return hand === 'left'
         ? 'leftWristPortal'
         : hand === 'right'
-        ? 'auxRightWristPortal'
+        ? 'rightWristPortal'
         : null;
 }
 
 export function portalToHand(portalTag: string): XRHandedness {
     return portalTag === 'leftWristPortal'
         ? 'left'
-        : portalTag === 'auxRightWristPortal'
+        : portalTag === 'rightWristPortal'
         ? 'right'
         : null;
 }
