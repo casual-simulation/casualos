@@ -7144,7 +7144,7 @@ describe('original action tests', () => {
     });
 
     describe('getUserMenuDimension()', () => {
-        it('should return the auxMenuPortal tag from the user bot', () => {
+        it('should return the menuPortal tag from the user bot', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -7156,7 +7156,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxMenuPortal: 'abc',
+                        menuPortal: 'abc',
                     },
                 },
             };
@@ -8480,7 +8480,7 @@ describe('original action tests', () => {
             ['inventory', 'inventoryDimension'],
             ['inventoryPortal', 'inventoryDimension'],
             ['menu', 'menuDimension'],
-            ['auxMenuPortal', 'menuDimension'],
+            ['menuPortal', 'menuDimension'],
             ['sheet', 'sheetDimension'],
             ['sheetPortal', 'sheetDimension'],
             ['missing', null],
@@ -8502,7 +8502,7 @@ describe('original action tests', () => {
                         tags: {
                             pagePortal: 'pageDimension',
                             inventoryPortal: 'inventoryDimension',
-                            auxMenuPortal: 'menuDimension',
+                            menuPortal: 'menuDimension',
                             sheetPortal: 'sheetDimension',
                             falsy: false,
                             number: 0,

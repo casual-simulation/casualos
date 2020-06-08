@@ -1589,15 +1589,15 @@ player.toast(dimension);
 ### `player.getMenuDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxMenuPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='menuPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxMenuPortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "menuPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxMenuPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='menuPortal'/> portal.
 ```typescript
 const dimension = player.getMenuDimension();
 player.toast(dimension);
@@ -1656,7 +1656,7 @@ Possible values are:
     The <TagLink tag='inventoryPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
-      The <TagLink tag='auxMenuPortal'/>.
+      The <TagLink tag='menuPortal'/>.
   </PossibleValueCode>
 </PossibleValuesTable>
 

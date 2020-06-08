@@ -1949,8 +1949,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the auxMenuPortal tag from the user bot', () => {
-                player.tags.auxMenuPortal = 'abc';
+            it('should return the menuPortal tag from the user bot', () => {
+                player.tags.menuPortal = 'abc';
                 const result = library.api.player.getMenuDimension();
                 expect(result).toEqual('abc');
             });
@@ -1958,7 +1958,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxMenuPortal = given;
+                    player.tags.menuPortal = given;
                     const result = library.api.player.getMenuDimension();
                     expect(result).toEqual(expected);
                 }
@@ -1980,7 +1980,7 @@ describe('AuxLibrary', () => {
                 ['inventory', 'inventoryDimension'],
                 ['inventoryPortal', 'inventoryDimension'],
                 ['menu', 'menuDimension'],
-                ['auxMenuPortal', 'menuDimension'],
+                ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
                 ['sheetPortal', 'sheetDimension'],
                 ['missing', null],
@@ -1991,7 +1991,7 @@ describe('AuxLibrary', () => {
                 it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.pagePortal = 'pageDimension';
                     player.tags.inventoryPortal = 'inventoryDimension';
-                    player.tags.auxMenuPortal = 'menuDimension';
+                    player.tags.menuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
                     player.tags.number = 0;
@@ -2006,7 +2006,7 @@ describe('AuxLibrary', () => {
                     (expected, given) => {
                         player.tags.pagePortal = given;
                         player.tags.inventoryPortal = given;
-                        player.tags.auxMenuPortal = given;
+                        player.tags.menuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
                         player.tags.number = 0;

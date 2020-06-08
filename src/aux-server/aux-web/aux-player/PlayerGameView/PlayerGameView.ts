@@ -65,7 +65,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 .subscribe()
         );
 
-        let menuContext = new ItemDimension(['auxMenuPortal']);
+        let menuContext = new ItemDimension(['menuPortal']);
         this._subscriptions.push(menuContext);
         this._subscriptions.push(
             menuContext.itemsUpdated.subscribe(items => (this.menu = items))

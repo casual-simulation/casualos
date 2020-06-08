@@ -1151,7 +1151,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getMenuDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const menu = getTag(user, 'auxMenuPortal');
+            const menu = getTag(user, 'menuPortal');
             if (hasValue(menu)) {
                 return menu.toString();
             }

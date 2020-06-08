@@ -16,6 +16,7 @@
         -   Renamed `auxPagePortal` to `pagePortal`.
         -   Renamed `auxSheetPortal` to `sheetPortal`.
         -   Renamed `auxInventoryPortal` to `inventoryPortal`.
+        -   Renamed `auxMenuPortal` to `menuPortal`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
         -   `auxUniverse` -> `auxStory`
         -   `onUniverseAction` -> `onStoryAction`

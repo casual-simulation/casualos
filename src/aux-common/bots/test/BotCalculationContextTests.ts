@@ -1156,9 +1156,9 @@ export function botCalculationContextTests(
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from auxMenuPortal', () => {
+        it('should return the value from menuPortal', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
 
             const calc = createPrecalculatedContext([user]);
@@ -1170,7 +1170,7 @@ export function botCalculationContextTests(
     describe('getBotsInMenu()', () => {
         it('should return the list of bots in the users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot1 = createBot('bot1', {
                 dimension: true,
@@ -1232,7 +1232,7 @@ export function botCalculationContextTests(
     describe('addBotToMenu()', () => {
         it('should return the update needed to add the given bot ID to the given users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -1250,7 +1250,7 @@ export function botCalculationContextTests(
 
         it('should return the given sortOrder', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -1268,7 +1268,7 @@ export function botCalculationContextTests(
 
         it('should return sortOrder needed to place the bot at the end of the list', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
             const bot2 = createBot('bot2', {
@@ -1291,7 +1291,7 @@ export function botCalculationContextTests(
     describe('removeBotFromMenu()', () => {
         it('should return the update needed to remove the given bot from the users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 

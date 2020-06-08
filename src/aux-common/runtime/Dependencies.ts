@@ -648,7 +648,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'auxMenuPortal',
+                    name: 'menuPortal',
                     dependencies: [],
                 },
             ];

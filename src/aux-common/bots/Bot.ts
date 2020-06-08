@@ -136,7 +136,7 @@ export interface BotTags {
     ['sheetPortal']?: string | boolean;
     ['auxStory']?: string | string[];
     ['inventoryPortal']?: string;
-    ['auxMenuPortal']?: string;
+    ['menuPortal']?: string;
     ['auxLeftWristPortal']?: string;
     ['auxRightWristPortal']?: string;
     ['auxPagePortalConfigBot']?: string;
@@ -861,7 +861,7 @@ export const KNOWN_PORTALS: string[] = [
     'pagePortal',
     'sheetPortal',
     'inventoryPortal',
-    'auxMenuPortal',
+    'menuPortal',
     'auxLeftWristPortal',
     'auxRightWristPortal',
 ];
@@ -880,7 +880,7 @@ export const KNOWN_TAGS: string[] = [
     'sheetPortal',
     'auxStory',
     'inventoryPortal',
-    'auxMenuPortal',
+    'menuPortal',
     'auxLeftWristPortal',
     'auxRightWristPortal',
     'auxPagePortalConfigBot',
