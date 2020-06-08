@@ -230,7 +230,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
             auxHistory: true,
             label: commit.message,
             labelSize: 0.25,
-            auxScale: 0.8,
+            scale: 0.8,
             auxScaleX: 2,
             auxMarkHash: commit.hash,
             auxPreviousMarkHash: commit.previousCommit,

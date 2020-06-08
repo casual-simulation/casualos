@@ -99,7 +99,7 @@ export interface BotTags {
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
     ['strokeWidth']?: unknown;
-    ['auxScale']?: number;
+    ['scale']?: number;
     ['auxScaleX']?: number;
     ['auxScaleY']?: number;
     ['auxScaleZ']?: number;
@@ -938,7 +938,7 @@ export const KNOWN_TAGS: string[] = [
     'labelAlignment',
     'labelFontAddress',
     'listening',
-    'auxScale',
+    'scale',
     'auxScaleX',
     'auxScaleY',
     'auxScaleZ',
