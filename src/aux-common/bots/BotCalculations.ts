@@ -2277,8 +2277,7 @@ export function getPortalTag(portal: PortalType) {
     if (portal.endsWith('Portal')) {
         return portal;
     }
-    const upper = portal[0].toUpperCase() + portal.slice(1);
-    return `aux${upper}Portal`;
+    return `${portal}Portal`;
 }
 
 /**
