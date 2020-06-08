@@ -1218,17 +1218,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getConnectedDevices()', () => {
-        numericalTagValueTests(0, (value, expected) => {
-            let bot = createBot('test', {
-                auxConnectedSessions: value,
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            expect(getConnectedDevices(calc, bot)).toBe(expected);
-        });
-    });
-
     describe('addBotToMenu()', () => {
         it('should return the update needed to add the given bot ID to the given users menu', () => {
             const user = createBot('user', {

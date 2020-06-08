@@ -2247,18 +2247,6 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
 }
 
 /**
- * Gets the number of connected devices that are connected from the given globals bot.
- * @param calc The bot calculation context.
- * @param bot The globals bot.
- */
-export function getConnectedDevices(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(calc, bot, 'auxConnectedSessions', 0);
-}
-
-/**
  * Returns wether or not the given bot resides in the given dimension id.
  * @param context The bot calculation context to run formulas with.
  * @param bot The bot.

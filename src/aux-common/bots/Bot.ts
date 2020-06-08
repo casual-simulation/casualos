@@ -147,9 +147,6 @@ export interface BotTags {
     ['rightWristPortalConfigBot']?: string;
     ['_editingBot']?: string;
 
-    // Admin channel tags
-    ['auxConnectedSessions']?: number;
-
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
     ['auxFinishedTasks']?: boolean;
@@ -890,7 +887,6 @@ export const KNOWN_TAGS: string[] = [
     'leftWristPortalConfigBot',
     'rightWristPortalConfigBot',
     '_editingBot',
-    'auxConnectedSessions',
 
     'auxPortalColor',
     'auxPortalLocked',
