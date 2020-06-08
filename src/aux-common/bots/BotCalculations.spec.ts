@@ -197,32 +197,6 @@ describe('BotCalculations', () => {
                 expect(tag).toBe(expected);
             }
         );
-
-        const noUppercaseCases = [
-            ['page', 'pagePortal'],
-            ['inventory', 'inventoryPortal'],
-            ['menu', 'menuPortal'],
-            ['sheet', 'sheetPortal'],
-            ['other', 'otherPortal'],
-            ['page', 'pagePortal'],
-            ['auxInventoryPortal', 'auxInventoryPortal'],
-            ['auxMenuPortal', 'auxMenuPortal'],
-            ['auxSheetPortal', 'auxSheetPortal'],
-            ['auxOtherPortal', 'auxOtherPortal'],
-        ];
-
-        describe('no uppercase', () => {
-            it.each(noUppercaseCases)(
-                'should return the corresponding tag for the portal type',
-                (type, expected) => {
-                    const tag = getPortalTag(type, {
-                        prefix: '',
-                        uppercase: false,
-                    });
-                    expect(tag).toBe(expected);
-                }
-            );
-        });
     });
 
     describe('botHasLOD()', () => {

@@ -370,7 +370,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 }
 
 export function calculateBotValue(
-    context: BotObjectsContext | null,
+    context: BotObjectsContext,
     object: Object | PrecalculatedBot,
     tag: keyof BotTags
 ) {
@@ -2285,19 +2285,12 @@ export function isBotInDimension(
  * Gets the tag that is used to set the dimension for the given portal type.
  * @param portal The portal type.
  */
-export function getPortalTag(
-    portal: PortalType,
-    options = { prefix: 'aux', uppercase: true }
-) {
+export function getPortalTag(portal: PortalType) {
     if (portal.endsWith('Portal')) {
         return portal;
     }
-    if (options.uppercase) {
-        const upper = portal[0].toUpperCase() + portal.slice(1);
-        return `${options.prefix}${upper}Portal`;
-    } else {
-        return `${portal}Portal`;
-    }
+    const upper = portal[0].toUpperCase() + portal.slice(1);
+    return `aux${upper}Portal`;
 }
 
 /**

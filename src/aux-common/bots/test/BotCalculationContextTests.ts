@@ -1120,20 +1120,18 @@ export function botCalculationContextTests(
     });
 
     describe('getPortalConfigBotID()', () => {
-        const tagCases = ['auxPagePortalConfigBot', 'pagePortalConfigBot'];
-        describe.each(tagCases)('%s', (tag: string) => {
-            it('should return the bot ID that the config bot tag points to', () => {
-                const userBot = createBot('userBot', {
-                    auxPagePortal: 'abc',
-                    [tag]: 'test',
-                });
-
-                const calc = createPrecalculatedContext([userBot]);
-                const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
-
-                expect(id).toEqual('test');
+        it('should return the bot ID that the config bot tag points to', () => {
+            const userBot = createBot('userBot', {
+                auxPagePortal: 'abc',
+                auxPagePortalConfigBot: 'test',
             });
+
+            const calc = createPrecalculatedContext([userBot]);
+            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+
+            expect(id).toEqual('test');
         });
+
         it('should return null if the tag does not exist', () => {
             const userBot = createBot('userBot', {
                 auxPagePortal: 'abc',
