@@ -954,7 +954,7 @@ export const KNOWN_TAGS: string[] = [
     'progressBarColor',
     'progressBarBackgroundColor',
     'progressBarPosition',
-    'auxMaxLODThreshold',
+    'maxLODThreshold',
     'auxMinLODThreshold',
     'auxPointable',
     'auxFocusable',

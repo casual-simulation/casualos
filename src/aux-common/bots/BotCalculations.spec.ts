@@ -207,6 +207,7 @@ describe('BotCalculations', () => {
             ['onMinLODExit'],
             ['auxMaxLODThreshold'],
             ['auxMinLODThreshold'],
+            ['maxLODThreshold'],
         ];
 
         describe.each(lodListeners)('%s', (tag: string) => {
