@@ -233,7 +233,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     {
                         auxHistory: true,
                         auxHistoryY: -0,
-                        auxLabel: 'commit1',
+                        label: 'commit1',
                         auxLabelSize: 0.25,
                         auxScale: 0.8,
                         auxScaleX: 2,
@@ -247,7 +247,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     {
                         auxHistory: true,
                         auxHistoryY: -1,
-                        auxLabel: 'commit2',
+                        label: 'commit2',
                         auxLabelSize: 0.25,
                         auxScale: 0.8,
                         auxScaleX: 2,

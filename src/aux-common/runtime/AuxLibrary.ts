@@ -1211,7 +1211,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show an input box for `this` bot's label.
-     * player.showInputForTag(this, "auxLabel", {
+     * player.showInputForTag(this, "label", {
      *            title: "Change the label",
      *            type: "text"
      * });

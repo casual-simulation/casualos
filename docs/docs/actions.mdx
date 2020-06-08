@@ -47,11 +47,11 @@ let myRedBot = create({
 ```typescript
 let myParentBot = create({
     creator: null,
-    auxLabel: "Parent"
+    label: "Parent"
 });
 let myChildBot = create({
     creator: getID(myParentBot),
-    auxLabel: "Child"
+    label: "Child"
 });
 ```
 
@@ -388,9 +388,9 @@ If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en
 let mod = getMod(bot);
 ```
 
-2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='auxLabel'/> tags.
+2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='label'/> tags.
 ```typescript
-let mod = getMod(bot, "color", "auxLabel");
+let mod = getMod(bot, "color", "label");
 ```
 
 3. Get a mod with every tag that starts with "on".
@@ -2058,7 +2058,7 @@ server.setupStory("test", {
     "onCreate": `@
         create({
             creator: null,
-            auxLabel: "This is in the dimension!",
+            label: "This is in the dimension!",
             color: "blue",
             abc: true
         });

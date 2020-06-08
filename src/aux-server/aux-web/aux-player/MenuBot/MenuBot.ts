@@ -79,17 +79,14 @@ export default class MenuBot extends Vue {
     }
 
     private _updateLabel(calc: BotCalculationContext, bot: Bot) {
-        let label = bot.tags['auxLabel'];
-        if (label) {
-            this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
-            const labelColor = bot.tags['auxLabelColor'];
-            if (labelColor) {
-                this.labelColor = calculateFormattedBotValue(
-                    calc,
-                    bot,
-                    'auxLabelColor'
-                );
-            } else {
+        this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
+        if (hasValue(this.label)) {
+            this.labelColor = calculateFormattedBotValue(
+                calc,
+                bot,
+                'auxLabelColor'
+            );
+            if (!hasValue(this.labelColor)) {
                 this.labelColor = '#000';
             }
         } else {

@@ -228,7 +228,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
     private _makeBot(commit: CausalRepoCommit): Bot {
         return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
             auxHistory: true,
-            auxLabel: commit.message,
+            label: commit.message,
             auxLabelSize: 0.25,
             auxScale: 0.8,
             auxScaleX: 2,
