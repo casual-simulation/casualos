@@ -87,11 +87,11 @@ export interface ScriptTags extends PrecalculatedTags {
 
 export interface BotTags {
     // Normal bot tags
-    ['auxColor']?: unknown;
-    ['auxDraggable']?: unknown;
-    ['auxDraggableMode']?: BotDragMode;
-    ['auxPositioningMode']?: unknown;
-    ['auxDestroyable']?: unknown;
+    ['color']?: unknown;
+    ['draggable']?: unknown;
+    ['draggableMode']?: BotDragMode;
+    ['positioningMode']?: unknown;
+    ['destroyable']?: unknown;
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
     ['strokeWidth']?: unknown;
