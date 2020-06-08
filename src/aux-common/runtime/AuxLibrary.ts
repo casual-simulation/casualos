@@ -2138,7 +2138,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Ask all the tall bots for their names.
-     * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
      *
      * @example
      * // Tell every friendly bot to say "Hi" to you.

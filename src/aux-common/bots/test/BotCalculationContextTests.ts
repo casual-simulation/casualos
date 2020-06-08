@@ -1069,7 +1069,7 @@ export function botCalculationContextTests(
             const bot = createBot('test', {
                 scaleX: 10,
                 scaleY: 11,
-                auxScaleZ: 12,
+                scaleZ: 12,
             });
 
             const calc = createPrecalculatedContext([bot]);
@@ -1085,7 +1085,7 @@ export function botCalculationContextTests(
             const bot = createBot('test', {
                 scaleX: 10,
                 scaleY: 11,
-                auxScaleZ: 12,
+                scaleZ: 12,
             });
 
             const calc = createPrecalculatedContext([bot]);
