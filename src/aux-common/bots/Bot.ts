@@ -182,7 +182,7 @@ export interface BotTags {
     ['inventoryPortalHeight']?: unknown;
     ['inventoryPortalResizable']?: boolean;
     ['wristPortalHeight']?: number;
-    ['auxWristPortalWidth']?: number;
+    ['wristPortalWidth']?: number;
 
     // Stripe tags
     ['stripeCharges']?: boolean;
@@ -910,7 +910,7 @@ export const KNOWN_TAGS: string[] = [
     'inventoryPortalHeight',
     'inventoryPortalResizable',
     'wristPortalHeight',
-    'auxWristPortalWidth',
+    'wristPortalWidth',
 
     'color',
     'creator',
