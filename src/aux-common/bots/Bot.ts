@@ -126,7 +126,7 @@ export interface BotTags {
     ['progressBar']?: unknown;
     ['progressBarColor']?: unknown;
     ['progressBarBackgroundColor']?: unknown;
-    ['auxProgressBarPosition']?: unknown;
+    ['progressBarPosition']?: unknown;
     ['auxPointable']?: unknown;
     ['auxFocusable']?: unknown;
 
@@ -953,7 +953,7 @@ export const KNOWN_TAGS: string[] = [
     'progressBar',
     'progressBarColor',
     'progressBarBackgroundColor',
-    'auxProgressBarPosition',
+    'progressBarPosition',
     'auxMaxLODThreshold',
     'auxMinLODThreshold',
     'auxPointable',
