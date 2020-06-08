@@ -1123,7 +1123,7 @@ export function botCalculationContextTests(
         it('should return the bot ID that the config bot tag points to', () => {
             const userBot = createBot('userBot', {
                 pagePortal: 'abc',
-                auxPagePortalConfigBot: 'test',
+                pagePortalConfigBot: 'test',
             });
 
             const calc = createPrecalculatedContext([userBot]);

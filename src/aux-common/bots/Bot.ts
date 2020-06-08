@@ -139,12 +139,12 @@ export interface BotTags {
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
     ['rightWristPortal']?: string;
-    ['auxPagePortalConfigBot']?: string;
-    ['auxSheetPortalConfigBot']?: string;
-    ['auxInventoryPortalConfigBot']?: string;
-    ['auxMenuPortalConfigBot']?: string;
-    ['auxLeftWristPortalConfigBot']?: string;
-    ['auxRightWristPortalConfigBot']?: string;
+    ['pagePortalConfigBot']?: string;
+    ['sheetPortalConfigBot']?: string;
+    ['inventoryPortalConfigBot']?: string;
+    ['menuPortalConfigBot']?: string;
+    ['leftWristPortalConfigBot']?: string;
+    ['rightWristPortalConfigBot']?: string;
     ['_auxEditingBot']?: string;
 
     // Admin channel tags
@@ -883,12 +883,12 @@ export const KNOWN_TAGS: string[] = [
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
-    'auxPagePortalConfigBot',
-    'auxSheetPortalConfigBot',
-    'auxInventoryPortalConfigBot',
-    'auxMenuPortalConfigBot',
-    'auxLeftWristPortalConfigBot',
-    'auxRightWristPortalConfigBot',
+    'pagePortalConfigBot',
+    'sheetPortalConfigBot',
+    'inventoryPortalConfigBot',
+    'menuPortalConfigBot',
+    'leftWristPortalConfigBot',
+    'rightWristPortalConfigBot',
     '_auxEditingBot',
     'auxConnectedSessions',
 
