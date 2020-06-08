@@ -121,7 +121,7 @@ export interface BotTags {
     ['auxFormAddress']?: string;
     ['auxOrientationMode']?: string;
     ['auxAnchorPoint']?: string;
-    ['auxCreator']?: string;
+    ['creator']?: string;
     ['auxConfigBot']?: string;
     ['auxProgressBar']?: unknown;
     ['auxProgressBarColor']?: unknown;
@@ -917,7 +917,7 @@ export const KNOWN_TAGS: string[] = [
     'auxWristPortalWidth',
 
     'color',
-    'auxCreator',
+    'creator',
     'auxConfigBot',
     'draggable',
     'draggableMode',

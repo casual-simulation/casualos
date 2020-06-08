@@ -966,7 +966,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns true if the bot is created by the given bot', () => {
                 const filter = library.api.byCreator(bot1);
 
-                bot2.tags.auxCreator = bot1.id;
+                bot2.tags.creator = bot1.id;
 
                 expect(filter(bot2)).toEqual(true);
             });
@@ -974,7 +974,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns true if the bot is created by the given bot ID', () => {
                 const filter = library.api.byCreator(bot1.id);
 
-                bot2.tags.auxCreator = bot1.id;
+                bot2.tags.creator = bot1.id;
 
                 expect(filter(bot2)).toEqual(true);
             });
@@ -982,7 +982,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns false if the bot not is created by the given bot ID', () => {
                 const filter = library.api.byCreator(bot1.id);
 
-                bot2.tags.auxCreator = 'other';
+                bot2.tags.creator = 'other';
 
                 expect(filter(bot2)).toEqual(false);
             });
@@ -990,7 +990,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns false if the bot not is created by the given bot', () => {
                 const filter = library.api.byCreator(bot1);
 
-                bot2.tags.auxCreator = 'other';
+                bot2.tags.creator = 'other';
 
                 expect(filter(bot2)).toEqual(false);
             });
@@ -2904,7 +2904,7 @@ describe('AuxLibrary', () => {
             });
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
-                    auxCreator: 'creator',
+                    creator: 'creator',
                     abc: 'def',
                 })
             );
@@ -2920,7 +2920,7 @@ describe('AuxLibrary', () => {
             });
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
-                    auxCreator: 'creator',
+                    creator: 'creator',
                     abc: 'def',
                 })
             );
@@ -3316,7 +3316,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('auxCreator', () => {
+        describe('creator', () => {
             let current: RuntimeBot;
             let bot1: RuntimeBot;
 
@@ -3328,34 +3328,34 @@ describe('AuxLibrary', () => {
                 context.currentBot = current;
             });
 
-            it('should set the auxCreator to the given bot', () => {
+            it('should set the creator to the given bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: bot1.id });
+                const bot = library.api.create({ creator: bot1.id });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
-                        auxCreator: 'bot1',
+                        creator: 'bot1',
                     })
                 );
             });
 
-            it('should be able to set the auxCreator to null', () => {
+            it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: null });
+                const bot = library.api.create({ creator: null });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
 
-            it('should set auxCreator to null if it references a bot in a different space', () => {
+            it('should set creator to null if it references a bot in a different space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({
-                    auxCreator: bot1.id,
+                    creator: bot1.id,
                     space: 'local',
                 });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
             });
 
-            it('should set auxCreator to null if it references a bot that does not exist', () => {
+            it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: 'missing' });
+                const bot = library.api.create({ creator: 'missing' });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
         });
@@ -3386,17 +3386,25 @@ describe('AuxLibrary', () => {
             expect(context.bots).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should destroy and bots that have auxCreator set to the bot ID', () => {
-            bot3.tags.auxCreator = 'test2';
-            bot4.tags.auxCreator = 'test2';
+        it('should destroy and bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test2';
 
             library.api.destroy('test2');
             expect(context.bots).toEqual([bot1]);
         });
 
-        it('should recursively destroy bots that have auxCreator set to the bot ID', () => {
-            bot3.tags.auxCreator = 'test2';
-            bot4.tags.auxCreator = 'test3';
+        it('should destroy and bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test2';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
+        it('should recursively destroy bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test3';
 
             library.api.destroy('test2');
             expect(context.bots).toEqual([bot1]);
@@ -3433,7 +3441,7 @@ describe('AuxLibrary', () => {
 
         it('should short-circut destroying child bots', () => {
             bot2.tags.destroyable = false;
-            bot3.tags.auxCreator = 'test2';
+            bot3.tags.creator = 'test2';
             library.api.destroy([bot1, bot2, bot4]);
             expect(context.bots).toEqual([bot2, bot3]);
         });
@@ -3496,10 +3504,10 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should not destroy all auxCreator bots when given a non-bot object', () => {
-            bot1.tags.auxCreator = 'a';
-            bot2.tags.auxCreator = 'b';
-            bot3.tags.auxCreator = 'c';
+        it('should not destroy all creator bots when given a non-bot object', () => {
+            bot1.tags.creator = 'a';
+            bot2.tags.creator = 'b';
+            bot3.tags.creator = 'c';
 
             library.api.destroy(<any>{
                 abc: 'def',

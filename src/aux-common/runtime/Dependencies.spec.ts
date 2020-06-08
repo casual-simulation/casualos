@@ -2251,7 +2251,7 @@ describe('Dependencies', () => {
         });
 
         const botTagDependencyCases = [
-            ['creator', 'auxCreator'],
+            ['creator', 'creator'],
             ['config', 'auxConfigBot'],
         ];
 

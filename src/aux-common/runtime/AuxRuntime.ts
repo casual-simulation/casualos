@@ -860,7 +860,7 @@ export class AuxRuntime
                 //     ctx.global.allowsEditing = false;
                 // }
                 ctx.creator = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxCreator)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
                 ctx.config = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)

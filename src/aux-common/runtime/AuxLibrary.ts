@@ -681,8 +681,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Find all the bots created by the yellow bot.
      * let bots = getBots(byCreator(getBot('color','yellow')));
      */
-    function byCreator(bot: Bot | string) {
-        return byTag('auxCreator', getID(bot));
+    function byCreator(bot: Bot | string): BotFilterFunction {
+        const id = getID(bot);
+        return byTag('creator', id);
     }
 
     /**
@@ -1892,7 +1893,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function createBase(idFactory: () => string, ...datas: Mod[]) {
         let parent = context.currentBot;
-        let parentDiff = parent ? { auxCreator: getID(parent) } : {};
+        let parentDiff = parent ? { creator: getID(parent) } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 
@@ -1945,9 +1946,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             applyMod(bot.tags, ...v);
 
-            if ('auxCreator' in bot.tags) {
+            if ('creator' in bot.tags) {
                 let clearCreator = false;
-                const creatorId = bot.tags['auxCreator'];
+                const creatorId = bot.tags['creator'];
                 if (!creatorId) {
                     clearCreator = true;
                 } else {
@@ -1964,7 +1965,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
 
                 if (clearCreator) {
-                    delete bot.tags.auxCreator;
+                    delete bot.tags['creator'];
                 }
             }
 
@@ -2055,7 +2056,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function destroyChildren(id: string) {
-        const children = getBots('auxCreator', id);
+        const children = getBots('creator', id);
         for (let child of children) {
             destroyBot(child);
         }

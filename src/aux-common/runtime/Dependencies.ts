@@ -530,7 +530,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag_value',
-                    name: 'auxCreator',
+                    name: 'creator',
                     dependencies: replace(node.dependencies),
                 },
             ];

@@ -416,6 +416,7 @@ describe('Weave2', () => {
 
         describe('bugs', () => {
             it('should handle issue where the atom is not overwriting a previous value', () => {
+                // This test should never be updated.
                 const site1 = 'e4fc0a5b-1b58-46f9-ae3b-67769153903f';
                 const root = atom(atomId(site1, 1989, null), null, {
                     type: 1,

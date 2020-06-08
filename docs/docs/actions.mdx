@@ -21,12 +21,12 @@ import {
 
 
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
-By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
+By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='creator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
 
-If <TagLink tag='auxCreator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='auxCreator'/> will be set to `null`.
+If <TagLink tag='creator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='creator'/> will be set to `null`.
 
 **Each parameter** is a mod that should be applied to the new bot(s).
-If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
+If no parameters are specified, then the new bot will have its <TagLink tag='creator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
 If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
 
 #### Examples:
@@ -46,11 +46,11 @@ let myRedBot = create({
 3. Create a parent and a child bot:
 ```typescript
 let myParentBot = create({
-    auxCreator: null,
+    creator: null,
     auxLabel: "Parent"
 });
 let myChildBot = create({
-    auxCreator: getID(myParentBot),
+    creator: getID(myParentBot),
     auxLabel: "Child"
 });
 ```
@@ -70,7 +70,7 @@ let myBot = create({ myDimension: true }, {
 
 6. Create a red bot and a blue bot:
 ```typescript
-let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
+let [myRedBot, myBlueBot] = create({ creator: null}, [
     {
         "color": "red"
     },
@@ -88,7 +88,7 @@ Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers 
 Note that only destroyable bots will be destroyed.
 Bots that have <TagLink tag='destroyable'/> set to `false` will not be destroyed.
 
-Also note that all bots that have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
+Also note that all bots that have <TagLink tag='creator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
 This happens recursively until there are no more bots to destroy.
 
 #### Examples:
@@ -606,12 +606,12 @@ let bots = getBots(inStack(this, "test"));
 ### `byCreator(bot)`
 
 
-Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
+Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='creator' /> set to the <TagLink tag='id' /> of the given bot.
 
 The **first parameter** is the bot that created the other bots.
 
 <Alert type='info'>
-    This function behaves exactly like <NormalCode>byTag("auxCreator", getID(bot))</NormalCode>.
+    This function behaves exactly like <NormalCode>byTag("creator", getID(bot))</NormalCode>.
 </Alert>
 
 #### Examples
@@ -2057,7 +2057,7 @@ server.setupStory("test", {
 server.setupStory("test", {
     "onCreate": `@
         create({
-            auxCreator: null,
+            creator: null,
             auxLabel: "This is in the dimension!",
             color: "blue",
             abc: true

@@ -874,7 +874,7 @@ describe('AuxRuntime', () => {
                     createBot('test2', {
                         abc: 'def',
                         script: '@create(bot)',
-                        auxCreator: 'test',
+                        creator: 'test',
                         other: true,
                     })
                 ),
@@ -1845,7 +1845,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -1869,7 +1869,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 shout: "@player.toast('abc')",
                             })
                         ),
@@ -1900,7 +1900,7 @@ describe('AuxRuntime', () => {
                     {
                         state: {
                             uuid: createPrecalculatedBot('uuid', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 shout: "@player.toast('abc')",
                                 abc: 'def',
                             }),
@@ -1934,7 +1934,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid1', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -1967,7 +1967,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid1', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -1975,7 +1975,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid2', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -2005,7 +2005,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid1', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -2032,7 +2032,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid1', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -2040,7 +2040,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('uuid2', {
-                                auxCreator: 'test1',
+                                creator: 'test1',
                                 abc: 'def',
                             })
                         ),
@@ -2693,7 +2693,7 @@ describe('AuxRuntime', () => {
 
                 const update = runtime.botsAdded([
                     createBot('test2', {
-                        auxCreator: 'test',
+                        creator: 'test',
                         formula: '=creator.id',
                     }),
                 ]);
@@ -3485,7 +3485,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    test: '@create({ auxCreator: null }, this);',
+                    test: '@create({ creator: null }, this);',
                 },
             },
             thatBot: {
@@ -3509,7 +3509,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    test: '@create({ auxCreator: null }, this);',
+                    test: '@create({ creator: null }, this);',
 
                     // the new bot is not destroyed
                 },
@@ -3984,14 +3984,14 @@ describe('original action tests', () => {
     });
 
     describe('creator', () => {
-        it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
+        it('should pass in a creator variable which equals getBot("id", tags.creator)', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        auxCreator: 'thatBot',
+                        creator: 'thatBot',
                         test: '@setTag(this, "creatorId", creator.id)',
                     },
                 },
@@ -4054,7 +4054,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        auxCreator: 'none',
+                        creator: 'none',
                         test: '@setTag(this, "hasCreator", creator !== null)',
                     },
                 },
@@ -4363,7 +4363,7 @@ describe('original action tests', () => {
                     num: 15,
                     formula: '=this.num',
                     test:
-                        '@create({ auxCreator: null }, this, that, { testFormula: "=this.name" });',
+                        '@create({ creator: null }, this, that, { testFormula: "=this.name" });',
                 },
             },
             thatBot: {
@@ -4395,7 +4395,7 @@ describe('original action tests', () => {
                     num: 15,
                     formula: '=this.num',
                     test:
-                        '@create({ auxCreator: null }, this, that, { testFormula: "=this.name" });',
+                        '@create({ creator: null }, this, that, { testFormula: "=this.name" });',
                     name: 'Friend',
                     testFormula: '=this.name',
 
@@ -4412,7 +4412,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef: '@create({ auxCreator: null }, this)',
+                    abcdef: '@create({ creator: null }, this)',
                 },
             },
             thatBot: {
@@ -4436,7 +4436,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef: '@create({ auxCreator: null }, this)',
+                    abcdef: '@create({ creator: null }, this)',
                 },
             }),
         ]);
@@ -4449,7 +4449,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef: '@create({ auxCreator: null }, this)',
+                    abcdef: '@create({ creator: null }, this)',
                 },
             },
             thatBot: {
@@ -4473,7 +4473,7 @@ describe('original action tests', () => {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: 'abc',
-                    abcdef: '@create({ auxCreator: null }, this)',
+                    abcdef: '@create({ creator: null }, this)',
                 },
             }),
         ]);
@@ -6225,7 +6225,7 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         create:
-                            '@let newBot = create({ auxCreator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
+                            '@let newBot = create({ creator: getID(this) }, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
                     },
                 },
             };
@@ -6242,7 +6242,7 @@ describe('original action tests', () => {
                         stay: 'def',
                         leaveX: null,
                         leaveY: null,
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     },
                 }),
             ]);
@@ -6305,7 +6305,7 @@ describe('original action tests', () => {
     createBotTests('create', 'uuid');
 
     describe('destroy()', () => {
-        it('should destroy and bots that have auxCreator set to the bot ID', () => {
+        it('should destroy and bots that have creator set to the bot ID', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -6316,7 +6316,7 @@ describe('original action tests', () => {
                 childBot: {
                     id: 'childBot',
                     tags: {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     },
                 },
             };
@@ -6330,7 +6330,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should recursively destroy bots that have auxCreator set to the bot ID', () => {
+        it('should recursively destroy bots that have creator set to the bot ID', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -6341,25 +6341,25 @@ describe('original action tests', () => {
                 childBot: {
                     id: 'childBot',
                     tags: {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     },
                 },
                 childChildBot: {
                     id: 'childChildBot',
                     tags: {
-                        auxCreator: 'childBot',
+                        creator: 'childBot',
                     },
                 },
                 otherChildBot: {
                     id: 'otherChildBot',
                     tags: {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     },
                 },
                 otherChildChildBot: {
                     id: 'otherChildChildBot',
                     tags: {
-                        auxCreator: 'otherChildBot',
+                        creator: 'otherChildBot',
                     },
                 },
             };
@@ -6463,7 +6463,7 @@ describe('original action tests', () => {
                 childBot: {
                     id: 'childBot',
                     tags: {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     },
                 },
             };
@@ -6484,14 +6484,14 @@ describe('original action tests', () => {
                 childBot: {
                     id: 'childBot',
                     tags: {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                         destroyable: false,
                     },
                 },
                 grandChildBot: {
                     id: 'grandChildBot',
                     tags: {
-                        auxCreator: 'childBot',
+                        creator: 'childBot',
                     },
                 },
             };
@@ -6518,7 +6518,7 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([
                 botAdded(
                     createBot('uuid-0', {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                     })
                 ),
                 botRemoved('uuid-0'),
@@ -6726,7 +6726,7 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([
                 botAdded(
                     createBot('newBot', {
-                        auxCreator: 'thisBot',
+                        creator: 'thisBot',
                         onCreate: "@changeState(this, 'abc')",
                         state: 'abc',
                     })
@@ -9547,7 +9547,7 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                         },
                     }),
                 ]);
@@ -9571,7 +9571,7 @@ describe('original action tests', () => {
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                         },
                     }),
                 ]);
@@ -9596,7 +9596,7 @@ describe('original action tests', () => {
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                         },
                     }),
                 ]);
@@ -9630,7 +9630,7 @@ describe('original action tests', () => {
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                         },
                     }),
                 ]);
@@ -9640,7 +9640,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: `@setTag(this, "#newBotId", ${name}({ auxCreator: null }, { abc: "def" }).id)`,
+                            test: `@setTag(this, "#newBotId", ${name}({ creator: null }, { abc: "def" }).id)`,
                         },
                     },
                 };
@@ -9668,7 +9668,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: `@let newBot = ${name}({ auxCreator: null }, { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
+                            test: `@let newBot = ${name}({ creator: null }, { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);`,
                         },
                     },
                 };
@@ -9693,7 +9693,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: `@${name}({ auxCreator: null }, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
+                            test: `@${name}({ creator: null }, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)`,
                         },
                     },
                 };
@@ -9721,7 +9721,7 @@ describe('original action tests', () => {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            test: `@let newBot = ${name}({ auxCreator: null }, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
+                            test: `@let newBot = ${name}({ creator: null }, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));`,
                         },
                     },
                 };
@@ -9764,7 +9764,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             abc: 100,
                         },
                     }),
@@ -9789,7 +9789,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             abc: 1,
                             onCreate: '@setTag(this, "#num", 100)',
                             num: 100,
@@ -9823,7 +9823,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             abc: 1,
                         },
                     }),
@@ -9853,14 +9853,14 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: true,
                         },
                     }),
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: false,
                         },
                     }),
@@ -9890,7 +9890,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: true,
                             wow: 1,
                         },
@@ -9898,7 +9898,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: false,
                             wow: 1,
                         },
@@ -9906,7 +9906,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-2`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: true,
                             oh: 'haha',
                         },
@@ -9914,7 +9914,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-3`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: false,
                             oh: 'haha',
                         },
@@ -9922,7 +9922,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-4`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: true,
                             test: 'a',
                         },
@@ -9930,7 +9930,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-5`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             hello: false,
                             test: 'a',
                         },
@@ -9975,7 +9975,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             test: true,
                             hello: true,
                         },
@@ -9983,7 +9983,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             test: true,
                             hello: false,
                         },
@@ -10049,7 +10049,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             test: true,
                             abc: `@tags.hit = true;`,
                             hit: true,
@@ -10089,7 +10089,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'thisBot',
+                            creator: 'thisBot',
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
@@ -10131,7 +10131,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'creatorBot',
+                            creator: 'creatorBot',
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
@@ -10218,7 +10218,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'creatorBot',
+                            creator: 'creatorBot',
                             test: true,
                             auxListening: true,
                             abc: `@tags.hit = true;`,
@@ -10261,7 +10261,7 @@ describe('original action tests', () => {
                     botAdded({
                         id: expectedId,
                         tags: {
-                            auxCreator: 'creatorBot',
+                            creator: 'creatorBot',
                             test: true,
                             auxListening: true,
                             abc: `@tags.value = 10; whisper(this, "def")`,
@@ -10331,7 +10331,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, { space: "local" })`,
+                                test: `@${name}({ creator: null }, { space: "local" })`,
                             },
                         },
                     };
@@ -10354,7 +10354,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: "local" })`,
+                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: "local" })`,
                             },
                         },
                     };
@@ -10377,7 +10377,7 @@ describe('original action tests', () => {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, { space: "cookie" }, { space: null })`,
+                                test: `@${name}({ creator: null }, { space: "cookie" }, { space: null })`,
                             },
                         },
                     };
@@ -10407,7 +10407,7 @@ describe('original action tests', () => {
                             thisBot: {
                                 id: 'thisBot',
                                 tags: {
-                                    test: `@${name}({ auxCreator: null }, { space: ${value} })`,
+                                    test: `@${name}({ creator: null }, { space: ${value} })`,
                                 },
                             },
                         };
@@ -10426,13 +10426,13 @@ describe('original action tests', () => {
                 );
             });
 
-            describe('auxCreator', () => {
-                it('should set the auxCreator to the given bot', () => {
+            describe('creator', () => {
+                it('should set the creator to the given bot', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: getID(getBot("other", true)) }, { abc: "def" })`,
+                                test: `@${name}({ creator: getID(getBot("other", true)) }, { abc: "def" })`,
                             },
                         },
                         otherBot: {
@@ -10452,18 +10452,18 @@ describe('original action tests', () => {
                             id: expectedId,
                             tags: {
                                 abc: 'def',
-                                auxCreator: 'otherBot',
+                                creator: 'otherBot',
                             },
                         }),
                     ]);
                 });
 
-                it('should be able to set the auxCreator to null', () => {
+                it('should be able to set the creator to null', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: null }, { abc: "def" })`,
+                                test: `@${name}({ creator: null }, { abc: "def" })`,
                             },
                         },
                         otherBot: {
@@ -10488,12 +10488,12 @@ describe('original action tests', () => {
                     ]);
                 });
 
-                it('should set auxCreator to null if it references a bot in a different space', () => {
+                it('should set creator to null if it references a bot in a different space', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: "otherBot" }, { space: "def" })`,
+                                test: `@${name}({ creator: "otherBot" }, { space: "def" })`,
                             },
                         },
                         otherBot: {
@@ -10518,12 +10518,12 @@ describe('original action tests', () => {
                     ]);
                 });
 
-                it('should set auxCreator to null if it references a bot that does not exist', () => {
+                it('should set creator to null if it references a bot that does not exist', () => {
                     const state: BotsState = {
                         thisBot: {
                             id: 'thisBot',
                             tags: {
-                                test: `@${name}({ auxCreator: "otherBot" })`,
+                                test: `@${name}({ creator: "otherBot" })`,
                             },
                         },
                     };

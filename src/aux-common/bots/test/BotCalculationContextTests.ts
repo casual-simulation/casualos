@@ -1889,13 +1889,13 @@ export function botCalculationContextTests(
         it('should return a list of events needed to destroy the given bot', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot3 = createBot('bot3', {
-                auxCreator: 'bot2',
+                creator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot5 = createBot('bot5');
 
@@ -1916,14 +1916,14 @@ export function botCalculationContextTests(
         it('should not return a destroy event for bots that are not destroyable', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
                 destroyable: false,
             });
             const bot3 = createBot('bot3', {
-                auxCreator: 'bot2',
+                creator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot5 = createBot('bot5');
 
