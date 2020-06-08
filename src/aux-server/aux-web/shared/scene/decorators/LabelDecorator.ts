@@ -211,28 +211,17 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateLabelColor(calc: BotCalculationContext) {
-        let labelColor = this.bot3D.bot.tags['auxLabelColor'];
+        let labelColor = calculateFormattedBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabelColor'
+        );
         if (labelColor) {
-            if (isFormula(labelColor)) {
-                let calculatedValue = calculateFormattedBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLabelColor'
-                );
-
-                let color = buildSRGBColor(calculatedValue);
-                if (color) {
-                    this.text3D.setColor(color);
-                } else {
-                    this.text3D.setColor(new Color('#000'));
-                }
+            let color = buildSRGBColor(labelColor);
+            if (color) {
+                this.text3D.setColor(color);
             } else {
-                let color = buildSRGBColor(<string>labelColor);
-                if (color) {
-                    this.text3D.setColor(color);
-                } else {
-                    this.text3D.setColor(new Color('#000'));
-                }
+                this.text3D.setColor(new Color('#000'));
             }
         } else {
             this.text3D.setColor(new Color('#000'));
