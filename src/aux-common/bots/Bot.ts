@@ -173,7 +173,7 @@ export interface BotTags {
     [`portalPannableMinY`]?: number | null;
     [`portalPannableMaxY`]?: number | null;
     ['portalZoomable']?: number | null;
-    [`auxPortalZoomableMin`]?: number | null;
+    [`portalZoomableMin`]?: number | null;
     [`auxPortalZoomableMax`]?: number | null;
     ['auxPortalRotatable']?: number | null;
     ['auxPortalPointerDragMode']?: PortalPointerDragMode;
@@ -896,7 +896,7 @@ export const KNOWN_TAGS: string[] = [
     `portalPannableMinY`,
     `portalPannableMaxY`,
     'portalZoomable',
-    `auxPortalZoomableMin`,
+    `portalZoomableMin`,
     `auxPortalZoomableMax`,
     'auxPortalRotatable',
     'auxPortalGridScale',
