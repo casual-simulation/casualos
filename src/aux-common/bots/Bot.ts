@@ -176,7 +176,7 @@ export interface BotTags {
     [`portalZoomableMin`]?: number | null;
     [`portalZoomableMax`]?: number | null;
     ['portalRotatable']?: number | null;
-    ['auxPortalPointerDragMode']?: PortalPointerDragMode;
+    ['portalPointerDragMode']?: PortalPointerDragMode;
     ['auxPortalShowFocusPoint']?: boolean | null;
     ['auxPortalDisableCanvasTransparency']?: boolean;
     ['auxInventoryPortalHeight']?: unknown;
@@ -904,7 +904,7 @@ export const KNOWN_TAGS: string[] = [
     `portalPlayerZoom`,
     `portalPlayerRotationX`,
     `portalPlayerRotationY`,
-    'auxPortalPointerDragMode',
+    'portalPointerDragMode',
     'auxPortalShowFocusPoint',
     'auxPortalDisableCanvasTransparency',
     'auxInventoryPortalHeight',

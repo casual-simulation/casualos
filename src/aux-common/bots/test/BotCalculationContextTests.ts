@@ -1031,14 +1031,18 @@ export function botCalculationContextTests(
 
     describe('calculatePortalPointerDragMode()', () => {
         const cases = [['grid'], ['world']];
-        it.each(cases)('should return %s', (mode: string) => {
-            const bot = createBot('test', {
-                auxPortalPointerDragMode: <any>mode,
+        const tagCases = ['auxPortalPointerDragMode', 'portalPointerDragMode'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
         });
 
         it('should default to world', () => {
