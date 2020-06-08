@@ -1942,15 +1942,18 @@ export function botCalculationContextTests(
     });
 
     describe('isBotFocusable()', () => {
-        booleanTagValueTests(true, (given, expected) => {
-            const thisBot = createBot('thisBot', {
-                auxFocusable: given,
+        const tagCases = ['auxFocusable', 'focusable'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            booleanTagValueTests(true, (given, expected) => {
+                const thisBot = createBot('thisBot', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([thisBot]);
+                const result = isBotFocusable(calc, thisBot);
+
+                expect(result).toBe(expected);
             });
-
-            const calc = createPrecalculatedContext([thisBot]);
-            const result = isBotFocusable(calc, thisBot);
-
-            expect(result).toBe(expected);
         });
     });
 
