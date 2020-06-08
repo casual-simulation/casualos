@@ -2203,7 +2203,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             if (bot) {
                 targets.push(bot);
             }
-            if (!bot || bot.tags.auxListening === false) {
+            if (
+                !bot ||
+                bot.tags.auxListening === false ||
+                bot.tags.listening === false
+            ) {
                 continue;
             }
 

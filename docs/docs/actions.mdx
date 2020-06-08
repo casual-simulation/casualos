@@ -717,7 +717,7 @@ const bots = getBots(not(inDimension("test")));
 ### `shout(name, arg?)`
 
 
-Sends a shout to all bots that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
+Sends a shout to all bots that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all <TagLink tag='@onClick'/> listeners.
@@ -739,7 +739,7 @@ shout("hello", "Bob");
 ### `whisper(bot, name, arg?)`
 
 
-Sends a whisper to the specified bot(s) that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
+Sends a whisper to the specified bot(s) that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
 The **first parameter** is the bot, array of bots, bot <TagLink tag='id'/>, or array of bot <TagLink tag='id'/> that the whisper should be sent to.

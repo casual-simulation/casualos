@@ -3153,16 +3153,19 @@ describe('AuxLibrary', () => {
             expect(abc).toBeCalled();
         });
 
-        it('should be able to shout to a new bot that is just now listening', () => {
-            uuidMock.mockReturnValue('uuid');
-            const abc = jest.fn();
-            library.api.create(
-                { auxListening: false, abc: abc, test: true },
-                { auxListening: true }
-            );
-            library.api.shout('abc');
+        const listeningTagCases = ['auxListening', 'listening'];
+        describe.each(listeningTagCases)('%s', (tag: string) => {
+            it('should be able to shout to a new bot that is just now listening', () => {
+                uuidMock.mockReturnValue('uuid');
+                const abc = jest.fn();
+                library.api.create(
+                    { [tag]: false, abc: abc, test: true },
+                    { [tag]: true }
+                );
+                library.api.shout('abc');
 
-            expect(abc).toBeCalled();
+                expect(abc).toBeCalled();
+            });
         });
 
         it('should be able to shout to a bot that was created during another shout', () => {
@@ -3679,10 +3682,26 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([1, 2]);
         });
 
-        it('should ignore bots that are not listening', () => {
+        const tagCases = ['auxListening', 'listening'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should ignore bots that are not listening', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                bot2.tags[tag] = false;
+
+                const results = library.api.shout('sayHello');
+                expect(results).toEqual([1]);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+            });
+        });
+
+        it('should ignore bots where either listening tag is false', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            bot2.tags.auxListening = false;
+
+            bot2.tags.auxListening = true;
+            bot2.tags.listening = false;
 
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1]);
@@ -3867,10 +3886,27 @@ describe('AuxLibrary', () => {
             expect(sayHello3).not.toBeCalled();
         });
 
-        it('should ignore bots that are not listening', () => {
+        const tagCases = ['auxListening', 'listening'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should ignore bots that are not listening', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                bot2.tags[tag] = false;
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+
+                const results = library.api.whisper([bot2, bot1], 'sayHello');
+                expect(results).toEqual([1]);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            });
+        });
+
+        it('should ignore bots where either listening tag is false', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            bot2.tags.auxListening = false;
+            bot2.tags.auxListening = true;
+            bot2.tags.listening = false;
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
 
             const results = library.api.whisper([bot2, bot1], 'sayHello');
