@@ -107,7 +107,7 @@ export interface BotTags {
     ['lineTo']?: unknown;
     ['lineWidth']?: number;
     ['lineStyle']?: unknown;
-    ['auxLineColor']?: unknown;
+    ['lineColor']?: unknown;
     ['auxLabel']?: unknown;
     ['auxLabelColor']?: unknown;
     ['auxLabelSize']?: unknown;
@@ -929,7 +929,7 @@ export const KNOWN_TAGS: string[] = [
     'lineTo',
     'lineStyle',
     'lineWidth',
-    'auxLineColor',
+    'lineColor',
     'auxLabel',
     'auxLabelColor',
     'auxLabelSize',
