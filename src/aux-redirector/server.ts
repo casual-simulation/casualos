@@ -44,14 +44,14 @@ export class Server {
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxStory=${storyEncoded}&sheetPortal=${dimensionEncoded}`
+                    }?story=${storyEncoded}&sheetPortal=${dimensionEncoded}`
                 );
             } else {
                 const dimensionEncoded = encodeURIComponent(dimension);
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxStory=${storyEncoded}&pagePortal=${dimensionEncoded}`
+                    }?story=${storyEncoded}&pagePortal=${dimensionEncoded}`
                 );
             }
         });

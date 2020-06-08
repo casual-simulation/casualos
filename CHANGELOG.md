@@ -27,7 +27,7 @@
         -   Renamed `auxRightWristPortalConfigBot` to `rightWristPortalConfigBot`.
         -   Renamed `_auxEditingBot` to `_editingBot`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
-        -   `auxUniverse` -> `auxStory`
+        -   `auxUniverse` -> `story`
         -   `onUniverseAction` -> `onStoryAction`
         -   `onUniverseStreaming` -> `onStoryStreaming`
             -   The `universe` property has been renamed to `story`

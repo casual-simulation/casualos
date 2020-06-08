@@ -636,7 +636,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'auxStory',
+                    name: 'story',
                     dependencies: [],
                 },
             ];

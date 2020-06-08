@@ -425,14 +425,14 @@ export default class PlayerApp extends Vue {
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'auxStory',
+            'story',
             []
         );
         if (list.indexOf(id) < 0) {
             list.push(id);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    auxStory: list,
+                    story: list,
                 },
             });
         }
@@ -443,7 +443,7 @@ export default class PlayerApp extends Vue {
         const list = calculateStringListTagValue(
             calc,
             sim.helper.userBot,
-            'auxStory',
+            'story',
             []
         );
         const index = list.indexOf(id);
@@ -451,7 +451,7 @@ export default class PlayerApp extends Vue {
             list.splice(index, 1);
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    auxStory: list,
+                    story: list,
                 },
             });
         }
@@ -622,13 +622,13 @@ export default class PlayerApp extends Vue {
                     const player = simulation.helper.userBot;
                     const calc = simulation.helper.createContext();
                     const story =
-                        e.story || calculateBotValue(calc, player, 'auxStory');
+                        e.story || calculateBotValue(calc, player, 'story');
                     const dimension =
                         e.dimension ||
                         calculateBotValue(calc, player, 'pagePortal');
                     const code = `${location.protocol}//${
                         location.host
-                    }?auxStory=${encodeURIComponent(
+                    }?story=${encodeURIComponent(
                         story
                     )}&pagePortal=${encodeURIComponent(dimension)}`;
                     this._showQRCode(code);

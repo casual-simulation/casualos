@@ -130,7 +130,7 @@ export interface BotTags {
     ['auxPlayerActive']?: boolean;
     ['pagePortal']?: string | boolean;
     ['sheetPortal']?: string | boolean;
-    ['auxStory']?: string | string[];
+    ['story']?: string | string[];
     ['inventoryPortal']?: string;
     ['menuPortal']?: string;
     ['leftWristPortal']?: string;
@@ -870,7 +870,7 @@ export const KNOWN_TAGS: string[] = [
     'playerActive',
     'pagePortal',
     'sheetPortal',
-    'auxStory',
+    'story',
     'inventoryPortal',
     'menuPortal',
     'leftWristPortal',

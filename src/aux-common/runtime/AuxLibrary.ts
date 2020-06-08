@@ -1120,7 +1120,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentStory(): string {
         const user = context.playerBot;
         if (user) {
-            let story = getTag(user, 'auxStory');
+            let story = getTag(user, 'story');
             if (hasValue(story)) {
                 return story.toString();
             }

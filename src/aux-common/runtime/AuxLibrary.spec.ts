@@ -1569,7 +1569,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxStory: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1814,7 +1814,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxStory: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1856,7 +1856,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxStory: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1894,13 +1894,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxStory', () => {
-                player.tags.auxStory = 'story';
+            it('should return story', () => {
+                player.tags.story = 'story';
                 const result = library.api.player.getCurrentStory();
                 expect(result).toEqual('story');
             });
 
-            it('should return undefined when auxStory is not set', () => {
+            it('should return undefined when story is not set', () => {
                 const result = library.api.player.getCurrentStory();
                 expect(result).toBeUndefined();
             });
@@ -1908,7 +1908,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxStory = given;
+                    player.tags.story = given;
                     const result = library.api.player.getCurrentStory();
                     expect(result).toEqual(expected);
                 }

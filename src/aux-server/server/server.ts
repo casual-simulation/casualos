@@ -603,7 +603,7 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.query.auxStory;
+        const id = req.query.story;
         if (!id) {
             res.sendStatus(400);
             return;

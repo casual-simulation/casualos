@@ -1507,7 +1507,7 @@ describe('Dependencies', () => {
                 ) => [
                     {
                         type: 'tag',
-                        name: 'auxStory',
+                        name: 'story',
                         dependencies: [],
                     },
                 ],
@@ -1550,7 +1550,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: 'auxStory',
+                    name: 'story',
                     dependencies: [],
                 },
                 {

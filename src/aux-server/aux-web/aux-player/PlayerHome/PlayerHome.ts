@@ -53,7 +53,7 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        await this._setStory(this.query['auxStory'] as (string | string[]));
+        await this._setStory(this.query['story'] as (string | string[]));
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 bot => {
@@ -85,7 +85,7 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            this._setStory(this.query['auxStory'] as (string | string[]));
+            this._setStory(this.query['story'] as (string | string[]));
         }
     }
 
@@ -99,13 +99,13 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (update.tags.has('auxStory')) {
+                        if (update.tags.has('story')) {
                             // Story changed - update it
                             const calc = sim.helper.createContext();
                             const story = calculateStringListTagValue(
                                 calc,
                                 update.bot,
-                                'auxStory',
+                                'story',
                                 null
                             );
                             if (hasValue(story)) {

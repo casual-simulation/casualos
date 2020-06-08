@@ -7832,7 +7832,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxStory: 'channel',
+                        story: 'channel',
                     },
                 },
             };
@@ -7873,7 +7873,7 @@ describe('original action tests', () => {
                     id: 'userBot',
                     space: 'tempLocal',
                     tags: {
-                        auxStory: 'channel',
+                        story: 'channel',
                     },
                 },
                 otherBot: {
@@ -8375,7 +8375,7 @@ describe('original action tests', () => {
     });
 
     describe('player.getCurrentStory()', () => {
-        it('should return auxStory', () => {
+        it('should return story', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8387,7 +8387,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxStory: 'dimension',
+                        story: 'dimension',
                     },
                 },
             };
@@ -8406,7 +8406,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return undefined when auxStory is not set', () => {
+        it('should return undefined when story is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8452,7 +8452,7 @@ describe('original action tests', () => {
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            auxStory: given,
+                            story: given,
                         },
                     },
                 };
