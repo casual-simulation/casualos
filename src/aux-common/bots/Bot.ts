@@ -958,12 +958,12 @@ export const KNOWN_TAGS: string[] = [
     'auxTaskBackupType',
     'auxTaskBackupUrl',
 
-    'auxError',
-    'auxErrorName',
-    'auxErrorMessage',
-    'auxErrorStack',
-    'auxErrorBot',
-    'auxErrorTag',
+    'error',
+    'errorName',
+    'errorMessage',
+    'errorStack',
+    'errorBot',
+    'errorTag',
 
     'stripeCharges',
     'stripeSuccessfulCharges',

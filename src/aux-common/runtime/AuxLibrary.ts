@@ -1507,15 +1507,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(
             loadBots('error', [
                 {
-                    tag: 'auxError',
+                    tag: 'error',
                     value: true,
                 },
                 {
-                    tag: 'auxErrorBot',
+                    tag: 'errorBot',
                     value: getID(bot),
                 },
                 {
-                    tag: 'auxErrorTag',
+                    tag: 'errorTag',
                     value: tag,
                 },
             ])

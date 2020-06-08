@@ -97,12 +97,12 @@ export class AuxHelper extends BaseHelper<Bot> {
                                 createBot(
                                     undefined,
                                     {
-                                        auxError: true,
-                                        auxErrorName: e.error.name,
-                                        auxErrorMessage: e.error.message,
-                                        auxErrorStack: e.error.stack,
-                                        auxErrorBot: e.bot ? e.bot.id : null,
-                                        auxErrorTag: e.tag || null,
+                                        error: true,
+                                        errorName: e.error.name,
+                                        errorMessage: e.error.message,
+                                        errorStack: e.error.stack,
+                                        errorBot: e.bot ? e.bot.id : null,
+                                        errorTag: e.tag || null,
                                     },
                                     'error'
                                 )

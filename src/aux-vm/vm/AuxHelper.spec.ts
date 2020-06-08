@@ -701,12 +701,12 @@ describe('AuxHelper', () => {
                     id: 'error',
                     space: 'error',
                     tags: {
-                        auxError: true,
-                        auxErrorName: 'Error',
-                        auxErrorMessage: 'abc',
-                        auxErrorStack: expect.any(String),
-                        auxErrorBot: 'test',
-                        auxErrorTag: 'action',
+                        error: true,
+                        errorName: 'Error',
+                        errorMessage: 'abc',
+                        errorStack: expect.any(String),
+                        errorBot: 'test',
+                        errorTag: 'action',
                     },
                 },
             });

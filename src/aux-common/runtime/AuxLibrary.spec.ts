@@ -2484,15 +2484,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.server.loadErrors('test', 'abc');
                 const expected = loadBots('error', [
                     {
-                        tag: 'auxError',
+                        tag: 'error',
                         value: true,
                     },
                     {
-                        tag: 'auxErrorBot',
+                        tag: 'errorBot',
                         value: 'test',
                     },
                     {
-                        tag: 'auxErrorTag',
+                        tag: 'errorTag',
                         value: 'abc',
                     },
                 ]);
@@ -2504,15 +2504,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.server.loadErrors(bot1, 'abc');
                 const expected = loadBots('error', [
                     {
-                        tag: 'auxError',
+                        tag: 'error',
                         value: true,
                     },
                     {
-                        tag: 'auxErrorBot',
+                        tag: 'errorBot',
                         value: bot1.id,
                     },
                     {
-                        tag: 'auxErrorTag',
+                        tag: 'errorTag',
                         value: 'abc',
                     },
                 ]);
