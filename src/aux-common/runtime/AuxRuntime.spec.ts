@@ -8482,7 +8482,7 @@ describe('original action tests', () => {
             ['menu', 'menuDimension'],
             ['auxMenuPortal', 'menuDimension'],
             ['sheet', 'sheetDimension'],
-            ['auxSheetPortal', 'sheetDimension'],
+            ['sheetPortal', 'sheetDimension'],
             ['missing', null],
             ['falsy', null],
         ];
@@ -8503,7 +8503,7 @@ describe('original action tests', () => {
                             pagePortal: 'pageDimension',
                             auxInventoryPortal: 'inventoryDimension',
                             auxMenuPortal: 'menuDimension',
-                            auxSheetPortal: 'sheetDimension',
+                            sheetPortal: 'sheetDimension',
                             falsy: false,
                             number: 0,
                         },

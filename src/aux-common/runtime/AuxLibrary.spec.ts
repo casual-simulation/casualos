@@ -1982,7 +1982,7 @@ describe('AuxLibrary', () => {
                 ['menu', 'menuDimension'],
                 ['auxMenuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
-                ['auxSheetPortal', 'sheetDimension'],
+                ['sheetPortal', 'sheetDimension'],
                 ['missing', null],
                 ['falsy', null],
             ];
@@ -1992,7 +1992,7 @@ describe('AuxLibrary', () => {
                     player.tags.pagePortal = 'pageDimension';
                     player.tags.auxInventoryPortal = 'inventoryDimension';
                     player.tags.auxMenuPortal = 'menuDimension';
-                    player.tags.auxSheetPortal = 'sheetDimension';
+                    player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
                     player.tags.number = 0;
                     const result = library.api.player.getPortalDimension(
@@ -2007,7 +2007,7 @@ describe('AuxLibrary', () => {
                         player.tags.pagePortal = given;
                         player.tags.auxInventoryPortal = given;
                         player.tags.auxMenuPortal = given;
-                        player.tags.auxSheetPortal = given;
+                        player.tags.sheetPortal = given;
                         player.tags.falsy = false;
                         player.tags.number = 0;
                         const result = library.api.player.getPortalDimension(
@@ -4011,7 +4011,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return true if the player bot has a sheet portal', () => {
-            player.tags.auxSheetPortal = 'sheet';
+            player.tags.sheetPortal = 'sheet';
 
             expect(library.api.player.inSheet()).toBe(true);
         });

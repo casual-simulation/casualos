@@ -182,12 +182,12 @@ describe('BotCalculations', () => {
             ['page', 'pagePortal'],
             ['inventory', 'auxInventoryPortal'],
             ['menu', 'auxMenuPortal'],
-            ['sheet', 'auxSheetPortal'],
+            ['sheet', 'sheetPortal'],
             ['other', 'auxOtherPortal'],
             ['page', 'pagePortal'],
             ['auxInventoryPortal', 'auxInventoryPortal'],
             ['auxMenuPortal', 'auxMenuPortal'],
-            ['auxSheetPortal', 'auxSheetPortal'],
+            ['sheetPortal', 'sheetPortal'],
             ['auxOtherPortal', 'auxOtherPortal'],
         ];
         it.each(cases)(

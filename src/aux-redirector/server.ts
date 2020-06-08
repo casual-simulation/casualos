@@ -44,7 +44,7 @@ export class Server {
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxStory=${storyEncoded}&auxSheetPortal=${dimensionEncoded}`
+                    }?auxStory=${storyEncoded}&sheetPortal=${dimensionEncoded}`
                 );
             } else {
                 const dimensionEncoded = encodeURIComponent(dimension);

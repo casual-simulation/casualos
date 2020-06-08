@@ -582,7 +582,7 @@ describe('AuxHelper', () => {
 
             await helper.updateBot(helper.userBot, {
                 tags: {
-                    auxSheetPortal: 'sheet',
+                    sheetPortal: 'sheet',
                 },
             });
 
@@ -1233,7 +1233,7 @@ describe('AuxHelper', () => {
 
             await helper.updateBot(helper.userBot, {
                 tags: {
-                    auxSheetPortal: 'sheet',
+                    sheetPortal: 'sheet',
                 },
             });
 

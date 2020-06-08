@@ -14,6 +14,7 @@
         -   Because the `gltfVersion` tag has special functionality, **the `auxGLTFVersion` tag will no longer be supported** and you should always use the `gltfVersion` tag in the future.
     -   The following tags have been renamed:
         -   Renamed `auxPagePortal` to `pagePortal`.
+        -   Renamed `auxSheetPortal` to `sheetPortal`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
         -   `auxUniverse` -> `auxStory`
         -   `onUniverseAction` -> `onStoryAction`

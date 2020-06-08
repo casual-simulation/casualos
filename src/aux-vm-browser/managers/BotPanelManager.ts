@@ -85,8 +85,7 @@ export class BotPanelManager implements SubscriptionLike {
         return bufferedEvents.pipe(
             flatMap(async () => {
                 if (this._helper.userBot) {
-                    const dimension = this._helper.userBot.values
-                        .auxSheetPortal;
+                    const dimension = this._helper.userBot.values.sheetPortal;
                     if (!!dimension && dimension !== true) {
                         const bots = filterBotsBySelection(
                             this._helper.objects,

@@ -54,7 +54,7 @@ export default class BotSheet extends Vue {
     exitSheet() {
         const pagePortal = this._simulation.helper.userBot.values.pagePortal;
         let tags: BotTags = {
-            auxSheetPortal: null,
+            sheetPortal: null,
         };
         if (!hasValue(pagePortal)) {
             tags.pagePortal = this.dimension;
@@ -67,7 +67,7 @@ export default class BotSheet extends Vue {
     goToTag(tag: string) {
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: {
-                auxSheetPortal: tag,
+                sheetPortal: tag,
             },
         });
     }
