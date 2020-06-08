@@ -112,12 +112,12 @@ async function backupAsDownload(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        auxTaskBackup: true,
-        auxTaskBackupType: 'download',
-        auxTaskOutput: 'Preparing...',
+        taskBackup: true,
+        taskBackupType: 'download',
+        taskOutput: 'Preparing...',
         progressBar: 0,
         progressBarColor: '#FCE24C',
-        auxTaskTime: time,
+        taskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
@@ -157,7 +157,7 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: `Downloaded ${branches.length} channels.`,
+                taskOutput: `Downloaded ${branches.length} channels.`,
                 progressBar: 1,
                 progressBarColor: '#00FF00',
             },
@@ -175,8 +175,8 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: 'The task failed.',
-                auxTaskError: err.toString(),
+                taskOutput: 'The task failed.',
+                taskError: err.toString(),
                 progressBar: 1,
                 progressBarColor: '#FF0000',
             },
@@ -201,12 +201,12 @@ async function backupToGithub(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        auxTaskBackup: true,
-        auxTaskBackupType: 'github',
-        auxTaskOutput: 'Uploading...',
+        taskBackup: true,
+        taskBackupType: 'github',
+        taskOutput: 'Uploading...',
         progressBar: 0,
         progressBarColor: '#FCE24C',
-        auxTaskTime: time,
+        taskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
@@ -245,8 +245,8 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: `Uploaded ${branches.length} channels.`,
-                auxTaskBackupUrl: response.data.html_url,
+                taskOutput: `Uploaded ${branches.length} channels.`,
+                taskBackupUrl: response.data.html_url,
                 progressBar: 1,
                 progressBarColor: '#00FF00',
             },
@@ -259,8 +259,8 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: 'The task failed.',
-                auxTaskError: err.toString(),
+                taskOutput: 'The task failed.',
+                taskError: err.toString(),
                 progressBar: 1,
                 progressBarColor: '#FF0000',
             },

@@ -146,13 +146,13 @@ export interface BotTags {
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
     ['auxFinishedTasks']?: boolean;
-    ['auxTaskOutput']?: unknown;
-    ['auxTaskError']?: unknown;
-    ['auxTaskTime']?: unknown;
-    ['auxTaskShell']?: string;
-    ['auxTaskBackup']?: boolean;
-    ['auxTaskBackupType']?: BackupType;
-    ['auxTaskBackupUrl']?: string;
+    ['taskOutput']?: unknown;
+    ['taskError']?: unknown;
+    ['taskTime']?: unknown;
+    ['taskShell']?: string;
+    ['taskBackup']?: boolean;
+    ['taskBackupType']?: BackupType;
+    ['taskBackupUrl']?: string;
 
     // Context related tags
     ['portalColor']?: string;
@@ -950,13 +950,13 @@ export const KNOWN_TAGS: string[] = [
     'pointable',
     'focusable',
 
-    'auxTaskOutput',
-    'auxTaskError',
-    'auxTaskTime',
-    'auxTaskShell',
-    'auxTaskBackup',
-    'auxTaskBackupType',
-    'auxTaskBackupUrl',
+    'taskOutput',
+    'taskError',
+    'taskTime',
+    'taskShell',
+    'taskBackup',
+    'taskBackupType',
+    'taskBackupUrl',
 
     'error',
     'errorName',
