@@ -89,16 +89,9 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             this.text3D.setText(label, alignment);
 
             // Update auto size mode.
-            if (this.bot3D.bot.tags['auxLabelSizeMode']) {
-                let mode = calculateBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLabelSizeMode'
-                );
-                this._autoSizeMode = mode === 'auto';
-            } else {
-                this._autoSizeMode = false;
-            }
+            this._autoSizeMode =
+                calculateBotValue(calc, this.bot3D.bot, 'auxLabelSizeMode') ===
+                'auto';
 
             let fontAddress = calculateStringTagValue(
                 calc,
