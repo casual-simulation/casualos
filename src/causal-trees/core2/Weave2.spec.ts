@@ -433,7 +433,7 @@ describe('Weave2', () => {
 
                 const color = atom(atomId(site1, 1996, null), root, {
                     type: 2,
-                    name: 'color',
+                    name: 'auxColor',
                 });
                 expect(color.hash).toEqual(
                     '5f02d0e3e44f1b4766eb5b31741c655edd025215d691f6b722e707e52eb19cee'
