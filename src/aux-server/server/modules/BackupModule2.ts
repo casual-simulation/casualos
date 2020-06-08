@@ -116,7 +116,7 @@ async function backupAsDownload(
         auxTaskBackupType: 'download',
         auxTaskOutput: 'Preparing...',
         progressBar: 0,
-        auxProgressBarColor: '#FCE24C',
+        progressBarColor: '#FCE24C',
         auxTaskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
@@ -159,7 +159,7 @@ async function backupAsDownload(
                 auxFinishedTasks: true,
                 auxTaskOutput: `Downloaded ${branches.length} channels.`,
                 progressBar: 1,
-                auxProgressBarColor: '#00FF00',
+                progressBarColor: '#00FF00',
             },
         });
 
@@ -178,7 +178,7 @@ async function backupAsDownload(
                 auxTaskOutput: 'The task failed.',
                 auxTaskError: err.toString(),
                 progressBar: 1,
-                auxProgressBarColor: '#FF0000',
+                progressBarColor: '#FF0000',
             },
         });
     }
@@ -205,7 +205,7 @@ async function backupToGithub(
         auxTaskBackupType: 'github',
         auxTaskOutput: 'Uploading...',
         progressBar: 0,
-        auxProgressBarColor: '#FCE24C',
+        progressBarColor: '#FCE24C',
         auxTaskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
@@ -248,7 +248,7 @@ async function backupToGithub(
                 auxTaskOutput: `Uploaded ${branches.length} channels.`,
                 auxTaskBackupUrl: response.data.html_url,
                 progressBar: 1,
-                auxProgressBarColor: '#00FF00',
+                progressBarColor: '#00FF00',
             },
         });
 
@@ -262,7 +262,7 @@ async function backupToGithub(
                 auxTaskOutput: 'The task failed.',
                 auxTaskError: err.toString(),
                 progressBar: 1,
-                auxProgressBarColor: '#FF0000',
+                progressBarColor: '#FF0000',
             },
         });
     }
