@@ -958,15 +958,21 @@ export function botCalculationContextTests(
             ['right', 'right'],
             ['[1, 2, 3]', [1, 2, 3]],
         ];
+        const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
-        it.each(cases)('should support %s', (mode: string, expected: any) => {
-            const bot = createBot('test', {
-                auxAnchorPoint: <any>mode,
-            });
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
+                    const calc = createPrecalculatedContext([bot]);
 
-            expect(getBotAnchorPoint(calc, bot)).toEqual(expected);
+                    expect(getBotAnchorPoint(calc, bot)).toEqual(expected);
+                }
+            );
         });
 
         it('should default to bottom', () => {
@@ -992,15 +998,21 @@ export function botCalculationContextTests(
             // Should mirror the coordinates when using literals
             ['[1, 2, 3]', { x: -1, y: -2, z: -3 }],
         ];
+        const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
-        it.each(cases)('should support %s', (mode: string, expected: any) => {
-            const bot = createBot('test', {
-                auxAnchorPoint: <any>mode,
-            });
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
+                    const calc = createPrecalculatedContext([bot]);
 
-            expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+                    expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+                }
+            );
         });
 
         it('should default to bottom', () => {
