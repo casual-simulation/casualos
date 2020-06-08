@@ -8,11 +8,13 @@
 
 -   :boom: Breaking Changes
 
-    -   Renamed `auxCreator` to `creator`.
-        -   Because the `creator` tag has special functionality, **the `auxCreator` tag will no longer be supported** and you should always use the `creator` tag in the future.
-    -   Renamed `auxGLTFVersion` to `gltfVersion`.
-        -   Because the `gltfVersion` tag has special functionality, **the `auxGLTFVersion` tag will no longer be supported** and you should always use the `gltfVersion` tag in the future.
     -   The following tags have been renamed:
+        -   Renamed all the tags so that they no longer have the `aux` prefix. However, any tag not listed below should continue to work with the `aux` prefix without any changes.
+        -   Renamed `auxCreator` to `creator`.
+            -   Note that the `creator` variable in scripts remains the same.
+        -   Renamed `auxConfigBot` to `configBot`.
+            -   Note that the `config` variable in scripts remains the same.
+        -   Renamed `auxGLTFVersion` to `gltfVersion`.
         -   Renamed `auxPagePortal` to `pagePortal`.
         -   Renamed `auxSheetPortal` to `sheetPortal`.
         -   Renamed `auxInventoryPortal` to `inventoryPortal`.
