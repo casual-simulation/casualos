@@ -1752,15 +1752,37 @@ export function botCalculationContextTests(
             ['right', 'right'],
             ['abc', 'center'],
         ];
-        it.each(cases)('given %s it should return %s', (anchor, expected) => {
-            const bot = createBot('bot', {
-                auxLabelAlignment: anchor,
-            });
 
-            const calc = createPrecalculatedContext([bot]);
-            const a = getBotLabelAlignment(calc, bot);
+        describe('auxLabelAlignment', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        auxLabelAlignment: anchor,
+                    });
 
-            expect(a).toBe(expected);
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAlignment(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
+        });
+
+        describe('labelAlignment', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        labelAlignment: anchor,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAlignment(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
         });
     });
 

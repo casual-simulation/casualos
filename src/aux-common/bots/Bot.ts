@@ -113,7 +113,7 @@ export interface BotTags {
     ['labelSize']?: unknown;
     ['labelSizeMode']?: 'auto' | null;
     ['labelPosition']?: BotLabelAnchor | null | string;
-    ['auxLabelAlignment']?: BotLabelAlignment | null | string;
+    ['labelAlignment']?: BotLabelAlignment | null | string;
     ['auxLabelFontAddress']?: BotLabelFontAddress;
     ['auxListening']?: unknown;
     ['auxForm']?: BotShape;
@@ -935,7 +935,7 @@ export const KNOWN_TAGS: string[] = [
     'labelSize',
     'labelSizeMode',
     'labelPosition',
-    'auxLabelAlignment',
+    'labelAlignment',
     'auxLabelFontAddress',
     'auxListening',
     'auxScale',
