@@ -133,7 +133,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const version = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'auxGLTFVersion',
+            'gltfVersion',
             2
         );
         const animation = calculateBotValue(

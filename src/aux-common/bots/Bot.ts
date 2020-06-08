@@ -949,7 +949,7 @@ export const KNOWN_TAGS: string[] = [
     'formAnimation',
     'orientationMode',
     'anchorPoint',
-    'auxGLTFVersion',
+    'gltfVersion',
     'auxProgressBar',
     'auxProgressBarColor',
     'auxProgressBarBackgroundColor',
