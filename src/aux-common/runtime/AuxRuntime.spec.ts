@@ -1171,7 +1171,7 @@ describe('AuxRuntime', () => {
             it('should recalculate formulas that depend on configTag', () => {
                 runtime.botsAdded([
                     createBot('thisBot', {
-                        auxConfigBot: 'thatBot',
+                        configBot: 'thatBot',
                         test: `=configTag`,
                     }),
                     createBot('thatBot', {
@@ -1213,7 +1213,7 @@ describe('AuxRuntime', () => {
             it('should recompile functions that depend on configTag', () => {
                 runtime.botsAdded([
                     createBot('thisBot', {
-                        auxConfigBot: 'thatBot',
+                        configBot: 'thatBot',
                         test: `=configTag`,
                     }),
                     createBot('thatBot', {
@@ -4082,12 +4082,12 @@ describe('original action tests', () => {
     });
 
     describe('config', () => {
-        it('should pass in a config variable which equals getBot("id", tags.auxConfigBot)', () => {
+        it('should pass in a config variable which equals getBot("id", tags.configBot)', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        auxConfigBot: 'thatBot',
+                        configBot: 'thatBot',
                         test: '@setTag(this, "configId", config.id)',
                     },
                 },
@@ -4113,7 +4113,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('the config variable should be null if auxConfigBot is not set', () => {
+        it('the config variable should be null if configBot is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -4143,12 +4143,12 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('the config variable should be null if auxConfigBot is referencing a missing bot', () => {
+        it('the config variable should be null if configBot is referencing a missing bot', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        auxConfigBot: 'none',
+                        configBot: 'none',
                         test: '@setTag(this, "hasConfig", config !== null)',
                     },
                 },
@@ -4232,7 +4232,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        auxConfigBot: 'thatBot',
+                        configBot: 'thatBot',
                         test: '@setTag(this, "parentScript", configTag)',
                     },
                 },
@@ -4264,7 +4264,7 @@ describe('original action tests', () => {
                 thisBot: {
                     id: 'thisBot',
                     tags: {
-                        auxConfigBot: 'thatBot',
+                        configBot: 'thatBot',
                         test: `@config.tags.test = "abc"; setTag(this, "parentScript", configTag)`,
                     },
                 },

@@ -863,7 +863,7 @@ export class AuxRuntime
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
                 ctx.config = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
             },
             invoke: (fn, ctx) => {

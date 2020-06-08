@@ -2252,7 +2252,7 @@ describe('Dependencies', () => {
 
         const botTagDependencyCases = [
             ['creator', 'creator'],
-            ['config', 'auxConfigBot'],
+            ['config', 'configBot'],
         ];
 
         describe.each(botTagDependencyCases)('%s', (name, tag) => {

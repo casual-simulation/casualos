@@ -543,7 +543,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag_value',
-                    name: 'auxConfigBot',
+                    name: 'configBot',
                     dependencies: replace(node.dependencies),
                 },
             ];
