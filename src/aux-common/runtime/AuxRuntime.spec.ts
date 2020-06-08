@@ -8478,7 +8478,7 @@ describe('original action tests', () => {
             ['page', 'pageDimension'],
             ['pagePortal', 'pageDimension'],
             ['inventory', 'inventoryDimension'],
-            ['auxInventoryPortal', 'inventoryDimension'],
+            ['inventoryPortal', 'inventoryDimension'],
             ['menu', 'menuDimension'],
             ['auxMenuPortal', 'menuDimension'],
             ['sheet', 'sheetDimension'],
@@ -8501,7 +8501,7 @@ describe('original action tests', () => {
                         id: 'userBot',
                         tags: {
                             pagePortal: 'pageDimension',
-                            auxInventoryPortal: 'inventoryDimension',
+                            inventoryPortal: 'inventoryDimension',
                             auxMenuPortal: 'menuDimension',
                             sheetPortal: 'sheetDimension',
                             falsy: false,

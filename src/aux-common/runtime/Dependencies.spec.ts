@@ -1961,7 +1961,7 @@ describe('Dependencies', () => {
             ],
             [
                 'player.getInventoryDimension',
-                'auxInventoryPortal',
+                'inventoryPortal',
                 ['player', 'getInventoryDimension'],
             ],
             [

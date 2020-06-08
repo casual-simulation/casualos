@@ -1924,8 +1924,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the auxInventoryPortal tag from the user bot', () => {
-                player.tags.auxInventoryPortal = 'abc';
+            it('should return the inventoryPortal tag from the user bot', () => {
+                player.tags.inventoryPortal = 'abc';
                 const result = library.api.player.getInventoryDimension();
                 expect(result).toEqual('abc');
             });
@@ -1933,7 +1933,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxInventoryPortal = given;
+                    player.tags.inventoryPortal = given;
                     const result = library.api.player.getInventoryDimension();
                     expect(result).toEqual(expected);
                 }
@@ -1978,7 +1978,7 @@ describe('AuxLibrary', () => {
                 ['page', 'pageDimension'],
                 ['pagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
-                ['auxInventoryPortal', 'inventoryDimension'],
+                ['inventoryPortal', 'inventoryDimension'],
                 ['menu', 'menuDimension'],
                 ['auxMenuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
@@ -1990,7 +1990,7 @@ describe('AuxLibrary', () => {
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
                     player.tags.pagePortal = 'pageDimension';
-                    player.tags.auxInventoryPortal = 'inventoryDimension';
+                    player.tags.inventoryPortal = 'inventoryDimension';
                     player.tags.auxMenuPortal = 'menuDimension';
                     player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
@@ -2005,7 +2005,7 @@ describe('AuxLibrary', () => {
                     'should return "%s" when given %s',
                     (expected, given) => {
                         player.tags.pagePortal = given;
-                        player.tags.auxInventoryPortal = given;
+                        player.tags.inventoryPortal = given;
                         player.tags.auxMenuPortal = given;
                         player.tags.sheetPortal = given;
                         player.tags.falsy = false;
@@ -2244,14 +2244,14 @@ describe('AuxLibrary', () => {
             });
 
             it('should return true if the given bot is in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
                 const result = library.api.player.hasBotInInventory(bot1);
                 expect(result).toEqual(true);
             });
 
             it('should return true if all the given bots are in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.player.hasBotInInventory([
@@ -2262,7 +2262,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return false if one of the given bots are not in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
                 const result = library.api.player.hasBotInInventory([

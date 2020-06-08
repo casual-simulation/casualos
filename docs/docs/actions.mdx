@@ -1606,15 +1606,15 @@ player.toast(dimension);
 ### `player.getInventoryDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='inventoryPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxInventoryPortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "inventoryPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxInventoryPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='inventoryPortal'/> portal.
 ```typescript
 const dimension = player.getInventoryDimension();
 player.toast(dimension);
@@ -1623,7 +1623,7 @@ player.toast(dimension);
 ### `player.hasBotInInventory(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='inventoryPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
@@ -1653,7 +1653,7 @@ Possible values are:
     The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='inventory'>
-    The <TagLink tag='auxInventoryPortal'/>.
+    The <TagLink tag='inventoryPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
       The <TagLink tag='auxMenuPortal'/>.
@@ -1667,7 +1667,7 @@ Possible values are:
 const dimension = player.getPortalDimension('page');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='auxInventoryPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='inventoryPortal'/>.
 ```typescript
 const dimension = player.getPortalDimension('inventory');
 ```

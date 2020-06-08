@@ -1135,7 +1135,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getInventoryDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const inventory = getTag(user, 'auxInventoryPortal');
+            const inventory = getTag(user, 'inventoryPortal');
             if (hasValue(inventory)) {
                 return inventory.toString();
             }
