@@ -907,7 +907,7 @@ export function createWorkspace(
                 auxDimensionY: 0,
                 auxDimensionZ: 0,
                 auxDimensionVisualize: 'surface',
-                auxPortalLocked: true,
+                portalLocked: true,
                 auxDimensionConfig: builderDimensionId,
             },
         };

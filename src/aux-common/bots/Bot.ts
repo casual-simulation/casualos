@@ -161,7 +161,7 @@ export interface BotTags {
     // Context related tags
     ['auxDimensionConfig']?: string | number | boolean;
     ['portalColor']?: string;
-    ['auxPortalLocked']?: unknown;
+    ['portalLocked']?: unknown;
     ['auxPortalGridScale']?: number;
     ['auxPortalSurfaceScale']?: number;
     ['auxPortalPlayerRotationX']?: number;
@@ -889,7 +889,7 @@ export const KNOWN_TAGS: string[] = [
     '_editingBot',
 
     'portalColor',
-    'auxPortalLocked',
+    'portalLocked',
     'auxPortalPannable',
     `auxPortalPannableMinX`,
     `auxPortalPannableMaxX`,

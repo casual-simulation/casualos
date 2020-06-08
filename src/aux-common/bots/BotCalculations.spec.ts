@@ -840,14 +840,14 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
+            expect(workspace.tags['portalLocked']).toEqual(undefined);
         });
 
         it('should allow setting the workspace to be unlocked', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID', false);
 
-            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
+            expect(workspace.tags['portalLocked']).toEqual(undefined);
         });
     });
 
