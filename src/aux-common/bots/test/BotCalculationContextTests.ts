@@ -508,24 +508,50 @@ export function botCalculationContextTests(
     });
 
     describe('isDestroyable()', () => {
-        booleanTagValueTests(true, (value, expected) => {
-            let bot = createBot('test', {
-                destroyable: value,
-            });
+        describe('auxDestroyable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    auxDestroyable: value,
+                });
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(isDestroyable(calc, bot)).toBe(expected);
+                const calc = createPrecalculatedContext([bot]);
+                expect(isDestroyable(calc, bot)).toBe(expected);
+            });
+        });
+
+        describe('destroyable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    destroyable: value,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(isDestroyable(calc, bot)).toBe(expected);
+            });
         });
     });
 
     describe('isEditable()', () => {
-        booleanTagValueTests(true, (value, expected) => {
-            let bot = createBot('test', {
-                auxEditable: value,
-            });
+        describe('auxEditable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    auxEditable: value,
+                });
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(isEditable(calc, bot)).toBe(expected);
+                const calc = createPrecalculatedContext([bot]);
+                expect(isEditable(calc, bot)).toBe(expected);
+            });
+        });
+
+        describe('editable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    editable: value,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(isEditable(calc, bot)).toBe(expected);
+            });
         });
     });
 
