@@ -98,7 +98,7 @@ export interface BotTags {
     ['auxDestroyable']?: unknown;
     ['editable']?: unknown;
     ['strokeColor']?: unknown;
-    ['auxStrokeWidth']?: unknown;
+    ['strokeWidth']?: unknown;
     ['auxScale']?: number;
     ['auxScaleX']?: number;
     ['auxScaleY']?: number;
@@ -925,7 +925,7 @@ export const KNOWN_TAGS: string[] = [
     'destroyable',
     'editable',
     'strokeColor',
-    'auxStrokeWidth',
+    'strokeWidth',
     'auxLineTo',
     'auxLineStyle',
     'auxLineWidth',
