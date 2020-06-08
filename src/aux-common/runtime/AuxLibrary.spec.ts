@@ -1822,31 +1822,55 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when auxPagePortal equals the given value', () => {
+            const tagCases = ['auxPagePortal', 'pagePortal'];
+            describe.each(tagCases)('%s', (tag: string) => {
+                it(`should return true when ${tag} equals the given value`, () => {
+                    player.tags[tag] = 'dimension';
+                    const result = library.api.player.isInDimension(
+                        'dimension'
+                    );
+                    expect(result).toEqual(true);
+                });
+
+                it(`should return false when ${tag} does not equal the given value`, () => {
+                    player.tags[tag] = 'dimension';
+                    const result = library.api.player.isInDimension('abc');
+                    expect(result).toEqual(false);
+                });
+
+                it(`should return false when ${tag} is not set`, () => {
+                    const result = library.api.player.isInDimension(
+                        'dimension'
+                    );
+                    expect(result).toEqual(false);
+                });
+
+                it.each(numberCases)(
+                    'should support "%s" when given %s',
+                    (expected, given) => {
+                        player.tags[tag] = given;
+                        const result = library.api.player.isInDimension(
+                            expected
+                        );
+                        expect(result).toEqual(true);
+                    }
+                );
+            });
+
+            it(`should default to auxPagePortal before pagePortal`, () => {
                 player.tags.auxPagePortal = 'dimension';
-                const result = library.api.player.isInDimension('dimension');
+                player.tags.pagePortal = 'other';
+                let result = library.api.player.isInDimension('dimension');
+                expect(result).toEqual(true);
+
+                result = library.api.player.isInDimension('other');
+                expect(result).toEqual(false);
+
+                delete player.tags.auxPagePortal;
+
+                result = library.api.player.isInDimension('other');
                 expect(result).toEqual(true);
             });
-
-            it('should return false when auxPagePortal does not equal the given value', () => {
-                player.tags.auxPagePortal = 'dimension';
-                const result = library.api.player.isInDimension('abc');
-                expect(result).toEqual(false);
-            });
-
-            it('should return false when auxPagePortal is not set', () => {
-                const result = library.api.player.isInDimension('dimension');
-                expect(result).toEqual(false);
-            });
-
-            it.each(numberCases)(
-                'should support "%s" when given %s',
-                (expected, given) => {
-                    player.tags.auxPagePortal = given;
-                    const result = library.api.player.isInDimension(expected);
-                    expect(result).toEqual(true);
-                }
-            );
         });
 
         describe('player.getCurrentDimension()', () => {
@@ -1864,25 +1888,28 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxPagePortal', () => {
-                player.tags.auxPagePortal = 'dimension';
-                const result = library.api.player.getCurrentDimension();
-                expect(result).toEqual('dimension');
-            });
-
-            it('should return undefined when auxPagePortal is not set', () => {
-                const result = library.api.player.getCurrentDimension();
-                expect(result).toBeUndefined();
-            });
-
-            it.each(numberCases)(
-                'should return "%s" when given %s',
-                (expected, given) => {
-                    player.tags.auxPagePortal = given;
+            const tagCases = ['auxPagePortal', 'pagePortal'];
+            describe.each(tagCases)('%s', (tag: string) => {
+                it(`should return ${tag}`, () => {
+                    player.tags[tag] = 'dimension';
                     const result = library.api.player.getCurrentDimension();
-                    expect(result).toEqual(expected);
-                }
-            );
+                    expect(result).toEqual('dimension');
+                });
+
+                it(`should return undefined when ${tag} is not set`, () => {
+                    const result = library.api.player.getCurrentDimension();
+                    expect(result).toBeUndefined();
+                });
+
+                it.each(numberCases)(
+                    'should return "%s" when given %s',
+                    (expected, given) => {
+                        player.tags[tag] = given;
+                        const result = library.api.player.getCurrentDimension();
+                        expect(result).toEqual(expected);
+                    }
+                );
+            });
         });
 
         describe('player.getCurrentStory()', () => {

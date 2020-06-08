@@ -1572,15 +1572,15 @@ player.toast(story);
 ### `player.getCurrentDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxPagePortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='pagePortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxPagePortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "pagePortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxPagePortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='pagePortal'/> portal.
 ```typescript
 const dimension = player.getCurrentDimension();
 player.toast(dimension);
@@ -1647,7 +1647,7 @@ Possible values are:
 
 <PossibleValuesTable>
   <PossibleValueCode value='page'>
-    The <TagLink tag='auxPagePortal'/>.
+    The <TagLink tag='pagePortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='sheet'>
     The <TagLink tag='auxSheetPortal'/>.
@@ -1662,7 +1662,7 @@ Possible values are:
 
 #### Examples:
 
-1. Get the dimension that is currently showing in the <TagLink tag='auxPagePortal'/>.
+1. Get the dimension that is currently showing in the <TagLink tag='pagePortal'/>.
 ```typescript
 const dimension = player.getPortalDimension('page');
 ```
@@ -1734,7 +1734,7 @@ playerBot.tags.auxSheetPortal = "testDimension";
 ### `player.goToDimension(dimension)`
 
 
-Loads the given dimension into the <TagLink tag='auxPagePortal'/> portal.
+Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
 Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
 
 The **first parameter** is the dimension that should be loaded.
@@ -1803,7 +1803,7 @@ player.playSound("https://www.testsounds.com/track06.mp3");
 ### `player.isInDimension(dimension)`
 
 
-Gets whether the given dimension is loaded into the <TagLink tag='auxPagePortal'/> portal.
+Gets whether the given dimension is loaded into the <TagLink tag='pagePortal'/> portal.
 
 The **first parameter** is the dimension to check for.
 

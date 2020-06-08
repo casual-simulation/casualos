@@ -627,6 +627,11 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                     name: 'auxPagePortal',
                     dependencies: [],
                 },
+                {
+                    type: 'tag',
+                    name: 'pagePortal',
+                    dependencies: [],
+                },
             ];
         },
         'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {

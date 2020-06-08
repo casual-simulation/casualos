@@ -1105,9 +1105,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const dimension = getTag(user, 'auxPagePortal');
+            let dimension = getTag(user, 'auxPagePortal');
             if (hasValue(dimension)) {
                 return dimension.toString();
+            } else {
+                dimension = getTag(user, 'pagePortal');
+                if (hasValue(dimension)) {
+                    return dimension.toString();
+                }
             }
             return undefined;
         }

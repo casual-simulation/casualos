@@ -1956,74 +1956,85 @@ describe('Dependencies', () => {
         const playerContextCases = [
             [
                 'player.getMenuDimension',
-                'auxMenuPortal',
+                ['auxMenuPortal'],
                 ['player', 'getMenuDimension'],
             ],
             [
                 'player.getInventoryDimension',
-                'auxInventoryPortal',
+                ['auxInventoryPortal'],
                 ['player', 'getInventoryDimension'],
             ],
             [
                 'player.getCurrentDimension',
-                'auxPagePortal',
+                ['auxPagePortal', 'pagePortal'],
                 ['player', 'getCurrentDimension'],
             ],
         ];
 
-        describe.each(playerContextCases)('%s()', (name, tag, names) => {
-            it(`should replace with a tag dependency on ${tag}`, () => {
-                const tree = dependencies.dependencyTree(`${name}()`);
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
+        describe.each(playerContextCases)(
+            '%s()',
+            (name, tags: string[], names) => {
+                it(`should replace with a tag dependency on ${tags.join(
+                    ','
+                )}`, () => {
+                    const tree = dependencies.dependencyTree(`${name}()`);
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
 
-                expect(replaced).toEqual([
-                    {
-                        type: 'tag',
-                        name: tag,
-                        dependencies: [],
-                    },
-                ]);
-            });
+                    expect(replaced).toEqual(
+                        tags.map(tag => ({
+                            type: 'tag',
+                            name: tag,
+                            dependencies: [],
+                        }))
+                    );
+                });
 
-            it(`should remove inner dependencies`, () => {
-                const tree = dependencies.dependencyTree(
-                    `${name}(getBot('#abc'))`
-                );
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
+                it(`should remove inner dependencies`, () => {
+                    const tree = dependencies.dependencyTree(
+                        `${name}(getBot('#abc'))`
+                    );
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
 
-                expect(replaced).toEqual([
-                    {
-                        type: 'tag',
-                        name: tag,
-                        dependencies: [],
-                    },
-                ]);
-            });
+                    expect(replaced).toEqual(
+                        tags.map(tag => ({
+                            type: 'tag',
+                            name: tag,
+                            dependencies: [],
+                        }))
+                    );
+                });
 
-            it('should not replace if it is not a function call', () => {
-                const tree = dependencies.dependencyTree(`${name}`);
-                const simple = dependencies.simplify(tree);
-                const replaced = dependencies.replaceAuxDependencies(simple);
+                it('should not replace if it is not a function call', () => {
+                    const tree = dependencies.dependencyTree(`${name}`);
+                    const simple = dependencies.simplify(tree);
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
 
-                expect(replaced).toEqual([
-                    {
-                        type: 'member',
-                        name: names[0],
-                        reference: null,
-                        dependencies: [
-                            {
-                                type: 'member',
-                                name: names[1],
-                                reference: null,
-                                dependencies: [],
-                            },
-                        ],
-                    },
-                ]);
-            });
-        });
+                    expect(replaced).toEqual([
+                        {
+                            type: 'member',
+                            name: names[0],
+                            reference: null,
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    name: names[1],
+                                    reference: null,
+                                    dependencies: [],
+                                },
+                            ],
+                        },
+                    ]);
+                });
+            }
+        );
 
         describe('getTag()', () => {
             it('should replace with a tag value dependency', () => {

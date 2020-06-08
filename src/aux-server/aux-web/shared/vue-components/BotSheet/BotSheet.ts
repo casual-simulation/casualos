@@ -1,7 +1,12 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import { Bot, hasValue, BotTags } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    hasValue,
+    BotTags,
+    calculateBotValue,
+} from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
@@ -52,12 +57,16 @@ export default class BotSheet extends Vue {
     }
 
     exitSheet() {
-        const pagePortal = this._simulation.helper.userBot.values.auxPagePortal;
+        const pagePortal = calculateBotValue(
+            null,
+            this._simulation.helper.userBot,
+            'auxPagePortal'
+        );
         let tags: BotTags = {
             auxSheetPortal: null,
         };
         if (!hasValue(pagePortal)) {
-            tags.auxPagePortal = this.dimension;
+            tags.pagePortal = this.dimension;
         }
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
