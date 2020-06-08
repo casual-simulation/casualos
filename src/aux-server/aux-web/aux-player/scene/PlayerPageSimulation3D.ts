@@ -89,7 +89,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
 
     constructor(game: Game, simulation: BrowserSimulation) {
         super(
-            ['auxPagePortal', 'auxLeftWristPortal', 'auxRightWristPortal'],
+            ['pagePortal', 'auxLeftWristPortal', 'auxRightWristPortal'],
             game,
             simulation
         );
@@ -100,7 +100,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     get pageConfig() {
-        return this.getPortalConfig('auxPagePortal');
+        return this.getPortalConfig('pagePortal');
     }
 
     get leftWristConfig() {

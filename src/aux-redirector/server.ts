@@ -51,7 +51,7 @@ export class Server {
                 res.redirect(
                     `https://${this._config.target.domain}:${
                         this._config.target.port
-                    }?auxStory=${storyEncoded}&auxPagePortal=${dimensionEncoded}`
+                    }?auxStory=${storyEncoded}&pagePortal=${dimensionEncoded}`
                 );
             }
         });

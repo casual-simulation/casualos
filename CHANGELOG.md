@@ -12,6 +12,8 @@
         -   Because the `creator` tag has special functionality, **the `auxCreator` tag will no longer be supported** and you should always use the `creator` tag in the future.
     -   Renamed `auxGLTFVersion` to `gltfVersion`.
         -   Because the `gltfVersion` tag has special functionality, **the `auxGLTFVersion` tag will no longer be supported** and you should always use the `gltfVersion` tag in the future.
+    -   The following tags have been renamed:
+        -   Renamed `auxPagePortal` to `pagePortal`.
     -   Renamed "universe" to "story". The following tags and functions have been affected:
         -   `auxUniverse` -> `auxStory`
         -   `onUniverseAction` -> `onStoryAction`

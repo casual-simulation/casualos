@@ -1822,19 +1822,19 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when auxPagePortal equals the given value', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return true when pagePortal equals the given value', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
-            it('should return false when auxPagePortal does not equal the given value', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return false when pagePortal does not equal the given value', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
-            it('should return false when auxPagePortal is not set', () => {
+            it('should return false when pagePortal is not set', () => {
                 const result = library.api.player.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
@@ -1842,7 +1842,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should support "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxPagePortal = given;
+                    player.tags.pagePortal = given;
                     const result = library.api.player.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
@@ -1864,13 +1864,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxPagePortal', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return pagePortal', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
-            it('should return undefined when auxPagePortal is not set', () => {
+            it('should return undefined when pagePortal is not set', () => {
                 const result = library.api.player.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
@@ -1878,7 +1878,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxPagePortal = given;
+                    player.tags.pagePortal = given;
                     const result = library.api.player.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
@@ -1976,7 +1976,7 @@ describe('AuxLibrary', () => {
 
             const cases = [
                 ['page', 'pageDimension'],
-                ['auxPagePortal', 'pageDimension'],
+                ['pagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
                 ['auxInventoryPortal', 'inventoryDimension'],
                 ['menu', 'menuDimension'],
@@ -1989,7 +1989,7 @@ describe('AuxLibrary', () => {
 
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
-                    player.tags.auxPagePortal = 'pageDimension';
+                    player.tags.pagePortal = 'pageDimension';
                     player.tags.auxInventoryPortal = 'inventoryDimension';
                     player.tags.auxMenuPortal = 'menuDimension';
                     player.tags.auxSheetPortal = 'sheetDimension';
@@ -2004,7 +2004,7 @@ describe('AuxLibrary', () => {
                 it.each(numberCases)(
                     'should return "%s" when given %s',
                     (expected, given) => {
-                        player.tags.auxPagePortal = given;
+                        player.tags.pagePortal = given;
                         player.tags.auxInventoryPortal = given;
                         player.tags.auxMenuPortal = given;
                         player.tags.auxSheetPortal = given;

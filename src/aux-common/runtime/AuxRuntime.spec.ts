@@ -8220,7 +8220,7 @@ describe('original action tests', () => {
     });
 
     describe('player.isInDimension()', () => {
-        it('should return true when auxPagePortal equals the given value', () => {
+        it('should return true when pagePortal equals the given value', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8232,7 +8232,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxPagePortal: 'dimension',
+                        pagePortal: 'dimension',
                     },
                 },
             };
@@ -8251,7 +8251,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return false when auxPagePortal does not equal the given value', () => {
+        it('should return false when pagePortal does not equal the given value', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8263,7 +8263,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxPagePortal: 'dimension',
+                        pagePortal: 'dimension',
                     },
                 },
             };
@@ -8282,7 +8282,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return false when auxPagePortal is not set', () => {
+        it('should return false when pagePortal is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8313,7 +8313,7 @@ describe('original action tests', () => {
     });
 
     describe('player.getCurrentDimension()', () => {
-        it('should return auxPagePortal', () => {
+        it('should return pagePortal', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8325,7 +8325,7 @@ describe('original action tests', () => {
                 userBot: {
                     id: 'userBot',
                     tags: {
-                        auxPagePortal: 'dimension',
+                        pagePortal: 'dimension',
                     },
                 },
             };
@@ -8344,7 +8344,7 @@ describe('original action tests', () => {
             ]);
         });
 
-        it('should return undefined when auxPagePortal is not set', () => {
+        it('should return undefined when pagePortal is not set', () => {
             const state: BotsState = {
                 thisBot: {
                     id: 'thisBot',
@@ -8476,7 +8476,7 @@ describe('original action tests', () => {
     describe('player.getPortalDimension()', () => {
         const cases = [
             ['page', 'pageDimension'],
-            ['auxPagePortal', 'pageDimension'],
+            ['pagePortal', 'pageDimension'],
             ['inventory', 'inventoryDimension'],
             ['auxInventoryPortal', 'inventoryDimension'],
             ['menu', 'menuDimension'],
@@ -8500,7 +8500,7 @@ describe('original action tests', () => {
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            auxPagePortal: 'pageDimension',
+                            pagePortal: 'pageDimension',
                             auxInventoryPortal: 'inventoryDimension',
                             auxMenuPortal: 'menuDimension',
                             auxSheetPortal: 'sheetDimension',

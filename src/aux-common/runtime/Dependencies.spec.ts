@@ -1966,7 +1966,7 @@ describe('Dependencies', () => {
             ],
             [
                 'player.getCurrentDimension',
-                'auxPagePortal',
+                'pagePortal',
                 ['player', 'getCurrentDimension'],
             ],
         ];

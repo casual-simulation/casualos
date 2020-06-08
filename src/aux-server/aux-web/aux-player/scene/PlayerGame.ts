@@ -396,7 +396,7 @@ export class PlayerGame extends Game {
                         playerSim3D.simulation.helper.userBot,
                         {
                             tags: {
-                                auxPagePortal: e.dimension,
+                                pagePortal: e.dimension,
                             },
                         }
                     );
