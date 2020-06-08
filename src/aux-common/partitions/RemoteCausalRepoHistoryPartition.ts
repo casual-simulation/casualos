@@ -231,7 +231,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
             label: commit.message,
             labelSize: 0.25,
             scale: 0.8,
-            auxScaleX: 2,
+            scaleX: 2,
             auxMarkHash: commit.hash,
             auxPreviousMarkHash: commit.previousCommit,
             auxMarkTime: commit.time,
