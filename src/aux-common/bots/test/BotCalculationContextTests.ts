@@ -1801,15 +1801,21 @@ export function botCalculationContextTests(
             ['absolute', 'absolute'],
             ['abc', 'fit'],
         ];
-        it.each(cases)('given %s it should return %s', (anchor, expected) => {
-            const bot = createBot('bot', {
-                auxScaleMode: anchor,
-            });
+        const tagCases = ['auxScaleMode', 'scaleMode'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        [tag]: anchor,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
-            const a = getBotScaleMode(calc, bot);
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotScaleMode(calc, bot);
 
-            expect(a).toBe(expected);
+                    expect(a).toBe(expected);
+                }
+            );
         });
     });
 
