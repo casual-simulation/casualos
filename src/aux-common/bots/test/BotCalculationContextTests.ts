@@ -1405,35 +1405,47 @@ export function botCalculationContextTests(
     });
 
     describe('getContextColor()', () => {
-        it('should return the auxPortalColor of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalColor: 'red',
-            });
+        const tagCases = ['auxPortalColor', 'portalColor'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionColor(calc, bot)).toBe('red');
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalColor of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 'red',
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionColor(calc, bot)).toBe('red');
+            });
         });
     });
 
     describe('getContextGridScale()', () => {
-        it('should return the auxPortalGridScale of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalGridScale: 10,
-            });
+        const tagCases = ['auxPortalGridScale', 'portalGridScale'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionGridScale(calc, bot)).toBe(10);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalGridScale of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 10,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionGridScale(calc, bot)).toBe(10);
+            });
         });
     });
 
     describe('getContextScale()', () => {
-        it('should return the auxPortalSurfaceScale of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalSurfaceScale: 10,
-            });
+        const tagCases = ['auxPortalSurfaceScale', 'portalSurfaceScale'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionScale(calc, bot)).toBe(10);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalSurfaceScale of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 10,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionScale(calc, bot)).toBe(10);
+            });
         });
 
         it('should return the default surface scale if the tag is not set', () => {
@@ -1445,13 +1457,20 @@ export function botCalculationContextTests(
     });
 
     describe('getContextDefaultHeight()', () => {
-        it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalSurfaceDefaultHeight: 10.123,
-            });
+        const tagCases = [
+            'auxPortalSurfaceDefaultHeight',
+            'portalSurfaceDefaultHeight',
+        ];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionDefaultHeight(calc, bot)).toBe(10.123);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
+                const bot = createBot('bot', {
+                    auxPortalSurfaceDefaultHeight: 10.123,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionDefaultHeight(calc, bot)).toBe(10.123);
+            });
         });
 
         it('should return undefined if the tag is not set', () => {
