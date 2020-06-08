@@ -101,7 +101,7 @@ export interface BotTags {
     ['strokeWidth']?: unknown;
     ['scale']?: number;
     ['scaleX']?: number;
-    ['auxScaleY']?: number;
+    ['scaleY']?: number;
     ['auxScaleZ']?: number;
     ['auxScaleMode']?: BotScaleMode | null | string;
     ['lineTo']?: unknown;
@@ -940,7 +940,7 @@ export const KNOWN_TAGS: string[] = [
     'listening',
     'scale',
     'scaleX',
-    'auxScaleY',
+    'scaleY',
     'auxScaleZ',
     'auxScaleMode',
     'auxFormAddress',

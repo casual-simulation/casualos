@@ -1068,7 +1068,7 @@ export function botCalculationContextTests(
         it('should return the scaleX, scaleY, and scaleZ values', () => {
             const bot = createBot('test', {
                 scaleX: 10,
-                auxScaleY: 11,
+                scaleY: 11,
                 auxScaleZ: 12,
             });
 
@@ -1084,7 +1084,7 @@ export function botCalculationContextTests(
         it('should cache the result', () => {
             const bot = createBot('test', {
                 scaleX: 10,
-                auxScaleY: 11,
+                scaleY: 11,
                 auxScaleZ: 12,
             });
 
