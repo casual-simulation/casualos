@@ -122,7 +122,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
-            this.text3D.setPositionForObject(this.bot3D.scaleContainer);
+            this._updateTextPosition();
         } else {
             this.disposeText3D();
         }
@@ -133,7 +133,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
                 this.bot3D.forceComputeBoundingObjects();
-                this.text3D.setPositionForObject(this.bot3D.scaleContainer);
+                this._updateTextPosition();
             }
         }
     }
@@ -162,6 +162,18 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
         // Should update word bubble every frame if the label is in auto size mode.
         let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
         return this._autoSizeMode || rendered;
+    }
+
+    private _updateTextPosition() {
+        let botBoundingBox = this.bot3D.boundingBox;
+        let objCenter: Vector3 = null;
+
+        if (botBoundingBox) {
+            objCenter = new Vector3();
+            botBoundingBox.getCenter(objCenter);
+        }
+
+        this.text3D.setPositionForObject(this.bot3D.scaleContainer, objCenter);
     }
 
     private _updateLabelSize(calc: BotCalculationContext) {
