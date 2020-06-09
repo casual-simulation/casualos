@@ -6,6 +6,7 @@ import {
     calculateBotValue,
     isArray,
     parseArray,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
@@ -59,6 +60,10 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         }
 
         let lineTo = this.bot3D.bot.tags['auxLineTo'];
+        // TODO: Replace with direct calls to calculateBotValue
+        if (!hasValue(lineTo)) {
+            lineTo = this.bot3D.bot.tags['lineTo'];
+        }
         let validLineIds: number[];
 
         if (
@@ -145,7 +150,11 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             }
         }
 
+        // TODO: Replace with direct calls to calculateBotValue
         let style = this.bot3D.bot.tags['auxLineStyle'];
+        if (!hasValue(style)) {
+            style = this.bot3D.bot.tags['lineStyle'];
+        }
         let styleValue: string;
 
         if (isFormula(style)) {

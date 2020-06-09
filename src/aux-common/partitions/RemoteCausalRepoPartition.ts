@@ -30,6 +30,8 @@ import {
     breakIntoIndividualEvents,
     MarkHistoryAction,
     loadSpace,
+    asyncError,
+    asyncResult,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -73,6 +75,12 @@ export class RemoteCausalRepoPartitionImpl
     private _user: User;
     private _branch: string;
     private _readOnly: boolean;
+    private _static: boolean;
+
+    /**
+     * Whether the partition is watching the branch.
+     */
+    private _watchingBranch: boolean = false;
 
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
@@ -81,7 +89,7 @@ export class RemoteCausalRepoPartitionImpl
     private: boolean;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
-        return 'immediate';
+        return this._static ? 'delayed' : 'immediate';
     }
 
     get onBotsAdded(): Observable<Bot[]> {
@@ -143,7 +151,11 @@ export class RemoteCausalRepoPartitionImpl
         this._branch = config.branch;
         this._client = client;
         this.private = config.private;
-        this._readOnly = config.readOnly || false;
+        this._static = config.static || false;
+
+        // static implies read only
+        this._readOnly = config.readOnly || this._static || false;
+
         this._synced = false;
     }
 
@@ -172,28 +184,121 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, e => {
+        if (this._static) {
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                if (event.type === 'unlock_space') {
+                    if (this._unlockSpace(event.password)) {
+                        const extraEvents = await this.applyEvents(
+                            events.slice(i + 1)
+                        );
+
+                        // Resolve the unlock_space task
+                        this._onEvents.next([
+                            asyncResult(event.taskId, undefined),
+                        ]);
+
+                        return extraEvents;
+                    } else {
+                        // Reject the unlock_space task
+                        this._onEvents.next([
+                            asyncError(
+                                event.taskId,
+                                new Error(
+                                    'Unable to unlock the space because the passcode is incorrect.'
+                                )
+                            ),
+                        ]);
+                    }
+                }
+            }
+            return [];
+        }
+
+        let finalEvents = [] as (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction)[];
+        for (let e of events) {
             if (e.type === 'apply_state') {
-                return breakIntoIndividualEvents(this.state, e);
+                finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
                 e.type === 'update_bot'
             ) {
-                return [e] as const;
-            } else {
-                return [];
+                finalEvents.push(e);
+            } else if (e.type === 'unlock_space') {
+                // Resolve the unlock_space task
+                this._onEvents.next([asyncResult(e.taskId, undefined)]);
             }
-        });
+        }
 
         this._applyEvents(finalEvents);
 
         return [];
     }
 
+    private _unlockSpace(password: string) {
+        // TODO: Improve with a better mechanism
+        if (password !== '3342') {
+            return false;
+        }
+        this._static = false;
+        this._readOnly = false;
+        if (this._synced) {
+            this._watchBranch();
+        }
+        return true;
+    }
+
     async init(): Promise<void> {}
 
     connect(): void {
+        if (this._static) {
+            this._requestBranch();
+        } else {
+            this._watchBranch();
+        }
+    }
+
+    /**
+     * Requests the current state from the configured branch.
+     */
+    private _requestBranch() {
+        this._client.getBranch(this._branch).subscribe(atoms => {
+            this._onStatusUpdated.next({
+                type: 'connection',
+                connected: true,
+            });
+            this._onStatusUpdated.next({
+                type: 'authentication',
+                authenticated: true,
+                user: this._user,
+            });
+            this._onStatusUpdated.next({
+                type: 'authorization',
+                authorized: true,
+            });
+
+            this._updateSynced(true);
+            this._applyAtoms(atoms, []);
+
+            if (!this._static) {
+                // the partition has been unlocked while getting the branch
+                this._watchBranch();
+            }
+        });
+    }
+
+    /**
+     * Subscribes to the configured branch for persistent updates.
+     */
+    private _watchBranch() {
+        if (this._watchingBranch) {
+            return;
+        }
+        this._watchingBranch = true;
         this._sub.add(
             this._client.connection.connectionState.subscribe(state => {
                 const connected = state.connected;
@@ -201,7 +306,6 @@ export class RemoteCausalRepoPartitionImpl
                     type: 'connection',
                     connected: !!connected,
                 });
-
                 if (connected) {
                     this._onStatusUpdated.next({
                         type: 'authentication',
@@ -209,7 +313,6 @@ export class RemoteCausalRepoPartitionImpl
                         user: this._user,
                         info: state.info,
                     });
-
                     this._onStatusUpdated.next({
                         type: 'authorization',
                         authorized: true,
@@ -219,7 +322,6 @@ export class RemoteCausalRepoPartitionImpl
                 }
             })
         );
-
         this._sub.add(
             this._client.watchBranch(this._branch).subscribe(event => {
                 if (!this._synced) {

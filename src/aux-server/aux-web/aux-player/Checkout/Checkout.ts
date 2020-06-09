@@ -26,7 +26,7 @@ export default class Checkout extends Vue {
     cardError: string = '';
     simulationId: string = null;
     productId: string = null;
-    processingUniverse: string = null;
+    processingStory: string = null;
     title: string = '';
     description: string = '';
     requestBillingAddress: boolean = false;
@@ -100,7 +100,7 @@ export default class Checkout extends Vue {
         this.title = event.title;
         this.requestBillingAddress = event.requestBillingAddress || false;
         this.productId = event.productId;
-        this.processingUniverse = event.processingUniverse;
+        this.processingStory = event.processingStory;
         this.paymentRequest = event.paymentRequest;
         this.publishableKey = event.publishableKey;
     }

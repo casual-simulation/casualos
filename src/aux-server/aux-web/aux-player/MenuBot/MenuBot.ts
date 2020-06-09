@@ -13,6 +13,7 @@ import {
     onClickArg,
     ANY_CLICK_ACTION_NAME,
     onAnyClickArg,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -71,25 +72,21 @@ export default class MenuBot extends Vue {
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
-        if (bot.tags['auxColor']) {
-            this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
-        } else {
+        this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
+        if (!hasValue(this.backgroundColor)) {
             this.backgroundColor = '#FFF';
         }
     }
 
     private _updateLabel(calc: BotCalculationContext, bot: Bot) {
-        let label = bot.tags['auxLabel'];
-        if (label) {
-            this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
-            const labelColor = bot.tags['auxLabelColor'];
-            if (labelColor) {
-                this.labelColor = calculateFormattedBotValue(
-                    calc,
-                    bot,
-                    'auxLabelColor'
-                );
-            } else {
+        this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
+        if (hasValue(this.label)) {
+            this.labelColor = calculateFormattedBotValue(
+                calc,
+                bot,
+                'auxLabelColor'
+            );
+            if (!hasValue(this.labelColor)) {
                 this.labelColor = '#000';
             }
         } else {

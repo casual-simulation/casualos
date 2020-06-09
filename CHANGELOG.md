@@ -1,5 +1,96 @@
 # CasualOS Changelog
 
+## V1.1.5
+
+### Date: 6/9/2020
+
+### Changes:
+
+-   :boom: Breaking Changes
+
+    -   The following tags have been renamed:
+        -   Renamed all the tags so that they no longer have the `aux` prefix. However, any tag not listed below should continue to work with the `aux` prefix without any changes.
+        -   Renamed `auxUniverse` to `story`.
+        -   Renamed `auxCreator` to `creator`.
+            -   Note that the `creator` variable in scripts remains the same.
+        -   Renamed `auxConfigBot` to `configBot`.
+            -   Note that the `config` variable in scripts remains the same.
+        -   Renamed `auxGLTFVersion` to `gltfVersion`.
+        -   Renamed `auxPagePortal` to `pagePortal`.
+        -   Renamed `auxSheetPortal` to `sheetPortal`.
+        -   Renamed `auxInventoryPortal` to `inventoryPortal`.
+        -   Renamed `auxMenuPortal` to `menuPortal`.
+        -   Renamed `auxLeftWristPortal` to `leftWristPortal`.
+        -   Renamed `auxRightWristPortal` to `rightWristPortal`.
+        -   Renamed `auxPagePortalConfigBot` to `pagePortalConfigBot`.
+        -   Renamed `auxSheetPortalConfigBot` to `sheetPortalConfigBot`.
+        -   Renamed `auxInventoryPortalConfigBot` to `inventoryPortalConfigBot`.
+        -   Renamed `auxMenuPortalConfigBot` to `menuPortalConfigBot`.
+        -   Renamed `auxLeftWristPortalConfigBot` to `leftWristPortalConfigBot`.
+        -   Renamed `auxRightWristPortalConfigBot` to `rightWristPortalConfigBot`.
+        -   Renamed `_auxEditingBot` to `_editingBot`.
+    -   Renamed "universe" to "story". The following tags and functions have been affected:
+        -   `auxUniverse` -> `story`
+        -   `onUniverseAction` -> `onStoryAction`
+        -   `onUniverseStreaming` -> `onStoryStreaming`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseStreamLost` -> `onStoryStreamLost`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseSubscribed` -> `onStorySubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseUnsubscribed` -> `onStoryUnsubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `player.downloadUniverse()` -> `player.downloadStory()`
+        -   `player.loadUniverse()` -> `player.loadStory()`
+            -   The action type has been renamed from `load_universe` to `load_story`.
+        -   `player.unloadUniverse()` -> `player.unloadStory()`
+            -   The action type has been renamed from `unload_universe` to `unload_story`.
+        -   `player.getCurrentUniverse()` -> `player.getCurrentStory()`
+        -   `player.checkout()`
+            -   The `processingUniverse` property has been renamed to `processingStory`.
+        -   `player.showJoinCode()`
+            -   The `universe` property on the `show_join_code` action has been renamed to `story`
+        -   `server.restoreHistoryMark()`
+            -   The `universe` property on the `restore_history_mark` action has been renamed to `story`.
+        -   `server.restoryHistoryMarkToUniverse()` -> `server.restoreHistoryMarkToStory()`
+        -   `server.setupUniverse()` -> `server.setupStory()`
+            -   The action type has been renamed from `setup_universe` to `setup_story`.
+
+-   :rocket: Improvements
+
+    -   Improved MongoDB to store all atoms for a commit inside the same document. This should improve loading performance since MongoDB will only need to make 1 lookup per universe instead of 1 lookup per atom per universe.
+    -   Added admin space.
+        -   Admin space is a space that is shared between all universes on the same auxPlayer.
+        -   It is locked by default, which means that bots that are in it cannot be created, updated, or destroyed.
+        -   You can unlock admin space by using the `adminSpace.unlock(password)` function.
+            -   It returns a Promise that resolves once the space is unlocked. If the space was unable to be unlocked, then the promise will reject with an error.
+            -   `password` is the password that should be used to unlock the admin space. If incorrect, admin space will remain locked.
+    -   Removed the CasualOS tagline from the loading popup.
+    -   Improved the `webhook()` and `webhook.post()` functions to return promises.
+        -   The promise can be awaited and resolves with the an an object with the following properties:
+            -   `data` - The data returned from the webhook. If the returned data was JSON, then this will be an object. Otherwise, it will be a string.
+            -   `status` - The numerical HTTP status code that was returned.
+            -   `statusText` - The name of the HTTP status code that was returned.
+            -   `headers` - The HTTP headers that were included in the response.
+    -   Improved the `neighboring()` function to allow omitting the `direction` parameter.
+        -   When omitted, all supported directions will be included.
+        -   Currently, the supported directions are `front`, `right`, `back`, and `left`.
+        -   If an unsupported direction is given, then no bots will be included.
+    -   Updated the Documentation website to the [latest version of Docusaurus](https://github.com/facebook/docusaurus/releases/tag/v2.0.0-alpha.56).
+    -   Added the `renameTag(bot, originalTag, newTag)` function which makes it easy to rename a tag on a bot or list of bots.
+        -   `bot` is the bot or list of bots that should have the tag renamed.
+        -   `originalTag` is the name of the tag that should be renamed.
+        -   `newTag` is the new name that the tag should have.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
+    -   Fixed an issue where using `player.run()` to execute an invalid script would cause other actions to fail.
+    -   Added some extra spacing to labels to help prevent Z-fighting.
+    -   Fixed toasting bots by converting them to copiable values. This will also allow toasting unconventional arguments like function and error objects.
+    -   Fixed an issue where the menu would stop repositioning after the inventory portal had been hidden.
+    -   Fixed an issue where tapping on the screen while in AR would crash the session.
+    -   Fixed an issue where labels would be positioned incorrectly if `#anchorPoint` was set to something other than `bottom`.
+
 ## V1.1.4
 
 ### Date: 5/18/2020

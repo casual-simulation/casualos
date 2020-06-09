@@ -1,4 +1,8 @@
-import { CausalRepoObject, CausalRepoBranch } from './CausalRepoObject';
+import {
+    CausalRepoObject,
+    CausalRepoBranch,
+    CausalRepoIndex,
+} from './CausalRepoObject';
 
 /**
  * Defines an interface for a causal repo store.
@@ -49,11 +53,33 @@ export interface CausalObjectStore {
     getObject(key: string): Promise<CausalRepoObject>;
 
     /**
+     * Gets the objects that are stored for the given index.
+     * @param head The head that the objects are being stored for.
+     * @param index The hash of the index.
+     */
+    loadIndex?(
+        head: string,
+        index: CausalRepoIndex
+    ): Promise<CausalRepoObject[]>;
+
+    /**
      * Stores the given objects.
      * @param head The head that the objects are being stored for.
      * @param objects The objects to store.
      */
     storeObjects(head: string, objects: CausalRepoObject[]): Promise<void>;
+
+    /**
+     * Stores the given objects by the given index hash.
+     * @param head The head that the objects are being stored for.
+     * @param index The hash of the index.
+     * @param objects The objects to store in the index.
+     */
+    storeIndex?(
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ): Promise<void>;
 }
 
 /**
@@ -66,6 +92,37 @@ export class CombinedCausalRepoStore implements CausalRepoStore {
     constructor(branches: CausalBranchStore, objects: CausalObjectStore) {
         this._branches = branches;
         this._objects = objects;
+        if (objects.loadIndex) {
+            this.loadIndex = this._loadIndex;
+        }
+        if (objects.storeIndex) {
+            this.storeIndex = this._storeIndex;
+        }
+    }
+
+    loadIndex: (
+        head: string,
+        index: CausalRepoIndex
+    ) => Promise<CausalRepoObject[]> = null;
+    storeIndex: (
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ) => Promise<void> = null;
+
+    private _loadIndex(
+        head: string,
+        index: CausalRepoIndex
+    ): Promise<CausalRepoObject[]> {
+        return this._objects.loadIndex(head, index);
+    }
+
+    private _storeIndex(
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
+        return this._objects.storeIndex(head, index, objects);
     }
 
     getObjects(head: string, keys: string[]): Promise<CausalRepoObject[]> {
@@ -103,6 +160,25 @@ export class FallbackCausalObjectStore implements CausalObjectStore {
     constructor(first: CausalObjectStore, second: CausalObjectStore) {
         this._first = first;
         this._second = second;
+    }
+
+    async loadIndex(
+        head: string,
+        index: CausalRepoIndex
+    ): Promise<CausalRepoObject[]> {
+        let objs = await this._first.loadIndex(head, index);
+        if (!objs || objs.length <= 0) {
+            objs = await this._second.loadIndex(head, index);
+        }
+        return objs;
+    }
+
+    storeIndex(
+        head: string,
+        index: string,
+        objects: CausalRepoObject[]
+    ): Promise<void> {
+        return this._first.storeIndex(head, index, objects);
     }
 
     async getObjects(

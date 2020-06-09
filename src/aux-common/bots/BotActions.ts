@@ -48,7 +48,7 @@ function destroyChildren(
     id: string
 ) {
     const result = calc.objects.filter(
-        o => calculateBotValue(calc, o, 'auxCreator') === id
+        o => calculateBotValue(calc, o, 'creator') === id
     );
 
     result.forEach(child => {

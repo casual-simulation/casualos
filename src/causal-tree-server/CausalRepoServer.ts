@@ -53,6 +53,7 @@ import {
     UNWATCH_BRANCHES,
     UNWATCH_DEVICES,
     UNWATCH_COMMITS,
+    GET_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -114,6 +115,16 @@ export class CausalRepoServer {
                             atoms: atoms,
                         });
                     },
+                    [GET_BRANCH]: async branch => {
+                        const info = infoForBranch(branch);
+                        const repo = await this._getOrLoadRepo(branch, true);
+                        const atoms = repo.getAtoms();
+                        conn.send(ADD_ATOMS, {
+                            branch: branch,
+                            atoms: atoms,
+                        });
+                        await this._tryUnloadBranch(info);
+                    },
                     [ADD_ATOMS]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
@@ -126,7 +137,12 @@ export class CausalRepoServer {
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
                             await this._stage.addAtoms(event.branch, added);
-                            await storeData(this._store, event.branch, added);
+                            await storeData(
+                                this._store,
+                                event.branch,
+                                null,
+                                added
+                            );
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
@@ -261,7 +277,9 @@ export class CausalRepoServer {
                             oldCommit.index,
                             current ? current.commit : null
                         );
-                        await storeData(this._store, event.branch, [newCommit]);
+                        await storeData(this._store, event.branch, null, [
+                            newCommit,
+                        ]);
                         await repo.reset(newCommit);
                         const after = repo.currentCommit;
 

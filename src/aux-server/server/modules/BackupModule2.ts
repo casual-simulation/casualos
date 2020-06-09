@@ -112,12 +112,12 @@ async function backupAsDownload(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        auxTaskBackup: true,
-        auxTaskBackupType: 'download',
-        auxTaskOutput: 'Preparing...',
-        auxProgressBar: 0,
-        auxProgressBarColor: '#FCE24C',
-        auxTaskTime: time,
+        taskBackup: true,
+        taskBackupType: 'download',
+        taskOutput: 'Preparing...',
+        progressBar: 0,
+        progressBarColor: '#FCE24C',
+        taskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
@@ -137,7 +137,7 @@ async function backupAsDownload(
                 let percent = (index / branches.length) * 0.8;
                 await simulation.helper.updateBot(bot, {
                     tags: {
-                        auxProgressBar: percent,
+                        progressBar: percent,
                     },
                 });
             } finally {
@@ -157,9 +157,9 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: `Downloaded ${branches.length} channels.`,
-                auxProgressBar: 1,
-                auxProgressBarColor: '#00FF00',
+                taskOutput: `Downloaded ${branches.length} channels.`,
+                progressBar: 1,
+                progressBarColor: '#00FF00',
             },
         });
 
@@ -175,10 +175,10 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: 'The task failed.',
-                auxTaskError: err.toString(),
-                auxProgressBar: 1,
-                auxProgressBarColor: '#FF0000',
+                taskOutput: 'The task failed.',
+                taskError: err.toString(),
+                progressBar: 1,
+                progressBarColor: '#FF0000',
             },
         });
     }
@@ -201,12 +201,12 @@ async function backupToGithub(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        auxTaskBackup: true,
-        auxTaskBackupType: 'github',
-        auxTaskOutput: 'Uploading...',
-        auxProgressBar: 0,
-        auxProgressBarColor: '#FCE24C',
-        auxTaskTime: time,
+        taskBackup: true,
+        taskBackupType: 'github',
+        taskOutput: 'Uploading...',
+        progressBar: 0,
+        progressBarColor: '#FCE24C',
+        taskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
@@ -226,7 +226,7 @@ async function backupToGithub(
             let percent = (index / branches.length) * 0.8;
             await simulation.helper.updateBot(bot, {
                 tags: {
-                    auxProgressBar: percent,
+                    progressBar: percent,
                 },
             });
         } finally {
@@ -245,10 +245,10 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: `Uploaded ${branches.length} channels.`,
-                auxTaskBackupUrl: response.data.html_url,
-                auxProgressBar: 1,
-                auxProgressBarColor: '#00FF00',
+                taskOutput: `Uploaded ${branches.length} channels.`,
+                taskBackupUrl: response.data.html_url,
+                progressBar: 1,
+                progressBarColor: '#00FF00',
             },
         });
 
@@ -259,10 +259,10 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                auxTaskOutput: 'The task failed.',
-                auxTaskError: err.toString(),
-                auxProgressBar: 1,
-                auxProgressBarColor: '#FF0000',
+                taskOutput: 'The task failed.',
+                taskError: err.toString(),
+                progressBar: 1,
+                progressBarColor: '#FF0000',
             },
         });
     }

@@ -19,6 +19,7 @@ import {
     Object,
     isMinimized,
     BotCalculationContext,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import { AuxBot3D } from './AuxBot3D';
 import { DimensionGroup3D } from './DimensionGroup3D';
@@ -174,7 +175,12 @@ export class Wall3D extends Object3D {
 
             let sourceY = this._sourceBot3d.display.position.y;
 
-            let width: number = this._sourceBot3d.bot.tags['auxLineWidth'];
+            let width: number = calculateNumericalTagValue(
+                calc,
+                this._sourceBot3d.bot,
+                'auxLineWidth',
+                undefined
+            );
 
             if (
                 width === this.lastWidth &&

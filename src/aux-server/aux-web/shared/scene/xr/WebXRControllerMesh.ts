@@ -61,7 +61,12 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
     update(frame: XRFrame, referenceSpace: XRSpace) {
         const inputSource = this.inputSource;
-        const gripPose = frame.getPose(inputSource.gripSpace, referenceSpace);
+        const gripPose = frame.getPose(
+            inputSource.targetRayMode === 'tracked-pointer'
+                ? inputSource.gripSpace
+                : inputSource.targetRaySpace,
+            referenceSpace
+        );
         const rayPose = frame.getPose(
             inputSource.targetRaySpace,
             referenceSpace

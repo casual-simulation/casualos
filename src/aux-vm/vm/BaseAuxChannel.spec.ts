@@ -18,6 +18,13 @@ import {
     PartitionConfig,
     AuxPartition,
     createAuxPartition,
+    SearchPartitionClientConfig,
+    MemoryBotClient,
+    StateUpdatedEvent,
+    createPrecalculatedBot,
+    BotAction,
+    toast,
+    createBotClientPartition,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -385,6 +392,71 @@ describe('BaseAuxChannel', () => {
                 const { abc } = channel.helper.botsState;
                 expect(abc).toBeUndefined();
             });
+
+            it('should handle adding spaces with delayed edit modes', async () => {
+                await channel.initAndWait();
+                let client = new MemoryBotClient();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: <any>'random',
+                        config: <SearchPartitionClientConfig>{
+                            type: 'bot_client',
+                            client: client,
+                            story: 'story',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                let updates = [] as StateUpdatedEvent[];
+                channel.onStateUpdated.subscribe(update =>
+                    updates.push(update)
+                );
+
+                let actions = [] as BotAction[];
+                channel.onLocalEvents.subscribe(events =>
+                    actions.push(...events)
+                );
+
+                uuidMock
+                    .mockReturnValueOnce('test1')
+                    .mockReturnValueOnce('test2');
+                await channel.sendEvents([
+                    {
+                        type: 'run_script',
+                        script:
+                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); player.toast(bot)',
+                    },
+                ]);
+
+                await waitAsync();
+
+                // test2 is not included because the bot space doesn't
+                // automatically add all new bots.
+                expect(updates).toEqual([
+                    {
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                        state: {
+                            test1: createPrecalculatedBot(
+                                'test1',
+                                {
+                                    value: 'fun',
+                                },
+                                undefined
+                            ),
+                        },
+                    },
+                ]);
+
+                // the toasted value should be null because the runtime
+                // should know that the new partition is delayed instead of immediate
+                expect(actions).toContainEqual(toast(null));
+            });
         });
     });
 
@@ -492,6 +564,10 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
-        return createAuxPartition(config, cfg => createMemoryPartition(cfg));
+        return createAuxPartition(
+            config,
+            cfg => createMemoryPartition(cfg),
+            config => createBotClientPartition(config)
+        );
     }
 }

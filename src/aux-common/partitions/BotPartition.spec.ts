@@ -20,7 +20,7 @@ describe('BotPartition', () => {
         client = new MemoryBotClient();
         subject = createBotClientPartition({
             type: 'bot_client',
-            universe: 'universe',
+            story: 'story',
             client: client,
         });
     });
@@ -50,8 +50,8 @@ describe('BotPartition', () => {
             ),
         ]);
 
-        expect(client.universes).toEqual({
-            universe: {
+        expect(client.stories).toEqual({
+            story: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -73,8 +73,8 @@ describe('BotPartition', () => {
             }),
         ]);
 
-        expect(client.universes).toEqual({
-            universe: {
+        expect(client.stories).toEqual({
+            story: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -92,8 +92,8 @@ describe('BotPartition', () => {
             botRemoved('test'),
         ]);
 
-        expect(client.universes).toEqual({
-            universe: {
+        expect(client.stories).toEqual({
+            story: {
                 test: createBot('test', {
                     abc: 'def',
                 }),
@@ -103,7 +103,7 @@ describe('BotPartition', () => {
 
     describe('load_bots', () => {
         it('should load the matching bots and emit a bot added event', async () => {
-            await client.addBots('universe', [
+            await client.addBots('story', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -157,8 +157,8 @@ describe('BotPartition', () => {
     });
 
     describe('clear_space', () => {
-        it('should clear all the bots in the given universe', async () => {
-            await client.addBots('universe', [
+        it('should clear all the bots in the given story', async () => {
+            await client.addBots('story', [
                 createBot('test2', {
                     num: 123,
                     test: true,
@@ -189,7 +189,7 @@ describe('BotPartition', () => {
 
             await waitAsync();
 
-            const bots = await client.universes['universe'];
+            const bots = await client.stories['story'];
             expect(bots).toEqual({});
 
             // Should emit them in order of ID

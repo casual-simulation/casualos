@@ -128,8 +128,10 @@ export class Text3D extends Object3D {
 
     /**
      * Sets the position of the text based on the size of the given bounding box.
+     * @param obj The object that this text's position should be set for.
+     * @param offset An arbitrary offset to apply to the text.
      */
-    public setPositionForObject(obj: Object3D) {
+    public setPositionForObject(obj: Object3D, objCenter: Vector3 = null) {
         this.updateBoundingBox();
 
         const tempPos = new Vector3();
@@ -137,7 +139,15 @@ export class Text3D extends Object3D {
         const worldScale = new Vector3();
         obj.matrixWorld.decompose(tempPos, tempRot, worldScale);
 
-        const [pos, rotation] = this._calculateAnchorPosition(worldScale);
+        const center = objCenter ? obj.worldToLocal(objCenter.clone()) : null;
+        if (center) {
+            center.multiply(worldScale);
+        }
+
+        const [pos, rotation] = this._calculateAnchorPosition(
+            worldScale,
+            center
+        );
 
         const worldPos = pos.clone();
         this.parent.localToWorld(worldPos);
@@ -145,20 +155,31 @@ export class Text3D extends Object3D {
         this.position.copy(pos);
         this._mesh.rotation.copy(new Euler(rotation.x, rotation.y, rotation.z));
 
-        DebugObjectManager.drawBox3(
-            this._boundingBox.clone(),
-            new Color(255, 0, 0),
-            3
-        );
+        // DebugObjectManager.drawBox3(
+        //     this._boundingBox.clone(),
+        //     new Color(255, 0, 0),
+        //     3
+        // );
         // DebugObjectManager.drawBox3(targetLocalBounds.clone(), new Color(0, 255, 0), 3);
         // DebugObjectManager.drawBox3(thisLocalBounds.clone(), new Color(255, 255, 0), 3);
-        DebugObjectManager.drawPoint(pos.clone(), 1, new Color(0, 255, 255), 3);
         DebugObjectManager.drawPoint(
-            worldPos.clone(),
+            objCenter.clone(),
+            1,
+            new Color(0, 255, 255),
+            3
+        );
+        DebugObjectManager.drawPoint(
+            center.clone(),
             1,
             new Color(255, 0, 255),
             3
         );
+        // DebugObjectManager.drawPoint(
+        //     worldPos.clone(),
+        //     1,
+        //     new Color(255, 0, 255),
+        //     3
+        // );
 
         this.updateBoundingBox();
     }
@@ -313,10 +334,15 @@ export class Text3D extends Object3D {
         this._renderedThisFrame = true;
     }
 
-    private _calculateAnchorPosition(scale: Vector3): [Vector3, Euler] {
+    private _calculateAnchorPosition(
+        scale: Vector3,
+        objCenter: Vector3
+    ): [Vector3, Euler] {
         // // Position the mesh some distance above the given object's bounding box.
         let targetSize = scale;
-        let targetCenter = new Vector3(0, targetSize.y * 0.5, 0);
+        let targetCenter = objCenter
+            ? objCenter
+            : new Vector3(0, targetSize.y * 0.5, 0);
 
         const positionMultiplier = 0.5;
 
@@ -335,7 +361,9 @@ export class Text3D extends Object3D {
             let pos = new Vector3(
                 targetCenter.x,
                 targetCenter.y,
-                targetCenter.z + targetSize.z * positionMultiplier
+                targetCenter.z +
+                    targetSize.z * positionMultiplier +
+                    Text3D.extraSpace
             );
 
             return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
@@ -343,13 +371,17 @@ export class Text3D extends Object3D {
             let pos = new Vector3(
                 targetCenter.x,
                 targetCenter.y,
-                targetCenter.z - targetSize.z * positionMultiplier
+                targetCenter.z -
+                    targetSize.z * positionMultiplier -
+                    Text3D.extraSpace
             );
 
             return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
         } else if (this._anchor === 'left') {
             let pos = new Vector3(
-                targetCenter.x + targetSize.x * positionMultiplier,
+                targetCenter.x +
+                    targetSize.x * positionMultiplier +
+                    Text3D.extraSpace,
                 targetCenter.y,
                 targetCenter.z
             );
@@ -357,7 +389,9 @@ export class Text3D extends Object3D {
             return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
         } else if (this._anchor === 'right') {
             let pos = new Vector3(
-                targetCenter.x - targetSize.x * positionMultiplier,
+                targetCenter.x -
+                    targetSize.x * positionMultiplier -
+                    Text3D.extraSpace,
                 targetCenter.y,
                 targetCenter.z
             );

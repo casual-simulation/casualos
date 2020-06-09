@@ -43,6 +43,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/watch_branches': void;
     'repo/unwatch_branches': void;
     'repo/watch_branch': string;
+    'repo/get_branch': string;
     'repo/unwatch_branch': string;
     'repo/add_atoms': AddAtomsEvent;
     'repo/send_event': SendRemoteActionEvent;
@@ -86,6 +87,10 @@ export interface CausalRepoSession extends GenericSession {
      * the notified branches for new atoms.
      */
     event(name: 'repo/unwatch_branch'): Observable<string>;
+    /**
+     * Gets an observable for events that retrieve the list of atoms in a branch.
+     */
+    event(name: 'repo/get_branch'): Observable<void>;
     /**
      * Gets an observable for events that add the given atoms to a branch.
      */

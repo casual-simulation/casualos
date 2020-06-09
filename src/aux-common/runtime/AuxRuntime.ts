@@ -44,9 +44,6 @@ import {
     createRuntimeBot,
     RuntimeBot,
     RealtimeEditMode,
-    getRealtimeEditMode,
-    SpaceRealtimeEditModeMap,
-    DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
 } from './RuntimeBot';
@@ -62,7 +59,12 @@ import { CleanupZoneSpec } from './CleanupZoneSpec';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import mapValues from 'lodash/mapValues';
+import { convertToCopiableValue } from './Utils';
+import {
+    AuxRealtimeEditModeProvider,
+    SpaceRealtimeEditModeMap,
+    DefaultRealtimeEditModeProvider,
+} from './AuxRealtimeEditModeProvider';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -94,7 +96,7 @@ export class AuxRuntime
     private _globalContext: AuxGlobalContext;
 
     private _library: AuxLibrary;
-    private _editModesMap: SpaceRealtimeEditModeMap;
+    private _editModeProvider: AuxRealtimeEditModeProvider;
 
     /**
      * Creates a new AuxRuntime using the given library factory.
@@ -106,11 +108,11 @@ export class AuxRuntime
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
-        editModesMap: SpaceRealtimeEditModeMap = DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP
+        editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider()
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
-        this._editModesMap = editModesMap;
+        this._editModeProvider = editModeProvider;
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
@@ -387,19 +389,23 @@ export class AuxRuntime
                 allowsEditing: true,
             });
         } catch (ex) {
-            this._onErrors.next([
+            let errors = [
                 {
                     error: ex,
                     bot: null,
                     tag: null,
                     script: script,
                 },
-            ]);
+            ] as ScriptError[];
+            this._onErrors.next(errors);
+
+            return {
+                result: undefined,
+                actions: [],
+                errors,
+            };
         }
 
-        if (!fn) {
-            return;
-        }
         return this._batchScriptResults(() => {
             try {
                 return fn();
@@ -542,7 +548,7 @@ export class AuxRuntime
 
     createRuntimeBot(bot: Bot): RuntimeBot {
         const space = getBotSpace(bot);
-        const mode = getRealtimeEditMode(this._editModesMap, space);
+        const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
             const compiled = this._createCompiledBot(bot, true);
             this._newBots.set(bot.id, compiled.script);
@@ -553,7 +559,7 @@ export class AuxRuntime
 
     destroyScriptBot(bot: RuntimeBot) {
         const space = getBotSpace(bot);
-        const mode = getRealtimeEditMode(this._editModesMap, space);
+        const mode = this._editModeProvider.getEditMode(space);
 
         if (mode === RealtimeEditMode.Immediate) {
             delete this._compiledState[bot.id];
@@ -700,7 +706,7 @@ export class AuxRuntime
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
         if (this._globalContext.allowsEditing) {
             const space = getBotSpace(bot);
-            const mode = getRealtimeEditMode(this._editModesMap, space);
+            const mode = this._editModeProvider.getEditMode(space);
             if (mode === RealtimeEditMode.Immediate) {
                 this._compileTag(bot, tag, newValue);
             }
@@ -854,10 +860,10 @@ export class AuxRuntime
                 //     ctx.global.allowsEditing = false;
                 // }
                 ctx.creator = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxCreator)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
                 ctx.config = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
             },
             invoke: (fn, ctx) => {
@@ -947,7 +953,7 @@ export class AuxRuntime
      *
      * Works by making a copy of the value where every bot value is replaced with a reference
      * to a script bot instance for the bot. The copy has a reference to the original value in the ORIGINAL_OBJECT symbol property.
-     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onUniverseAction works properly.
+     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onStoryAction works properly.
      *
      * @param context The sandbox context.
      * @param value The value that should be converted.
@@ -993,35 +999,4 @@ interface CompileOptions {
      * If false, then the script will set the bot's editable value to false for the duration of the script.
      */
     allowsEditing: boolean;
-}
-
-/**
- * Converts the given value to a copiable value.
- * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
- * Non-copiable values are functions and errors.
- * @param value
- */
-export function convertToCopiableValue(value: any): any {
-    if (typeof value === 'function') {
-        return `[Function ${value.name}]`;
-    } else if (value instanceof Error) {
-        return `${value.name}: ${value.message}`;
-    } else if (typeof value === 'object') {
-        if (isRuntimeBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags.toJSON(),
-            };
-        } else if (isBot(value)) {
-            return {
-                id: value.id,
-                tags: value.tags,
-            };
-        } else if (Array.isArray(value)) {
-            return value.map(val => convertToCopiableValue(val));
-        } else {
-            return mapValues(value, val => convertToCopiableValue(val));
-        }
-    }
-    return value;
 }

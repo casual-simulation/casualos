@@ -136,6 +136,12 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be loaded in read-only mode.
      */
     readOnly?: boolean;
+
+    /**
+     * Whether the partition should be loaded without realtime updates.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
 }
 
 /**
@@ -196,9 +202,9 @@ export interface BotPartitionConfig extends PartitionConfigBase {
     host: string;
 
     /**
-     * The universe that should be used from the host.
+     * The story that should be used from the host.
      */
-    universe: string;
+    story: string;
 }
 
 /**
@@ -208,9 +214,9 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
     type: 'bot_client';
 
     /**
-     * The universe that should be used.
+     * The story that should be used.
      */
-    universe: string;
+    story: string;
 
     /**
      * The client that the partition should connect with.

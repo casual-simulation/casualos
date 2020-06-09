@@ -38,6 +38,7 @@ export function booleanTagValueTests(
     let cases = [
         ['', defaultValue],
         [null, defaultValue],
+        [undefined, defaultValue],
         [0, defaultValue],
         ['=false', defaultValue],
         ['=0', defaultValue],
@@ -63,6 +64,7 @@ export function numericalTagValueTests(
     let cases = [
         ['', defaultValue],
         [null, defaultValue],
+        [undefined, defaultValue],
         [0, 0],
         ['=false', defaultValue],
         ['=0', defaultValue],
@@ -89,6 +91,7 @@ export function stringTagValueTests(
     let cases = [
         ['', ''],
         [null, defaultValue],
+        [undefined, defaultValue],
         [0, defaultValue],
         ['=false', '=false'],
         ['=0', '=0'],

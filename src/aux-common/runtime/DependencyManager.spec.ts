@@ -872,7 +872,7 @@ describe('DependencyManager', () => {
             }
         );
 
-        const formulas = ['=getBot("#tag")', '=player.getCurrentUniverse()'];
+        const formulas = ['=getBot("#tag")', '=player.getCurrentStory()'];
 
         const cases = [];
         for (let formula of formulas) {

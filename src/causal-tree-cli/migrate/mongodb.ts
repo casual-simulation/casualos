@@ -40,8 +40,13 @@ export async function mongoConnectionInfo(
 
     const objectsCollection = db.collection('objects');
     const headsCollection = db.collection('heads');
+    const indexesCollection = db.collection('indexes');
 
-    const mongoStore = new MongoDBRepoStore(objectsCollection, headsCollection);
+    const mongoStore = new MongoDBRepoStore(
+        objectsCollection,
+        headsCollection,
+        indexesCollection
+    );
     await mongoStore.init();
     return mongoStore;
 }

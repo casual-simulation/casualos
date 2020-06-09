@@ -12,5 +12,5 @@
         </md-dialog-actions>
     </md-dialog>
 </template>
-<script src="./UploadUniverseModal.ts"></script>
-<style src="./UploadUniverseModal.css" scoped></style>
+<script src="./UploadStoryModal.ts"></script>
+<style src="./UploadStoryModal.css" scoped></style>

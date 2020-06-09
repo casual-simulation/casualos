@@ -31,7 +31,7 @@ describe('BotPanelManager', () => {
         await vm.sendEvents([
             botAdded(
                 createBot('user', {
-                    auxSheetPortal: 'hello',
+                    sheetPortal: 'hello',
                 })
             ),
         ]);
@@ -108,7 +108,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: true,
+                        sheetPortal: true,
                     },
                 }),
                 botAdded(
@@ -136,7 +136,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: 'id',
+                        sheetPortal: 'id',
                     },
                 }),
                 botAdded(
@@ -163,7 +163,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: 'wow',
+                        sheetPortal: 'wow',
                     },
                 }),
                 botAdded(
@@ -191,7 +191,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: 'wow',
+                        sheetPortal: 'wow',
                     },
                 }),
                 botAdded(
@@ -212,7 +212,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: null,
+                        sheetPortal: null,
                     },
                 }),
             ]);
@@ -229,7 +229,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: 'wow',
+                        sheetPortal: 'wow',
                     },
                 }),
                 botAdded(
@@ -250,7 +250,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: null,
+                        sheetPortal: null,
                     },
                 }),
             ]);
@@ -269,7 +269,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: 'test',
+                        sheetPortal: 'test',
                     },
                 }),
                 botAdded(
@@ -295,7 +295,7 @@ describe('BotPanelManager', () => {
             await vm.sendEvents([
                 botUpdated('user', {
                     tags: {
-                        auxSheetPortal: null,
+                        sheetPortal: null,
                     },
                 }),
             ]);

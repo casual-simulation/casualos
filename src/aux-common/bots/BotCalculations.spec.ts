@@ -13,7 +13,6 @@ import {
     isTagWellKnown,
     calculateStateDiff,
     tagsOnBot,
-    createWorkspace,
     isBot,
     createDimensionId,
     formatValue,
@@ -179,15 +178,15 @@ describe('BotCalculations', () => {
 
     describe('getPortalTag()', () => {
         const cases = [
-            ['page', 'auxPagePortal'],
-            ['inventory', 'auxInventoryPortal'],
-            ['menu', 'auxMenuPortal'],
-            ['sheet', 'auxSheetPortal'],
-            ['other', 'auxOtherPortal'],
-            ['page', 'auxPagePortal'],
-            ['auxInventoryPortal', 'auxInventoryPortal'],
-            ['auxMenuPortal', 'auxMenuPortal'],
-            ['auxSheetPortal', 'auxSheetPortal'],
+            ['page', 'pagePortal'],
+            ['inventory', 'inventoryPortal'],
+            ['menu', 'menuPortal'],
+            ['sheet', 'sheetPortal'],
+            ['other', 'otherPortal'],
+            ['page', 'pagePortal'],
+            ['inventoryPortal', 'inventoryPortal'],
+            ['menuPortal', 'menuPortal'],
+            ['sheetPortal', 'sheetPortal'],
             ['auxOtherPortal', 'auxOtherPortal'],
         ];
         it.each(cases)(
@@ -207,6 +206,8 @@ describe('BotCalculations', () => {
             ['onMinLODExit'],
             ['auxMaxLODThreshold'],
             ['auxMinLODThreshold'],
+            ['maxLODThreshold'],
+            ['minLODThreshold'],
         ];
 
         describe.each(lodListeners)('%s', (tag: string) => {
@@ -711,6 +712,29 @@ describe('BotCalculations', () => {
 
             expect(result).toEqual('="haha"');
         });
+
+        it('should fallback to the prefix-less tag name when getting an AUX tag', () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                auxAbc: '123',
+            });
+
+            const result1 = calculateBotValue(null, bot1, 'auxAbc');
+            const result2 = calculateBotValue(null, bot2, 'auxAbc');
+            expect(result1).toEqual('def');
+            expect(result2).toEqual(123);
+        });
+
+        it('should handle fallback with characters that are surrogate pairs', () => {
+            const bot1 = createBot('test1', {
+                '😀': '123',
+            });
+
+            const result1 = calculateBotValue(null, bot1, 'aux😀');
+            expect(result1).toEqual(123);
+        });
     });
 
     describe('tagsOnBot()', () => {
@@ -727,16 +751,6 @@ describe('BotCalculations', () => {
                     })
                 )
             ).toEqual(['_position', '_workspace', 'test', 'abc']);
-        });
-
-        it('should return the property names that are on workspaces', () => {
-            expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
-                'auxDimensionX',
-                'auxDimensionY',
-                'auxDimensionZ',
-                'auxDimensionVisualize',
-                'auxDimensionConfig',
-            ]);
         });
     });
 
@@ -778,51 +792,6 @@ describe('BotCalculations', () => {
                 state['second'],
                 state['workspace'],
             ]);
-        });
-    });
-
-    describe('createWorkspace()', () => {
-        it('should create new random dimension id if empty', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', '');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should create new random dimension id if undefined', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', undefined);
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should create new random dimension id if whitespace', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', ' ');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('uuid');
-        });
-
-        it('should use input dimension id if given', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID');
-
-            expect(workspace.tags['auxDimensionConfig']).toEqual('userSetID');
-        });
-
-        // Test for the dimension type changes
-        it('should lock the workspace by default', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID');
-
-            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
-        });
-
-        it('should allow setting the workspace to be unlocked', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID', false);
-
-            expect(workspace.tags['auxPortalLocked']).toEqual(undefined);
         });
     });
 
@@ -1128,7 +1097,7 @@ describe('BotCalculations', () => {
                 host: 'https://example.com',
             });
 
-            result = parseSimulationId('https://example.com?auxUniverse=sim');
+            result = parseSimulationId('https://example.com?story=sim');
             expect(result).toEqual({
                 success: true,
                 host: 'https://example.com',
@@ -1136,7 +1105,7 @@ describe('BotCalculations', () => {
             });
 
             result = parseSimulationId(
-                'https://example.com:3000?auxUniverse=sim/dimension'
+                'https://example.com:3000?story=sim/dimension'
             );
             expect(result).toEqual({
                 success: true,
@@ -1173,9 +1142,7 @@ describe('BotCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe(
-                `https://example.com?auxUniverse=${encodeURIComponent(
-                    'test/abc'
-                )}`
+                `https://example.com?story=${encodeURIComponent('test/abc')}`
             );
         });
 

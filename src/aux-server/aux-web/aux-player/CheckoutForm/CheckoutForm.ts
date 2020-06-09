@@ -27,7 +27,7 @@ export default class CheckoutForm extends Vue {
     @Prop({ required: true }) description: string;
     @Prop({ required: true }) requestBillingAddress: boolean;
     @Prop() paymentRequest: PaymentRequestOptions;
-    @Prop({ required: true }) processingUniverse: string;
+    @Prop({ required: true }) processingStory: string;
     @Prop({ required: true }) publishableKey: string;
 
     billingName: string = '';
@@ -90,7 +90,7 @@ export default class CheckoutForm extends Vue {
 
         this.checkingOut = true;
         const productId = this.productId;
-        const processingUniverse = this.processingUniverse;
+        const processingStory = this.processingStory;
         const result = await this._stripe.createToken(
             this._card,
             this.requestBillingAddress
@@ -115,7 +115,7 @@ export default class CheckoutForm extends Vue {
                 await this._sendTokenToServer(
                     result,
                     productId,
-                    processingUniverse
+                    processingStory
                 );
             } catch (err) {
                 this.checkingOut = false;
@@ -318,7 +318,7 @@ export default class CheckoutForm extends Vue {
                         await this._sendTokenToServer(
                             token,
                             this.productId,
-                            this.processingUniverse
+                            this.processingStory
                         );
                         token.complete('success');
                     } catch (err) {
@@ -336,7 +336,7 @@ export default class CheckoutForm extends Vue {
     private async _sendTokenToServer(
         result: stripe.TokenResponse,
         productId: string,
-        processingUniverse: string
+        processingStory: string
     ) {
         const token = result.token.id;
         await this._checkoutSim.helper.action(ON_CHECKOUT_ACTION_NAME, null, {
@@ -344,7 +344,7 @@ export default class CheckoutForm extends Vue {
             token: token,
         });
         await this._checkoutSim.helper.transaction(
-            remote(checkoutSubmitted(productId, token, processingUniverse))
+            remote(checkoutSubmitted(productId, token, processingStory))
         );
         this.$emit('paymentSuccess');
     }

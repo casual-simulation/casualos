@@ -3,14 +3,14 @@ import { Bot, BotsState, TagFilter } from '../bots';
 import values from 'lodash/values';
 
 export class MemoryBotClient implements BotClient {
-    universes: {
-        [universe: string]: BotsState;
+    stories: {
+        [story: string]: BotsState;
     } = {};
 
-    async addBots(universe: string, added: Bot[]): Promise<void> {
-        let uni = this.universes[universe];
+    async addBots(story: string, added: Bot[]): Promise<void> {
+        let uni = this.stories[story];
         if (!uni) {
-            uni = this.universes[universe] = {};
+            uni = this.stories[story] = {};
         }
 
         for (let bot of added) {
@@ -18,12 +18,12 @@ export class MemoryBotClient implements BotClient {
         }
     }
 
-    async clearBots(universe: string) {
-        this.universes[universe] = {};
+    async clearBots(story: string) {
+        this.stories[story] = {};
     }
 
-    async lookupBots(universe: string, tags: TagFilter[]): Promise<Bot[]> {
-        let uni = this.universes[universe];
+    async lookupBots(story: string, tags: TagFilter[]): Promise<Bot[]> {
+        let uni = this.stories[story];
         if (!uni) {
             return [];
         }

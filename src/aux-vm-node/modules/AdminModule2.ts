@@ -92,9 +92,9 @@ function shell(simulation: Simulation, event: ShellAction) {
             }
             await simulation.helper.createBot(undefined, {
                 auxFinishedTasks: true,
-                auxTaskShell: event.script,
-                auxTaskOutput: stdout,
-                auxTaskError: stderr,
+                taskShell: event.script,
+                taskOutput: stdout,
+                taskError: stderr,
             });
 
             resolve();

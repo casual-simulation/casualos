@@ -20,6 +20,12 @@ export const UNWATCH_BRANCHES = 'repo/unwatch_branches';
 export const WATCH_BRANCH = 'repo/watch_branch';
 
 /**
+ * The name of the event which gets all the current atoms on a branch.
+ * The atoms are returned via a ADD_ATOMS event.
+ */
+export const GET_BRANCH = 'repo/get_branch';
+
+/**
  * The name of the event which stops watching changes on a branch.
  */
 export const UNWATCH_BRANCH = 'repo/unwatch_branch';

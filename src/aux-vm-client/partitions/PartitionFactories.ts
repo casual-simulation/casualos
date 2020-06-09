@@ -14,18 +14,39 @@ import {
 } from '@casual-simulation/aux-common';
 
 /**
+ * A map of hostnames to CausalRepoClients.
+ * Helps prevent duplicating websocket connections to the same host.
+ */
+let clientCache = new Map<string, CausalRepoClient>();
+
+/**
+ * Gets the causal repo client that should be used for the given host.
+ * @param host The host.
+ */
+export function getClientForHost(host: string, user: User): CausalRepoClient {
+    let client = clientCache.get(host);
+    if (!client) {
+        const manager = new SocketManager(host);
+        manager.init();
+        const connection = new SocketIOConnectionClient(manager.socket, user);
+        client = new CausalRepoClient(connection);
+        clientCache.set(host, client);
+    }
+
+    return client;
+}
+
+/**
  * Attempts to create a CausalTree2Partition from the given config.
  * @param config The config.
  */
 export async function createRemoteCausalRepoPartition(
     config: PartitionConfig,
-    user: User
+    user: User,
+    useCache: boolean = true
 ): Promise<RemoteCausalRepoPartition> {
     if (config.type === 'remote_causal_repo') {
-        const manager = new SocketManager(config.host);
-        manager.init();
-        const connection = new SocketIOConnectionClient(manager.socket, user);
-        const client = new CausalRepoClient(connection);
+        const client = getClientForHost(config.host, user);
         const partition = new RemoteCausalRepoPartitionImpl(
             user,
             client,

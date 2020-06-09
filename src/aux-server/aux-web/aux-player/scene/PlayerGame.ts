@@ -396,7 +396,7 @@ export class PlayerGame extends Game {
                         playerSim3D.simulation.helper.userBot,
                         {
                             tags: {
-                                auxPagePortal: e.dimension,
+                                pagePortal: e.dimension,
                             },
                         }
                     );
@@ -775,6 +775,8 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.sliderRight).style.display = 'none';
         (<HTMLElement>this.menuElement).style.bottom =
             this.menuOffset.toString() + 'px';
+        (<HTMLElement>this.menuElement).style.left = null;
+        (<HTMLElement>this.menuElement).style.width = null;
     }
 
     private _showInventory() {

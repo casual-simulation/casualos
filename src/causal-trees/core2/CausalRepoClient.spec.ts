@@ -38,6 +38,7 @@ import {
     ADD_COMMITS,
     CHECKOUT,
     RESTORE,
+    GET_BRANCH,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -367,6 +368,105 @@ describe('CausalRepoClient', () => {
                     data: 'abc',
                 },
             ]);
+        });
+    });
+
+    describe('getBranch()', () => {
+        it('should send a get branch event after connecting', async () => {
+            client.getBranch('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: GET_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should return an observable of atoms for the branch', async () => {
+            const addAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            let atoms = [] as Atom<any>[];
+            connection.connect();
+            client.getBranch('abc').subscribe(a => atoms.push(...a));
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const b1 = atom(atomId('b', 1), null, {});
+            const b2 = atom(atomId('b', 2), a1, {});
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+            });
+
+            addAtoms.next({
+                branch: 'other',
+                atoms: [b1, b2],
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2]);
+        });
+
+        it('should finish after the first add atoms event for the branch', async () => {
+            const addAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            let atoms = [] as Atom<any>[];
+            let finished = false;
+            connection.connect();
+            client
+                .getBranch('abc')
+                .subscribe(
+                    a => atoms.push(...a),
+                    err => {},
+                    () => (finished = true)
+                );
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a1, {});
+            const b1 = atom(atomId('b', 1), null, {});
+            const b2 = atom(atomId('b', 2), a1, {});
+
+            addAtoms.next({
+                branch: 'other',
+                atoms: [b1, b2],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(false);
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+            });
+
+            await waitAsync();
+
+            expect(finished).toBe(true);
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2]);
         });
     });
 

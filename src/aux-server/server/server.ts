@@ -603,7 +603,7 @@ export class Server {
     }
 
     private async _handleWebhook(req: Request, res: Response) {
-        const id = req.query.auxUniverse;
+        const id = req.query.story;
         if (!id) {
             res.sendStatus(400);
             return;
@@ -888,9 +888,11 @@ export class Server {
         const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
         const objectsCollection = db.collection('objects');
         const headsCollection = db.collection('heads');
+        const indexesCollection = db.collection('indexes');
         const mongoStore = new MongoDBRepoStore(
             objectsCollection,
-            headsCollection
+            headsCollection,
+            indexesCollection
         );
         await mongoStore.init();
 

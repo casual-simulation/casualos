@@ -5,7 +5,6 @@ import {
     BotCalculationContext,
     hasValue,
     PrecalculatedBot,
-    GLOBALS_BOT_ID,
     BotIndexEvent,
     LocalActions,
 } from '@casual-simulation/aux-common';
@@ -205,21 +204,6 @@ export abstract class Simulation3D extends Object3D
         this._subs.push(
             this.simulation.localEvents
                 .pipe(tap(e => this._localEvent(e)))
-                .subscribe()
-        );
-
-        this._subs.push(
-            this.simulation.watcher
-                .botChanged(GLOBALS_BOT_ID)
-                .pipe(
-                    tap(bot => {
-                        // Scene background color.
-                        let sceneBackgroundColor = bot.tags['auxUniverseColor'];
-                        this._sceneBackground = hasValue(sceneBackgroundColor)
-                            ? new Color(sceneBackgroundColor)
-                            : null;
-                    })
-                )
                 .subscribe()
         );
     }

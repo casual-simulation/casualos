@@ -90,7 +90,7 @@ export class CheckoutModule2 implements AuxModule2 {
         device: DeviceInfo
     ) {
         const info = await this._client
-            .branchInfo(event.processingUniverse)
+            .branchInfo(event.processingStory)
             .toPromise();
         if (!info.exists) {
             console.log(
@@ -99,12 +99,12 @@ export class CheckoutModule2 implements AuxModule2 {
             return;
         }
         console.log(
-            `[CheckoutModule2] Loading channel: ${event.processingUniverse}`
+            `[CheckoutModule2] Loading channel: ${event.processingStory}`
         );
         const simulation = nodeSimulationForBranch(
             this._user,
             this._client,
-            event.processingUniverse
+            event.processingStory
         );
         try {
             await simulation.init();

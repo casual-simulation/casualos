@@ -149,6 +149,21 @@ export interface AsyncTask {
 }
 
 /**
+ * Gets the index of the bot in the given context.
+ * Returns a negative number if the bot is not in the list.
+ * @param context The context.
+ * @param bot The bot.
+ */
+function indexInContext(context: AuxGlobalContext, bot: RuntimeBot): number {
+    const index = sortedIndexBy(context.bots, bot, sb => sb.id);
+    const expected = context.bots.length > index ? context.bots[index] : null;
+    if (!!expected && expected.id === bot.id) {
+        return index;
+    }
+    return -1;
+}
+
+/**
  * Inserts the given bot into the global context.
  * @param context The context.
  * @param bot The bot.
@@ -174,7 +189,10 @@ export function removeFromContext(
     ...bots: RuntimeBot[]
 ) {
     for (let bot of bots) {
-        const index = sortedIndexBy(context.bots, bot, sb => sb.id);
+        const index = indexInContext(context, bot);
+        if (index < 0) {
+            continue;
+        }
         context.bots.splice(index, 1);
         delete context.state[bot.id];
     }
@@ -327,9 +345,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * @param bot The bot to destroy.
      */
     destroyBot(bot: RuntimeBot): void {
+        const index = indexInContext(this, bot);
+        if (index < 0) {
+            return;
+        }
         const mode = this._scriptFactory.destroyScriptBot(bot);
         if (mode === RealtimeEditMode.Immediate) {
-            removeFromContext(this, bot);
+            this.bots.splice(index, 1);
+            delete this.state[bot.id];
         }
         this.enqueueAction(botRemoved(bot.id));
     }

@@ -37,8 +37,6 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     private _game: Game;
     private _autoSizeMode: boolean;
 
-    _oldLabel: any;
-
     constructor(bot3D: AuxBot3D, game: Game) {
         super(bot3D);
         this._game = game;
@@ -47,7 +45,11 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = this.bot3D.bot.tags['auxLabel'];
+        let label = calculateFormattedBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabel'
+        );
 
         const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const alignment = getBotLabelAlignment(calc, this.bot3D.bot);
@@ -84,28 +86,12 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             }
 
             // Update label text content.
-            if (isFormula(label)) {
-                let calculatedValue = calculateFormattedBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLabel'
-                );
-                this.text3D.setText(calculatedValue, alignment);
-            } else {
-                this.text3D.setText(<string>label, alignment);
-            }
+            this.text3D.setText(label, alignment);
 
             // Update auto size mode.
-            if (this.bot3D.bot.tags['auxLabelSizeMode']) {
-                let mode = calculateBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLabelSizeMode'
-                );
-                this._autoSizeMode = mode === 'auto';
-            } else {
-                this._autoSizeMode = false;
-            }
+            this._autoSizeMode =
+                calculateBotValue(calc, this.bot3D.bot, 'auxLabelSizeMode') ===
+                'auto';
 
             let fontAddress = calculateStringTagValue(
                 calc,
@@ -136,16 +122,10 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             this._updateLabelColor(calc);
             this.bot3D.forceComputeBoundingObjects();
 
-            this.text3D.setPositionForObject(this.bot3D.scaleContainer);
-
-            if (this._oldLabel === undefined) {
-                this._oldLabel = label;
-            }
+            this._updateTextPosition();
         } else {
             this.disposeText3D();
         }
-
-        this._oldLabel = label;
     }
 
     frameUpdate(calc: BotCalculationContext): void {
@@ -153,7 +133,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
                 this.bot3D.forceComputeBoundingObjects();
-                this.text3D.setPositionForObject(this.bot3D.scaleContainer);
+                this._updateTextPosition();
             }
         }
     }
@@ -182,6 +162,18 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
         // Should update word bubble every frame if the label is in auto size mode.
         let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
         return this._autoSizeMode || rendered;
+    }
+
+    private _updateTextPosition() {
+        let botBoundingBox = this.bot3D.boundingBox;
+        let objCenter: Vector3 = null;
+
+        if (botBoundingBox) {
+            objCenter = new Vector3();
+            botBoundingBox.getCenter(objCenter);
+        }
+
+        this.text3D.setPositionForObject(this.bot3D.scaleContainer, objCenter);
     }
 
     private _updateLabelSize(calc: BotCalculationContext) {
@@ -224,28 +216,17 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateLabelColor(calc: BotCalculationContext) {
-        let labelColor = this.bot3D.bot.tags['auxLabelColor'];
+        let labelColor = calculateFormattedBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabelColor'
+        );
         if (labelColor) {
-            if (isFormula(labelColor)) {
-                let calculatedValue = calculateFormattedBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLabelColor'
-                );
-
-                let color = buildSRGBColor(calculatedValue);
-                if (color) {
-                    this.text3D.setColor(color);
-                } else {
-                    this.text3D.setColor(new Color('#000'));
-                }
+            let color = buildSRGBColor(labelColor);
+            if (color) {
+                this.text3D.setColor(color);
             } else {
-                let color = buildSRGBColor(<string>labelColor);
-                if (color) {
-                    this.text3D.setColor(color);
-                } else {
-                    this.text3D.setColor(new Color('#000'));
-                }
+                this.text3D.setColor(new Color('#000'));
             }
         } else {
             this.text3D.setColor(new Color('#000'));

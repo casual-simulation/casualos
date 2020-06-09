@@ -3,22 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "docusaurus": "docusaurus",
     "start": "docusaurus start -p 3001",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy"
   },
   "dependencies": {
-    "@casual-simulation/aux-common": "0.11.20",
-    "@docusaurus/core": "2.0.0-alpha.48",
-    "@docusaurus/preset-classic": "2.0.0-alpha.48",
+    "@docusaurus/core": "^2.0.0-alpha.56",
+    "@docusaurus/preset-classic": "^2.0.0-alpha.56",
     "classnames": "^2.2.6",
-    "raw-loader": "^4.0.0",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
-    "ts-morph": "^7.0.0",
-    "typescript": "^3.8.3"
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4"
   },
   "browserslist": {
     "production": [

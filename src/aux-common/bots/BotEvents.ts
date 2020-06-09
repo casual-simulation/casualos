@@ -45,8 +45,8 @@ export type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadUniverseAction
-    | UnloadUniverseAction
+    | LoadStoryAction
+    | UnloadStoryAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
@@ -93,7 +93,9 @@ export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
-    | ShareAction;
+    | ShareAction
+    | SendWebhookAction
+    | UnlockSpaceAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -295,9 +297,9 @@ export interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The universe that the payment processing should occur in.
+     * The story that the payment processing should occur in.
      */
-    processingUniverse: string;
+    processingStory: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -366,7 +368,7 @@ export interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingUniverse: string;
+    processingStory: string;
 }
 
 /**
@@ -425,7 +427,7 @@ export interface ShellAction extends Action {
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
-    message: string;
+    message: string | number | boolean | object | Array<any> | null;
     duration: number;
 }
 
@@ -591,8 +593,8 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-export interface LoadUniverseAction extends Action {
-    type: 'load_universe';
+export interface LoadStoryAction extends Action {
+    type: 'load_story';
 
     /**
      * The ID of the simulation to load.
@@ -603,8 +605,8 @@ export interface LoadUniverseAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-export interface UnloadUniverseAction extends Action {
-    type: 'unload_universe';
+export interface UnloadStoryAction extends Action {
+    type: 'unload_story';
 
     /**
      * The ID of the simulation to unload.
@@ -644,7 +646,7 @@ export interface SuperShoutAction extends Action {
 /**
  * Defines an event that sends a web request to a server.
  */
-export interface SendWebhookAction extends Action {
+export interface SendWebhookAction extends AsyncAction {
     type: 'send_webhook';
 
     /**
@@ -972,7 +974,7 @@ export interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 export interface SetupChannelAction {
-    type: 'setup_universe';
+    type: 'setup_story';
 
     /**
      * The channel that should be created.
@@ -1047,7 +1049,7 @@ export interface RunScriptAction {
 }
 
 /**
- * Defines an event that shows the "upload universe" dialog.
+ * Defines an event that shows the "upload AUX file" dialog.
  */
 export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
@@ -1066,7 +1068,7 @@ export interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the universe.
+ * Defines an event that loads the history into the story.
  */
 export interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1084,14 +1086,14 @@ export interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The universe that the mark should be restored to.
-     * If not specified, then the current universe will be used.
+     * The story that the mark should be restored to.
+     * If not specified, then the current story will be used.
      */
-    universe?: string;
+    story?: string;
 }
 
 /**
- * Defines an event that loads a space into the universe.
+ * Defines an event that loads a space into the story.
  */
 export interface LoadSpaceAction {
     type: 'load_space';
@@ -1156,6 +1158,27 @@ export interface ClearSpaceAction {
 }
 
 /**
+ * Defines an event that unlocks the given space for editing.
+ * Once a space is unlocked, it cannot be locked for the remainder of the session.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ */
+export interface UnlockSpaceAction extends AsyncAction {
+    type: 'unlock_space';
+
+    /**
+     * The space to unlock.
+     */
+    space: BotSpace;
+
+    /**
+     * The password to use to unlock the space.
+     */
+    password: string;
+}
+
+/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  */
@@ -1198,15 +1221,15 @@ export interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a universe & dimension.
+ * Defines an event that shows a QR code that is a link to a story & dimension.
  */
 export interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The universe that should be joined.
+     * The story that should be joined.
      */
-    universe?: string;
+    story?: string;
 
     /**
      * The dimension that should be joined.
@@ -1371,7 +1394,10 @@ export function pasteState(
  * Creates a new ShowToastAction.
  * @param message The message to show with the event.
  */
-export function toast(message: string, duration?: number): ShowToastAction {
+export function toast(
+    message: string | number | boolean | object | Array<any> | null,
+    duration?: number
+): ShowToastAction {
     if (duration != null) {
         return {
             type: 'show_toast',
@@ -1550,9 +1576,9 @@ export function hideChat(): ShowChatBarAction {
  * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadUniverseAction {
+export function loadSimulation(id: string): LoadStoryAction {
     return {
-        type: 'load_universe',
+        type: 'load_story',
         id: id,
     };
 }
@@ -1561,9 +1587,9 @@ export function loadSimulation(id: string): LoadUniverseAction {
  * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadUniverseAction {
+export function unloadSimulation(id: string): UnloadStoryAction {
     return {
-        type: 'unload_universe',
+        type: 'unload_story',
         id: id,
     };
 }
@@ -1771,13 +1797,13 @@ export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
 export function checkoutSubmitted(
     productId: string,
     token: string,
-    processingUniverse: string
+    processingStory: string
 ): CheckoutSubmittedAction {
     return {
         type: 'checkout_submitted',
         productId: productId,
         token: token,
-        processingUniverse: processingUniverse,
+        processingStory: processingStory,
     };
 }
 
@@ -1812,11 +1838,16 @@ export function finishCheckout(
 /**
  * Creates a new SendWebhookAction.
  * @param options The options for the webhook.
+ * @param taskId The ID of the task.
  */
-export function webhook(options: WebhookOptions): SendWebhookAction {
+export function webhook(
+    options: WebhookOptions,
+    taskId?: number
+): SendWebhookAction {
     return {
         type: 'send_webhook',
         options: options,
+        taskId,
     };
 }
 
@@ -1858,12 +1889,12 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * @param channel The ID of the channel to setup.
  * @param botOrMod The bot that should be cloned into the new channel.
  */
-export function setupUniverse(
+export function setupStory(
     channel: string,
     botOrMod?: Bot | BotTags
 ): SetupChannelAction {
     return {
-        type: 'setup_universe',
+        type: 'setup_story',
         channel,
         botOrMod,
     };
@@ -1927,13 +1958,13 @@ export function browseHistory(): BrowseHistoryAction {
 /**
  * Creates a RestoreHistoryMarkAction.
  * @param mark The ID of the mark that history should be restored to.
- * @param universe The universe that the mark should be restored to. If not specified, then the current universe will be used.
+ * @param story The story that the mark should be restored to. If not specified, then the current story will be used.
  */
 export function restoreHistoryMark(
     mark: string,
-    universe?: string
+    story?: string
 ): RestoreHistoryMarkAction {
-    if (!universe) {
+    if (!story) {
         return {
             type: 'restore_history_mark',
             mark,
@@ -1942,13 +1973,13 @@ export function restoreHistoryMark(
         return {
             type: 'restore_history_mark',
             mark,
-            universe,
+            story,
         };
     }
 }
 
 /**
- * Loads a space into the universe.
+ * Loads a space into the story.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
  */
@@ -2002,16 +2033,16 @@ export function disableVR(): EnableVRAction {
 
 /**
  * Creates a ShowJoinCodeAction.
- * @param universe The universe to link to.
+ * @param story The story to link to.
  * @param dimension The dimension to link to.
  */
 export function showJoinCode(
-    universe?: string,
+    story?: string,
     dimension?: string
 ): ShowJoinCodeAction {
     return {
         type: 'show_join_code',
-        universe,
+        story,
         dimension,
     };
 }
@@ -2059,6 +2090,29 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+    };
+}
+
+/**
+ * Requests that the given space be unlocked for editing.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ *
+ * @param space The space to unlock.
+ * @param password The password to use to unlock the space.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function unlockSpace(
+    space: BotSpace,
+    password: string,
+    taskId?: number
+): UnlockSpaceAction {
+    return {
+        type: 'unlock_space',
+        space,
+        password,
+        taskId,
     };
 }
 

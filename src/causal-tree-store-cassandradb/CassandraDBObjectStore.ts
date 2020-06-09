@@ -2,6 +2,7 @@ import {
     CausalRepoObject,
     CausalObjectStore,
     getObjectHash,
+    CausalRepoIndex,
 } from '@casual-simulation/causal-trees';
 import { Client, concurrent } from 'cassandra-driver';
 import sortBy from 'lodash/sortBy';

@@ -13,40 +13,61 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #e0bf65;
-  --ifm-link-color: #d3a31f;
-  --ifm-contents-link-color:#d3a31f;
-}
-
-.hero.hero--primary {
-  --ifm-hero-background-color: #1c1c1c;
-}
-
-html[data-theme=dark] {
-  --ifm-contents-link-color: #D3A000;
-}
-
-.button.button--secondary.button--outline:not(.button--active):not(:hover) {
-  color: #fff;
-}
-
-.badge-row {
-  margin-bottom: 8px;
-}
-
-.badge {
-  margin-right: 8px;
-}
-
-.badge a {
-  color: var(--ifm-badge-color);
-}
-
-.alert code {
-  color: var(--ifm-alert-color);
-  background-color: rgba(0, 0, 0, .1);
-}
-
-pre.prism-code {
-  font-size: inherit;
-}
+    --ifm-color-primary: #e0bf65;
+    --ifm-link-color: #d3a31f;
+    --ifm-contents-link-color:#d3a31f;
+  }
+  
+  .hero.hero--primary {
+    --ifm-hero-background-color: #1c1c1c;
+    --ifm-hero-text-color: var(--ifm-font-base-color-inverse);
+  }
+  
+  div.markdown > h2 > a.hash-link {
+      float: left;
+      padding-left: 0;
+      padding-right: 0.5rem;
+  }
+  
+  div.markdown > h2 {
+      margin-left: -26.95px;
+  }
+  
+  div.markdown > h3 > a.hash-link {
+      float: left;
+      padding-left: 0;
+      padding-right: 0.5rem;
+  }
+  
+  div.markdown > h3 {
+      margin-left: -22.22px;
+  }
+  
+  html[data-theme=dark] {
+    --ifm-contents-link-color: #D3A000;
+  }
+  
+  .button.button--secondary.button--outline:not(.button--active):not(:hover) {
+    color: #fff;
+  }
+  
+  .badge-row {
+    margin-bottom: 8px;
+  }
+  
+  .badge {
+    margin-right: 8px;
+  }
+  
+  .badge a {
+    color: var(--ifm-badge-color);
+  }
+  
+  .alert code {
+    color: var(--ifm-alert-color);
+    background-color: rgba(0, 0, 0, .1);
+  }
+  
+  pre.prism-code {
+    font-size: inherit;
+  }

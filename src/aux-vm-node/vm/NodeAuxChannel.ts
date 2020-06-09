@@ -46,8 +46,4 @@ export class NodeAuxChannel extends BaseAuxChannel {
         // manager.logFormulaErrors = true;
         return manager;
     }
-
-    protected async _createGlobalsBot() {
-        await super._createGlobalsBot();
-    }
 }
