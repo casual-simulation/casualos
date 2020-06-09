@@ -10,6 +10,7 @@
 
     -   The following tags have been renamed:
         -   Renamed all the tags so that they no longer have the `aux` prefix. However, any tag not listed below should continue to work with the `aux` prefix without any changes.
+        -   Renamed `auxUniverse` to `story`.
         -   Renamed `auxCreator` to `creator`.
             -   Note that the `creator` variable in scripts remains the same.
         -   Renamed `auxConfigBot` to `configBot`.
@@ -76,6 +77,10 @@
         -   Currently, the supported directions are `front`, `right`, `back`, and `left`.
         -   If an unsupported direction is given, then no bots will be included.
     -   Updated the Documentation website to the [latest version of Docusaurus](https://github.com/facebook/docusaurus/releases/tag/v2.0.0-alpha.56).
+    -   Added the `renameTag(bot, originalTag, newTag)` function which makes it easy to rename a tag on a bot or list of bots.
+        -   `bot` is the bot or list of bots that should have the tag renamed.
+        -   `originalTag` is the name of the tag that should be renamed.
+        -   `newTag` is the new name that the tag should have.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.
