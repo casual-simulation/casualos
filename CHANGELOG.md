@@ -89,6 +89,7 @@
     -   Fixed toasting bots by converting them to copiable values. This will also allow toasting unconventional arguments like function and error objects.
     -   Fixed an issue where the menu would stop repositioning after the inventory portal had been hidden.
     -   Fixed an issue where tapping on the screen while in AR would crash the session.
+    -   Fixed an issue where labels would be positioned incorrectly if `#anchorPoint` was set to something other than `bottom`.
 
 ## V1.1.4
 
