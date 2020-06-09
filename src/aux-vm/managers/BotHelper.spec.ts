@@ -53,7 +53,7 @@ describe('BotHelper', () => {
     });
 
     describe('setEditingBot()', () => {
-        it('should set the _auxEditingBot tag on the user bot', async () => {
+        it('should set the _editingBot tag on the user bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
@@ -63,7 +63,7 @@ describe('BotHelper', () => {
             expect(vm.events).toEqual([
                 botUpdated('user', {
                     tags: {
-                        _auxEditingBot: 'test',
+                        _editingBot: 'test',
                     },
                 }),
             ]);
@@ -110,7 +110,7 @@ describe('BotHelper', () => {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1'),
                 bot2: createPrecalculatedBot('bot2', {
-                    auxCreator: 'bot1',
+                    creator: 'bot1',
                 }),
             };
 
@@ -124,7 +124,7 @@ describe('BotHelper', () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1', {
-                    auxDestroyable: false,
+                    destroyable: false,
                 }),
             };
 

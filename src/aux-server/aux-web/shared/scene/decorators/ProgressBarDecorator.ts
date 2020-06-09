@@ -115,28 +115,24 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         // Flag that detected if the color values have changed.
         let colorsChanged = false;
 
-        let colorTagValue: any;
-        if (hasValue(this.bot3D.bot.tags['auxProgressBarColor'])) {
-            colorTagValue = calculateBotValue(
-                calc,
-                this.bot3D.bot,
-                'auxProgressBarColor'
-            );
-
+        let colorTagValue: any = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxProgressBarColor'
+        );
+        if (hasValue(colorTagValue)) {
             if (this.color != colorTagValue) {
                 this.color = colorTagValue;
                 colorsChanged = true;
             }
         }
 
-        let bgColorTagValue: any;
-        if (hasValue(this.bot3D.bot.tags['auxProgressBarBackgroundColor'])) {
-            bgColorTagValue = calculateBotValue(
-                calc,
-                this.bot3D.bot,
-                'auxProgressBarBackgroundColor'
-            );
-
+        let bgColorTagValue: any = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxProgressBarBackgroundColor'
+        );
+        if (hasValue(bgColorTagValue)) {
             if (this.bgColor != bgColorTagValue) {
                 this.bgColor = bgColorTagValue;
                 colorsChanged = true;

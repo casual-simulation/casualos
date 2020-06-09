@@ -310,7 +310,7 @@ A whisper that is sent whenever a bot starts being focused by the player.
 
 Focus is when the bot is in the center of the screen.
 
-Only sent if <TagLink tag='auxFocusable'/> is true.
+Only sent if <TagLink tag='focusable'/> is true.
 
 #### Arguments:
 ```typescript
@@ -578,51 +578,51 @@ let that: {
 };
 ```
 
-### `@onUniverseSubscribed`
+### `@onStorySubscribed`
 
-A shout that is sent when a universe is loaded.
-Sent to every universe that is loaded.
+A shout that is sent when a story is loaded.
+Sent to every story that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  universe: string
+  story: string
 };
 ```
 
-### `@onUniverseUnsubscribed`
+### `@onStoryUnsubscribed`
 
-A shout that is sent when a universe is unloaded.
-Sent to every universe that is loaded.
+A shout that is sent when a story is unloaded.
+Sent to every story that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  universe: string
+  story: string
 };
 ```
 
-### `@onUniverseStreaming`
+### `@onStoryStreaming`
 
-A shout that is sent when a universe is connected and fully synced.
-Sent to every universe that is loaded.
+A shout that is sent when a story is connected and fully synced.
+Sent to every story that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  universe: string
+  story: string
 };
 ```
 
-### `@onUniverseStreamLost`
+### `@onStoryStreamLost`
 
-A shout that is sent when a universe has been temporarily disconnected from the server.
-Sent to every universe that is loaded.
+A shout that is sent when a story has been temporarily disconnected from the server.
+Sent to every story that is loaded.
 
 #### Arguments:
 ```typescript
 let that: {
-  universe: string
+  story: string
 };
 ```
 
@@ -645,7 +645,7 @@ let that: {
 
 ### `@onPaste`
 
-A shout that is sent when some text is pasted into the universe.
+A shout that is sent when some text is pasted into the story.
 
 This happens by pressing <kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Cmd</kbd>+<kbd>V</kbd> while something is in your clipboard.
 
@@ -745,7 +745,7 @@ let that: {
 
 A shout that is sent whenever a bot enters its maximum Level-Of-Detail.
 
-Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>,  <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>,  <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
 
 #### Arguments:
 ```typescript
@@ -759,7 +759,7 @@ let that: {
 
 A shout that is sent whenever a bot enters its minimum Level-Of-Detail.
 
-Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
 
 #### Arguments:
 ```typescript
@@ -773,7 +773,7 @@ let that: {
 
 A shout that is sent whenever a bot exits its maximum Level-Of-Detail.
 
-Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
 
 #### Arguments:
 ```typescript
@@ -787,7 +787,7 @@ let that: {
 
 A shout that is sent whenever a bot exits its minimum Level-Of-Detail.
 
-Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='auxMaxLODThreshold'/> or <TagLink tag='auxMinLODThreshold'/> specified.
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
 
 #### Arguments:
 ```typescript
@@ -803,7 +803,7 @@ A shout that is sent whenever a bot starts being focused by the player.
 
 Focus is when the bot is in the center of the screen.
 
-Only sent if <TagLink tag='auxFocusable'/> is true.
+Only sent if <TagLink tag='focusable'/> is true.
 
 #### Arguments:
 ```typescript
@@ -841,7 +841,7 @@ let that: {
 };
 ```
 
-### `@onUniverseAction`
+### `@onStoryAction`
 
 A shout that is sent whenever an action happens.
 

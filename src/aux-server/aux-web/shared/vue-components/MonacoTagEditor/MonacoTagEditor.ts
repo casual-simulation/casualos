@@ -109,7 +109,7 @@ export default class MonacoTagEditor extends Vue {
                             for (let b of bots) {
                                 if (
                                     b.space !== 'error' ||
-                                    b.values['auxError'] !== true
+                                    b.values['error'] !== true
                                 ) {
                                     continue;
                                 }
@@ -118,11 +118,11 @@ export default class MonacoTagEditor extends Vue {
                                 }
 
                                 let error = {
-                                    botId: b.values['auxErrorBot'],
-                                    tag: b.values['auxErrorTag'],
-                                    message: b.values['auxErrorMessage'],
-                                    name: b.values['auxErrorName'],
-                                    stack: b.values['auxErrorStack'],
+                                    botId: b.values['errorBot'],
+                                    tag: b.values['errorTag'],
+                                    message: b.values['errorMessage'],
+                                    name: b.values['errorName'],
+                                    stack: b.values['errorStack'],
                                 } as BotError;
 
                                 this._errorIds.add(b.id);
@@ -210,15 +210,15 @@ export default class MonacoTagEditor extends Vue {
             this._simulation.helper.transaction(
                 loadBots('error', [
                     {
-                        tag: 'auxError',
+                        tag: 'error',
                         value: true,
                     },
                     {
-                        tag: 'auxErrorBot',
+                        tag: 'errorBot',
                         value: bot.id,
                     },
                     {
-                        tag: 'auxErrorTag',
+                        tag: 'errorTag',
                         value: tag,
                     },
                 ])

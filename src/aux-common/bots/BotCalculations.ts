@@ -372,8 +372,26 @@ export function getBotSpace(bot: Bot): BotSpace {
 export function calculateBotValue(
     context: BotObjectsContext,
     object: Object | PrecalculatedBot,
-    tag: keyof BotTags,
-    energy?: number
+    tag: keyof BotTags
+) {
+    const value = calculateBotTagValue(object, tag);
+    if (
+        typeof value === 'undefined' &&
+        typeof tag === 'string' &&
+        tag.startsWith('aux') &&
+        tag.length >= 4
+    ) {
+        const firstChar = tag.substring(3, 4);
+        const rest = tag.substring(4);
+        const newTag = firstChar.toLowerCase() + rest;
+        return calculateBotTagValue(object, newTag);
+    }
+    return value;
+}
+
+function calculateBotTagValue(
+    object: Object | PrecalculatedBot,
+    tag: keyof BotTags
 ) {
     if (tag === 'id') {
         return object.id;
@@ -382,7 +400,7 @@ export function calculateBotValue(
     } else if (isPrecalculated(object)) {
         return object.values[tag];
     } else {
-        return calculateValue(object, tag, object.tags[tag], energy);
+        return calculateValue(object, tag, object.tags[tag]);
     }
 }
 
@@ -505,7 +523,7 @@ export function isTagWellKnown(tag: string): boolean {
  * Determines if the bots are equal disregarding well-known hidden tags
  * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like auxDraggable but not _position, _index _selection, etc.
+ * We also care about things like draggable but not _position, _index _selection, etc.
  *
  * You can determine if a tag is "well-known" by using isTagWellKnown().
  * @param first The first bot.
@@ -616,7 +634,6 @@ export function toggleBotSelection(
 export function getUserBotColor(
     calc: BotCalculationContext,
     userBot: Bot,
-    globalsBot: Bot,
     domain: AuxDomain
 ): string {
     if (userBot.tags['auxColor']) {
@@ -624,18 +641,9 @@ export function getUserBotColor(
     }
 
     if (domain === 'builder') {
-        return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'auxUniverseUserBuilderColor'
-            ) || DEFAULT_BUILDER_USER_COLOR
-        );
+        return DEFAULT_BUILDER_USER_COLOR;
     } else {
-        return (
-            calculateBotValue(calc, globalsBot, 'auxUniverseUserPlayerColor') ||
-            DEFAULT_PLAYER_USER_COLOR
-        );
+        return DEFAULT_PLAYER_USER_COLOR;
     }
 }
 
@@ -644,7 +652,7 @@ export function getUserBotColor(
  * @param userBot The bot for the user.
  */
 export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
-    return calculateBotValue(calc, userBot, 'auxMenuPortal');
+    return calculateBotValue(calc, userBot, 'menuPortal');
 }
 
 /**
@@ -873,48 +881,6 @@ export function createPrecalculatedBot(
         tags: tags || values,
         values,
     };
-}
-
-/**
- * Creates a new Workspace with default values.
- * @param id The ID of the new workspace.
- * @param builderDimensionId The tag that should be used for contexts stored on this workspace.
- * @param locked Whether the dimension is allowed to be accessed via AUX Player.
- */
-export function createWorkspace(
-    id = uuid(),
-    builderDimensionId: string = createDimensionId(),
-    locked: boolean = false
-): Workspace {
-    // checks if given dimension string is empty or just whitespace
-    if (builderDimensionId.length === 0 || /^\s*$/.test(builderDimensionId)) {
-        builderDimensionId = createDimensionId();
-    }
-
-    if (locked) {
-        return {
-            id: id,
-            tags: {
-                auxDimensionX: 0,
-                auxDimensionY: 0,
-                auxDimensionZ: 0,
-                auxDimensionVisualize: 'surface',
-                auxPortalLocked: true,
-                auxDimensionConfig: builderDimensionId,
-            },
-        };
-    } else {
-        return {
-            id: id,
-            tags: {
-                auxDimensionX: 0,
-                auxDimensionY: 0,
-                auxDimensionZ: 0,
-                auxDimensionVisualize: 'surface',
-                auxDimensionConfig: builderDimensionId,
-            },
-        };
-    }
 }
 
 /**
@@ -2005,7 +1971,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     if (id.host) {
         let str = id.host;
         if (id.channel) {
-            str += `?auxUniverse=${encodeURIComponent(id.channel)}`;
+            str += `?story=${encodeURIComponent(id.channel)}`;
         }
         return str;
     }
@@ -2016,7 +1982,7 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
-        const channel = uri.searchParams.get('auxUniverse');
+        const channel = uri.searchParams.get('story');
         if (channel) {
             return {
                 success: true,
@@ -2125,11 +2091,9 @@ export function calculateNumericalTagValue(
     tag: string,
     defaultValue: number
 ): number {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'number' && result !== null) {
-            return result;
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'number' && result !== null) {
+        return result;
     }
     return defaultValue;
 }
@@ -2147,13 +2111,11 @@ export function calculateBooleanTagValue(
     tag: string,
     defaultValue: boolean
 ): boolean {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'boolean' && result !== null) {
-            return result;
-        } else if (typeof result === 'object' && result instanceof Boolean) {
-            return result.valueOf();
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'boolean' && result !== null) {
+        return result;
+    } else if (typeof result === 'object' && result instanceof Boolean) {
+        return result.valueOf();
     }
     return defaultValue;
 }
@@ -2171,11 +2133,9 @@ export function calculateStringTagValue(
     tag: string,
     defaultValue: string
 ): string {
-    if (typeof bot.tags[tag] !== 'undefined') {
-        const result = calculateBotValue(context, bot, tag);
-        if (typeof result === 'string' && result !== null) {
-            return result;
-        }
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'string' && result !== null) {
+        return result;
     }
     return defaultValue;
 }
@@ -2213,7 +2173,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the auxUniverse tag from the given bot.
+ * Gets the story tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2221,11 +2181,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'auxUniverse');
+    return calculateBotValue(calc, bot, 'story');
 }
 
 /**
- * Gets the first bot which is in the aux.channels dimension that has the auxUniverse tag set to the given ID.
+ * Gets the first bot which is in the aux.channels dimension that has the story tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2233,7 +2193,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'auxUniverse') === id
+            calculateBotValue(calc, o, 'story') === id
         );
     });
 
@@ -2242,36 +2202,6 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     } else {
         return null;
     }
-}
-
-/**
- * Gets the number of connected devices that are connected to the channel that
- * the given bot is for.
- * @param calc The bot calculation context.
- * @param bot The bot.
- */
-export function getChannelConnectedDevices(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'auxUniverseConnectedSessions',
-        0
-    );
-}
-
-/**
- * Gets the number of connected devices that are connected from the given globals bot.
- * @param calc The bot calculation context.
- * @param bot The globals bot.
- */
-export function getConnectedDevices(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(calc, bot, 'auxConnectedSessions', 0);
 }
 
 /**
@@ -2305,8 +2235,7 @@ export function getPortalTag(portal: PortalType) {
     if (portal.endsWith('Portal')) {
         return portal;
     }
-    const upper = portal[0].toUpperCase() + portal.slice(1);
-    return `aux${upper}Portal`;
+    return `${portal}Portal`;
 }
 
 /**
@@ -2401,17 +2330,15 @@ export function formatValue(value: any): string {
  * @param object The bot that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
- * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
     object: Bot,
     tag: keyof BotTags,
-    formula: string,
-    energy?: number
+    formula: string
 ): any {
     if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => calculateValue(object, tag, s.trim(), energy));
+        return split.map(s => calculateValue(object, tag, s.trim()));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {

@@ -2,7 +2,6 @@ import {
     botRemoved,
     parseSimulationId,
     SimulationIdParseSuccess,
-    GLOBALS_BOT_ID,
     BotIndex,
     AuxPartitionConfig,
 } from '@casual-simulation/aux-common';

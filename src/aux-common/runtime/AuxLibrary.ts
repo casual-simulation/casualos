@@ -36,7 +36,7 @@ import {
     openURL as calcOpenURL,
     checkout as calcCheckout,
     playSound as calcPlaySound,
-    setupUniverse as calcSetupUniverse,
+    setupStory as calcSetupStory,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
@@ -266,6 +266,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag,
             setTag,
             removeTags,
+            renameTag,
             applyMod,
             subtractMods,
 
@@ -312,7 +313,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableVR,
                 disableVR,
                 downloadBots,
-                downloadUniverse,
+                downloadStory,
                 showUploadAuxFile,
                 openQRCodeScanner,
                 closeQRCodeScanner,
@@ -322,15 +323,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
-                loadUniverse,
-                unloadUniverse,
+                loadStory,
+                unloadStory,
                 importAUX,
                 replaceDragBot,
 
                 getBot: getPlayerBot,
                 isInDimension,
                 getCurrentDimension,
-                getCurrentUniverse,
+                getCurrentStory,
                 getMenuDimension,
                 getInventoryDimension,
                 getPortalDimension,
@@ -349,7 +350,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             server: {
-                setupUniverse,
+                setupStory,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -357,7 +358,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 markHistory,
                 browseHistory,
                 restoreHistoryMark,
-                restoreHistoryMarkToUniverse,
+                restoreHistoryMarkToStory,
                 loadFile,
                 saveFile,
                 destroyErrors,
@@ -393,7 +394,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the universe.
+     * // Gets all the bots in the story.
      * let bots = getBots();
      */
     function getBots(...args: any[]): RuntimeBot[] {
@@ -553,9 +554,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param mod The mod that bots should be checked against.
      *
      * @example
-     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * // Find all the bots with a height set to 1 and color set to "red".
      * let bots = getBots(byMod({
-     *      "auxColor": "red",
+     *      "color": "red",
      *      height: 1
      * }));
      */
@@ -679,10 +680,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Find all the bots created by the yellow bot.
-     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     * let bots = getBots(byCreator(getBot('color','yellow')));
      */
-    function byCreator(bot: Bot | string) {
-        return byTag('auxCreator', getID(bot));
+    function byCreator(bot: Bot | string): BotFilterFunction {
+        const id = getID(bot);
+        return byTag('creator', id);
     }
 
     /**
@@ -720,8 +722,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tag The tag.
      *
      * @example
-     * // Get the "auxColor" tag from the `this` bot.
-     * let color = getTag(this, "auxColor");
+     * // Get the "color" tag from the `this` bot.
+     * let color = getTag(this, "color");
      */
     function getTag(bot: Bot, ...tags: string[]): any {
         let current: any = bot;
@@ -776,12 +778,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a universe and dimension.
-     * @param universe The universe that should be joined. Defaults to the current universe.
+     * Shows a QR Code that contains a link to a story and dimension.
+     * @param story The story that should be joined. Defaults to the current story.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    function showJoinCode(universe?: string, dimension?: string) {
-        return addAction(calcShowJoinCode(universe, dimension));
+    function showJoinCode(story?: string, dimension?: string) {
+        return addAction(calcShowJoinCode(story, dimension));
     }
 
     /**
@@ -951,15 +953,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
-    function downloadUniverse() {
+    function downloadStory() {
         return downloadBots(
             getBots(bySpace('shared')),
-            `${getCurrentUniverse()}.aux`
+            `${getCurrentStory()}.aux`
         );
     }
 
     /**
-     * Shows the "Upload Universe" dialog.
+     * Shows the "Upload AUX File" dialog.
      */
     function showUploadAuxFile() {
         return addAction(calcShowUploadAuxFile());
@@ -1035,19 +1037,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the universe with the given ID.
-     * @param id The ID of the universe to load.
+     * Loads the story with the given ID.
+     * @param id The ID of the story to load.
      */
-    function loadUniverse(id: string) {
+    function loadStory(id: string) {
         const event = loadSimulation(id);
         return addAction(event);
     }
 
     /**
-     * Unloads the universe with the given ID.
-     * @param id The ID of the universe to unload.
+     * Unloads the story with the given ID.
+     * @param id The ID of the story to unload.
      */
-    function unloadUniverse(id: string) {
+    function unloadStory(id: string) {
         const event = unloadSimulation(id);
         return addAction(event);
     }
@@ -1104,7 +1106,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const dimension = getTag(user, 'auxPagePortal');
+            const dimension = getTag(user, 'pagePortal');
             if (hasValue(dimension)) {
                 return dimension.toString();
             }
@@ -1114,14 +1116,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the universe that the player is currently in.
+     * Gets the story that the player is currently in.
      */
-    function getCurrentUniverse(): string {
+    function getCurrentStory(): string {
         const user = context.playerBot;
         if (user) {
-            let universe = getTag(user, 'auxUniverse');
-            if (hasValue(universe)) {
-                return universe.toString();
+            let story = getTag(user, 'story');
+            if (hasValue(story)) {
+                return story.toString();
             }
             return undefined;
         }
@@ -1134,7 +1136,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getInventoryDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const inventory = getTag(user, 'auxInventoryPortal');
+            const inventory = getTag(user, 'inventoryPortal');
             if (hasValue(inventory)) {
                 return inventory.toString();
             }
@@ -1150,7 +1152,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getMenuDimension(): string {
         const user = context.playerBot;
         if (user) {
-            const menu = getTag(user, 'auxMenuPortal');
+            const menu = getTag(user, 'menuPortal');
             if (hasValue(menu)) {
                 return menu.toString();
             }
@@ -1210,14 +1212,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Show an input box for `this` bot's label.
-     * player.showInputForTag(this, "auxLabel", {
+     * player.showInputForTag(this, "label", {
      *            title: "Change the label",
      *            type: "text"
      * });
      *
      * @example
      * // Show a color picker for the bot's color.
-     * player.showInputForTag(this, "auxColor", {
+     * player.showInputForTag(this, "color", {
      *            title: "Change the color",
      *            type: "color",
      *            subtype: "advanced"
@@ -1314,7 +1316,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   productId: '10_cookies',
      *   title: '10 Cookies',
      *   description: '$5.00',
-     *   processingUniverse: 'cookies_checkout'
+     *   processingStory: 'cookies_checkout'
      * });
      *
      */
@@ -1360,12 +1362,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new universe if it does not exist.
-     * @param universe The universe.
-     * @param botOrMod The bot or mod that should be cloned into the new universe.
+     * Sends an event to the server to setup a new story if it does not exist.
+     * @param story The story.
+     * @param botOrMod The bot or mod that should be cloned into the new story.
      */
-    function setupUniverse(universe: string, botOrMod?: Mod) {
-        return remote(calcSetupUniverse(universe, context.unwrapBot(botOrMod)));
+    function setupStory(story: string, botOrMod?: Mod) {
+        return remote(calcSetupStory(story, context.unwrapBot(botOrMod)));
     }
 
     /**
@@ -1377,7 +1379,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX universes to a Github Gist.
+     * Backs up all the AUX stories to a Github Gist.
      * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
      */
     function backupToGithub(auth: string) {
@@ -1385,7 +1387,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX universes to a zip bot.
+     * Backs up all the AUX stories to a zip bot.
      */
     function backupAsDownload(target: SessionSelector) {
         return remote(calcBackupAsDownload(convertSessionSelector(target)));
@@ -1435,7 +1437,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the "history" space into the universe.
+     * Loads the "history" space into the story.
      */
     function browseHistory() {
         return remote(calcBrowseHistory());
@@ -1453,14 +1455,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Restores the current state to the given mark.
      * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param universe The universe that the mark should be restored to.
+     * @param story The story that the mark should be restored to.
      */
-    function restoreHistoryMarkToUniverse(
-        mark: Bot | string,
-        universe: string
-    ) {
+    function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id, universe));
+        return remote(calcRestoreHistoryMark(id, story));
     }
 
     /**
@@ -1494,7 +1493,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Destroys all the errors in the universe.
+     * Destroys all the errors in the story.
      */
     function destroyErrors() {
         return addAction(clearSpace('error'));
@@ -1509,15 +1508,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(
             loadBots('error', [
                 {
-                    tag: 'auxError',
+                    tag: 'error',
                     value: true,
                 },
                 {
-                    tag: 'auxErrorBot',
+                    tag: 'errorBot',
                     value: getID(bot),
                 },
                 {
-                    tag: 'auxErrorTag',
+                    tag: 'errorTag',
                     value: tag,
                 },
             ])
@@ -1750,7 +1749,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Set a bot's color to "green".
-     * setTag(this, "auxColor", "green");
+     * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         tag = trimTag(tag);
@@ -1822,6 +1821,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Renames the given original tag to the given new tag using the given bot or list of bots.
+     * @param bot The bot or list of bots that the tag should be renamed on.
+     * @param originalTag The original tag to rename.
+     * @param newTag The new tag name.
+     */
+    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string) {
+        if (Array.isArray(bot)) {
+            for (let b of bot) {
+                renameTag(b, originalTag, newTag);
+            }
+        } else {
+            if (originalTag in bot.tags) {
+                const original = bot.tags[originalTag];
+                delete bot.tags[originalTag];
+                bot.tags[newTag] = original;
+            }
+        }
+    }
+
+    /**
      * Applies the given mods to the given bot.
      * @param bot The bot.
      * @param diffs The mods to apply.
@@ -1879,13 +1898,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Create a red bot without a parent.
-     * let redBot = create(null, { "auxColor": "red" });
+     * let redBot = create(null, { "color": "red" });
      *
      * @example
      * // Create a red bot and a blue bot with `this` as the parent.
      * let [redBot, blueBot] = create(this, [
-     *    { "auxColor": "red" },
-     *    { "auxColor": "blue" }
+     *    { "color": "red" },
+     *    { "color": "blue" }
      * ]);
      *
      */
@@ -1895,7 +1914,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function createBase(idFactory: () => string, ...datas: Mod[]) {
         let parent = context.currentBot;
-        let parentDiff = parent ? { auxCreator: getID(parent) } : {};
+        let parentDiff = parent ? { creator: getID(parent) } : {};
         return createFromMods(idFactory, parentDiff, ...datas);
     }
 
@@ -1948,9 +1967,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             applyMod(bot.tags, ...v);
 
-            if ('auxCreator' in bot.tags) {
+            if ('creator' in bot.tags) {
                 let clearCreator = false;
-                const creatorId = bot.tags['auxCreator'];
+                const creatorId = bot.tags['creator'];
                 if (!creatorId) {
                     clearCreator = true;
                 } else {
@@ -1967,7 +1986,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
 
                 if (clearCreator) {
-                    delete bot.tags.auxCreator;
+                    delete bot.tags['creator'];
                 }
             }
 
@@ -2039,7 +2058,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return;
         }
 
-        const destroyable = realBot.tags.auxDestroyable;
+        let destroyable = realBot.tags.auxDestroyable;
+        if (hasValue(destroyable) && destroyable !== true) {
+            return;
+        }
+
+        destroyable = realBot.tags.destroyable;
         if (hasValue(destroyable) && destroyable !== true) {
             return;
         }
@@ -2053,7 +2077,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function destroyChildren(id: string) {
-        const children = getBots('auxCreator', id);
+        const children = getBots('creator', id);
         for (let child of children) {
             destroyBot(child);
         }
@@ -2097,7 +2121,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the universe to run the given action.
+     * Asks every bot in the story to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -2131,11 +2155,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#auxColor", "red"), "reset()");
+     * whisper(getBots("#color", "red"), "reset()");
      *
      * @example
      * // Ask all the tall bots for their names.
-     * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
      *
      * @example
      * // Tell every friendly bot to say "Hi" to you.
@@ -2200,7 +2224,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             if (bot) {
                 targets.push(bot);
             }
-            if (!bot || bot.tags.auxListening === false) {
+            if (
+                !bot ||
+                bot.tags.auxListening === false ||
+                bot.tags.listening === false
+            ) {
                 continue;
             }
 

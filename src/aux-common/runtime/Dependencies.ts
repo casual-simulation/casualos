@@ -530,7 +530,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag_value',
-                    name: 'auxCreator',
+                    name: 'creator',
                     dependencies: replace(node.dependencies),
                 },
             ];
@@ -543,7 +543,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag_value',
-                    name: 'auxConfigBot',
+                    name: 'configBot',
                     dependencies: replace(node.dependencies),
                 },
             ];
@@ -624,19 +624,19 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'auxPagePortal',
+                    name: 'pagePortal',
                     dependencies: [],
                 },
             ];
         },
-        'player.getCurrentUniverse': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentStory': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'auxUniverse',
+                    name: 'story',
                     dependencies: [],
                 },
             ];
@@ -648,7 +648,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'auxMenuPortal',
+                    name: 'menuPortal',
                     dependencies: [],
                 },
             ];
@@ -660,7 +660,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'auxInventoryPortal',
+                    name: 'inventoryPortal',
                     dependencies: [],
                 },
             ];

@@ -102,7 +102,7 @@ describe('WebhooksModule2', () => {
                 });
             });
 
-            it('should execute webhook events from remote devices that are allowed by onUniverseAction()', async () => {
+            it('should execute webhook events from remote devices that are allowed by onStoryAction()', async () => {
                 expect.assertions(1);
 
                 require('axios').__setResponse({
@@ -116,7 +116,7 @@ describe('WebhooksModule2', () => {
                 });
 
                 await simulation.helper.createBot('filter', {
-                    onUniverseAction: `@
+                    onStoryAction: `@
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }

@@ -146,10 +146,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
                     continue;
                 }
                 const hash = bot.tags.auxMarkHash;
-                this._client.restore(
-                    restoreMark.universe || this._branch,
-                    hash
-                );
+                this._client.restore(restoreMark.story || this._branch, hash);
             }
         }
     }
@@ -231,10 +228,10 @@ export class RemoteCausalRepoHistoryPartitionImpl
     private _makeBot(commit: CausalRepoCommit): Bot {
         return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
             auxHistory: true,
-            auxLabel: commit.message,
-            auxLabelSize: 0.25,
-            auxScale: 0.8,
-            auxScaleX: 2,
+            label: commit.message,
+            labelSize: 0.25,
+            scale: 0.8,
+            scaleX: 2,
             auxMarkHash: commit.hash,
             auxPreviousMarkHash: commit.previousCommit,
             auxMarkTime: commit.time,

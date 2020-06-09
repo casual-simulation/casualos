@@ -251,7 +251,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     private _isUserDimensionGroupEvent(event: BotIndexEvent): boolean {
-        return event.tag === 'auxMenuPortal';
+        return event.tag === 'menuPortal';
     }
 
     // TODO:

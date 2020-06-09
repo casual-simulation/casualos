@@ -5,7 +5,6 @@ import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
     BotAction,
-    GLOBALS_BOT_ID,
     BotsState,
     BOT_SPACE_TAG,
     StateUpdatedEvent,
@@ -556,10 +555,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init builder bot:', err);
         }
-    }
-
-    protected async _createGlobalsBot() {
-        await this._helper.createGlobalsBot(GLOBALS_BOT_ID);
     }
 
     /**

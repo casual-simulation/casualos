@@ -41,7 +41,7 @@ import {
     openConsole,
     checkout,
     playSound,
-    setupUniverse,
+    setupStory,
     shell,
     backupToGithub,
     backupAsDownload,
@@ -546,11 +546,11 @@ describe('AuxLibrary', () => {
 
             it('should match bots with all of the same tags and values', () => {
                 const filter = library.api.byMod({
-                    auxColor: 'red',
+                    color: 'red',
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
                 bot1.tags.number = 123;
                 bot1.tags.other = true;
 
@@ -559,11 +559,11 @@ describe('AuxLibrary', () => {
 
             it('should not match bots with wrong tag values', () => {
                 const filter = library.api.byMod({
-                    auxColor: 'red',
+                    color: 'red',
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
                 bot1.tags.number = 999;
                 bot1.tags.other = true;
 
@@ -572,11 +572,11 @@ describe('AuxLibrary', () => {
 
             it('should match tags using the given filter', () => {
                 const filter = library.api.byMod({
-                    auxColor: (x: string) => x.startsWith('r'),
+                    color: (x: string) => x.startsWith('r'),
                     number: 123,
                 });
 
-                bot1.tags.auxColor = 'rubble';
+                bot1.tags.color = 'rubble';
                 bot1.tags.number = 123;
                 bot1.tags.other = true;
 
@@ -585,7 +585,7 @@ describe('AuxLibrary', () => {
 
             it('should match tags with null', () => {
                 const filter = library.api.byMod({
-                    auxColor: null,
+                    color: null,
                     number: 123,
                 });
 
@@ -594,7 +594,7 @@ describe('AuxLibrary', () => {
 
                 expect(filter(bot1)).toEqual(true);
 
-                bot1.tags.auxColor = 'red';
+                bot1.tags.color = 'red';
 
                 expect(filter(bot1)).toEqual(false);
             });
@@ -966,7 +966,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns true if the bot is created by the given bot', () => {
                 const filter = library.api.byCreator(bot1);
 
-                bot2.tags.auxCreator = bot1.id;
+                bot2.tags.creator = bot1.id;
 
                 expect(filter(bot2)).toEqual(true);
             });
@@ -974,7 +974,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns true if the bot is created by the given bot ID', () => {
                 const filter = library.api.byCreator(bot1.id);
 
-                bot2.tags.auxCreator = bot1.id;
+                bot2.tags.creator = bot1.id;
 
                 expect(filter(bot2)).toEqual(true);
             });
@@ -982,7 +982,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns false if the bot not is created by the given bot ID', () => {
                 const filter = library.api.byCreator(bot1.id);
 
-                bot2.tags.auxCreator = 'other';
+                bot2.tags.creator = 'other';
 
                 expect(filter(bot2)).toEqual(false);
             });
@@ -990,7 +990,7 @@ describe('AuxLibrary', () => {
             it('should return a function that returns false if the bot not is created by the given bot', () => {
                 const filter = library.api.byCreator(bot1);
 
-                bot2.tags.auxCreator = 'other';
+                bot2.tags.creator = 'other';
 
                 expect(filter(bot2)).toEqual(false);
             });
@@ -1304,14 +1304,14 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([showJoinCode()]);
             });
 
-            it('should allow linking to a specific universe and dimension', () => {
+            it('should allow linking to a specific story and dimension', () => {
                 const action = library.api.player.showJoinCode(
-                    'universe',
+                    'story',
                     'dimension'
                 );
-                expect(action).toEqual(showJoinCode('universe', 'dimension'));
+                expect(action).toEqual(showJoinCode('story', 'dimension'));
                 expect(context.actions).toEqual([
-                    showJoinCode('universe', 'dimension'),
+                    showJoinCode('story', 'dimension'),
                 ]);
             });
         });
@@ -1560,7 +1560,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.downloadUniverse()', () => {
+        describe('player.downloadStory()', () => {
             let bot3: RuntimeBot;
             let player: RuntimeBot;
 
@@ -1569,7 +1569,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1577,8 +1577,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should emit a DownloadAction with the current state and universe name', () => {
-                const action = library.api.player.downloadUniverse();
+            it('should emit a DownloadAction with the current state and story name', () => {
+                const action = library.api.player.downloadStory();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1603,7 +1603,7 @@ describe('AuxLibrary', () => {
                 const bot8 = createDummyRuntimeBot('test8', {}, 'admin');
                 addToContext(context, bot4, bot5, bot6, bot7, bot8);
 
-                const action = library.api.player.downloadUniverse();
+                const action = library.api.player.downloadStory();
                 const expected = download(
                     JSON.stringify({
                         version: 1,
@@ -1721,17 +1721,17 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('player.loadUniverse()', () => {
-            it('should emit a LoadUniverseAction', () => {
-                const action = library.api.player.loadUniverse('abc');
+        describe('player.loadStory()', () => {
+            it('should emit a LoadStoryAction', () => {
+                const action = library.api.player.loadStory('abc');
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
-        describe('player.unloadUniverse()', () => {
-            it('should emit a UnloadUniverseAction', () => {
-                const action = library.api.player.unloadUniverse('abc');
+        describe('player.unloadStory()', () => {
+            it('should emit a UnloadStoryAction', () => {
+                const action = library.api.player.unloadStory('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
@@ -1814,7 +1814,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1822,19 +1822,19 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return true when auxPagePortal equals the given value', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return true when pagePortal equals the given value', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.isInDimension('dimension');
                 expect(result).toEqual(true);
             });
 
-            it('should return false when auxPagePortal does not equal the given value', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return false when pagePortal does not equal the given value', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.isInDimension('abc');
                 expect(result).toEqual(false);
             });
 
-            it('should return false when auxPagePortal is not set', () => {
+            it('should return false when pagePortal is not set', () => {
                 const result = library.api.player.isInDimension('dimension');
                 expect(result).toEqual(false);
             });
@@ -1842,7 +1842,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should support "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxPagePortal = given;
+                    player.tags.pagePortal = given;
                     const result = library.api.player.isInDimension(expected);
                     expect(result).toEqual(true);
                 }
@@ -1856,7 +1856,7 @@ describe('AuxLibrary', () => {
                 player = createDummyRuntimeBot(
                     'player',
                     {
-                        auxUniverse: 'channel',
+                        story: 'channel',
                     },
                     'tempLocal'
                 );
@@ -1864,13 +1864,13 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxPagePortal', () => {
-                player.tags.auxPagePortal = 'dimension';
+            it('should return pagePortal', () => {
+                player.tags.pagePortal = 'dimension';
                 const result = library.api.player.getCurrentDimension();
                 expect(result).toEqual('dimension');
             });
 
-            it('should return undefined when auxPagePortal is not set', () => {
+            it('should return undefined when pagePortal is not set', () => {
                 const result = library.api.player.getCurrentDimension();
                 expect(result).toBeUndefined();
             });
@@ -1878,14 +1878,14 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxPagePortal = given;
+                    player.tags.pagePortal = given;
                     const result = library.api.player.getCurrentDimension();
                     expect(result).toEqual(expected);
                 }
             );
         });
 
-        describe('player.getCurrentUniverse()', () => {
+        describe('player.getCurrentStory()', () => {
             let player: RuntimeBot;
 
             beforeEach(() => {
@@ -1894,22 +1894,22 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return auxUniverse', () => {
-                player.tags.auxUniverse = 'universe';
-                const result = library.api.player.getCurrentUniverse();
-                expect(result).toEqual('universe');
+            it('should return story', () => {
+                player.tags.story = 'story';
+                const result = library.api.player.getCurrentStory();
+                expect(result).toEqual('story');
             });
 
-            it('should return undefined when auxUniverse is not set', () => {
-                const result = library.api.player.getCurrentUniverse();
+            it('should return undefined when story is not set', () => {
+                const result = library.api.player.getCurrentStory();
                 expect(result).toBeUndefined();
             });
 
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxUniverse = given;
-                    const result = library.api.player.getCurrentUniverse();
+                    player.tags.story = given;
+                    const result = library.api.player.getCurrentStory();
                     expect(result).toEqual(expected);
                 }
             );
@@ -1924,8 +1924,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the auxInventoryPortal tag from the user bot', () => {
-                player.tags.auxInventoryPortal = 'abc';
+            it('should return the inventoryPortal tag from the user bot', () => {
+                player.tags.inventoryPortal = 'abc';
                 const result = library.api.player.getInventoryDimension();
                 expect(result).toEqual('abc');
             });
@@ -1933,7 +1933,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxInventoryPortal = given;
+                    player.tags.inventoryPortal = given;
                     const result = library.api.player.getInventoryDimension();
                     expect(result).toEqual(expected);
                 }
@@ -1949,8 +1949,8 @@ describe('AuxLibrary', () => {
                 context.playerBot = player;
             });
 
-            it('should return the auxMenuPortal tag from the user bot', () => {
-                player.tags.auxMenuPortal = 'abc';
+            it('should return the menuPortal tag from the user bot', () => {
+                player.tags.menuPortal = 'abc';
                 const result = library.api.player.getMenuDimension();
                 expect(result).toEqual('abc');
             });
@@ -1958,7 +1958,7 @@ describe('AuxLibrary', () => {
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
-                    player.tags.auxMenuPortal = given;
+                    player.tags.menuPortal = given;
                     const result = library.api.player.getMenuDimension();
                     expect(result).toEqual(expected);
                 }
@@ -1976,23 +1976,23 @@ describe('AuxLibrary', () => {
 
             const cases = [
                 ['page', 'pageDimension'],
-                ['auxPagePortal', 'pageDimension'],
+                ['pagePortal', 'pageDimension'],
                 ['inventory', 'inventoryDimension'],
-                ['auxInventoryPortal', 'inventoryDimension'],
+                ['inventoryPortal', 'inventoryDimension'],
                 ['menu', 'menuDimension'],
-                ['auxMenuPortal', 'menuDimension'],
+                ['menuPortal', 'menuDimension'],
                 ['sheet', 'sheetDimension'],
-                ['auxSheetPortal', 'sheetDimension'],
+                ['sheetPortal', 'sheetDimension'],
                 ['missing', null],
                 ['falsy', null],
             ];
 
             describe.each(cases)('%s', (portal, expectedDimension) => {
                 it(`should get the dimension for the ${portal} portal`, () => {
-                    player.tags.auxPagePortal = 'pageDimension';
-                    player.tags.auxInventoryPortal = 'inventoryDimension';
-                    player.tags.auxMenuPortal = 'menuDimension';
-                    player.tags.auxSheetPortal = 'sheetDimension';
+                    player.tags.pagePortal = 'pageDimension';
+                    player.tags.inventoryPortal = 'inventoryDimension';
+                    player.tags.menuPortal = 'menuDimension';
+                    player.tags.sheetPortal = 'sheetDimension';
                     player.tags.falsy = false;
                     player.tags.number = 0;
                     const result = library.api.player.getPortalDimension(
@@ -2004,10 +2004,10 @@ describe('AuxLibrary', () => {
                 it.each(numberCases)(
                     'should return "%s" when given %s',
                     (expected, given) => {
-                        player.tags.auxPagePortal = given;
-                        player.tags.auxInventoryPortal = given;
-                        player.tags.auxMenuPortal = given;
-                        player.tags.auxSheetPortal = given;
+                        player.tags.pagePortal = given;
+                        player.tags.inventoryPortal = given;
+                        player.tags.menuPortal = given;
+                        player.tags.sheetPortal = given;
                         player.tags.falsy = false;
                         player.tags.number = 0;
                         const result = library.api.player.getPortalDimension(
@@ -2212,14 +2212,14 @@ describe('AuxLibrary', () => {
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 });
                 const expected = checkout({
                     publishableKey: 'key',
                     productId: 'ID1',
                     title: 'Product 1',
                     description: '$50.43',
-                    processingUniverse: 'channel2',
+                    processingStory: 'channel2',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2244,14 +2244,14 @@ describe('AuxLibrary', () => {
             });
 
             it('should return true if the given bot is in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
                 const result = library.api.player.hasBotInInventory(bot1);
                 expect(result).toEqual(true);
             });
 
             it('should return true if all the given bots are in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = true;
                 bot2.tags.abc = true;
                 const result = library.api.player.hasBotInInventory([
@@ -2262,7 +2262,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should return false if one of the given bots are not in the users inventory dimension', () => {
-                player.tags.auxInventoryPortal = 'abc';
+                player.tags.inventoryPortal = 'abc';
                 bot1.tags.abc = false;
                 bot2.tags.abc = true;
                 const result = library.api.player.hasBotInInventory([
@@ -2301,15 +2301,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.setupUniverse()', () => {
+        describe('server.setupStory()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
                 bot1.tags.abc = true;
-                const action = library.api.server.setupUniverse(
-                    'channel',
-                    bot1
-                );
+                const action = library.api.server.setupStory('channel', bot1);
                 const expected = remote(
-                    setupUniverse('channel', createBot(bot1.id, bot1.tags))
+                    setupStory('channel', createBot(bot1.id, bot1.tags))
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -2434,13 +2431,13 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.restoreHistoryMarkToUniverse()', () => {
+        describe('server.restoreHistoryMarkToStory()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMarkToUniverse(
+                const action = library.api.server.restoreHistoryMarkToStory(
                     'mark',
-                    'universe'
+                    'story'
                 );
-                const expected = remote(restoreHistoryMark('mark', 'universe'));
+                const expected = remote(restoreHistoryMark('mark', 'story'));
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
@@ -2487,15 +2484,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.server.loadErrors('test', 'abc');
                 const expected = loadBots('error', [
                     {
-                        tag: 'auxError',
+                        tag: 'error',
                         value: true,
                     },
                     {
-                        tag: 'auxErrorBot',
+                        tag: 'errorBot',
                         value: 'test',
                     },
                     {
-                        tag: 'auxErrorTag',
+                        tag: 'errorTag',
                         value: 'abc',
                     },
                 ]);
@@ -2507,15 +2504,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.server.loadErrors(bot1, 'abc');
                 const expected = loadBots('error', [
                     {
-                        tag: 'auxError',
+                        tag: 'error',
                         value: true,
                     },
                     {
-                        tag: 'auxErrorBot',
+                        tag: 'errorBot',
                         value: bot1.id,
                     },
                     {
-                        tag: 'auxErrorTag',
+                        tag: 'errorTag',
                         value: 'abc',
                     },
                 ]);
@@ -2813,6 +2810,60 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('renameTag()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should rename the given tag on the given bot', () => {
+            bot1.tags.abc = 123;
+            bot2.tags.abc = 456;
+
+            library.api.renameTag(bot1, 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe(123);
+        });
+
+        it('should rename the given tag on the given bots', () => {
+            bot1.tags.abc = 123;
+            bot2.tags.abc = 456;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe(123);
+
+            expect(bot2.tags.abc).toBe(null);
+            expect(bot2.tags.def).toBe(456);
+        });
+
+        it('should do nothing if the bot does not have the given tag', () => {
+            bot1.tags.def = 123;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBeUndefined();
+            expect(bot1.tags.def).toBe(123);
+        });
+
+        it('should replace the existing tag value', () => {
+            bot1.tags.abc = 'hello';
+            bot1.tags.def = 123;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe('hello');
+        });
+    });
+
     describe('applyMod()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
@@ -2907,7 +2958,7 @@ describe('AuxLibrary', () => {
             });
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
-                    auxCreator: 'creator',
+                    creator: 'creator',
                     abc: 'def',
                 })
             );
@@ -2923,7 +2974,7 @@ describe('AuxLibrary', () => {
             });
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
-                    auxCreator: 'creator',
+                    creator: 'creator',
                     abc: 'def',
                 })
             );
@@ -3156,16 +3207,19 @@ describe('AuxLibrary', () => {
             expect(abc).toBeCalled();
         });
 
-        it('should be able to shout to a new bot that is just now listening', () => {
-            uuidMock.mockReturnValue('uuid');
-            const abc = jest.fn();
-            library.api.create(
-                { auxListening: false, abc: abc, test: true },
-                { auxListening: true }
-            );
-            library.api.shout('abc');
+        const listeningTagCases = ['auxListening', 'listening'];
+        describe.each(listeningTagCases)('%s', (tag: string) => {
+            it('should be able to shout to a new bot that is just now listening', () => {
+                uuidMock.mockReturnValue('uuid');
+                const abc = jest.fn();
+                library.api.create(
+                    { [tag]: false, abc: abc, test: true },
+                    { [tag]: true }
+                );
+                library.api.shout('abc');
 
-            expect(abc).toBeCalled();
+                expect(abc).toBeCalled();
+            });
         });
 
         it('should be able to shout to a bot that was created during another shout', () => {
@@ -3319,7 +3373,7 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('auxCreator', () => {
+        describe('creator', () => {
             let current: RuntimeBot;
             let bot1: RuntimeBot;
 
@@ -3331,34 +3385,34 @@ describe('AuxLibrary', () => {
                 context.currentBot = current;
             });
 
-            it('should set the auxCreator to the given bot', () => {
+            it('should set the creator to the given bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: bot1.id });
+                const bot = library.api.create({ creator: bot1.id });
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
-                        auxCreator: 'bot1',
+                        creator: 'bot1',
                     })
                 );
             });
 
-            it('should be able to set the auxCreator to null', () => {
+            it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: null });
+                const bot = library.api.create({ creator: null });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
 
-            it('should set auxCreator to null if it references a bot in a different space', () => {
+            it('should set creator to null if it references a bot in a different space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const bot = library.api.create({
-                    auxCreator: bot1.id,
+                    creator: bot1.id,
                     space: 'local',
                 });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid', {}, 'local'));
             });
 
-            it('should set auxCreator to null if it references a bot that does not exist', () => {
+            it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.api.create({ auxCreator: 'missing' });
+                const bot = library.api.create({ creator: 'missing' });
                 expect(bot).toEqual(createDummyRuntimeBot('uuid'));
             });
         });
@@ -3389,17 +3443,25 @@ describe('AuxLibrary', () => {
             expect(context.bots).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should destroy and bots that have auxCreator set to the bot ID', () => {
-            bot3.tags.auxCreator = 'test2';
-            bot4.tags.auxCreator = 'test2';
+        it('should destroy and bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test2';
 
             library.api.destroy('test2');
             expect(context.bots).toEqual([bot1]);
         });
 
-        it('should recursively destroy bots that have auxCreator set to the bot ID', () => {
-            bot3.tags.auxCreator = 'test2';
-            bot4.tags.auxCreator = 'test3';
+        it('should destroy and bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test2';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
+        it('should recursively destroy bots that have creator set to the bot ID', () => {
+            bot3.tags.creator = 'test2';
+            bot4.tags.creator = 'test3';
 
             library.api.destroy('test2');
             expect(context.bots).toEqual([bot1]);
@@ -3429,14 +3491,14 @@ describe('AuxLibrary', () => {
         });
 
         it('should not destroy bots that are not destroyable', () => {
-            bot2.tags.auxDestroyable = false;
+            bot2.tags.destroyable = false;
             library.api.destroy(context.bots.slice());
             expect(context.bots).toEqual([bot2]);
         });
 
         it('should short-circut destroying child bots', () => {
-            bot2.tags.auxDestroyable = false;
-            bot3.tags.auxCreator = 'test2';
+            bot2.tags.destroyable = false;
+            bot3.tags.creator = 'test2';
             library.api.destroy([bot1, bot2, bot4]);
             expect(context.bots).toEqual([bot2, bot3]);
         });
@@ -3468,8 +3530,16 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+        it('should not destroy bots that have auxDestroyable set to false', () => {
             bot2.tags.auxDestroyable = false;
+            library.api.destroy(bot2);
+
+            const results = library.api.getBots();
+            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+        });
+
+        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+            bot2.tags.destroyable = false;
             library.api.destroy({ id: bot2.id, tags: {} });
 
             const results = library.api.getBots();
@@ -3491,10 +3561,10 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
-        it('should not destroy all auxCreator bots when given a non-bot object', () => {
-            bot1.tags.auxCreator = 'a';
-            bot2.tags.auxCreator = 'b';
-            bot3.tags.auxCreator = 'c';
+        it('should not destroy all creator bots when given a non-bot object', () => {
+            bot1.tags.creator = 'a';
+            bot2.tags.creator = 'b';
+            bot3.tags.creator = 'c';
 
             library.api.destroy(<any>{
                 abc: 'def',
@@ -3666,10 +3736,26 @@ describe('AuxLibrary', () => {
             expect(results).toEqual([1, 2]);
         });
 
-        it('should ignore bots that are not listening', () => {
+        const tagCases = ['auxListening', 'listening'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should ignore bots that are not listening', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                bot2.tags[tag] = false;
+
+                const results = library.api.shout('sayHello');
+                expect(results).toEqual([1]);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+            });
+        });
+
+        it('should ignore bots where either listening tag is false', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            bot2.tags.auxListening = false;
+
+            bot2.tags.auxListening = true;
+            bot2.tags.listening = false;
 
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1]);
@@ -3854,10 +3940,27 @@ describe('AuxLibrary', () => {
             expect(sayHello3).not.toBeCalled();
         });
 
-        it('should ignore bots that are not listening', () => {
+        const tagCases = ['auxListening', 'listening'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should ignore bots that are not listening', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                bot2.tags[tag] = false;
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+
+                const results = library.api.whisper([bot2, bot1], 'sayHello');
+                expect(results).toEqual([1]);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            });
+        });
+
+        it('should ignore bots where either listening tag is false', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            bot2.tags.auxListening = false;
+            bot2.tags.auxListening = true;
+            bot2.tags.listening = false;
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
 
             const results = library.api.whisper([bot2, bot1], 'sayHello');
@@ -3962,7 +4065,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should return true if the player bot has a sheet portal', () => {
-            player.tags.auxSheetPortal = 'sheet';
+            player.tags.sheetPortal = 'sheet';
 
             expect(library.api.player.inSheet()).toBe(true);
         });

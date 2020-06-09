@@ -35,16 +35,16 @@ export function copyPose(pose: XRPose, obj: Object3D) {
 
 export function handToPortal(hand: XRHandedness) {
     return hand === 'left'
-        ? 'auxLeftWristPortal'
+        ? 'leftWristPortal'
         : hand === 'right'
-        ? 'auxRightWristPortal'
+        ? 'rightWristPortal'
         : null;
 }
 
 export function portalToHand(portalTag: string): XRHandedness {
-    return portalTag === 'auxLeftWristPortal'
+    return portalTag === 'leftWristPortal'
         ? 'left'
-        : portalTag === 'auxRightWristPortal'
+        : portalTag === 'rightWristPortal'
         ? 'right'
         : null;
 }

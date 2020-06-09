@@ -202,9 +202,9 @@ export interface BotPartitionConfig extends PartitionConfigBase {
     host: string;
 
     /**
-     * The universe that should be used from the host.
+     * The story that should be used from the host.
      */
-    universe: string;
+    story: string;
 }
 
 /**
@@ -214,9 +214,9 @@ export interface SearchPartitionClientConfig extends PartitionConfigBase {
     type: 'bot_client';
 
     /**
-     * The universe that should be used.
+     * The story that should be used.
      */
-    universe: string;
+    story: string;
 
     /**
      * The client that the partition should connect with.

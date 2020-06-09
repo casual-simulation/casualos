@@ -170,8 +170,8 @@ declare type ExtraActions =
     | OpenBarcodeScannerAction
     | ShowQRCodeAction
     | ShowBarcodeAction
-    | LoadUniverseAction
-    | UnloadUniverseAction
+    | LoadStoryAction
+    | UnloadStoryAction
     | SuperShoutAction
     | SendWebhookAction
     | LoadFileAction
@@ -421,9 +421,9 @@ declare interface StartCheckoutOptions {
     description: string;
 
     /**
-     * The universe that the payment processing should occur in.
+     * The story that the payment processing should occur in.
      */
-    processingUniverse: string;
+    processingStory: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -492,7 +492,7 @@ declare interface CheckoutSubmittedAction extends Action {
     /**
      * The channel that processing should happen in.
      */
-    processingUniverse: string;
+    processingStory: string;
 }
 
 /**
@@ -717,8 +717,8 @@ declare interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to load a simulation.
  */
-declare interface LoadUniverseAction extends Action {
-    type: 'load_universe';
+declare interface LoadStoryAction extends Action {
+    type: 'load_story';
 
     /**
      * The ID of the simulation to load.
@@ -729,8 +729,8 @@ declare interface LoadUniverseAction extends Action {
 /**
  * An event that is used to unload a simulation.
  */
-declare interface UnloadUniverseAction extends Action {
-    type: 'unload_universe';
+declare interface UnloadStoryAction extends Action {
+    type: 'unload_story';
 
     /**
      * The ID of the simulation to unload.
@@ -1098,7 +1098,7 @@ declare interface RejectAction {
  * Defines an event that creates a channel if it doesn't exist.
  */
 declare interface SetupChannelAction {
-    type: 'setup_universe';
+    type: 'setup_story';
 
     /**
      * The channel that should be created.
@@ -1173,7 +1173,7 @@ declare interface RunScriptAction {
 }
 
 /**
- * Defines an event that shows the "upload universe" dialog.
+ * Defines an event that shows the "upload AUX file" dialog.
  */
 declare interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
@@ -1192,7 +1192,7 @@ declare interface MarkHistoryAction {
 }
 
 /**
- * Defines an event that loads the history into the universe.
+ * Defines an event that loads the history into the story.
  */
 declare interface BrowseHistoryAction {
     type: 'browse_history';
@@ -1210,14 +1210,14 @@ declare interface RestoreHistoryMarkAction {
     mark: string;
 
     /**
-     * The universe that the mark should be restored to.
-     * If not specified, then the current universe will be used.
+     * The story that the mark should be restored to.
+     * If not specified, then the current story will be used.
      */
-    universe?: string;
+    story?: string;
 }
 
 /**
- * Defines an event that loads a space into the universe.
+ * Defines an event that loads a space into the story.
  */
 declare interface LoadSpaceAction {
     type: 'load_space';
@@ -1345,15 +1345,15 @@ declare interface EnableVRAction {
 }
 
 /**
- * Defines an event that shows a QR code that is a link to a universe & dimension.
+ * Defines an event that shows a QR code that is a link to a story & dimension.
  */
 declare interface ShowJoinCodeAction {
     type: 'show_join_code';
 
     /**
-     * The universe that should be joined.
+     * The story that should be joined.
      */
-    universe?: string;
+    story?: string;
 
     /**
      * The dimension that should be joined.
@@ -1429,9 +1429,9 @@ declare interface CheckoutOptions {
     description: string;
 
     /**
-     * The universe that the payment should be processed on.
+     * The story that the payment should be processed on.
      */
-    processingUniverse: string;
+    processingStory: string;
 
     /**
      * Whether to request the payer's billing address.
@@ -1584,7 +1584,7 @@ declare type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'universes'
+    | 'stories'
     | string;
 
 /**
@@ -1695,13 +1695,13 @@ declare global {
      *
      * @example
      * // Create a red bot without a parent.
-     * let redBot = create(null, { "auxColor": "red" });
+     * let redBot = create(null, { "color": "red" });
      *
      * @example
      * // Create a red bot and a blue bot with `this` as the parent.
      * let [redBot, blueBot] = create(this, [
-     *    { "auxColor": "red" },
-     *    { "auxColor": "blue" }
+     *    { "color": "red" },
+     *    { "color": "blue" }
      * ]);
      *
      */
@@ -1731,6 +1731,18 @@ declare global {
     function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
 
     /**
+     * Renames the given original tag to the given new tag using the given bot or list of bots.
+     * @param bot The bot or list of bots that the tag should be renamed on.
+     * @param originalTag The original tag to rename.
+     * @param newTag The new tag name.
+     * 
+     * @example
+     * // Rename the "abc" tag to "def"
+     * renameTag(this, "abc", "def")
+     */
+    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
+
+    /**
      * Gets the ID from the given bot.
      * @param bot The bot or string.
      */
@@ -1743,7 +1755,7 @@ declare global {
     function getJSON(data: any): string;
 
     /**
-     * Asks every bot in the universe to run the given action.
+     * Asks every bot in the story to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
      *
      * @param name The event name.
@@ -1775,11 +1787,11 @@ declare global {
      *
      * @example
      * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#auxColor", "red"), "reset()");
+     * whisper(getBots("#color", "red"), "reset()");
      *
      * @example
      * // Ask all the tall bots for their names.
-     * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
      *
      * @example
      * // Tell every friendly bot to say "Hi" to you.
@@ -1920,7 +1932,7 @@ declare global {
      *
      * @example
      * // Get all the bots that are red.
-     * let bots = getBots(byTag("auxColor", "red"));
+     * let bots = getBots(byTag("color", "red"));
      */
     function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
 
@@ -1931,8 +1943,8 @@ declare global {
      *
      * @example
      * // Get all the bots that are red.
-     * // Shorthand for getBots(byTag("auxColor", "red"))
-     * let bots = getBots("auxColor", "red");
+     * // Shorthand for getBots(byTag("color", "red"))
+     * let bots = getBots("color", "red");
      */
     function getBots(tag: string, filter?: any | TagFilter): Bot[];
 
@@ -1940,7 +1952,7 @@ declare global {
      * Gets a list of all the bots.
      *
      * @example
-     * // Gets all the bots in the universe.
+     * // Gets all the bots in the story.
      * let bots = getBots();
      */
     function getBots(): Bot[];
@@ -1976,9 +1988,9 @@ declare global {
      * @param mod The mod that bots should be checked against.
      *
      * @example
-     * // Find all the bots with a height set to 1 and auxColor set to "red".
+     * // Find all the bots with a height set to 1 and color set to "red".
      * let bots = getBots(byMod({
-     *      "auxColor": "red",
+     *      "color": "red",
      *      height: 1
      * }));
      */
@@ -2019,7 +2031,7 @@ declare global {
      *
      * @example
      * // Find all the bots created by the yellow bot.
-     * let bots = getBots(byCreator(getBot('auxColor','yellow')));
+     * let bots = getBots(byCreator(getBot('color','yellow')));
      */
     function byCreator(bot: Bot | string);
 
@@ -2090,8 +2102,8 @@ declare global {
      * @param tag The tag.
      *
      * @example
-     * // Get the "auxColor" tag from the `this` bot.
-     * let color = getTag(this, "auxColor");
+     * // Get the "color" tag from the `this` bot.
+     * let color = getTag(this, "color");
      */
     function getTag(bot: Bot, ...tags: string[]): any;
 
@@ -2103,7 +2115,7 @@ declare global {
      *
      * @example
      * // Set a bot's color to "green".
-     * setTag(this, "auxColor", "green");
+     * setTag(this, "color", "green");
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
 
@@ -2222,12 +2234,12 @@ declare global {
         playSound(url: string): PlaySoundAction;
 
         /**
-         * Shows a QR Code that contains a link to a universe and dimension.
-         * @param universe The universe that should be joined. Defaults to the current universe.
+         * Shows a QR Code that contains a link to a story and dimension.
+         * @param story The story that should be joined. Defaults to the current story.
          * @param dimension The dimension that should be joined. Defaults to the current dimension.
          */
         showJoinCode(
-            universe?: string,
+            story?: string,
             dimension?: string
         ): ShowJoinCodeAction;
 
@@ -2374,24 +2386,24 @@ declare global {
          */
         downloadBots(bots: Bot[], filename: string): DownloadAction;
 
-        downloadUniverse(): DownloadAction;
+        downloadStory(): DownloadAction;
 
         /**
-         * Shows the "Upload Universe" dialog.
+         * Shows the "Upload AUX File" dialog.
          */
         showUploadAuxFile(): ShowUploadAuxFileAction;
 
         /**
-         * Loads the universe with the given ID.
-         * @param id The ID of the universe to load.
+         * Loads the story with the given ID.
+         * @param id The ID of the story to load.
          */
-        loadUniverse(id: string): LoadUniverseAction;
+        loadStory(id: string): LoadStoryAction;
 
         /**
-         * Unloads the universe with the given ID.
-         * @param id The ID of the universe to unload.
+         * Unloads the story with the given ID.
+         * @param id The ID of the story to unload.
          */
-        unloadUniverse(id: string): UnloadUniverseAction;
+        unloadStory(id: string): UnloadStoryAction;
 
         /**
          * Imports the AUX from the given URL or JSON
@@ -2443,14 +2455,14 @@ declare global {
          *
          * @example
          * // Show an input box for `this` bot's label.
-         * player.showInputForTag(this, "auxLabel", {
+         * player.showInputForTag(this, "label", {
          *            title: "Change the label",
          *            type: "text"
          * });
          *
          * @example
          * // Show a color picker for the bot's color.
-         * player.showInputForTag(this, "auxColor", {
+         * player.showInputForTag(this, "color", {
          *            title: "Change the color",
          *            type: "color",
          *            subtype: "advanced"
@@ -2491,7 +2503,7 @@ declare global {
          *   productId: '10_cookies',
          *   title: '10 Cookies',
          *   description: '$5.00',
-         *   processingUniverse: 'cookies_checkout'
+         *   processingStory: 'cookies_checkout'
          * });
          *
          */
@@ -2503,9 +2515,9 @@ declare global {
         getCurrentDimension(): string;
 
         /**
-         * Gets the universe that the player is currently in.
+         * Gets the story that the player is currently in.
          */
-        getCurrentUniverse(): string;
+        getCurrentStory(): string;
 
         /**
          * Gets the distance that the player bot is from the given dimension.
@@ -2543,11 +2555,11 @@ declare global {
      */
     const server: {
         /**
-         * Sends an event to the server to setup a new universe if it does not exist.
-         * @param universe The universe.
-         * @param botOrMod The bot or mod that should be cloned into the new universe.
+         * Sends an event to the server to setup a new story if it does not exist.
+         * @param story The story.
+         * @param botOrMod The bot or mod that should be cloned into the new story.
          */
-        setupUniverse(universe: string, botOrMod?: Mod): SetupChannelAction;
+        setupStory(story: string, botOrMod?: Mod): SetupChannelAction;
     
         /**
          * Executes the given shell script on the server.
@@ -2556,18 +2568,18 @@ declare global {
         shell(script: string): ShellAction;
     
         /**
-         * Backs up all the AUX universes to a Github Gist.
+         * Backs up all the AUX stories to a Github Gist.
          * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
          */
         backupToGithub(auth: string): BackupToGithubAction;
     
         /**
-         * Backs up all the AUX universes to a zip bot.
+         * Backs up all the AUX stories to a zip bot.
          */
         backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
     
         /**
-         * Clears all the errors in the universe.
+         * Clears all the errors in the story.
          */
         destroyErrors(): ClearSpaceAction;
     
@@ -2624,7 +2636,7 @@ declare global {
         markHistory(options: MarkHistoryOptions): MarkHistoryAction;
     
         /**
-         * Loads the "history" space into the universe.
+         * Loads the "history" space into the story.
          */
         browseHistory(): BrowseHistoryAction;
     
@@ -2637,11 +2649,11 @@ declare global {
         /**
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
-         * @param universe The universe that the mark should be restored to.
+         * @param story The story that the mark should be restored to.
          */
-        restoreHistoryMarkToUniverse(
+        restoreHistoryMarkToStory(
             mark: Bot | string,
-            universe: string
+            story: string
         ): RestoreHistoryMarkAction;
     };
 

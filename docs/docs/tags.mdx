@@ -74,13 +74,13 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Note that once a bot is added to error space it is unable to be changed.
   </PossibleValueCode>
   <PossibleValueCode value='admin'>
-    The bot is saved on the AUXPlayer and is shared across all universes.
+    The bot is saved on the AUXPlayer and is shared across all stories.
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
     You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxCreator`
+### `creator`
 
 <Badges>
   <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
@@ -90,7 +90,7 @@ The ID of the bot that created this bot.
 
 ## Behavior Tags
 
-### `auxDraggable`
+### `draggable`
 
 <Badges>
   <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
@@ -109,7 +109,7 @@ Whether the bot is able to be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxDraggableMode`
+### `draggableMode`
 
 The mode that controls how a bot can be dragged.
 
@@ -130,7 +130,7 @@ The mode that controls how a bot can be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPositioningMode`
+### `positioningMode`
 
 The positioning mode that the bot uses.
 
@@ -145,12 +145,12 @@ The positioning mode that the bot uses.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPointable`
+### `pointable`
 
 Whether the bot interacts with the pointer.
 
 Bots that are pointable can receive clicks, pointer enter/exit, and drop events.
-Note that the <TagLink tag='auxPointable'/> tag also affects whether the content inside an [iframe form](#iframe-form) is interactable.
+Note that the <TagLink tag='pointable'/> tag also affects whether the content inside an [iframe form](#iframe-form) is interactable.
 
 #### Possible values are:
 
@@ -163,7 +163,7 @@ Note that the <TagLink tag='auxPointable'/> tag also affects whether the content
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxFocusable`
+### `focusable`
 
 Whether the bot is able to be focused.
 
@@ -180,7 +180,7 @@ Bots that are focusable can receive focus events like <TagLink tag='@onFocusEnte
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxDestroyable`
+### `destroyable`
 
 Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
 
@@ -195,12 +195,12 @@ Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destr
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxEditable`
+### `editable`
 
 Whether the bot is able to be edited in the sheet in Channel Designer.
 
 <Alert type='warning'>
-  <strong>Use with caution.</strong> Once you set <TagLink tag='auxEditable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
+  <strong>Use with caution.</strong> Once you set <TagLink tag='editable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
 </Alert>
 
 #### Possible values are:
@@ -210,11 +210,11 @@ Whether the bot is able to be edited in the sheet in Channel Designer.
     The bot can be edited via the sheet. (default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The bot cannot be edited via the sheet. (including being able to set auxEditable back to true)
+    The bot cannot be edited via the sheet. (including being able to set editable back to true)
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxListening`
+### `listening`
 
 Determines whether this bot responds to whispers or shouts. If this tag is set to `true` it will respond to them. If set to `false`, it will not.
 
@@ -229,14 +229,14 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxConfigBot`
+### `configBot`
 
 The ID of the bot that "configures" this bot.
 When set, the `config` variable will be available in scripts and formulas as a shortcut to the specified bot.
 
 ## Visualization Tags
 
-### `auxColor`
+### `color`
 
 <Badges>
   <VideoBadge url='https://youtu.be/tV4xJJjxDkE' />
@@ -253,7 +253,7 @@ The color of the bot.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxStrokeColor`
+### `strokeColor`
 
 The color of the bot's outline.
 
@@ -266,15 +266,15 @@ The color of the bot's outline.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxStrokeWidth`
+### `strokeWidth`
 
 The width of the bot's outline. Only works in Chrome.
 
-### `auxLineTo`
+### `lineTo`
 
 The Bot IDs that this bot should draw lines to.
 
-### `auxLineStyle`
+### `lineStyle`
 
 The style of the lines.
 
@@ -292,7 +292,22 @@ The style of the lines.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxLineColor`
+### `lineWidth`
+
+The width of the walls from this bot. Only works when <TagLink tag='lineStyle'/> is set to `wall`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    The width of the line is 1 unit. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The width of the wall is the given size.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `lineColor`
 
 The color of the lines.
 
@@ -305,7 +320,7 @@ The color of the lines.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxLabel`
+### `label`
 
 <Badges>
   <VideoBadge url='https://youtu.be/rWyJ1A42BFA' />
@@ -313,7 +328,7 @@ The color of the lines.
 
 The text that the bot should show in a label.
 
-### `auxLabelColor`
+### `labelColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/tNlH0gx7OBQ' />
@@ -330,7 +345,7 @@ The color of the text in the label.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxLabelSize`
+### `labelSize`
 
 <Badges>
   <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
@@ -338,7 +353,7 @@ The color of the text in the label.
 
 The size of the label font. Default is 1.
 
-### `auxLabelSizeMode`
+### `labelSizeMode`
 
 The sizing mode for the label.
 
@@ -353,7 +368,7 @@ The sizing mode for the label.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxLabelPosition`
+### `labelPosition`
 
 <Badges>
   <VideoBadge url='https://youtu.be/0P87qsLexW0' />
@@ -367,7 +382,7 @@ The anchor position for the label.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
-### `auxLabelAlignment`
+### `labelAlignment`
 
 The text alignment for the label.
 
@@ -385,7 +400,7 @@ The text alignment for the label.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxLabelFontAddress`
+### `labelFontAddress`
 
 The address of the font that the label should use.
 
@@ -407,7 +422,7 @@ If the current font does not support a specific character, the character will be
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxScale`
+### `scale`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
@@ -417,41 +432,41 @@ The uniform scale of the bot.
 
 Defaults to 1.
 
-### `auxScaleX`
+### `scaleX`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The X scale (width) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final width of the bot.
+The X scale (width) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final width of the bot.
 
 Defaults to 1.
 
-### `auxScaleY`
+### `scaleY`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The Y scale (length) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final length of the bot.
+The Y scale (length) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final length of the bot.
 
 Defaults to 1.
 
-### `auxScaleZ`
+### `scaleZ`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The Z scale (height) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final height of the bot.
+The Z scale (height) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final height of the bot.
 
 Defaults to 1.
 
-### `auxScaleMode`
+### `scaleMode`
 
 How the form is scaled to fit inside the bot.
 
-Note that this setting does not affect <TagLink tag='auxScale'/>, <TagLink tag='auxScaleX'/>, <TagLink tag='auxScaleY'/> or <TagLink tag='auxScaleZ'/>.
+Note that this setting does not affect <TagLink tag='scale'/>, <TagLink tag='scaleX'/>, <TagLink tag='scaleY'/> or <TagLink tag='scaleZ'/>.
 Instead, it changes how custom forms like meshes are scaled to fit inside the unit cube.
 
 Also note that this setting affects a bot's collision volume. The collision volume will always try to wrap the bot's form to the best of its ability.
@@ -468,7 +483,7 @@ This means that if you have a really large mesh the collider will scale up to su
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxForm`
+### `form`
 
 The shape that the bot should be displayed as.
 
@@ -485,14 +500,14 @@ The shape that the bot should be displayed as.
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
   <PossibleValueCode value='mesh'>
-    A mesh loaded from the web. See <TagLink tag="auxFormSubtype"/> for additional options.
+    A mesh loaded from the web. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
-    A webpage loaded into a 3D iframe. See <TagLink tag="auxFormSubtype"/> for additional options.
+    A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxFormSubtype`
+### `formSubtype`
 
 The subtype that the form should use. Useful for specifying how a mesh should be loaded.
 
@@ -506,26 +521,26 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
   </PossibleValueCode>
   <PossibleValueCode value='html'>
-    The HTML code that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe. (Default when <TagLink tag="auxForm"/> is set to iframe)
+    The HTML code that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe. (Default when <TagLink tag="form"/> is set to iframe)
   </PossibleValueCode>
   <PossibleValueCode value='src'>
-    The URL that should be loaded into an iframe when <TagLink tag="auxForm"/> is set to iframe.
+    The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxFormAddress`
+### `formAddress`
 
 The address that the bot should represent data from.
 
-When <TagLink tag='auxForm'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+When <TagLink tag='form'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
-When <TagLink tag='auxForm'/> is set to `mesh` and <TagLink tag='auxFormSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
 
-When <TagLink tag='auxForm'/> is set to `iframe` and <TagLink tag='auxFormSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
-### `auxFormAnimation`
+### `formAnimation`
 
 The name of the animation that the mesh should play.
 Only works for mesh forms.
@@ -550,7 +565,7 @@ Only works for mesh forms.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxGLTFVersion`
+### `gltfVersion`
 
 The GLTF specification version that should be used to load a GLTF model.
 
@@ -566,10 +581,10 @@ The GLTF specification version that should be used to load a GLTF model.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxProgressBar`
+### `progressBar`
 
 Causes a progress bar to be shown for the bot. Range is between 0 and 1.
-Needs both auxProgressBarBackgroundColor and auxProgressBarColor to visualize the progress
+Needs both progressBarBackgroundColor and progressBarColor to visualize the progress
 
 #### Possible values are:
 
@@ -577,19 +592,19 @@ Needs both auxProgressBarBackgroundColor and auxProgressBarColor to visualize th
   <PossibleValue value='Numbers >= 0 and <= 1'>
     <ul>
       <li>
-        0 means that you will only see <TagLink tag='auxProgressBarBackgroundColor'/>.
+        0 means that you will only see <TagLink tag='progressBarBackgroundColor'/>.
       </li>
       <li>
-        0.5 means that you will see half of <TagLink tag='auxProgressBarBackgroundColor'/> and half of <TagLink tag='auxProgressBarColor'/>.
+        0.5 means that you will see half of <TagLink tag='progressBarBackgroundColor'/> and half of <TagLink tag='progressBarColor'/>.
       </li>
       <li>
-        1 means that you will only see <TagLink tag='auxProgressBarColor'/>.
+        1 means that you will only see <TagLink tag='progressBarColor'/>.
       </li>
     </ul>
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxProgressBarColor`
+### `progressBarColor`
 
 The foreground color of the progress bar.
 
@@ -602,7 +617,7 @@ The foreground color of the progress bar.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxProgressBarBackgroundColor`
+### `progressBarBackgroundColor`
 
 The background color of the progress bar.
 
@@ -613,7 +628,7 @@ The background color of the progress bar.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxProgressBarPosition`
+### `progressBarPosition`
 
 The anchor position for the progress bar.
 
@@ -623,7 +638,7 @@ The anchor position for the progress bar.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
-### `auxAnchorPoint`
+### `anchorPoint`
 
 The position that the bot form should rotate and scale around.
 
@@ -658,7 +673,7 @@ The position that the bot form should rotate and scale around.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxOrientationMode`
+### `orientationMode`
 
 The mode that determines how the bot automatically rotates.
 
@@ -679,7 +694,7 @@ The mode that determines how the bot automatically rotates.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxMaxLODThreshold`
+### `maxLODThreshold`
 
 The minimum percentage of the screen that the bot form should take up in order to enter the maximum Level-Of-Detail.
 When the maximum LOD is entered the <TagLink tag='@onMaxLODEnter'/> listener is triggered.
@@ -694,7 +709,7 @@ When the maximum LOD is exited the <TagLink tag='@onMaxLODExit'/> listener is tr
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxMinLODThreshold`
+### `minLODThreshold`
 
 The maximum percentage of the screen that the bot form should take up in order to enter the minimum Level-Of-Detail.
 When the minimum LOD is entered the <TagLink tag='@onMinLODEnter'/> listener is triggered.
@@ -816,7 +831,7 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 
 These tags are used to configure portals.
 
-### `auxPortalColor`
+### `portalColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
@@ -832,7 +847,7 @@ The color of the background of the portal in AUXPlayer.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `auxPortalLocked`
+### `portalLocked`
 
 Determines if the portal can be loaded in AUXPlayer.
 
@@ -846,7 +861,7 @@ Determines if the portal can be loaded in AUXPlayer.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPortalPannable`
+### `portalPannable`
 
 Whether the player will be able to pan the camera inside the portal.
 
@@ -860,7 +875,7 @@ Whether the player will be able to pan the camera inside the portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPortalPannableMinX`
+### `portalPannableMinX`
 
 The minimum X value that the camera can pan to in the portal.
 
@@ -871,7 +886,7 @@ The minimum X value that the camera can pan to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPannableMaxX`
+### `portalPannableMaxX`
 
 The maximum X value that the camera can pan to in the portal.
 
@@ -882,7 +897,7 @@ The maximum X value that the camera can pan to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPannableMinY`
+### `portalPannableMinY`
 
 The minimum Y value that the camera can pan to in the portal.
 
@@ -893,7 +908,7 @@ The minimum Y value that the camera can pan to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPannableMaxY`
+### `portalPannableMaxY`
 
 The maximum Y value that the camera can pan to in the portal.
 
@@ -904,7 +919,7 @@ The maximum Y value that the camera can pan to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalRotatable`
+### `portalRotatable`
 
 Whether the player will be able to rotate the camera inside the inventory in this portal.
 
@@ -918,7 +933,7 @@ Whether the player will be able to rotate the camera inside the inventory in thi
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPortalPlayerRotationX`
+### `portalPlayerRotationX`
 
 The X rotation that the camera starts at in the portal.
 
@@ -929,7 +944,7 @@ The X rotation that the camera starts at in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPlayerRotationY`
+### `portalPlayerRotationY`
 
 The Y rotation that the camera starts at in the portal.
 
@@ -940,7 +955,7 @@ The Y rotation that the camera starts at in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalZoomable`
+### `portalZoomable`
 
 Whether the player will be able to zoom the camera inside the portal.
 
@@ -954,7 +969,7 @@ Whether the player will be able to zoom the camera inside the portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxPortalZoomableMin`
+### `portalZoomableMin`
 
 The minimum value that the camera can zoom to in the portal.
 
@@ -965,7 +980,7 @@ The minimum value that the camera can zoom to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalZoomableMax`
+### `portalZoomableMax`
 
 The maximum value that the camera can zoom to in the portal.
 
@@ -976,7 +991,7 @@ The maximum value that the camera can zoom to in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPlayerZoom`
+### `portalPlayerZoom`
 
 The zoom value that the camera starts at in the portal.
 
@@ -987,7 +1002,7 @@ The zoom value that the camera starts at in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalGridScale`
+### `portalGridScale`
 
 The size of bots in the portal.
 
@@ -998,7 +1013,7 @@ The size of bots in the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalSurfaceScale`
+### `portalSurfaceScale`
 
 The scale of surfaces.
 
@@ -1009,7 +1024,7 @@ The scale of surfaces.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalPointerDragMode`
+### `portalPointerDragMode`
 
 The mode that specifies how the mouse pointer/controller drags bots in the portal.
 
@@ -1023,7 +1038,7 @@ The mode that specifies how the mouse pointer/controller drags bots in the porta
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalShowFocusPoint`
+### `portalShowFocusPoint`
 
 Whether the focus point of the portal camera should be shown as a small sphere.
 
@@ -1041,7 +1056,7 @@ When a bot is between the focus point and the camera, then focus events will tri
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxPortalDisableCanvasTransparency`
+### `portalDisableCanvasTransparency`
 
 Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
 
@@ -1058,7 +1073,7 @@ Note that when this value is `true`, [iframe forms](#iframe-form) will cease to 
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxInventoryPortalHeight`
+### `inventoryPortalHeight`
 
 Sets the initial height of the inventory viewport for the portal.
 
@@ -1069,7 +1084,7 @@ Sets the initial height of the inventory viewport for the portal.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxInventoryPortalResizable`
+### `inventoryPortalResizable`
 
 Whether the player will be able to resize the viewport for the inventory portal.
 
@@ -1083,7 +1098,7 @@ Whether the player will be able to resize the viewport for the inventory portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `auxWristPortalHeight`
+### `wristPortalHeight`
 
 The number of grid spaces that the wrist portal should have in the Y direction.
 
@@ -1094,7 +1109,7 @@ The number of grid spaces that the wrist portal should have in the Y direction.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `auxWristPortalWidth`
+### `wristPortalWidth`
 
 The number of grid spaces that the wrist portal should have in the X direction.
 
@@ -1107,12 +1122,12 @@ The number of grid spaces that the wrist portal should have in the X direction.
 
 ## Channel Config Tags
 
-These tags are set on the config bot and affect the entire universe.
+These tags are set on the config bot and affect the entire story.
 
 ### `auxSceneColor`
 
 The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
-The value can be overridden on a per-dimension basis in AUXPlayer by using the <TagLink tag='auxPortalColor'/> tag.
+The value can be overridden on a per-dimension basis in AUXPlayer by using the <TagLink tag='portalColor'/> tag.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1200,27 +1215,27 @@ The time that the mark was created.
 
 Error tags are tags that are automatically appied to bots in the `error` space.
 
-### `auxError`
+### `error`
 
-Whether the bot is in the `auxError` dimension.
+Whether the bot is in the `error` dimension.
 
-### `auxErrorName`
+### `errorName`
 
 The name of the error that occurred.
 
-### `auxErrorMessage`
+### `errorMessage`
 
 The error message containing more information about what went wrong.
 
-### `auxErrorStack`
+### `errorStack`
 
 The [stack trace](https://en.wikipedia.org/wiki/Stack_trace) that indicates where the error occurred.
 
-### `auxErrorBot`
+### `errorBot`
 
 The bot that the error occurred in.
 
-### `auxErrorTag`
+### `errorTag`
 
 The tag that the error occurred in.
 
@@ -1228,17 +1243,17 @@ The tag that the error occurred in.
 
 All tags on the player bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the player bot to `hello` will update the URL to include `abc=hello`.
-It also means that putting `auxInventoryPortal=myDimension` into the query string will set the <TagLink tag='auxInventoryPortal'/> tag to `myDimension`.
+It also means that putting `inventoryPortal=myDimension` into the query string will set the <TagLink tag='inventoryPortal'/> tag to `myDimension`.
 
-### `auxUniverse`
+### `story`
 
 <Badges>
   <UserBotBadge/>
 </Badges>
 
-The universe that is loaded into auxPlayer.
+The story that is loaded into auxPlayer.
 
-### `auxPagePortal`
+### `pagePortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1247,7 +1262,7 @@ The universe that is loaded into auxPlayer.
 The dimension that is loaded into the "page" portal in auxPlayer.
 Only available on the player bot.
 
-### `auxSheetPortal`
+### `sheetPortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1256,7 +1271,7 @@ Only available on the player bot.
 The dimension that is loaded into the "sheet" portal in auxPlayer.
 Only available on the player bot.
 
-### `auxInventoryPortal`
+### `inventoryPortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1265,7 +1280,7 @@ Only available on the player bot.
 The dimension that is loaded into the "inventory" portal in auxPlayer.
 Only available on the player bot.
 
-### `auxMenuPortal`
+### `menuPortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1274,7 +1289,7 @@ Only available on the player bot.
 The dimension that is loaded into the "menu" portal in auxPlayer.
 Only available on the player bot.
 
-### `auxLeftWristPortal`
+### `leftWristPortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1283,7 +1298,7 @@ Only available on the player bot.
 The dimension that is loaded onto the left controller near the wrist when in VR.
 Only available on the player bot.
 
-### `auxRightWristPortal`
+### `rightWristPortal`
 
 <Badges>
   <UserBotBadge/>
@@ -1300,7 +1315,7 @@ Hidden tags are tags that are hidden in the sheet by default.
   You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
 </Alert>
 
-### `_auxEditingBot`
+### `_editingBot`
 
 <Badges>
   <UserBotBadge/>

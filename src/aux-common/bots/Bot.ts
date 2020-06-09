@@ -60,7 +60,7 @@ export interface UpdatedBot {
  * - "tempLocal" means that the bot is stored in the temporary partition.
  * - "history" means that the bot represents a version of another space.
  * - "error" means that the bot represents an error.
- * - "admin" means that the bot is shared across all universes.
+ * - "admin" means that the bot is shared across all stories.
  */
 export type BotSpace =
     | 'shared'
@@ -78,7 +78,7 @@ export type PortalType =
     | 'inventory'
     | 'menu'
     | 'sheet'
-    | 'universes'
+    | 'stories'
     | string;
 
 export interface ScriptTags extends PrecalculatedTags {
@@ -86,112 +86,98 @@ export interface ScriptTags extends PrecalculatedTags {
 }
 
 export interface BotTags {
-    // Global bot tags
-    ['auxUniverseColor']?: string;
-    ['auxUniverseUserPlayerColor']?: unknown;
-    ['auxUniverseUserBuilderColor']?: unknown;
-    ['auxInventoryHeight']?: unknown;
-    ['auxVersion']?: unknown;
-
     // Normal bot tags
-    ['auxColor']?: unknown;
-    ['auxDraggable']?: unknown;
-    ['auxDraggableMode']?: BotDragMode;
-    ['auxPositioningMode']?: unknown;
-    ['auxDestroyable']?: unknown;
-    ['auxEditable']?: unknown;
-    ['auxStrokeColor']?: unknown;
-    ['auxStrokeWidth']?: unknown;
-    ['auxScale']?: number;
-    ['auxScaleX']?: number;
-    ['auxScaleY']?: number;
-    ['auxScaleZ']?: number;
-    ['auxScaleMode']?: BotScaleMode | null | string;
-    ['auxLineTo']?: unknown;
-    ['auxLineWidth']?: number;
-    ['auxLineStyle']?: unknown;
-    ['auxLineColor']?: unknown;
-    ['auxLabel']?: unknown;
-    ['auxLabelColor']?: unknown;
-    ['auxLabelSize']?: unknown;
-    ['auxLabelSizeMode']?: 'auto' | null;
-    ['auxLabelPosition']?: BotLabelAnchor | null | string;
-    ['auxLabelAlignment']?: BotLabelAlignment | null | string;
-    ['auxLabelFontAddress']?: BotLabelFontAddress;
-    ['auxListening']?: unknown;
-    ['auxForm']?: BotShape;
-    ['auxFormAnimation']?: string;
-    ['auxFormAddress']?: string;
-    ['auxOrientationMode']?: string;
-    ['auxAnchorPoint']?: string;
-    ['auxCreator']?: string;
-    ['auxConfigBot']?: string;
-    ['auxProgressBar']?: unknown;
-    ['auxProgressBarColor']?: unknown;
-    ['auxProgressBarBackgroundColor']?: unknown;
-    ['auxProgressBarPosition']?: unknown;
-    ['auxPointable']?: unknown;
-    ['auxFocusable']?: unknown;
+    ['color']?: unknown;
+    ['draggable']?: unknown;
+    ['draggableMode']?: BotDragMode;
+    ['positioningMode']?: unknown;
+    ['destroyable']?: unknown;
+    ['editable']?: unknown;
+    ['strokeColor']?: unknown;
+    ['strokeWidth']?: unknown;
+    ['scale']?: number;
+    ['scaleX']?: number;
+    ['scaleY']?: number;
+    ['scaleZ']?: number;
+    ['scaleMode']?: BotScaleMode | null | string;
+    ['lineTo']?: unknown;
+    ['lineWidth']?: number;
+    ['lineStyle']?: unknown;
+    ['lineColor']?: unknown;
+    ['label']?: unknown;
+    ['labelColor']?: unknown;
+    ['labelSize']?: unknown;
+    ['labelSizeMode']?: 'auto' | null;
+    ['labelPosition']?: BotLabelAnchor | null | string;
+    ['labelAlignment']?: BotLabelAlignment | null | string;
+    ['labelFontAddress']?: BotLabelFontAddress;
+    ['listening']?: unknown;
+    ['form']?: BotShape;
+    ['formAnimation']?: string;
+    ['formAddress']?: string;
+    ['orientationMode']?: string;
+    ['anchorPoint']?: string;
+    ['creator']?: string;
+    ['configBot']?: string;
+    ['progressBar']?: unknown;
+    ['progressBarColor']?: unknown;
+    ['progressBarBackgroundColor']?: unknown;
+    ['progressBarPosition']?: unknown;
+    ['pointable']?: unknown;
+    ['focusable']?: unknown;
 
     // User tags
     ['auxPlayerActive']?: boolean;
-    ['auxPagePortal']?: string | boolean;
-    ['auxSheetPortal']?: string | boolean;
-    ['auxUniverse']?: string | string[];
-    ['auxInventoryPortal']?: string;
-    ['auxMenuPortal']?: string;
-    ['auxLeftWristPortal']?: string;
-    ['auxRightWristPortal']?: string;
-    ['auxPagePortalConfigBot']?: string;
-    ['auxSheetPortalConfigBot']?: string;
-    ['auxInventoryPortalConfigBot']?: string;
-    ['auxMenuPortalConfigBot']?: string;
-    ['auxLeftWristPortalConfigBot']?: string;
-    ['auxRightWristPortalConfigBot']?: string;
-    ['_auxEditingBot']?: string;
-
-    // Admin channel bot-channel tags
-    ['auxUniverseConnectedSessions']?: number;
-
-    // Admin channel tags
-    ['auxConnectedSessions']?: number;
+    ['pagePortal']?: string | boolean;
+    ['sheetPortal']?: string | boolean;
+    ['story']?: string | string[];
+    ['inventoryPortal']?: string;
+    ['menuPortal']?: string;
+    ['leftWristPortal']?: string;
+    ['rightWristPortal']?: string;
+    ['pagePortalConfigBot']?: string;
+    ['sheetPortalConfigBot']?: string;
+    ['inventoryPortalConfigBot']?: string;
+    ['menuPortalConfigBot']?: string;
+    ['leftWristPortalConfigBot']?: string;
+    ['rightWristPortalConfigBot']?: string;
+    ['_editingBot']?: string;
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
     ['auxFinishedTasks']?: boolean;
-    ['auxTaskOutput']?: unknown;
-    ['auxTaskError']?: unknown;
-    ['auxTaskTime']?: unknown;
-    ['auxTaskShell']?: string;
-    ['auxTaskBackup']?: boolean;
-    ['auxTaskBackupType']?: BackupType;
-    ['auxTaskBackupUrl']?: string;
+    ['taskOutput']?: unknown;
+    ['taskError']?: unknown;
+    ['taskTime']?: unknown;
+    ['taskShell']?: string;
+    ['taskBackup']?: boolean;
+    ['taskBackupType']?: BackupType;
+    ['taskBackupUrl']?: string;
 
     // Context related tags
-    ['auxDimensionConfig']?: string | number | boolean;
-    ['auxPortalColor']?: string;
-    ['auxPortalLocked']?: unknown;
-    ['auxPortalGridScale']?: number;
-    ['auxPortalSurfaceScale']?: number;
-    ['auxPortalPlayerRotationX']?: number;
-    ['auxPortalPlayerRotationY']?: number;
-    ['auxPortalPlayerZoom']?: number;
-    ['auxPortalPannable']?: number | null;
-    [`auxPortalPannableMinX`]?: number | null;
-    [`auxPortalPannableMaxX`]?: number | null;
-    [`auxPortalPannableMinY`]?: number | null;
-    [`auxPortalPannableMaxY`]?: number | null;
-    ['auxPortalZoomable']?: number | null;
-    [`auxPortalZoomableMin`]?: number | null;
-    [`auxPortalZoomableMax`]?: number | null;
-    ['auxPortalRotatable']?: number | null;
-    ['auxPortalPointerDragMode']?: PortalPointerDragMode;
-    ['auxPortalShowFocusPoint']?: boolean | null;
-    ['auxPortalDisableCanvasTransparency']?: boolean;
-    ['auxInventoryPortalHeight']?: unknown;
-    ['auxInventoryPortalResizable']?: boolean;
-    ['auxWristPortalHeight']?: number;
-    ['auxWristPortalWidth']?: number;
+    ['portalColor']?: string;
+    ['portalLocked']?: unknown;
+    ['portalGridScale']?: number;
+    ['portalSurfaceScale']?: number;
+    ['portalPlayerRotationX']?: number;
+    ['portalPlayerRotationY']?: number;
+    ['portalPlayerZoom']?: number;
+    ['portalPannable']?: number | null;
+    [`portalPannableMinX`]?: number | null;
+    [`portalPannableMaxX`]?: number | null;
+    [`portalPannableMinY`]?: number | null;
+    [`portalPannableMaxY`]?: number | null;
+    ['portalZoomable']?: number | null;
+    [`portalZoomableMin`]?: number | null;
+    [`portalZoomableMax`]?: number | null;
+    ['portalRotatable']?: number | null;
+    ['portalPointerDragMode']?: PortalPointerDragMode;
+    ['portalShowFocusPoint']?: boolean | null;
+    ['portalDisableCanvasTransparency']?: boolean;
+    ['inventoryPortalHeight']?: unknown;
+    ['inventoryPortalResizable']?: boolean;
+    ['wristPortalHeight']?: number;
+    ['wristPortalWidth']?: number;
 
     // Stripe tags
     ['stripeCharges']?: boolean;
@@ -537,11 +523,6 @@ export const DEFAULT_BOT_LOD_MIN_THRESHOLD = 0.0005;
 export const DEFAULT_BOT_LOD_MAX_THRESHOLD = 0.03;
 
 /**
- * The ID of the global configuration bot.
- */
-export const GLOBALS_BOT_ID = 'config';
-
-/**
  * The ID of the device configuration bot.
  */
 export const DEVICE_BOT_ID = 'device';
@@ -729,30 +710,27 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onUniverseAction';
+export const ON_ACTION_ACTION_NAME: string = 'onStoryAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
  */
-export const ON_UNIVERSE_STREAMING_ACTION_NAME: string = 'onUniverseStreaming';
+export const ON_STORY_STREAMING_ACTION_NAME: string = 'onStoryStreaming';
 
 /**
  * The name of the event that is triggered when a channel has become unsynced.
  */
-export const ON_UNIVERSE_STREAM_LOST_ACTION_NAME: string =
-    'onUniverseStreamLost';
+export const ON_STORY_STREAM_LOST_ACTION_NAME: string = 'onStoryStreamLost';
 
 /**
  * The name of the event that is triggered when a channel is loaded.
  */
-export const ON_UNIVERSE_SUBSCRIBED_ACTION_NAME: string =
-    'onUniverseSubscribed';
+export const ON_STORY_SUBSCRIBED_ACTION_NAME: string = 'onStorySubscribed';
 
 /**
  * The name of the event that is triggered when a channel is unloaded.
  */
-export const ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME: string =
-    'onUniverseUnsubscribed';
+export const ON_STORY_UNSUBSCRIBED_ACTION_NAME: string = 'onStoryUnsubscribed';
 
 /**
  * The name of the event that is triggered when portal tag is changed on the player.
@@ -872,126 +850,120 @@ export const AUX_BOT_VERSION: number = 1;
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'auxPagePortal',
-    'auxSheetPortal',
-    'auxInventoryPortal',
-    'auxMenuPortal',
-    'auxLeftWristPortal',
-    'auxRightWristPortal',
+    'pagePortal',
+    'sheetPortal',
+    'inventoryPortal',
+    'menuPortal',
+    'leftWristPortal',
+    'rightWristPortal',
 ];
 
 /**
  * The list of portal tags that should always be represented in the query string.
  */
-export const QUERY_PORTALS: string[] = ['auxPagePortal', 'auxSheetPortal'];
+export const QUERY_PORTALS: string[] = ['pagePortal', 'sheetPortal'];
 
 /*
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    'auxPlayerActive',
-    'auxPagePortal',
-    'auxSheetPortal',
-    'auxUniverse',
-    'auxInventoryPortal',
-    'auxMenuPortal',
-    'auxLeftWristPortal',
-    'auxRightWristPortal',
-    'auxPagePortalConfigBot',
-    'auxSheetPortalConfigBot',
-    'auxInventoryPortalConfigBot',
-    'auxMenuPortalConfigBot',
-    'auxLeftWristPortalConfigBot',
-    'auxRightWristPortalConfigBot',
-    '_auxEditingBot',
-    'auxConnectedSessions',
+    'playerActive',
+    'pagePortal',
+    'sheetPortal',
+    'story',
+    'inventoryPortal',
+    'menuPortal',
+    'leftWristPortal',
+    'rightWristPortal',
+    'pagePortalConfigBot',
+    'sheetPortalConfigBot',
+    'inventoryPortalConfigBot',
+    'menuPortalConfigBot',
+    'leftWristPortalConfigBot',
+    'rightWristPortalConfigBot',
+    '_editingBot',
 
-    'auxPortalColor',
-    'auxPortalLocked',
-    'auxPortalPannable',
-    `auxPortalPannableMinX`,
-    `auxPortalPannableMaxX`,
-    `auxPortalPannableMinY`,
-    `auxPortalPannableMaxY`,
-    'auxPortalZoomable',
-    `auxPortalZoomableMin`,
-    `auxPortalZoomableMax`,
-    'auxPortalRotatable',
-    'auxPortalGridScale',
-    'auxPortalSurfaceScale',
-    `auxPortalPlayerZoom`,
-    `auxPortalPlayerRotationX`,
-    `auxPortalPlayerRotationY`,
-    'auxPortalPointerDragMode',
-    'auxPortalShowFocusPoint',
-    'auxPortalDisableCanvasTransparency',
-    'auxInventoryPortalHeight',
-    'auxInventoryPortalResizable',
-    'auxWristPortalHeight',
-    'auxWristPortalWidth',
+    'portalColor',
+    'portalLocked',
+    'portalPannable',
+    `portalPannableMinX`,
+    `portalPannableMaxX`,
+    `portalPannableMinY`,
+    `portalPannableMaxY`,
+    'portalZoomable',
+    `portalZoomableMin`,
+    `portalZoomableMax`,
+    'portalRotatable',
+    'portalGridScale',
+    'portalSurfaceScale',
+    `portalPlayerZoom`,
+    `portalPlayerRotationX`,
+    `portalPlayerRotationY`,
+    'portalPointerDragMode',
+    'portalShowFocusPoint',
+    'portalDisableCanvasTransparency',
+    'inventoryPortalHeight',
+    'inventoryPortalResizable',
+    'wristPortalHeight',
+    'wristPortalWidth',
 
-    'auxUniverseColor',
-    'auxUniverseUserPlayerColor',
-    'auxUniverseUserBuilderColor',
+    'color',
+    'creator',
+    'configBot',
+    'draggable',
+    'draggableMode',
+    'positioningMode',
+    'destroyable',
+    'editable',
+    'strokeColor',
+    'strokeWidth',
+    'lineTo',
+    'lineStyle',
+    'lineWidth',
+    'lineColor',
+    'label',
+    'labelColor',
+    'labelSize',
+    'labelSizeMode',
+    'labelPosition',
+    'labelAlignment',
+    'labelFontAddress',
+    'listening',
+    'scale',
+    'scaleX',
+    'scaleY',
+    'scaleZ',
+    'scaleMode',
+    'formAddress',
+    'formSubtype',
+    'form',
+    'formAnimation',
+    'orientationMode',
+    'anchorPoint',
+    'gltfVersion',
+    'progressBar',
+    'progressBarColor',
+    'progressBarBackgroundColor',
+    'progressBarPosition',
+    'maxLODThreshold',
+    'minLODThreshold',
+    'pointable',
+    'focusable',
 
-    'auxColor',
-    'auxCreator',
-    'auxConfigBot',
-    'auxDraggable',
-    'auxDraggableMode',
-    'auxPositioningMode',
-    'auxDestroyable',
-    'auxEditable',
-    'auxStrokeColor',
-    'auxStrokeWidth',
-    'auxLineTo',
-    'auxLineStyle',
-    'auxLineWidth',
-    'auxLineColor',
-    'auxLabel',
-    'auxLabelColor',
-    'auxLabelSize',
-    'auxLabelSizeMode',
-    'auxLabelPosition',
-    'auxLabelAlignment',
-    'auxLabelFontAddress',
-    'auxListening',
-    'auxScale',
-    'auxScaleX',
-    'auxScaleY',
-    'auxScaleZ',
-    'auxScaleMode',
-    'auxFormAddress',
-    'auxFormSubtype',
-    'auxForm',
-    'auxFormAnimation',
-    'auxOrientationMode',
-    'auxAnchorPoint',
-    'auxGLTFVersion',
-    'auxProgressBar',
-    'auxProgressBarColor',
-    'auxProgressBarBackgroundColor',
-    'auxProgressBarPosition',
-    'auxMaxLODThreshold',
-    'auxMinLODThreshold',
-    'auxUniverseConnectedSessions',
-    'auxPointable',
-    'auxFocusable',
+    'taskOutput',
+    'taskError',
+    'taskTime',
+    'taskShell',
+    'taskBackup',
+    'taskBackupType',
+    'taskBackupUrl',
 
-    'auxTaskOutput',
-    'auxTaskError',
-    'auxTaskTime',
-    'auxTaskShell',
-    'auxTaskBackup',
-    'auxTaskBackupType',
-    'auxTaskBackupUrl',
-
-    'auxError',
-    'auxErrorName',
-    'auxErrorMessage',
-    'auxErrorStack',
-    'auxErrorBot',
-    'auxErrorTag',
+    'error',
+    'errorName',
+    'errorMessage',
+    'errorStack',
+    'errorBot',
+    'errorTag',
 
     'stripeCharges',
     'stripeSuccessfulCharges',
@@ -1038,10 +1010,10 @@ export const KNOWN_TAGS: string[] = [
     'onPointerExit',
     'onPointerDown',
     'onPointerUp',
-    ON_UNIVERSE_STREAMING_ACTION_NAME,
-    ON_UNIVERSE_STREAM_LOST_ACTION_NAME,
-    ON_UNIVERSE_SUBSCRIBED_ACTION_NAME,
-    ON_UNIVERSE_UNSUBSCRIBED_ACTION_NAME,
+    ON_STORY_STREAMING_ACTION_NAME,
+    ON_STORY_STREAM_LOST_ACTION_NAME,
+    ON_STORY_SUBSCRIBED_ACTION_NAME,
+    ON_STORY_UNSUBSCRIBED_ACTION_NAME,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
@@ -1116,27 +1088,27 @@ export function onDropArg(
     };
 }
 
-export function onUniverseStreamingArg(universe: string) {
+export function onStoryStreamingArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseStreamLostArg(universe: string) {
+export function onStoryStreamLostArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseSubscribedArg(universe: string) {
+export function onStorySubscribedArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 
-export function onUniverseUnsubscribedArg(universe: string) {
+export function onStoryUnsubscribedArg(story: string) {
     return {
-        universe,
+        story,
     };
 }
 

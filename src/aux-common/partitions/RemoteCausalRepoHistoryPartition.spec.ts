@@ -138,7 +138,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     ]);
                 });
 
-                it('should send a restore event to the server with the universe if specified', async () => {
+                it('should send a restore event to the server with the story if specified', async () => {
                     const addCommits = new Subject<AddCommitsEvent>();
                     connection.events.set(ADD_COMMITS, addCommits);
 
@@ -174,7 +174,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         remote(
                             restoreHistoryMark(
                                 uuid(c1.hash, COMMIT_ID_NAMESPACE),
-                                'universe'
+                                'story'
                             )
                         ),
                     ]);
@@ -185,7 +185,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         {
                             name: RESTORE,
                             data: {
-                                branch: 'universe',
+                                branch: 'story',
                                 commit: c1.hash,
                             },
                         },
@@ -233,10 +233,10 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     {
                         auxHistory: true,
                         auxHistoryY: -0,
-                        auxLabel: 'commit1',
-                        auxLabelSize: 0.25,
-                        auxScale: 0.8,
-                        auxScaleX: 2,
+                        label: 'commit1',
+                        labelSize: 0.25,
+                        scale: 0.8,
+                        scaleX: 2,
                         auxMarkHash: c1.hash,
                         auxPreviousMarkHash: null,
                         auxMarkTime: new Date(1900, 1, 1),
@@ -247,10 +247,10 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     {
                         auxHistory: true,
                         auxHistoryY: -1,
-                        auxLabel: 'commit2',
-                        auxLabelSize: 0.25,
-                        auxScale: 0.8,
-                        auxScaleX: 2,
+                        label: 'commit2',
+                        labelSize: 0.25,
+                        scale: 0.8,
+                        scaleX: 2,
                         auxMarkHash: c2.hash,
                         auxPreviousMarkHash: c1.hash,
                         auxMarkTime: new Date(1900, 1, 1),

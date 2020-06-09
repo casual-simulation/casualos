@@ -6,6 +6,56 @@
 
 ### Changes:
 
+-   :boom: Breaking Changes
+
+    -   The following tags have been renamed:
+        -   Renamed all the tags so that they no longer have the `aux` prefix. However, any tag not listed below should continue to work with the `aux` prefix without any changes.
+        -   Renamed `auxUniverse` to `story`.
+        -   Renamed `auxCreator` to `creator`.
+            -   Note that the `creator` variable in scripts remains the same.
+        -   Renamed `auxConfigBot` to `configBot`.
+            -   Note that the `config` variable in scripts remains the same.
+        -   Renamed `auxGLTFVersion` to `gltfVersion`.
+        -   Renamed `auxPagePortal` to `pagePortal`.
+        -   Renamed `auxSheetPortal` to `sheetPortal`.
+        -   Renamed `auxInventoryPortal` to `inventoryPortal`.
+        -   Renamed `auxMenuPortal` to `menuPortal`.
+        -   Renamed `auxLeftWristPortal` to `leftWristPortal`.
+        -   Renamed `auxRightWristPortal` to `rightWristPortal`.
+        -   Renamed `auxPagePortalConfigBot` to `pagePortalConfigBot`.
+        -   Renamed `auxSheetPortalConfigBot` to `sheetPortalConfigBot`.
+        -   Renamed `auxInventoryPortalConfigBot` to `inventoryPortalConfigBot`.
+        -   Renamed `auxMenuPortalConfigBot` to `menuPortalConfigBot`.
+        -   Renamed `auxLeftWristPortalConfigBot` to `leftWristPortalConfigBot`.
+        -   Renamed `auxRightWristPortalConfigBot` to `rightWristPortalConfigBot`.
+        -   Renamed `_auxEditingBot` to `_editingBot`.
+    -   Renamed "universe" to "story". The following tags and functions have been affected:
+        -   `auxUniverse` -> `story`
+        -   `onUniverseAction` -> `onStoryAction`
+        -   `onUniverseStreaming` -> `onStoryStreaming`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseStreamLost` -> `onStoryStreamLost`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseSubscribed` -> `onStorySubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `onUniverseUnsubscribed` -> `onStoryUnsubscribed`
+            -   The `universe` property has been renamed to `story`
+        -   `player.downloadUniverse()` -> `player.downloadStory()`
+        -   `player.loadUniverse()` -> `player.loadStory()`
+            -   The action type has been renamed from `load_universe` to `load_story`.
+        -   `player.unloadUniverse()` -> `player.unloadStory()`
+            -   The action type has been renamed from `unload_universe` to `unload_story`.
+        -   `player.getCurrentUniverse()` -> `player.getCurrentStory()`
+        -   `player.checkout()`
+            -   The `processingUniverse` property has been renamed to `processingStory`.
+        -   `player.showJoinCode()`
+            -   The `universe` property on the `show_join_code` action has been renamed to `story`
+        -   `server.restoreHistoryMark()`
+            -   The `universe` property on the `restore_history_mark` action has been renamed to `story`.
+        -   `server.restoryHistoryMarkToUniverse()` -> `server.restoreHistoryMarkToStory()`
+        -   `server.setupUniverse()` -> `server.setupStory()`
+            -   The action type has been renamed from `setup_universe` to `setup_story`.
+
 -   :rocket: Improvements
 
     -   Improved MongoDB to store all atoms for a commit inside the same document. This should improve loading performance since MongoDB will only need to make 1 lookup per universe instead of 1 lookup per atom per universe.
@@ -27,6 +77,10 @@
         -   Currently, the supported directions are `front`, `right`, `back`, and `left`.
         -   If an unsupported direction is given, then no bots will be included.
     -   Updated the Documentation website to the [latest version of Docusaurus](https://github.com/facebook/docusaurus/releases/tag/v2.0.0-alpha.56).
+    -   Added the `renameTag(bot, originalTag, newTag)` function which makes it easy to rename a tag on a bot or list of bots.
+        -   `bot` is the bot or list of bots that should have the tag renamed.
+        -   `originalTag` is the name of the tag that should be renamed.
+        -   `newTag` is the new name that the tag should have.
 
 -   :bug: Bug Fixes
     -   Fixed an issue where destroying an already destroyed bot would incorrectly destroy an unrelated bot.

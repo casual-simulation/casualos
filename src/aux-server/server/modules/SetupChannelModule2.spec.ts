@@ -1,7 +1,7 @@
 import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import {
     createBot,
-    setupUniverse,
+    setupStory,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { deviceInfo } from '@casual-simulation/causal-trees';
@@ -94,13 +94,11 @@ describe('SetupChannelModule2', () => {
     });
 
     describe('events', () => {
-        describe('setup_universe', () => {
+        describe('setup_story', () => {
             it('should create non-existant channels', async () => {
                 expect.assertions(1);
 
-                await simulation.helper.transaction(
-                    setupUniverse('newChannel')
-                );
+                await simulation.helper.transaction(setupStory('newChannel'));
 
                 await waitAsync();
 
@@ -114,7 +112,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupUniverse(
+                    setupStory(
                         'newChannel',
                         createBot('test', {
                             abc: 'def',
@@ -147,7 +145,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupUniverse('newChannel', {
+                    setupStory('newChannel', {
                         abc: 'def',
                     })
                 );
@@ -177,7 +175,7 @@ describe('SetupChannelModule2', () => {
                 expect.assertions(2);
 
                 await simulation.helper.transaction(
-                    setupUniverse('newChannel', {
+                    setupStory('newChannel', {
                         onCreate: '@setTag(this, "created", true)',
                     })
                 );
@@ -216,7 +214,7 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 await simulation.helper.transaction(
-                    setupUniverse('newChannel', {
+                    setupStory('newChannel', {
                         test: 'abc',
                     })
                 );

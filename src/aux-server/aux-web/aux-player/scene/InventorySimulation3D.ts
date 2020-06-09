@@ -42,9 +42,7 @@ export class InventorySimulation3D extends PlayerSimulation3D {
     inventoryDimension: string;
 
     get inventoryConfig() {
-        return <InventoryPortalConfig>(
-            this.getPortalConfig('auxInventoryPortal')
-        );
+        return <InventoryPortalConfig>this.getPortalConfig('inventoryPortal');
     }
 
     /**
@@ -160,7 +158,7 @@ export class InventorySimulation3D extends PlayerSimulation3D {
     }
 
     constructor(game: Game, simulation: BrowserSimulation) {
-        super('auxInventoryPortal', game, simulation);
+        super('inventoryPortal', game, simulation);
     }
 
     getMainCameraRig(): CameraRig {
@@ -174,7 +172,7 @@ export class InventorySimulation3D extends PlayerSimulation3D {
                     filter(bot => !!bot),
                     tap(bot => {
                         const userInventoryDimensionValue =
-                            bot.values['auxInventoryPortal'];
+                            bot.values['inventoryPortal'];
                         if (
                             !this.inventoryDimension ||
                             this.inventoryDimension !==
@@ -205,7 +203,7 @@ export class InventorySimulation3D extends PlayerSimulation3D {
     }
 
     protected _createPortalConfig(portalTag: string) {
-        if (portalTag === 'auxInventoryPortal') {
+        if (portalTag === 'inventoryPortal') {
             return new InventoryPortalConfig(portalTag, this.simulation);
         } else {
             return super._createPortalConfig(portalTag);

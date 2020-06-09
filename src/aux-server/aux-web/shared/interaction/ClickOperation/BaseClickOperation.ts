@@ -123,7 +123,7 @@ export abstract class BaseClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
-                    // Returns true (can drag) if either auxDraggable or aux.pickupable are true
+                    // Returns true (can drag) if either draggable or aux.pickupable are true
                     if (this._canDrag(calc)) {
                         this._dragOperation = this._baseCreateDragOperation(
                             calc

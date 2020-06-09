@@ -21,12 +21,12 @@ import {
 
 
 Creates a new bot or combination of bots with the given mods. Also triggers <TagLink tag='@onCreate'/> on all the created bots.
-By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='auxCreator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
+By default, bots are created with a unique <TagLink tag='id'/>, <TagLink tag='creator'/> set to the current `bot.id`, and <TagLink tag='space'/> set to `shared`.
 
-If <TagLink tag='auxCreator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='auxCreator'/> will be set to `null`.
+If <TagLink tag='creator'/> references a non-existent bot or a bot with a different <TagLink tag='space'/> than the created bot, then <TagLink tag='creator'/> will be set to `null`.
 
 **Each parameter** is a mod that should be applied to the new bot(s).
-If no parameters are specified, then the new bot will have its <TagLink tag='auxCreator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
+If no parameters are specified, then the new bot will have its <TagLink tag='creator'/> set to `bot.id` and <TagLink tag='space'/> set to `shared`.
 If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
 
 #### Examples:
@@ -39,19 +39,19 @@ let myNewBot = create();
 2. Create a red bot:
 ```typescript
 let myRedBot = create({
-    auxColor: "red"
+    color: "red"
 });
 ```
 
 3. Create a parent and a child bot:
 ```typescript
 let myParentBot = create({
-    auxCreator: null,
-    auxLabel: "Parent"
+    creator: null,
+    label: "Parent"
 });
 let myChildBot = create({
-    auxCreator: getID(myParentBot),
-    auxLabel: "Child"
+    creator: getID(myParentBot),
+    label: "Child"
 });
 ```
 
@@ -64,18 +64,18 @@ let myBot = create({ space: "tempLocal" });
 ```typescript
 // myBot is placed in the "myDimension" dimension and is colored green
 let myBot = create({ myDimension: true }, {
-    auxColor: "green"
+    color: "green"
 });
 ```
 
 6. Create a red bot and a blue bot:
 ```typescript
-let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
+let [myRedBot, myBlueBot] = create({ creator: null}, [
     {
-        "auxColor": "red"
+        "color": "red"
     },
     {
-        "auxColor": "blue"
+        "color": "blue"
     }
 ]);
 ```
@@ -86,9 +86,9 @@ let [myRedBot, myBlueBot] = create({ auxCreator: null}, [
 Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='@onDestroy'/> for each of the destroyed bots.
 
 Note that only destroyable bots will be destroyed.
-Bots that have <TagLink tag='auxDestroyable'/> set to `false` will not be destroyed.
+Bots that have <TagLink tag='destroyable'/> set to `false` will not be destroyed.
 
-Also note that all bots that have <TagLink tag='auxCreator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
+Also note that all bots that have <TagLink tag='creator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
 This happens recursively until there are no more bots to destroy.
 
 #### Examples:
@@ -101,8 +101,8 @@ destroy(getBot("#name", "bob"));
 
 2. Destroying a list of bots:
 ```typescript
-// Destroy all the bots that have #auxColor set to "red"
-destroy(getBots("#auxColor", "red"));
+// Destroy all the bots that have #color set to "red"
+destroy(getBots("#color", "red"));
 ```
 
 3. Destroying a bot by its id
@@ -144,7 +144,7 @@ The **other parameters** are the bots or mods that contain the tags which should
 1. Remove a mod from this bot.
 ```typescript
 const mod = {
-    auxColor: 'red',
+    color: 'red',
     name: 'bob'
 };
 
@@ -154,7 +154,7 @@ subtractMods(this, mod);
 2. Remove multiple mods from this bot.
 ```typescript
 subtractMods(this, {
-    auxColor: 'red'
+    color: 'red'
 }, {
     name: 'bob'
 });
@@ -181,6 +181,25 @@ removeTags(this, "abc");
 2. Remove tags named `hello` using a case-insensitive regex from the `this` bot.
 ```typescript
 removeTags(this, /^hello$/gi)
+```
+
+### `renameTag(bot, originalTag, newTag)`
+
+Renames the given original tag on the given bot or list of bots to the given new tag.
+If the original tag does not exist on the bot, then no changes will take place.
+If the new tag already exists on the bot, then it will be overwritten with the contents of the original tag.
+
+The **first parameter** is the bot or list of bots that should have the tag renamed.
+
+The **second parameter** is the name of the tag that should be renamed.
+
+The **third parameter** is the new name that the tag should have.
+
+#### Examples:
+
+1. Rename the `auxColor` tag to `color`.
+```typescript
+renameTag(this, "auxColor", "color");
 ```
 
 ### `changeState(bot, stateName, groupName?)`
@@ -214,7 +233,7 @@ changeState(bot, "Playing", "playbackState");
 
 Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the universe are returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the story are returned.
 If multiple filters are specified, then only the bots that match all of the filters are returned.
 
 #### Examples
@@ -265,7 +284,7 @@ let bots = getBots("#test");
 
 Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
 
-**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the universe is returned.
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the story is returned.
 If multiple filters are specified, then the first bot that matches all of the filters is returned.
 
 #### Examples
@@ -314,7 +333,7 @@ let foundBot = getBot("#test");
 ### `getBotTagValues(tag, filter?)`
 
 
-Gets a list of all the values in the universe for the given tag. Optionally accepts a filter for the tag values.
+Gets a list of all the values in the story for the given tag. Optionally accepts a filter for the tag values.
 
 The **first parameter** is the name of the tag to search for.
 
@@ -388,9 +407,9 @@ If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en
 let mod = getMod(bot);
 ```
 
-2. Get a mod with only the <TagLink tag='auxColor'/> and <TagLink tag='auxLabel'/> tags.
+2. Get a mod with only the <TagLink tag='color'/> and <TagLink tag='label'/> tags.
 ```typescript
-let mod = getMod(bot, "auxColor", "auxLabel");
+let mod = getMod(bot, "color", "label");
 ```
 
 3. Get a mod with every tag that starts with "on".
@@ -606,12 +625,12 @@ let bots = getBots(inStack(this, "test"));
 ### `byCreator(bot)`
 
 
-Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='auxCreator' /> set to the <TagLink tag='id' /> of the given bot.
+Creates a bot filter that includes bots created by the given bot. That is, they have <TagLink tag='creator' /> set to the <TagLink tag='id' /> of the given bot.
 
 The **first parameter** is the bot that created the other bots.
 
 <Alert type='info'>
-    This function behaves exactly like <NormalCode>byTag("auxCreator", getID(bot))</NormalCode>.
+    This function behaves exactly like <NormalCode>byTag("creator", getID(bot))</NormalCode>.
 </Alert>
 
 #### Examples
@@ -648,11 +667,11 @@ The **first parameter** is the bot or mod that the other bots should match.
 
 #### Examples:
 
-1. Find all the bots with `#height` set to `1` and `#auxColor` set to `red`.
+1. Find all the bots with `#height` set to `1` and `#color` set to `red`.
 ```typescript
 const bots = getBots(byMod({
     height: 1,
-    auxColor: "red"
+    color: "red"
 }));
 ```
 
@@ -717,7 +736,7 @@ const bots = getBots(not(inDimension("test")));
 ### `shout(name, arg?)`
 
 
-Sends a shout to all bots that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
+Sends a shout to all bots that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all <TagLink tag='@onClick'/> listeners.
@@ -739,7 +758,7 @@ shout("hello", "Bob");
 ### `whisper(bot, name, arg?)`
 
 
-Sends a whisper to the specified bot(s) that are <TagLink tag='auxListening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
+Sends a whisper to the specified bot(s) that are <TagLink tag='listening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
 Also triggers <TagLink tag='@onListen'/> and <TagLink tag='@onAnyListen'/>.
 
 The **first parameter** is the bot, array of bots, bot <TagLink tag='id'/>, or array of bot <TagLink tag='id'/> that the whisper should be sent to.
@@ -764,7 +783,7 @@ whisper(this, "setColor", "red");
 ### `superShout(name, arg?)`
 
 
-Sends a shout to all of the other universes that are loaded.
+Sends a shout to all of the other stories that are loaded.
 
 The **first parameter** is the name of the shout. e.g. Using `onClick` for the name will trigger all the <TagLink tag='@onClick'/> listeners.
 
@@ -772,7 +791,7 @@ The **second parameter** is the optional `that` argument to include with the sho
 
 #### Examples:
 
-1. Send a `hello` super shout to all the loaded universes.
+1. Send a `hello` super shout to all the loaded stories.
 ```typescript
 superShout("hello");
 ```
@@ -785,11 +804,11 @@ Sends the given action to another player.
 In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
 
 For example, the <ActionLink action='player.toast(message, duration?)'/> action queues a message which, when processed, will show a toast message.
-However, before any action is performed, it is run through the <TagLink tag='@onUniverseAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
+However, before any action is performed, it is run through the <TagLink tag='@onStoryAction'/> listener which can decide whether reject an action using <ActionLink action='action.reject(action)'/>.
 This lets you write rules for what actions each player is allowed to take.
 
 There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the <ActionLink action='remote(action)'/> function), it won't run by default.
-Instead it is wrapped as a `device` action and sent to <TagLink tag='@onUniverseAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+Instead it is wrapped as a `device` action and sent to <TagLink tag='@onStoryAction'/> for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
 If you want to perform the action, you can use <ActionLink action='action.perform(action)'/> on the inner device action to queue it for execution.
 
 The **first parameter** is the action to send.
@@ -838,7 +857,7 @@ action.perform({
 
 Prevents a previous action from being performed.
 
-This is especially useful when used in a <TagLink tag='@onUniverseAction'/> listener since it lets you reject actions before they are performed.
+This is especially useful when used in a <TagLink tag='@onStoryAction'/> listener since it lets you reject actions before they are performed.
 
 The **first parameter** is the action that should be prevented/rejected.
 
@@ -854,7 +873,7 @@ action.reject(toastAction);
 
 
 Shows a payment screen modal that lets the player purchase something.
-Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing universe.
+Triggers the <TagLink tag='@onCheckout'/> shout on the server inside the given processing story.
 
 The **first parameter** is the options to use to setup the checkout screen.
 
@@ -871,7 +890,7 @@ player.checkout({
     productId: '10_cookies',
     title: '10 Cookies',
     description: '$5.00',
-    processingUniverse: 'cookies_checkout'
+    processingStory: 'cookies_checkout'
 });
 ```
 
@@ -939,7 +958,7 @@ player.replaceDragBot(clone);
 2. Drag a mod that makes other bots red.
 ```typescript
 player.replaceDragBot({
-    "auxColor": "red"
+    "color": "red"
 });
 ```
 
@@ -1220,13 +1239,13 @@ Closes the QR Code popup modal.
 player.hideQRCode();
 ```
 
-### `player.showJoinCode(universe?, dimension?)`
+### `player.showJoinCode(story?, dimension?)`
 
 
-Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given universe and dimension.
-If the universe and dimension are omitted, then the current universe and dimension will be used.
+Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given story and dimension.
+If the story and dimension are omitted, then the current story and dimension will be used.
 
-The **first parameter** is the universe that the code should be shown for.
+The **first parameter** is the story that the code should be shown for.
 
 The **second parameter** is the dimension that the code should be shown for.
 
@@ -1237,9 +1256,9 @@ The **second parameter** is the dimension that the code should be shown for.
 player.showJoinCode();
 ```
 
-2. Show a join QR Code for a universe and dimension.
+2. Show a join QR Code for a story and dimension.
 ```typescript
-player.showJoinCode("universe", "dimension");
+player.showJoinCode("story", "dimension");
 ```
 
 ### `player.openBarcodeScanner(camera?)`
@@ -1430,7 +1449,7 @@ player.showInputForTag(this, "name", {
 
 4. Show a color input modal with a custom title.
 ```typescript
-player.showInputForTag(this, "auxColor", {
+player.showInputForTag(this, "color", {
     type: 'color',
     title: 'Enter a custom color'
 });
@@ -1454,7 +1473,7 @@ player.setClipboard("hello");
 ### `player.showUploadAuxFile()`
 
 
-Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the universe.
+Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to upload to the story.
 
 #### Examples:
 
@@ -1463,49 +1482,49 @@ Shows the "Upload AUX File" dialog which lets the user select a `.aux` file to u
 player.showUploadAuxFile();
 ```
 
-### `player.loadUniverse(universe)`
+### `player.loadStory(story)`
 
 
-Loads the given univese into the current browser tab. When the universe is loaded, the <TagLink tag='@onUniverseSubscribed'/> shout will be triggered.
+Loads the given univese into the current browser tab. When the story is loaded, the <TagLink tag='@onStorySubscribed'/> shout will be triggered.
 
-Note that separate universes cannot interact directly. They must instead interact via super shouts.
+Note that separate stories cannot interact directly. They must instead interact via super shouts.
 
-The **first parameter** is the name of the universe to load.
-
-#### Examples:
-
-1. Load the `fun` universe.
-```typescript
-player.loadUniverse("fun");
-```
-
-### `player.unloadUniverse()`
-
-Unloads the given universe from the current browser tab. When the universe is unloaded, the <TagLink tag='@onUniverseUnsubscribed'/> shout will be triggered.
-
-The **first parameter** is the name of the universe to unload.
+The **first parameter** is the name of the story to load.
 
 #### Examples:
 
-1. Unload the `fun` universe.
+1. Load the `fun` story.
 ```typescript
-player.unloadUniverse('fun');
+player.loadStory("fun");
 ```
 
-### `player.downloadUniverse()`
+### `player.unloadStory()`
+
+Unloads the given story from the current browser tab. When the story is unloaded, the <TagLink tag='@onStoryUnsubscribed'/> shout will be triggered.
+
+The **first parameter** is the name of the story to unload.
+
+#### Examples:
+
+1. Unload the `fun` story.
+```typescript
+player.unloadStory('fun');
+```
+
+### `player.downloadStory()`
 
 
 Downloads all of the shared bots into a `.aux` file on the player's computer.
-The file will have the same name as the universe.
+The file will have the same name as the story.
 
 Note that this function is almost exactly the same as <ActionLink action='player.downloadBots(bots, filename)'/>.
 The only difference is that all bots in the shared space are included and the file is named for you automatically.
 
 #### Examples:
 
-1. Download the entire universe.
+1. Download the entire story.
 ```typescript
-player.downloadUniverse();
+player.downloadStory();
 ```
 
 ### `player.enableAR()`
@@ -1556,31 +1575,31 @@ Disables virtual reality on the device.
 player.disableVR();
 ```
 
-### `player.getCurrentUniverse()`
+### `player.getCurrentStory()`
 
 
-Gets the universe that the player is in.
+Gets the story that the player is in.
 
 #### Examples:
 
-1. Show a message of the current universe.
+1. Show a message of the current story.
 ```typescript
-const universe = player.getCurrentUniverse();
-player.toast(universe);
+const story = player.getCurrentStory();
+player.toast(story);
 ```
 
 ### `player.getCurrentDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxPagePortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='pagePortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxPagePortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "pagePortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxPagePortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='pagePortal'/> portal.
 ```typescript
 const dimension = player.getCurrentDimension();
 player.toast(dimension);
@@ -1589,15 +1608,15 @@ player.toast(dimension);
 ### `player.getMenuDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxMenuPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='menuPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxMenuPortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "menuPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxMenuPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='menuPortal'/> portal.
 ```typescript
 const dimension = player.getMenuDimension();
 player.toast(dimension);
@@ -1606,15 +1625,15 @@ player.toast(dimension);
 ### `player.getInventoryDimension()`
 
 
-Gets the dimension that is loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+Gets the dimension that is loaded into the <TagLink tag='inventoryPortal'/> portal.
 
 <Alert type='info'>
-    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "auxInventoryPortal".
+    This function behaves exactly like <ActionLink action='player.getPortalDimension(portal)'/> when given "inventoryPortal".
 </Alert>
 
 #### Examples:
 
-1. Show a message of the dimension that is currently in the <TagLink tag='auxInventoryPortal'/> portal.
+1. Show a message of the dimension that is currently in the <TagLink tag='inventoryPortal'/> portal.
 ```typescript
 const dimension = player.getInventoryDimension();
 player.toast(dimension);
@@ -1623,7 +1642,7 @@ player.toast(dimension);
 ### `player.hasBotInInventory(bot)`
 
 
-Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='auxInventoryPortal'/> portal.
+Determines if the given bot is in the dimension that is currently loaded into the <TagLink tag='inventoryPortal'/> portal.
 
 The **first parameter** is the bot that should be checked.
 
@@ -1647,27 +1666,27 @@ Possible values are:
 
 <PossibleValuesTable>
   <PossibleValueCode value='page'>
-    The <TagLink tag='auxPagePortal'/>.
+    The <TagLink tag='pagePortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='sheet'>
-    The <TagLink tag='auxSheetPortal'/>.
+    The <TagLink tag='sheetPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='inventory'>
-    The <TagLink tag='auxInventoryPortal'/>.
+    The <TagLink tag='inventoryPortal'/>.
   </PossibleValueCode>
   <PossibleValueCode value='menu'>
-      The <TagLink tag='auxMenuPortal'/>.
+      The <TagLink tag='menuPortal'/>.
   </PossibleValueCode>
 </PossibleValuesTable>
 
 #### Examples:
 
-1. Get the dimension that is currently showing in the <TagLink tag='auxPagePortal'/>.
+1. Get the dimension that is currently showing in the <TagLink tag='pagePortal'/>.
 ```typescript
 const dimension = player.getPortalDimension('page');
 ```
 
-2. Get the dimension that is currently showing in the <TagLink tag='auxInventoryPortal'/>.
+2. Get the dimension that is currently showing in the <TagLink tag='inventoryPortal'/>.
 ```typescript
 const dimension = player.getPortalDimension('inventory');
 ```
@@ -1728,13 +1747,13 @@ playerBot.tags.username = "bob";
 2. Open the sheet to "testDimension".
 ```typescript
 const playerBot = player.getBot();
-playerBot.tags.auxSheetPortal = "testDimension";
+playerBot.tags.sheetPortal = "testDimension";
 ```
 
 ### `player.goToDimension(dimension)`
 
 
-Loads the given dimension into the <TagLink tag='auxPagePortal'/> portal.
+Loads the given dimension into the <TagLink tag='pagePortal'/> portal.
 Triggers the <TagLink tag='@onPlayerPortalChanged'/> shout.
 
 The **first parameter** is the dimension that should be loaded.
@@ -1803,7 +1822,7 @@ player.playSound("https://www.testsounds.com/track06.mp3");
 ### `player.isInDimension(dimension)`
 
 
-Gets whether the given dimension is loaded into the <TagLink tag='auxPagePortal'/> portal.
+Gets whether the given dimension is loaded into the <TagLink tag='pagePortal'/> portal.
 
 The **first parameter** is the dimension to check for.
 
@@ -1838,7 +1857,7 @@ Imports an AUX file from the given string.
 If the string contains JSON, then the JSON will be imported as if it was a .aux file.
 If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
 
-This is useful to quickly download a AUX file and load it into the current universe from a site such as https://gist.github.com/.
+This is useful to quickly download a AUX file and load it into the current story from a site such as https://gist.github.com/.
 
 The **first parameter** is the JSON or URL that the AUX file should be imported from.
 
@@ -1858,7 +1877,7 @@ player.importAUX(`{
         "079847e4-6a58-423d-9a86-8d4ef8be5970": {
             "id": "079847e4-6a58-423d-9a86-8d4ef8be5970",
             "tags": {
-                "auxColor": "red"
+                "color": "red"
             }
         }
     }
@@ -1943,7 +1962,7 @@ player.exitFullscreenMode();
 ### `server.backupToGithub(auth)`
 
 
-Saves all the universes to GitHub as a private Gist using the given authentication token.
+Saves all the stories to GitHub as a private Gist using the given authentication token.
 
 Just like <ActionLink action='server.shell(script)'/>, you need 
 
@@ -1951,13 +1970,13 @@ The **first parameter** is the Github Personal Access Token that should be used 
 See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
 
 <Alert type='info'>
-    By default, backing up to GitHub is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up to GitHub is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
 
-1. Backup all the universes to a Github Gist.
+1. Backup all the stories to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
 ```
@@ -1965,13 +1984,13 @@ server.backupToGithub('your auth token');
 ### `server.backupAsDownload(target)`
 
 
-Saves all the universes to a zip file and downloads it to the session matching the given target.
+Saves all the stories to a zip file and downloads it to the session matching the given target.
 
 The **first parameter** is an object that indicates which session the zip file should be downloaded to.
 
 <Alert type='info'>
-    By default, backing up as a download is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, backing up as a download is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2006,60 +2025,60 @@ server.finishCheckout({
 });
 ```
 
-### `server.setupUniverse(universe, botOrMod?)`
+### `server.setupStory(story, botOrMod?)`
 
 
-Sends an action to the server that will create the given universe if it does not exist and places a clone of the given bot or mod in it.
-The new bot will only be added to the universe if the universe did not exist.
-The action is only executed if <TagLink tag='@onUniverseAction'/> has been configured to perform events in `device` actions.
+Sends an action to the server that will create the given story if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the story if the story did not exist.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-The **first parameter** is the ID of the universe that should be setup.
+The **first parameter** is the ID of the story that should be setup.
 
-The **second parameter** is optional and is the bot or mod that should be cloned into the new universe. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
+The **second parameter** is optional and is the bot or mod that should be cloned into the new story. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
 
 #### Examples:
 
-Before `server.setupUniverse()` will work, you need to setup the <TagLink tag='@onUniverseAction'/> tag to execute events from remote devices.
-This is because when you run `server.setupUniverse()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new universe.
+Before `server.setupStory()` will work, you need to setup the <TagLink tag='@onStoryAction'/> tag to execute events from remote devices.
+This is because when you run `server.setupStory()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new story.
 By default, AUX does not perform actions that are received from a remote device. You must instruct AUX to execute these yourself.
 
-Ensure that <TagLink tag='@onUniverseAction'/> is setup properly.
-The following script will execute `setup_universe` events that were sent from other devices:
+Ensure that <TagLink tag='@onStoryAction'/> is setup properly.
+The following script will execute `setup_story` events that were sent from other devices:
 ```typescript
 // Device actions are actions that were sent to this computer from another device
 if (that.action.type === 'device') {
 
-    // The setup_universe action is the action that is created
-    // from server.setupUniverse()
-    if (that.action.event.type === 'setup_universe') {
+    // The setup_story action is the action that is created
+    // from server.setupStory()
+    if (that.action.event.type === 'setup_story') {
 
-        // Execute the setup_universe action
+        // Execute the setup_story action
         action.perform(that.action.event);
     }
 }
 ```
 
-1. Create the "test" universe:
+1. Create the "test" story:
 ```typescript
-server.setupUniverse("test");
+server.setupStory("test");
 ```
 
-2. Create the "test" universe with a bot inside it:
+2. Create the "test" story with a bot inside it:
 ```typescript
-server.setupUniverse("test", {
+server.setupStory("test", {
     "name": "bob",
-    "auxColor": "red"
+    "color": "red"
 });
 ```
 
-3. Create the "test" universe with a bot that places a bot in the "abc" dimension:
+3. Create the "test" story with a bot that places a bot in the "abc" dimension:
 ```typescript
-server.setupUniverse("test", {
+server.setupStory("test", {
     "onCreate": `@
         create({
-            auxCreator: null,
-            auxLabel: "This is in the dimension!",
-            auxColor: "blue",
+            creator: null,
+            label: "This is in the dimension!",
+            color: "blue",
             abc: true
         });
 
@@ -2071,8 +2090,8 @@ server.setupUniverse("test", {
 ### `server.browseHistory()`
 
 
-Loads the `history` space into the current universe.
-The `history` space is read-only and contains all the marks that have been created for the universe.
+Loads the `history` space into the current story.
+The `history` space is read-only and contains all the marks that have been created for the story.
 Each mark is a bot that is placed in the `#auxHistory` dimension.
 
 #### Examples:
@@ -2107,7 +2126,7 @@ server.markHistory({
 Restores the current state to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
 #### Examples:
 
@@ -2120,25 +2139,25 @@ let mark = getBot(byTag("#auxHistory", true));
 server.restoreHistoryMark(mark);
 ```
 
-### `server.restoreHistoryMarkToUniverse(mark, universe)`
+### `server.restoreHistoryMarkToStory(mark, story)`
 
 
-Restores the state in the given universe to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes in the universe and another mark with the state that was saved by the given mark.
+Restores the state in the given story to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the story and another mark with the state that was saved by the given mark.
 
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current universe by using the <ActionLink action='server.browseHistory()'/> action.
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
-The **second parameter** is the universe that the state should be restored to. If `null` or an empty string, then the current universe will be restored.
+The **second parameter** is the story that the state should be restored to. If `null` or an empty string, then the current story will be restored.
 
 #### Examples:
 
-1. Restore the state of the `test` universe to a given mark.
+1. Restore the state of the `test` story to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
 let mark = getBot(byTag("#auxHistory", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMarkToUniverse(mark, "test");
+server.restoreHistoryMarkToStory(mark, "test");
 ```
 
 ### `server.shell(script)`
@@ -2149,8 +2168,8 @@ Executes the given script on the server.
 The **first parameter** is the shell script that should be executed.
 
 <Alert type='info'>
-    By default, shell scripts are disabled on a universe.
-    To enable them, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, shell scripts are disabled on a story.
+    To enable them, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 ### `server.loadFile(path, options?)`
@@ -2167,8 +2186,8 @@ The **first parameter** is the path that the file should be loaded from. This is
 The **second parameter** are the options that should be used for loading the file.
 
 <Alert type='info'>
-    By default, loading files is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, loading files is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2204,8 +2223,8 @@ The **second parameter** is the data that should be saved into the file.
 The **third parameter** are the options that should be used for saving the file.
 
 <Alert type='info'>
-    By default, saving files is disabled on a universe.
-    To enable it, you have to write a custom <TagLink tag='@onUniverseAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+    By default, saving files is disabled on a story.
+    To enable it, you have to write a custom <TagLink tag='@onStoryAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
 </Alert>
 
 #### Examples:
@@ -2229,15 +2248,15 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 
 
 Loads the errors for the given bot and tag.
-Note that the bots don't load immediately. They will automatically be added to the universe state once they have been loaded.
+Note that the bots don't load immediately. They will automatically be added to the story state once they have been loaded.
 
 Can be called multiple times for the same bot/tag combination to load errors that have been created since the last time they were loaded.
 
 Finds bots by searching the error space for bots with the following tags:
 
--   `auxError` must be set to true.
--   `auxErrorBot` must be the ID of the bot that was specified.
--   `auxErrorTag` must be the tag that was specified.
+-   `error` must be set to true.
+-   `errorBot` must be the ID of the bot that was specified.
+-   `errorTag` must be the tag that was specified.
 
 The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
 
@@ -2257,7 +2276,7 @@ Destroys all the error bots.
 
 #### Examples:
 
-1. Destroy all the error bots in this universe:
+1. Destroy all the error bots in this story:
 ```typescript
 server.destroyErrors();
 ```
@@ -2277,9 +2296,9 @@ The **third parameter** is the value that should be placed into the tag(s).
 
 #### Examples:
 
-1. Set a bot's <TagLink tag='auxColor'/> to `green`.
+1. Set a bot's <TagLink tag='color'/> to `green`.
 ```typescript
-setTag(this, "#auxColor", "green");
+setTag(this, "#color", "green");
 ```
 
 ### `getTag(bot, tag)`
@@ -2293,9 +2312,9 @@ The **second parameter** is the tag that should be retrieved.
 
 #### Examples:
 
-1. Get the <TagLink tag='auxColor'/> tag from `this` bot.
+1. Get the <TagLink tag='color'/> tag from `this` bot.
 ```typescript
-const color = getTag(this, "#auxColor");
+const color = getTag(this, "#color");
 ```
 
 ## Math Actions

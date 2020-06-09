@@ -34,8 +34,6 @@ import {
     getChannelBotById,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
-    getChannelConnectedDevices,
-    getConnectedDevices,
     getBotScale,
     isUserActive,
     calculateStringTagValue,
@@ -63,7 +61,6 @@ import {
     Bot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
 } from '../Bot';
@@ -341,6 +338,17 @@ export function botCalculationContextTests(
                 expected
             );
         });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: true,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBooleanTagValue(calc, bot, 'auxTag', false)).toBe(
+                true
+            );
+        });
     });
 
     describe('calculateStringTagValue()', () => {
@@ -352,6 +360,17 @@ export function botCalculationContextTests(
             const calc = createPrecalculatedContext([bot]);
             expect(calculateStringTagValue(calc, bot, 'tag', 'test')).toBe(
                 expected
+            );
+        });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 'abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateStringTagValue(calc, bot, 'auxTag', 'empty')).toBe(
+                'abc'
             );
         });
     });
@@ -367,11 +386,22 @@ export function botCalculationContextTests(
                 expected
             );
         });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 123,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateNumericalTagValue(calc, bot, 'auxTag', 0)).toBe(
+                123
+            );
+        });
     });
 
     describe('isMergeable()', () => {
         it('should return true if the bot is stackable', () => {
-            const bot1 = createBot(undefined, { auxPositioningMode: 'stack' });
+            const bot1 = createBot(undefined, { positioningMode: 'stack' });
             const update1 = isMergeable(
                 createPrecalculatedContext([bot1]),
                 bot1
@@ -382,7 +412,7 @@ export function botCalculationContextTests(
 
         it('should return true if the bot is not stackable', () => {
             const bot1 = createBot(undefined, {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const update1 = isMergeable(
                 createPrecalculatedContext([bot1]),
@@ -409,8 +439,8 @@ export function botCalculationContextTests(
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
             const bot1 = createBot(undefined, {
-                auxDraggable: true,
-                auxDraggableMode: value,
+                draggable: true,
+                draggableMode: value,
             });
             const update1 = isPickupable(
                 createPrecalculatedContext([bot1]),
@@ -422,26 +452,30 @@ export function botCalculationContextTests(
     });
 
     describe('isUserActive()', () => {
-        it('should return true if the auxPlayerActive tag is true', () => {
-            dateNowMock.mockReturnValue(1000 * 60 + 999);
-            const bot1 = createBot(undefined, {
-                auxPlayerActive: true,
+        const tags = ['auxPlayerActive', 'playerActive'];
+
+        describe.each(tags)('%s', tag => {
+            it(`should return true if the ${tag} tag is true`, () => {
+                dateNowMock.mockReturnValue(1000 * 60 + 999);
+                const bot1 = createBot(undefined, {
+                    [tag]: true,
+                });
+                const calc = createPrecalculatedContext([bot1]);
+                const update1 = isUserActive(calc, bot1);
+
+                expect(update1).toBe(true);
             });
-            const calc = createPrecalculatedContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
 
-            expect(update1).toBe(true);
-        });
+            it('should return false if the user is not active', () => {
+                dateNowMock.mockReturnValue(1000);
+                const bot1 = createBot(undefined, {
+                    [tag]: false,
+                });
+                const calc = createPrecalculatedContext([bot1]);
+                const update1 = isUserActive(calc, bot1);
 
-        it('should return false if the user is not active', () => {
-            dateNowMock.mockReturnValue(1000);
-            const bot1 = createBot(undefined, {
-                auxPlayerActive: false,
+                expect(update1).toBe(false);
             });
-            const calc = createPrecalculatedContext([bot1]);
-            const update1 = isUserActive(calc, bot1);
-
-            expect(update1).toBe(false);
         });
     });
 
@@ -460,10 +494,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map auxUniverse:%s to %s',
+            'should map story:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    auxUniverse: value,
+                    story: value,
                 });
 
                 const calc = createPrecalculatedContext([bot]);
@@ -473,24 +507,50 @@ export function botCalculationContextTests(
     });
 
     describe('isDestroyable()', () => {
-        booleanTagValueTests(true, (value, expected) => {
-            let bot = createBot('test', {
-                auxDestroyable: value,
-            });
+        describe('auxDestroyable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    auxDestroyable: value,
+                });
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(isDestroyable(calc, bot)).toBe(expected);
+                const calc = createPrecalculatedContext([bot]);
+                expect(isDestroyable(calc, bot)).toBe(expected);
+            });
+        });
+
+        describe('destroyable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    destroyable: value,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(isDestroyable(calc, bot)).toBe(expected);
+            });
         });
     });
 
     describe('isEditable()', () => {
-        booleanTagValueTests(true, (value, expected) => {
-            let bot = createBot('test', {
-                auxEditable: value,
-            });
+        describe('auxEditable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    auxEditable: value,
+                });
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(isEditable(calc, bot)).toBe(expected);
+                const calc = createPrecalculatedContext([bot]);
+                expect(isEditable(calc, bot)).toBe(expected);
+            });
+        });
+
+        describe('editable', () => {
+            booleanTagValueTests(true, (value, expected) => {
+                let bot = createBot('test', {
+                    editable: value,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(isEditable(calc, bot)).toBe(expected);
+            });
         });
     });
 
@@ -630,23 +690,23 @@ export function botCalculationContextTests(
     });
 
     describe('isBotMovable()', () => {
-        it('should return true when auxDraggable has no value', () => {
+        it('should return true when draggable has no value', () => {
             let bot = createBot('test', {});
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
         });
 
-        it('should return false when auxDraggable is false', () => {
+        it('should return false when draggable is false', () => {
             let bot = createBot('test', {
-                ['auxDraggable']: false,
+                ['draggable']: false,
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return true when auxDraggable has any other value', () => {
+        it('should return true when draggable has any other value', () => {
             let bot = createBot('test', {
-                ['auxDraggable']: 'anything',
+                ['draggable']: 'anything',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
@@ -670,8 +730,8 @@ export function botCalculationContextTests(
 
         it.each(cases)('should return %s for %s', (expected, val) => {
             const bot1 = createBot('bot1', {
-                auxDraggable: true,
-                auxDraggableMode: val,
+                draggable: true,
+                draggableMode: val,
             });
             const result = getBotDragMode(
                 createPrecalculatedContext([bot1]),
@@ -681,10 +741,10 @@ export function botCalculationContextTests(
             expect(result).toBe(expected);
         });
 
-        it('should return none when auxDraggable is false', () => {
+        it('should return none when draggable is false', () => {
             const bot1 = createBot('bot1', {
-                auxDraggable: false,
-                auxDraggableMode: 'all',
+                draggable: false,
+                draggableMode: 'all',
             });
             const result = getBotDragMode(
                 createPrecalculatedContext([bot1]),
@@ -705,7 +765,7 @@ export function botCalculationContextTests(
         });
 
         it('should return the default when given an invalid value', () => {
-            const bot1 = createBot('bot1', { auxDraggable: <any>'test' });
+            const bot1 = createBot('bot1', { draggable: <any>'test' });
             const result = getBotDragMode(
                 createPrecalculatedContext([bot1]),
                 bot1
@@ -716,23 +776,23 @@ export function botCalculationContextTests(
     });
 
     describe('isBotStackable()', () => {
-        it('should return true when auxPositioningMode is stackable', () => {
+        it('should return true when positioningMode is stackable', () => {
             let bot = createBot('test', {});
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
         });
 
-        it('should return false when auxPositioningMode is absolute', () => {
+        it('should return false when positioningMode is absolute', () => {
             let bot = createBot('test', {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return true when auxPositioningMode has any other value', () => {
+        it('should return true when positioningMode has any other value', () => {
             let bot = createBot('test', {
-                auxPositioningMode: 'anything',
+                positioningMode: 'anything',
             });
             const context = createPrecalculatedContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
@@ -740,7 +800,7 @@ export function botCalculationContextTests(
     });
 
     describe('getBotPositioningMode()', () => {
-        it('should return stack when auxPositioningMode is not set', () => {
+        it('should return stack when positioningMode is not set', () => {
             const bot1 = createBot('bot1', {});
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -750,9 +810,9 @@ export function botCalculationContextTests(
             expect(result).toBe('stack');
         });
 
-        it('should return absolute when auxPositioningMode is set to it', () => {
+        it('should return absolute when positioningMode is set to it', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: 'absolute',
+                positioningMode: 'absolute',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -762,9 +822,9 @@ export function botCalculationContextTests(
             expect(result).toBe('absolute');
         });
 
-        it('should return stack when auxPositioningMode is set to it', () => {
+        it('should return stack when positioningMode is set to it', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: 'stack',
+                positioningMode: 'stack',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -774,9 +834,9 @@ export function botCalculationContextTests(
             expect(result).toBe('stack');
         });
 
-        it('should return stack when auxPositioningMode is set to a random value', () => {
+        it('should return stack when positioningMode is set to a random value', () => {
             const bot1 = createBot('bot1', {
-                auxPositioningMode: <any>'abc',
+                positioningMode: <any>'abc',
             });
             const result = getBotPositioningMode(
                 createPrecalculatedContext([bot1]),
@@ -796,14 +856,28 @@ export function botCalculationContextTests(
             ['iframe'],
             ['nothing'],
         ];
-        it.each(cases)('should return %s', (shape: string) => {
-            const bot = createBot('test', {
-                auxForm: <any>shape,
+        const tagCases = ['auxForm', 'form'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotShape(calc, bot)).toBe(shape);
             });
 
-            const calc = createPrecalculatedContext([bot]);
+            it('should return the shape from the tag', () => {
+                let bot = createBot();
+                bot.tags[tag] = 'sphere';
 
-            expect(getBotShape(calc, bot)).toBe(shape);
+                const calc = createPrecalculatedContext([bot]);
+                const shape = getBotShape(calc, bot);
+
+                expect(shape).toBe('sphere');
+            });
         });
 
         it('should default to cube', () => {
@@ -814,28 +888,22 @@ export function botCalculationContextTests(
 
             expect(shape).toBe('cube');
         });
-
-        it('should return the shape from auxForm', () => {
-            let bot = createBot();
-            bot.tags['auxForm'] = 'sphere';
-
-            const calc = createPrecalculatedContext([bot]);
-            const shape = getBotShape(calc, bot);
-
-            expect(shape).toBe('sphere');
-        });
     });
 
     describe('getBotSubShape()', () => {
         const cases = [['gltf'], ['src'], ['html']];
-        it.each(cases)('should return %s', (shape: string) => {
-            const bot = createBot('test', {
-                auxFormSubtype: <any>shape,
+        const tagCases = ['auxFormSubtype', 'formSubtype'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotSubShape(calc, bot)).toBe(shape);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(getBotSubShape(calc, bot)).toBe(shape);
         });
 
         it('should default to null', () => {
@@ -855,14 +923,17 @@ export function botCalculationContextTests(
             ['billboardTop'],
             ['billboardFront'],
         ];
-        it.each(cases)('should return %s', (mode: string) => {
-            const bot = createBot('test', {
-                auxOrientationMode: <any>mode,
+        const tagCases = ['auxOrientationMode', 'orientationMode'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotOrientationMode(calc, bot)).toBe(mode);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(getBotOrientationMode(calc, bot)).toBe(mode);
         });
 
         it('should default to absolute', () => {
@@ -886,15 +957,21 @@ export function botCalculationContextTests(
             ['right', 'right'],
             ['[1, 2, 3]', [1, 2, 3]],
         ];
+        const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
-        it.each(cases)('should support %s', (mode: string, expected: any) => {
-            const bot = createBot('test', {
-                auxAnchorPoint: <any>mode,
-            });
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
+                    const calc = createPrecalculatedContext([bot]);
 
-            expect(getBotAnchorPoint(calc, bot)).toEqual(expected);
+                    expect(getBotAnchorPoint(calc, bot)).toEqual(expected);
+                }
+            );
         });
 
         it('should default to bottom', () => {
@@ -920,15 +997,21 @@ export function botCalculationContextTests(
             // Should mirror the coordinates when using literals
             ['[1, 2, 3]', { x: -1, y: -2, z: -3 }],
         ];
+        const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
-        it.each(cases)('should support %s', (mode: string, expected: any) => {
-            const bot = createBot('test', {
-                auxAnchorPoint: <any>mode,
-            });
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
+                    const calc = createPrecalculatedContext([bot]);
 
-            expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+                    expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+                }
+            );
         });
 
         it('should default to bottom', () => {
@@ -947,14 +1030,18 @@ export function botCalculationContextTests(
 
     describe('calculatePortalPointerDragMode()', () => {
         const cases = [['grid'], ['world']];
-        it.each(cases)('should return %s', (mode: string) => {
-            const bot = createBot('test', {
-                auxPortalPointerDragMode: <any>mode,
+        const tagCases = ['auxPortalPointerDragMode', 'portalPointerDragMode'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (mode: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>mode,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
             });
-
-            const calc = createPrecalculatedContext([bot]);
-
-            expect(calculatePortalPointerDragMode(calc, bot)).toBe(mode);
         });
 
         it('should default to world', () => {
@@ -1006,9 +1093,9 @@ export function botCalculationContextTests(
     describe('getBotScale()', () => {
         it('should return the scaleX, scaleY, and scaleZ values', () => {
             const bot = createBot('test', {
-                auxScaleX: 10,
-                auxScaleY: 11,
-                auxScaleZ: 12,
+                scaleX: 10,
+                scaleY: 11,
+                scaleZ: 12,
             });
 
             const calc = createPrecalculatedContext([bot]);
@@ -1022,9 +1109,9 @@ export function botCalculationContextTests(
 
         it('should cache the result', () => {
             const bot = createBot('test', {
-                auxScaleX: 10,
-                auxScaleY: 11,
-                auxScaleZ: 12,
+                scaleX: 10,
+                scaleY: 11,
+                scaleZ: 12,
             });
 
             const calc = createPrecalculatedContext([bot]);
@@ -1038,23 +1125,23 @@ export function botCalculationContextTests(
     describe('getPortalConfigBotID()', () => {
         it('should return the bot ID that the config bot tag points to', () => {
             const userBot = createBot('userBot', {
-                auxPagePortal: 'abc',
-                auxPagePortalConfigBot: 'test',
+                pagePortal: 'abc',
+                pagePortalConfigBot: 'test',
             });
 
             const calc = createPrecalculatedContext([userBot]);
-            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+            const id = getPortalConfigBotID(calc, userBot, 'pagePortal');
 
             expect(id).toEqual('test');
         });
 
         it('should return null if the tag does not exist', () => {
             const userBot = createBot('userBot', {
-                auxPagePortal: 'abc',
+                pagePortal: 'abc',
             });
 
             const calc = createPrecalculatedContext([userBot]);
-            const id = getPortalConfigBotID(calc, userBot, 'auxPagePortal');
+            const id = getPortalConfigBotID(calc, userBot, 'pagePortal');
 
             expect(id).toEqual(null);
         });
@@ -1072,9 +1159,9 @@ export function botCalculationContextTests(
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from auxMenuPortal', () => {
+        it('should return the value from menuPortal', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
 
             const calc = createPrecalculatedContext([user]);
@@ -1086,7 +1173,7 @@ export function botCalculationContextTests(
     describe('getBotsInMenu()', () => {
         it('should return the list of bots in the users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot1 = createBot('bot1', {
                 dimension: true,
@@ -1111,7 +1198,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                auxUniverse: 'test',
+                story: 'test',
                 'aux.channels': true,
             });
 
@@ -1123,7 +1210,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                auxUniverse: 'test',
+                story: 'test',
                 'aux.channels': true,
             });
 
@@ -1134,32 +1221,10 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getChannelConnectedDevices()', () => {
-        numericalTagValueTests(0, (value, expected) => {
-            let bot = createBot('test', {
-                auxUniverseConnectedSessions: value,
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            expect(getChannelConnectedDevices(calc, bot)).toBe(expected);
-        });
-    });
-
-    describe('getConnectedDevices()', () => {
-        numericalTagValueTests(0, (value, expected) => {
-            let bot = createBot('test', {
-                auxConnectedSessions: value,
-            });
-
-            const calc = createPrecalculatedContext([bot]);
-            expect(getConnectedDevices(calc, bot)).toBe(expected);
-        });
-    });
-
     describe('addBotToMenu()', () => {
         it('should return the update needed to add the given bot ID to the given users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -1177,7 +1242,7 @@ export function botCalculationContextTests(
 
         it('should return the given sortOrder', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -1195,7 +1260,7 @@ export function botCalculationContextTests(
 
         it('should return sortOrder needed to place the bot at the end of the list', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
             const bot2 = createBot('bot2', {
@@ -1218,7 +1283,7 @@ export function botCalculationContextTests(
     describe('removeBotFromMenu()', () => {
         it('should return the update needed to remove the given bot from the users menu', () => {
             const user = createBot('user', {
-                auxMenuPortal: 'dimension',
+                menuPortal: 'dimension',
             });
             const bot = createBot('bot');
 
@@ -1343,35 +1408,47 @@ export function botCalculationContextTests(
     });
 
     describe('getContextColor()', () => {
-        it('should return the auxPortalColor of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalColor: 'red',
-            });
+        const tagCases = ['auxPortalColor', 'portalColor'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionColor(calc, bot)).toBe('red');
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalColor of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 'red',
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionColor(calc, bot)).toBe('red');
+            });
         });
     });
 
     describe('getContextGridScale()', () => {
-        it('should return the auxPortalGridScale of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalGridScale: 10,
-            });
+        const tagCases = ['auxPortalGridScale', 'portalGridScale'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionGridScale(calc, bot)).toBe(10);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalGridScale of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 10,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionGridScale(calc, bot)).toBe(10);
+            });
         });
     });
 
     describe('getContextScale()', () => {
-        it('should return the auxPortalSurfaceScale of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalSurfaceScale: 10,
-            });
+        const tagCases = ['auxPortalSurfaceScale', 'portalSurfaceScale'];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionScale(calc, bot)).toBe(10);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalSurfaceScale of the bot', () => {
+                const bot = createBot('bot', {
+                    [tag]: 10,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionScale(calc, bot)).toBe(10);
+            });
         });
 
         it('should return the default surface scale if the tag is not set', () => {
@@ -1383,13 +1460,20 @@ export function botCalculationContextTests(
     });
 
     describe('getContextDefaultHeight()', () => {
-        it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
-            const bot = createBot('bot', {
-                auxPortalSurfaceDefaultHeight: 10.123,
-            });
+        const tagCases = [
+            'auxPortalSurfaceDefaultHeight',
+            'portalSurfaceDefaultHeight',
+        ];
 
-            const calc = createPrecalculatedContext([bot]);
-            expect(getDimensionDefaultHeight(calc, bot)).toBe(10.123);
+        describe.each(tagCases)('%s', (tag: string) => {
+            it('should return the auxPortalSurfaceDefaultHeight of the bot', () => {
+                const bot = createBot('bot', {
+                    auxPortalSurfaceDefaultHeight: 10.123,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+                expect(getDimensionDefaultHeight(calc, bot)).toBe(10.123);
+            });
         });
 
         it('should return undefined if the tag is not set', () => {
@@ -1652,15 +1736,37 @@ export function botCalculationContextTests(
             ['floating', 'floating'],
             ['abc', 'top'],
         ];
-        it.each(cases)('given %s it should return %s', (anchor, expected) => {
-            const bot = createBot('bot', {
-                auxLabelPosition: anchor,
-            });
 
-            const calc = createPrecalculatedContext([bot]);
-            const a = getBotLabelAnchor(calc, bot);
+        describe('auxLabelPosition', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        auxLabelPosition: anchor,
+                    });
 
-            expect(a).toBe(expected);
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAnchor(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
+        });
+
+        describe('labelPosition', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        labelPosition: anchor,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAnchor(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
         });
     });
 
@@ -1680,15 +1786,37 @@ export function botCalculationContextTests(
             ['right', 'right'],
             ['abc', 'center'],
         ];
-        it.each(cases)('given %s it should return %s', (anchor, expected) => {
-            const bot = createBot('bot', {
-                auxLabelAlignment: anchor,
-            });
 
-            const calc = createPrecalculatedContext([bot]);
-            const a = getBotLabelAlignment(calc, bot);
+        describe('auxLabelAlignment', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        auxLabelAlignment: anchor,
+                    });
 
-            expect(a).toBe(expected);
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAlignment(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
+        });
+
+        describe('labelAlignment', () => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        labelAlignment: anchor,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotLabelAlignment(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
         });
     });
 
@@ -1707,15 +1835,21 @@ export function botCalculationContextTests(
             ['absolute', 'absolute'],
             ['abc', 'fit'],
         ];
-        it.each(cases)('given %s it should return %s', (anchor, expected) => {
-            const bot = createBot('bot', {
-                auxScaleMode: anchor,
-            });
+        const tagCases = ['auxScaleMode', 'scaleMode'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        [tag]: anchor,
+                    });
 
-            const calc = createPrecalculatedContext([bot]);
-            const a = getBotScaleMode(calc, bot);
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotScaleMode(calc, bot);
 
-            expect(a).toBe(expected);
+                    expect(a).toBe(expected);
+                }
+            );
         });
     });
 
@@ -1803,28 +1937,34 @@ export function botCalculationContextTests(
     });
 
     describe('isBotPointable()', () => {
-        booleanTagValueTests(true, (given, expected) => {
-            const thisBot = createBot('thisBot', {
-                auxPointable: given,
+        const tagCases = ['auxPointable', 'pointable'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            booleanTagValueTests(true, (given, expected) => {
+                const thisBot = createBot('thisBot', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([thisBot]);
+                const result = isBotPointable(calc, thisBot);
+
+                expect(result).toBe(expected);
             });
-
-            const calc = createPrecalculatedContext([thisBot]);
-            const result = isBotPointable(calc, thisBot);
-
-            expect(result).toBe(expected);
         });
     });
 
     describe('isBotFocusable()', () => {
-        booleanTagValueTests(true, (given, expected) => {
-            const thisBot = createBot('thisBot', {
-                auxFocusable: given,
+        const tagCases = ['auxFocusable', 'focusable'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            booleanTagValueTests(true, (given, expected) => {
+                const thisBot = createBot('thisBot', {
+                    [tag]: given,
+                });
+
+                const calc = createPrecalculatedContext([thisBot]);
+                const result = isBotFocusable(calc, thisBot);
+
+                expect(result).toBe(expected);
             });
-
-            const calc = createPrecalculatedContext([thisBot]);
-            const result = isBotFocusable(calc, thisBot);
-
-            expect(result).toBe(expected);
         });
     });
 
@@ -1838,32 +1978,10 @@ export function botCalculationContextTests(
             'should default to %s when in %s',
             (expected: any, domain: AuxDomain) => {
                 const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_BOT_ID, {});
 
-                const calc = createPrecalculatedContext([globals, bot]);
+                const calc = createPrecalculatedContext([bot]);
 
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe(
-                    expected
-                );
-            }
-        );
-
-        const globalsCases = [
-            ['auxUniverseUserPlayerColor', 'player', '#40A287'],
-            ['auxUniverseUserBuilderColor', 'builder', '#AAAAAA'],
-        ];
-
-        it.each(globalsCases)(
-            'should use %s when in %s',
-            (tag: string, domain: AuxDomain, value: any) => {
-                const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_BOT_ID, {
-                    [tag]: value,
-                });
-
-                const calc = createPrecalculatedContext([globals, bot]);
-
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe(value);
+                expect(getUserBotColor(calc, bot, domain)).toBe(expected);
             }
         );
 
@@ -1875,11 +1993,10 @@ export function botCalculationContextTests(
                 const bot = createBot('test', {
                     auxColor: 'red',
                 });
-                const globals = createBot(GLOBALS_BOT_ID, {});
 
-                const calc = createPrecalculatedContext([globals, bot]);
+                const calc = createPrecalculatedContext([bot]);
 
-                expect(getUserBotColor(calc, bot, globals, domain)).toBe('red');
+                expect(getUserBotColor(calc, bot, domain)).toBe('red');
             }
         );
     });
@@ -1888,13 +2005,13 @@ export function botCalculationContextTests(
         it('should return a list of events needed to destroy the given bot', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot3 = createBot('bot3', {
-                auxCreator: 'bot2',
+                creator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot5 = createBot('bot5');
 
@@ -1915,14 +2032,14 @@ export function botCalculationContextTests(
         it('should not return a destroy event for bots that are not destroyable', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                auxCreator: 'bot1',
-                auxDestroyable: false,
+                creator: 'bot1',
+                destroyable: false,
             });
             const bot3 = createBot('bot3', {
-                auxCreator: 'bot2',
+                creator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                auxCreator: 'bot1',
+                creator: 'bot1',
             });
             const bot5 = createBot('bot5');
 

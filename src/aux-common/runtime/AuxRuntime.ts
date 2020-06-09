@@ -860,10 +860,10 @@ export class AuxRuntime
                 //     ctx.global.allowsEditing = false;
                 // }
                 ctx.creator = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxCreator)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
                 ctx.config = ctx.bot
-                    ? this._getRuntimeBot(ctx.bot.script.tags.auxConfigBot)
+                    ? this._getRuntimeBot(ctx.bot.script.tags.configBot)
                     : null;
             },
             invoke: (fn, ctx) => {
@@ -953,7 +953,7 @@ export class AuxRuntime
      *
      * Works by making a copy of the value where every bot value is replaced with a reference
      * to a script bot instance for the bot. The copy has a reference to the original value in the ORIGINAL_OBJECT symbol property.
-     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onUniverseAction works properly.
+     * We use this property in action.reject() to resolve the original action value so that doing a action.reject() in a onStoryAction works properly.
      *
      * @param context The sandbox context.
      * @param value The value that should be converted.

@@ -97,12 +97,12 @@ export class AuxHelper extends BaseHelper<Bot> {
                                 createBot(
                                     undefined,
                                     {
-                                        auxError: true,
-                                        auxErrorName: e.error.name,
-                                        auxErrorMessage: e.error.message,
-                                        auxErrorStack: e.error.stack,
-                                        auxErrorBot: e.bot ? e.bot.id : null,
-                                        auxErrorTag: e.tag || null,
+                                        error: true,
+                                        errorName: e.error.name,
+                                        errorMessage: e.error.message,
+                                        errorStack: e.error.stack,
+                                        errorBot: e.bot ? e.bot.id : null,
+                                        errorTag: e.tag || null,
                                     },
                                     'error'
                                 )
@@ -264,24 +264,6 @@ export class AuxHelper extends BaseHelper<Bot> {
      */
     async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
         await this._sendEvents([botUpdated(bot.id, newData)]);
-    }
-
-    /**
-     * Creates a new globals bot.
-     * @param botId The ID of the bot to create. If not specified a new ID will be generated.
-     */
-    async createGlobalsBot(botId?: string) {
-        const workspace = createBot(botId, {});
-
-        const final = merge(workspace, {
-            tags: {
-                auxVersion: AUX_BOT_VERSION,
-                auxDestroyable: false,
-            },
-        });
-
-        await this._sendEvents([botAdded(final)]);
-        // await this._tree.addBot(final);
     }
 
     /**
