@@ -2810,6 +2810,60 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('renameTag()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should rename the given tag on the given bot', () => {
+            bot1.tags.abc = 123;
+            bot2.tags.abc = 456;
+
+            library.api.renameTag(bot1, 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe(123);
+        });
+
+        it('should rename the given tag on the given bots', () => {
+            bot1.tags.abc = 123;
+            bot2.tags.abc = 456;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe(123);
+
+            expect(bot2.tags.abc).toBe(null);
+            expect(bot2.tags.def).toBe(456);
+        });
+
+        it('should do nothing if the bot does not have the given tag', () => {
+            bot1.tags.def = 123;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBeUndefined();
+            expect(bot1.tags.def).toBe(123);
+        });
+
+        it('should replace the existing tag value', () => {
+            bot1.tags.abc = 'hello';
+            bot1.tags.def = 123;
+
+            library.api.renameTag([bot1, bot2], 'abc', 'def');
+
+            expect(bot1.tags.abc).toBe(null);
+            expect(bot1.tags.def).toBe('hello');
+        });
+    });
+
     describe('applyMod()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

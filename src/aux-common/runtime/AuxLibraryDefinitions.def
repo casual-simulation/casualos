@@ -1731,6 +1731,18 @@ declare global {
     function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
 
     /**
+     * Renames the given original tag to the given new tag using the given bot or list of bots.
+     * @param bot The bot or list of bots that the tag should be renamed on.
+     * @param originalTag The original tag to rename.
+     * @param newTag The new tag name.
+     * 
+     * @example
+     * // Rename the "abc" tag to "def"
+     * renameTag(this, "abc", "def")
+     */
+    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
+
+    /**
      * Gets the ID from the given bot.
      * @param bot The bot or string.
      */

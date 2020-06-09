@@ -183,6 +183,25 @@ removeTags(this, "abc");
 removeTags(this, /^hello$/gi)
 ```
 
+### `renameTag(bot, originalTag, newTag)`
+
+Renames the given original tag on the given bot or list of bots to the given new tag.
+If the original tag does not exist on the bot, then no changes will take place.
+If the new tag already exists on the bot, then it will be overwritten with the contents of the original tag.
+
+The **first parameter** is the bot or list of bots that should have the tag renamed.
+
+The **second parameter** is the name of the tag that should be renamed.
+
+The **third parameter** is the new name that the tag should have.
+
+#### Examples:
+
+1. Rename the `auxColor` tag to `color`.
+```typescript
+renameTag(this, "auxColor", "color");
+```
+
 ### `changeState(bot, stateName, groupName?)`
 
 

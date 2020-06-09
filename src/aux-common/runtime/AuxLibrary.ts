@@ -266,6 +266,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag,
             setTag,
             removeTags,
+            renameTag,
             applyMod,
             subtractMods,
 
@@ -1815,6 +1816,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     // if the tag starts with the tag section
                     setTag(bot, tags[i], null);
                 }
+            }
+        }
+    }
+
+    /**
+     * Renames the given original tag to the given new tag using the given bot or list of bots.
+     * @param bot The bot or list of bots that the tag should be renamed on.
+     * @param originalTag The original tag to rename.
+     * @param newTag The new tag name.
+     */
+    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string) {
+        if (Array.isArray(bot)) {
+            for (let b of bot) {
+                renameTag(b, originalTag, newTag);
+            }
+        } else {
+            if (originalTag in bot.tags) {
+                const original = bot.tags[originalTag];
+                delete bot.tags[originalTag];
+                bot.tags[newTag] = original;
             }
         }
     }
