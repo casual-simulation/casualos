@@ -332,6 +332,41 @@ describe('RemoteCausalRepoPartition', () => {
 
                     expect(events).toEqual([asyncResult('task1', 2)]);
                 });
+
+                it(`should filter out the server player`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const devices = new Subject<DevicesEvent>();
+                    connection.events.set(DEVICES, devices);
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getPlayerCount('testBranch'),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const info1 = deviceInfo('info1', 'info1', 'info1');
+                    const info2 = deviceInfo('Server', 'info2', 'info2');
+                    devices.next({
+                        devices: [info1, info2],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', 1)]);
+                });
             });
         });
 

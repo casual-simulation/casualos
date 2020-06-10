@@ -3,6 +3,7 @@ import {
     StatusUpdate,
     RemoteAction,
     Action,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     Atom,
@@ -181,9 +182,12 @@ export class RemoteCausalRepoPartitionImpl
             } else if (event.event.type === 'get_player_count') {
                 const action = <GetPlayerCountAction>event.event;
                 this._client.devices(action.story).subscribe(
-                    devices => {
+                    e => {
+                        const devices = e.devices.filter(
+                            d => d.claims[USERNAME_CLAIM] !== 'Server'
+                        );
                         this._onEvents.next([
-                            asyncResult(event.taskId, devices.devices.length),
+                            asyncResult(event.taskId, devices.length),
                         ]);
                     },
                     err => {
