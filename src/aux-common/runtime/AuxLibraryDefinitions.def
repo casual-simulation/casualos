@@ -2589,6 +2589,12 @@ declare global {
          * @param tag The tag that the errors should be loaded for.
          */
         loadErrors(bot: string | Bot, tag: string): LoadBotsAction;
+
+        /**
+         * Gets the number of players that are viewing the current story.
+         * @param story The story to get the statistics for. If omitted, then the current story is used.
+         */
+        storyPlayerCount(story?: string): Promise<number>;
     
         /**
          * Loads a file from the server at the given path.
