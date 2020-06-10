@@ -17,6 +17,8 @@
         -   Optionally accepts a parameter which indicates the story to check.
     -   Added the `server.totalPlayerCount()` function.
         -   Returns a promise that resolves with the total number of players connected to the server.
+    -   Added the `server.stories()` function.
+        -   Returns a promise that resolves with the list of stories that are on the server.
 
 -   :bug: Bug Fixes
     -   Removed the globals bot tags from the documentation since they no longer exist.
