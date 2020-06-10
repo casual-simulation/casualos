@@ -2092,7 +2092,7 @@ server.setupStory("test", {
 
 Loads the `history` space into the current story.
 The `history` space is read-only and contains all the marks that have been created for the story.
-Each mark is a bot that is placed in the `#auxHistory` dimension.
+Each mark is a bot that is placed in the `#history` dimension.
 
 #### Examples:
 
@@ -2133,7 +2133,7 @@ The **first parameter** is the bot or bot ID of the mark that should be restored
 1. Restore the state to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#auxHistory", true));
+let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMark(mark);
@@ -2154,7 +2154,7 @@ The **second parameter** is the story that the state should be restored to. If `
 1. Restore the state of the `test` story to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#auxHistory", true));
+let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMarkToStory(mark, "test");
