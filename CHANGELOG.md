@@ -7,7 +7,11 @@
 ### Changes:
 
 -   :boom: Breaking Changes
+
     -   Renamed all the history tags no not have the `aux` prefix.
+
+-   :bug: Bug Fixes
+    -   Removed the globals bot tags from the documentation since they no longer exist.
 
 ## V1.1.5
 
