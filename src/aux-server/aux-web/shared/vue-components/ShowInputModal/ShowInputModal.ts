@@ -41,7 +41,7 @@ export default class ShowInputModal extends Vue {
 
     private _currentTag: string = '';
     private _currentBot: Bot = null;
-    private _currentTask: number = null;
+    private _currentTask: number | string = null;
     private _inputDialogSimulation: Simulation = null;
 
     created() {
