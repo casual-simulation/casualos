@@ -2574,6 +2574,44 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.totalPlayerCount()', () => {
+            it('should emit a remote action with a get_player_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.totalPlayerCount();
+                const expected = remote(
+                    getPlayerCount(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a custom story ID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.totalPlayerCount();
+                const expected = remote(
+                    getPlayerCount(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.totalPlayerCount();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(

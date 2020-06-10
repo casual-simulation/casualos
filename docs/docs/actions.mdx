@@ -2305,6 +2305,20 @@ const numberOfPlayers = await server.storyPlayerCount('test');
 player.toast("Number of Players: " + numberOfPlayers);
 ```
 
+### `server.totalPlayerCount()`
+
+Gets the number of players that are connected to the server.
+Returns a promise that resolves with the number of active players.
+
+#### Examples
+
+1. Get the number of players on the server.
+```typescript
+const numberOfPlayers = await server.totalPlayerCount();
+
+player.toast("Number of Players: " + numberOfPlayers);
+```
+
 ## Utility Actions
 
 ### `setTag(bot, tag, value)`

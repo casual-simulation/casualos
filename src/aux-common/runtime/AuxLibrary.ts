@@ -365,6 +365,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 destroyErrors,
                 loadErrors,
                 storyPlayerCount,
+                totalPlayerCount,
             },
 
             action: {
@@ -1534,6 +1535,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const actualStory = hasValue(story) ? story : getCurrentStory();
         const event = calcRemote(
             getPlayerCount(actualStory),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the total number of players that are connected to the server.
+     */
+    function totalPlayerCount(): Promise<number> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getPlayerCount(),
             undefined,
             undefined,
             task.taskId

@@ -2595,6 +2595,11 @@ declare global {
          * @param story The story to get the statistics for. If omitted, then the current story is used.
          */
         storyPlayerCount(story?: string): Promise<number>;
+
+        /**
+         * Gets the total number of players that are connected to the server.
+         */
+        totalPlayerCount(): Promise<number>;
     
         /**
          * Loads a file from the server at the given path.
