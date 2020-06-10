@@ -129,6 +129,11 @@ export const BRANCH_INFO = 'repo/branch_info';
 export const BRANCHES = 'repo/branches';
 
 /**
+ * The name of the event which gets all the devices.
+ */
+export const DEVICES = 'repo/devices';
+
+/**
  * Defines an event which indicates that atoms should be added for the given branch.
  */
 export interface AddAtomsEvent {
@@ -290,6 +295,10 @@ export interface BranchDoesNotExistInfo {
 
 export interface BranchesEvent {
     branches: string[];
+}
+
+export interface DevicesEvent {
+    devices: DeviceInfo[];
 }
 
 export interface LoadBranchEvent {

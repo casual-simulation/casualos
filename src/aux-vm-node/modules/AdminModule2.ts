@@ -6,7 +6,12 @@ import {
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
-import { ShellAction, LocalActions } from '@casual-simulation/aux-common';
+import {
+    ShellAction,
+    LocalActions,
+    BotActions,
+    BotAction,
+} from '@casual-simulation/aux-common';
 import { exec } from 'child_process';
 
 /**

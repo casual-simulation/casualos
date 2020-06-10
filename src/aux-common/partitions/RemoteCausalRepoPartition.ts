@@ -32,6 +32,7 @@ import {
     loadSpace,
     asyncError,
     asyncResult,
+    GetPlayerCountAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -177,6 +178,18 @@ export class RemoteCausalRepoPartitionImpl
                         client: this._client,
                     }),
                 ]);
+            } else if (event.event.type === 'get_player_count') {
+                const action = <GetPlayerCountAction>event.event;
+                this._client.devices(action.story).subscribe(
+                    devices => {
+                        this._onEvents.next([
+                            asyncResult(event.taskId, devices.devices.length),
+                        ]);
+                    },
+                    err => {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                );
             } else {
                 this._client.sendEvent(this._branch, event);
             }

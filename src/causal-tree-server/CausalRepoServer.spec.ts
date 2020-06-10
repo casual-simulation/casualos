@@ -43,6 +43,7 @@ import {
     RestoreEvent,
     CausalRepoCommit,
     GET_BRANCH,
+    DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -2711,6 +2712,100 @@ describe('CausalRepoServer', () => {
             ]);
         });
     });
+
+    describe(DEVICES, () => {
+        it('should send a response with the list of devices', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const devices = new Subject<string>();
+            device.events.set(DEVICES, devices);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            devices.next(null);
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICES,
+                    data: {
+                        devices: [device1Info, device2Info],
+                    },
+                },
+            ]);
+        });
+
+        it('should send a response with the list of devices that are connected to the given branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const device3 = new MemoryConnection(device3Info);
+            const devices = new Subject<string>();
+            const watchBranch2 = new Subject<string>();
+            const watchBranch3 = new Subject<string>();
+            device.events.set(DEVICES, devices);
+            device2.events.set(WATCH_BRANCH, watchBranch2);
+            device3.events.set(WATCH_BRANCH, watchBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+            const a6 = atom(atomId('a', 6), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                a3,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                a1,
+                a2,
+                a4,
+                a5,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch2.next('testBranch');
+            watchBranch3.next('testBranch');
+
+            await waitAsync();
+
+            devices.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICES,
+                    data: {
+                        devices: [device2Info, device3Info],
+                    },
+                },
+            ]);
+        });
+    });
+
     // describe(UNWATCH_DEVICES, () => {
     //     it('should stop sending events when a device connects to a branch', async () => {
     //         server.init();

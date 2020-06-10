@@ -46,6 +46,8 @@ import {
     RestoreEvent,
     RESTORE,
     GET_BRANCH,
+    DEVICES,
+    DevicesEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -280,6 +282,21 @@ export class CausalRepoClient {
             }),
             switchMap(connected =>
                 merge(this._client.event<BranchesEvent>(BRANCHES).pipe(first()))
+            )
+        );
+    }
+
+    /**
+     * Requests a list of devices that are currently connected.
+     * @param branch The branch that the devices should be retrieved from.
+     */
+    devices(branch?: string) {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(DEVICES, branch);
+            }),
+            switchMap(connected =>
+                merge(this._client.event<DevicesEvent>(DEVICES).pipe(first()))
             )
         );
     }

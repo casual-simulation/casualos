@@ -88,7 +88,8 @@ export type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | LocalFormAnimationAction;
+    | LocalFormAnimationAction
+    | GetPlayerCountAction;
 
 /**
  * Defines a set of possible async action types.
@@ -759,6 +760,19 @@ export interface SaveFileOptions {
      * Whether to overwrite existing files.
      */
     overwriteExistingFile?: boolean;
+}
+
+/**
+ * Defines an event that is used to get the player count.
+ */
+export interface GetPlayerCountAction extends Action {
+    type: 'get_player_count';
+
+    /**
+     * The story that the player count should be retrieved for.
+     * If omitted, then the total player count will be returned.
+     */
+    story?: string;
 }
 
 /**
@@ -1881,6 +1895,23 @@ export function saveFile(options: SaveFileOptions): SaveFileAction {
         type: 'save_file',
         options: options,
     };
+}
+
+/**
+ * Creates a new GetPlayerCountAction.
+ * @param story The story that the player count should be retrieved for.
+ */
+export function getPlayerCount(story?: string): GetPlayerCountAction {
+    if (hasValue(story)) {
+        return {
+            type: 'get_player_count',
+            story,
+        };
+    } else {
+        return {
+            type: 'get_player_count',
+        };
+    }
 }
 
 /**

@@ -16,6 +16,8 @@ import {
     WATCH_COMMITS,
     GET_BRANCH,
     WATCH_BRANCH,
+    DEVICES,
+    DevicesEvent,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -35,6 +37,8 @@ import {
     unlockSpace,
     asyncResult,
     asyncError,
+    getPlayerCount,
+    BotActions,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -271,6 +275,62 @@ describe('RemoteCausalRepoPartition', () => {
                             },
                         },
                     ]);
+                });
+            });
+
+            describe('get_player_count', () => {
+                it(`should send a ${DEVICES} event to the server`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayerCount('testBranch')),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: DEVICES,
+                            data: 'testBranch',
+                        },
+                    ]);
+                });
+
+                it(`should send an async result with the response`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const devices = new Subject<DevicesEvent>();
+                    connection.events.set(DEVICES, devices);
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getPlayerCount('testBranch'),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const info1 = deviceInfo('info1', 'info1', 'info1');
+                    const info2 = deviceInfo('info2', 'info2', 'info2');
+                    devices.next({
+                        devices: [info1, info2],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', 2)]);
                 });
             });
         });
