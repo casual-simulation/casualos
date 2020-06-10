@@ -2246,7 +2246,6 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 
 ### `server.loadErrors(bot, tag)`
 
-
 Loads the errors for the given bot and tag.
 Note that the bots don't load immediately. They will automatically be added to the story state once they have been loaded.
 
@@ -2279,6 +2278,31 @@ Destroys all the error bots.
 1. Destroy all the error bots in this story:
 ```typescript
 server.destroyErrors();
+```
+
+### `server.storyPlayerCount(story?)`
+
+Gets the number of players that are viewing the current story.
+Optionally takes a parameter which is the story that the number of players should be retrieved for. If omitted, then the current story will be checked.
+Returns a promise that resolves with the number of active players.
+
+The **first parameter** is optional and is the name of the story that the number of players should be retrieved for.
+If not specified, then the current story <ActionLink action="player.getCurrentStory()">current story</ActionLink> will be used.
+
+#### Examples
+
+1. Get the number of players in the current story.
+```typescript
+const numberOfPlayers = await server.storyPlayerCount();
+
+player.toast("Number of Players: " + numberOfPlayers);
+```
+
+2. Get the number of players in the `test` story.
+```typescript
+const numberOfPlayers = await server.storyPlayerCount('test');
+
+player.toast("Number of Players: " + numberOfPlayers);
 ```
 
 ## Utility Actions
