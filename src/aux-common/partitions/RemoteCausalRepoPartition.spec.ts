@@ -421,6 +421,36 @@ describe('RemoteCausalRepoPartition', () => {
                         asyncResult('task1', ['abc', 'def']),
                     ]);
                 });
+
+                it('should filter out branches that start with a dollar sign ($)', async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const branches = new Subject<BranchesEvent>();
+                    connection.events.set(BRANCHES, branches);
+
+                    await partition.sendRemoteEvents([
+                        remote(getStories(), undefined, undefined, 'task1'),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    branches.next({
+                        branches: ['$admin', '$$hello', 'abc', 'def'],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult('task1', ['abc', 'def']),
+                    ]);
+                });
             });
         });
 

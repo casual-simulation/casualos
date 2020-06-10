@@ -200,7 +200,10 @@ export class RemoteCausalRepoPartitionImpl
                 this._client.branches().subscribe(
                     e => {
                         this._onEvents.next([
-                            asyncResult(event.taskId, e.branches),
+                            asyncResult(
+                                event.taskId,
+                                e.branches.filter(b => !b.startsWith('$'))
+                            ),
                         ]);
                     },
                     err => {
