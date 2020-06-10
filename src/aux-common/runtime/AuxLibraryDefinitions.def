@@ -2600,6 +2600,11 @@ declare global {
          * Gets the total number of players that are connected to the server.
          */
         totalPlayerCount(): Promise<number>;
+
+        /**
+         * Gets the list of stories that are on the server.
+         */
+        stories(): Promise<string[]>;
     
         /**
          * Loads a file from the server at the given path.

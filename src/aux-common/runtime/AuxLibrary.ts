@@ -81,6 +81,7 @@ import {
     ShareOptions,
     unlockSpace,
     getPlayerCount,
+    getStories,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -366,6 +367,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 loadErrors,
                 storyPlayerCount,
                 totalPlayerCount,
+                stories,
             },
 
             action: {
@@ -1549,6 +1551,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getPlayerCount(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of stories that are on the server.
+     */
+    function stories(): Promise<string[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getStories(),
             undefined,
             undefined,
             task.taskId

@@ -25,6 +25,8 @@ import {
     device,
     deviceInfo,
     Action,
+    BRANCHES,
+    BranchesEvent,
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
@@ -38,6 +40,7 @@ import {
     asyncResult,
     asyncError,
     getPlayerCount,
+    getStories,
     BotActions,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
@@ -366,6 +369,57 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     expect(events).toEqual([asyncResult('task1', 1)]);
+                });
+            });
+
+            describe('get_stories', () => {
+                it(`should send a ${BRANCHES} event to the server`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(getStories(), undefined, undefined, 'task1'),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: BRANCHES,
+                            data: undefined,
+                        },
+                    ]);
+                });
+
+                it(`should send an async result with the response`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const branches = new Subject<BranchesEvent>();
+                    connection.events.set(BRANCHES, branches);
+
+                    await partition.sendRemoteEvents([
+                        remote(getStories(), undefined, undefined, 'task1'),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    branches.next({
+                        branches: ['abc', 'def'],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult('task1', ['abc', 'def']),
+                    ]);
                 });
             });
         });

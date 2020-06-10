@@ -2319,6 +2319,20 @@ const numberOfPlayers = await server.totalPlayerCount();
 player.toast("Number of Players: " + numberOfPlayers);
 ```
 
+### `server.stories()`
+
+Gets the list of stories that are stored on the server.
+Returns a promise that resolves with the list of story names.
+
+#### Examples
+
+1. Get the number of players on the server.
+```typescript
+const stories = await server.stories();
+
+player.toast("Stories " + stories.join(','));
+```
+
 ## Utility Actions
 
 ### `setTag(bot, tag, value)`

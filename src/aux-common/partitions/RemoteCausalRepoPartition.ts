@@ -34,6 +34,7 @@ import {
     asyncError,
     asyncResult,
     GetPlayerCountAction,
+    GetStoriesAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -188,6 +189,18 @@ export class RemoteCausalRepoPartitionImpl
                         );
                         this._onEvents.next([
                             asyncResult(event.taskId, devices.length),
+                        ]);
+                    },
+                    err => {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                );
+            } else if (event.event.type === 'get_stories') {
+                const action = <GetStoriesAction>event.event;
+                this._client.branches().subscribe(
+                    e => {
+                        this._onEvents.next([
+                            asyncResult(event.taskId, e.branches),
                         ]);
                     },
                     err => {
