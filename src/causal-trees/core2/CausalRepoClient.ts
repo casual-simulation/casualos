@@ -48,7 +48,12 @@ import {
     GET_BRANCH,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
-import { DeviceAction, RemoteAction } from '../core/Event';
+import {
+    DeviceAction,
+    RemoteAction,
+    DeviceActionResult,
+    DeviceActionError,
+} from '../core/Event';
 
 /**
  * Defines a client for a causal repo.
@@ -405,7 +410,7 @@ export interface ClientAtomsReceived {
 
 export interface ClientEvent {
     type: 'event';
-    action: DeviceAction;
+    action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
 export type ClientWatchBranchEvents =

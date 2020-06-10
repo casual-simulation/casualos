@@ -5,6 +5,10 @@ import {
     SESSION_ID_CLAIM,
     device as deviceEvent,
     DeviceSelector,
+    RemoteActionResult,
+    deviceResult,
+    RemoteActionError,
+    deviceError,
 } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
@@ -295,7 +299,10 @@ export class CausalRepoServer {
                             d => [d, d.extra.device as DeviceInfo] as const
                         );
 
-                        let finalAction: RemoteAction;
+                        let finalAction:
+                            | RemoteAction
+                            | RemoteActionResult
+                            | RemoteActionError;
                         if (
                             event.action.deviceId ||
                             event.action.sessionId ||
@@ -316,10 +323,25 @@ export class CausalRepoServer {
                             finalAction,
                             devices
                         );
-                        const dEvent = deviceEvent(
-                            conn.device,
-                            finalAction.event
-                        );
+
+                        const dEvent =
+                            finalAction.type === 'remote'
+                                ? deviceEvent(
+                                      conn.device,
+                                      finalAction.event,
+                                      finalAction.taskId
+                                  )
+                                : finalAction.type === 'remote_result'
+                                ? deviceResult(
+                                      conn.device,
+                                      finalAction.result,
+                                      finalAction.taskId
+                                  )
+                                : deviceError(
+                                      conn.device,
+                                      finalAction.error,
+                                      finalAction.taskId
+                                  );
                         sendToDevices(targetedDevices, RECEIVE_EVENT, {
                             branch: event.branch,
                             action: dEvent,

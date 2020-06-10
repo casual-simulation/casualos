@@ -1,6 +1,13 @@
 import { Atom } from './Atom2';
 import { DeviceInfo } from '../core/DeviceInfo';
-import { RemoteAction, DeviceAction } from '../core/Event';
+import {
+    RemoteAction,
+    DeviceAction,
+    DeviceActionResult,
+    RemoteActionResult,
+    RemoteActionError,
+    DeviceActionError,
+} from '../core/Event';
 import { CausalRepoCommit } from './CausalRepoObject';
 
 /**
@@ -213,7 +220,7 @@ export interface SendRemoteActionEvent {
     /**
      * The action to send.
      */
-    action: RemoteAction;
+    action: RemoteAction | RemoteActionResult | RemoteActionError;
 }
 
 /**
@@ -221,7 +228,7 @@ export interface SendRemoteActionEvent {
  */
 export interface ReceiveDeviceActionEvent {
     branch: string;
-    action: DeviceAction;
+    action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
 /**

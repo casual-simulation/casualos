@@ -308,9 +308,17 @@ export class AuxRuntime
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);
         } else if (action.type === 'async_result') {
-            this._globalContext.resolveTask(action.taskId, action.result);
+            this._globalContext.resolveTask(
+                action.taskId,
+                action.result,
+                false
+            );
         } else if (action.type === 'async_error') {
-            this._globalContext.rejectTask(action.taskId, action.error);
+            this._globalContext.rejectTask(action.taskId, action.error, false);
+        } else if (action.type === 'device_result') {
+            this._globalContext.resolveTask(action.taskId, action.result, true);
+        } else if (action.type === 'device_error') {
+            this._globalContext.rejectTask(action.taskId, action.error, true);
         } else {
             this._actionBatch.push(action);
         }
