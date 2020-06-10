@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.6
+
+### Date: TBD
+
+### Changes:
+
+-   :boom: Breaking Changes
+    -   Renamed all the history tags no not have the `aux` prefix.
+
 ## V1.1.5
 
 ### Date: 6/9/2020
