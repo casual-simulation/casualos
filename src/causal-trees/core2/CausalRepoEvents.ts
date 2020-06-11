@@ -1,6 +1,13 @@
 import { Atom } from './Atom2';
 import { DeviceInfo } from '../core/DeviceInfo';
-import { RemoteAction, DeviceAction } from '../core/Event';
+import {
+    RemoteAction,
+    DeviceAction,
+    DeviceActionResult,
+    RemoteActionResult,
+    RemoteActionError,
+    DeviceActionError,
+} from '../core/Event';
 import { CausalRepoCommit } from './CausalRepoObject';
 
 /**
@@ -122,6 +129,11 @@ export const BRANCH_INFO = 'repo/branch_info';
 export const BRANCHES = 'repo/branches';
 
 /**
+ * The name of the event which gets all the devices.
+ */
+export const DEVICES = 'repo/devices';
+
+/**
  * Defines an event which indicates that atoms should be added for the given branch.
  */
 export interface AddAtomsEvent {
@@ -213,7 +225,7 @@ export interface SendRemoteActionEvent {
     /**
      * The action to send.
      */
-    action: RemoteAction;
+    action: RemoteAction | RemoteActionResult | RemoteActionError;
 }
 
 /**
@@ -221,7 +233,7 @@ export interface SendRemoteActionEvent {
  */
 export interface ReceiveDeviceActionEvent {
     branch: string;
-    action: DeviceAction;
+    action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
 /**
@@ -283,6 +295,10 @@ export interface BranchDoesNotExistInfo {
 
 export interface BranchesEvent {
     branches: string[];
+}
+
+export interface DevicesEvent {
+    devices: DeviceInfo[];
 }
 
 export interface LoadBranchEvent {

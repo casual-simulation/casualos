@@ -63,6 +63,8 @@ import {
     showInput,
     share,
     unlockSpace,
+    getPlayerCount,
+    getStories,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2518,6 +2520,106 @@ describe('AuxLibrary', () => {
                 ]);
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('server.storyPlayerCount()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        story: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a remote action with a get_player_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.storyPlayerCount();
+                const expected = remote(
+                    getPlayerCount('channel'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a custom story ID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.storyPlayerCount('test');
+                const expected = remote(
+                    getPlayerCount('test'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.storyPlayerCount('test');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.totalPlayerCount()', () => {
+            it('should emit a remote action with a get_player_count action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.totalPlayerCount();
+                const expected = remote(
+                    getPlayerCount(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.totalPlayerCount();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.stories()', () => {
+            it('should emit a remote action with a get_stories action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.stories();
+                const expected = remote(
+                    getStories(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.stories();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

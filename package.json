@@ -38,7 +38,8 @@
         "view:server:profile": "gulp view:server:profile",
         "view:web:profile": "gulp view:web:profile",
         "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
-        "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile"
+        "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
+        "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def"
     },
     "husky": {
         "hooks": {

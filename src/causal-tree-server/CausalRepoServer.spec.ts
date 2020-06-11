@@ -43,6 +43,7 @@ import {
     RestoreEvent,
     CausalRepoCommit,
     GET_BRANCH,
+    DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -52,6 +53,10 @@ import {
     remote,
     SESSION_ID_CLAIM,
     device as deviceEvent,
+    remoteResult,
+    deviceResult,
+    remoteError,
+    deviceError,
 } from '@casual-simulation/causal-trees';
 
 console.log = jest.fn();
@@ -2210,6 +2215,213 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should relay the task ID from the remote action to the device action', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const sendEvent = new Subject<SendRemoteActionEvent>();
+            device.events.set(SEND_EVENT, sendEvent);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            joinBranch2.next('testBranch');
+            joinBranch3.next('testBranch');
+
+            await waitAsync();
+
+            sendEvent.next({
+                branch: 'testBranch',
+                action: remote(
+                    {
+                        type: 'abc',
+                    },
+                    {
+                        sessionId: device3Info.claims[SESSION_ID_CLAIM],
+                    },
+                    undefined,
+                    'task1'
+                ),
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+                {
+                    name: RECEIVE_EVENT,
+                    data: {
+                        branch: 'testBranch',
+                        action: deviceEvent(
+                            device1Info,
+                            {
+                                type: 'abc',
+                            },
+                            'task1'
+                        ),
+                    },
+                },
+            ]);
+        });
+
+        it('should convert a remote action result to a device action result', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const sendEvent = new Subject<SendRemoteActionEvent>();
+            device.events.set(SEND_EVENT, sendEvent);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            joinBranch2.next('testBranch');
+            joinBranch3.next('testBranch');
+
+            await waitAsync();
+
+            sendEvent.next({
+                branch: 'testBranch',
+                action: remoteResult(
+                    'data',
+                    {
+                        sessionId: device3Info.claims[SESSION_ID_CLAIM],
+                    },
+                    'task1'
+                ),
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+                {
+                    name: RECEIVE_EVENT,
+                    data: {
+                        branch: 'testBranch',
+                        action: deviceResult(device1Info, 'data', 'task1'),
+                    },
+                },
+            ]);
+        });
+
+        it('should convert a remote action error to a device action error', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const sendEvent = new Subject<SendRemoteActionEvent>();
+            device.events.set(SEND_EVENT, sendEvent);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            joinBranch2.next('testBranch');
+            joinBranch3.next('testBranch');
+
+            await waitAsync();
+
+            sendEvent.next({
+                branch: 'testBranch',
+                action: remoteError(
+                    'data',
+                    {
+                        sessionId: device3Info.claims[SESSION_ID_CLAIM],
+                    },
+                    'task1'
+                ),
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+                {
+                    name: RECEIVE_EVENT,
+                    data: {
+                        branch: 'testBranch',
+                        action: deviceError(device1Info, 'data', 'task1'),
+                    },
+                },
+            ]);
+        });
     });
 
     describe(WATCH_DEVICES, () => {
@@ -2500,6 +2712,100 @@ describe('CausalRepoServer', () => {
             ]);
         });
     });
+
+    describe(DEVICES, () => {
+        it('should send a response with the list of devices', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const devices = new Subject<string>();
+            device.events.set(DEVICES, devices);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            devices.next(null);
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICES,
+                    data: {
+                        devices: [device1Info, device2Info],
+                    },
+                },
+            ]);
+        });
+
+        it('should send a response with the list of devices that are connected to the given branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const device3 = new MemoryConnection(device3Info);
+            const devices = new Subject<string>();
+            const watchBranch2 = new Subject<string>();
+            const watchBranch3 = new Subject<string>();
+            device.events.set(DEVICES, devices);
+            device2.events.set(WATCH_BRANCH, watchBranch2);
+            device3.events.set(WATCH_BRANCH, watchBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a2, {});
+            const a5 = atom(atomId('a', 5), a2, {});
+            const a6 = atom(atomId('a', 6), a2, {});
+
+            const idx1 = index(a1, a2, a3);
+            const idx2 = index(a1, a2, a4, a5);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                a3,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                a1,
+                a2,
+                a4,
+                a5,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            watchBranch2.next('testBranch');
+            watchBranch3.next('testBranch');
+
+            await waitAsync();
+
+            devices.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICES,
+                    data: {
+                        devices: [device2Info, device3Info],
+                    },
+                },
+            ]);
+        });
+    });
+
     // describe(UNWATCH_DEVICES, () => {
     //     it('should stop sending events when a device connects to a branch', async () => {
     //         server.init();

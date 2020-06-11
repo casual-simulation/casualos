@@ -2092,7 +2092,7 @@ server.setupStory("test", {
 
 Loads the `history` space into the current story.
 The `history` space is read-only and contains all the marks that have been created for the story.
-Each mark is a bot that is placed in the `#auxHistory` dimension.
+Each mark is a bot that is placed in the `#history` dimension.
 
 #### Examples:
 
@@ -2133,7 +2133,7 @@ The **first parameter** is the bot or bot ID of the mark that should be restored
 1. Restore the state to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#auxHistory", true));
+let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMark(mark);
@@ -2154,7 +2154,7 @@ The **second parameter** is the story that the state should be restored to. If `
 1. Restore the state of the `test` story to a given mark.
 ```typescript
 // Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#auxHistory", true));
+let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
 server.restoreHistoryMarkToStory(mark, "test");
@@ -2246,7 +2246,6 @@ server.loadFile('/2/book.txt', 'My memoirs', {
 
 ### `server.loadErrors(bot, tag)`
 
-
 Loads the errors for the given bot and tag.
 Note that the bots don't load immediately. They will automatically be added to the story state once they have been loaded.
 
@@ -2279,6 +2278,59 @@ Destroys all the error bots.
 1. Destroy all the error bots in this story:
 ```typescript
 server.destroyErrors();
+```
+
+### `server.storyPlayerCount(story?)`
+
+Gets the number of players that are viewing the current story.
+Optionally takes a parameter which is the story that the number of players should be retrieved for. If omitted, then the current story will be checked.
+Returns a promise that resolves with the number of active players.
+
+The **first parameter** is optional and is the name of the story that the number of players should be retrieved for.
+If not specified, then the current story <ActionLink action="player.getCurrentStory()">current story</ActionLink> will be used.
+
+#### Examples
+
+1. Get the number of players in the current story.
+```typescript
+const numberOfPlayers = await server.storyPlayerCount();
+
+player.toast("Number of Players: " + numberOfPlayers);
+```
+
+2. Get the number of players in the `test` story.
+```typescript
+const numberOfPlayers = await server.storyPlayerCount('test');
+
+player.toast("Number of Players: " + numberOfPlayers);
+```
+
+### `server.totalPlayerCount()`
+
+Gets the number of players that are connected to the server.
+Returns a promise that resolves with the number of active players.
+
+#### Examples
+
+1. Get the number of players on the server.
+```typescript
+const numberOfPlayers = await server.totalPlayerCount();
+
+player.toast("Number of Players: " + numberOfPlayers);
+```
+
+### `server.stories()`
+
+Gets the list of stories that are stored on the server.
+Returns a promise that resolves with the list of story names.
+
+#### Examples
+
+1. Get the number of players on the server.
+```typescript
+const stories = await server.stories();
+
+player.toast("Stories " + stories.join(','));
 ```
 
 ## Utility Actions

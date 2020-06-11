@@ -80,6 +80,8 @@ import {
     AsyncActions,
     ShareOptions,
     unlockSpace,
+    getPlayerCount,
+    getStories,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -363,6 +365,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 saveFile,
                 destroyErrors,
                 loadErrors,
+                storyPlayerCount,
+                totalPlayerCount,
+                stories,
             },
 
             action: {
@@ -1521,6 +1526,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 },
             ])
         );
+    }
+
+    /**
+     * Gets the number of players that are viewing the current story.
+     * @param story The story to get the statistics for. If omitted, then the current story is used.
+     */
+    function storyPlayerCount(story?: string): Promise<number> {
+        const task = context.createTask(true, true);
+        const actualStory = hasValue(story) ? story : getCurrentStory();
+        const event = calcRemote(
+            getPlayerCount(actualStory),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the total number of players that are connected to the server.
+     */
+    function totalPlayerCount(): Promise<number> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getPlayerCount(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of stories that are on the server.
+     */
+    function stories(): Promise<string[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getStories(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**

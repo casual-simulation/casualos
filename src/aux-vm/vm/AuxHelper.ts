@@ -402,7 +402,11 @@ export class AuxHelper extends BaseHelper<Bot> {
             }
             if (typeof partition === 'undefined') {
                 console.warn('[AuxHelper] No partition for event', event);
-                if ('taskId' in event) {
+                if (
+                    'taskId' in event &&
+                    event.type !== 'remote' &&
+                    event.type !== 'device'
+                ) {
                     events.push(
                         asyncError(
                             event.taskId,

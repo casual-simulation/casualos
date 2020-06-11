@@ -51,6 +51,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/unwatch_devices': void;
     'repo/branch_info': string;
     'repo/branches': void;
+    'repo/devices': string;
     'repo/commit': CommitEvent;
     'repo/watch_commits': string;
     'repo/unwatch_commits': string;
@@ -117,6 +118,10 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that request a list of available branches.
      */
     event(name: 'repo/branches'): Observable<void>;
+    /**
+     * Gets an observable for events that request a list of connected devices.
+     */
+    event(name: 'repo/devices'): Observable<string>;
     /**
      * Gets an observable for events which make a commit for a branch.
      */

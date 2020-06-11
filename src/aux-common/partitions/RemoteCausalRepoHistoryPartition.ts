@@ -145,7 +145,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
                 if (!bot) {
                     continue;
                 }
-                const hash = bot.tags.auxMarkHash;
+                const hash = bot.tags.markHash;
                 this._client.restore(restoreMark.story || this._branch, hash);
             }
         }
@@ -212,8 +212,8 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
         this._commits.push(...reverse(commits));
         for (let bot of newBots) {
-            bot.tags.auxHistoryY = -this._commits.findIndex(
-                c => c.hash === bot.tags.auxMarkHash
+            bot.tags.historyY = -this._commits.findIndex(
+                c => c.hash === bot.tags.markHash
             );
             nextState[bot.id] = bot;
         }
@@ -227,14 +227,14 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
     private _makeBot(commit: CausalRepoCommit): Bot {
         return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
-            auxHistory: true,
+            history: true,
             label: commit.message,
             labelSize: 0.25,
             scale: 0.8,
             scaleX: 2,
-            auxMarkHash: commit.hash,
-            auxPreviousMarkHash: commit.previousCommit,
-            auxMarkTime: commit.time,
+            markHash: commit.hash,
+            previousMarkHash: commit.previousCommit,
+            markTime: commit.time,
         });
     }
 }

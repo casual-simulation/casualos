@@ -231,29 +231,29 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                 [uuid(c1.hash, COMMIT_ID_NAMESPACE)]: createBot(
                     uuid(c1.hash, COMMIT_ID_NAMESPACE),
                     {
-                        auxHistory: true,
-                        auxHistoryY: -0,
+                        history: true,
+                        historyY: -0,
                         label: 'commit1',
                         labelSize: 0.25,
                         scale: 0.8,
                         scaleX: 2,
-                        auxMarkHash: c1.hash,
-                        auxPreviousMarkHash: null,
-                        auxMarkTime: new Date(1900, 1, 1),
+                        markHash: c1.hash,
+                        previousMarkHash: null,
+                        markTime: new Date(1900, 1, 1),
                     }
                 ),
                 [uuid(c2.hash, COMMIT_ID_NAMESPACE)]: createBot(
                     uuid(c2.hash, COMMIT_ID_NAMESPACE),
                     {
-                        auxHistory: true,
-                        auxHistoryY: -1,
+                        history: true,
+                        historyY: -1,
                         label: 'commit2',
                         labelSize: 0.25,
                         scale: 0.8,
                         scaleX: 2,
-                        auxMarkHash: c2.hash,
-                        auxPreviousMarkHash: c1.hash,
-                        auxMarkTime: new Date(1900, 1, 1),
+                        markHash: c2.hash,
+                        previousMarkHash: c1.hash,
+                        markTime: new Date(1900, 1, 1),
                     }
                 ),
             });

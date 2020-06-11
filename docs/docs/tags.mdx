@@ -1120,73 +1120,19 @@ The number of grid spaces that the wrist portal should have in the X direction.
   </PossibleValue>
 </PossibleValuesTable>
 
-## Channel Config Tags
-
-These tags are set on the config bot and affect the entire story.
-
-### `auxSceneColor`
-
-The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
-The value can be overridden on a per-dimension basis in AUXPlayer by using the <TagLink tag='portalColor'/> tag.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='#263238'>
-    (default)
-  </PossibleValueCode>
-  <AnyColorValues/>
-</PossibleValuesTable>
-
-### `auxSceneUserPlayerColor`
-
-The color of other users that are in AUXPlayer.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='#DDDD00'>
-    (default)
-  </PossibleValueCode>
-  <AnyColorValues/>
-</PossibleValuesTable>
-
-### `auxSceneUserBuilderColor`
-
-The color of other users that are in Channel Designer.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='#00D000'>
-    (default)
-  </PossibleValueCode>
-  <AnyColorValues/>
-</PossibleValuesTable>
-
-### `auxInventoryHeight`
-
-Sets the initial height of the inventory viewport for all dimension.
-
-This value is overridden by <TagLink tag='auxDimensionInventoryHeight'/>.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Numbers >= 1 and <= 10'>
-    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
-  </PossibleValue>
-</PossibleValuesTable>
-
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
 
-### `auxHistory`
+### `history`
 
 <Badges>
   <HistoryBotBadge/>
 </Badges>
 
-Whether the bot is in the `auxHistory` dimension.
+Whether the bot is in the `history` dimension.
 
-### `auxMarkHash`
+### `markHash`
 
 <Badges>
   <HistoryBotBadge/>
@@ -1194,16 +1140,16 @@ Whether the bot is in the `auxHistory` dimension.
 
 The [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash that the mark represents.
 
-### `auxPreviousMarkHash`
+### `previousMarkHash`
 
 <Badges>
   <HistoryBotBadge/>
 </Badges>
 
-The <TagLink tag='auxMarkHash'/> of the mark that was created before this mark.
+The <TagLink tag='markHash'/> of the mark that was created before this mark.
 You can use this tag as a way to find previous marks from a mark.
 
-### `auxMarkTime`
+### `markTime`
 
 <Badges>
   <HistoryBotBadge/>

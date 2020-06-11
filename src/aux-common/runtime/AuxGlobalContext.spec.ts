@@ -12,6 +12,10 @@ import { createBot, botAdded, botRemoved } from '../bots';
 import { RealtimeEditMode } from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
+import uuid from 'uuid/v4';
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
 
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
@@ -190,6 +194,21 @@ describe('AuxGlobalContext', () => {
             expect(t2.taskId).toBe(2);
             expect(t3.taskId).toBe(3);
         });
+
+        it('should create the task ID using UUIDs', () => {
+            uuidMock
+                .mockReturnValueOnce('task1')
+                .mockReturnValueOnce('task2')
+                .mockReturnValueOnce('task3');
+
+            const t1 = context.createTask(true);
+            const t2 = context.createTask(true);
+            const t3 = context.createTask(true);
+
+            expect(t1.taskId).toBe('task1');
+            expect(t2.taskId).toBe('task2');
+            expect(t3.taskId).toBe('task3');
+        });
     });
 
     describe('resolveTask()', () => {
@@ -198,13 +217,39 @@ describe('AuxGlobalContext', () => {
             const t1 = context.createTask();
             t1.promise.then(fn);
 
-            context.resolveTask(t1.taskId, 'abc');
-            context.resolveTask(t1.taskId, 'def');
+            context.resolveTask(t1.taskId, 'abc', false);
+            context.resolveTask(t1.taskId, 'def', false);
 
             await waitAsync();
 
             expect(fn).toBeCalledWith('abc');
             expect(fn).not.toBeCalledWith('def');
+        });
+
+        it('should do nothing by default when resolving from a remote', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask();
+            t1.promise.then(fn);
+
+            context.resolveTask(t1.taskId, 'abc', true);
+            context.resolveTask(t1.taskId, 'def', false);
+
+            await waitAsync();
+
+            expect(fn).not.toBeCalledWith('abc');
+            expect(fn).toBeCalledWith('def');
+        });
+
+        it('should allow resolving from a remote when the task is expected to be resolved that way', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask(false, true);
+            t1.promise.then(fn);
+
+            context.resolveTask(t1.taskId, 'abc', true);
+
+            await waitAsync();
+
+            expect(fn).toBeCalledWith('abc');
         });
     });
 
@@ -214,13 +259,39 @@ describe('AuxGlobalContext', () => {
             const t1 = context.createTask();
             t1.promise.catch(fn);
 
-            context.rejectTask(t1.taskId, 'abc');
-            context.rejectTask(t1.taskId, 'def');
+            context.rejectTask(t1.taskId, 'abc', false);
+            context.rejectTask(t1.taskId, 'def', false);
 
             await waitAsync();
 
             expect(fn).toBeCalledWith('abc');
             expect(fn).not.toBeCalledWith('def');
+        });
+
+        it('should do nothing by default when rejecting from a remote', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask();
+            t1.promise.catch(fn);
+
+            context.rejectTask(t1.taskId, 'abc', true);
+            context.rejectTask(t1.taskId, 'def', false);
+
+            await waitAsync();
+
+            expect(fn).not.toBeCalledWith('abc');
+            expect(fn).toBeCalledWith('def');
+        });
+
+        it('should allow rejecting from a remote when the task is expected to be resolved that way', async () => {
+            const fn = jest.fn();
+            const t1 = context.createTask(false, true);
+            t1.promise.catch(fn);
+
+            context.rejectTask(t1.taskId, 'abc', true);
+
+            await waitAsync();
+
+            expect(fn).toBeCalledWith('abc');
         });
     });
 });

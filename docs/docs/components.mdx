@@ -52,9 +52,11 @@ export const ListenTagLink = ({tag}) => (
   </a>
 );
 
-export const ActionLink = ({action}) => (
+export const ActionLink = ({action, children}) => (
   <a href={useBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
-    <NormalCode>{action}</NormalCode>
+  {children ? children : (
+      <NormalCode>{action}</NormalCode>
+  )}
   </a>
 );
 

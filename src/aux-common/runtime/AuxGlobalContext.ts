@@ -18,6 +18,7 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
+import uuid from 'uuid/v4';
 
 /**
  * Holds global values that need to be accessible from the runtime.
@@ -105,22 +106,31 @@ export interface AuxGlobalContext {
 
     /**
      * Creates a new task.
+     * @param Whether to use an unguessable task ID. Defaults to false.
+     * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
      */
-    createTask(): AsyncTask;
+    createTask(
+        unguessableId?: boolean,
+        allowRemoteResolution?: boolean
+    ): AsyncTask;
 
     /**
      * Completes the task with the given task ID with the given result.
      * @param taskId The ID of the task.
      * @param result The result.
+     * @param remote Whether this call is being triggered from a remote device.
+     *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    resolveTask(taskId: number, result: any): void;
+    resolveTask(taskId: number | string, result: any, remote: boolean): void;
 
     /**
      * Completes the task with the given task ID with the given error.
      * @param taskId The ID of the task.
      * @param error The error.
+     * @param remote Whether this call is being triggered from a remote device.
+     *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
-    rejectTask(taskId: number, error: any): void;
+    rejectTask(taskId: number | string, error: any, remote: boolean): void;
 }
 
 /**
@@ -130,7 +140,12 @@ export interface AsyncTask {
     /**
      * The ID of the task.
      */
-    taskId: number;
+    taskId: number | string;
+
+    /**
+     * Whether the task is allowed to be resolved via a remote action result.
+     */
+    allowRemoteResolution: boolean;
 
     /**
      * The promise that the task contains.
@@ -230,7 +245,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     /**
      * The map of task IDs to tasks.
      */
-    tasks: Map<number, AsyncTask> = new Map();
+    tasks: Map<number | string, AsyncTask> = new Map();
 
     /**
      * The version.
@@ -357,7 +372,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this.enqueueAction(botRemoved(bot.id));
     }
 
-    createTask(): AsyncTask {
+    createTask(
+        unguessableId: boolean,
+        allowRemoteResolution: boolean
+    ): AsyncTask {
         let resolve: AsyncTask['resolve'];
         let reject: AsyncTask['reject'];
         let promise = new Promise((res, rej) => {
@@ -365,7 +383,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             reject = rej;
         });
         const task: AsyncTask = {
-            taskId: this._taskCounter += 1,
+            taskId: !unguessableId ? (this._taskCounter += 1) : uuid(),
+            allowRemoteResolution: allowRemoteResolution || false,
             resolve: resolve,
             reject: reject,
             promise,
@@ -375,17 +394,17 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return task;
     }
 
-    resolveTask(taskId: number, result: any): void {
+    resolveTask(taskId: number, result: any, remote: boolean): void {
         const task = this.tasks.get(taskId);
-        if (task) {
+        if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.resolve(result);
         }
     }
 
-    rejectTask(taskId: number, error: any): void {
+    rejectTask(taskId: number, error: any, remote: boolean): void {
         const task = this.tasks.get(taskId);
-        if (task) {
+        if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.reject(error);
         }
