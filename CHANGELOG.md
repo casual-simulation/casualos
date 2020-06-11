@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.7
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the ability to auto-generate a story name when loading CasualOS without a story.
+
 ## V1.1.6
 
 ### Date: 6/11/2020
