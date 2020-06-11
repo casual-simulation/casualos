@@ -8,7 +8,7 @@
 
 -   :boom: Breaking Changes
 
-    -   Renamed all the history tags no not have the `aux` prefix.
+    -   Renamed all the history tags to not have the `aux` prefix.
 
 -   :rocket: Improvements
 
