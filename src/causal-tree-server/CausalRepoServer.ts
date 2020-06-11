@@ -59,6 +59,7 @@ import {
     UNWATCH_COMMITS,
     GET_BRANCH,
     DEVICES,
+    MemoryCausalRepoStore,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -138,23 +139,30 @@ export class CausalRepoServer {
 
                         let added: Atom<any>[];
                         let removed: Atom<any>[];
+                        const isTemp = isTempBranch(event.branch);
 
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
-                            await this._stage.addAtoms(event.branch, added);
-                            await storeData(
-                                this._store,
-                                event.branch,
-                                null,
-                                added
-                            );
+
+                            if (!isTemp) {
+                                await this._stage.addAtoms(event.branch, added);
+                                await storeData(
+                                    this._store,
+                                    event.branch,
+                                    null,
+                                    added
+                                );
+                            }
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
-                            await this._stage.removeAtoms(
-                                event.branch,
-                                removed
-                            );
+
+                            if (!isTemp) {
+                                await this._stage.removeAtoms(
+                                    event.branch,
+                                    removed
+                                );
+                            }
                         }
                         const hasAdded = added && added.length > 0;
                         const hasRemoved = removed && removed.length > 0;
@@ -534,35 +542,61 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            const startTime = process.hrtime();
-            try {
-                console.log(`[CausalRepoServer] Loading branch: ${branch}`);
-                repo = new CausalRepo(this._store);
-                await repo.checkout(branch, {
-                    createIfDoesntExist: createBranch
-                        ? {
-                              hash: null,
-                          }
-                        : null,
-                });
-                const stage = await this._stage.getStage(branch);
-                repo.addMany(stage.additions);
-                const hashes = Object.keys(stage.deletions);
-                repo.removeMany(hashes);
-
-                this._repos.set(branch, repo);
-                this._branchLoaded(branch);
-            } finally {
-                const [seconds, nanoseconds] = process.hrtime(startTime);
-                console.log(
-                    `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
-                    seconds,
-                    nanoseconds
-                );
+            const isTemp = isTempBranch(branch);
+            if (!isTemp) {
+                repo = await this._loadRepo(branch, createBranch);
+            } else {
+                repo = await this._createEmptyRepo(branch);
             }
+
+            this._repos.set(branch, repo);
+            this._branchLoaded(branch);
         }
 
         return repo;
+    }
+
+    private async _createEmptyRepo(branch: string) {
+        console.log(`[CausalRepoServer] Creating temp branch: ${branch}`);
+        const emptyStore = new MemoryCausalRepoStore();
+        const repo = new CausalRepo(emptyStore);
+        await repo.checkout(branch, {
+            createIfDoesntExist: {
+                hash: null,
+            },
+        });
+
+        return repo;
+    }
+
+    private async _loadRepo(
+        branch: string,
+        createBranch: boolean
+    ): Promise<CausalRepo> {
+        const startTime = process.hrtime();
+        try {
+            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
+            const repo = new CausalRepo(this._store);
+            await repo.checkout(branch, {
+                createIfDoesntExist: createBranch
+                    ? {
+                          hash: null,
+                      }
+                    : null,
+            });
+            const stage = await this._stage.getStage(branch);
+            repo.addMany(stage.additions);
+            const hashes = Object.keys(stage.deletions);
+            repo.removeMany(hashes);
+            return repo;
+        } finally {
+            const [seconds, nanoseconds] = process.hrtime(startTime);
+            console.log(
+                `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
+                seconds,
+                nanoseconds
+            );
+        }
     }
 
     private _branchLoaded(branch: string) {
@@ -576,6 +610,14 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, UNLOAD_BRANCH, unloadBranchEvent(branch));
     }
+}
+
+/**
+ * Determines if the given branch should be loaded as a temporary branch.
+ * @param branch The name of the branch.
+ */
+function isTempBranch(branch: string) {
+    return branch.startsWith('@');
 }
 
 function loadBranchEvent(branch: string) {

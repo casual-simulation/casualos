@@ -243,6 +243,93 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        describe('temp', () => {
+            it('should load the branch without persistent data if the branch name starts with an @ symbol', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<string>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                const a1 = atom(atomId('a', 1), null, {});
+                const a2 = atom(atomId('a', 2), a1, {});
+
+                const idx = index(a1, a2);
+                const c = commit('message', new Date(2019, 9, 4), idx, null);
+                const b = branch('@testBranch', c);
+
+                await storeData(store, '@testBranch', idx.data.hash, [
+                    a1,
+                    a2,
+                    idx,
+                    c,
+                ]);
+                await updateBranch(store, b);
+
+                joinBranch.next('@testBranch');
+
+                await waitAsync();
+
+                expect(device.messages).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [],
+                        },
+                    },
+                ]);
+            });
+
+            it('should load the atoms that were added to the branch by another device', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<string>();
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                const device3 = new MemoryConnection(device3Info);
+                const joinBranch3 = new Subject<string>();
+                device3.events.set(WATCH_BRANCH, joinBranch3);
+
+                connections.connection.next(device);
+                connections.connection.next(device3);
+
+                await waitAsync();
+
+                const a1 = atom(atomId('a', 1), null, {});
+
+                joinBranch.next('@testBranch');
+
+                await waitAsync();
+
+                addAtoms.next({
+                    branch: '@testBranch',
+                    atoms: [a1],
+                });
+
+                await waitAsync();
+
+                joinBranch3.next('@testBranch');
+
+                await waitAsync();
+
+                expect(device3.messages).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [a1],
+                        },
+                    },
+                ]);
+            });
+        });
     });
 
     describe(GET_BRANCH, () => {
@@ -1468,6 +1555,119 @@ describe('CausalRepoServer', () => {
                 deletions: {
                     [a3.hash]: atomIdToString(a3.id),
                 },
+            });
+        });
+
+        describe('temp', () => {
+            it('should not store the given atoms with the current branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                const joinBranch = new Subject<string>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                const a1 = atom(atomId('a', 1), null, {});
+                const a2 = atom(atomId('a', 2), a1, {});
+                const a3 = atom(atomId('a', 3), a2, {});
+
+                const idx = index(a1, a2);
+                const c = commit('message', new Date(2019, 9, 4), idx, null);
+                const b = branch('@testBranch', c);
+
+                await storeData(store, '@testBranch', idx.data.hash, [
+                    a1,
+                    a2,
+                    idx,
+                    c,
+                ]);
+                await updateBranch(store, b);
+
+                addAtoms.next({
+                    branch: '@testBranch',
+                    atoms: [a3],
+                });
+
+                await waitAsync();
+
+                const [repoAtom] = await store.getObjects('@testBranch', [
+                    a3.hash,
+                ]);
+                expect(repoAtom).toBeFalsy();
+            });
+
+            it('should notify all other devices connected to the branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                const device2 = new MemoryConnection(device2Info);
+                const joinBranch2 = new Subject<string>();
+                device2.events.set(WATCH_BRANCH, joinBranch2);
+
+                const device3 = new MemoryConnection(device3Info);
+                const joinBranch3 = new Subject<string>();
+                device3.events.set(WATCH_BRANCH, joinBranch3);
+
+                connections.connection.next(device);
+                connections.connection.next(device2);
+                connections.connection.next(device3);
+
+                await waitAsync();
+
+                const a1 = atom(atomId('a', 1), null, {});
+
+                joinBranch2.next('@testBranch');
+                joinBranch3.next('@testBranch');
+
+                await waitAsync();
+
+                addAtoms.next({
+                    branch: '@testBranch',
+                    atoms: [a1],
+                });
+
+                await waitAsync();
+
+                expect(device2.messages).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [],
+                        },
+                    },
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [a1],
+                        },
+                    },
+                ]);
+
+                expect(device3.messages).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [],
+                        },
+                    },
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: '@testBranch',
+                            atoms: [a1],
+                        },
+                    },
+                ]);
             });
         });
     });
