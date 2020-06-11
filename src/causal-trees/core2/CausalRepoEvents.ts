@@ -134,6 +134,31 @@ export const BRANCHES = 'repo/branches';
 export const DEVICES = 'repo/devices';
 
 /**
+ * Defines an event which indicates that a branch should be watched.
+ */
+export interface WatchBranchEvent {
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+
+    /**
+     * Whether the branch should be temporary.
+     * That is, if the branch data should not be loaded from the database
+     * and everything should be deleted once all the watchers have left.
+     * Defaults to false.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether this branch is the primary branch.
+     * Useful for indicating to branch watchers whether they should enable specialized functionality
+     * on this branch. Defaults to true.
+     */
+    primary?: boolean;
+}
+
+/**
  * Defines an event which indicates that atoms should be added for the given branch.
  */
 export interface AddAtomsEvent {

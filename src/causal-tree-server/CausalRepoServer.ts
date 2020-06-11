@@ -109,10 +109,15 @@ export class CausalRepoServer {
                 );
 
                 handleEvents(conn, {
-                    [WATCH_BRANCH]: async branch => {
+                    [WATCH_BRANCH]: async event => {
+                        const branch = event.branch;
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
-                        const repo = await this._getOrLoadRepo(branch, true);
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            true,
+                            event.temporary
+                        );
                         const atoms = repo.getAtoms();
 
                         this._sendConnectedToBranch(device, branch);
@@ -123,7 +128,11 @@ export class CausalRepoServer {
                     },
                     [GET_BRANCH]: async branch => {
                         const info = infoForBranch(branch);
-                        const repo = await this._getOrLoadRepo(branch, true);
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            true,
+                            false
+                        );
                         const atoms = repo.getAtoms();
                         conn.send(ADD_ATOMS, {
                             branch: branch,
@@ -134,6 +143,7 @@ export class CausalRepoServer {
                     [ADD_ATOMS]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
+                            false,
                             false
                         );
 
@@ -198,6 +208,7 @@ export class CausalRepoServer {
                     [COMMIT]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
+                            false,
                             false
                         );
                         if (!repo) {
@@ -212,7 +223,11 @@ export class CausalRepoServer {
                         const info = infoForBranchCommits(branch);
                         await this._deviceManager.joinChannel(device, info);
 
-                        const repo = await this._getOrLoadRepo(branch, false);
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            false,
+                            false
+                        );
                         if (!repo) {
                             return;
                         }
@@ -235,7 +250,8 @@ export class CausalRepoServer {
                     [CHECKOUT]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
-                            true
+                            true,
+                            false
                         );
 
                         console.log(
@@ -253,7 +269,8 @@ export class CausalRepoServer {
                     [RESTORE]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
-                            true
+                            true,
+                            false
                         );
 
                         console.log(
@@ -538,12 +555,15 @@ export class CausalRepoServer {
         this._branchUnloaded(branch);
     }
 
-    private async _getOrLoadRepo(branch: string, createBranch: boolean) {
+    private async _getOrLoadRepo(
+        branch: string,
+        createBranch: boolean,
+        temporary: boolean
+    ) {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            const isTemp = isTempBranch(branch);
-            if (!isTemp) {
+            if (!temporary) {
                 repo = await this._loadRepo(branch, createBranch);
             } else {
                 repo = await this._createEmptyRepo(branch);

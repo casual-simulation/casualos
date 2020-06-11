@@ -8,6 +8,7 @@ import {
     CommitEvent,
     CheckoutEvent,
     RestoreEvent,
+    WatchBranchEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -42,7 +43,7 @@ export interface GenericSession {
 export interface CausalRepoMessageHandlerTypes {
     'repo/watch_branches': void;
     'repo/unwatch_branches': void;
-    'repo/watch_branch': string;
+    'repo/watch_branch': WatchBranchEvent;
     'repo/get_branch': string;
     'repo/unwatch_branch': string;
     'repo/add_atoms': AddAtomsEvent;
@@ -82,7 +83,7 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that start watching
      * the notified branches for new atoms.
      */
-    event(name: 'repo/watch_branch'): Observable<string>;
+    event(name: 'repo/watch_branch'): Observable<WatchBranchEvent>;
     /**
      * Gets an observable for events that stop watching
      * the notified branches for new atoms.
