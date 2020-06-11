@@ -27,7 +27,7 @@ describe('DeviceManagerHelpers', () => {
 
                 expect(
                     isEventForDevice(
-                        {
+                        <any>{
                             type: 'remote',
                             event: null,
                             username: eventUsername,
@@ -57,7 +57,7 @@ describe('DeviceManagerHelpers', () => {
 
                 expect(
                     isEventForDevice(
-                        {
+                        <any>{
                             type: 'remote',
                             event: null,
                             sessionId: eventSessionId,
@@ -87,7 +87,7 @@ describe('DeviceManagerHelpers', () => {
 
                 expect(
                     isEventForDevice(
-                        {
+                        <any>{
                             type: 'remote',
                             event: null,
                             deviceId: eventDeviceId,

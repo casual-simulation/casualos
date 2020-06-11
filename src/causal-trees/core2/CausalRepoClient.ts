@@ -46,9 +46,16 @@ import {
     RestoreEvent,
     RESTORE,
     GET_BRANCH,
+    DEVICES,
+    DevicesEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
-import { DeviceAction, RemoteAction } from '../core/Event';
+import {
+    DeviceAction,
+    RemoteAction,
+    DeviceActionResult,
+    DeviceActionError,
+} from '../core/Event';
 
 /**
  * Defines a client for a causal repo.
@@ -280,6 +287,21 @@ export class CausalRepoClient {
     }
 
     /**
+     * Requests a list of devices that are currently connected.
+     * @param branch The branch that the devices should be retrieved from.
+     */
+    devices(branch?: string) {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(DEVICES, branch);
+            }),
+            switchMap(connected =>
+                merge(this._client.event<DevicesEvent>(DEVICES).pipe(first()))
+            )
+        );
+    }
+
+    /**
      * Adds the given atoms to the given branch.
      * @param branch The name of the branch.
      * @param atoms The atoms to add.
@@ -405,7 +427,7 @@ export interface ClientAtomsReceived {
 
 export interface ClientEvent {
     type: 'event';
-    action: DeviceAction;
+    action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
 export type ClientWatchBranchEvents =

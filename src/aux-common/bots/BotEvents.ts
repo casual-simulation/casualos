@@ -4,6 +4,10 @@ import {
     DeviceAction,
     RemoteAction,
     DeviceSelector,
+    RemoteActionResult,
+    RemoteActionError,
+    DeviceActionResult,
+    DeviceActionError,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
@@ -84,7 +88,8 @@ export type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | LocalFormAnimationAction;
+    | LocalFormAnimationAction
+    | GetPlayerCountAction;
 
 /**
  * Defines a set of possible async action types.
@@ -95,7 +100,13 @@ export type AsyncActions =
     | ShowInputAction
     | ShareAction
     | SendWebhookAction
-    | UnlockSpaceAction;
+    | UnlockSpaceAction
+    | RemoteAction
+    | RemoteActionResult
+    | RemoteActionError
+    | DeviceAction
+    | DeviceActionResult
+    | DeviceActionError;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -104,7 +115,7 @@ export interface AsyncAction extends Action {
     /**
      * The ID of the async task.
      */
-    taskId: number;
+    taskId: number | string;
 }
 
 /**
@@ -749,6 +760,26 @@ export interface SaveFileOptions {
      * Whether to overwrite existing files.
      */
     overwriteExistingFile?: boolean;
+}
+
+/**
+ * Defines an event that is used to get the player count.
+ */
+export interface GetPlayerCountAction extends Action {
+    type: 'get_player_count';
+
+    /**
+     * The story that the player count should be retrieved for.
+     * If omitted, then the total player count will be returned.
+     */
+    story?: string;
+}
+
+/**
+ * Defines an event that is used to get the list of stories on the server.
+ */
+export interface GetStoriesAction extends Action {
+    type: 'get_stories';
 }
 
 /**
@@ -1656,7 +1687,7 @@ export function showInputForTag(
 export function showInput(
     currentValue?: any,
     options?: Partial<ShowInputOptions>,
-    taskId?: number
+    taskId?: number | string
 ): ShowInputAction {
     return {
         type: 'show_input',
@@ -1842,7 +1873,7 @@ export function finishCheckout(
  */
 export function webhook(
     options: WebhookOptions,
-    taskId?: number
+    taskId?: number | string
 ): SendWebhookAction {
     return {
         type: 'send_webhook',
@@ -1870,6 +1901,32 @@ export function saveFile(options: SaveFileOptions): SaveFileAction {
     return {
         type: 'save_file',
         options: options,
+    };
+}
+
+/**
+ * Creates a new GetPlayerCountAction.
+ * @param story The story that the player count should be retrieved for.
+ */
+export function getPlayerCount(story?: string): GetPlayerCountAction {
+    if (hasValue(story)) {
+        return {
+            type: 'get_player_count',
+            story,
+        };
+    } else {
+        return {
+            type: 'get_player_count',
+        };
+    }
+}
+
+/**
+ * Creates a new GetStoriesAction.
+ */
+export function getStories(): GetStoriesAction {
+    return {
+        type: 'get_stories',
     };
 }
 
@@ -2106,7 +2163,7 @@ export function clearSpace(space: BotSpace): ClearSpaceAction {
 export function unlockSpace(
     space: BotSpace,
     password: string,
-    taskId?: number
+    taskId?: number | string
 ): UnlockSpaceAction {
     return {
         type: 'unlock_space',
@@ -2137,7 +2194,10 @@ export function localFormAnimation(
  * @param taskId The ID of the task.
  * @param result The result.
  */
-export function asyncResult(taskId: number, result: any): AsyncResultAction {
+export function asyncResult(
+    taskId: number | string,
+    result: any
+): AsyncResultAction {
     return {
         type: 'async_result',
         taskId,
@@ -2150,7 +2210,10 @@ export function asyncResult(taskId: number, result: any): AsyncResultAction {
  * @param taskId The ID of the task.
  * @param error The error.
  */
-export function asyncError(taskId: number, error: any): AsyncErrorAction {
+export function asyncError(
+    taskId: number | string,
+    error: any
+): AsyncErrorAction {
     return {
         type: 'async_error',
         taskId,
@@ -2163,7 +2226,10 @@ export function asyncError(taskId: number, error: any): AsyncErrorAction {
  * @param options The options for sharing.
  * @param taskId The ID of the task.
  */
-export function share(options: ShareOptions, taskId?: number): ShareAction {
+export function share(
+    options: ShareOptions,
+    taskId?: number | string
+): ShareAction {
     return {
         type: 'share',
         taskId,

@@ -5,6 +5,10 @@ import {
     SESSION_ID_CLAIM,
     device as deviceEvent,
     DeviceSelector,
+    RemoteActionResult,
+    deviceResult,
+    RemoteActionError,
+    deviceError,
 } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
@@ -54,6 +58,7 @@ import {
     UNWATCH_DEVICES,
     UNWATCH_COMMITS,
     GET_BRANCH,
+    DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -295,7 +300,10 @@ export class CausalRepoServer {
                             d => [d, d.extra.device as DeviceInfo] as const
                         );
 
-                        let finalAction: RemoteAction;
+                        let finalAction:
+                            | RemoteAction
+                            | RemoteActionResult
+                            | RemoteActionError;
                         if (
                             event.action.deviceId ||
                             event.action.sessionId ||
@@ -316,10 +324,25 @@ export class CausalRepoServer {
                             finalAction,
                             devices
                         );
-                        const dEvent = deviceEvent(
-                            conn.device,
-                            finalAction.event
-                        );
+
+                        const dEvent =
+                            finalAction.type === 'remote'
+                                ? deviceEvent(
+                                      conn.device,
+                                      finalAction.event,
+                                      finalAction.taskId
+                                  )
+                                : finalAction.type === 'remote_result'
+                                ? deviceResult(
+                                      conn.device,
+                                      finalAction.result,
+                                      finalAction.taskId
+                                  )
+                                : deviceError(
+                                      conn.device,
+                                      finalAction.error,
+                                      finalAction.taskId
+                                  );
                         sendToDevices(targetedDevices, RECEIVE_EVENT, {
                             branch: event.branch,
                             action: dEvent,
@@ -373,6 +396,21 @@ export class CausalRepoServer {
 
                         conn.send(BRANCHES, {
                             branches: branches.map(b => b.name),
+                        });
+                    },
+                    [DEVICES]: async branch => {
+                        let devices: DeviceConnection<any>[];
+                        if (typeof branch !== 'undefined' && branch !== null) {
+                            const info = infoForBranch(branch);
+                            devices = this._deviceManager.getConnectedDevices(
+                                info
+                            );
+                        } else {
+                            devices = this._deviceManager.connectedDevices;
+                        }
+
+                        conn.send(DEVICES, {
+                            devices: devices.map(d => d.extra.device),
                         });
                     },
                     [UNWATCH_BRANCHES]: async () => {},

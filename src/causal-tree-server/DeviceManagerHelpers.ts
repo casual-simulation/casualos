@@ -6,6 +6,7 @@ import {
     USERNAME_CLAIM,
     SESSION_ID_CLAIM,
     DEVICE_ID_CLAIM,
+    DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { DeviceManager } from './DeviceManager';
@@ -38,14 +39,14 @@ export function connectDeviceChannel<TExtra>(
 }
 
 export function devicesForEvent(
-    event: RemoteAction,
+    event: DeviceSelector,
     devices: (readonly [DeviceConnection<any>, DeviceInfo])[]
 ): DeviceConnection<any>[] {
     return devices.filter(d => isEventForDevice(event, d[1])).map(d => d[0]);
 }
 
 export function isEventForDevice(
-    event: RemoteAction,
+    event: DeviceSelector,
     device: DeviceInfo
 ): boolean {
     if (event.username === device.claims[USERNAME_CLAIM]) {

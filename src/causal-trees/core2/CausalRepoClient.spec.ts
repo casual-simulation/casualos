@@ -39,11 +39,19 @@ import {
     CHECKOUT,
     RESTORE,
     GET_BRANCH,
+    DEVICES,
+    DevicesEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
 import { filter, map } from 'rxjs/operators';
-import { DeviceAction, device, remote } from '../core/Event';
+import {
+    DeviceAction,
+    device,
+    remote,
+    DeviceActionResult,
+    DeviceActionError,
+} from '../core/Event';
 import { DeviceInfo } from '../core/DeviceInfo';
 import { CausalRepoCommit, index, commit } from '.';
 
@@ -149,7 +157,10 @@ describe('CausalRepoClient', () => {
             const receiveEvent = new Subject<ReceiveDeviceActionEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
 
-            let events = [] as DeviceAction[];
+            let events = [] as (
+                | DeviceAction
+                | DeviceActionResult
+                | DeviceActionError)[];
             connection.connect();
             client
                 .watchBranch('abc')
@@ -925,6 +936,72 @@ describe('CausalRepoClient', () => {
             expect(infos).toEqual([
                 {
                     branches: ['abc', 'def'],
+                },
+            ]);
+        });
+    });
+
+    describe('devices()', () => {
+        it('should send a devices event after connecting', async () => {
+            client.devices().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: DEVICES,
+                    data: undefined,
+                },
+            ]);
+        });
+
+        it('should return an observable of device info', async () => {
+            const devices = new Subject<DevicesEvent>();
+            connection.events.set(DEVICES, devices);
+
+            let infos = [] as DevicesEvent[];
+            client.devices().subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            const info1 = deviceInfo('abc', 'abc', 'abc');
+            const info2 = deviceInfo('def', 'def', 'def');
+            const info3 = deviceInfo('ghi', 'ghi', 'ghi');
+
+            devices.next({
+                devices: [info1, info2],
+            });
+            await waitAsync();
+
+            devices.next({
+                devices: [info3],
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    devices: [info1, info2],
+                },
+            ]);
+        });
+
+        it('should send the given branch name', async () => {
+            const devices = new Subject<DevicesEvent>();
+            connection.events.set(DEVICES, devices);
+
+            client.devices('haha').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: DEVICES,
+                    data: 'haha',
                 },
             ]);
         });

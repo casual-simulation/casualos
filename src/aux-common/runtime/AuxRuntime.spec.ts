@@ -67,11 +67,17 @@ import {
     showInput,
     asyncResult,
     asyncError,
+    getPlayerCount,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
-import { remote, device } from '@casual-simulation/causal-trees';
+import {
+    remote,
+    device,
+    deviceResult,
+    deviceError,
+} from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import values from 'lodash/values';
 import { RealtimeEditMode } from './RuntimeBot';
@@ -1547,6 +1553,48 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+        });
+
+        it('should support resolving device async actions', async () => {
+            uuidMock.mockReturnValueOnce('task1');
+            runtime.process([
+                runScript(
+                    'server.storyPlayerCount("test").then(result => player.toast(result))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+            ]);
+
+            runtime.process([deviceResult(null, 123, 'task1')]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast(123)]]);
+        });
+
+        it('should support rejecting device async actions', async () => {
+            uuidMock.mockReturnValueOnce('task1');
+            runtime.process([
+                runScript(
+                    'server.storyPlayerCount("test").catch(err => player.toast(err))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [remote(getPlayerCount('test'), undefined, undefined, 'task1')],
+            ]);
+
+            runtime.process([deviceError(null, 'bad', 'task1')]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('bad')]]);
         });
 
         it('should support using await for async actions', async () => {

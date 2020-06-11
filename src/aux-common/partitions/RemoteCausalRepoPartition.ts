@@ -3,6 +3,7 @@ import {
     StatusUpdate,
     RemoteAction,
     Action,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     Atom,
@@ -32,6 +33,8 @@ import {
     loadSpace,
     asyncError,
     asyncResult,
+    GetPlayerCountAction,
+    GetStoriesAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -177,6 +180,36 @@ export class RemoteCausalRepoPartitionImpl
                         client: this._client,
                     }),
                 ]);
+            } else if (event.event.type === 'get_player_count') {
+                const action = <GetPlayerCountAction>event.event;
+                this._client.devices(action.story).subscribe(
+                    e => {
+                        const devices = e.devices.filter(
+                            d => d.claims[USERNAME_CLAIM] !== 'Server'
+                        );
+                        this._onEvents.next([
+                            asyncResult(event.taskId, devices.length),
+                        ]);
+                    },
+                    err => {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                );
+            } else if (event.event.type === 'get_stories') {
+                const action = <GetStoriesAction>event.event;
+                this._client.branches().subscribe(
+                    e => {
+                        this._onEvents.next([
+                            asyncResult(
+                                event.taskId,
+                                e.branches.filter(b => !b.startsWith('$'))
+                            ),
+                        ]);
+                    },
+                    err => {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                );
             } else {
                 this._client.sendEvent(this._branch, event);
             }
