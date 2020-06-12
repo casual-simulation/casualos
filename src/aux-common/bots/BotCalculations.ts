@@ -326,6 +326,15 @@ export function botFromShortId(bots: Bot[] | Object[], shortId: string): Bot {
  */
 export function getShortId(bot: Bot | Object | string): string {
     let id = typeof bot === 'string' ? bot : bot.id;
+
+    if (typeof id !== 'string') {
+        if (id !== null && typeof id !== 'undefined') {
+            return (<any>id).toString();
+        } else {
+            return null;
+        }
+    }
+
     let str = id.substr(0, ShortId_Length);
 
     if (id.startsWith('mod-')) {
@@ -2312,7 +2321,7 @@ export function formatValue(value: any): string {
         } else if (value instanceof Error) {
             return value.toString();
         } else {
-            if (value.id) {
+            if (isBot(value)) {
                 return getShortId(value);
             } else {
                 return JSON.stringify(value);
