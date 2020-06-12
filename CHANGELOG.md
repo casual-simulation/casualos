@@ -10,6 +10,9 @@
 
     -   Added the ability to auto-generate a story name when loading CasualOS without a story.
 
+-   :bug: Bug Fixes
+    -   Fixed an issue where objects that have an `id` property that is not a string would break the sheet.
+
 ## V1.1.6
 
 ### Date: 6/11/2020
