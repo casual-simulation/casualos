@@ -95,12 +95,6 @@ Vue.use(VueShortkey, {
 });
 Vue.use(VueClipboard);
 
-function redirectToBuilder(id: string) {
-    console.log('[Router] Redirecting to builder');
-    const url = new URL(`/*/${id}`, window.location.href);
-    window.location.href = url.href;
-}
-
 const routes: RouteConfig[] = [
     {
         path: '*',

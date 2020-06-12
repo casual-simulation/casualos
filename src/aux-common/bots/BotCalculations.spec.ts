@@ -35,6 +35,7 @@ import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 import { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
+import { getShortId } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1523,6 +1524,13 @@ describe('BotCalculations', () => {
             expect(formatValue(bot)).toBe('abcde');
         });
 
+        it('should handle objects that have non string IDs', () => {
+            const obj = {
+                id: 123,
+            };
+            expect(formatValue(obj)).toBe(JSON.stringify(obj));
+        });
+
         it('should format bot arrays', () => {
             const bot1 = createBot('abcdefghijklmnopqrstuvwxyz');
             const bot2 = createBot('zyxwvutsrqponmlkjighfedcba');
@@ -1532,6 +1540,24 @@ describe('BotCalculations', () => {
         it('should convert errors to strings', () => {
             const error = new Error('test');
             expect(formatValue(error)).toBe(error.toString());
+        });
+    });
+
+    describe('getShortId()', () => {
+        it('should get the short ID of the given bot', () => {
+            const bot = createBot('abcdefghijklmnopqrstuvwxyz');
+            expect(getShortId(bot)).toBe('abcde');
+        });
+
+        it('should handle objects that have non string IDs', () => {
+            const obj = {
+                id: 123,
+            };
+            expect(getShortId(<any>obj)).toBe('123');
+        });
+
+        it('should support using a string directly', () => {
+            expect(getShortId('abcdefghijklmnopqrstuvwxyz')).toBe('abcde');
         });
     });
 

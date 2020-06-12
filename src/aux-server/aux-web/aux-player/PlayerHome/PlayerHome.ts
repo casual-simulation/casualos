@@ -29,6 +29,19 @@ import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import intersection from 'lodash/intersection';
 import { Subscription } from 'rxjs';
 import isEqual from 'lodash/isEqual';
+import {
+    uniqueNamesGenerator,
+    Config,
+    adjectives,
+    colors,
+    animals,
+} from 'unique-names-generator';
+
+const customConfig: Config = {
+    dictionaries: [adjectives, colors],
+    separator: '-',
+    length: 2,
+};
 
 @Component({
     components: {
@@ -53,7 +66,8 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged() {
-        await this._setStory(this.query['story'] as (string | string[]));
+        const story = this.query['story'] as (string | string[]);
+        await this._setStory(story);
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
                 bot => {
@@ -85,7 +99,23 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            this._setStory(this.query['story'] as (string | string[]));
+            // On first load check the story and load a default
+            let story = this.query['story'] as (string | string[]);
+            if (!hasValue(story)) {
+                // Generate a random story name
+                const randomName: string = uniqueNamesGenerator({
+                    dictionaries: [adjectives, colors, animals],
+                });
+                let update: Dictionary<string> = {
+                    story: randomName,
+                };
+                if (!hasValue(this.query['pagePortal'])) {
+                    update.pagePortal = 'home';
+                }
+                this._updateQuery(update);
+                story = randomName;
+            }
+            this._setStory(story);
         }
     }
 
@@ -205,17 +235,19 @@ export default class PlayerHome extends Vue {
             [...Object.keys(this.query), ...QUERY_PORTALS]
         );
         let changes: Dictionary<any> = {};
-        let hasChange = false;
         for (let tag of tags) {
             const oldValue = this.query[tag];
             const newValue = calculateBotValue(calc, update.bot, tag);
             if (!isEqual(newValue, oldValue)) {
                 changes[tag] = newValue;
-                hasChange = true;
             }
         }
 
-        if (hasChange) {
+        this._updateQuery(changes);
+    }
+
+    private _updateQuery(changes: Dictionary<any>) {
+        if (Object.keys(changes).length > 0) {
             const final = {
                 ...this.$route,
                 query: {
