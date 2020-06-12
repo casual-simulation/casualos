@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.8
+
+### Date: 6/12/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Changed what words the story name auto-generation will use.
+
 ## V1.1.7
 
 ### Date: 6/11/2020
