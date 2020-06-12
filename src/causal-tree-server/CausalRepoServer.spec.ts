@@ -44,6 +44,7 @@ import {
     CausalRepoCommit,
     GET_BRANCH,
     DEVICES,
+    WatchBranchEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -206,7 +207,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -229,7 +230,9 @@ describe('CausalRepoServer', () => {
 
             await stageStore.addAtoms('testBranch', [a3]);
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -249,7 +252,7 @@ describe('CausalRepoServer', () => {
                 server.init();
 
                 const device = new MemoryConnection(device1Info);
-                const joinBranch = new Subject<string>();
+                const joinBranch = new Subject<WatchBranchEvent>();
                 device.events.set(WATCH_BRANCH, joinBranch);
 
                 connections.connection.next(device);
@@ -269,7 +272,9 @@ describe('CausalRepoServer', () => {
                 ]);
                 await updateBranch(store, b);
 
-                joinBranch.next('@testBranch');
+                joinBranch.next({
+                    branch: '@testBranch',
+                });
 
                 await waitAsync();
 
@@ -288,13 +293,13 @@ describe('CausalRepoServer', () => {
                 server.init();
 
                 const device = new MemoryConnection(device1Info);
-                const joinBranch = new Subject<string>();
+                const joinBranch = new Subject<WatchBranchEvent>();
                 const addAtoms = new Subject<AddAtomsEvent>();
                 device.events.set(ADD_ATOMS, addAtoms);
                 device.events.set(WATCH_BRANCH, joinBranch);
 
                 const device3 = new MemoryConnection(device3Info);
-                const joinBranch3 = new Subject<string>();
+                const joinBranch3 = new Subject<WatchBranchEvent>();
                 device3.events.set(WATCH_BRANCH, joinBranch3);
 
                 connections.connection.next(device);
@@ -304,7 +309,9 @@ describe('CausalRepoServer', () => {
 
                 const a1 = atom(atomId('a', 1), null, {});
 
-                joinBranch.next('@testBranch');
+                joinBranch.next({
+                    branch: '@testBranch',
+                });
 
                 await waitAsync();
 
@@ -315,7 +322,9 @@ describe('CausalRepoServer', () => {
 
                 await waitAsync();
 
-                joinBranch3.next('@testBranch');
+                joinBranch3.next({
+                    branch: '@testBranch',
+                });
 
                 await waitAsync();
 
@@ -818,7 +827,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -846,7 +855,9 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -879,11 +890,11 @@ describe('CausalRepoServer', () => {
             device.events.set(ADD_ATOMS, addAtoms);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -908,8 +919,12 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -960,7 +975,7 @@ describe('CausalRepoServer', () => {
 
             const device = new MemoryConnection(device1Info);
             const addAtoms = new Subject<AddAtomsEvent>();
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
             device.events.set(WATCH_BRANCH, joinBranch);
 
@@ -984,7 +999,9 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1023,7 +1040,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1065,7 +1082,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1108,11 +1125,11 @@ describe('CausalRepoServer', () => {
             device.events.set(ADD_ATOMS, addAtoms);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -1138,8 +1155,12 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1188,7 +1209,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1231,7 +1252,7 @@ describe('CausalRepoServer', () => {
             const removeAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, removeAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1260,7 +1281,9 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1293,11 +1316,11 @@ describe('CausalRepoServer', () => {
             device.events.set(ADD_ATOMS, removeAtoms);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -1323,8 +1346,12 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1375,7 +1402,7 @@ describe('CausalRepoServer', () => {
 
             const device = new MemoryConnection(device1Info);
             const removeAtoms = new Subject<AddAtomsEvent>();
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(ADD_ATOMS, removeAtoms);
             device.events.set(WATCH_BRANCH, joinBranch);
 
@@ -1400,7 +1427,9 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1440,11 +1469,11 @@ describe('CausalRepoServer', () => {
             device.events.set(ADD_ATOMS, removeAtoms);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -1469,8 +1498,12 @@ describe('CausalRepoServer', () => {
             ]);
             await updateBranch(store, b);
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -1519,7 +1552,7 @@ describe('CausalRepoServer', () => {
             const addAtoms = new Subject<AddAtomsEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
 
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1566,7 +1599,7 @@ describe('CausalRepoServer', () => {
                 const addAtoms = new Subject<AddAtomsEvent>();
                 device.events.set(ADD_ATOMS, addAtoms);
 
-                const joinBranch = new Subject<string>();
+                const joinBranch = new Subject<WatchBranchEvent>();
                 device.events.set(WATCH_BRANCH, joinBranch);
 
                 connections.connection.next(device);
@@ -1608,11 +1641,11 @@ describe('CausalRepoServer', () => {
                 device.events.set(ADD_ATOMS, addAtoms);
 
                 const device2 = new MemoryConnection(device2Info);
-                const joinBranch2 = new Subject<string>();
+                const joinBranch2 = new Subject<WatchBranchEvent>();
                 device2.events.set(WATCH_BRANCH, joinBranch2);
 
                 const device3 = new MemoryConnection(device3Info);
-                const joinBranch3 = new Subject<string>();
+                const joinBranch3 = new Subject<WatchBranchEvent>();
                 device3.events.set(WATCH_BRANCH, joinBranch3);
 
                 connections.connection.next(device);
@@ -1623,8 +1656,12 @@ describe('CausalRepoServer', () => {
 
                 const a1 = atom(atomId('a', 1), null, {});
 
-                joinBranch2.next('@testBranch');
-                joinBranch3.next('@testBranch');
+                joinBranch2.next({
+                    branch: '@testBranch',
+                });
+                joinBranch3.next({
+                    branch: '@testBranch',
+                });
 
                 await waitAsync();
 
@@ -1807,7 +1844,7 @@ describe('CausalRepoServer', () => {
             const device = new MemoryConnection(device1Info);
             const addAtoms = new Subject<AddAtomsEvent>();
             const makeCommit = new Subject<CommitEvent>();
-            const joinBranch = new Subject<string>();
+            const joinBranch = new Subject<WatchBranchEvent>();
             device.events.set(ADD_ATOMS, addAtoms);
             device.events.set(WATCH_BRANCH, joinBranch);
             device.events.set(COMMIT, makeCommit);
@@ -1862,7 +1899,9 @@ describe('CausalRepoServer', () => {
                 new Map([[a1.hash, a1], [a2.hash, a2], [a3.hash, a3]])
             );
 
-            joinBranch.next('testBranch');
+            joinBranch.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -2288,11 +2327,11 @@ describe('CausalRepoServer', () => {
             device.events.set(SEND_EVENT, sendEvent);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -2301,8 +2340,12 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
@@ -2360,11 +2403,11 @@ describe('CausalRepoServer', () => {
             device.events.set(SEND_EVENT, sendEvent);
 
             const device2 = new MemoryConnection(device2Info);
-            const joinBranch2 = new Subject<string>();
+            const joinBranch2 = new Subject<WatchBranchEvent>();
             device2.events.set(WATCH_BRANCH, joinBranch2);
 
             const device3 = new MemoryConnection(device3Info);
-            const joinBranch3 = new Subject<string>();
+            const joinBranch3 = new Subject<WatchBranchEvent>();
             device3.events.set(WATCH_BRANCH, joinBranch3);
 
             connections.connection.next(device);
@@ -2373,8 +2416,12 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            joinBranch2.next('testBranch');
-            joinBranch3.next('testBranch');
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
 
             await waitAsync();
 
