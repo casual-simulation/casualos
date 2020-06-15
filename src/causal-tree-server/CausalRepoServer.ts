@@ -469,7 +469,10 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCHES]: async () => {},
                     [UNWATCH_DEVICES]: async () => {},
-                    [UNWATCH_BRANCH_DEVICES]: async () => {},
+                    [UNWATCH_BRANCH_DEVICES]: async branch => {
+                        const info = devicesBranchInfo(branch);
+                        await this._deviceManager.leaveChannel(device, info);
+                    },
                     [UNWATCH_COMMITS]: async () => {},
                 }).subscribe();
 

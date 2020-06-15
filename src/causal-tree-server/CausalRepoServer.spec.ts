@@ -46,6 +46,7 @@ import {
     DEVICES,
     WatchBranchEvent,
     WATCH_BRANCH_DEVICES,
+    UNWATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -3195,6 +3196,39 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe(UNWATCH_BRANCH_DEVICES, () => {
+        it('should not send an event when stopped watching', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+            const unwatchDevices = new Subject<string>();
+            device.events.set(UNWATCH_BRANCH_DEVICES, unwatchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next('testBranch');
+            await waitAsync();
+
+            unwatchDevices.next('testBranch');
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            expect(device.messages).toEqual([]);
         });
     });
 
