@@ -213,6 +213,58 @@ describe('RuntimeBot', () => {
                 'otherNewTag',
             ]);
         });
+
+        describe('toJSON()', () => {
+            it('should return the raw tags that are on the bot', () => {
+                const { toJSON, ...first } = script.tags.toJSON();
+
+                expect(first).toEqual({
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 987,
+                });
+            });
+
+            it('should return raw tags that have been added to the compiled bot', () => {
+                precalc.tags.newTag = '987';
+
+                const { toJSON, ...first } = script.tags.toJSON();
+
+                expect(first).toEqual({
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 987,
+                    newTag: '987',
+                });
+            });
+
+            it('should return raw tags that have been added to the runtime bot', () => {
+                script.tags.newTag = '987';
+
+                const { toJSON, ...first } = script.tags.toJSON();
+
+                expect(first).toEqual({
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 987,
+                    newTag: '987',
+                });
+            });
+
+            it('should not be circular', () => {
+                const result = script.tags.toJSON();
+
+                expect(result).toEqual({
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 987,
+                });
+            });
+        });
     });
 
     describe('raw', () => {
