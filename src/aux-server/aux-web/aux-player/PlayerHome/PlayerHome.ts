@@ -29,18 +29,14 @@ import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import intersection from 'lodash/intersection';
 import { Subscription } from 'rxjs';
 import isEqual from 'lodash/isEqual';
-import {
-    uniqueNamesGenerator,
-    Config,
-    adjectives,
-    colors,
-    animals,
-} from 'unique-names-generator';
+import { uniqueNamesGenerator, Config } from 'unique-names-generator';
+import adjectives from '../../shared/dictionaries/adjectives';
+import colors from '../../shared/dictionaries/colors';
+import animals from '../../shared/dictionaries/animals';
 
-const customConfig: Config = {
-    dictionaries: [adjectives, colors],
+const namesConfig: Config = {
+    dictionaries: [adjectives, colors, animals],
     separator: '-',
-    length: 2,
 };
 
 @Component({
@@ -103,9 +99,7 @@ export default class PlayerHome extends Vue {
             let story = this.query['story'] as (string | string[]);
             if (!hasValue(story)) {
                 // Generate a random story name
-                const randomName: string = uniqueNamesGenerator({
-                    dictionaries: [adjectives, colors, animals],
-                });
+                const randomName: string = uniqueNamesGenerator(namesConfig);
                 let update: Dictionary<string> = {
                     story: randomName,
                 };
@@ -257,7 +251,13 @@ export default class PlayerHome extends Vue {
             };
 
             window.history.pushState({}, window.document.title);
-            this.$router.replace(final);
+            this.$router.replace(final).then(undefined, (err: Error) => {
+                // Ignore navigation duplicated errors
+                if (err.name !== 'NavigationDuplicated') {
+                    // Throw all other error types
+                    throw err;
+                }
+            });
         }
     }
 

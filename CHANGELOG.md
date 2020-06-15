@@ -1,14 +1,38 @@
 # CasualOS Changelog
 
-## V1.1.7
+## V1.1.9
 
 ### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where using a single minus sign in a tag would be interpreted as a number.
+    -   Fixed an issue where some tags would not be included in the JSON output of a bot.
+
+## V1.1.8
+
+### Date: 6/12/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Changed what words the story name auto-generation will use.
+
+## V1.1.7
+
+### Date: 6/11/2020
 
 ### Changes:
 
 -   :rocket: Improvements
 
     -   Added the ability to auto-generate a story name when loading CasualOS without a story.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where objects that have an `id` property that is not a string would break the sheet.
 
 ## V1.1.6
 

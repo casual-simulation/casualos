@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "1.1.6",
+    "version": "1.1.8",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -43,10 +43,10 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^1.1.6",
-        "@casual-simulation/aux-vm": "^1.1.6",
-        "@casual-simulation/aux-vm-browser": "^1.1.6",
-        "@casual-simulation/aux-vm-node": "^1.1.6",
+        "@casual-simulation/aux-common": "^1.1.7",
+        "@casual-simulation/aux-vm": "^1.1.7",
+        "@casual-simulation/aux-vm-browser": "^1.1.7",
+        "@casual-simulation/aux-vm-node": "^1.1.7",
         "@casual-simulation/causal-tree-client-socketio": "^1.1.6",
         "@casual-simulation/causal-tree-server": "^1.1.6",
         "@casual-simulation/causal-tree-server-socketio": "^1.1.6",
@@ -99,6 +99,7 @@
         "stripe": "7.9.0",
         "three": "0.113.2",
         "troika-3d-text": "0.24.1",
+        "unique-names-generator": "4.2.0",
         "useragent": "^2.3.0",
         "uuid": "^3.3.2",
         "vhost": "^3.0.2",
@@ -111,7 +112,6 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6",
-        "unique-names-generator": "4.2.0"
+        "vue-shortkey": "^3.1.6"
     }
 }
