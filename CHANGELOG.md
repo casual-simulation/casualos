@@ -8,7 +8,8 @@
 
 -   :bug: Bug Fixes
 
-    -   Fix an issue where using a single minus sign in a tag would be interpreted as a number.
+    -   Fixed an issue where using a single minus sign in a tag would be interpreted as a number.
+    -   Fixed an issue where some tags would not be included in the JSON output of a bot.
 
 ## V1.1.8
 
