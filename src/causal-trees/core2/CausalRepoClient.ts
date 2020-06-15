@@ -48,6 +48,7 @@ import {
     GET_BRANCH,
     DEVICES,
     DevicesEvent,
+    WatchBranchEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -104,10 +105,19 @@ export class CausalRepoClient {
      * Starts watching the given branch.
      * @param name The name of the branch to watch.
      */
-    watchBranch(name: string) {
+    watchBranch(nameOrEvent: string | WatchBranchEvent) {
+        let event: WatchBranchEvent;
+        if (typeof nameOrEvent === 'string') {
+            event = {
+                branch: nameOrEvent,
+            };
+        } else {
+            event = nameOrEvent;
+        }
+        const name = event.branch;
         return this._whenConnected().pipe(
             tap(connected => {
-                this._client.send(WATCH_BRANCH, name);
+                this._client.send(WATCH_BRANCH, event);
                 let list = this._getSentAtoms(name);
                 let unsentAtoms = [] as Atom<any>[];
                 let removedAtoms = [] as string[];

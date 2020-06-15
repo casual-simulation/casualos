@@ -845,7 +845,9 @@ describe('RemoteCausalRepoPartition', () => {
                 expect(connection.sentMessages.slice(1)).toEqual([
                     {
                         name: WATCH_BRANCH,
-                        data: 'testBranch',
+                        data: {
+                            branch: 'testBranch',
+                        },
                     },
                 ]);
             });

@@ -841,7 +841,9 @@ describe('AuxHelper', () => {
                 expect(connection.sentMessages.slice(1)).toEqual([
                     {
                         name: WATCH_BRANCH,
-                        data: 'story',
+                        data: {
+                            branch: 'story',
+                        },
                     },
                 ]);
             });

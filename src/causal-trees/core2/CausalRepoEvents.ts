@@ -283,7 +283,7 @@ export interface ConnectedToBranchEvent {
     /**
      * The name of the branch that was connected.
      */
-    branch: string;
+    branch: WatchBranchEvent;
 
     /**
      * The info of session that connected.

@@ -60,6 +60,7 @@ import {
     GET_BRANCH,
     DEVICES,
     MemoryCausalRepoStore,
+    WatchBranchEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -75,6 +76,7 @@ export class CausalRepoServer {
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
+    private _branches: Map<string, WatchBranchEvent>;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -91,6 +93,7 @@ export class CausalRepoServer {
         this._store = store;
         this._deviceManager = new DeviceManagerImpl();
         this._repos = new Map();
+        this._branches = new Map();
         this._stage = stageStore;
     }
 
@@ -113,6 +116,9 @@ export class CausalRepoServer {
                         const branch = event.branch;
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
+                        if (!this._branches.has(branch)) {
+                            this._branches.set(branch, event);
+                        }
                         const repo = await this._getOrLoadRepo(
                             branch,
                             true,
@@ -400,8 +406,9 @@ export class CausalRepoServer {
                                 branchInfo
                             );
                             for (let device of devices) {
+                                const branchEvent = this._branches.get(branch);
                                 conn.send(DEVICE_CONNECTED_TO_BRANCH, {
-                                    branch: branch,
+                                    branch: branchEvent,
                                     device: device.extra.device,
                                 });
                             }
@@ -510,8 +517,9 @@ export class CausalRepoServer {
         );
         const info = devicesInfo();
         const devices = this._deviceManager.getConnectedDevices(info);
+        const branchEvent = this._branches.get(branch);
         sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
-            branch: branch,
+            branch: branchEvent,
             device: device.extra.device,
         });
     }
@@ -537,6 +545,7 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         if (devices.length <= 0) {
             await this._unloadBranch(info.id);
+            this._branches.delete(info.id);
         }
     }
 

@@ -2746,7 +2746,9 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch',
+                        branch: {
+                            branch: 'testBranch',
+                        },
                         device: device2Info,
                     },
                 },
@@ -2785,7 +2787,9 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch',
+                        branch: {
+                            branch: 'testBranch',
+                        },
                         device: device2Info,
                     },
                 },
@@ -2829,7 +2833,9 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch',
+                        branch: {
+                            branch: 'testBranch',
+                        },
                         device: device2Info,
                     },
                 },
@@ -2890,22 +2896,66 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch',
+                        branch: {
+                            branch: 'testBranch',
+                        },
                         device: device2Info,
                     },
                 },
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch2',
+                        branch: {
+                            branch: 'testBranch2',
+                        },
                         device: device3Info,
                     },
                 },
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
-                        branch: 'testBranch2',
+                        branch: {
+                            branch: 'testBranch2',
+                        },
                         device: device4Info,
+                    },
+                },
+            ]);
+        });
+
+        it('should include whether the branch is temporary when a device connects', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next();
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+                temporary: true,
+            });
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                            temporary: true,
+                        },
+                        device: device2Info,
                     },
                 },
             ]);

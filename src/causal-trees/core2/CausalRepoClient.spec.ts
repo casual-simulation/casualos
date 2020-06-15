@@ -76,7 +76,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
             ]);
         });
@@ -205,7 +207,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
             ]);
 
@@ -214,7 +218,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
             ]);
 
@@ -223,11 +229,15 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
             ]);
         });
@@ -254,7 +264,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
                 {
                     name: ADD_ATOMS,
@@ -271,7 +283,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages.slice(2)).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
                 {
                     name: ADD_ATOMS,
@@ -305,7 +319,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
                 {
                     name: ADD_ATOMS,
@@ -322,7 +338,9 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages.slice(2)).toEqual([
                 {
                     name: WATCH_BRANCH,
-                    data: 'abc',
+                    data: {
+                        branch: 'abc',
+                    },
                 },
                 {
                     name: ADD_ATOMS,
@@ -372,7 +390,38 @@ describe('CausalRepoClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                    },
+                },
+                {
+                    name: UNWATCH_BRANCH,
                     data: 'abc',
+                },
+            ]);
+        });
+
+        it('should allow connecting to temporary branches', async () => {
+            const sub = client
+                .watchBranch({
+                    branch: 'abc',
+                    temporary: true,
+                })
+                .subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                        temporary: true,
+                    },
                 },
                 {
                     name: UNWATCH_BRANCH,
@@ -800,7 +849,9 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             connect.next({
-                branch: 'abc',
+                branch: {
+                    branch: 'abc',
+                },
                 device: device1,
             });
 
@@ -813,7 +864,9 @@ describe('CausalRepoClient', () => {
             expect(connections).toEqual([
                 {
                     type: DEVICE_CONNECTED_TO_BRANCH,
-                    branch: 'abc',
+                    branch: {
+                        branch: 'abc',
+                    },
                     device: device1,
                 },
             ]);
