@@ -142,6 +142,11 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
      * Basically this means that all you get is the initial state.
      */
     static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
 }
 
 /**
@@ -170,6 +175,11 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Basically this means that all you get is the initial state.
      */
     static?: boolean;
+
+    /**
+     * Whether the partition should be temporary.
+     */
+    temporary?: boolean;
 }
 
 /**

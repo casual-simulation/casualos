@@ -952,6 +952,35 @@ describe('RemoteCausalRepoPartition', () => {
             });
         });
 
+        describe('temporary', () => {
+            it('should load the given branch as temporary', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    temporary: true,
+                });
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                partition.connect();
+
+                await waitAsync();
+
+                expect(connection.sentMessages).toEqual([
+                    {
+                        name: WATCH_BRANCH,
+                        data: {
+                            branch: 'testBranch',
+                            temporary: true,
+                        },
+                    },
+                ]);
+            });
+        });
+
         function setupPartition(config: RemoteCausalRepoPartitionConfig) {
             partition = new RemoteCausalRepoPartitionImpl(
                 {

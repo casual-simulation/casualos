@@ -54,7 +54,7 @@ export class AuxCausalRepoManager {
         if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
             this._serverDevice = device;
         }
-        if (branch.temporary) {
+        if (branch.temporary === true) {
             return;
         }
 

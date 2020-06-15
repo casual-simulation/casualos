@@ -79,6 +79,7 @@ export class RemoteCausalRepoPartitionImpl
     private _branch: string;
     private _readOnly: boolean;
     private _static: boolean;
+    private _temporary: boolean;
 
     /**
      * Whether the partition is watching the branch.
@@ -155,6 +156,7 @@ export class RemoteCausalRepoPartitionImpl
         this._client = client;
         this.private = config.private;
         this._static = config.static || false;
+        this._temporary = config.temporary;
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -356,16 +358,21 @@ export class RemoteCausalRepoPartitionImpl
             })
         );
         this._sub.add(
-            this._client.watchBranch(this._branch).subscribe(event => {
-                if (!this._synced) {
-                    this._updateSynced(true);
-                }
-                if (event.type === 'atoms') {
-                    this._applyAtoms(event.atoms, event.removedAtoms);
-                } else if (event.type === 'event') {
-                    this._onEvents.next([event.action]);
-                }
-            })
+            this._client
+                .watchBranch({
+                    branch: this._branch,
+                    temporary: this._temporary,
+                })
+                .subscribe(event => {
+                    if (!this._synced) {
+                        this._updateSynced(true);
+                    }
+                    if (event.type === 'atoms') {
+                        this._applyAtoms(event.atoms, event.removedAtoms);
+                    } else if (event.type === 'event') {
+                        this._onEvents.next([event.action]);
+                    }
+                })
         );
     }
 
