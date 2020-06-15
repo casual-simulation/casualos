@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.9
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fix an issue where using a single minus sign in a tag would be interpreted as a number.
+
 ## V1.1.8
 
 ### Date: 6/12/2020
