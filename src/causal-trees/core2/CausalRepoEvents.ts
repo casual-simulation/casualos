@@ -108,6 +108,16 @@ export const WATCH_DEVICES = 'repo/watch_devices';
 export const UNWATCH_DEVICES = 'repo/unwatch_devices';
 
 /**
+ * The name of the event which starts watching for connection/disconnection events to the server on a particular branch.
+ */
+export const WATCH_BRANCH_DEVICES = 'repo/watch_branch_devices';
+
+/**
+ * The name of the event which stops watching for connection/disconnection events to the server on a particular branch.
+ */
+export const UNWATCH_BRANCH_DEVICES = 'repo/unwatch_branch_devices';
+
+/**
  * The name of the event which notifies that a device became connected to a branch.
  */
 export const DEVICE_CONNECTED_TO_BRANCH = 'repo/device_connected_to_branch';

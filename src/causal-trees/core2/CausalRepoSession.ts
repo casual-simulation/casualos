@@ -50,6 +50,8 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/send_event': SendRemoteActionEvent;
     'repo/watch_devices': void;
     'repo/unwatch_devices': void;
+    'repo/watch_branch_devices': string;
+    'repo/unwatch_branch_devices': string;
     'repo/branch_info': string;
     'repo/branches': void;
     'repo/devices': string;
@@ -111,6 +113,16 @@ export interface CausalRepoSession extends GenericSession {
      * for connection/disconnection events.
      */
     event(name: 'repo/unwatch_devices'): Observable<void>;
+    /**
+     * Gets an observable for events that start watching
+     * for connection/disconnection events on a particular branch.
+     */
+    event(name: 'repo/watch_branch_devices'): Observable<string>;
+    /**
+     * Gets an observable for events that stop watching
+     * for connection/disconnection events on a particular branch.
+     */
+    event(name: 'repo/unwatch_branch_devices'): Observable<string>;
     /**
      * Gets an observable for events that request branch info.
      */

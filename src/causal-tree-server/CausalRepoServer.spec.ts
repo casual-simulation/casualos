@@ -45,6 +45,7 @@ import {
     GET_BRANCH,
     DEVICES,
     WatchBranchEvent,
+    WATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -2939,6 +2940,241 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             watchDevices.next();
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+                temporary: true,
+            });
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                            temporary: true,
+                        },
+                        device: device2Info,
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(WATCH_BRANCH_DEVICES, () => {
+        it('should send an event when a device connects to a branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next('testBranch');
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2Info,
+                    },
+                },
+            ]);
+        });
+
+        it('should send an event when a device unwatches a branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            const leaveBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+            device2.events.set(UNWATCH_BRANCH, leaveBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next('testBranch');
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            leaveBranch2.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2Info,
+                    },
+                },
+                {
+                    name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        device: device2Info,
+                    },
+                },
+            ]);
+        });
+
+        it('should send an event when a device disconnects', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next('testBranch');
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            device2.disconnect.next();
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2Info,
+                    },
+                },
+                {
+                    name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        device: device2Info,
+                    },
+                },
+            ]);
+        });
+
+        it('should send events for all the currently connected devices only for the specified branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<WatchBranchEvent>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            const device4 = new MemoryConnection(device4Info);
+            const joinBranch4 = new Subject<WatchBranchEvent>();
+            device4.events.set(WATCH_BRANCH, joinBranch4);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+            connections.connection.next(device4);
+            await waitAsync();
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            joinBranch3.next({
+                branch: 'testBranch',
+            });
+            await waitAsync();
+
+            joinBranch4.next({
+                branch: 'testBranch2',
+            });
+            await waitAsync();
+
+            watchDevices.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2Info,
+                    },
+                },
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device3Info,
+                    },
+                },
+            ]);
+        });
+
+        it('should include whether the branch is temporary when a device connects', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<string>();
+            device.events.set(WATCH_BRANCH_DEVICES, watchDevices);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            watchDevices.next('testBranch');
             await waitAsync();
 
             joinBranch2.next({

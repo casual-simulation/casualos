@@ -61,6 +61,8 @@ import {
     DEVICES,
     MemoryCausalRepoStore,
     WatchBranchEvent,
+    WATCH_BRANCH_DEVICES,
+    UNWATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -414,6 +416,26 @@ export class CausalRepoServer {
                             }
                         }
                     },
+                    [WATCH_BRANCH_DEVICES]: async branch => {
+                        console.log(
+                            `[CausalRepoServer] Watch Devices for branch: ${branch}`
+                        );
+                        const info = devicesBranchInfo(branch);
+                        await this._deviceManager.joinChannel(device, info);
+
+                        const branches = this._repos.keys();
+                        const branchInfo = infoForBranch(branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            branchInfo
+                        );
+                        for (let device of devices) {
+                            const branchEvent = this._branches.get(branch);
+                            conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                branch: branchEvent,
+                                device: device.extra.device,
+                            });
+                        }
+                    },
                     [BRANCH_INFO]: async branch => {
                         const branches = await this._store.getBranches(branch);
                         const exists = branches.some(b => b.name === branch);
@@ -447,6 +469,7 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCHES]: async () => {},
                     [UNWATCH_DEVICES]: async () => {},
+                    [UNWATCH_BRANCH_DEVICES]: async () => {},
                     [UNWATCH_COMMITS]: async () => {},
                 }).subscribe();
 
@@ -515,13 +538,18 @@ export class CausalRepoServer {
                 device.id
             } connected to branch: ${branch}`
         );
-        const info = devicesInfo();
-        const devices = this._deviceManager.getConnectedDevices(info);
         const branchEvent = this._branches.get(branch);
-        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
+        const event = {
             branch: branchEvent,
             device: device.extra.device,
-        });
+        };
+        let info = devicesInfo();
+        let devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, event);
+
+        info = devicesBranchInfo(branch);
+        devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, event);
     }
 
     private _sendDisconnectedFromBranch(
@@ -533,12 +561,17 @@ export class CausalRepoServer {
                 device.id
             } disconnected from branch: ${branch}`
         );
-        const info = devicesInfo();
-        const devices = this._deviceManager.getConnectedDevices(info);
-        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
+        const event = {
             branch: branch,
             device: device.extra.device,
-        });
+        };
+        let info = devicesInfo();
+        let devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
+
+        info = devicesBranchInfo(branch);
+        devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
     }
 
     private async _tryUnloadBranch(info: RealtimeChannelInfo) {
@@ -699,6 +732,13 @@ function branchesInfo(): RealtimeChannelInfo {
 function devicesInfo(): RealtimeChannelInfo {
     return {
         id: 'devices',
+        type: 'aux-devices',
+    };
+}
+
+function devicesBranchInfo(branch: string): RealtimeChannelInfo {
+    return {
+        id: `${branch}-devices`,
         type: 'aux-devices',
     };
 }
