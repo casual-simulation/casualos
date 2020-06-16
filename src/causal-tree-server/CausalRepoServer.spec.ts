@@ -664,6 +664,33 @@ describe('CausalRepoServer', () => {
                 deletions: {},
             });
         });
+
+        it('should do nothing if the branch is already unloaded', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            watchDevices.next();
+
+            await waitAsync();
+
+            leaveBranch.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([]);
+        });
     });
 
     describe(WATCH_BRANCHES, () => {

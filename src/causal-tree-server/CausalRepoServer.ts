@@ -383,6 +383,12 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCH]: async branch => {
                         const info = infoForBranch(branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            info
+                        );
+                        if (devices.length <= 0) {
+                            return;
+                        }
                         await this._deviceManager.leaveChannel(device, info);
 
                         this._sendDisconnectedFromBranch(device, branch);
