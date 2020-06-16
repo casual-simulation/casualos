@@ -9,7 +9,7 @@
 -   :rocket: Improvements
     -   Added the `player` and `otherPlayers` spaces.
         -   These spaces are special and interact with each other.
-        -   The both the `player` space and `otherPlayers` space are shared but the lifetime of the bots is temporary. In this sense, the bots act like temporary shared bots.
+        -   Both the `player` space and `otherPlayers` space are shared but the lifetime of the bots is temporary. In this sense, the bots act like temporary shared bots.
         -   However, bots created in the `player` space will show up in the `otherPlayers` space to other players and vice versa.
         -   This means you can share temporary bots with other players by using the `player` space and see the temporary bots shared by other players by inspecting the `otherPlayers` space.
         -   Important Notes:
