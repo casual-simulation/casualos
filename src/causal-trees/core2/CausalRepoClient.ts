@@ -60,6 +60,7 @@ import {
     DeviceActionError,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
+import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 /**
  * Defines a client for a causal repo.
@@ -111,18 +112,18 @@ export class CausalRepoClient {
      * @param name The name of the branch to watch.
      */
     watchBranch(nameOrEvent: string | WatchBranchEvent) {
-        let event: WatchBranchEvent;
+        let branchEvent: WatchBranchEvent;
         if (typeof nameOrEvent === 'string') {
-            event = {
+            branchEvent = {
                 branch: nameOrEvent,
             };
         } else {
-            event = nameOrEvent;
+            branchEvent = nameOrEvent;
         }
-        const name = event.branch;
+        const name = branchEvent.branch;
         return this._whenConnected().pipe(
             tap(connected => {
-                this._client.send(WATCH_BRANCH, event);
+                this._client.send(WATCH_BRANCH, branchEvent);
                 let list = this._getSentAtoms(name);
                 let unsentAtoms = [] as Atom<any>[];
                 let removedAtoms = [] as string[];
@@ -153,7 +154,11 @@ export class CausalRepoClient {
                     this._client.event<AtomsReceivedEvent>(ATOMS_RECEIVED).pipe(
                         filter(event => event.branch === name),
                         tap(event => {
+                            if (branchEvent.temporary) {
+                                return;
+                            }
                             let list = this._getSentAtoms(event.branch);
+
                             for (let hash of event.hashes) {
                                 list.delete(hash);
                             }
