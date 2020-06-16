@@ -24,7 +24,8 @@ export type AuxPartition =
     | RemoteCausalRepoPartition
     | LocalStoragePartition
     | ProxyClientPartition
-    | BotPartition;
+    | BotPartition
+    | OtherPlayersPartition;
 
 /**
  * The list of edit stategies that a partition can use.
@@ -161,6 +162,18 @@ export interface RemoteCausalRepoPartition extends CausalRepoPartition {
      * Gets or sets whether the partition has been forced offline.
      */
     forcedOffline: boolean;
+}
+
+/**
+ * Defines a partition that listens for other players and loads their player partitions.
+ */
+export interface OtherPlayersPartition extends AuxPartitionBase {
+    type: 'other_players';
+
+    /**
+     * The current state of the partition.
+     */
+    state: BotsState;
 }
 
 /**

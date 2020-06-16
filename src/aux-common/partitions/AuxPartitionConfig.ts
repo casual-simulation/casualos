@@ -32,7 +32,9 @@ export type PartitionConfig =
     | ProxyClientPartitionConfig
     | LocalStoragePartitionConfig
     | BotPartitionConfig
-    | SearchPartitionClientConfig;
+    | SearchPartitionClientConfig
+    | OtherPlayersClientPartitionConfig
+    | OtherPlayersRepoPartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -180,6 +182,40 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be temporary.
      */
     temporary?: boolean;
+}
+
+/**
+ * Defines a partition that uses the Causal Repo API to watch for other players on the given branch.
+ */
+export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
+    type: 'other_players_repo';
+
+    /**
+     * The branch to watch for players.
+     */
+    branch: string;
+
+    /**
+     * The host that the branch should be loaded from.
+     */
+    host: string;
+}
+
+/**
+ * Defines a partition that uses the Causal Repo API to watch for other players on the given branch.
+ */
+export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
+    type: 'other_players_client';
+
+    /**
+     * The branch to watch for players.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used.
+     */
+    client: CausalRepoClient;
 }
 
 /**

@@ -17,6 +17,7 @@ import {
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
     PLAYER_PARTITION_ID,
+    OTHER_PLAYERS_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -132,6 +133,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     branch: `${parsedId.channel}-player-${user.id}`,
                     host: host,
                     temporary: true,
+                },
+                [OTHER_PLAYERS_PARTITION_ID]: {
+                    type: 'other_players_repo',
+                    branch: parsedId.channel,
+                    host: host,
                 },
             };
         }
