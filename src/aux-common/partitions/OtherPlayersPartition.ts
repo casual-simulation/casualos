@@ -72,6 +72,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      * The map of branch names to partitions.
      */
     private _partitions: Map<string, RemoteCausalRepoPartition>;
+    /**
+     * The map of branch names to subscriptions.
+     */
+    private _partitionSubs: Map<string, Subscription>;
 
     /**
      * Whether the partition is watching the branch.
@@ -112,7 +116,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     }
 
     unsubscribe() {
-        return this._sub.unsubscribe();
+        this._sub.unsubscribe();
+        for (let sub of this._partitionSubs.values()) {
+            sub.unsubscribe();
+        }
     }
 
     get closed(): boolean {
@@ -145,6 +152,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         this._client = client;
         this._state = {};
         this._partitions = new Map();
+        this._partitionSubs = new Map();
         this._synced = false;
     }
 
@@ -238,6 +246,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                     device.claims[SESSION_ID_CLAIM]
                 }`
             );
+            const sub = new Subscription();
             const partition = await createCausalRepoClientPartition(
                 {
                     type: 'causal_repo_client',
@@ -249,41 +258,48 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 this._user
             );
             this._partitions.set(branch, partition);
-            this._sub.add(partition);
+            this._partitionSubs.set(branch, sub);
+            sub.add(partition);
 
-            partition.onBotsAdded.subscribe(
-                added => {
-                    this._state = Object.assign({}, this._state);
-                    for (let bot of added) {
-                        if (bot) {
-                            this._state[bot.id] = bot;
+            sub.add(
+                partition.onBotsAdded.subscribe(
+                    added => {
+                        this._state = Object.assign({}, this._state);
+                        for (let bot of added) {
+                            if (bot) {
+                                this._state[bot.id] = bot;
+                            }
                         }
-                    }
-                    this._onBotsAdded.next(added);
-                },
-                err => this._onBotsAdded.error(err)
+                        this._onBotsAdded.next(added);
+                    },
+                    err => this._onBotsAdded.error(err)
+                )
             );
-            partition.onBotsRemoved.subscribe(
-                removed => {
-                    this._state = Object.assign({}, this._state);
-                    for (let id of removed) {
-                        delete this._state[id];
-                    }
-                    this._onBotsRemoved.next(removed);
-                },
-                err => this._onBotsRemoved.error(err)
+            sub.add(
+                partition.onBotsRemoved.subscribe(
+                    removed => {
+                        this._state = Object.assign({}, this._state);
+                        for (let id of removed) {
+                            delete this._state[id];
+                        }
+                        this._onBotsRemoved.next(removed);
+                    },
+                    err => this._onBotsRemoved.error(err)
+                )
             );
-            partition.onBotsUpdated.subscribe(
-                updated => {
-                    this._state = Object.assign({}, this._state);
-                    for (let update of updated) {
-                        this._state[update.bot.id] = update.bot;
-                    }
-                    this._onBotsUpdated.next(updated);
-                },
-                err => this._onBotsUpdated.error(err)
+            sub.add(
+                partition.onBotsUpdated.subscribe(
+                    updated => {
+                        this._state = Object.assign({}, this._state);
+                        for (let update of updated) {
+                            this._state[update.bot.id] = update.bot;
+                        }
+                        this._onBotsUpdated.next(updated);
+                    },
+                    err => this._onBotsUpdated.error(err)
+                )
             );
-            partition.onError.subscribe(this._onError);
+            sub.add(partition.onError.subscribe(this._onError));
             partition.connect();
         }
     }
@@ -295,9 +311,18 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _tryUnloadBranchForDevice(device: DeviceInfo) {
         const branch = this._branchNameForDevice(device);
         if (this._partitions.has(branch)) {
+            console.log(
+                `[OtherPlayersPartitionImpl] Unloading partition for ${
+                    device.claims[SESSION_ID_CLAIM]
+                }`
+            );
             const partition = this._partitions.get(branch);
             this._partitions.delete(branch);
-            partition.unsubscribe();
+            const sub = this._partitionSubs.get(branch);
+            this._partitionSubs.delete(branch);
+            if (sub) {
+                sub.unsubscribe();
+            }
 
             const state = partition.state;
             const ids = Object.keys(state);
