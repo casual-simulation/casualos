@@ -41,6 +41,8 @@ import {
     GET_BRANCH,
     DEVICES,
     DevicesEvent,
+    WATCH_BRANCH_DEVICES,
+    UNWATCH_BRANCH_DEVICES,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -896,6 +898,98 @@ describe('CausalRepoClient', () => {
                 {
                     name: UNWATCH_DEVICES,
                     data: undefined,
+                },
+            ]);
+        });
+    });
+
+    describe('watchBranchDevices()', () => {
+        it('should send a watch devices event after connecting', async () => {
+            client.watchBranchDevices('testBranch').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH_DEVICES,
+                    data: 'testBranch',
+                },
+            ]);
+        });
+
+        it('should return an observable of connected/disconnected events', async () => {
+            let connections: ConnectedToBranchEvent[] = [];
+            let disconnections: DisconnectedFromBranchEvent[] = [];
+            client.watchBranchDevices('testBranch').subscribe(e => {
+                if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
+                    connections.push(e);
+                } else {
+                    disconnections.push(e);
+                }
+            });
+
+            let connect = new Subject<ConnectedToBranchEvent>();
+            let disconnect = new Subject<DisconnectedFromBranchEvent>();
+            connection.events.set(DEVICE_CONNECTED_TO_BRANCH, connect);
+            connection.events.set(DEVICE_DISCONNECTED_FROM_BRANCH, disconnect);
+
+            const device1 = deviceInfo('device1', 'device1', 'device1');
+            const device2 = deviceInfo('device2', 'device2', 'device2');
+
+            connection.connect();
+            await waitAsync();
+
+            connect.next({
+                branch: {
+                    branch: 'testBranch',
+                },
+                device: device1,
+            });
+
+            disconnect.next({
+                branch: 'testBranch',
+                device: device2,
+            });
+            await waitAsync();
+
+            expect(connections).toEqual([
+                {
+                    type: DEVICE_CONNECTED_TO_BRANCH,
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                },
+            ]);
+            expect(disconnections).toEqual([
+                {
+                    type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    branch: 'testBranch',
+                    device: device2,
+                },
+            ]);
+        });
+
+        it('should send a unwatch devices event when unsubscribed', async () => {
+            const sub = client.watchBranchDevices('testBranch').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH_DEVICES,
+                    data: 'testBranch',
+                },
+                {
+                    name: UNWATCH_BRANCH_DEVICES,
+                    data: 'testBranch',
                 },
             ]);
         });

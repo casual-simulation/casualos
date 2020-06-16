@@ -49,6 +49,8 @@ import {
     DEVICES,
     DevicesEvent,
     WatchBranchEvent,
+    WATCH_BRANCH_DEVICES,
+    UNWATCH_BRANCH_DEVICES,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -259,6 +261,51 @@ export class CausalRepoClient {
             ),
             finalize(() => {
                 this._client.send(UNWATCH_DEVICES, undefined);
+            })
+        );
+    }
+
+    /**
+     * Watches for device connection/disconnection events on the given branch.
+     * @param branch The branch to watch.
+     */
+    watchBranchDevices(branch: string) {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(WATCH_BRANCH_DEVICES, branch);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<ConnectedToBranchEvent>(
+                            DEVICE_CONNECTED_TO_BRANCH
+                        )
+                        .pipe(
+                            map(
+                                e =>
+                                    ({
+                                        type: DEVICE_CONNECTED_TO_BRANCH,
+                                        ...e,
+                                    } as const)
+                            )
+                        ),
+                    this._client
+                        .event<DisconnectedFromBranchEvent>(
+                            DEVICE_DISCONNECTED_FROM_BRANCH
+                        )
+                        .pipe(
+                            map(
+                                e =>
+                                    ({
+                                        type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                                        ...e,
+                                    } as const)
+                            )
+                        )
+                )
+            ),
+            finalize(() => {
+                this._client.send(UNWATCH_BRANCH_DEVICES, branch);
             })
         );
     }
