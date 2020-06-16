@@ -8,7 +8,7 @@ import {
     finalize,
     first,
 } from 'rxjs/operators';
-import { merge, Observable, never } from 'rxjs';
+import { merge, Observable, never, of } from 'rxjs';
 import {
     WATCH_BRANCH,
     AddAtomsEvent,
@@ -59,6 +59,7 @@ import {
     DeviceActionResult,
     DeviceActionError,
 } from '../core/Event';
+import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
 
 /**
  * Defines a client for a causal repo.
@@ -66,12 +67,14 @@ import {
 export class CausalRepoClient {
     private _client: ConnectionClient;
     private _sentAtoms: Map<string, Map<string, Atom<any>>>;
+    private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
         this._forcedOffline = false;
         this._sentAtoms = new Map();
+        this._connectedDevices = new Map();
     }
 
     /**
@@ -270,7 +273,32 @@ export class CausalRepoClient {
      * @param branch The branch to watch.
      */
     watchBranchDevices(branch: string) {
-        return this._whenConnected().pipe(
+        return this._whenConnected(false).pipe(
+            switchMap(connected =>
+                // Grab all of the currently connected devices
+                // and send disconnected events for them
+                !connected
+                    ? this._disconnectDevices(branch)
+                    : this._watchConnectedDevices(branch)
+            )
+        );
+    }
+
+    private _disconnectDevices(branch: string) {
+        return of(
+            ...[...this._getConnectedDevices(branch).values()].map(
+                device =>
+                    ({
+                        type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                        branch: branch,
+                        device: device,
+                    } as const)
+            )
+        );
+    }
+
+    private _watchConnectedDevices(branch: string) {
+        return of(true).pipe(
             tap(connected => {
                 this._client.send(WATCH_BRANCH_DEVICES, branch);
             }),
@@ -281,6 +309,15 @@ export class CausalRepoClient {
                             DEVICE_CONNECTED_TO_BRANCH
                         )
                         .pipe(
+                            tap(e => {
+                                const devices = this._getConnectedDevices(
+                                    branch
+                                );
+                                devices.set(
+                                    e.device.claims[SESSION_ID_CLAIM],
+                                    e.device
+                                );
+                            }),
                             map(
                                 e =>
                                     ({
@@ -294,6 +331,14 @@ export class CausalRepoClient {
                             DEVICE_DISCONNECTED_FROM_BRANCH
                         )
                         .pipe(
+                            tap(e => {
+                                const devices = this._getConnectedDevices(
+                                    branch
+                                );
+                                devices.delete(
+                                    e.device.claims[SESSION_ID_CLAIM]
+                                );
+                            }),
                             map(
                                 e =>
                                     ({
@@ -441,8 +486,8 @@ export class CausalRepoClient {
         );
     }
 
-    private _whenConnected() {
-        return whenConnected(this._client.connectionState);
+    private _whenConnected(filter: boolean = true) {
+        return whenConnected(this._client.connectionState, filter);
     }
 
     private _sendAddAtoms(
@@ -467,6 +512,15 @@ export class CausalRepoClient {
         if (!map) {
             map = new Map();
             this._sentAtoms.set(branch, map);
+        }
+        return map;
+    }
+
+    private _getConnectedDevices(branch: string) {
+        let map = this._connectedDevices.get(branch);
+        if (!map) {
+            map = new Map();
+            this._connectedDevices.set(branch, map);
         }
         return map;
     }
@@ -512,11 +566,12 @@ export function isClientAtomsOrEvents(
 }
 
 function whenConnected(
-    observable: Observable<ClientConnectionState>
+    observable: Observable<ClientConnectionState>,
+    filterConnected: boolean = true
 ): Observable<boolean> {
     return observable.pipe(
         map(s => s.connected),
         distinctUntilChanged(),
-        filter(connected => connected)
+        filterConnected ? filter(connected => connected) : a => a
     );
 }
