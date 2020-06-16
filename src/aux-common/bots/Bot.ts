@@ -558,6 +558,11 @@ export const ERROR_BOT_PARTITION_ID = 'error';
 export const ADMIN_PARTITION_ID = 'admin';
 
 /**
+ * The partition ID for player bots.
+ */
+export const PLAYER_PARTITION_ID = 'player';
+
+/**
  * The name of the branch that contains admin space.
  */
 export const ADMIN_BRANCH_NAME = '$admin';
