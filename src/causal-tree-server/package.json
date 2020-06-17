@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server",
-    "version": "1.1.9",
+    "version": "1.1.10",
     "description": "Abstractions for serving causal trees in Node.js.",
     "keywords": [
         "socket.io",
@@ -43,7 +43,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^1.1.9",
+        "@casual-simulation/causal-trees": "^1.1.10",
         "@casual-simulation/crypto": "^1.0.24",
         "rxjs": "^6.5.2"
     }
