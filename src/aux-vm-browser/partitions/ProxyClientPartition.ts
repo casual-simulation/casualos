@@ -45,6 +45,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _proxies: readonly any[];
     private _sub: Subscription;
 
+    space: string;
     type: 'proxy_client';
     state: BotsState;
     private: boolean;
@@ -103,7 +104,10 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _handleOnBotsAdded(bots: Bot[]): void {
         let newState = Object.assign({}, this.state);
         for (let b of bots) {
-            newState[b.id] = b;
+            newState[b.id] = {
+                ...b,
+                space: <any>this.space,
+            };
         }
         this.state = newState;
         this._onBotsAdded.next(bots);
