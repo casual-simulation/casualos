@@ -1,7 +1,6 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { OtherPlayersPartitionImpl } from './OtherPlayersPartition';
 import {
-    CausalRepoClient,
     MemoryConnectionClient,
     ADD_ATOMS,
     AddAtomsEvent,
@@ -20,6 +19,7 @@ import {
     WATCH_BRANCH,
     UNWATCH_BRANCH,
 } from '@casual-simulation/causal-trees';
+import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { Bot, UpdatedBot, createBot, botAdded } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
