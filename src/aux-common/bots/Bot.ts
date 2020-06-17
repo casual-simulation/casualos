@@ -61,6 +61,8 @@ export interface UpdatedBot {
  * - "history" means that the bot represents a version of another space.
  * - "error" means that the bot represents an error.
  * - "admin" means that the bot is shared across all stories.
+ * - "player" means that the bot is temporary and shared with other players.
+ * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
  */
 export type BotSpace =
     | 'shared'
@@ -68,7 +70,9 @@ export type BotSpace =
     | 'tempLocal'
     | 'history'
     | 'error'
-    | 'admin';
+    | 'admin'
+    | 'player'
+    | 'otherPlayers';
 
 /**
  * The possible portal types.
