@@ -153,15 +153,19 @@ export class CausalRepoServer {
                             return;
                         }
 
+                        const branchEvent = this._branches.get(event.branch);
+                        const isTemp = branchEvent
+                            ? branchEvent.temporary
+                            : false;
+
                         const repo = await this._getOrLoadRepo(
                             event.branch,
                             false,
-                            false
+                            isTemp
                         );
 
                         let added: Atom<any>[];
                         let removed: Atom<any>[];
-                        const isTemp = isTempBranch(event.branch);
 
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
@@ -685,14 +689,6 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, UNLOAD_BRANCH, unloadBranchEvent(branch));
     }
-}
-
-/**
- * Determines if the given branch should be loaded as a temporary branch.
- * @param branch The name of the branch.
- */
-function isTempBranch(branch: string) {
-    return branch.startsWith('@');
 }
 
 function loadBranchEvent(branch: string) {

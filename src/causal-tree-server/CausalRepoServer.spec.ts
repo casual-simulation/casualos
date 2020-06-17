@@ -1699,6 +1699,13 @@ describe('CausalRepoServer', () => {
 
                 connections.connection.next(device);
 
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: '@testBranch',
+                    temporary: true,
+                });
+
                 const a1 = atom(atomId('a', 1), null, {});
                 const a2 = atom(atomId('a', 2), a1, {});
                 const a3 = atom(atomId('a', 3), a2, {});
@@ -1753,9 +1760,11 @@ describe('CausalRepoServer', () => {
 
                 joinBranch2.next({
                     branch: '@testBranch',
+                    temporary: true,
                 });
                 joinBranch3.next({
                     branch: '@testBranch',
+                    temporary: true,
                 });
 
                 await waitAsync();
