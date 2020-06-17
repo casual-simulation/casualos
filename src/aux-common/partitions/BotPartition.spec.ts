@@ -154,6 +154,76 @@ describe('BotPartition', () => {
                 }),
             });
         });
+
+        it('should put the bots into the space specified by the partition', async () => {
+            subject.space = 'test';
+            await client.addBots('story', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let bots = [] as Bot[];
+            subject.onBotsAdded.subscribe(b => bots.push(...b));
+
+            await subject.applyEvents([
+                loadBots(<any>'space', [
+                    {
+                        tag: 'test',
+                        value: true,
+                    },
+                ]),
+            ]);
+
+            await waitAsync();
+
+            // Should emit them in order of ID
+            expect(bots).toEqual([
+                createBot(
+                    'test1',
+                    {
+                        abc: 'def',
+                        test: true,
+                    },
+                    <any>'test'
+                ),
+                createBot(
+                    'test2',
+                    {
+                        num: 123,
+                        test: true,
+                    },
+                    <any>'test'
+                ),
+            ]);
+            expect(subject.state).toEqual({
+                test1: createBot(
+                    'test1',
+                    {
+                        abc: 'def',
+                        test: true,
+                    },
+                    <any>'test'
+                ),
+                test2: createBot(
+                    'test2',
+                    {
+                        num: 123,
+                        test: true,
+                    },
+                    <any>'test'
+                ),
+            });
+        });
     });
 
     describe('clear_space', () => {

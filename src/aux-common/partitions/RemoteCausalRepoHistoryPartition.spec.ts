@@ -209,6 +209,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             const addCommits = new Subject<AddCommitsEvent>();
             connection.events.set(ADD_COMMITS, addCommits);
 
+            partition.space = 'history';
             partition.connect();
 
             await waitAsync();
@@ -240,7 +241,8 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         markHash: c1.hash,
                         previousMarkHash: null,
                         markTime: new Date(1900, 1, 1),
-                    }
+                    },
+                    'history'
                 ),
                 [uuid(c2.hash, COMMIT_ID_NAMESPACE)]: createBot(
                     uuid(c2.hash, COMMIT_ID_NAMESPACE),
@@ -254,7 +256,8 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                         markHash: c2.hash,
                         previousMarkHash: c1.hash,
                         markTime: new Date(1900, 1, 1),
-                    }
+                    },
+                    'history'
                 ),
             });
         });

@@ -18,6 +18,7 @@ import {
     getActiveObjects,
     createBot,
     RestoreHistoryMarkAction,
+    BotSpace,
 } from '../bots';
 import {
     PartitionConfig,
@@ -68,6 +69,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
     private _client: CausalRepoClient;
     private _synced: boolean;
 
+    space: string;
     private: boolean;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
@@ -226,15 +228,19 @@ export class RemoteCausalRepoHistoryPartitionImpl
     }
 
     private _makeBot(commit: CausalRepoCommit): Bot {
-        return createBot(uuid(commit.hash, COMMIT_ID_NAMESPACE), {
-            history: true,
-            label: commit.message,
-            labelSize: 0.25,
-            scale: 0.8,
-            scaleX: 2,
-            markHash: commit.hash,
-            previousMarkHash: commit.previousCommit,
-            markTime: commit.time,
-        });
+        return createBot(
+            uuid(commit.hash, COMMIT_ID_NAMESPACE),
+            {
+                history: true,
+                label: commit.message,
+                labelSize: 0.25,
+                scale: 0.8,
+                scaleX: 2,
+                markHash: commit.hash,
+                previousMarkHash: commit.previousCommit,
+                markTime: commit.time,
+            },
+            <BotSpace>this.space
+        );
     }
 }

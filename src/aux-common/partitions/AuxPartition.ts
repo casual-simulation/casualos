@@ -51,6 +51,13 @@ export interface AuxPartitionBase extends SubscriptionLike {
     private: boolean;
 
     /**
+     * The space of the partition.
+     * Should be used to set the space of bots output by this partition.
+     * Will be automatically set by the channel.
+     */
+    space: string;
+
+    /**
      * The realtime edit strategy that the partition supports.
      * This is used to hint to the AUX Runtime how it should handle in-memory changes
      * for bots in this partition.

@@ -135,6 +135,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     type = 'causal_repo' as const;
+    space: string;
 
     get forcedOffline(): boolean {
         return this._client.forcedOffline;
@@ -390,7 +391,12 @@ export class RemoteCausalRepoPartitionImpl
                 `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
             );
         }
-        let { tree, updates } = applyAtoms(this._tree, atoms, removedAtoms);
+        let { tree, updates } = applyAtoms(
+            this._tree,
+            atoms,
+            removedAtoms,
+            this.space
+        );
         this._tree = tree;
         this._sendUpdates(updates);
     }
@@ -398,7 +404,11 @@ export class RemoteCausalRepoPartitionImpl
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let { tree, updates, result } = applyEvents(this._tree, events);
+        let { tree, updates, result } = applyEvents(
+            this._tree,
+            events,
+            this.space
+        );
         this._tree = tree;
 
         this._sendUpdates(updates);

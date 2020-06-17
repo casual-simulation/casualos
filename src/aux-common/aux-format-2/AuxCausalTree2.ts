@@ -66,15 +66,17 @@ export function auxTree(id?: string): AuxCausalTree {
  * @param cause The cause of the operation.
  * @param op The operation.
  * @param priority The priority.
+ * @param space The space that new bots should be placed in.
  */
 export function addAuxAtom(
     tree: CausalTree<AuxOp>,
     cause: Atom<AuxOp>,
     op: AuxOp,
-    priority?: number
+    priority?: number,
+    space?: string
 ): AuxResult {
     const treeResult = addAtom(tree, cause, op, priority);
-    const update = reducer(tree.weave, treeResult.results[0]);
+    const update = reducer(tree.weave, treeResult.results[0], undefined, space);
 
     return {
         ...treeResult,
@@ -180,10 +182,17 @@ export function auxResultIdentity(): AuxResult {
 /**
  * Applies the given bot actions to the given tree.
  * Returns the new tree and the list of updates that occurred.
+ * @param tree The tree that the events should be applied on top of.
+ * @param actions The actions that should be applied.
+ * @param space The space that new bots should be placed in.
  */
-export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
+export function applyEvents(
+    tree: AuxCausalTree,
+    actions: BotActions[],
+    space?: string
+) {
     const addAtom = (cause: Atom<AuxOp>, op: AuxOp, priority?: number) => {
-        const result = addAuxAtom(tree, cause, op, priority);
+        const result = addAuxAtom(tree, cause, op, priority, space);
         tree = applyAuxResult(tree, result);
         return result;
     };
@@ -293,11 +302,13 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
  * @param tree The tree.
  * @param atoms The atoms.
  * @param removedAtoms The atoms that were removed.
+ * @param space The space that the bots should have.
  */
 export function applyAtoms(
     tree: AuxCausalTree,
     atoms?: Atom<AuxOp>[],
-    removedAtoms?: string[]
+    removedAtoms?: string[],
+    space?: string
 ) {
     let update: PartialBotsState = {};
     let results = [] as WeaveResult[];
@@ -308,7 +319,7 @@ export function applyAtoms(
         removeAtoms(tree, removedAtoms, results);
     }
     for (let result of results) {
-        reducer(tree.weave, result, update);
+        reducer(tree.weave, result, update, space);
     }
     const prevState = tree.state;
     const finalState = apply(prevState, update);

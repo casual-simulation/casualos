@@ -25,6 +25,7 @@ import {
     BotAction,
     toast,
     createBotClientPartition,
+    AuxPartitions,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -85,6 +86,14 @@ describe('BaseAuxChannel', () => {
             const userBot = channel.helper.userBot;
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toMatchSnapshot();
+        });
+
+        it('should set the space on the partitions', async () => {
+            await channel.initAndWait();
+
+            const partitions = (<any>channel)._partitions as AuxPartitions;
+
+            expect(partitions.shared.space).toEqual('shared');
         });
 
         it('should create a user dimension bot', async () => {

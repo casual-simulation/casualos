@@ -94,6 +94,38 @@ export function testPartitionImplementation(
 
             expect(added).toEqual([bot1, bot2]);
         });
+
+        it('should add bots to the configured space.', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            partition.space = 'test';
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            let added: Bot[] = [];
+            partition.onBotsAdded.subscribe(a => added.push(...a));
+
+            expect(added).toEqual([
+                createBot(
+                    'test',
+                    {
+                        abc: 'def',
+                    },
+                    <any>'test'
+                ),
+                createBot(
+                    'test2',
+                    {
+                        abc: 'xyz',
+                    },
+                    <any>'test'
+                ),
+            ]);
+        });
     });
 
     describe('remove_bot', () => {

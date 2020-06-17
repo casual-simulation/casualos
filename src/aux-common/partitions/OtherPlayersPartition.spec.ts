@@ -448,6 +448,58 @@ describe('OtherPlayersPartition', () => {
 
                 expect(connection.sentMessages.slice(1)).toEqual([]);
             });
+
+            it('should use the specified space', async () => {
+                partition.space = 'test';
+                partition.connect();
+
+                await waitAsync();
+
+                deviceConnected.next({
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                const state = partition.state;
+
+                const bot1 = atom(atomId('device1', 1), null, bot('test1'));
+                const tag1 = atom(atomId('device1', 2), bot1, tag('abc'));
+                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+
+                addAtoms.next({
+                    branch: 'testBranch-player-device1SessionId',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await waitAsync();
+
+                expect(added).toEqual([
+                    createBot(
+                        'test1',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'test'
+                    ),
+                ]);
+                expect(partition.state).toEqual({
+                    test1: createBot(
+                        'test1',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'test'
+                    ),
+                });
+
+                // Should make a new state object on updates.
+                // This is because AuxHelper expects this in order for its caching to work properly.
+                expect(partition.state).not.toBe(state);
+            });
         });
 
         function setupPartition(config: OtherPlayersRepoPartitionConfig) {

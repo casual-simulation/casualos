@@ -135,9 +135,14 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 expect(newChannelSim.helper.objects).toContainEqual(
-                    createPrecalculatedBot(expect.any(String), {
-                        abc: 'def',
-                    })
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            abc: 'def',
+                        },
+                        undefined,
+                        'shared'
+                    )
                 );
             });
 
@@ -165,9 +170,14 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 expect(newChannelSim.helper.objects).toContainEqual(
-                    createPrecalculatedBot(expect.any(String), {
-                        abc: 'def',
-                    })
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            abc: 'def',
+                        },
+                        undefined,
+                        'shared'
+                    )
                 );
             });
 
@@ -195,10 +205,15 @@ describe('SetupChannelModule2', () => {
                 await newChannelSim.init();
 
                 expect(newChannelSim.helper.objects).toContainEqual(
-                    createPrecalculatedBot(expect.any(String), {
-                        onCreate: '@setTag(this, "created", true)',
-                        created: true,
-                    })
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            onCreate: '@setTag(this, "created", true)',
+                            created: true,
+                        },
+                        undefined,
+                        'shared'
+                    )
                 );
             });
 
@@ -222,9 +237,14 @@ describe('SetupChannelModule2', () => {
                 await waitAsync();
 
                 expect(newChannelSim.helper.objects).not.toContainEqual(
-                    createPrecalculatedBot(expect.any(String), {
-                        abc: 'def',
-                    })
+                    createPrecalculatedBot(
+                        expect.any(String),
+                        {
+                            abc: 'def',
+                        },
+                        undefined,
+                        'shared'
+                    )
                 );
             });
         });

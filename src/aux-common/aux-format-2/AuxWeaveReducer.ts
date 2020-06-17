@@ -19,7 +19,7 @@ import {
     DeleteOp,
     TagOp,
 } from './AuxOpTypes';
-import { Bot, PartialBotsState } from '../bots/Bot';
+import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
 import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
@@ -30,14 +30,16 @@ import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
  * @param weave The weave.
  * @param result The result from the weave.
  * @param state The object that the updates should be stored in. Use this when batching updates to reduce intermediate object allocations.
+ * @param space The space that new bots should use.
  */
 export default function reducer(
     weave: Weave<AuxOp>,
     result: WeaveResult,
-    state: PartialBotsState = {}
+    state: PartialBotsState = {},
+    space?: string
 ): PartialBotsState {
     if (result.type === 'atom_added') {
-        return atomAddedReducer(weave, result, state);
+        return atomAddedReducer(weave, result, state, space);
     } else if (result.type === 'conflict') {
         return conflictReducer(weave, result, state);
     } else if (result.type === 'atom_removed') {
@@ -49,13 +51,14 @@ export default function reducer(
 function atomAddedReducer(
     weave: Weave<AuxOp>,
     result: AtomAddedResult,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space?: string
 ): PartialBotsState {
     const atom: Atom<AuxOp> = result.atom;
     const value: AuxOp = atom.value;
 
     if (value.type === AuxOpType.bot) {
-        return botAtomAddedReducer(atom, value, state);
+        return botAtomAddedReducer(atom, value, state, space);
     } else if (value.type === AuxOpType.value) {
         return valueAtomAddedReducer(weave, atom, value, state);
     } else if (value.type === AuxOpType.delete) {
@@ -81,10 +84,11 @@ function atomRemovedReducer(
 function botAtomAddedReducer(
     atom: Atom<AuxOp>,
     value: BotOp,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string
 ): PartialBotsState {
     const id = value.id;
-    return addBot(atom, id, state);
+    return addBot(atom, id, state, space);
 }
 
 function valueAtomAddedReducer(
@@ -223,14 +227,15 @@ function conflictReducer(
 function addBot(
     atom: Atom<AuxOp>,
     botId: string,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string
 ): PartialBotsState {
     if (atom.cause !== null) {
         return state;
     }
 
     lodashMerge(state, {
-        [botId]: createBot(botId),
+        [botId]: createBot(botId, undefined, <BotSpace>space),
     });
     return state;
 }
