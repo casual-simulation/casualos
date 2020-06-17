@@ -5,7 +5,6 @@ import {
     PartitionConfig,
 } from './AuxPartitionConfig';
 import {
-    CausalRepoClient,
     User,
     StatusUpdate,
     Action,
@@ -15,6 +14,7 @@ import {
     USERNAME_CLAIM,
     SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
+import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
