@@ -1647,6 +1647,45 @@ describe('CausalRepoServer', () => {
             });
         });
 
+        it('should ignore when given an event with a null branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: null,
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toBe(null);
+        });
+
         describe('temp', () => {
             it('should not store the given atoms with the current branch', async () => {
                 server.init();

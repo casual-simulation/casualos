@@ -149,6 +149,10 @@ export class CausalRepoServer {
                         await this._tryUnloadBranch(info);
                     },
                     [ADD_ATOMS]: async event => {
+                        if (!event || !event.branch) {
+                            return;
+                        }
+
                         const repo = await this._getOrLoadRepo(
                             event.branch,
                             false,
