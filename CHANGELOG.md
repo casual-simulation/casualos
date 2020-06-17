@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.1.10
+
+### Date: 6/16/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where an incorrectly formatted event would crash the server.
+    -   Fixed an issue where the server would incorrectly store atoms added to a temporary branch.
+
 ## V1.1.9
 
 ### Date: 6/16/2020
