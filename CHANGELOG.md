@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.11
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where all bots would appear to be in the `shared` space even though they were not.
+
 ## V1.1.10
 
 ### Date: 6/16/2020
