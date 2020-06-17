@@ -488,6 +488,7 @@ export class CausalRepo {
 
     /**
      * Creates a commit containing all of the current changes.
+     * Returns null if there are no changes to commit.
      * @param message The message to include for the commit.
      */
     async commit(
@@ -526,6 +527,11 @@ export class CausalRepo {
         const branches = await this._store.getBranches(branch);
         if (branches.length === 0) {
             if (options.createIfDoesntExist) {
+                console.log(
+                    `[CausalRepo] Creating branch (${branch}) at ${
+                        options.createIfDoesntExist.hash
+                    }`
+                );
                 await this.createBranch(
                     branch,
                     options.createIfDoesntExist.hash
