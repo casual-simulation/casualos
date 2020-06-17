@@ -59,6 +59,10 @@ import {
     UNWATCH_COMMITS,
     GET_BRANCH,
     DEVICES,
+    MemoryCausalRepoStore,
+    WatchBranchEvent,
+    WATCH_BRANCH_DEVICES,
+    UNWATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -74,6 +78,7 @@ export class CausalRepoServer {
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
+    private _branches: Map<string, WatchBranchEvent>;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -90,6 +95,7 @@ export class CausalRepoServer {
         this._store = store;
         this._deviceManager = new DeviceManagerImpl();
         this._repos = new Map();
+        this._branches = new Map();
         this._stage = stageStore;
     }
 
@@ -108,10 +114,18 @@ export class CausalRepoServer {
                 );
 
                 handleEvents(conn, {
-                    [WATCH_BRANCH]: async branch => {
+                    [WATCH_BRANCH]: async event => {
+                        const branch = event.branch;
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
-                        const repo = await this._getOrLoadRepo(branch, true);
+                        if (!this._branches.has(branch)) {
+                            this._branches.set(branch, event);
+                        }
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            true,
+                            event.temporary
+                        );
                         const atoms = repo.getAtoms();
 
                         this._sendConnectedToBranch(device, branch);
@@ -122,7 +136,11 @@ export class CausalRepoServer {
                     },
                     [GET_BRANCH]: async branch => {
                         const info = infoForBranch(branch);
-                        const repo = await this._getOrLoadRepo(branch, true);
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            true,
+                            false
+                        );
                         const atoms = repo.getAtoms();
                         conn.send(ADD_ATOMS, {
                             branch: branch,
@@ -133,28 +151,36 @@ export class CausalRepoServer {
                     [ADD_ATOMS]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
+                            false,
                             false
                         );
 
                         let added: Atom<any>[];
                         let removed: Atom<any>[];
+                        const isTemp = isTempBranch(event.branch);
 
                         if (event.atoms) {
                             added = repo.add(...event.atoms);
-                            await this._stage.addAtoms(event.branch, added);
-                            await storeData(
-                                this._store,
-                                event.branch,
-                                null,
-                                added
-                            );
+
+                            if (!isTemp) {
+                                await this._stage.addAtoms(event.branch, added);
+                                await storeData(
+                                    this._store,
+                                    event.branch,
+                                    null,
+                                    added
+                                );
+                            }
                         }
                         if (event.removedAtoms) {
                             removed = repo.remove(...event.removedAtoms);
-                            await this._stage.removeAtoms(
-                                event.branch,
-                                removed
-                            );
+
+                            if (!isTemp) {
+                                await this._stage.removeAtoms(
+                                    event.branch,
+                                    removed
+                                );
+                            }
                         }
                         const hasAdded = added && added.length > 0;
                         const hasRemoved = removed && removed.length > 0;
@@ -190,6 +216,7 @@ export class CausalRepoServer {
                     [COMMIT]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
+                            false,
                             false
                         );
                         if (!repo) {
@@ -204,7 +231,11 @@ export class CausalRepoServer {
                         const info = infoForBranchCommits(branch);
                         await this._deviceManager.joinChannel(device, info);
 
-                        const repo = await this._getOrLoadRepo(branch, false);
+                        const repo = await this._getOrLoadRepo(
+                            branch,
+                            false,
+                            false
+                        );
                         if (!repo) {
                             return;
                         }
@@ -227,7 +258,8 @@ export class CausalRepoServer {
                     [CHECKOUT]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
-                            true
+                            true,
+                            false
                         );
 
                         console.log(
@@ -245,7 +277,8 @@ export class CausalRepoServer {
                     [RESTORE]: async event => {
                         const repo = await this._getOrLoadRepo(
                             event.branch,
-                            true
+                            true,
+                            false
                         );
 
                         console.log(
@@ -350,6 +383,12 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCH]: async branch => {
                         const info = infoForBranch(branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            info
+                        );
+                        if (devices.length <= 0) {
+                            return;
+                        }
                         await this._deviceManager.leaveChannel(device, info);
 
                         this._sendDisconnectedFromBranch(device, branch);
@@ -375,11 +414,32 @@ export class CausalRepoServer {
                                 branchInfo
                             );
                             for (let device of devices) {
+                                const branchEvent = this._branches.get(branch);
                                 conn.send(DEVICE_CONNECTED_TO_BRANCH, {
-                                    branch: branch,
+                                    branch: branchEvent,
                                     device: device.extra.device,
                                 });
                             }
+                        }
+                    },
+                    [WATCH_BRANCH_DEVICES]: async branch => {
+                        console.log(
+                            `[CausalRepoServer] Watch Devices for branch: ${branch}`
+                        );
+                        const info = devicesBranchInfo(branch);
+                        await this._deviceManager.joinChannel(device, info);
+
+                        const branches = this._repos.keys();
+                        const branchInfo = infoForBranch(branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            branchInfo
+                        );
+                        for (let device of devices) {
+                            const branchEvent = this._branches.get(branch);
+                            conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                branch: branchEvent,
+                                device: device.extra.device,
+                            });
                         }
                     },
                     [BRANCH_INFO]: async branch => {
@@ -415,6 +475,10 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCHES]: async () => {},
                     [UNWATCH_DEVICES]: async () => {},
+                    [UNWATCH_BRANCH_DEVICES]: async branch => {
+                        const info = devicesBranchInfo(branch);
+                        await this._deviceManager.leaveChannel(device, info);
+                    },
                     [UNWATCH_COMMITS]: async () => {},
                 }).subscribe();
 
@@ -483,12 +547,18 @@ export class CausalRepoServer {
                 device.id
             } connected to branch: ${branch}`
         );
-        const info = devicesInfo();
-        const devices = this._deviceManager.getConnectedDevices(info);
-        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
-            branch: branch,
+        const branchEvent = this._branches.get(branch);
+        const event = {
+            branch: branchEvent,
             device: device.extra.device,
-        });
+        };
+        let info = devicesInfo();
+        let devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, event);
+
+        info = devicesBranchInfo(branch);
+        devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, event);
     }
 
     private _sendDisconnectedFromBranch(
@@ -500,18 +570,24 @@ export class CausalRepoServer {
                 device.id
             } disconnected from branch: ${branch}`
         );
-        const info = devicesInfo();
-        const devices = this._deviceManager.getConnectedDevices(info);
-        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
+        const event = {
             branch: branch,
             device: device.extra.device,
-        });
+        };
+        let info = devicesInfo();
+        let devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
+
+        info = devicesBranchInfo(branch);
+        devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
     }
 
     private async _tryUnloadBranch(info: RealtimeChannelInfo) {
         const devices = this._deviceManager.getConnectedDevices(info);
         if (devices.length <= 0) {
             await this._unloadBranch(info.id);
+            this._branches.delete(info.id);
         }
     }
 
@@ -530,39 +606,68 @@ export class CausalRepoServer {
         this._branchUnloaded(branch);
     }
 
-    private async _getOrLoadRepo(branch: string, createBranch: boolean) {
+    private async _getOrLoadRepo(
+        branch: string,
+        createBranch: boolean,
+        temporary: boolean
+    ) {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            const startTime = process.hrtime();
-            try {
-                console.log(`[CausalRepoServer] Loading branch: ${branch}`);
-                repo = new CausalRepo(this._store);
-                await repo.checkout(branch, {
-                    createIfDoesntExist: createBranch
-                        ? {
-                              hash: null,
-                          }
-                        : null,
-                });
-                const stage = await this._stage.getStage(branch);
-                repo.addMany(stage.additions);
-                const hashes = Object.keys(stage.deletions);
-                repo.removeMany(hashes);
-
-                this._repos.set(branch, repo);
-                this._branchLoaded(branch);
-            } finally {
-                const [seconds, nanoseconds] = process.hrtime(startTime);
-                console.log(
-                    `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
-                    seconds,
-                    nanoseconds
-                );
+            if (!temporary) {
+                repo = await this._loadRepo(branch, createBranch);
+            } else {
+                repo = await this._createEmptyRepo(branch);
             }
+
+            this._repos.set(branch, repo);
+            this._branchLoaded(branch);
         }
 
         return repo;
+    }
+
+    private async _createEmptyRepo(branch: string) {
+        console.log(`[CausalRepoServer] Creating temp branch: ${branch}`);
+        const emptyStore = new MemoryCausalRepoStore();
+        const repo = new CausalRepo(emptyStore);
+        await repo.checkout(branch, {
+            createIfDoesntExist: {
+                hash: null,
+            },
+        });
+
+        return repo;
+    }
+
+    private async _loadRepo(
+        branch: string,
+        createBranch: boolean
+    ): Promise<CausalRepo> {
+        const startTime = process.hrtime();
+        try {
+            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
+            const repo = new CausalRepo(this._store);
+            await repo.checkout(branch, {
+                createIfDoesntExist: createBranch
+                    ? {
+                          hash: null,
+                      }
+                    : null,
+            });
+            const stage = await this._stage.getStage(branch);
+            repo.addMany(stage.additions);
+            const hashes = Object.keys(stage.deletions);
+            repo.removeMany(hashes);
+            return repo;
+        } finally {
+            const [seconds, nanoseconds] = process.hrtime(startTime);
+            console.log(
+                `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
+                seconds,
+                nanoseconds
+            );
+        }
     }
 
     private _branchLoaded(branch: string) {
@@ -576,6 +681,14 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, UNLOAD_BRANCH, unloadBranchEvent(branch));
     }
+}
+
+/**
+ * Determines if the given branch should be loaded as a temporary branch.
+ * @param branch The name of the branch.
+ */
+function isTempBranch(branch: string) {
+    return branch.startsWith('@');
 }
 
 function loadBranchEvent(branch: string) {
@@ -628,6 +741,13 @@ function branchesInfo(): RealtimeChannelInfo {
 function devicesInfo(): RealtimeChannelInfo {
     return {
         id: 'devices',
+        type: 'aux-devices',
+    };
+}
+
+function devicesBranchInfo(branch: string): RealtimeChannelInfo {
+    return {
+        id: `${branch}-devices`,
         type: 'aux-devices',
     };
 }

@@ -9,6 +9,7 @@ import {
     createCausalRepoHistoryClientPartition,
     createBotClientPartition,
     iteratePartitions,
+    createOtherPlayersClientPartition,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -19,6 +20,7 @@ import {
 import {
     createBotPartition,
     createRemoteCausalRepoPartition,
+    createOtherPlayersRepoPartition,
 } from '../partitions';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
@@ -43,7 +45,9 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             config => createCausalRepoClientPartition(config, this.user),
             config => createCausalRepoHistoryClientPartition(config, this.user),
             config => createBotPartition(config),
-            config => createBotClientPartition(config)
+            config => createBotClientPartition(config),
+            config => createOtherPlayersClientPartition(config, this.user),
+            config => createOtherPlayersRepoPartition(config, this.user)
         );
     }
 

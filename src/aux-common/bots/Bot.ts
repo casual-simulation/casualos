@@ -61,6 +61,8 @@ export interface UpdatedBot {
  * - "history" means that the bot represents a version of another space.
  * - "error" means that the bot represents an error.
  * - "admin" means that the bot is shared across all stories.
+ * - "player" means that the bot is temporary and shared with other players.
+ * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
  */
 export type BotSpace =
     | 'shared'
@@ -68,7 +70,9 @@ export type BotSpace =
     | 'tempLocal'
     | 'history'
     | 'error'
-    | 'admin';
+    | 'admin'
+    | 'player'
+    | 'otherPlayers';
 
 /**
  * The possible portal types.
@@ -556,6 +560,16 @@ export const ERROR_BOT_PARTITION_ID = 'error';
  * The partition ID for admin bots.
  */
 export const ADMIN_PARTITION_ID = 'admin';
+
+/**
+ * The partition ID for player bots.
+ */
+export const PLAYER_PARTITION_ID = 'player';
+
+/**
+ * The partition ID for other player bots.
+ */
+export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
 
 /**
  * The name of the branch that contains admin space.

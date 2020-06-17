@@ -251,7 +251,13 @@ export default class PlayerHome extends Vue {
             };
 
             window.history.pushState({}, window.document.title);
-            this.$router.replace(final);
+            this.$router.replace(final).then(undefined, (err: Error) => {
+                // Ignore navigation duplicated errors
+                if (err.name !== 'NavigationDuplicated') {
+                    // Throw all other error types
+                    throw err;
+                }
+            });
         }
     }
 

@@ -496,7 +496,7 @@ export function isNumber(value: string): boolean {
     return (
         typeof value === 'string' &&
         value.length > 0 &&
-        (/^-?\d*(?:\.?\d+)?$/.test(value) ||
+        ((/^-?\d*(?:\.?\d+)?$/.test(value) && value !== '-') ||
             (typeof value === 'string' && 'infinity' === value.toLowerCase()))
     );
 }

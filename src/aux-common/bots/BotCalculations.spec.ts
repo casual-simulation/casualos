@@ -93,6 +93,7 @@ describe('BotCalculations', () => {
             [false, '$123'],
             [false, 'abc'],
             [false, '.'],
+            [false, '-'],
         ];
 
         it.each(cases)(

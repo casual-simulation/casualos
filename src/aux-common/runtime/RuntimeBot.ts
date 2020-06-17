@@ -225,7 +225,7 @@ export function createRuntimeBot(
     // make it not enumerable so it is not included
     // in Object.keys() and for..in expressions.
     Object.defineProperty(tagsProxy, 'toJSON', {
-        value: () => rawTags,
+        value: () => bot.tags,
         writable: false,
         enumerable: false,
 

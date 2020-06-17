@@ -98,7 +98,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -106,7 +108,9 @@ describe('AuxCausalRepoManager', () => {
         expect(connection.sentMessages.slice(1)).toEqual([
             {
                 name: WATCH_BRANCH,
-                data: 'abc',
+                data: {
+                    branch: 'abc',
+                },
             },
         ]);
     });
@@ -117,7 +121,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -130,7 +136,9 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: serverInfo,
         });
         await waitAsync();
@@ -143,7 +151,9 @@ describe('AuxCausalRepoManager', () => {
 
         expect(connection.sentMessages).toContainEqual({
             name: WATCH_BRANCH,
-            data: 'abc',
+            data: {
+                branch: 'abc',
+            },
         });
         expect(connection.sentMessages).toContainEqual({
             name: UNWATCH_BRANCH,
@@ -157,7 +167,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -170,7 +182,9 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: serverInfo,
         });
         await waitAsync();
@@ -184,7 +198,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -197,7 +213,9 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: serverInfo,
         });
         await waitAsync();
@@ -223,7 +241,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -236,7 +256,9 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: serverInfo,
         });
         await waitAsync();
@@ -250,7 +272,9 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: device1Info,
         });
         await waitAsync();
@@ -263,7 +287,9 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
-            branch: 'abc',
+            branch: {
+                branch: 'abc',
+            },
             device: serverInfo,
         });
         await waitAsync();

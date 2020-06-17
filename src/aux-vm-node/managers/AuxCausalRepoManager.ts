@@ -1,6 +1,7 @@
 import {
     CausalRepoClient,
     DEVICE_CONNECTED_TO_BRANCH,
+    WatchBranchEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { DeviceInfo, SESSION_ID_CLAIM } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxModule2, Simulation } from '@casual-simulation/aux-vm';
@@ -46,12 +47,18 @@ export class AuxCausalRepoManager {
             .subscribe();
     }
 
-    private async _deviceConnected(branch: string, device: DeviceInfo) {
+    private async _deviceConnected(
+        branch: WatchBranchEvent,
+        device: DeviceInfo
+    ) {
         if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
             this._serverDevice = device;
         }
+        if (branch.temporary === true) {
+            return;
+        }
 
-        let info = await this._loadBranch(branch);
+        let info = await this._loadBranch(branch.branch);
         const id = device.claims[SESSION_ID_CLAIM];
         info.connections.add(id);
 
@@ -64,6 +71,7 @@ export class AuxCausalRepoManager {
         if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
             return;
         }
+
         let info = await this._loadBranch(branch);
         const id = device.claims[SESSION_ID_CLAIM];
         info.connections.delete(id);
