@@ -62,6 +62,18 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     The bot is not saved and is not shared with other sessions.
     When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
   </PossibleValueCode>
+  <PossibleValueCode value='player'>
+    The bot is not saved and is shared with everyone else.
+    Bots in this space show up in the `otherPlayers` space to other players.
+    Only the current session can create, edit, and destroy bots in this space.
+    When the current session is closed, the bot is destroyed.
+  </PossibleValueCode>
+  <PossibleValueCode value='otherPlayers'>
+    The bot is not saved and is shared with everyone else.
+    Bots appear in this space when another player puts a bot in their `player` space.
+    Only the other player's session can create, edit, and destroy bots in this space.
+    When the other player's session is closed, the bot is destroyed.
+  </PossibleValueCode>
   <PossibleValueCode value='history'>
     The bot represents a mark (save point).
     The history space is not available by default.

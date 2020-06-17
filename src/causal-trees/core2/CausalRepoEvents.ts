@@ -108,6 +108,16 @@ export const WATCH_DEVICES = 'repo/watch_devices';
 export const UNWATCH_DEVICES = 'repo/unwatch_devices';
 
 /**
+ * The name of the event which starts watching for connection/disconnection events to the server on a particular branch.
+ */
+export const WATCH_BRANCH_DEVICES = 'repo/watch_branch_devices';
+
+/**
+ * The name of the event which stops watching for connection/disconnection events to the server on a particular branch.
+ */
+export const UNWATCH_BRANCH_DEVICES = 'repo/unwatch_branch_devices';
+
+/**
  * The name of the event which notifies that a device became connected to a branch.
  */
 export const DEVICE_CONNECTED_TO_BRANCH = 'repo/device_connected_to_branch';
@@ -132,6 +142,31 @@ export const BRANCHES = 'repo/branches';
  * The name of the event which gets all the devices.
  */
 export const DEVICES = 'repo/devices';
+
+/**
+ * Defines an event which indicates that a branch should be watched.
+ */
+export interface WatchBranchEvent {
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+
+    /**
+     * Whether the branch should be temporary.
+     * That is, if the branch data should not be loaded from the database
+     * and everything should be deleted once all the watchers have left.
+     * Defaults to false.
+     */
+    temporary?: boolean;
+
+    /**
+     * Whether this branch is the primary branch.
+     * Useful for indicating to branch watchers whether they should enable specialized functionality
+     * on this branch. Defaults to true.
+     */
+    primary?: boolean;
+}
 
 /**
  * Defines an event which indicates that atoms should be added for the given branch.
@@ -258,7 +293,7 @@ export interface ConnectedToBranchEvent {
     /**
      * The name of the branch that was connected.
      */
-    branch: string;
+    branch: WatchBranchEvent;
 
     /**
      * The info of session that connected.

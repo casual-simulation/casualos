@@ -8,6 +8,7 @@ import {
     CommitEvent,
     CheckoutEvent,
     RestoreEvent,
+    WatchBranchEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -42,13 +43,15 @@ export interface GenericSession {
 export interface CausalRepoMessageHandlerTypes {
     'repo/watch_branches': void;
     'repo/unwatch_branches': void;
-    'repo/watch_branch': string;
+    'repo/watch_branch': WatchBranchEvent;
     'repo/get_branch': string;
     'repo/unwatch_branch': string;
     'repo/add_atoms': AddAtomsEvent;
     'repo/send_event': SendRemoteActionEvent;
     'repo/watch_devices': void;
     'repo/unwatch_devices': void;
+    'repo/watch_branch_devices': string;
+    'repo/unwatch_branch_devices': string;
     'repo/branch_info': string;
     'repo/branches': void;
     'repo/devices': string;
@@ -82,7 +85,7 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that start watching
      * the notified branches for new atoms.
      */
-    event(name: 'repo/watch_branch'): Observable<string>;
+    event(name: 'repo/watch_branch'): Observable<WatchBranchEvent>;
     /**
      * Gets an observable for events that stop watching
      * the notified branches for new atoms.
@@ -110,6 +113,16 @@ export interface CausalRepoSession extends GenericSession {
      * for connection/disconnection events.
      */
     event(name: 'repo/unwatch_devices'): Observable<void>;
+    /**
+     * Gets an observable for events that start watching
+     * for connection/disconnection events on a particular branch.
+     */
+    event(name: 'repo/watch_branch_devices'): Observable<string>;
+    /**
+     * Gets an observable for events that stop watching
+     * for connection/disconnection events on a particular branch.
+     */
+    event(name: 'repo/unwatch_branch_devices'): Observable<string>;
     /**
      * Gets an observable for events that request branch info.
      */

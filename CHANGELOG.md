@@ -6,6 +6,16 @@
 
 ### Changes:
 
+-   :rocket: Improvements
+    -   Added the `player` and `otherPlayers` spaces.
+        -   These spaces are special and interact with each other.
+        -   Both the `player` space and `otherPlayers` space are shared but the lifetime of the bots is temporary. In this sense, the bots act like temporary shared bots.
+        -   However, bots created in the `player` space will show up in the `otherPlayers` space to other players and vice versa.
+        -   This means you can share temporary bots with other players by using the `player` space and see the temporary bots shared by other players by inspecting the `otherPlayers` space.
+        -   Important Notes:
+            -   The `player` space only contains bots that you create while `otherPlayers` contains bots that other players have created.
+            -   You can create, edit, and destroy bots in the `player` space, but not in the `otherPlayers` space.
+            -   When you close your session (exit the browser or close the tab), all of your `player` bots will be automatically destroyed. This will also automatically remove them from any `otherPlayers` spaces that they may be in.
 -   :bug: Bug Fixes
 
     -   Fixed an issue where using a single minus sign in a tag would be interpreted as a number.

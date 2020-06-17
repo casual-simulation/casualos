@@ -11,6 +11,8 @@ import {
     RemoteCausalRepoPartitionImpl,
     BotPartition,
     BotPartitionImpl,
+    OtherPlayersPartition,
+    OtherPlayersPartitionImpl,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -53,6 +55,23 @@ export async function createRemoteCausalRepoPartition(
             config
         );
         await partition.init();
+        return partition;
+    }
+    return undefined;
+}
+
+/**
+ * Attempts to create a CausalTree2Partition from the given config.
+ * @param config The config.
+ */
+export async function createOtherPlayersRepoPartition(
+    config: PartitionConfig,
+    user: User,
+    useCache: boolean = true
+): Promise<OtherPlayersPartition> {
+    if (config.type === 'other_players_repo') {
+        const client = getClientForHost(config.host, user);
+        const partition = new OtherPlayersPartitionImpl(user, client, config);
         return partition;
     }
     return undefined;
