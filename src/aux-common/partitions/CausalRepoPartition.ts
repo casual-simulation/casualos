@@ -92,6 +92,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     type = 'causal_repo' as const;
     private: boolean;
+    space: string;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -148,7 +149,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let { tree, updates } = applyEvents(this._tree, events);
+        let { tree, updates } = applyEvents(this._tree, events, this.space);
         this._tree = tree;
 
         if (updates.addedBots.length > 0) {

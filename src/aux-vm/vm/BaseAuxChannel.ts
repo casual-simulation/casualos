@@ -193,6 +193,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._config.partitions[key]
             );
             if (partition) {
+                partition.space = key;
                 this._partitions[key] = partition;
                 partitions.push(partition);
             } else {

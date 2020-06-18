@@ -37,6 +37,14 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         return this._partition.onStatusUpdated;
     }
 
+    get space(): string {
+        return this._partition.space;
+    }
+
+    set space(value: string) {
+        this._partition.space = value;
+    }
+
     private _sub: Subscription;
     private _partition: AuxPartitionBase;
 

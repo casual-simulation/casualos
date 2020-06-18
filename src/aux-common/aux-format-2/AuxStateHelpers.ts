@@ -70,7 +70,7 @@ export function updates(
             let updatedTags = new Set<string>();
             // bot was updated
             let updatedBot = {
-                id: existingBot.id,
+                ...existingBot,
                 tags: {
                     ...existingBot.tags,
                 },

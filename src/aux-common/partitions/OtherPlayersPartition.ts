@@ -65,6 +65,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
     private _user: User;
+    private _space: string;
     private _branch: string;
     private _state: BotsState;
 
@@ -86,6 +87,16 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _synced: boolean;
 
     private: boolean;
+    get space(): string {
+        return this._space;
+    }
+
+    set space(value: string) {
+        this._space = value;
+        for (let p of this._partitions.values()) {
+            p.space = value;
+        }
+    }
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'delayed';
@@ -300,6 +311,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 )
             );
             sub.add(partition.onError.subscribe(this._onError));
+
+            partition.space = this.space;
             partition.connect();
         }
     }

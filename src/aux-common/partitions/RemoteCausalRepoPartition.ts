@@ -92,6 +92,10 @@ export class RemoteCausalRepoPartitionImpl
 
     private: boolean;
 
+    get tree() {
+        return this._tree;
+    }
+
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return this._static ? 'delayed' : 'immediate';
     }
@@ -135,6 +139,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     type = 'causal_repo' as const;
+    space: string;
 
     get forcedOffline(): boolean {
         return this._client.forcedOffline;
@@ -362,6 +367,7 @@ export class RemoteCausalRepoPartitionImpl
                 .watchBranch({
                     branch: this._branch,
                     temporary: this._temporary,
+                    siteId: this._tree.site.id,
                 })
                 .subscribe(event => {
                     if (!this._synced) {
@@ -390,7 +396,12 @@ export class RemoteCausalRepoPartitionImpl
                 `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
             );
         }
-        let { tree, updates } = applyAtoms(this._tree, atoms, removedAtoms);
+        let { tree, updates } = applyAtoms(
+            this._tree,
+            atoms,
+            removedAtoms,
+            this.space
+        );
         this._tree = tree;
         this._sendUpdates(updates);
     }
@@ -398,7 +409,11 @@ export class RemoteCausalRepoPartitionImpl
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let { tree, updates, result } = applyEvents(this._tree, events);
+        let { tree, updates, result } = applyEvents(
+            this._tree,
+            events,
+            this.space
+        );
         this._tree = tree;
 
         this._sendUpdates(updates);

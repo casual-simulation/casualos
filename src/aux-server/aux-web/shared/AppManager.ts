@@ -407,32 +407,50 @@ export class AppManager {
     // }
 
     private async _getUser(username: string): Promise<AuxUser> {
-        return await this._db.users.get(username);
+        try {
+            return await this._db.users.get(username);
+        } catch (err) {
+            console.log('Unable to get user from DB', err);
+            return null;
+        }
     }
 
     private async _saveUser(user: AuxUser) {
-        await this._db.users.put(user);
+        try {
+            await this._db.users.put(user);
+        } catch (err) {
+            console.log('Unable to save user to DB', err);
+        }
     }
 
     /**
      * Gets the username that is currently being used.
      */
     private async _getCurrentUsername(): Promise<string> {
-        const stored = await this._db.keyval.get('username');
-        if (stored) {
-            return stored.value;
+        try {
+            const stored = await this._db.keyval.get('username');
+            if (stored) {
+                return stored.value;
+            }
+            return null;
+        } catch (err) {
+            console.error('Unable to get Username', err);
+            return null;
         }
-        return null;
     }
 
     /**
      * Sets the username that is currently being used.
      */
     private async _setCurrentUsername(username: string) {
-        await this._db.keyval.put({
-            key: 'username',
-            value: username,
-        });
+        try {
+            await this._db.keyval.put({
+                key: 'username',
+                value: username,
+            });
+        } catch (err) {
+            console.error('Unable to save username', err);
+        }
     }
 
     private async _getCurrentUser(): Promise<AuxUser> {
@@ -495,7 +513,11 @@ export class AppManager {
     }
 
     removeUser(username: string): Promise<void> {
-        return this._db.users.delete(username);
+        try {
+            return this._db.users.delete(username);
+        } catch (err) {
+            console.log('Unable to remove user', err);
+        }
     }
 
     async setCurrentUser(user: AuxUser): Promise<void> {
@@ -581,27 +603,44 @@ export class AppManager {
     }
 
     private async _fetchConfigFromServer(): Promise<WebConfig> {
-        const result = await Axios.get<WebConfig>(`/api/config`);
-        if (result.status === 200) {
-            return result.data;
-        } else {
+        try {
+            const result = await Axios.get<WebConfig>(`/api/config`);
+            if (result.status === 200) {
+                return result.data;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            console.error('Unable to fetch config from server: ', err);
             return null;
         }
     }
 
     private async _saveConfig() {
-        if (this.config) {
-            await this._db.keyval.put({ key: 'config', value: this.config });
-        } else {
-            await this._db.keyval.delete('config');
+        try {
+            if (this.config) {
+                await this._db.keyval.put({
+                    key: 'config',
+                    value: this.config,
+                });
+            } else {
+                await this._db.keyval.delete('config');
+            }
+        } catch (err) {
+            console.error('Unable to save config: ', err);
         }
     }
 
     private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
-        const val = await this._db.keyval.get('config');
-        if (val) {
-            return val.value;
-        } else {
+        try {
+            const val = await this._db.keyval.get('config');
+            if (val) {
+                return val.value;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            console.error('Unable to fetch config from storage', err);
             return null;
         }
     }

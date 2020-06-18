@@ -240,6 +240,43 @@ describe('AuxCausalTree2', () => {
                     updatedBots: [],
                 });
             });
+
+            it('should use the given space', () => {
+                ({ tree, updates } = applyEvents(
+                    tree,
+                    [
+                        botAdded(
+                            createBot('test', {
+                                abc: 'def',
+                            })
+                        ),
+                    ],
+                    'test'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: createBot(
+                        'test',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'test'
+                    ),
+                });
+                expect(updates).toEqual({
+                    addedBots: [
+                        createBot(
+                            'test',
+                            {
+                                abc: 'def',
+                            },
+                            <any>'test'
+                        ),
+                    ],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
         });
 
         describe('remove_bot', () => {
@@ -838,6 +875,124 @@ describe('AuxCausalTree2', () => {
                     tag4: 6,
                 }),
             });
+        });
+
+        it('should accept a space parameter for the space that the bots should have', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+            ({ tree, updates, results } = applyAtoms(
+                tree,
+                [bot1, tag1, value1],
+                undefined,
+                'test'
+            ));
+
+            expect(tree).toEqual({
+                site: {
+                    id: 'a',
+                    time: 3,
+                },
+                weave: expect.anything(),
+                state: {
+                    bot1: createBot(
+                        'bot1',
+                        {
+                            tag1: 'abc',
+                        },
+                        <any>'test'
+                    ),
+                },
+            });
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot(
+                        'bot1',
+                        {
+                            tag1: 'abc',
+                        },
+                        <any>'test'
+                    ),
+                ],
+                updatedBots: [],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: bot1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: tag1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: value1,
+                },
+            ]);
+        });
+
+        it('should preserve the state on an updated bot', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+            ({ tree, updates, results } = applyAtoms(
+                tree,
+                [bot1, tag1, value1],
+                undefined,
+                'test'
+            ));
+
+            const value2 = atom(atomId('a', 4), tag1, value('def'));
+
+            ({ tree, updates, results } = applyAtoms(
+                tree,
+                [value2],
+                undefined,
+                'test'
+            ));
+
+            expect(tree).toEqual({
+                site: {
+                    id: 'a',
+                    time: 4,
+                },
+                weave: expect.anything(),
+                state: {
+                    bot1: createBot(
+                        'bot1',
+                        {
+                            tag1: 'def',
+                        },
+                        <any>'test'
+                    ),
+                },
+            });
+            expect(updates).toEqual({
+                addedBots: [],
+                updatedBots: [
+                    {
+                        bot: createBot(
+                            'bot1',
+                            {
+                                tag1: 'def',
+                            },
+                            <any>'test'
+                        ),
+                        tags: new Set(['tag1']),
+                    },
+                ],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: value2,
+                },
+            ]);
         });
     });
 });

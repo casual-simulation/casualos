@@ -65,6 +65,7 @@ export class BotPartitionImpl implements BotPartition {
     type = 'bot' as const;
     state: BotsState;
     private: boolean;
+    space: string;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'delayed';
@@ -180,6 +181,7 @@ export class BotPartitionImpl implements BotPartition {
             const sorted = sortBy(bots, b => b.id);
             this.state = Object.assign({}, this.state);
             for (let bot of sorted) {
+                bot.space = <any>this.space;
                 this.state[bot.id] = bot;
             }
             this._onBotsAdded.next(sorted);

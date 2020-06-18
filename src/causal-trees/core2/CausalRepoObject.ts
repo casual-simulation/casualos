@@ -30,6 +30,54 @@ export interface CausalRepoBranch {
 }
 
 /**
+ * Defines a reflog.
+ * That is, a record that records where a ref (i.e. branch) was pointing at a given moment in time.
+ * Useful for recovering old states that a branch was at if it was reset to an unrelated commit.
+ */
+export interface CausalRepoReflog {
+    type: 'reflog';
+
+    /**
+     * The name of the branch that this log entry represents.
+     */
+    branch: string;
+
+    /**
+     * The hash that the branch pointed to.
+     */
+    hash: string;
+
+    /**
+     * The time that the reflog was created at.
+     */
+    time: Date;
+}
+
+/**
+ * Defines a sitelog.
+ * That is, a record that records when a site connected to a branch.
+ * Useful for recovering a list of atoms that have been created for a branch if the branch has not been saved.
+ */
+export interface CausalRepoSitelog {
+    type: 'sitelog';
+
+    /**
+     * The name of the branch that this log entry represents.
+     */
+    branch: string;
+
+    /**
+     * The ID of the site that connected to the branch.
+     */
+    site: string;
+
+    /**
+     * The time that the sitelog was created at.
+     */
+    time: Date;
+}
+
+/**
  * Defines information about an index in a causal repo.
  */
 export interface CausalRepoIndex {
@@ -117,6 +165,32 @@ export function branch(
         return repoBranch(name, ref);
     }
     return repoBranch(name, getObjectHash(ref));
+}
+
+/**
+ * Creates a reflog for the given branch.
+ * @param head The branch.
+ */
+export function reflog(head: CausalRepoBranch): CausalRepoReflog {
+    return {
+        type: 'reflog',
+        branch: head.name,
+        hash: head.hash,
+        time: new Date(),
+    };
+}
+
+/**
+ * Creates a sitelog for the given branch.
+ * @param branch The branch.
+ */
+export function sitelog(branch: string, site: string): CausalRepoSitelog {
+    return {
+        type: 'sitelog',
+        branch: branch,
+        site: site,
+        time: new Date(),
+    };
 }
 
 /**

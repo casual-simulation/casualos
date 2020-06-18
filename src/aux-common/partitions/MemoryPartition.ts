@@ -50,6 +50,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     type = 'memory' as const;
     state: BotsState;
     private: boolean;
+    space: string;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -141,7 +142,10 @@ class MemoryPartitionImpl implements MemoryPartition {
             if (event.type === 'add_bot') {
                 // console.log('[MemoryPartition] Add bot', event.bot);
                 this.state = Object.assign({}, this.state, {
-                    [event.bot.id]: event.bot,
+                    [event.bot.id]: {
+                        ...event.bot,
+                        space: this.space,
+                    },
                 });
                 added.set(event.bot.id, event.bot);
             } else if (event.type === 'remove_bot') {

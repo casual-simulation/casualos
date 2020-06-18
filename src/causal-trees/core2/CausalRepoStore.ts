@@ -2,6 +2,8 @@ import {
     CausalRepoObject,
     CausalRepoBranch,
     CausalRepoIndex,
+    CausalRepoReflog,
+    CausalRepoSitelog,
 } from './CausalRepoObject';
 
 /**
@@ -23,6 +25,7 @@ export interface CausalBranchStore {
 
     /**
      * Saves/updates the given head to the given repo.
+     * The old branch will be saved as a ref.
      * @param head The branch to save.
      */
     saveBranch(head: CausalRepoBranch): Promise<void>;
@@ -32,6 +35,29 @@ export interface CausalBranchStore {
      * @param head The branch to delete.
      */
     deleteBranch(head: CausalRepoBranch): Promise<void>;
+
+    /**
+     * Gets the reflog for the given branch.
+     * Useful for recovering references to old commits.
+     * The returned reflog list will be sorted from most recent to least recent.
+     * @param branch The name of the branch.
+     */
+    getReflog(branch: string): Promise<CausalRepoReflog[]>;
+
+    /**
+     * Gets the sitelog for the given branch.
+     * Useful for recovering a list of atoms that have been added to the given branch.
+     * The returned sitelog list will be sorted from most recent to least recent.
+     * @param branch The name of the branch.
+     */
+    getSitelog(branch: string): Promise<CausalRepoSitelog[]>;
+
+    /**
+     * Logs that the given site connected to the given branch.
+     * @param branch The name of the branch.
+     * @param site The site.
+     */
+    logSite(branch: string, site: string): Promise<CausalRepoSitelog>;
 }
 
 /**
@@ -98,6 +124,18 @@ export class CombinedCausalRepoStore implements CausalRepoStore {
         if (objects.storeIndex) {
             this.storeIndex = this._storeIndex;
         }
+    }
+
+    getReflog(branch: string): Promise<CausalRepoReflog[]> {
+        return this._branches.getReflog(branch);
+    }
+
+    getSitelog(branch: string): Promise<CausalRepoSitelog[]> {
+        return this._branches.getSitelog(branch);
+    }
+
+    logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
+        return this._branches.logSite(branch, site);
     }
 
     loadIndex: (

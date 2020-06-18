@@ -78,6 +78,7 @@ export class CausalRepoServer {
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
+    private _repoPromises: Map<string, Promise<CausalRepo>>;
     private _branches: Map<string, WatchBranchEvent>;
 
     /**
@@ -95,6 +96,7 @@ export class CausalRepoServer {
         this._store = store;
         this._deviceManager = new DeviceManagerImpl();
         this._repos = new Map();
+        this._repoPromises = new Map();
         this._branches = new Map();
         this._stage = stageStore;
     }
@@ -120,6 +122,12 @@ export class CausalRepoServer {
                         await this._deviceManager.joinChannel(device, info);
                         if (!this._branches.has(branch)) {
                             this._branches.set(branch, event);
+                        }
+                        if (!event.temporary && event.siteId) {
+                            await this._store.logSite(
+                                event.branch,
+                                event.siteId
+                            );
                         }
                         const repo = await this._getOrLoadRepo(
                             branch,
@@ -299,7 +307,9 @@ export class CausalRepoServer {
                             await this._commitToRepo(
                                 {
                                     branch: event.branch,
-                                    message: 'Save before restore',
+                                    message: `Save ${
+                                        event.branch
+                                    } before restore`,
                                 },
                                 repo
                             );
@@ -601,15 +611,25 @@ export class CausalRepoServer {
 
     private async _unloadBranch(branch: string) {
         console.log(`[CausalRepoServer] Unloading branch: ${branch}`);
-        const repo = this._repos.get(branch);
+        const repo = await this._repoPromises.get(branch);
+        this._repoPromises.delete(branch);
         if (repo && repo.hasChanges()) {
             console.log(
                 `[CausalRepoServer] Committing '${branch}' before unloading...`
             );
-            await repo.commit('Save before unload');
-            console.log(`[CausalRepoServer] Committed '${branch}'!`);
+            const c = await repo.commit(`Save ${branch} before unload`);
+
+            if (c) {
+                console.log(
+                    `[CausalRepoServer] Committed '${branch}: ${c.hash}'!`
+                );
+                await this._stage.clearStage(branch);
+            } else {
+                console.log(
+                    `[CausalRepoServer] No commit created due to no changes.`
+                );
+            }
         }
-        await this._stage.clearStage(branch);
         this._repos.delete(branch);
         this._branchUnloaded(branch);
     }
@@ -622,11 +642,16 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
+            let promise: Promise<CausalRepo>;
             if (!temporary) {
-                repo = await this._loadRepo(branch, createBranch);
+                promise = this._loadRepo(branch, createBranch);
             } else {
-                repo = await this._createEmptyRepo(branch);
+                promise = this._createEmptyRepo(branch);
             }
+
+            this._repoPromises.set(branch, promise);
+
+            repo = await promise;
 
             this._repos.set(branch, repo);
             this._branchLoaded(branch);

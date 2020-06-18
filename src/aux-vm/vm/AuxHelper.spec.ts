@@ -47,6 +47,7 @@ import {
 import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
+import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test/TestScriptBotFactory';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -70,10 +71,12 @@ describe('AuxHelper', () => {
             type: 'memory',
             initialState: {},
         });
+        memory.space = 'shared';
         error = createMemoryPartition({
             type: 'memory',
             initialState: {},
         });
+        error.space = 'error';
         helper = createHelper({
             shared: memory,
             error: error,
@@ -349,6 +352,8 @@ describe('AuxHelper', () => {
                     userId: createBot('userId'),
                 },
             });
+            shared.space = 'shared';
+            TEST.space = 'TEST';
             helper = createHelper({
                 shared: shared,
                 TEST: TEST,

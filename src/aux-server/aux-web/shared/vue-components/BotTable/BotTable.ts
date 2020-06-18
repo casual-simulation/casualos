@@ -90,7 +90,6 @@ export default class BotTable extends Vue {
     showNewBot: boolean;
 
     tags: string[] = [];
-    readOnlyTags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
     focusedBot: Bot = null;
@@ -677,6 +676,10 @@ export default class BotTable extends Vue {
         }
     }
 
+    get readOnlyTags() {
+        return [BOT_SPACE_TAG];
+    }
+
     private _updateTags() {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
@@ -687,13 +690,6 @@ export default class BotTable extends Vue {
             allExtraTags,
             this.tagWhitelist
         ).sort();
-
-        const isHiddenActive = this.isWhitelistTagActive('hidden');
-        if (isHiddenActive) {
-            this.readOnlyTags = [BOT_SPACE_TAG];
-        } else {
-            this.readOnlyTags = [];
-        }
     }
 
     toggleWhitelistIndex(index: number) {

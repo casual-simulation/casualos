@@ -61,6 +61,7 @@ import {
     remoteError,
     deviceError,
 } from '@casual-simulation/causal-trees';
+import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
 
 console.log = jest.fn();
 
@@ -257,6 +258,38 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
+        it('should log the site ID to the branch if specified', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+                siteId: 'testSite',
+            });
+
+            await waitAsync();
+
+            const log = await store.getSitelog('testBranch');
+            expect(log).toEqual([
+                {
+                    type: 'sitelog',
+                    branch: 'testBranch',
+                    site: 'testSite',
+                    time: expect.any(Date),
+                },
+            ]);
+        });
+
         describe('temp', () => {
             it('should load the branch without persistent data if the branch is temporary', async () => {
                 server.init();
@@ -350,6 +383,58 @@ describe('CausalRepoServer', () => {
                         },
                     },
                 ]);
+            });
+
+            it('should not log the site ID to the branch if specified', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: 'testBranch',
+                    siteId: 'testSite',
+                    temporary: true,
+                });
+
+                await waitAsync();
+
+                const log = await store.getSitelog('testBranch');
+                expect(log).toEqual([]);
+            });
+
+            it('should not create a branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: 'testBranch',
+                    siteId: 'testSite',
+                    temporary: true,
+                });
+
+                await waitAsync();
+
+                const branches = await store.getBranches('testBranch');
+                expect(branches).toEqual([]);
             });
         });
     });
@@ -603,7 +688,9 @@ describe('CausalRepoServer', () => {
 
             const savedCommit = await loadBranch(store, savedBranch);
             expect([...savedCommit.atoms.values()]).toEqual([a1, a2, a3]);
-            expect(savedCommit.commit.message).toEqual('Save before unload');
+            expect(savedCommit.commit.message).toEqual(
+                'Save testBranch before unload'
+            );
         });
 
         it('should clear the stored stage after commiting', async () => {
@@ -690,6 +777,119 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             expect(device.messages).toEqual([]);
+        });
+
+        it('should not clear the stage if the branch is not loaded', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            watchDevices.next();
+
+            const a1 = atom(atomId('a', 1), null, bot('test'));
+            await stageStore.addAtoms('testBranch', [a1]);
+
+            await waitAsync();
+
+            leaveBranch.next('testBranch');
+
+            await waitAsync();
+
+            const atoms = await stageStore.getStage('testBranch');
+
+            expect(atoms.additions).toEqual([a1]);
+        });
+
+        it('should wait to commit until the branch has been loaded', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            watchDevices.next();
+
+            const a1 = atom(atomId('a', 1), null, bot('test'));
+            await stageStore.addAtoms('testBranch', [a1]);
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+            leaveBranch.next('testBranch');
+
+            await waitAsync();
+
+            const atoms = await stageStore.getStage('testBranch');
+
+            expect(atoms.additions).toEqual([]);
+
+            const [branch] = await store.getBranches('testBranch');
+            const commit = await loadBranch(store, branch);
+            expect([...commit.atoms.values()]).toEqual([a1]);
+        });
+
+        it('should not clear the stage if there are no changes', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            watchDevices.next();
+
+            const a1 = atom(atomId('a', 1), null, bot('test'));
+
+            // The same data is stored in the stage as the
+            // repo store.
+            await stageStore.addAtoms('testBranch', [a1]);
+            const idx = index(a1);
+            const b = branch('testBranch', idx);
+            await storeData(store, 'testBranch', idx.data.hash, [a1, idx]);
+            await store.saveBranch(b);
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+            leaveBranch.next('testBranch');
+
+            await waitAsync();
+
+            const atoms = await stageStore.getStage('testBranch');
+
+            expect(atoms.additions).toEqual([a1]);
         });
     });
 
@@ -2341,7 +2541,7 @@ describe('CausalRepoServer', () => {
 
             expect(changesCommit).toEqual({
                 type: 'commit',
-                message: `Save before restore`,
+                message: `Save testBranch before restore`,
                 time: expect.any(Date),
                 hash: expect.any(String),
                 index: expect.any(String),

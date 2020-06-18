@@ -79,6 +79,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     type = 'local_storage' as const;
     private: boolean;
     namespace: string;
+    space: string;
 
     constructor(config: LocalStoragePartitionConfig) {
         this.private = config.private || false;

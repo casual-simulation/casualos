@@ -4,6 +4,10 @@ import {
     CausalRepoObject,
     getObjectHash,
     CausalRepoIndex,
+    CausalRepoReflog,
+    reflog,
+    CausalRepoSitelog,
+    sitelog,
 } from './CausalRepoObject';
 import sortBy from 'lodash/sortBy';
 import { getAtomHashes } from './AtomIndex';
@@ -13,12 +17,43 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
     private _headsMap: Map<string, Map<string, CausalRepoObject>>;
     private _indexes: Map<string, CausalRepoObject[]>;
     private _branches: CausalRepoBranch[];
+    private _reflog: Map<string, CausalRepoReflog[]>;
+    private _sitelog: Map<string, CausalRepoSitelog[]>;
 
     constructor() {
         this._map = new Map();
         this._headsMap = new Map();
         this._indexes = new Map();
+        this._reflog = new Map();
+        this._sitelog = new Map();
         this._branches = [];
+    }
+
+    async getReflog(branch: string): Promise<CausalRepoReflog[]> {
+        let reflog = this._reflog.get(branch);
+        if (!reflog) {
+            return [];
+        }
+        return reflog;
+    }
+
+    async getSitelog(branch: string): Promise<CausalRepoSitelog[]> {
+        let sitelog = this._sitelog.get(branch);
+        if (!sitelog) {
+            return [];
+        }
+        return sitelog;
+    }
+
+    async logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
+        let log = this._sitelog.get(branch);
+        if (!log) {
+            log = [];
+            this._sitelog.set(branch, log);
+        }
+        const newLog = sitelog(branch, site);
+        log.unshift(newLog);
+        return newLog;
     }
 
     async loadIndex(
@@ -89,6 +124,13 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
         } else {
             this._branches.push(head);
         }
+
+        let log = this._reflog.get(head.name);
+        if (!log) {
+            log = [];
+            this._reflog.set(head.name, log);
+        }
+        log.unshift(reflog(head));
     }
 
     async deleteBranch(head: CausalRepoBranch): Promise<void> {
