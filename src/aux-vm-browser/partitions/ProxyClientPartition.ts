@@ -75,8 +75,6 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         this.private = config.private;
         this.realtimeStrategy = config.editStrategy;
 
-        console.log('Got Bridge: ', this._bridge);
-
         this.state = {};
 
         this._onBotsAdded = new Subject<Bot[]>();
