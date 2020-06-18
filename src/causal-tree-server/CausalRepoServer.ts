@@ -123,7 +123,7 @@ export class CausalRepoServer {
                         if (!this._branches.has(branch)) {
                             this._branches.set(branch, event);
                         }
-                        if (event.siteId) {
+                        if (!event.temporary && event.siteId) {
                             await this._store.logSite(
                                 event.branch,
                                 event.siteId

@@ -384,6 +384,32 @@ describe('CausalRepoServer', () => {
                     },
                 ]);
             });
+
+            it('should not log the site ID to the branch if specified', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                const joinBranch = new Subject<WatchBranchEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+
+                connections.connection.next(device);
+
+                await waitAsync();
+
+                joinBranch.next({
+                    branch: 'testBranch',
+                    siteId: 'testSite',
+                    temporary: true,
+                });
+
+                await waitAsync();
+
+                const log = await store.getSitelog('testBranch');
+                expect(log).toEqual([]);
+            });
         });
     });
 
