@@ -14,6 +14,7 @@
     -   Fixed an issue where all bots would appear to be in the `shared` space even though they were not.
     -   Fixed issues with loading on Servo-based browsers.
         -   The issues were mostly related to Servo having not implemented IndexedDB yet.
+    -   Fixed an issue where some temporary branches would show up in `server.stories()`.
 
 ## V1.1.10
 
