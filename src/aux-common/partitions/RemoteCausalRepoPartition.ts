@@ -92,6 +92,10 @@ export class RemoteCausalRepoPartitionImpl
 
     private: boolean;
 
+    get tree() {
+        return this._tree;
+    }
+
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return this._static ? 'delayed' : 'immediate';
     }
@@ -363,6 +367,7 @@ export class RemoteCausalRepoPartitionImpl
                 .watchBranch({
                     branch: this._branch,
                     temporary: this._temporary,
+                    siteId: this._tree.site.id,
                 })
                 .subscribe(event => {
                     if (!this._synced) {

@@ -171,6 +171,7 @@ describe('OtherPlayersPartition', () => {
                         data: {
                             branch: 'testBranch-player-device1SessionId',
                             temporary: true,
+                            siteId: expect.any(String),
                         },
                     },
                 ]);
@@ -339,6 +340,7 @@ describe('OtherPlayersPartition', () => {
                         data: {
                             branch: 'testBranch-player-device1SessionId',
                             temporary: true,
+                            siteId: expect.any(String),
                         },
                     },
                     {

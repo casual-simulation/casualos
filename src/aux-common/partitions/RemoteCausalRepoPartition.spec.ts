@@ -181,6 +181,26 @@ describe('RemoteCausalRepoPartition', () => {
             ]);
         });
 
+        it('should send a WATCH_BRANCH event to the server', async () => {
+            setupPartition({
+                type: 'remote_causal_repo',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
+
+            partition.connect();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        siteId: partition.tree.site.id,
+                    },
+                },
+            ]);
+        });
+
         describe('remote events', () => {
             it('should send the remote event to the server', async () => {
                 await partition.sendRemoteEvents([
@@ -902,6 +922,7 @@ describe('RemoteCausalRepoPartition', () => {
                         name: WATCH_BRANCH,
                         data: {
                             branch: 'testBranch',
+                            siteId: partition.tree.site.id,
                         },
                     },
                 ]);
@@ -1029,6 +1050,7 @@ describe('RemoteCausalRepoPartition', () => {
                         name: WATCH_BRANCH,
                         data: {
                             branch: 'testBranch',
+                            siteId: partition.tree.site.id,
                             temporary: true,
                         },
                     },

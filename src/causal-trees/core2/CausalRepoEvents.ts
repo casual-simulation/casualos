@@ -153,6 +153,11 @@ export interface WatchBranchEvent {
     branch: string;
 
     /**
+     * The ID of the site that is watching the branch.
+     */
+    siteId?: string;
+
+    /**
      * Whether the branch should be temporary.
      * That is, if the branch data should not be loaded from the database
      * and everything should be deleted once all the watchers have left.
