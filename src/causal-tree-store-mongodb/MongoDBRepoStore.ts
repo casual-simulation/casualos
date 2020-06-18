@@ -204,7 +204,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
      * @param head The branch to save.
      */
     async saveBranch(head: CausalRepoBranch): Promise<void> {
-        await this._heads.updateOne(
+        const result = await this._heads.updateOne(
             { name: head.name },
             {
                 $set: head,
@@ -213,8 +213,10 @@ export class MongoDBRepoStore implements CausalRepoStore {
                 upsert: true,
             }
         );
-        const ref = reflog(head);
-        await this._reflog.insertOne(ref);
+        if (result.modifiedCount > 0 || result.upsertedCount > 0) {
+            const ref = reflog(head);
+            await this._reflog.insertOne(ref);
+        }
     }
 
     /**
