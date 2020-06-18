@@ -81,6 +81,37 @@ export default function causalRepoStoreTests(
             expect(branches).toEqual([b4, b3]);
         });
 
+        it('should create a reflog for the saved branch', async () => {
+            const b1 = repoBranch('my-repo/master', 'hash1');
+
+            await store.saveBranch(b1);
+
+            const b2 = repoBranch('my-repo/master', 'hash2');
+
+            await store.saveBranch(b2);
+
+            let branches = await store.getBranches('my-repo');
+
+            expect(branches).toEqual([b2]);
+
+            let reflog = await store.getReflog('my-repo/master');
+
+            expect(reflog).toEqual([
+                {
+                    type: 'reflog',
+                    branch: 'my-repo/master',
+                    hash: 'hash2',
+                    time: expect.any(Date),
+                },
+                {
+                    type: 'reflog',
+                    branch: 'my-repo/master',
+                    hash: 'hash1',
+                    time: expect.any(Date),
+                },
+            ]);
+        });
+
         it('should be able to delete branches', async () => {
             const b1 = repoBranch('my-repo/master', 'hash1');
             const b2 = repoBranch('my-repo/other', 'hash2');
@@ -121,6 +152,29 @@ export default function causalRepoStoreTests(
 
             // should be sorted by name
             expect(branches).toEqual([b4, b3, b1, b2]);
+        });
+    });
+
+    describe('sitelog', () => {
+        it('should be able to log that a site was connected to a branch', async () => {
+            await store.logSite('test', 'abc1');
+            await store.logSite('test', 'abc2');
+
+            const log = await store.getSitelog('test');
+            expect(log).toEqual([
+                {
+                    type: 'sitelog',
+                    branch: 'test',
+                    site: 'abc2',
+                    time: expect.any(Date),
+                },
+                {
+                    type: 'sitelog',
+                    branch: 'test',
+                    site: 'abc1',
+                    time: expect.any(Date),
+                },
+            ]);
         });
     });
 

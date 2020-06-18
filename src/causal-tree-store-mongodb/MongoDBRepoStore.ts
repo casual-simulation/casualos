@@ -6,6 +6,10 @@ import {
     getObjectHash,
     CausalRepoIndex,
     getAtomHashes,
+    CausalRepoReflog,
+    reflog,
+    CausalRepoSitelog,
+    sitelog,
 } from '@casual-simulation/causal-trees/core2';
 
 /**
@@ -15,19 +19,72 @@ export class MongoDBRepoStore implements CausalRepoStore {
     private _objects: Collection<MongoDBObject>;
     private _heads: Collection<MongoDBHead>;
     private _indexes: Collection<MongoDBIndex>;
+    private _reflog: Collection<MongoDBReflog>;
+    private _sitelog: Collection<MongoDBSitelog>;
 
     constructor(
         objectsCollection: Collection<MongoDBObject>,
         headsCollection: Collection<MongoDBHead>,
-        indexesCollection: Collection<MongoDBIndex>
+        indexesCollection: Collection<MongoDBIndex>,
+        reflogCollection: Collection<MongoDBReflog>,
+        sitelogCollection: Collection<MongoDBSitelog>
     ) {
         this._objects = objectsCollection;
         this._heads = headsCollection;
         this._indexes = indexesCollection;
+        this._reflog = reflogCollection;
+        this._sitelog = sitelogCollection;
     }
 
     async init() {
         await this._heads.createIndex({ name: 1 }, { unique: true });
+        await this._reflog.createIndex({ branch: 1, time: -1 });
+        await this._sitelog.createIndex({ branch: 1, time: -1 });
+        await this._sitelog.createIndex({ site: 1, branch: 1, time: -1 });
+    }
+
+    async getSitelog(branch: string): Promise<CausalRepoSitelog[]> {
+        const sitelog = await this._sitelog
+            .find({ branch: branch })
+            .sort({
+                time: -1,
+            })
+            .toArray();
+
+        return sitelog.map(
+            ref =>
+                ({
+                    type: 'sitelog',
+                    branch: ref.branch,
+                    site: ref.site,
+                    time: ref.time,
+                } as CausalRepoSitelog)
+        );
+    }
+
+    async logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
+        const log = sitelog(branch, site);
+        await this._sitelog.insertOne(log);
+        return log;
+    }
+
+    async getReflog(branch: string): Promise<CausalRepoReflog[]> {
+        const reflog = await this._reflog
+            .find({ branch: branch })
+            .sort({
+                time: -1,
+            })
+            .toArray();
+
+        return reflog.map(
+            ref =>
+                ({
+                    type: 'reflog',
+                    branch: ref.branch,
+                    hash: ref.hash,
+                    time: ref.time,
+                } as CausalRepoReflog)
+        );
     }
 
     async loadIndex(
@@ -156,6 +213,8 @@ export class MongoDBRepoStore implements CausalRepoStore {
                 upsert: true,
             }
         );
+        const ref = reflog(head);
+        await this._reflog.insertOne(ref);
     }
 
     /**
@@ -178,6 +237,20 @@ export interface MongoDBObject {
 export interface MongoDBIndex {
     _id: string;
     objects: CausalRepoObject[];
+}
+
+export interface MongoDBReflog {
+    _id?: any;
+    branch: string;
+    hash: string;
+    time: Date;
+}
+
+export interface MongoDBSitelog {
+    _id?: any;
+    branch: string;
+    site: string;
+    time: Date;
 }
 
 export function escapeRegex(value: string): string {

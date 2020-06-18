@@ -110,6 +110,7 @@ describe('AuxCausalRepoManager', () => {
                 name: WATCH_BRANCH,
                 data: {
                     branch: 'abc',
+                    siteId: expect.any(String),
                 },
             },
         ]);
@@ -153,6 +154,7 @@ describe('AuxCausalRepoManager', () => {
             name: WATCH_BRANCH,
             data: {
                 branch: 'abc',
+                siteId: expect.any(String),
             },
         });
         expect(connection.sentMessages).toContainEqual({
