@@ -58,7 +58,7 @@ export class AuxCausalRepoManager {
             return;
         }
 
-        let info = await this._loadBranch(branch.branch);
+        let info = await this._loadBranch(branch.branch, true);
         const id = device.claims[SESSION_ID_CLAIM];
         info.connections.add(id);
 
@@ -72,7 +72,10 @@ export class AuxCausalRepoManager {
             return;
         }
 
-        let info = await this._loadBranch(branch);
+        let info = await this._loadBranch(branch, false);
+        if (!info) {
+            return;
+        }
         const id = device.claims[SESSION_ID_CLAIM];
         info.connections.delete(id);
 
@@ -95,9 +98,14 @@ export class AuxCausalRepoManager {
         }
     }
 
-    private async _loadBranch(branch: string) {
+    /**
+     * Loads a simulation for the given branch.
+     * @param branch The branch to load.
+     * @param allowLoadingFresh Whether to allow loading a new simulation. If false and the branch is not already loaded, then null will be returned.
+     */
+    private async _loadBranch(branch: string, allowLoadingFresh: boolean) {
         let info = this._branches.get(branch);
-        if (!info) {
+        if (!info && allowLoadingFresh) {
             const sim = nodeSimulationForBranch(
                 this._user,
                 this._client,

@@ -163,6 +163,26 @@ describe('AuxCausalRepoManager', () => {
         });
     });
 
+    it('should not try loading the branch if a disconnected event is received without a corresponding connection event', async () => {
+        manager.init();
+        connection.connect();
+        await waitAsync();
+
+        deviceDisconnected.next({
+            branch: 'abc',
+            device: device1Info,
+        });
+        await waitAsync();
+
+        expect(connection.sentMessages).not.toContainEqual({
+            name: WATCH_BRANCH,
+            data: {
+                branch: 'abc',
+                siteId: expect.any(String),
+            },
+        });
+    });
+
     it('should call setup() on each of the modules when a branch is loaded', async () => {
         manager.init();
         connection.connect();
