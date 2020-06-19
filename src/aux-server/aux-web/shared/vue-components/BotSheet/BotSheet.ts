@@ -5,6 +5,7 @@ import { Bot, hasValue, BotTags } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTable from '../BotTable/BotTable';
+import { SubscriptionLike } from 'rxjs';
 
 @Component({
     components: {
@@ -27,7 +28,7 @@ export default class BotSheet extends Vue {
 
     created() {
         appManager.whileLoggedIn((user, botManager) => {
-            let subs = [];
+            let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.bots = [];
             this.updateTime = -1;

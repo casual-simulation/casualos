@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.12
+
+### Date: 6/18/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where Servo-based browsers would run into a race condition during initialization.
+
 ## V1.1.11
 
 ### Date: 6/18/2020

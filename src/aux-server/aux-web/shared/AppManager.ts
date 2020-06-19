@@ -313,10 +313,11 @@ export class AppManager {
 
     async setPrimarySimulation(channelId: string) {
         if (
-            this.simulationManager.primary &&
-            this.simulationManager.primary.id === channelId
+            (this.simulationManager.primary &&
+                this.simulationManager.primary.id === channelId) ||
+            this.simulationManager.primaryId === channelId
         ) {
-            return this.simulationManager.primary;
+            return await this.simulationManager.primaryPromise;
         }
 
         this._sendProgress('Requesting channel...', 0.1);
@@ -358,53 +359,6 @@ export class AppManager {
 
         return sim;
     }
-
-    // private async _initUser() {
-    //     console.log('[AppManager] Initalizing user...');
-    //     this._user = null;
-    //     this._userSubject.subscribe(user => {
-    //         Sentry.configureScope(scope => {
-    //             if (user) {
-    //                 scope.setUser(this._userSubject);
-    //             } else {
-    //                 scope.clear();
-    //             }
-    //         });
-    //     });
-
-    //     let user = await this._getCurrentUser();
-
-    //     if (user) {
-    //         if (user.id) {
-
-    //             await this._saveUser(this._user);
-    //             await this._setCurrentUsername(this._user.username);
-    //             this._userSubject.next(this._user);
-    //         } else {
-    //             this.loadingProgress.status = 'Saving user...';
-    //             this._user = null;
-    //             await this._setCurrentUsername(null);
-    //         }
-    //     }
-    // }
-
-    // private async _setPrimarySimulation(channelId: string): Promise<void> {
-    //     try {
-
-    //         return null;
-    //     } catch (ex) {
-    //         Sentry.captureException(ex);
-    //         console.error(ex);
-    //         this.loadingProgress.set(
-    //             0,
-    //             'Exception occured while logging in.',
-    //             this._exceptionMessage(ex)
-    //         );
-    //         this.loadingProgress.show = false;
-    //         this._user = null;
-    //         await this._setCurrentUsername(null);
-    //     }
-    // }
 
     private async _getUser(username: string): Promise<AuxUser> {
         try {
