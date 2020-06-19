@@ -27,17 +27,15 @@ describe('SimulationManager', () => {
             expect(manager.simulations.get('test').initialized).toBe(true);
         });
 
-        it('should not add the simulation if it already exists', async () => {
+        it('should reuse the simulation if it already exists', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
             const val = new TestInitable();
             manager.simulations.set('test', val);
+            const first = manager.addSimulation('test');
+            const second = manager.addSimulation('test');
 
-            const added = await manager.addSimulation('test');
-
-            expect(manager.simulations.get('test')).toBe(val);
-            expect(val.initialized).toBeFalsy();
-            expect(added).toBe(val);
+            expect(await first).toBe(await second);
         });
 
         it('should trigger a simulationAdded event', async () => {
@@ -88,8 +86,7 @@ describe('SimulationManager', () => {
         it('should remove the given simulation from the map', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const val = new TestInitable();
-            manager.simulations.set('test', val);
+            const val = await manager.addSimulation('test');
 
             await manager.removeSimulation('test');
 
@@ -100,9 +97,7 @@ describe('SimulationManager', () => {
         it('should clear the primary sim if the removed is the primary', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const val = new TestInitable();
-            manager.simulations.set('test', val);
-            manager.primary = val;
+            const val = await manager.setPrimary('test');
 
             await manager.removeSimulation('test');
 
@@ -138,10 +133,9 @@ describe('SimulationManager', () => {
         it('should dispose and remove all the simulations', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const sim = new TestInitable();
-            manager.simulations.set('test', sim);
-            manager.simulations.set('test2', new TestInitable());
-            manager.primary = sim;
+            await manager.addSimulation('test');
+            await manager.addSimulation('test2');
+            await manager.setPrimary('test3');
 
             await manager.clear();
 
