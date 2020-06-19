@@ -11,11 +11,22 @@ export class SimulationManager<TSimulation extends Initable> {
     private _simulationAdded: Subject<TSimulation>;
     private _simulationRemoved: Subject<TSimulation>;
     private _simulationSubscriptions: Map<string, Subscription>;
+    private _simulationPromises: Map<string, Promise<TSimulation>>;
+
+    /**
+     * The ID of the primary simulation.
+     */
+    primaryId: string;
 
     /**
      * The primary simulation to use.
      */
     primary: TSimulation;
+
+    /**
+     * The promise of the primary simulation.
+     */
+    primaryPromise: Promise<TSimulation>;
 
     /**
      * The map of simulations to their IDs.
@@ -47,6 +58,7 @@ export class SimulationManager<TSimulation extends Initable> {
         this._factory = factory;
         this.simulations = new Map();
         this._simulationSubscriptions = new Map();
+        this._simulationPromises = new Map();
         this.primary = null;
         this._simulationAdded = new Subject();
         this._simulationRemoved = new Subject();
@@ -79,7 +91,10 @@ export class SimulationManager<TSimulation extends Initable> {
      * @param loadingCallback The loading progress callback to use.
      */
     async setPrimary(id: string): Promise<TSimulation> {
-        let added = await this.addSimulation(id);
+        const promise = this.addSimulation(id);
+        this.primaryId = id;
+        this.primaryPromise = promise;
+        let added = await promise;
 
         this.primary = added;
 
@@ -90,27 +105,33 @@ export class SimulationManager<TSimulation extends Initable> {
      * Adds a new simulation using the given ID.
      * @param id The ID of the simulation to add.
      */
-    async addSimulation(id: string): Promise<TSimulation> {
-        if (this.simulations.has(id)) {
-            return this.simulations.get(id);
+    addSimulation(id: string): Promise<TSimulation> {
+        if (this._simulationPromises.has(id)) {
+            return this._simulationPromises.get(id);
         } else {
-            const sim = this._factory(id);
-
-            let sub = new Subscription();
-            sub.add(
-                sim.onError.subscribe(e => {
-                    console.error(e);
-                    this.removeSimulation(id);
-                })
-            );
-            this._simulationSubscriptions.set(id, sub);
-            this.simulations.set(id, sim);
-
-            await sim.init();
-
-            this._simulationAdded.next(sim);
-            return sim;
+            const promise = this._initSimulation(id);
+            this._simulationPromises.set(id, promise);
+            return promise;
         }
+    }
+
+    private async _initSimulation(id: string) {
+        const sim = this._factory(id);
+
+        let sub = new Subscription();
+        sub.add(
+            sim.onError.subscribe(e => {
+                console.error(e);
+                this.removeSimulation(id);
+            })
+        );
+        this._simulationSubscriptions.set(id, sub);
+        this.simulations.set(id, sim);
+
+        await sim.init();
+
+        this._simulationAdded.next(sim);
+        return sim;
     }
 
     /**
@@ -118,8 +139,8 @@ export class SimulationManager<TSimulation extends Initable> {
      * @param id The ID of the simulation to remove.
      */
     async removeSimulation(id: string) {
-        if (this.simulations.has(id)) {
-            const sim = this.simulations.get(id);
+        if (this._simulationPromises.has(id)) {
+            const sim = await this._simulationPromises.get(id);
             sim.unsubscribe();
             if (this._simulationSubscriptions.has(id)) {
                 const sub = this._simulationSubscriptions.get(id);
@@ -129,6 +150,7 @@ export class SimulationManager<TSimulation extends Initable> {
                 this.primary = null;
             }
             this.simulations.delete(id);
+            this._simulationPromises.delete(id);
             this._simulationSubscriptions.delete(id);
             this._simulationRemoved.next(sim);
         }
