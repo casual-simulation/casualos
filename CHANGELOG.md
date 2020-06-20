@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.1.13
+
+### Date: TBD
+
+### Changes:
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where the Hololens 2 would not be able to enter AR/VR because a controller's (hand) position would sometimes be null.
+    -   Fixed an issue where loading without a story would create a new random story but then immediately unload it.
+
 ## V1.1.12
 
 ### Date: 6/18/2020
