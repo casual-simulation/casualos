@@ -312,6 +312,7 @@ export class AppManager {
     }
 
     async setPrimarySimulation(channelId: string) {
+        channelId = channelId || 'default';
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === channelId) ||
@@ -319,11 +320,11 @@ export class AppManager {
         ) {
             return await this.simulationManager.primaryPromise;
         }
+        this.simulationManager.primaryId = channelId;
 
         this._sendProgress('Requesting channel...', 0.1);
 
         console.log('[AppManager] Setting primary simulation:', channelId);
-        channelId = channelId || 'default';
 
         const user = await this._getCurrentUserOrGuest();
         this._user = user;
