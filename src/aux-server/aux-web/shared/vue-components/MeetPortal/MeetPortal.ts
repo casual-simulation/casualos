@@ -8,6 +8,7 @@ import {
     MEET_PORTAL,
     PrecalculatedBot,
     calculateBotValue,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -66,6 +67,16 @@ export default class MeetPortal extends Vue {
         }
     }
 
+    onClose() {
+        if (this._currentSim) {
+            this._currentSim.helper.updateBot(this._currentSim.helper.userBot, {
+                tags: {
+                    [MEET_PORTAL]: null,
+                },
+            });
+        }
+    }
+
     private _onSimulationAdded(sim: BrowserSimulation) {
         let sub = new Subscription();
         this._simulations.set(sim, sub);
@@ -97,7 +108,7 @@ export default class MeetPortal extends Vue {
     }
 
     private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
-        const portal = calculateBotValue(null, user, MEET_PORTAL);
+        const portal = calculateStringTagValue(null, user, MEET_PORTAL, null);
         if (hasValue(portal)) {
             this._portals.set(sim, portal);
         } else {

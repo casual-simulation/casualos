@@ -1,6 +1,6 @@
 <template>
     <div v-if="hasPortal" class="meet-portal">
-        <jitsi-meet :options="{ roomName: currentMeet }"></jitsi-meet>
+        <jitsi-meet :options="{ roomName: currentMeet }" @closed="onClose"></jitsi-meet>
     </div>
 </template>
 <script src="./MeetPortal.ts"></script>

@@ -52,6 +52,10 @@ export default class JitsiMeet extends Vue {
             this.domain,
             options
         ) as JitsiApi;
+
+        this._jitsiApi.on('readyToClose', () => {
+            this.$emit('closed');
+        });
     }
 
     private _removeJitsiWidget() {
