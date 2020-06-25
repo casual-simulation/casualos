@@ -1,0 +1,8 @@
+.meet-portal {
+    position: absolute;
+    z-index: 3;
+}
+
+.meet-portal.invisible {
+    display: none;
+}

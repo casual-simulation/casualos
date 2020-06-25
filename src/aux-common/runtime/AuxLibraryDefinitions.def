@@ -2490,7 +2490,7 @@ declare global {
         showInput(
             currentValue?: any,
             options?: Partial<ShowInputOptions>
-        ): Promise<ShowInputAction>;
+        ): Promise<string>;
 
         /**
          * Shows a checkout screen that lets the user purchase something.

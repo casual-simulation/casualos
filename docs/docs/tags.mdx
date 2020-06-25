@@ -1132,6 +1132,87 @@ The number of grid spaces that the wrist portal should have in the X direction.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `meetPortalVisible`
+
+Whether the meet portal should be visible.
+This is useful for hiding the meet portal while still in a meeting.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal will be visible. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal will be hidden.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalAnchorPoint`
+
+The position on the screen that the meet portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='meetPortalStyle'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The meet portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The meet portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The meet portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The meet portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The meet portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The meet portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The meet portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The meet portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the meet portal container.
+This is useful for positioning the meet portal in ways that are not possible using <TagLink tag='meetPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='meetPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the meet portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the meet portal in the center of the screen.
+Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
+```
+=({
+    top: "10%",
+    bottom: "10%",
+    left: "10%",
+    right: "10%",
+})
+```
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -1263,6 +1344,19 @@ Only available on the player bot.
 </Badges>
 
 The dimension that is loaded onto the right controller near the wrist when in VR.
+Only available on the player bot.
+
+### `meetPortal`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be joined.
+This will join the current tab to the meeting and provide audiovisual communication between everyone that is joined.
+
+This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
+
 Only available on the player bot.
 
 ## Hidden Tags

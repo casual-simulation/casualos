@@ -1,5 +1,41 @@
 # CasualOS Changelog
 
+## V1.1.13
+
+### Date: 6/25/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `meetPortal`.
+        -   This is a special portal that, instead of loading bots, loads a [Jitsi Meet](https://meet.jit.si/) meeting with the given room code.
+        -   All rooms are publicly accessible (but not searchable), so longer room codes will be more private.
+        -   You can use the `meetPortalConfigBot` option to reference the bot that should be used to configure the meet portal.
+        -   The following options are available:
+            -   `meetPortalVisible` - Whether the meet portal should be visible. This allows you to be joined to a meet while keeping your screen on the page portal. (Defaults to true)
+            -   `meetPortalAnchorPoint` - The anchor point that the meet portal should use. Possible options are:
+                -   `fullscreen` - The meet portal should take the entire screen. (Default)
+                -   `top` - The meet portal should take the top of the screen.
+                -   `topRight` - The meet portal should take the top-right corner of the screen.
+                -   `topLeft` - The meet portal should take the top-left corner of the screen.
+                -   `bottom` - The meet portal should take the bottom of the screen.
+                -   `bottomRight` - The meet portal should take the bottom-right corner of the screen.
+                -   `bottomLeft` - The meet portal should take the bottom-left corner of the screen.
+                -   `[top, right, bottom, left]` - The meet portal should use the given values for the CSS top, right, bottom, and left properties respectively.
+            -   `meetPortalStyle` - The CSS style that should be applied to the meet portal container.
+                -   Should be a JavaScript object.
+                -   Each property on the object will map directly to a CSS property.
+                -   Useful for moving the meet portal to arbitrary positions.
+
+-   :bug: Bug Fixes
+
+    -   Fixed an issue where the Hololens 2 would not be able to enter AR/VR because a controller's (hand) position would sometimes be null.
+    -   Fixed an issue where loading without a story would create a new random story but then immediately unload it.
+    -   Fixed an issue where local bots from other stories would be loaded if the current story name happened to be a prefix of the other story name.
+    -   Fixed the input modal background.
+    -   Fixed the TypeScript definitions for the `player.showInput()` function.
+
 ## V1.1.12
 
 ### Date: 6/18/2020
