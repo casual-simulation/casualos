@@ -6,6 +6,12 @@
 
 ### Changes:
 
+-   :rocket: Improvements
+
+    -   Added the `meetPortal`.
+        -   This is a special portal that, instead of loading bots, loads a [Jitsi Meet](https://meet.jit.si/) meeting with the given room code.
+        -   All rooms are publicly accessible (but not searchable), so longer room codes will be more private.
+
 -   :bug: Bug Fixes
 
     -   Fixed an issue where the Hololens 2 would not be able to enter AR/VR because a controller's (hand) position would sometimes be null.
