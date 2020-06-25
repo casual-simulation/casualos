@@ -33,6 +33,8 @@
     -   Fixed an issue where the Hololens 2 would not be able to enter AR/VR because a controller's (hand) position would sometimes be null.
     -   Fixed an issue where loading without a story would create a new random story but then immediately unload it.
     -   Fixed an issue where local bots from other stories would be loaded if the current story name happened to be a prefix of the other story name.
+    -   Fixed the input modal background.
+    -   Fixed the TypeScript definitions for the `player.showInput()` function.
 
 ## V1.1.12
 
