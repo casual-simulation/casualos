@@ -83,6 +83,7 @@ export type PortalType =
     | 'menu'
     | 'sheet'
     | 'stories'
+    | 'meet'
     | string;
 
 export interface ScriptTags extends PrecalculatedTags {
@@ -326,6 +327,22 @@ export type BotAnchorPoint =
     | [number, number, number];
 
 /**
+ * Defines the possible meet portal anchor points.
+ */
+export type MeetPortalAnchorPoint =
+    | 'fullscreen'
+    | 'top'
+    | 'topRight'
+    | 'topLeft'
+    | 'bottom'
+    | 'bottomRight'
+    | 'bottomLeft'
+    | [number | string]
+    | [number | string, number | string]
+    | [number | string, number | string, number | string]
+    | [number | string, number | string, number | string, number | string];
+
+/**
  * Defines the possible portal raycast modes.
  */
 export type PortalPointerDragMode = 'grid' | 'world';
@@ -510,6 +527,12 @@ export const DEFAULT_WRIST_PORTAL_WIDTH = 6;
  * The default grid scale for wrist portals.
  */
 export const DEFAULT_WRIST_PORTAL_GRID_SCALE = 0.025;
+
+/**
+ * The default anchor point for the meet portal.
+ */
+export const DEFAULT_MEET_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
 
 /**
  * The default bot LOD.
@@ -861,6 +884,11 @@ export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
+ * The name of the meet portal.
+ */
+export const MEET_PORTAL: string = 'meetPortal';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
@@ -870,12 +898,17 @@ export const KNOWN_PORTALS: string[] = [
     'menuPortal',
     'leftWristPortal',
     'rightWristPortal',
+    MEET_PORTAL,
 ];
 
 /**
  * The list of portal tags that should always be represented in the query string.
  */
-export const QUERY_PORTALS: string[] = ['pagePortal', 'sheetPortal'];
+export const QUERY_PORTALS: string[] = [
+    'pagePortal',
+    'sheetPortal',
+    MEET_PORTAL,
+];
 
 /*
  * The list of all tags that have existing functionality in casual sim
@@ -895,6 +928,10 @@ export const KNOWN_TAGS: string[] = [
     'menuPortalConfigBot',
     'leftWristPortalConfigBot',
     'rightWristPortalConfigBot',
+
+    MEET_PORTAL,
+    `${MEET_PORTAL}ConfigBot`,
+
     '_editingBot',
 
     'portalColor',
@@ -920,6 +957,9 @@ export const KNOWN_TAGS: string[] = [
     'inventoryPortalResizable',
     'wristPortalHeight',
     'wristPortalWidth',
+    'meetPortalAnchorPoint',
+    'meetPortalVisible',
+    'meetPortalStyle',
 
     'color',
     'creator',

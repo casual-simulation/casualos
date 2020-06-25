@@ -145,7 +145,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         let events = [] as AddBotAction[];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith(this.namespace)) {
+            if (key.startsWith(this.namespace + '/')) {
                 // it is a bot
                 events.push(botAdded(getStoredBot(key)));
             }
@@ -243,7 +243,7 @@ function storedBotUpdated(
     namespace: string
 ): Observable<AddBotAction | RemoveBotAction | UpdateBotAction> {
     return storageUpdated().pipe(
-        filter(e => e.key.startsWith(namespace)),
+        filter(e => e.key.startsWith(namespace + '/')),
         map(e => {
             const newBot: Bot = JSON.parse(e.newValue) || null;
             const oldBot: Bot = JSON.parse(e.oldValue) || null;

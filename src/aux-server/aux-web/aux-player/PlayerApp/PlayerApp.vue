@@ -14,6 +14,7 @@
             <checkout></checkout>
             <bot-sheet></bot-sheet>
             <show-input></show-input>
+            <meet-portal></meet-portal>
 
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">

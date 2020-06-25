@@ -56,6 +56,8 @@ import {
     isBotFocusable,
     getBotLabelAlignment,
     getBotScaleMode,
+    getBotMeetPortalAnchorPoint,
+    getBotMeetPortalAnchorPointOffset,
 } from '../BotCalculations';
 import {
     Bot,
@@ -984,6 +986,55 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('getMeetPortalAnchorPoint()', () => {
+        const cases = [
+            ['fullscreen', 'fullscreen'],
+            ['top', 'top'],
+            ['topRight', 'topRight'],
+            ['topLeft', 'topLeft'],
+            ['bottom', 'bottom'],
+            ['bottomRight', 'bottomRight'],
+            ['bottomLeft', 'bottomLeft'],
+            ['[1]', [1, 0, 0, 0]],
+            ['[1, 2]', [1, 2, 0, 0]],
+            ['[1, 2, 3]', [1, 2, 3, 0]],
+            ['[1, 2, 3, 4]', [1, 2, 3, 4]],
+            ['[1, 2, 3, 4, 5]', [1, 2, 3, 4]],
+            ['[a]', ['a', 0, 0, 0]],
+            ['[a, b]', ['a', 'b', 0, 0]],
+            ['[a, b, c]', ['a', 'b', 'c', 0]],
+            ['[a, b, c, d]', ['a', 'b', 'c', 'd']],
+            ['[a, b, c, d, e]', ['a', 'b', 'c', 'd']],
+        ];
+        const tagCases = ['auxMeetPortalAnchorPoint', 'meetPortalAnchorPoint'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotMeetPortalAnchorPoint(calc, bot)).toEqual(
+                        expected
+                    );
+                }
+            );
+        });
+
+        it('should default to fullscreen', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getBotMeetPortalAnchorPoint(calc, bot);
+
+            expect(shape).toBe('fullscreen');
+        });
+    });
+
     describe('getAnchorPointOffset()', () => {
         const cases = [
             ['center', { x: 0, y: 0, z: 0 }],
@@ -1010,6 +1061,119 @@ export function botCalculationContextTests(
                     const calc = createPrecalculatedContext([bot]);
 
                     expect(getAnchorPointOffset(calc, bot)).toEqual(expected);
+                }
+            );
+        });
+
+        it('should default to bottom', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const offset = getAnchorPointOffset(calc, bot);
+
+            expect(offset).toEqual({
+                x: 0,
+                y: 0,
+                z: 0.5,
+            });
+        });
+    });
+
+    describe('getMeetPortalAnchorPointOffset()', () => {
+        const cases = [
+            [
+                'fullscreen',
+                { top: '0px', bottom: '0px', left: '0px', right: '0px' },
+            ],
+            [
+                '[1, 2, 3]',
+                { top: '1px', bottom: '3px', left: '0px', right: '2px' },
+            ],
+            [
+                '[1%, 2%, 3%]',
+                { top: '1%', bottom: '3%', left: '0px', right: '2%' },
+            ],
+
+            [
+                'top',
+                {
+                    top: '0px',
+                    height: '25%',
+                    'min-height': '250px',
+                    left: '0px',
+                    right: '0px',
+                },
+            ],
+            [
+                'topRight',
+                {
+                    top: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    right: '25px',
+                },
+            ],
+            [
+                'topLeft',
+                {
+                    top: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    left: '25px',
+                },
+            ],
+            [
+                'bottom',
+                {
+                    bottom: '0px',
+                    height: '25%',
+                    'min-height': '250px',
+                    left: '0px',
+                    right: '0px',
+                },
+            ],
+            [
+                'bottomRight',
+                {
+                    bottom: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    right: '25px',
+                },
+            ],
+            [
+                'bottomLeft',
+                {
+                    bottom: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    left: '25px',
+                },
+            ],
+        ];
+        const tagCases = ['auxMeetPortalAnchorPoint', 'meetPortalAnchorPoint'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(
+                        getBotMeetPortalAnchorPointOffset(calc, bot)
+                    ).toEqual(expected);
                 }
             );
         });
