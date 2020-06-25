@@ -1343,7 +1343,15 @@ export function getAnchorPointOffset(
     }
 }
 
-const possibleMeetPortalAnchorPoints = new Set(['fullscreen'] as const);
+const possibleMeetPortalAnchorPoints = new Set([
+    'fullscreen',
+    'top',
+    'topRight',
+    'topLeft',
+    'bottom',
+    'bottomRight',
+    'bottomLeft',
+] as const);
 
 /**
  * Gets the meet portal anchor point for the given bot.
@@ -1381,10 +1389,14 @@ export function getBotMeetPortalAnchorPointOffset(
     calc: BotCalculationContext,
     bot: Bot
 ): {
-    top: string;
-    right: string;
-    bottom: string;
-    left: string;
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+    height?: string;
+    width?: string;
+    'min-height'?: string;
+    'min-width'?: string;
 } {
     const point = getBotMeetPortalAnchorPoint(calc, bot);
     return calculateMeetPortalAnchorPointOffset(point);
@@ -1396,18 +1408,76 @@ export function getBotMeetPortalAnchorPointOffset(
 export function calculateMeetPortalAnchorPointOffset(
     anchorPoint: MeetPortalAnchorPoint
 ): {
-    top: string;
-    right: string;
-    bottom: string;
-    left: string;
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+    height?: string;
+    width?: string;
+    'min-height'?: string;
+    'min-width'?: string;
 } {
     if (typeof anchorPoint === 'string') {
-        return {
-            top: '0px',
-            right: '0px',
-            bottom: '0px',
-            left: '0px',
-        };
+        if (anchorPoint === 'top') {
+            return {
+                top: '0px',
+                height: '25%',
+                'min-height': '250px',
+                left: '0px',
+                right: '0px',
+            };
+        } else if (anchorPoint === 'topRight') {
+            return {
+                top: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                right: '25px',
+            };
+        } else if (anchorPoint === 'topLeft') {
+            return {
+                top: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                left: '25px',
+            };
+        } else if (anchorPoint === 'bottom') {
+            return {
+                bottom: '0px',
+                height: '25%',
+                'min-height': '250px',
+                left: '0px',
+                right: '0px',
+            };
+        } else if (anchorPoint === 'bottomRight') {
+            return {
+                bottom: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                right: '25px',
+            };
+        } else if (anchorPoint === 'bottomLeft') {
+            return {
+                bottom: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                left: '25px',
+            };
+        } else {
+            return {
+                top: '0px',
+                right: '0px',
+                bottom: '0px',
+                left: '0px',
+            };
+        }
     } else {
         const [top, right, bottom, left] = anchorPoint;
         return {

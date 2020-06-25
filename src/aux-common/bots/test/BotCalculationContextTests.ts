@@ -989,6 +989,12 @@ export function botCalculationContextTests(
     describe('getMeetPortalAnchorPoint()', () => {
         const cases = [
             ['fullscreen', 'fullscreen'],
+            ['top', 'top'],
+            ['topRight', 'topRight'],
+            ['topLeft', 'topLeft'],
+            ['bottom', 'bottom'],
+            ['bottomRight', 'bottomRight'],
+            ['bottomLeft', 'bottomLeft'],
             ['[1]', [1, 0, 0, 0]],
             ['[1, 2]', [1, 2, 0, 0]],
             ['[1, 2, 3]', [1, 2, 3, 0]],
@@ -1086,6 +1092,71 @@ export function botCalculationContextTests(
             [
                 '[1%, 2%, 3%]',
                 { top: '1%', bottom: '3%', left: '0px', right: '2%' },
+            ],
+
+            [
+                'top',
+                {
+                    top: '0px',
+                    height: '25%',
+                    'min-height': '250px',
+                    left: '0px',
+                    right: '0px',
+                },
+            ],
+            [
+                'topRight',
+                {
+                    top: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    right: '25px',
+                },
+            ],
+            [
+                'topLeft',
+                {
+                    top: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    left: '25px',
+                },
+            ],
+            [
+                'bottom',
+                {
+                    bottom: '0px',
+                    height: '25%',
+                    'min-height': '250px',
+                    left: '0px',
+                    right: '0px',
+                },
+            ],
+            [
+                'bottomRight',
+                {
+                    bottom: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    right: '25px',
+                },
+            ],
+            [
+                'bottomLeft',
+                {
+                    bottom: '25px',
+                    height: '25%',
+                    'min-height': '250px',
+                    width: '25%',
+                    'min-width': '250px',
+                    left: '25px',
+                },
             ],
         ];
         const tagCases = ['auxMeetPortalAnchorPoint', 'meetPortalAnchorPoint'];

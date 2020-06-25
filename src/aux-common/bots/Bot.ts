@@ -331,6 +331,12 @@ export type BotAnchorPoint =
  */
 export type MeetPortalAnchorPoint =
     | 'fullscreen'
+    | 'top'
+    | 'topRight'
+    | 'topLeft'
+    | 'bottom'
+    | 'bottomRight'
+    | 'bottomLeft'
     | [number | string]
     | [number | string, number | string]
     | [number | string, number | string, number | string]
