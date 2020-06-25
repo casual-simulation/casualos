@@ -37,6 +37,8 @@ import {
     DEFAULT_LABEL_ALIGNMENT,
     BotScaleMode,
     DEFAULT_SCALE_MODE,
+    MeetPortalAnchorPoint,
+    DEFAULT_MEET_PORTAL_ANCHOR_POINT,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1339,6 +1341,89 @@ export function getAnchorPointOffset(
             z: -z,
         };
     }
+}
+
+const possibleMeetPortalAnchorPoints = new Set(['fullscreen'] as const);
+
+/**
+ * Gets the meet portal anchor point for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotMeetPortalAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): MeetPortalAnchorPoint {
+    const mode = <MeetPortalAnchorPoint>(
+        calculateBotValue(calc, bot, 'auxMeetPortalAnchorPoint')
+    );
+
+    if (Array.isArray(mode)) {
+        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+            let result = mode.slice(0, 4);
+            while (result.length < 4) {
+                result.push(0);
+            }
+            return result as MeetPortalAnchorPoint;
+        }
+    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
+        return mode;
+    }
+    return DEFAULT_MEET_PORTAL_ANCHOR_POINT;
+}
+
+/**
+ * Gets the anchor point offset for the bot in AUX coordinates.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotMeetPortalAnchorPointOffset(
+    calc: BotCalculationContext,
+    bot: Bot
+): {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+} {
+    const point = getBotMeetPortalAnchorPoint(calc, bot);
+    return calculateMeetPortalAnchorPointOffset(point);
+}
+
+/**
+ * Calculates the CSS style for the given meet portal anchor point.
+ */
+export function calculateMeetPortalAnchorPointOffset(
+    anchorPoint: MeetPortalAnchorPoint
+): {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+} {
+    if (typeof anchorPoint === 'string') {
+        return {
+            top: '0px',
+            right: '0px',
+            bottom: '0px',
+            left: '0px',
+        };
+    } else {
+        const [top, right, bottom, left] = anchorPoint;
+        return {
+            top: stringOrPx(top),
+            right: stringOrPx(right),
+            bottom: stringOrPx(bottom),
+            left: stringOrPx(left),
+        };
+    }
+}
+
+function stringOrPx(value: string | number): string {
+    if (typeof value === 'string') {
+        return value;
+    }
+    return `${value}px`;
 }
 
 const lodTags = new Set([

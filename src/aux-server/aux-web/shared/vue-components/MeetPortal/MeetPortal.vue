@@ -1,5 +1,10 @@
 <template>
-    <div v-if="hasPortal" class="meet-portal">
+    <div
+        v-if="hasPortal"
+        class="meet-portal"
+        :class="{ invisible: !portalVisible }"
+        :style="extraStyle"
+    >
         <jitsi-meet :options="{ roomName: currentMeet }" @closed="onClose"></jitsi-meet>
     </div>
 </template>

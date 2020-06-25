@@ -327,6 +327,16 @@ export type BotAnchorPoint =
     | [number, number, number];
 
 /**
+ * Defines the possible meet portal anchor points.
+ */
+export type MeetPortalAnchorPoint =
+    | 'fullscreen'
+    | [number | string]
+    | [number | string, number | string]
+    | [number | string, number | string, number | string]
+    | [number | string, number | string, number | string, number | string];
+
+/**
  * Defines the possible portal raycast modes.
  */
 export type PortalPointerDragMode = 'grid' | 'world';
@@ -511,6 +521,12 @@ export const DEFAULT_WRIST_PORTAL_WIDTH = 6;
  * The default grid scale for wrist portals.
  */
 export const DEFAULT_WRIST_PORTAL_GRID_SCALE = 0.025;
+
+/**
+ * The default anchor point for the meet portal.
+ */
+export const DEFAULT_MEET_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
 
 /**
  * The default bot LOD.
@@ -935,6 +951,9 @@ export const KNOWN_TAGS: string[] = [
     'inventoryPortalResizable',
     'wristPortalHeight',
     'wristPortalWidth',
+    'meetPortalAnchorPoint',
+    'meetPortalVisible',
+    'meetPortalStyle',
 
     'color',
     'creator',

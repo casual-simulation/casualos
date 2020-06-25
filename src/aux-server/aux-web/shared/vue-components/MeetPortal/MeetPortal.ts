@@ -9,6 +9,7 @@ import {
     PrecalculatedBot,
     calculateBotValue,
     calculateStringTagValue,
+    calculateMeetPortalAnchorPointOffset,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -21,6 +22,7 @@ import {
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
+import { MeetPortalConfig } from './MeetPortalConfig';
 
 @Component({
     components: {
@@ -29,12 +31,15 @@ import {
 })
 export default class MeetPortal extends Vue {
     private _sub: Subscription;
-    private _simulations: Map<Simulation, Subscription> = new Map();
-    private _portals: Map<Simulation, string> = new Map();
-
-    private _currentSim: Simulation;
+    private _simulations: Map<BrowserSimulation, Subscription> = new Map();
+    private _portals: Map<BrowserSimulation, string> = new Map();
+    private _currentConfig: MeetPortalConfig;
+    private _currentSim: BrowserSimulation;
 
     currentMeet: string = null;
+    extraStyle: Object = {};
+    portalVisible: boolean = true;
+
     get hasPortal(): boolean {
         return hasValue(this.currentMeet);
     }
@@ -47,6 +52,8 @@ export default class MeetPortal extends Vue {
         this._sub = new Subscription();
         this._simulations = new Map();
         this._portals = new Map();
+        this.extraStyle = calculateMeetPortalAnchorPointOffset('fullscreen');
+        this.portalVisible = true;
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
@@ -127,12 +134,43 @@ export default class MeetPortal extends Vue {
         }
 
         // Use the first meet
-        this._currentSim = null;
-        this.currentMeet = null;
+        this._setCurrentSim(null, null);
         for (let [sim, meet] of this._portals) {
-            this._currentSim = sim;
-            this.currentMeet = meet;
+            this._setCurrentSim(sim, meet);
             break;
+        }
+    }
+
+    private _setCurrentSim(sim: BrowserSimulation, meet: string) {
+        if (this._currentConfig) {
+            this._currentConfig.unsubscribe();
+            this._currentConfig = null;
+        }
+
+        if (sim) {
+            this._currentConfig = new MeetPortalConfig(MEET_PORTAL, sim);
+            this._currentConfig.onUpdated
+                .pipe(
+                    tap(() => {
+                        this._updateConfig();
+                    })
+                )
+                .subscribe();
+        }
+        this._currentSim = sim;
+        this.currentMeet = meet;
+        this._updateConfig();
+    }
+
+    private _updateConfig() {
+        if (this._currentConfig) {
+            this.portalVisible = this._currentConfig.visible;
+            this.extraStyle = this._currentConfig.style;
+        } else {
+            this.portalVisible = true;
+            this.extraStyle = calculateMeetPortalAnchorPointOffset(
+                'fullscreen'
+            );
         }
     }
 }
