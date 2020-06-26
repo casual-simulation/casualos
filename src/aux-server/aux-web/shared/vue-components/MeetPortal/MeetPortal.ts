@@ -76,6 +76,32 @@ export default class MeetPortal extends Vue {
             SHOW_JITSI_WATERMARK: false,
             SHOW_WATERMARK_FOR_GUESTS: false,
             SHOW_POWERED_BY: false,
+
+            // Disable some settings sections
+            SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile'],
+            TOOLBAR_BUTTONS: [
+                'microphone',
+                'camera',
+                'hangup',
+                'closedcaptions',
+                'desktop',
+                'chat',
+                'recording',
+                'livestreaming',
+                'sharedvideo',
+                'settings',
+                'filmstrip',
+                'feedback',
+                'tileview',
+                'videobackgroundblur',
+                'download',
+                'help',
+                'mute-everyone',
+                'security',
+            ],
+
+            // Hide the "invite more people" header since we want them to share the CausalOS link.
+            HIDE_INVITE_MORE_HEADER: true,
         };
     }
 
