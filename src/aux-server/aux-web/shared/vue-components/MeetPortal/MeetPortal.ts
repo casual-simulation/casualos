@@ -23,6 +23,7 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
+import { EventBus } from '../../EventBus';
 
 @Component({
     components: {
@@ -105,6 +106,21 @@ export default class MeetPortal extends Vue {
         };
     }
 
+    /**
+     * The HTML element that contains the meet iframe.
+     */
+    get portalElement(): HTMLElement {
+        return <HTMLElement>this.$refs.portalContainer;
+    }
+
+    /**
+     * The HTML element that contains the other elements that should be repositioned when
+     * the meet portal is open.
+     */
+    get othersElement(): HTMLElement {
+        return <HTMLElement>this.$refs.otherContainer;
+    }
+
     constructor() {
         super();
     }
@@ -115,6 +131,8 @@ export default class MeetPortal extends Vue {
         this._portals = new Map();
         this.extraStyle = calculateMeetPortalAnchorPointOffset('fullscreen');
         this.portalVisible = true;
+
+        window.addEventListener('resize', e => this._resize());
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
@@ -143,6 +161,78 @@ export default class MeetPortal extends Vue {
                 },
             });
         }
+    }
+
+    private _resize(): any {
+        if (!this.portalElement || !this.othersElement) {
+            return;
+        }
+        setTimeout(() => {
+            const portalRect = this.portalElement.getBoundingClientRect();
+
+            // Calculate whether to fill space not taken or whether to fill behind
+            if (
+                portalRect.top !== 0 &&
+                portalRect.bottom !== window.innerHeight &&
+                portalRect.left !== 0 &&
+                portalRect.right !== window.innerWidth
+            ) {
+                // If the portal is not attached to a side of the screen then fill behind
+                this.othersElement.style.height = null;
+                this.othersElement.style.width = null;
+                this.othersElement.style.top = null;
+                this.othersElement.style.bottom = null;
+                this.othersElement.style.left = null;
+                this.othersElement.style.right = null;
+                return;
+            }
+
+            const portalSize = this._calculateSize(this.portalElement);
+            const heightRatio = portalSize.height / window.innerHeight;
+            const widthRatio = portalSize.width / window.innerWidth;
+
+            // Calculate whether to fill the rest of the height or width
+            if (widthRatio > heightRatio) {
+                this.othersElement.style.height =
+                    window.innerHeight - portalSize.height + 'px';
+                this.othersElement.style.width = null;
+
+                // Calculate whether to fill above or below
+                if (portalRect.top < window.innerHeight - portalRect.bottom) {
+                    // The meet portal is on the top so place the others on the bottom
+                    this.othersElement.style.top = null;
+                    this.othersElement.style.bottom = '0px';
+                } else {
+                    // the meet portal is on the bottom so place the others on the top
+                    this.othersElement.style.top = '0px';
+                    this.othersElement.style.bottom = null;
+                }
+            } else {
+                this.othersElement.style.height = null;
+                this.othersElement.style.width =
+                    window.innerWidth - portalSize.width + 'px';
+
+                // Calculate whether to fill left or right
+                if (portalRect.left < window.innerWidth - portalRect.right) {
+                    // The meet portal is on the left so place the others on the right
+                    this.othersElement.style.left = null;
+                    this.othersElement.style.right = '0px';
+                } else {
+                    // the meet portal is on the right so place the others on the left
+                    this.othersElement.style.left = '0px';
+                    this.othersElement.style.right = null;
+                }
+            }
+
+            EventBus.$emit('resize');
+        }, 100);
+    }
+
+    private _calculateSize(element: HTMLElement) {
+        const width = element.offsetWidth;
+        const height = element.offsetHeight;
+
+        return { width, height };
     }
 
     private _onSimulationAdded(sim: BrowserSimulation) {
@@ -224,9 +314,16 @@ export default class MeetPortal extends Vue {
     }
 
     private _updateConfig() {
+        if (!this.currentMeet) {
+            this.extraStyle = {};
+            this.portalVisible = true;
+            this._resize();
+            return;
+        }
         if (this._currentConfig) {
             this.portalVisible = this._currentConfig.visible;
             this.extraStyle = this._currentConfig.style;
+            this._resize();
         } else {
             this.portalVisible = true;
             this.extraStyle = calculateMeetPortalAnchorPointOffset(

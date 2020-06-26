@@ -1,11 +1,13 @@
 import Vue from 'vue';
 import { IGameView } from './IGameView';
 import { BotRenderer } from '../scene/BotRenderer';
-import { Provide, Component } from 'vue-property-decorator';
+import { Provide, Component, Prop } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import { Game } from '../scene/Game';
 import { SubscriptionLike } from 'rxjs';
+import { EventBus } from '../EventBus';
+import debounce from 'lodash/debounce';
 
 export interface SidebarItem {
     id: string;
@@ -22,9 +24,13 @@ export interface SidebarItem {
     },
 })
 export default class BaseGameView extends Vue implements IGameView {
+    private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     protected _subscriptions: SubscriptionLike[] = [];
 
     _game: Game = null;
+
+    @Prop({})
+    containerId: string;
 
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
@@ -38,13 +44,26 @@ export default class BaseGameView extends Vue implements IGameView {
         return !PRODUCTION;
     }
 
-    created() {
+    async created() {
         this._subscriptions = [];
-        this.resize = this.resize.bind(this);
-        window.addEventListener('resize', this.resize);
+        this.resize = debounce(this.resize.bind(this), 100);
+
+        EventBus.$on('resize', this.resize);
+        // window.addEventListener('resize', this.resize);
         window.addEventListener('vrdisplaypresentchange', this.resize);
 
         this._game = this.createGame();
+
+        if (this.containerId) {
+            const el = document.getElementById(this.containerId);
+            if (el) {
+                const ResizeObserver =
+                    window.ResizeObserver ||
+                    (await import('@juggle/resize-observer')).ResizeObserver;
+                this._resizeObserver = new ResizeObserver(() => this.resize());
+                this._resizeObserver.observe(el);
+            }
+        }
     }
 
     mounted() {
@@ -71,8 +90,8 @@ export default class BaseGameView extends Vue implements IGameView {
     }
 
     beforeDestroy() {
-        window.removeEventListener('resize', this.resize);
-        window.removeEventListener('vrdisplaypresentchange', this.resize);
+        // window.removeEventListener('resize', this.resize);
+        window.removeEventListener('', this.resize);
 
         if (this._game) {
             this._game.dispose();
@@ -82,6 +101,9 @@ export default class BaseGameView extends Vue implements IGameView {
             sub.unsubscribe();
         }
         this._subscriptions = [];
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
+        }
     }
 
     calculateContainerSize() {
@@ -92,9 +114,35 @@ export default class BaseGameView extends Vue implements IGameView {
         return { width, height };
     }
 
+    /**
+     * Resizes the game view.
+     * This is automatically triggered when the EventBus emits a "resize" event or when the vrdisplaypresentchange event is emitted.
+     *
+     * Resizing works by calculating the size that the viewport should be and setting the container and game (and therefore renderer) to be that size.
+     * The size calculation algorithm looks like this:
+     * - Check if the containerId property has been set.
+     * - If it has, then use the size of the DOM element that matches that property.
+     * - If it has not, then assume that the game view container should be fullscreen minus any elements that are placed above it.
+     */
     resize() {
-        const { width, height } = this.calculateContainerSize();
+        if (this.containerId) {
+            const el = document.getElementById(this.containerId);
+            if (el) {
+                const { width, height } = el.getBoundingClientRect();
+                if (width <= 0 || height <= 0) {
+                    setTimeout(() => this.resize());
+                } else {
+                    this._setWidthAndHeight(width, height);
+                }
+                return;
+            }
+        }
 
+        const { width, height } = this.calculateContainerSize();
+        this._setWidthAndHeight(width, height);
+    }
+
+    private _setWidthAndHeight(width: number, height: number) {
         this._game.onWindowResize(width, height);
 
         this.container.style.height = this.gameView.style.height = this._game.getRenderer().domElement.style.height;

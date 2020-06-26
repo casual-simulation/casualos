@@ -13,10 +13,6 @@ html.ar-app .webxr-sessions canvas {
     top: 0px !important;
 }
 
-.game-container {
-    margin: -16px;
-}
-
 .toolbar {
     position: absolute;
     bottom: 0.75vh;

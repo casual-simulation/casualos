@@ -64,9 +64,31 @@ export class PlayerGame extends Game {
 
     inventoryHeightOverride: number = null;
 
-    private sliderLeft: Element;
-    private sliderRight: Element;
-    private menuElement: Element;
+    private _sliderLeft: Element;
+    private _sliderRight: Element;
+    private _menuElement: Element;
+
+    private get sliderLeft() {
+        if (!this._sliderLeft) {
+            this._sliderLeft = document.querySelector('.slider-hiddenLeft');
+        }
+        return this._sliderLeft;
+    }
+
+    private get sliderRight() {
+        if (!this._sliderRight) {
+            this._sliderRight = document.querySelector('.slider-hiddenRight');
+        }
+        return this._sliderRight;
+    }
+
+    private get menuElement() {
+        if (!this._menuElement) {
+            this._menuElement = document.querySelector('.toolbar.menu');
+        }
+        return this._menuElement;
+    }
+
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -645,18 +667,6 @@ export class PlayerGame extends Game {
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
-            // get a new reference to the slider object in the html
-            if (this.sliderLeft === undefined)
-                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-
-            if (this.sliderRight === undefined)
-                this.sliderRight = document.querySelector(
-                    '.slider-hiddenRight'
-                );
-
-            if (this.menuElement === undefined)
-                this.menuElement = document.querySelector('.toolbar.menu');
-
             let invOffsetHeight = 40;
 
             if (window.innerWidth <= 700) {
@@ -765,12 +775,6 @@ export class PlayerGame extends Game {
 
     private _hideInventory() {
         this.inventoryViewport.setScale(null, 0);
-        if (this.sliderLeft === undefined)
-            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-        if (this.sliderRight === undefined)
-            this.sliderRight = document.querySelector('.slider-hiddenRight');
-        if (this.menuElement === undefined)
-            this.menuElement = document.querySelector('.toolbar.menu');
         (<HTMLElement>this.sliderLeft).style.display = 'none';
         (<HTMLElement>this.sliderRight).style.display = 'none';
         (<HTMLElement>this.menuElement).style.bottom =
@@ -780,12 +784,6 @@ export class PlayerGame extends Game {
     }
 
     private _showInventory() {
-        if (this.sliderLeft === undefined)
-            this.sliderLeft = document.querySelector('.slider-hiddenLeft');
-        if (this.sliderRight === undefined)
-            this.sliderRight = document.querySelector('.slider-hiddenRight');
-        if (this.menuElement === undefined)
-            this.menuElement = document.querySelector('.toolbar.menu');
         (<HTMLElement>this.sliderLeft).style.display = 'block';
         (<HTMLElement>this.sliderRight).style.display = 'block';
     }
