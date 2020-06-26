@@ -44,6 +44,41 @@ export default class MeetPortal extends Vue {
         return hasValue(this.currentMeet);
     }
 
+    // The override options for the config
+    // that the Jitsi Iframe should use.
+    // See https://github.com/jitsi/jitsi-meet/blob/master/config.js for options
+    get config() {
+        return {
+            // Start with the video feed muted
+            // Unlike startAudioOnly, this will let people unmute their
+            // video feed to show it.
+            startWithVideoMuted: true,
+        };
+    }
+
+    // The override options for the interface config
+    // that the Jitsi Iframe should use.
+    // See https://github.com/jitsi/jitsi-meet/blob/master/interface_config.js for options
+    // Note that not all options will work due to the settings whitelist (https://github.com/jitsi/jitsi-meet/blob/master/react/features/base/config/interfaceConfigWhitelist.js).
+    // Also note that meet.jit.si uses a custom whitelist that prevents disabling the watermarks and branding.
+    // The settings below are specified for the future if/when we get our own Jitsi deployment.
+    get interfaceConfig() {
+        return {
+            // Disable the mobile app promo screen
+            MOBILE_APP_PROMO: false,
+
+            // Don't show the chrome extension promo
+            SHOW_CHROME_EXTENSION_BANNER: false,
+
+            // Don't show the watermark
+            filStripOnly: false,
+            SHOW_BRAND_WATERMARK: false,
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            SHOW_POWERED_BY: false,
+        };
+    }
+
     constructor() {
         super();
     }
