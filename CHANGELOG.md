@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V1.1.14
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved how the meet portal, page portal, and sheet portal work together to make space for each other.
+    -   Added the `left` and `right` options for `meetPortalAnchorPoint`.
+    -   Changed the `top` and `bottom` options for `meetPortalAnchorPoint` to occupy half of the screen.
+
 ## V1.1.13
 
 ### Date: 6/25/2020
