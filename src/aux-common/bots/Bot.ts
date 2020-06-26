@@ -337,6 +337,8 @@ export type MeetPortalAnchorPoint =
     | 'bottom'
     | 'bottomRight'
     | 'bottomLeft'
+    | 'left'
+    | 'right'
     | [number | string]
     | [number | string, number | string]
     | [number | string, number | string, number | string]
