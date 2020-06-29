@@ -814,7 +814,7 @@ If you want to perform the action, you can use <ActionLink action='action.perfor
 The **first parameter** is the action to send.
 
 The **second parameter** is optional and is a object specifing which player to send the action to. If not specified, then the action is sent to the server player.
-If specified, then the action is sent to all players that match the given values.
+If specified, then the action is sent to all players that match the given values. If given a string, then the action is sent to the player with the matching ID.
 
 #### Examples:
 
@@ -829,9 +829,58 @@ const toastAction = player.toast('My message!');
 // Send the action to the other player
 // The toastAction will not be performed locally because
 // it is being sent to another player.
-remote(toastAction, {
-    session: otherPlayerBotId
-});
+remote(toastAction, otherPlayerBotId);
+```
+
+### `remoteWhisper(playerId, name, arg?)`
+
+Sends a <TagLink tag='@onRemoteWhisper'/> shout to the player with the given ID or players if given a list of IDs.
+This is useful for sending arbitrary messages to specific players.
+
+The **first parameter** is the player ID or list of player IDs that the shout should be sent to.
+
+The **second parameter** is the name of the event that is being sent. This is useful for telling the difference between different messages.
+
+The **third parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a "custom" message to another player.
+```typescript
+const otherPlayerBotId = "otherPlayerBotId";
+
+// The other player will receive a @onRemoteWhisper with 
+// that.name === "custom" and that.that === "Hello"
+remoteWhisper(otherPlayerBotId, "custom", "Hello");
+```
+
+2. Send a message to all other players.
+```typescript
+const players = await server.players();
+const playerId = getID(player.getBot());
+const otherPlayers = players.filter(id => id !== playerId);
+
+// All other players will receive a @onRemoteWhisper with
+// that.name === "custom" and that.that === "Hello"
+remoteWhisper(otherPlayers, "custom", "Hello");
+```
+
+### `remoteShout(name, arg?)`
+
+Sends a <TagLink tag='@onRemoteWhisper'/> shout to all the players in the current story.
+The listener will be triggered on all players connected to the story, including the local player.
+
+The **first parameter** is the name of the message that is being sent. This is useful for telling the difference between different messages.
+
+The **second parameter** is optional and is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a message to all players.
+```typescript
+// All players will receive a @onRemoteWhisper with
+// that.name === "custom" and that.that === "Hello"
+remoteShout("custom", "Hello");
 ```
 
 ### `action.perform(action)`

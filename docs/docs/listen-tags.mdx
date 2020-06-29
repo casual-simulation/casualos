@@ -851,3 +851,43 @@ let that: {
   action: any
 };
 ```
+
+### `@onRemoteWhisper`
+
+A shout that is sent whenever a message is received from another player.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the message.
+     */
+    name: string,
+
+    /**
+     * The argument that was included in the message.
+     */
+    that: any,
+
+    /**
+     * The ID of the player that sent the message.
+     */
+    playerId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a "custom" message is received.
+```typescript
+if (that.name === "custom") {
+    player.toast("Got message from " + that.playerId + " with " + that.that);
+}
+```
+
+2. Send a message back to the player that sent the message.
+```typescript
+if (that.name === "hello") {
+    remoteWhisper(that.playerId, "hi");
+}
+```
