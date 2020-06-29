@@ -82,6 +82,7 @@ import {
     unlockSpace,
     getPlayerCount,
     getStories,
+    getPlayers,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -368,6 +369,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 storyPlayerCount,
                 totalPlayerCount,
                 stories,
+                players,
             },
 
             action: {
@@ -1565,6 +1567,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getStories(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of player IDs that are connected to the story.
+     */
+    function players(): Promise<string[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getPlayers(),
             undefined,
             undefined,
             task.taskId

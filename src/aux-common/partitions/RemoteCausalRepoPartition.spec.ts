@@ -42,6 +42,7 @@ import {
     getPlayerCount,
     getStories,
     BotActions,
+    getPlayers,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -525,6 +526,36 @@ describe('RemoteCausalRepoPartition', () => {
                     expect(events).toEqual([
                         asyncResult('task1', ['abc', 'def']),
                     ]);
+                });
+            });
+
+            describe('get_players', () => {
+                it('should not send a get_players event to the server', async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    partition.connect();
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayers(), undefined, undefined, 'task1'),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).not.toContainEqual({
+                        name: SEND_EVENT,
+                        data: {
+                            branch: 'testBranch',
+                            action: remote(
+                                getPlayers(),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        },
+                    });
                 });
             });
         });

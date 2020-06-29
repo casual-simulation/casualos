@@ -65,6 +65,7 @@ import {
     unlockSpace,
     getPlayerCount,
     getStories,
+    getPlayers,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2617,6 +2618,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.stories();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.players()', () => {
+            it('should emit a remote action with a get_players action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.players();
+                const expected = remote(
+                    getPlayers(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.players();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

@@ -2605,6 +2605,11 @@ declare global {
          * Gets the list of stories that are on the server.
          */
         stories(): Promise<string[]>;
+
+        /**
+         * Gets the list of player IDs that are connected to the story.
+         */
+        players(): Promise<string[]>;
     
         /**
          * Loads a file from the server at the given path.

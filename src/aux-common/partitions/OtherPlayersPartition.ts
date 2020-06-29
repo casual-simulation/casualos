@@ -31,10 +31,13 @@ import {
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
+    GetPlayersAction,
+    asyncResult,
 } from '../bots';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
+import sortBy from 'lodash/sortBy';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,
@@ -73,6 +76,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      * The map of branch names to partitions.
      */
     private _partitions: Map<string, RemoteCausalRepoPartition>;
+
+    /**
+     * The map of session IDs to connected devices.
+     */
+    private _devices: Map<string, ConnectedDevice>;
+
     /**
      * The map of branch names to subscriptions.
      */
@@ -164,6 +173,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         this._state = {};
         this._partitions = new Map();
         this._partitionSubs = new Map();
+        this._devices = new Map();
         this._synced = false;
     }
 
@@ -171,7 +181,21 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         return [];
     }
 
-    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {}
+    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        for (let event of events) {
+            if (event.event.type === 'get_players') {
+                const action = <GetPlayersAction>event.event;
+                const connectedDevices = [...this._devices.values()];
+                const sessionIds = sortBy([
+                    this._user.id,
+                    ...connectedDevices.map(
+                        cd => cd.deviceInfo.claims[SESSION_ID_CLAIM]
+                    ),
+                ]);
+                this._onEvents.next([asyncResult(event.taskId, sessionIds)]);
+            }
+        }
+    }
 
     async setUser(user: User): Promise<void> {
         for (let partition of this._partitions.values()) {
@@ -227,10 +251,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 }
 
                 if (event.type === 'repo/device_connected_to_branch') {
+                    this._registerDevice(event.device);
                     this._tryLoadBranchForDevice(event.device);
                 } else if (
                     event.type === 'repo/device_disconnected_from_branch'
                 ) {
+                    this._unregisterDevice(event.device);
                     this._tryUnloadBranchForDevice(event.device);
                 }
             })
@@ -243,6 +269,29 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             type: 'sync',
             synced: synced,
         });
+    }
+
+    private _registerDevice(device: DeviceInfo) {
+        if (this._devices.has(device.claims[SESSION_ID_CLAIM])) {
+            let connected = this._devices.get(device.claims[SESSION_ID_CLAIM]);
+            connected.connectionCount += 1;
+        } else {
+            const connected = {
+                connectionCount: 1,
+                deviceInfo: device,
+            } as ConnectedDevice;
+            this._devices.set(device.claims[SESSION_ID_CLAIM], connected);
+        }
+    }
+
+    private _unregisterDevice(device: DeviceInfo) {
+        if (this._devices.has(device.claims[SESSION_ID_CLAIM])) {
+            let connected = this._devices.get(device.claims[SESSION_ID_CLAIM]);
+            connected.connectionCount -= 1;
+            if (connected.connectionCount <= 0) {
+                this._devices.delete(device.claims[SESSION_ID_CLAIM]);
+            }
+        }
     }
 
     /**
@@ -349,4 +398,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _branchNameForDevice(device: DeviceInfo) {
         return `${this._branch}-player-${device.claims[SESSION_ID_CLAIM]}`;
     }
+}
+
+interface ConnectedDevice {
+    connectionCount: number;
+    deviceInfo: DeviceInfo;
 }
