@@ -66,6 +66,7 @@ import {
     getPlayerCount,
     getStories,
     getPlayers,
+    action,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2677,6 +2678,80 @@ describe('AuxLibrary', () => {
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given player ID as the session ID', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    'abc'
+                );
+                const expected = remote(toast('abc'), {
+                    sessionId: 'abc',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple selectors to send the same event to multiple places', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    [
+                        'abc',
+                        {
+                            session: 's',
+                            username: 'u',
+                            device: 'd',
+                        },
+                    ]
+                );
+                const expected = [
+                    remote(toast('abc'), {
+                        sessionId: 'abc',
+                    }),
+                    remote(toast('abc'), {
+                        sessionId: 's',
+                        username: 'u',
+                        deviceId: 'd',
+                    }),
+                ];
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('remoteWhisper()', () => {
+            it('should send a remote action with a @onPlayerWhisper shout', () => {
+                const actions = library.api.remoteWhisper(
+                    'playerId',
+                    'eventName'
+                );
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        sessionId: 'playerId',
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple player IDs', () => {
+                const actions = library.api.remoteWhisper(
+                    ['playerId1', 'playerId2'],
+                    'eventName'
+                );
+
+                const expected = [
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId1',
+                    }),
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId2',
+                    }),
+                ];
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual(expected);
             });
         });
 

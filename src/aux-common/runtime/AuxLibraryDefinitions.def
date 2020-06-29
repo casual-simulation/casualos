@@ -1879,9 +1879,21 @@ declare global {
      */
     function remote(
         event: BotAction,
-        selector?: SessionSelector,
+        selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
-    ): RemoteAction;
+    ): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends the given shout to the given player or list of players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     * 
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * 
+     * @param playerId The ID of the other player or players to whisper to.
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteWhisper(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
 
     /**
      * Gets the first bot which matches all of the given filters.

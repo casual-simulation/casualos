@@ -43,9 +43,11 @@ import {
     getStories,
     BotActions,
     getPlayers,
+    action,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
+import { info } from 'console';
 
 console.log = jest.fn();
 
@@ -556,6 +558,74 @@ describe('RemoteCausalRepoPartition', () => {
                             ),
                         },
                     });
+                });
+            });
+
+            describe('action', () => {
+                it('should translate a remote shout to a onRemoteWhisper event', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    partition.connect();
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1DeviceId',
+                        'info1SessionId'
+                    );
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: {
+                            type: 'device',
+                            device: info1,
+                            event: action('eventName', null, null, {
+                                abc: 'def',
+                            }),
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action('onRemoteWhisper', null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
+                    ]);
+                });
+
+                it('should ignore the bot IDs and userId', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    partition.connect();
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1DeviceId',
+                        'info1SessionId'
+                    );
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: {
+                            type: 'device',
+                            device: info1,
+                            event: action('eventName', ['abc'], 'userId', {
+                                abc: 'def',
+                            }),
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action('onRemoteWhisper', null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
+                    ]);
                 });
             });
         });

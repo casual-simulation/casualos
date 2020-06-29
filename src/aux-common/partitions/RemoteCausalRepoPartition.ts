@@ -4,6 +4,8 @@ import {
     RemoteAction,
     Action,
     USERNAME_CLAIM,
+    remote,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     Atom,
@@ -35,6 +37,8 @@ import {
     asyncResult,
     GetPlayerCountAction,
     GetStoriesAction,
+    action,
+    ShoutAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -380,7 +384,25 @@ export class RemoteCausalRepoPartitionImpl
                     if (event.type === 'atoms') {
                         this._applyAtoms(event.atoms, event.removedAtoms);
                     } else if (event.type === 'event') {
-                        this._onEvents.next([event.action]);
+                        if (
+                            event.action.type === 'device' &&
+                            event.action.event.type === 'action'
+                        ) {
+                            const remoteAction = event.action
+                                .event as ShoutAction;
+                            this._onEvents.next([
+                                action('onRemoteWhisper', null, null, {
+                                    name: remoteAction.eventName,
+                                    that: remoteAction.argument,
+                                    playerId:
+                                        event.action.device.claims[
+                                            SESSION_ID_CLAIM
+                                        ],
+                                }),
+                            ]);
+                        } else {
+                            this._onEvents.next([event.action]);
+                        }
                     }
                 })
         );
