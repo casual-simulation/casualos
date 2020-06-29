@@ -1,5 +1,37 @@
 # CasualOS Changelog
 
+## V1.1.14
+
+### Date: 6/29/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved how the meet portal, page portal, and sheet portal work together to make space for each other.
+    -   Added the `left` and `right` options for `meetPortalAnchorPoint`.
+    -   Changed the `top` and `bottom` options for `meetPortalAnchorPoint` to occupy half of the screen.
+    -   Added the `server.players()` function to get the list of player IDs that are connected to the current story.
+        -   Returns a promise that resolves with the list of player IDs.
+    -   Added the `remoteWhisper(players, name, arg)` function to make sending messages to other players easy.
+        -   Takes the following arguments:
+            -   `players` is the player ID or list of player IDs that should receive the shout.
+            -   `name` is the name of the message.
+            -   `arg` is the data that should be included.
+        -   This will trigger a `@onRemoteWhisper` shout on all the specified players.
+    -   Added the `remoteShout(name, arg)` function to make sending messages to all players easy.
+        -   Takes the following arguments:
+            -   `name` is the name of the message.
+            -   `arg` is the data that should be included.
+    -   Added the `@onRemoteWhisper` listen tag that is shouted when a `remoteWhisper()` or `remoteShout()` is sent to the local player.
+        -   `that` is an object with the following properties:
+            -   `name` - The name of the shout that was sent.
+            -   `that` - The data which was sent.
+            -   `playerId` - The ID of the player that sent the shout.
+
+-   Bug Fixes
+    -   Fixed an issue that prevented using `lineStyle` in place of `auxLineStyle`.
+
 ## V1.1.13
 
 ### Date: 6/25/2020

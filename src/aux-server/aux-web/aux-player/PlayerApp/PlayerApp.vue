@@ -1,20 +1,25 @@
 <template>
     <div id="app">
         <load-app>
+            <meet-portal>
+                <md-toolbar v-if="showChatBar">
+                    <div class="md-toolbar-section-start">
+                        <bot-chat
+                            ref="chatBar"
+                            :prefill="chatBarPrefill"
+                            :placeholder="chatBarPlaceholder"
+                        ></bot-chat>
+                    </div>
+                </md-toolbar>
+                <bot-sheet></bot-sheet>
+                <md-content id="app-game-container">
+                    <router-view></router-view>
+                </md-content>
+            </meet-portal>
+
             <upload-files></upload-files>
-            <md-toolbar v-if="showChatBar">
-                <div class="md-toolbar-section-start">
-                    <bot-chat
-                        ref="chatBar"
-                        :prefill="chatBarPrefill"
-                        :placeholder="chatBarPlaceholder"
-                    ></bot-chat>
-                </div>
-            </md-toolbar>
             <checkout></checkout>
-            <bot-sheet></bot-sheet>
             <show-input></show-input>
-            <meet-portal></meet-portal>
 
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">
@@ -124,10 +129,6 @@
             <html-modal></html-modal>
             <clipboard-modal></clipboard-modal>
             <upload-story-modal></upload-story-modal>
-
-            <md-content class="app-content">
-                <router-view></router-view>
-            </md-content>
         </load-app>
     </div>
 </template>

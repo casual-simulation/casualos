@@ -117,10 +117,17 @@ export class CausalRepoServer {
 
                 handleEvents(conn, {
                     [WATCH_BRANCH]: async event => {
+                        if (!event) {
+                            console.log(
+                                '[CasualRepoServer] Trying to watch branch with a null event!'
+                            );
+                            return;
+                        }
                         const branch = event.branch;
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
-                        if (!this._branches.has(branch)) {
+                        let currentBranch = this._branches.get(branch);
+                        if (!currentBranch) {
                             this._branches.set(branch, event);
                         }
                         if (!event.temporary && event.siteId) {
@@ -358,7 +365,9 @@ export class CausalRepoServer {
                         if (
                             event.action.deviceId ||
                             event.action.sessionId ||
-                            event.action.username
+                            event.action.username ||
+                            (typeof event.action.broadcast !== 'undefined' &&
+                                event.action.broadcast !== null)
                         ) {
                             finalAction = event.action;
                         } else if (this.defaultDeviceSelector) {
@@ -427,12 +436,15 @@ export class CausalRepoServer {
 
                         const branches = this._repos.keys();
                         for (let branch of branches) {
+                            const branchEvent = this._branches.get(branch);
+                            if (!branchEvent) {
+                                continue;
+                            }
                             const branchInfo = infoForBranch(branch);
                             const devices = this._deviceManager.getConnectedDevices(
                                 branchInfo
                             );
                             for (let device of devices) {
-                                const branchEvent = this._branches.get(branch);
                                 conn.send(DEVICE_CONNECTED_TO_BRANCH, {
                                     branch: branchEvent,
                                     device: device.extra.device,
@@ -452,8 +464,11 @@ export class CausalRepoServer {
                         const devices = this._deviceManager.getConnectedDevices(
                             branchInfo
                         );
+                        const branchEvent = this._branches.get(branch);
+                        if (!branchEvent) {
+                            return;
+                        }
                         for (let device of devices) {
-                            const branchEvent = this._branches.get(branch);
                             conn.send(DEVICE_CONNECTED_TO_BRANCH, {
                                 branch: branchEvent,
                                 device: device.extra.device,
@@ -566,6 +581,11 @@ export class CausalRepoServer {
             } connected to branch: ${branch}`
         );
         const branchEvent = this._branches.get(branch);
+        if (!branchEvent) {
+            throw new Error(
+                'Unable to send connected to branch event because the branch does not exist!'
+            );
+        }
         const event = {
             branch: branchEvent,
             device: device.extra.device,

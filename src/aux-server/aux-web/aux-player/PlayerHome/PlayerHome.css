@@ -2,25 +2,6 @@
     margin-top: 0;
 }
 
-.game-view {
-    position: fixed;
-    top: 0px;
-}
-
-/* @media(min-width: 1024px) {
-    .info-card {
-        max-width: 66%;
-    }
-} */
-
-.info-card {
-    /* margin: -16px; */
-}
-
-/* .info-card .md-card-content .bot-table {
-    margin: 0 -16px;
-} */
-
 .info-card .md-card-content {
     max-height: 500px;
     overflow-y: auto;

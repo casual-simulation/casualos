@@ -1351,6 +1351,8 @@ const possibleMeetPortalAnchorPoints = new Set([
     'bottom',
     'bottomRight',
     'bottomLeft',
+    'left',
+    'right',
 ] as const);
 
 /**
@@ -1421,7 +1423,7 @@ export function calculateMeetPortalAnchorPointOffset(
         if (anchorPoint === 'top') {
             return {
                 top: '0px',
-                height: '25%',
+                height: '50%',
                 'min-height': '250px',
                 left: '0px',
                 right: '0px',
@@ -1447,7 +1449,7 @@ export function calculateMeetPortalAnchorPointOffset(
         } else if (anchorPoint === 'bottom') {
             return {
                 bottom: '0px',
-                height: '25%',
+                height: '50%',
                 'min-height': '250px',
                 left: '0px',
                 right: '0px',
@@ -1469,6 +1471,24 @@ export function calculateMeetPortalAnchorPointOffset(
                 width: '25%',
                 'min-width': '250px',
                 left: '25px',
+            };
+        } else if (anchorPoint === 'left') {
+            return {
+                bottom: '25px',
+                height: '100%',
+                'min-height': '250px',
+                width: '50%',
+                'min-width': '250px',
+                left: '0px',
+            };
+        } else if (anchorPoint === 'right') {
+            return {
+                bottom: '25px',
+                height: '100%',
+                'min-height': '250px',
+                width: '50%',
+                'min-width': '250px',
+                right: '0px',
             };
         } else {
             return {

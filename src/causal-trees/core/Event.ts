@@ -53,6 +53,11 @@ export interface DeviceSelector {
      * The username of the user that the event should be sent to.
      */
     username?: string;
+
+    /**
+     * Whether the event should be broadcast to all users.
+     */
+    broadcast?: boolean;
 }
 
 /**

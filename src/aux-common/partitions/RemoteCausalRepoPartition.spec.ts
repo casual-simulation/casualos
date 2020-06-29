@@ -42,9 +42,13 @@ import {
     getPlayerCount,
     getStories,
     BotActions,
+    getPlayers,
+    action,
+    ON_REMOTE_WHISPER_ACTION_NAME,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
+import { info } from 'console';
 
 console.log = jest.fn();
 
@@ -524,6 +528,104 @@ describe('RemoteCausalRepoPartition', () => {
 
                     expect(events).toEqual([
                         asyncResult('task1', ['abc', 'def']),
+                    ]);
+                });
+            });
+
+            describe('get_players', () => {
+                it('should not send a get_players event to the server', async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    partition.connect();
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayers(), undefined, undefined, 'task1'),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).not.toContainEqual({
+                        name: SEND_EVENT,
+                        data: {
+                            branch: 'testBranch',
+                            action: remote(
+                                getPlayers(),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        },
+                    });
+                });
+            });
+
+            describe('action', () => {
+                it('should translate a remote shout to a onRemoteWhisper event', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    partition.connect();
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1DeviceId',
+                        'info1SessionId'
+                    );
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: {
+                            type: 'device',
+                            device: info1,
+                            event: action('eventName', null, null, {
+                                abc: 'def',
+                            }),
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
+                    ]);
+                });
+
+                it('should ignore the bot IDs and userId', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    partition.connect();
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1DeviceId',
+                        'info1SessionId'
+                    );
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: {
+                            type: 'device',
+                            device: info1,
+                            event: action('eventName', ['abc'], 'userId', {
+                                abc: 'def',
+                            }),
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
+                            name: 'eventName',
+                            that: { abc: 'def' },
+                            playerId: 'info1SessionId',
+                        }),
                     ]);
                 });
             });
