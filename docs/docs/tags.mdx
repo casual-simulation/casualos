@@ -135,10 +135,10 @@ The mode that controls how a bot can be dragged.
     The bot cannot be dragged.
   </PossibleValueCode>
   <PossibleValueCode value='moveOnly'>
-    The bot can be moved anywhere within the dimension it is currently in but not moved to another dimension. (only applies to AUXPlayer)
+    The bot can be moved anywhere within the dimension it is currently in but not moved to another dimension.
   </PossibleValueCode>
   <PossibleValueCode value='pickupOnly'>
-    The bot can be moved to another dimension but not within the dimension it is currently in. (only applies to AUXPlayer)
+    The bot can be moved to another dimension but not within the dimension it is currently in.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -194,16 +194,16 @@ Bots that are focusable can receive focus events like <TagLink tag='@onFocusEnte
 
 ### `destroyable`
 
-Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
+Whether the bot is able to be destroyed.
 
 #### Possible values are:
 
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The bot will allow destruction events to occur outside Channel Designer. (default)
+    The bot will be able to be destroyed. (default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The bot will not allow destruction events to occur to it outside of Channel Designer.
+    The bot will not be able to be destroyed.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -849,7 +849,7 @@ These tags are used to configure portals.
   <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
 </Badges>
 
-The color of the background of the portal in AUXPlayer.
+The color of the background of the portal.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -861,15 +861,15 @@ The color of the background of the portal in AUXPlayer.
 
 ### `portalLocked`
 
-Determines if the portal can be loaded in AUXPlayer.
+Determines if the portal can be loaded.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The portal can be loaded in AUXPlayer. (Default)
+    The portal can be loaded. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The portal cannot be loaded in AUXPlayer.
+    The portal cannot be loaded.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -1296,7 +1296,7 @@ It also means that putting `inventoryPortal=myDimension` into the query string w
   <UserBotBadge/>
 </Badges>
 
-The story that is loaded into auxPlayer.
+The story that is loaded into CasualOS.
 
 ### `pagePortal`
 
@@ -1304,7 +1304,7 @@ The story that is loaded into auxPlayer.
   <UserBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "page" portal in auxPlayer.
+The dimension that is loaded into the "page" portal in CasualOS.
 Only available on the player bot.
 
 ### `sheetPortal`
@@ -1313,7 +1313,7 @@ Only available on the player bot.
   <UserBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "sheet" portal in auxPlayer.
+The dimension that is loaded into the "sheet" portal in CasualOS.
 Only available on the player bot.
 
 ### `inventoryPortal`
@@ -1322,7 +1322,7 @@ Only available on the player bot.
   <UserBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "inventory" portal in auxPlayer.
+The dimension that is loaded into the "inventory" portal in CasualOS.
 Only available on the player bot.
 
 ### `menuPortal`
@@ -1331,7 +1331,7 @@ Only available on the player bot.
   <UserBotBadge/>
 </Badges>
 
-The dimension that is loaded into the "menu" portal in auxPlayer.
+The dimension that is loaded into the "menu" portal in CasualOS.
 Only available on the player bot.
 
 ### `leftWristPortal`
@@ -1362,6 +1362,134 @@ The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be j
 This will join the current tab to the meeting and provide audiovisual communication between everyone that is joined.
 
 This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
+
+Only available on the player bot.
+
+### `pagePortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='pagePortal'>page portal</TagLink>.
+
+Supports the following tags:
+
+- <TagLink tag='portalColor'/>
+- <TagLink tag='portalLocked'/>
+- <TagLink tag='portalPannable'/>
+- <TagLink tag='portalPannableMinX'/>
+- <TagLink tag='portalPannableMaxX'/>
+- <TagLink tag='portalPannableMinY'/>
+- <TagLink tag='portalPannableMaxY'/>
+- <TagLink tag='portalRotatable'/>
+- <TagLink tag='portalPlayerRotationX'/>
+- <TagLink tag='portalPlayerRotationY'/>
+- <TagLink tag='portalZoomable'/>
+- <TagLink tag='portalGridScale'/>
+- <TagLink tag='portalSurfaceScale'/>
+- <TagLink tag='portalPointerDragMode'/>
+- <TagLink tag='portalShowFocusPoint'/>
+- <TagLink tag='portalDisableCanvasTransparency'/>
+
+Only available on the player bot.
+
+### `sheetPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='sheetPortal'>sheet portal</TagLink>.
+
+Currently not used. Only available on the player bot.
+
+### `inventoryPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='inventoryPortal'>inventory portal</TagLink>.
+
+Supports the following tags:
+
+- <TagLink tag='portalColor'/>
+- <TagLink tag='portalLocked'/>
+- <TagLink tag='portalPannable'/>
+- <TagLink tag='portalPannableMinX'/>
+- <TagLink tag='portalPannableMaxX'/>
+- <TagLink tag='portalPannableMinY'/>
+- <TagLink tag='portalPannableMaxY'/>
+- <TagLink tag='portalRotatable'/>
+- <TagLink tag='portalPlayerRotationX'/>
+- <TagLink tag='portalPlayerRotationY'/>
+- <TagLink tag='portalZoomable'/>
+- <TagLink tag='portalGridScale'/>
+- <TagLink tag='portalSurfaceScale'/>
+- <TagLink tag='portalPointerDragMode'/>
+- <TagLink tag='inventoryPortalHeight'/>
+- <TagLink tag='inventoryPortalResizable'/>
+
+Only available on the player bot.
+
+### `menuPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='menuPortal'>menu portal</TagLink>.
+
+Currently not used. Only available on the player bot.
+
+### `leftWristPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='leftWristPortal'>left wrist portal</TagLink>.
+
+Supports the following tags:
+
+- <TagLink tag='portalGridScale'/>
+- <TagLink tag='portalSurfaceScale'/>
+- <TagLink tag='wristPortalHeight'/>
+- <TagLink tag='wristPortalWidth'/>
+
+Only available on the player bot.
+
+### `rightWristPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='rightWristPortal'>right wrist portal</TagLink>.
+
+Supports the following tags:
+
+- <TagLink tag='portalGridScale'/>
+- <TagLink tag='portalSurfaceScale'/>
+- <TagLink tag='wristPortalHeight'/>
+- <TagLink tag='wristPortalWidth'/>
+
+Only available on the player bot.
+
+### `meetPortalConfigBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that should be used to configure the <TagLink tag='meetPortal'>meet portal</TagLink>.
+
+Supports the following tags:
+
+- <TagLink tag='meetPortalVisible'/>
+- <TagLink tag='meetPortalAnchorPoint'/>
+- <TagLink tag='meetPortalStyle'/>
 
 Only available on the player bot.
 
