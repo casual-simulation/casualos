@@ -2333,6 +2333,22 @@ const stories = await server.stories();
 player.toast("Stories " + stories.join(','));
 ```
 
+### `server.players()`
+
+Gets the list of player IDs that are connected to the current story.
+Returns a promise that resolves with the list of player IDs.
+
+The resolved list will always have at least one value that represents the current player.
+
+#### Examples
+
+1. Get the list of player IDs.
+```typescript
+const players = await server.players();
+
+player.toast("Players " + players.join(','));
+```
+
 ## Utility Actions
 
 ### `setTag(bot, tag, value)`
