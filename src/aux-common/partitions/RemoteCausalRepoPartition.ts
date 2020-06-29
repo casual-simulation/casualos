@@ -4,6 +4,8 @@ import {
     RemoteAction,
     Action,
     USERNAME_CLAIM,
+    remote,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     Atom,
@@ -35,6 +37,9 @@ import {
     asyncResult,
     GetPlayerCountAction,
     GetStoriesAction,
+    action,
+    ShoutAction,
+    ON_REMOTE_WHISPER_ACTION_NAME,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -217,6 +222,10 @@ export class RemoteCausalRepoPartitionImpl
                         this._onEvents.next([asyncError(event.taskId, err)]);
                     }
                 );
+            } else if (event.event.type === 'get_players') {
+                // Do nothing for get_players since it will be handled by the OtherPlayersPartition.
+                // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
+                //       we do this type of logic.
             } else {
                 this._client.sendEvent(this._branch, event);
             }
@@ -376,7 +385,30 @@ export class RemoteCausalRepoPartitionImpl
                     if (event.type === 'atoms') {
                         this._applyAtoms(event.atoms, event.removedAtoms);
                     } else if (event.type === 'event') {
-                        this._onEvents.next([event.action]);
+                        if (
+                            event.action.type === 'device' &&
+                            event.action.event.type === 'action'
+                        ) {
+                            const remoteAction = event.action
+                                .event as ShoutAction;
+                            this._onEvents.next([
+                                action(
+                                    ON_REMOTE_WHISPER_ACTION_NAME,
+                                    null,
+                                    null,
+                                    {
+                                        name: remoteAction.eventName,
+                                        that: remoteAction.argument,
+                                        playerId:
+                                            event.action.device.claims[
+                                                SESSION_ID_CLAIM
+                                            ],
+                                    }
+                                ),
+                            ]);
+                        } else {
+                            this._onEvents.next([event.action]);
+                        }
                     }
                 })
         );

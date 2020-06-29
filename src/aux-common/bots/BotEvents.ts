@@ -783,6 +783,13 @@ export interface GetStoriesAction extends Action {
 }
 
 /**
+ * Defines an event that is used to get the list of players on the server.
+ */
+export interface GetPlayersAction extends Action {
+    type: 'get_players';
+}
+
+/**
  * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
@@ -1927,6 +1934,15 @@ export function getPlayerCount(story?: string): GetPlayerCountAction {
 export function getStories(): GetStoriesAction {
     return {
         type: 'get_stories',
+    };
+}
+
+/**
+ * Creates a new GetPlayersAction.
+ */
+export function getPlayers(): GetPlayersAction {
+    return {
+        type: 'get_players',
     };
 }
 

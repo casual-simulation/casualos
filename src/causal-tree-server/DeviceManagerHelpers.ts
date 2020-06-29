@@ -49,6 +49,9 @@ export function isEventForDevice(
     event: DeviceSelector,
     device: DeviceInfo
 ): boolean {
+    if (event.broadcast === true) {
+        return true;
+    }
     if (event.username === device.claims[USERNAME_CLAIM]) {
         return true;
     } else if (event.sessionId === device.claims[SESSION_ID_CLAIM]) {

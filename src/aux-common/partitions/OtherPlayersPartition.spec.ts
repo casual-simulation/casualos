@@ -18,10 +18,18 @@ import {
     deviceInfo,
     WATCH_BRANCH,
     UNWATCH_BRANCH,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { Bot, UpdatedBot, createBot, botAdded } from '../bots';
+import {
+    Bot,
+    UpdatedBot,
+    createBot,
+    botAdded,
+    getPlayers,
+    asyncResult,
+} from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { bot, tag, value, del } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
@@ -134,6 +142,170 @@ describe('OtherPlayersPartition', () => {
                 ]);
 
                 expect(connection.sentMessages).toEqual([]);
+            });
+
+            describe('get_players', () => {
+                it(`should send an async result with the player list`, async () => {
+                    setupPartition({
+                        type: 'other_players_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    partition.connect();
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1Device',
+                        'info1Session'
+                    );
+                    const info2 = deviceInfo(
+                        'info2Username',
+                        'info2Device',
+                        'info2Session'
+                    );
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info1,
+                    });
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info2,
+                    });
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayers(), undefined, undefined, 'task1'),
+                    ]);
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            'info1Session',
+                            'info2Session',
+                            // Should include the current player
+                            'test',
+                        ]),
+                    ]);
+                });
+
+                it(`should return only the players that are currently connected`, async () => {
+                    setupPartition({
+                        type: 'other_players_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    partition.connect();
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1Device',
+                        'info1Session'
+                    );
+                    const info2 = deviceInfo(
+                        'info2Username',
+                        'info2Device',
+                        'info2Session'
+                    );
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info1,
+                    });
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info2,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        branch: 'testBranch',
+                        device: info2,
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayers(), undefined, undefined, 'task1'),
+                    ]);
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            'info1Session',
+                            // Should include the current player
+                            'test',
+                        ]),
+                    ]);
+                });
+
+                it(`should return only the current player if not connected`, async () => {
+                    setupPartition({
+                        type: 'other_players_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const info1 = deviceInfo(
+                        'info1Username',
+                        'info1Device',
+                        'info1Session'
+                    );
+                    const info2 = deviceInfo(
+                        'info2Username',
+                        'info2Device',
+                        'info2Session'
+                    );
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info1,
+                    });
+                    deviceConnected.next({
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: info2,
+                    });
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        branch: 'testBranch',
+                        device: info2,
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(getPlayers(), undefined, undefined, 'task1'),
+                    ]);
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            // Should include the current player
+                            'test',
+                        ]),
+                    ]);
+                });
             });
         });
 

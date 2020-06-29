@@ -1526,6 +1526,7 @@ declare interface SessionSelector {
     username?: string;
     device?: string;
     session?: string;
+    broadcast?: boolean;
 }
 
 declare interface BotTags {
@@ -1879,8 +1880,34 @@ declare global {
      */
     function remote(
         event: BotAction,
-        selector?: SessionSelector,
+        selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
+    ): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends the given shout to the given player or list of players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     * 
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     * 
+     * @param playerId The ID of the other player or players to whisper to.
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteWhisper(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends the given shout to all players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     *
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     *
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteShout(
+        name: string,
+        arg?: any
     ): RemoteAction;
 
     /**
@@ -2605,6 +2632,11 @@ declare global {
          * Gets the list of stories that are on the server.
          */
         stories(): Promise<string[]>;
+
+        /**
+         * Gets the list of player IDs that are connected to the story.
+         */
+        players(): Promise<string[]>;
     
         /**
          * Loads a file from the server at the given path.

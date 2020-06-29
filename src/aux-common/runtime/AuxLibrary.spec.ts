@@ -65,6 +65,8 @@ import {
     unlockSpace,
     getPlayerCount,
     getStories,
+    getPlayers,
+    action,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2623,6 +2625,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.players()', () => {
+            it('should emit a remote action with a get_players action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.server.players();
+                const expected = remote(
+                    getPlayers(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.players();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(
@@ -2651,6 +2677,109 @@ describe('AuxLibrary', () => {
                     deviceId: 'd',
                 });
                 expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given player ID as the session ID', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    'abc'
+                );
+                const expected = remote(toast('abc'), {
+                    sessionId: 'abc',
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to broadcast to all players', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    {
+                        broadcast: true,
+                    }
+                );
+                const expected = remote(toast('abc'), {
+                    broadcast: true,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple selectors to send the same event to multiple places', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    [
+                        'abc',
+                        {
+                            session: 's',
+                            username: 'u',
+                            device: 'd',
+                        },
+                    ]
+                );
+                const expected = [
+                    remote(toast('abc'), {
+                        sessionId: 'abc',
+                    }),
+                    remote(toast('abc'), {
+                        sessionId: 's',
+                        username: 'u',
+                        deviceId: 'd',
+                    }),
+                ];
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('remoteWhisper()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.remoteWhisper(
+                    'playerId',
+                    'eventName'
+                );
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        sessionId: 'playerId',
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support multiple player IDs', () => {
+                const actions = library.api.remoteWhisper(
+                    ['playerId1', 'playerId2'],
+                    'eventName'
+                );
+
+                const expected = [
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId1',
+                    }),
+                    remote(action('eventName', null, null, undefined), {
+                        sessionId: 'playerId2',
+                    }),
+                ];
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('remoteShout()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.remoteShout('eventName');
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        broadcast: true,
+                    }
+                );
+                expect(actions).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

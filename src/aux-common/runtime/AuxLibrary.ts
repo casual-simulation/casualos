@@ -82,6 +82,8 @@ import {
     unlockSpace,
     getPlayerCount,
     getStories,
+    getPlayers,
+    action,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -133,6 +135,7 @@ export interface SessionSelector {
     username?: string;
     device?: string;
     session?: string;
+    broadcast?: boolean;
 }
 
 /**
@@ -291,6 +294,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             not,
 
             remote,
+            remoteWhisper,
+            remoteShout,
             webhook,
 
             __energyCheck,
@@ -368,6 +373,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 storyPlayerCount,
                 totalPlayerCount,
                 stories,
+                players,
             },
 
             action: {
@@ -1573,6 +1579,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of player IDs that are connected to the story.
+     */
+    function players(): Promise<string[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getPlayers(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
@@ -1591,18 +1611,61 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function remote(
         event: BotAction,
-        selector?: SessionSelector,
+        selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
     ) {
         if (!event) {
             return;
         }
-        const r = calcRemote(
-            event,
-            convertSessionSelector(selector),
-            allowBatching
-        );
-        return addAction(r);
+        let actions = [];
+        let selectors = Array.isArray(selector) ? selector : [selector];
+        for (let s of selectors) {
+            const r = calcRemote(
+                event,
+                convertSessionSelector(s),
+                allowBatching
+            );
+            actions.push(addAction(r));
+        }
+
+        if (Array.isArray(selector)) {
+            return actions;
+        } else {
+            return actions[0];
+        }
+    }
+
+    /**
+     * Sends the given shout to the given player or list of players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     *
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     *
+     * @param playerId The ID of the other player or players to whisper to.
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteWhisper(
+        playerId: string | string[],
+        name: string,
+        arg?: any
+    ) {
+        return remote(action(name, null, null, arg), playerId);
+    }
+
+    /**
+     * Sends the given shout to all players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     *
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     *
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteShout(name: string, arg?: any) {
+        return remote(action(name, null, null, arg), {
+            broadcast: true,
+        });
     }
 
     function webhook(options: WebhookOptions) {
@@ -2347,12 +2410,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return filename + '.aux';
     }
 
-    function convertSessionSelector(selector: SessionSelector): DeviceSelector {
+    function convertSessionSelector(
+        selector: SessionSelector | string
+    ): DeviceSelector {
+        if (typeof selector === 'string') {
+            return {
+                sessionId: selector,
+            };
+        }
         return selector
             ? {
                   sessionId: selector.session,
                   username: selector.username,
                   deviceId: selector.device,
+                  broadcast: selector.broadcast,
               }
             : undefined;
     }
