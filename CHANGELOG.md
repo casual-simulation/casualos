@@ -29,6 +29,9 @@
             -   `that` - The data which was sent.
             -   `playerId` - The ID of the player that sent the shout.
 
+-   Bug Fixes
+    -   Fixed an issue that prevented using `lineStyle` in place of `auxLineStyle`.
+
 ## V1.1.13
 
 ### Date: 6/25/2020
