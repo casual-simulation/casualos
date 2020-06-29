@@ -2692,6 +2692,20 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should be able to broadcast to all players', () => {
+                const action = library.api.remote(
+                    library.api.player.toast('abc'),
+                    {
+                        broadcast: true,
+                    }
+                );
+                const expected = remote(toast('abc'), {
+                    broadcast: true,
+                });
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should support multiple selectors to send the same event to multiple places', () => {
                 const action = library.api.remote(
                     library.api.player.toast('abc'),
@@ -2720,7 +2734,7 @@ describe('AuxLibrary', () => {
         });
 
         describe('remoteWhisper()', () => {
-            it('should send a remote action with a @onPlayerWhisper shout', () => {
+            it('should send a remote action with a shout', () => {
                 const actions = library.api.remoteWhisper(
                     'playerId',
                     'eventName'
@@ -2752,6 +2766,21 @@ describe('AuxLibrary', () => {
                 ];
                 expect(actions).toEqual(expected);
                 expect(context.actions).toEqual(expected);
+            });
+        });
+
+        describe('remoteShout()', () => {
+            it('should send a remote action with a shout', () => {
+                const actions = library.api.remoteShout('eventName');
+
+                const expected = remote(
+                    action('eventName', null, null, undefined),
+                    {
+                        broadcast: true,
+                    }
+                );
+                expect(actions).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

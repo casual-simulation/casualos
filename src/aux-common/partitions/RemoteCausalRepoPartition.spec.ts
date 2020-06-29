@@ -44,6 +44,7 @@ import {
     BotActions,
     getPlayers,
     action,
+    ON_REMOTE_WHISPER_ACTION_NAME,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -587,7 +588,7 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     expect(events).toEqual([
-                        action('onRemoteWhisper', null, null, {
+                        action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
                             playerId: 'info1SessionId',
@@ -620,7 +621,7 @@ describe('RemoteCausalRepoPartition', () => {
                     await waitAsync();
 
                     expect(events).toEqual([
-                        action('onRemoteWhisper', null, null, {
+                        action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
                             name: 'eventName',
                             that: { abc: 'def' },
                             playerId: 'info1SessionId',

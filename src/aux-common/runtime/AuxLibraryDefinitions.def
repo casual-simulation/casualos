@@ -1526,6 +1526,7 @@ declare interface SessionSelector {
     username?: string;
     device?: string;
     session?: string;
+    broadcast?: boolean;
 }
 
 declare interface BotTags {
@@ -1894,6 +1895,20 @@ declare global {
      * @param arg The optional argument to include in the whisper.
      */
     function remoteWhisper(playerId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends the given shout to all players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     *
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     *
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteShout(
+        name: string,
+        arg?: any
+    ): RemoteAction;
 
     /**
      * Gets the first bot which matches all of the given filters.

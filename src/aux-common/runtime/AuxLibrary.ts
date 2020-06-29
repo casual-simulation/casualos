@@ -135,6 +135,7 @@ export interface SessionSelector {
     username?: string;
     device?: string;
     session?: string;
+    broadcast?: boolean;
 }
 
 /**
@@ -294,6 +295,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             remote,
             remoteWhisper,
+            remoteShout,
             webhook,
 
             __energyCheck,
@@ -1651,6 +1653,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return remote(action(name, null, null, arg), playerId);
     }
 
+    /**
+     * Sends the given shout to all players.
+     * The other players will recieve an onRemoteWhisper event for this whisper.
+     *
+     * In effect, this allows players to communicate with each other by sending arbitrary events.
+     *
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the whisper.
+     */
+    function remoteShout(name: string, arg?: any) {
+        return remote(action(name, null, null, arg), {
+            broadcast: true,
+        });
+    }
+
     function webhook(options: WebhookOptions) {
         const task = context.createTask();
         const event = calcWebhook(<any>options, task.taskId);
@@ -2406,6 +2423,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                   sessionId: selector.session,
                   username: selector.username,
                   deviceId: selector.device,
+                  broadcast: selector.broadcast,
               }
             : undefined;
     }

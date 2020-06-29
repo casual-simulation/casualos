@@ -39,6 +39,7 @@ import {
     GetStoriesAction,
     action,
     ShoutAction,
+    ON_REMOTE_WHISPER_ACTION_NAME,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -391,14 +392,19 @@ export class RemoteCausalRepoPartitionImpl
                             const remoteAction = event.action
                                 .event as ShoutAction;
                             this._onEvents.next([
-                                action('onRemoteWhisper', null, null, {
-                                    name: remoteAction.eventName,
-                                    that: remoteAction.argument,
-                                    playerId:
-                                        event.action.device.claims[
-                                            SESSION_ID_CLAIM
-                                        ],
-                                }),
+                                action(
+                                    ON_REMOTE_WHISPER_ACTION_NAME,
+                                    null,
+                                    null,
+                                    {
+                                        name: remoteAction.eventName,
+                                        that: remoteAction.argument,
+                                        playerId:
+                                            event.action.device.claims[
+                                                SESSION_ID_CLAIM
+                                            ],
+                                    }
+                                ),
                             ]);
                         } else {
                             this._onEvents.next([event.action]);

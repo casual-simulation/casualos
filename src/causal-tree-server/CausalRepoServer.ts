@@ -365,7 +365,9 @@ export class CausalRepoServer {
                         if (
                             event.action.deviceId ||
                             event.action.sessionId ||
-                            event.action.username
+                            event.action.username ||
+                            (typeof event.action.broadcast !== 'undefined' &&
+                                event.action.broadcast !== null)
                         ) {
                             finalAction = event.action;
                         } else if (this.defaultDeviceSelector) {

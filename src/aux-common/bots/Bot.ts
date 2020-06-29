@@ -752,6 +752,11 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 export const ON_ACTION_ACTION_NAME: string = 'onStoryAction';
 
 /**
+ * The name of the event that is triggered when a remote whisper is executed.
+ */
+export const ON_REMOTE_WHISPER_ACTION_NAME: string = 'onRemoteWhisper';
+
+/**
  * The name of the event that is triggered when a channel becomes synced.
  */
 export const ON_STORY_STREAMING_ACTION_NAME: string = 'onStoryStreaming';
@@ -1082,6 +1087,7 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook',
     'onAnyListen',
     'onListen',
+    ON_REMOTE_WHISPER_ACTION_NAME,
     ON_ACTION_ACTION_NAME,
     ON_RUN_ACTION_NAME,
     ON_CHAT_TYPING_ACTION_NAME,
