@@ -24,8 +24,10 @@
             -   `name` is the name of the message.
             -   `arg` is the data that should be included.
     -   Added the `@onRemoteWhisper` listen tag that is shouted when a `remoteWhisper()` or `remoteShout()` is sent to the local player.
-
-        -   `that` is an object with the following properties: - `name` - The name of the shout that was sent. - `that` - The data which was sent. - `playerId` - The ID of the player that sent the shout.
+        -   `that` is an object with the following properties:
+            -   `name` - The name of the shout that was sent.
+            -   `that` - The data which was sent.
+            -   `playerId` - The ID of the player that sent the shout.
 
 ## V1.1.13
 
