@@ -2382,6 +2382,22 @@ const stories = await server.stories();
 player.toast("Stories " + stories.join(','));
 ```
 
+### `server.storyStatuses()`
+
+Gets the list of stories that are stored on the server along with the last time that they were updated.
+Returns a promise that resolves with the list of stories.
+
+The resolved list is sorted by the most recently updated first and the least recently updated last.
+
+#### Examples
+
+1. Get the list of stories on the server along with their status.
+```typescript
+const stories = await server.storyStatuses();
+
+player.toast("Stories " + getJSON(stories));
+```
+
 ### `server.players()`
 
 Gets the list of player IDs that are connected to the current story.
