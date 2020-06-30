@@ -27,6 +27,11 @@ export interface CausalRepoBranch {
      * The hash of the commit/index that this branch is pointing at.
      */
     hash: string;
+
+    /**
+     * The time that the branch was updated.
+     */
+    time?: Date;
 }
 
 /**
@@ -156,12 +161,18 @@ export interface CausalRepoAtom {
  * Creates a new causal repo branch.
  * @param name The name of the branch.
  * @param hash The hash that the branch points to.
+ * @param time The time that the branch was updated.
  */
-export function repoBranch(name: string, hash: string): CausalRepoBranch {
+export function repoBranch(
+    name: string,
+    hash: string,
+    time?: Date
+): CausalRepoBranch {
     return {
         type: 'branch',
         name: name,
         hash: hash,
+        time: time,
     };
 }
 
@@ -169,15 +180,17 @@ export function repoBranch(name: string, hash: string): CausalRepoBranch {
  * Creates a new CausalRepoBranch.
  * @param name The name of the branch.
  * @param ref The reference that the branch should point to.
+ * @param time The time that the branch should store.
  */
 export function branch(
     name: string,
-    ref: CausalRepoCommit | CausalRepoIndex | string
+    ref: CausalRepoCommit | CausalRepoIndex | string,
+    time?: Date
 ): CausalRepoBranch {
     if (typeof ref === 'string') {
-        return repoBranch(name, ref);
+        return repoBranch(name, ref, time);
     }
-    return repoBranch(name, getObjectHash(ref));
+    return repoBranch(name, getObjectHash(ref), time);
 }
 
 /**

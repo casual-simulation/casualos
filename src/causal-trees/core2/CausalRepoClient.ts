@@ -51,6 +51,8 @@ import {
     WatchBranchEvent,
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
+    BRANCHES_STATUS,
+    BranchesStatusEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -389,6 +391,24 @@ export class CausalRepoClient {
             }),
             switchMap(connected =>
                 merge(this._client.event<BranchesEvent>(BRANCHES).pipe(first()))
+            )
+        );
+    }
+
+    /**
+     * Requests status information for the list of branches.
+     */
+    branchesStatus() {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(BRANCHES_STATUS, undefined);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<BranchesStatusEvent>(BRANCHES_STATUS)
+                        .pipe(first())
+                )
             )
         );
     }

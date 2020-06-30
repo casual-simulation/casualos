@@ -47,6 +47,7 @@ import {
     WatchBranchEvent,
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
+    BRANCHES_STATUS,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -3776,6 +3777,65 @@ describe('CausalRepoServer', () => {
                     name: BRANCHES,
                     data: {
                         branches: ['testBranch', 'testBranch2'],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(BRANCHES_STATUS, () => {
+        it('should send a response with info about each branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const branches = new Subject<void>();
+            device.events.set(BRANCHES_STATUS, branches);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const b2 = branch('testBranch2', c, new Date(2019, 9, 5));
+            const b3 = branch('testBranch3', c, new Date(2019, 9, 6));
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+            await updateBranch(store, b2);
+            await updateBranch(store, b3);
+
+            branches.next();
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: BRANCHES_STATUS,
+                    data: {
+                        // should be sorted from most recently updated to least
+                        // recently updated.
+                        branches: [
+                            {
+                                branch: 'testBranch3',
+                                lastUpdateTime: new Date(2019, 9, 6),
+                            },
+                            {
+                                branch: 'testBranch2',
+                                lastUpdateTime: new Date(2019, 9, 5),
+                            },
+                            {
+                                branch: 'testBranch',
+                                lastUpdateTime: null,
+                            },
+                        ],
                     },
                 },
             ]);

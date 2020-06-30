@@ -63,11 +63,13 @@ import {
     WatchBranchEvent,
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
+    BRANCHES_STATUS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
 import { map, concatMap } from 'rxjs/operators';
 import { Observable, merge } from 'rxjs';
+import orderBy from 'lodash/orderBy';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -500,6 +502,21 @@ export class CausalRepoServer {
 
                         conn.send(BRANCHES, {
                             branches: branches.map(b => b.name),
+                        });
+                    },
+                    [BRANCHES_STATUS]: async () => {
+                        const branches = await this._store.getBranches(null);
+                        const sorted = orderBy(
+                            branches,
+                            [b => b.time || new Date(0, 1, 1)],
+                            ['desc']
+                        );
+
+                        conn.send(BRANCHES_STATUS, {
+                            branches: sorted.map(b => ({
+                                branch: b.name,
+                                lastUpdateTime: b.time || null,
+                            })),
                         });
                     },
                     [DEVICES]: async branch => {
