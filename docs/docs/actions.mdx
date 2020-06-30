@@ -537,6 +537,19 @@ const response = await webhook.post('https://example.com', {
 player.toast(response);
 ```
 
+### `uuid()`
+
+Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
+
+#### Examples:
+
+1. Generate a new UUID and toast it:
+```typescript
+const id = uuid();
+
+player.toast(id);
+```
+
 ## Bot Filters
 
 ### `byTag(tag, value?)`
