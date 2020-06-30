@@ -243,10 +243,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                     this._updateSynced(true);
                 }
 
-                if (
-                    event.device.claims[SESSION_ID_CLAIM] === this._user.id ||
-                    event.device.claims[SESSION_ID_CLAIM] === 'server'
-                ) {
+                if (event.device.claims[SESSION_ID_CLAIM] === this._user.id) {
                     return;
                 }
 

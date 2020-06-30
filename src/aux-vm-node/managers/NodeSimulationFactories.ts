@@ -6,7 +6,11 @@ import {
 import { AuxVMNode } from '../vm/AuxVMNode';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import { AuxConfig } from '@casual-simulation/aux-vm/vm';
-import { CausalRepoClientPartitionConfig } from '@casual-simulation/aux-common';
+import {
+    CausalRepoClientPartitionConfig,
+    PLAYER_PARTITION_ID,
+    OTHER_PLAYERS_PARTITION_ID,
+} from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
     user: AuxUser,
@@ -21,6 +25,17 @@ export function nodeSimulationForBranch(
             shared: {
                 type: 'causal_repo_client',
                 ...(extraOptions || {}),
+                branch: branch,
+                client: client,
+            },
+            [PLAYER_PARTITION_ID]: {
+                type: 'causal_repo_client',
+                branch: `${branch}-player-${user.id}`,
+                client: client,
+                temporary: true,
+            },
+            [OTHER_PLAYERS_PARTITION_ID]: {
+                type: 'other_players_client',
                 branch: branch,
                 client: client,
             },

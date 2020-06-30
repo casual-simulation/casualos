@@ -605,7 +605,7 @@ describe('OtherPlayersPartition', () => {
                 expect(connection.sentMessages.slice(1)).toEqual([]);
             });
 
-            it('should ignore the server user', async () => {
+            it('should not ignore the server user', async () => {
                 partition.connect();
 
                 await waitAsync();
@@ -620,7 +620,16 @@ describe('OtherPlayersPartition', () => {
 
                 await waitAsync();
 
-                expect(connection.sentMessages.slice(1)).toEqual([]);
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: WATCH_BRANCH,
+                        data: {
+                            branch: 'testBranch-player-server',
+                            temporary: true,
+                            siteId: expect.any(String),
+                        },
+                    },
+                ]);
             });
 
             it('should use the specified space', async () => {

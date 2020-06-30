@@ -16,6 +16,7 @@ import {
     UNWATCH_BRANCH,
     AddAtomsEvent,
     ADD_ATOMS,
+    WATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees/core2';
 import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
 import {
@@ -113,6 +114,18 @@ describe('AuxCausalRepoManager', () => {
                     siteId: expect.any(String),
                 },
             },
+            {
+                name: WATCH_BRANCH,
+                data: {
+                    branch: 'abc-player-server',
+                    temporary: true,
+                    siteId: expect.any(String),
+                },
+            },
+            {
+                name: WATCH_BRANCH_DEVICES,
+                data: 'abc',
+            },
         ]);
     });
 
@@ -135,6 +148,12 @@ describe('AuxCausalRepoManager', () => {
         });
         await waitAsync();
 
+        addAtoms.next({
+            branch: 'abc-player-server',
+            atoms: [],
+        });
+        await waitAsync();
+
         // Server is connected
         deviceConnected.next({
             branch: {
@@ -149,6 +168,7 @@ describe('AuxCausalRepoManager', () => {
             device: device1Info,
         });
         await waitAsync();
+        await waitAsync();
 
         expect(connection.sentMessages).toContainEqual({
             name: WATCH_BRANCH,
@@ -160,6 +180,19 @@ describe('AuxCausalRepoManager', () => {
         expect(connection.sentMessages).toContainEqual({
             name: UNWATCH_BRANCH,
             data: 'abc',
+        });
+
+        expect(connection.sentMessages).toContainEqual({
+            name: WATCH_BRANCH,
+            data: {
+                branch: 'abc-player-server',
+                temporary: true,
+                siteId: expect.any(String),
+            },
+        });
+        expect(connection.sentMessages).toContainEqual({
+            name: UNWATCH_BRANCH,
+            data: 'abc-player-server',
         });
     });
 
@@ -202,6 +235,12 @@ describe('AuxCausalRepoManager', () => {
         });
         await waitAsync();
 
+        addAtoms.next({
+            branch: 'abc-player-server',
+            atoms: [],
+        });
+        await waitAsync();
+
         // Server is connected
         deviceConnected.next({
             branch: {
@@ -229,6 +268,12 @@ describe('AuxCausalRepoManager', () => {
 
         addAtoms.next({
             branch: 'abc',
+            atoms: [],
+        });
+        await waitAsync();
+
+        addAtoms.next({
+            branch: 'abc-player-server',
             atoms: [],
         });
         await waitAsync();
@@ -276,6 +321,12 @@ describe('AuxCausalRepoManager', () => {
         });
         await waitAsync();
 
+        addAtoms.next({
+            branch: 'abc-player-server',
+            atoms: [],
+        });
+        await waitAsync();
+
         // Server is connected
         deviceConnected.next({
             branch: {
@@ -303,6 +354,12 @@ describe('AuxCausalRepoManager', () => {
 
         addAtoms.next({
             branch: 'abc',
+            atoms: [],
+        });
+        await waitAsync();
+
+        addAtoms.next({
+            branch: 'abc-player-server',
             atoms: [],
         });
         await waitAsync();
