@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.1.15
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added player space to the server.
+        -   This lets you send remote whispers to the `server` player.
+
 ## V1.1.14
 
 ### Date: 6/29/2020
