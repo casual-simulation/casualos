@@ -92,7 +92,7 @@ import {
     remote as calcRemote,
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import uuidv4 from 'uuid/v4';
 import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
@@ -298,6 +298,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteWhisper,
             remoteShout,
             webhook,
+            uuid,
 
             __energyCheck,
 
@@ -1695,6 +1696,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Creates a Universally Unique IDentifier (UUID).
+     */
+    function uuid() {
+        return uuidv4();
+    }
+
     // /**
     //  * Sends a web request based on the given options.
     //  * @param options The options that specify where and what to send in the web request.
@@ -2042,7 +2050,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      */
     function create(...mods: Mod[]) {
-        return createBase(() => uuid(), ...mods);
+        return createBase(() => uuidv4(), ...mods);
     }
 
     function createBase(idFactory: () => string, ...datas: Mod[]) {

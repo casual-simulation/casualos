@@ -2860,6 +2860,14 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('uuid()', () => {
+            it('should return a UUID', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const guid = library.api.uuid();
+                expect(guid).toBe('uuid');
+            });
+        });
+
         describe('action.perform()', () => {
             it('should add the given event to the list', () => {
                 const action = library.api.action.perform({
