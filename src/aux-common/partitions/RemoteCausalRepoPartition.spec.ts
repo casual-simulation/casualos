@@ -18,6 +18,8 @@ import {
     WATCH_BRANCH,
     DEVICES,
     DevicesEvent,
+    BRANCHES_STATUS,
+    BranchesStatusEvent,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -45,6 +47,7 @@ import {
     getPlayers,
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    getStoryStatuses,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -471,6 +474,30 @@ describe('RemoteCausalRepoPartition', () => {
                     ]);
                 });
 
+                it(`should send a ${BRANCHES_STATUS} event to the server if told to include statuses`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getStoryStatuses(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: BRANCHES_STATUS,
+                            data: undefined,
+                        },
+                    ]);
+                });
+
                 it(`should send an async result with the response`, async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
@@ -528,6 +555,67 @@ describe('RemoteCausalRepoPartition', () => {
 
                     expect(events).toEqual([
                         asyncResult('task1', ['abc', 'def']),
+                    ]);
+                });
+
+                it(`should filter out branches that start with a dollar sign when including statuses`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const branches = new Subject<BranchesStatusEvent>();
+                    connection.events.set(BRANCHES_STATUS, branches);
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getStoryStatuses(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    branches.next({
+                        branches: [
+                            {
+                                branch: '$admin',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: '$$other',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: 'abc',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: 'def',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                        ],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            {
+                                story: 'abc',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                story: 'def',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                        ]),
                     ]);
                 });
             });

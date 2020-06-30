@@ -84,6 +84,7 @@ import {
     getStories,
     getPlayers,
     action,
+    getStoryStatuses,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -373,6 +374,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 storyPlayerCount,
                 totalPlayerCount,
                 stories,
+                storyStatuses,
                 players,
             },
 
@@ -1571,6 +1573,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getStories(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of stories that are on the server.
+     */
+    function storyStatuses(): Promise<
+        {
+            story: string;
+            lastUpdateTime: Date;
+        }[]
+    > {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getStoryStatuses(),
             undefined,
             undefined,
             task.taskId

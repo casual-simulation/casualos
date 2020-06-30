@@ -780,6 +780,11 @@ export interface GetPlayerCountAction extends Action {
  */
 export interface GetStoriesAction extends Action {
     type: 'get_stories';
+
+    /**
+     * Whether to get the story statuses.
+     */
+    includeStatuses?: boolean;
 }
 
 /**
@@ -1934,6 +1939,16 @@ export function getPlayerCount(story?: string): GetPlayerCountAction {
 export function getStories(): GetStoriesAction {
     return {
         type: 'get_stories',
+    };
+}
+
+/**
+ * Creates a new GetStoriesAction that includes statuses.
+ */
+export function getStoryStatuses(): GetStoriesAction {
+    return {
+        type: 'get_stories',
+        includeStatuses: true,
     };
 }
 

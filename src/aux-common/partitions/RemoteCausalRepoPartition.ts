@@ -209,19 +209,44 @@ export class RemoteCausalRepoPartitionImpl
                 );
             } else if (event.event.type === 'get_stories') {
                 const action = <GetStoriesAction>event.event;
-                this._client.branches().subscribe(
-                    e => {
-                        this._onEvents.next([
-                            asyncResult(
-                                event.taskId,
-                                e.branches.filter(b => !b.startsWith('$'))
-                            ),
-                        ]);
-                    },
-                    err => {
-                        this._onEvents.next([asyncError(event.taskId, err)]);
-                    }
-                );
+                if (action.includeStatuses) {
+                    this._client.branchesStatus().subscribe(
+                        e => {
+                            this._onEvents.next([
+                                asyncResult(
+                                    event.taskId,
+                                    e.branches
+                                        .filter(b => !b.branch.startsWith('$'))
+                                        .map(b => ({
+                                            story: b.branch,
+                                            lastUpdateTime: b.lastUpdateTime,
+                                        }))
+                                ),
+                            ]);
+                        },
+                        err => {
+                            this._onEvents.next([
+                                asyncError(event.taskId, err),
+                            ]);
+                        }
+                    );
+                } else {
+                    this._client.branches().subscribe(
+                        e => {
+                            this._onEvents.next([
+                                asyncResult(
+                                    event.taskId,
+                                    e.branches.filter(b => !b.startsWith('$'))
+                                ),
+                            ]);
+                        },
+                        err => {
+                            this._onEvents.next([
+                                asyncError(event.taskId, err),
+                            ]);
+                        }
+                    );
+                }
             } else if (event.event.type === 'get_players') {
                 // Do nothing for get_players since it will be handled by the OtherPlayersPartition.
                 // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
