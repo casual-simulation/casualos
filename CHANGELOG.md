@@ -10,6 +10,8 @@
 
     -   Added player space to the server.
         -   This lets you send remote whispers to the `server` player.
+    -   Added the `server.storyStatuses()` function.
+        -   Returns a promise that resolves with a list of stories and the last time each story was updated.
 
 ## V1.1.14
 
