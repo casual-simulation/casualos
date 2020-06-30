@@ -556,7 +556,7 @@ export class CausalRepo {
             throw new Error('There is no head to reset!');
         }
 
-        const newBranch = branch(this._head.name, hash);
+        const newBranch = branch(this._head.name, hash, new Date());
         await this._saveHead(newBranch);
         await this._checkoutHead();
     }
@@ -577,6 +577,7 @@ export class CausalRepo {
             type: 'branch',
             name: name,
             hash: hash || null,
+            time: new Date(),
         };
 
         await this._saveHead(branch);
@@ -594,7 +595,7 @@ export class CausalRepo {
     private async _updateHead(
         ref: string | CausalRepoCommit | CausalRepoIndex
     ) {
-        const updated = branch(this._head.name, ref);
+        const updated = branch(this._head.name, ref, new Date());
         await this._saveHead(updated);
     }
 
