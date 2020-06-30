@@ -10,6 +10,7 @@ import {
     reflog,
     CausalRepoSitelog,
     sitelog,
+    CausalRepoSitelogType,
 } from '@casual-simulation/causal-trees/core2';
 
 /**
@@ -58,12 +59,17 @@ export class MongoDBRepoStore implements CausalRepoStore {
                     branch: ref.branch,
                     site: ref.site,
                     time: ref.time,
+                    sitelogType: ref.sitelogType,
                 } as CausalRepoSitelog)
         );
     }
 
-    async logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
-        const log = sitelog(branch, site);
+    async logSite(
+        branch: string,
+        site: string,
+        type: CausalRepoSitelogType
+    ): Promise<CausalRepoSitelog> {
+        const log = sitelog(branch, site, type);
         await this._sitelog.insertOne(log);
         return log;
     }
@@ -253,6 +259,7 @@ export interface MongoDBSitelog {
     branch: string;
     site: string;
     time: Date;
+    sitelogType?: CausalRepoSitelogType;
 }
 
 export function escapeRegex(value: string): string {

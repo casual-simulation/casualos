@@ -157,22 +157,32 @@ export default function causalRepoStoreTests(
 
     describe('sitelog', () => {
         it('should be able to log that a site was connected to a branch', async () => {
-            await store.logSite('test', 'abc1');
-            await store.logSite('test', 'abc2');
+            await store.logSite('test', 'abc1', 'WATCH');
+            await store.logSite('test', 'abc2', 'UNWATCH');
+            await store.logSite('test', 'abc3', null);
 
             const log = await store.getSitelog('test');
             expect(log).toEqual([
                 {
                     type: 'sitelog',
                     branch: 'test',
+                    site: 'abc3',
+                    time: expect.any(Date),
+                    sitelogType: null,
+                },
+                {
+                    type: 'sitelog',
+                    branch: 'test',
                     site: 'abc2',
                     time: expect.any(Date),
+                    sitelogType: 'UNWATCH',
                 },
                 {
                     type: 'sitelog',
                     branch: 'test',
                     site: 'abc1',
                     time: expect.any(Date),
+                    sitelogType: 'WATCH',
                 },
             ]);
         });

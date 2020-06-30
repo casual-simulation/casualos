@@ -286,6 +286,7 @@ describe('CausalRepoServer', () => {
                     branch: 'testBranch',
                     site: 'testSite',
                     time: expect.any(Date),
+                    sitelogType: 'WATCH',
                 },
             ]);
         });
@@ -890,6 +891,88 @@ describe('CausalRepoServer', () => {
             const atoms = await stageStore.getStage('testBranch');
 
             expect(atoms.additions).toEqual([a1]);
+        });
+
+        it('should log the site when unwatching a branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+                siteId: 'testSite',
+            });
+            await waitAsync();
+
+            leaveBranch.next('testBranch');
+            await waitAsync();
+
+            const log = await store.getSitelog('testBranch');
+
+            expect(log).toEqual([
+                {
+                    type: 'sitelog',
+                    branch: 'testBranch',
+                    site: 'testSite',
+                    time: expect.any(Date),
+                    sitelogType: 'UNWATCH',
+                },
+                {
+                    type: 'sitelog',
+                    branch: 'testBranch',
+                    site: 'testSite',
+                    time: expect.any(Date),
+                    sitelogType: 'WATCH',
+                },
+            ]);
+        });
+
+        it('should log the site when disconnected while watching a branch', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const joinBranch = new Subject<WatchBranchEvent>();
+            const leaveBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+                siteId: 'testSite',
+            });
+            await waitAsync();
+
+            device.disconnect.next();
+            await waitAsync();
+
+            const log = await store.getSitelog('testBranch');
+
+            expect(log).toEqual([
+                {
+                    type: 'sitelog',
+                    branch: 'testBranch',
+                    site: 'testSite',
+                    time: expect.any(Date),
+                    sitelogType: 'UNWATCH',
+                },
+                {
+                    type: 'sitelog',
+                    branch: 'testBranch',
+                    site: 'testSite',
+                    time: expect.any(Date),
+                    sitelogType: 'WATCH',
+                },
+            ]);
         });
     });
 

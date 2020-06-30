@@ -4,6 +4,7 @@ import {
     CausalRepoIndex,
     CausalRepoReflog,
     CausalRepoSitelog,
+    CausalRepoSitelogType,
 } from './CausalRepoObject';
 
 /**
@@ -56,8 +57,13 @@ export interface CausalBranchStore {
      * Logs that the given site connected to the given branch.
      * @param branch The name of the branch.
      * @param site The site.
+     * @param type The type of the sitelog.
      */
-    logSite(branch: string, site: string): Promise<CausalRepoSitelog>;
+    logSite(
+        branch: string,
+        site: string,
+        type: CausalRepoSitelogType
+    ): Promise<CausalRepoSitelog>;
 }
 
 /**
@@ -134,8 +140,12 @@ export class CombinedCausalRepoStore implements CausalRepoStore {
         return this._branches.getSitelog(branch);
     }
 
-    logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
-        return this._branches.logSite(branch, site);
+    logSite(
+        branch: string,
+        site: string,
+        type: CausalRepoSitelogType
+    ): Promise<CausalRepoSitelog> {
+        return this._branches.logSite(branch, site, type);
     }
 
     loadIndex: (

@@ -75,7 +75,20 @@ export interface CausalRepoSitelog {
      * The time that the sitelog was created at.
      */
     time: Date;
+
+    /**
+     * The type of the sitelog.
+     */
+    sitelogType?: CausalRepoSitelogType;
 }
+
+/**
+ * Defines a list of possible sitelog types.
+ * - null means that the type is not specified.
+ * - 'WATCH' means that the sitelog indicates that the branch was starting to be watched.
+ * - 'UNWATCH' means that the sitelog indicates that the branch was stopped being watched.
+ */
+export type CausalRepoSitelogType = null | 'WATCH' | 'UNWATCH';
 
 /**
  * Defines information about an index in a causal repo.
@@ -184,12 +197,17 @@ export function reflog(head: CausalRepoBranch): CausalRepoReflog {
  * Creates a sitelog for the given branch.
  * @param branch The branch.
  */
-export function sitelog(branch: string, site: string): CausalRepoSitelog {
+export function sitelog(
+    branch: string,
+    site: string,
+    type?: CausalRepoSitelogType
+): CausalRepoSitelog {
     return {
         type: 'sitelog',
         branch: branch,
         site: site,
         time: new Date(),
+        sitelogType: type,
     };
 }
 

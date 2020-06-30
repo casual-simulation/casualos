@@ -8,6 +8,7 @@ import {
     reflog,
     CausalRepoSitelog,
     sitelog,
+    CausalRepoSitelogType,
 } from './CausalRepoObject';
 import sortBy from 'lodash/sortBy';
 import { getAtomHashes } from './AtomIndex';
@@ -45,13 +46,17 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
         return sitelog;
     }
 
-    async logSite(branch: string, site: string): Promise<CausalRepoSitelog> {
+    async logSite(
+        branch: string,
+        site: string,
+        type: CausalRepoSitelogType
+    ): Promise<CausalRepoSitelog> {
         let log = this._sitelog.get(branch);
         if (!log) {
             log = [];
             this._sitelog.set(branch, log);
         }
-        const newLog = sitelog(branch, site);
+        const newLog = sitelog(branch, site, type);
         log.unshift(newLog);
         return newLog;
     }
