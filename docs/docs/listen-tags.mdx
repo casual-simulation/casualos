@@ -891,3 +891,77 @@ if (that.name === "hello") {
     remoteWhisper(that.playerId, "hi");
 }
 ```
+
+### `@onRemotePlayerSubscribed`
+
+A shout that is run on every other player when a player joins the current story.
+
+Since this shout is run on every player, you should be careful about performing duplicate actions.
+When in doubt, elect a player to perform all actions that should only be executed once.
+See example 2 below.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The ID of the player that joined the story.
+     */
+    playerId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a player joins.
+```typescript
+player.toast("Player joined: " + that.playerId);
+```
+
+2. Create a bot when a player joins.
+```typescript
+// Check if the current player is the "server" player.
+// This will ensure that only one bot is created.
+if (getID(player.getBot()) === 'server') {
+    create({
+        playerLog: true,
+        label: 'Player Joined: ' + that.playerId
+    });
+}
+```
+
+### `@onRemotePlayerUnsubscribed`
+
+A shout that is run on every other player when a player leaves the current story.
+
+Since this shout is run on every player, you should be careful about performing duplicate actions.
+When in doubt, elect a player to perform all actions that should only be executed once.
+See example 2 below.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The ID of the player that left the story.
+     */
+    playerId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a player leaves.
+```typescript
+player.toast("Player joined: " + that.playerId);
+```
+
+2. Create a bot when a player leaves.
+```typescript
+// Check if the current player is the "server" player.
+// This will ensure that only one bot is created.
+if (getID(player.getBot()) === 'server') {
+    create({
+        playerLog: true,
+        label: 'Player Left: ' + that.playerId
+    });
+}
+```
