@@ -33,6 +33,9 @@ import {
     UpdateBotAction,
     GetPlayersAction,
     asyncResult,
+    action,
+    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+    ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
 } from '../bots';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -278,6 +281,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 deviceInfo: device,
             } as ConnectedDevice;
             this._devices.set(device.claims[SESSION_ID_CLAIM], connected);
+
+            this._onEvents.next([
+                action(ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME, null, null, {
+                    playerId: device.claims[SESSION_ID_CLAIM],
+                }),
+            ]);
         }
     }
 
@@ -287,6 +296,16 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             connected.connectionCount -= 1;
             if (connected.connectionCount <= 0) {
                 this._devices.delete(device.claims[SESSION_ID_CLAIM]);
+                this._onEvents.next([
+                    action(
+                        ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                        null,
+                        null,
+                        {
+                            playerId: device.claims[SESSION_ID_CLAIM],
+                        }
+                    ),
+                ]);
             }
         }
     }

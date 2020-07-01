@@ -7,6 +7,7 @@ import {
     DeviceAction,
     remote,
     DeviceInfo,
+    Action,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -26,6 +27,7 @@ import {
     toast,
     createBotClientPartition,
     AuxPartitions,
+    action,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -357,6 +359,47 @@ describe('BaseAuxChannel', () => {
                     event: botAdded(createBot('abc')),
                 },
             ]);
+        });
+
+        it('should buffer events that are sent before the channel is initialized', async () => {
+            let localEvents = [] as Action[];
+            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+
+            await channel.sendEvents([toast('abc')]);
+
+            expect(localEvents).toEqual([]);
+
+            await channel.initAndWait();
+
+            let deviceEvents: DeviceAction[] = [];
+            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+
+            expect(localEvents).toEqual([toast('abc')]);
+        });
+
+        it('should wait for the existing bots to be loaded before running actions', async () => {
+            let localEvents = [] as Action[];
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test1', {
+                        test: '@player.toast("abc");',
+                    })
+                ),
+            ]);
+
+            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+
+            await channel.sendEvents([action('test')]);
+
+            expect(localEvents).toEqual([]);
+
+            await channel.initAndWait();
+
+            let deviceEvents: DeviceAction[] = [];
+            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+
+            expect(localEvents).toEqual([toast('abc')]);
         });
 
         describe('load_space', () => {

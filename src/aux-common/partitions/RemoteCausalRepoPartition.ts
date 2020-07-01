@@ -343,29 +343,32 @@ export class RemoteCausalRepoPartitionImpl
      * Requests the current state from the configured branch.
      */
     private _requestBranch() {
-        this._client.getBranch(this._branch).subscribe(atoms => {
-            this._onStatusUpdated.next({
-                type: 'connection',
-                connected: true,
-            });
-            this._onStatusUpdated.next({
-                type: 'authentication',
-                authenticated: true,
-                user: this._user,
-            });
-            this._onStatusUpdated.next({
-                type: 'authorization',
-                authorized: true,
-            });
+        this._client.getBranch(this._branch).subscribe(
+            atoms => {
+                this._onStatusUpdated.next({
+                    type: 'connection',
+                    connected: true,
+                });
+                this._onStatusUpdated.next({
+                    type: 'authentication',
+                    authenticated: true,
+                    user: this._user,
+                });
+                this._onStatusUpdated.next({
+                    type: 'authorization',
+                    authorized: true,
+                });
 
-            this._updateSynced(true);
-            this._applyAtoms(atoms, []);
+                this._updateSynced(true);
+                this._applyAtoms(atoms, []);
 
-            if (!this._static) {
-                // the partition has been unlocked while getting the branch
-                this._watchBranch();
-            }
-        });
+                if (!this._static) {
+                    // the partition has been unlocked while getting the branch
+                    this._watchBranch();
+                }
+            },
+            err => this._onError.next(err)
+        );
     }
 
     /**
@@ -377,27 +380,30 @@ export class RemoteCausalRepoPartitionImpl
         }
         this._watchingBranch = true;
         this._sub.add(
-            this._client.connection.connectionState.subscribe(state => {
-                const connected = state.connected;
-                this._onStatusUpdated.next({
-                    type: 'connection',
-                    connected: !!connected,
-                });
-                if (connected) {
+            this._client.connection.connectionState.subscribe(
+                state => {
+                    const connected = state.connected;
                     this._onStatusUpdated.next({
-                        type: 'authentication',
-                        authenticated: true,
-                        user: this._user,
-                        info: state.info,
+                        type: 'connection',
+                        connected: !!connected,
                     });
-                    this._onStatusUpdated.next({
-                        type: 'authorization',
-                        authorized: true,
-                    });
-                } else {
-                    this._updateSynced(false);
-                }
-            })
+                    if (connected) {
+                        this._onStatusUpdated.next({
+                            type: 'authentication',
+                            authenticated: true,
+                            user: this._user,
+                            info: state.info,
+                        });
+                        this._onStatusUpdated.next({
+                            type: 'authorization',
+                            authorized: true,
+                        });
+                    } else {
+                        this._updateSynced(false);
+                    }
+                },
+                err => this._onError.next(err)
+            )
         );
         this._sub.add(
             this._client
@@ -406,39 +412,42 @@ export class RemoteCausalRepoPartitionImpl
                     temporary: this._temporary,
                     siteId: this._tree.site.id,
                 })
-                .subscribe(event => {
-                    if (!this._synced) {
-                        this._updateSynced(true);
-                    }
-                    if (event.type === 'atoms') {
-                        this._applyAtoms(event.atoms, event.removedAtoms);
-                    } else if (event.type === 'event') {
-                        if (
-                            event.action.type === 'device' &&
-                            event.action.event.type === 'action'
-                        ) {
-                            const remoteAction = event.action
-                                .event as ShoutAction;
-                            this._onEvents.next([
-                                action(
-                                    ON_REMOTE_WHISPER_ACTION_NAME,
-                                    null,
-                                    null,
-                                    {
-                                        name: remoteAction.eventName,
-                                        that: remoteAction.argument,
-                                        playerId:
-                                            event.action.device.claims[
-                                                SESSION_ID_CLAIM
-                                            ],
-                                    }
-                                ),
-                            ]);
-                        } else {
-                            this._onEvents.next([event.action]);
+                .subscribe(
+                    event => {
+                        if (!this._synced) {
+                            this._updateSynced(true);
                         }
-                    }
-                })
+                        if (event.type === 'atoms') {
+                            this._applyAtoms(event.atoms, event.removedAtoms);
+                        } else if (event.type === 'event') {
+                            if (
+                                event.action.type === 'device' &&
+                                event.action.event.type === 'action'
+                            ) {
+                                const remoteAction = event.action
+                                    .event as ShoutAction;
+                                this._onEvents.next([
+                                    action(
+                                        ON_REMOTE_WHISPER_ACTION_NAME,
+                                        null,
+                                        null,
+                                        {
+                                            name: remoteAction.eventName,
+                                            that: remoteAction.argument,
+                                            playerId:
+                                                event.action.device.claims[
+                                                    SESSION_ID_CLAIM
+                                                ],
+                                        }
+                                    ),
+                                ]);
+                            } else {
+                                this._onEvents.next([event.action]);
+                            }
+                        }
+                    },
+                    err => this._onError.next(err)
+                )
         );
     }
 
@@ -451,7 +460,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _applyAtoms(atoms: Atom<any>[], removedAtoms: string[]) {
-        if (this._tree.weave.roots.length === 0) {
+        if (this._tree.weave.roots.length === 0 && atoms) {
             console.log(
                 `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
             );

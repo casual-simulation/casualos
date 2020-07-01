@@ -883,6 +883,18 @@ export const ON_ANY_FOCUS_ENTER_ACTION_NAME: string = 'onAnyFocusEnter';
 export const ON_ANY_FOCUS_EXIT_ACTION_NAME: string = 'onAnyFocusExit';
 
 /**
+ * The name of the event that is triggered when a remote player joins the game.
+ */
+export const ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME: string =
+    'onRemotePlayerSubscribed';
+
+/**
+ * The name of the event that is triggered when a remote player leaves the game.
+ */
+export const ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME: string =
+    'onRemotePlayerUnsubscribed';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1107,6 +1119,9 @@ export const KNOWN_TAGS: string[] = [
     ON_FOCUS_EXIT_ACTION_NAME,
     ON_ANY_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
+
+    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+    ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {

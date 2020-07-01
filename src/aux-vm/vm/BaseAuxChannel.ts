@@ -49,6 +49,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _partitions: AuxPartitions;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
+    private _eventBuffer: BotAction[];
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
@@ -96,6 +97,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+        this._eventBuffer = [];
 
         this._onConnectionStateChanged.subscribe(null, err => {
             this._onError.next({
@@ -267,7 +269,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async sendEvents(events: BotAction[]): Promise<void> {
-        await this._helper.transaction(...events);
+        if (this._helper) {
+            await this._helper.transaction(...events);
+        } else {
+            this._eventBuffer.push(...events);
+        }
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
@@ -433,6 +439,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged.next({
             type: 'init',
         });
+
+        if (this._eventBuffer.length > 0) {
+            const buffer = this._eventBuffer;
+            this._eventBuffer = [];
+            await this._helper.transaction(...buffer);
+        }
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {

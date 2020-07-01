@@ -92,6 +92,7 @@ describe('RemoteCausalRepoPartition', () => {
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
+        let errors: any[];
         let sub: Subscription;
 
         beforeEach(async () => {
@@ -107,6 +108,7 @@ describe('RemoteCausalRepoPartition', () => {
             added = [];
             removed = [];
             updated = [];
+            errors = [];
 
             setupPartition({
                 type: 'remote_causal_repo',
@@ -890,6 +892,27 @@ describe('RemoteCausalRepoPartition', () => {
 
                 expect(connection.sentMessages.slice(1)).toEqual([]);
             });
+
+            it('should handle an ADD_ATOMS event without any new atoms', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                });
+
+                partition.connect();
+
+                const a1 = atom(atomId('a', 1), null, {});
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    removedAtoms: [a1.hash],
+                });
+                await waitAsync();
+
+                expect(errors).toEqual([]);
+            });
         });
 
         describe('static mode', () => {
@@ -1286,6 +1309,7 @@ describe('RemoteCausalRepoPartition', () => {
             sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
             sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
             sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+            sub.add(partition.onError.subscribe(e => errors.push(e)));
         }
     });
 });
