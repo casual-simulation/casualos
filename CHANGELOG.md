@@ -12,6 +12,11 @@
         -   This lets you send remote whispers to the `server` player.
     -   Added the `server.storyStatuses()` function.
         -   Returns a promise that resolves with a list of stories and the last time each story was updated.
+    -   Added the `@onRemotePlayerSubscribed` and `@onRemotePlayerUnsubscribed` listen tags.
+        -   They are triggered on _every_ other player when a player joins or leaves the story.
+        -   Additionally, they are triggered whenever connection to the other players is lost.
+        -   `that` is an object with the following properties:
+            -   `playerId` - The ID of the player that joined/left the story.
 
 -   Bug Fixes
     -   Fixed an issue where remote shouts would be sent to yourself twice.
