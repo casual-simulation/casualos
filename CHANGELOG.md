@@ -13,6 +13,9 @@
     -   Added the `server.storyStatuses()` function.
         -   Returns a promise that resolves with a list of stories and the last time each story was updated.
 
+-   Bug Fixes
+    -   Fixed an issue where remote shouts would be sent to yourself twice.
+
 ## V1.1.14
 
 ### Date: 6/29/2020
