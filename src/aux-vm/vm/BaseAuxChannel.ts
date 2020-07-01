@@ -50,6 +50,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
     private _eventBuffer: BotAction[];
+    private _hasInitialState: boolean;
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
@@ -98,6 +99,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
+        this._hasInitialState = false;
 
         this._onConnectionStateChanged.subscribe(null, err => {
             this._onError.next({
@@ -269,7 +271,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async sendEvents(events: BotAction[]): Promise<void> {
-        if (this._helper) {
+        if (this._hasInitialState) {
             await this._helper.transaction(...events);
         } else {
             this._eventBuffer.push(...events);
@@ -439,12 +441,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged.next({
             type: 'init',
         });
-
-        if (this._eventBuffer.length > 0) {
-            const buffer = this._eventBuffer;
-            this._eventBuffer = [];
-            await this._helper.transaction(...buffer);
-        }
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
@@ -470,6 +466,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
         this._onStateUpdated.next(event);
+        if (!this._hasInitialState) {
+            this._hasInitialState = true;
+            if (this._eventBuffer.length > 0) {
+                if (Object.keys(this._runtime.currentState).length <= 0) {
+                    console.log(
+                        '[BaseAuxChannel] Sending event before bots are added!'
+                    );
+                }
+                const buffer = this._eventBuffer;
+                this._eventBuffer = [];
+                this._helper.transaction(...buffer);
+            }
+        }
     }
 
     protected _handleError(error: any) {
