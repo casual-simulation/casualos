@@ -133,6 +133,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     branch: `${parsedId.channel}-player-${user.id}`,
                     host: host,
                     temporary: true,
+                    remoteEvents: false,
                 },
                 [OTHER_PLAYERS_PARTITION_ID]: {
                     type: 'other_players_repo',

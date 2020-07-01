@@ -85,6 +85,7 @@ export class RemoteCausalRepoPartitionImpl
     private _readOnly: boolean;
     private _static: boolean;
     private _temporary: boolean;
+    private _remoteEvents: boolean;
 
     /**
      * Whether the partition is watching the branch.
@@ -167,6 +168,8 @@ export class RemoteCausalRepoPartitionImpl
         this.private = config.private;
         this._static = config.static || false;
         this._temporary = config.temporary;
+        this._remoteEvents =
+            'remoteEvents' in config ? config.remoteEvents : true;
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -175,7 +178,7 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-        if (this._readOnly) {
+        if (this._readOnly || !this._remoteEvents) {
             return;
         }
         for (let event of events) {

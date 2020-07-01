@@ -149,6 +149,11 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be temporary.
      */
     temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
 }
 
 /**
@@ -182,6 +187,11 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * Whether the partition should be temporary.
      */
     temporary?: boolean;
+
+    /**
+     * Whether to support remote events. (Default is true)
+     */
+    remoteEvents?: boolean;
 }
 
 /**

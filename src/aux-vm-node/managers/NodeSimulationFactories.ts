@@ -33,6 +33,7 @@ export function nodeSimulationForBranch(
                 branch: `${branch}-player-${user.id}`,
                 client: client,
                 temporary: true,
+                remoteEvents: false,
             },
             [OTHER_PLAYERS_PARTITION_ID]: {
                 type: 'other_players_client',

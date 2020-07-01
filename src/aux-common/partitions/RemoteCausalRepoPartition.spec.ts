@@ -239,6 +239,28 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
             });
 
+            it('should not send the remote event if remote events are disabled', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    remoteEvents: false,
+                });
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        {
+                            type: 'def',
+                        },
+                        {
+                            deviceId: 'device',
+                        }
+                    ),
+                ]);
+
+                expect(connection.sentMessages).toEqual([]);
+            });
+
             it('should listen for device events from the connection', async () => {
                 let events = [] as Action[];
                 partition.onEvents.subscribe(e => events.push(...e));
