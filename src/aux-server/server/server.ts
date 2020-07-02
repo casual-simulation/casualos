@@ -1,6 +1,6 @@
 import * as Http from 'http';
 import * as Https from 'https';
-import express, { Response } from 'express';
+import express, { Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
@@ -19,7 +19,14 @@ import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
-import { ON_WEBHOOK_ACTION_NAME, merge } from '@casual-simulation/aux-common';
+import {
+    ON_WEBHOOK_ACTION_NAME,
+    merge,
+    hasValue,
+    DATA_PORTAL,
+    createBot,
+    calculateBotValue,
+} from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
@@ -82,6 +89,8 @@ import {
 import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
+import mime from 'mime';
+import sortBy from 'lodash/sortBy';
 
 const connect = pify(MongoClient.connect);
 
@@ -579,18 +588,32 @@ export class Server {
         await this._serveDirectory();
         await this._startDirectoryClient();
 
-        this._app.use(this._client.app);
-
-        if (this._botServer) {
-            this._app.use(this._botServer.app);
-        }
-
         this._app.all(
             '/webhook/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
+        this._app.all(
+            '/webhook',
+            asyncMiddleware(async (req, res) => {
+                await this._handleWebhook(req, res);
+            })
+        );
+        this._app.get(
+            '/',
+            dataPortalMiddleware(
+                asyncMiddleware(async (req, res) => {
+                    await this._handleDataPortal(req, res);
+                })
+            )
+        );
+
+        if (this._botServer) {
+            this._app.use(this._botServer.app);
+        }
+
+        this._app.use(this._client.app);
     }
 
     private _configureBotHttpServer() {
@@ -603,6 +626,77 @@ export class Server {
         this._botServer.configure();
     }
 
+    private async _handleDataPortal(req: Request, res: Response) {
+        const id = req.query.story;
+        if (!id) {
+            res.sendStatus(400);
+            return;
+        }
+
+        const portal = req.query[DATA_PORTAL];
+        if (!portal) {
+            res.sendStatus(400);
+            return;
+        }
+
+        const exists = await this._webhooksClient
+            .branchInfo(id)
+            .pipe(
+                first(),
+                map(info => info.exists)
+            )
+            .toPromise();
+
+        if (!exists) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const user = getWebhooksUser();
+        const simulation = nodeSimulationForBranch(
+            user,
+            this._webhooksClient,
+            id
+        );
+        try {
+            await simulation.init();
+
+            // Wait for full sync
+            await simulation.connection.syncStateChanged
+                .pipe(first(synced => synced))
+                .toPromise();
+
+            const bot = simulation.helper.botsState[portal];
+            if (!!bot) {
+                res.send(createBot(bot.id, bot.tags));
+                return;
+            }
+
+            const bots = sortBy(
+                simulation.index.findBotsWithTag(portal),
+                b => b.id
+            );
+            const values = bots.map(b => calculateBotValue(null, b, portal));
+            const portalContentType = mime.getType(portal);
+            const contentType =
+                req.query[`${DATA_PORTAL}ContentType`] ||
+                portalContentType ||
+                'application/json';
+
+            if (hasValue(contentType)) {
+                res.set('Content-Type', contentType);
+            }
+
+            if (hasValue(portalContentType)) {
+                res.send(values[0] || '');
+            } else {
+                res.send(values);
+            }
+        } finally {
+            simulation.unsubscribe();
+        }
+    }
+
     private async _handleWebhook(req: Request, res: Response) {
         const id = req.query.story;
         if (!id) {
@@ -610,16 +704,19 @@ export class Server {
             return;
         }
 
-        let handled = await this._handleV2Webhook(req, id);
+        let handled = await this._handleV2Webhook(req, res, id);
         if (handled) {
-            res.sendStatus(204);
             return;
         }
 
         res.sendStatus(404);
     }
 
-    private async _handleV2Webhook(req: Request, id: string): Promise<boolean> {
+    private async _handleV2Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
         const exists = await this._webhooksClient
             .branchInfo(id)
             .pipe(
@@ -640,22 +737,52 @@ export class Server {
         );
         try {
             await simulation.init();
-            await this._sendWebhook(req, simulation);
+            return await this._sendWebhook(req, res, simulation);
         } finally {
             simulation.unsubscribe();
         }
-
-        return true;
     }
 
-    private async _sendWebhook(req: Request, simulation: Simulation) {
+    private async _sendWebhook(
+        req: Request,
+        res: Response,
+        simulation: Simulation
+    ) {
         const fullUrl = requestUrl(req, req.protocol);
-        await simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
-            method: req.method,
-            url: fullUrl,
-            data: req.body,
-            headers: req.headers,
-        });
+        const result = await simulation.helper.shout(
+            ON_WEBHOOK_ACTION_NAME,
+            null,
+            {
+                method: req.method,
+                url: fullUrl,
+                data: req.body,
+                headers: req.headers,
+            }
+        );
+
+        if (result.results.length > 0) {
+            let firstValue = result.results.find(r => hasValue(r));
+            if (firstValue) {
+                if (typeof firstValue === 'object') {
+                    if (typeof firstValue.headers === 'object') {
+                        res.set(firstValue.headers);
+                    }
+
+                    if (typeof firstValue.status === 'number') {
+                        res.status(firstValue.status);
+                    }
+
+                    res.send(firstValue.data);
+                } else {
+                    res.send(firstValue);
+                }
+            } else {
+                res.sendStatus(204);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private async _serveDirectory() {
@@ -958,5 +1085,20 @@ function getWebhooksUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-webhooks-token',
+    };
+}
+
+/**
+ * Middleware that calls the given function if the request is for the data portal
+ * and skips it if the request is not.
+ * @param func
+ */
+function dataPortalMiddleware(func: express.Handler) {
+    return function(req: Request, res: Response, next: NextFunction) {
+        if (hasValue(req.query.story) && hasValue(req.query[DATA_PORTAL])) {
+            return func(req, res, next);
+        } else {
+            return next();
+        }
     };
 }

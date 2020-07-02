@@ -2,6 +2,7 @@ import {
     AuxVM,
     AuxChannelErrorType,
     StoredAux,
+    ChannelActionResult,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -70,6 +71,14 @@ export class AuxVMNode implements AuxVM {
 
     sendEvents(events: BotAction[]): Promise<void> {
         return this._channel.sendEvents(events);
+    }
+
+    shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult> {
+        return this._channel.shout(eventName, botIds, arg);
     }
 
     formulaBatch(formulas: string[]): Promise<void> {

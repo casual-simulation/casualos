@@ -20,6 +20,7 @@ import values from 'lodash/values';
 import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
+import { ChannelActionResult } from '../../vm';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -66,6 +67,19 @@ export class TestAuxVM implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
+    }
+
+    async shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult> {
+        const result = this._runtime.shout(eventName, botIds, arg);
+
+        return {
+            actions: result.actions,
+            results: await Promise.all(result.results),
+        };
     }
 
     async setUser(user: AuxUser): Promise<void> {

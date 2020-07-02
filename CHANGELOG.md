@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V1.1.16
+
+### Date: 7/2/2020
+
+### Changes:
+
+-   :rocket: Improvements
+    -   Added the ability to respond to webhooks by returning data from `@onWebhook`.
+        -   If the returned value is a string, then it will be used for the response.
+        -   If the returned value is an object, then it should have the following properties:
+            -   `data` - The value that should be used as the body of the response.
+            -   `headers` - An object that contains the HTTP headers that should be set on the response. (Optional)
+            -   `status` - The numerical status code that should be set on the response. (Optional) If omitted, status code 200 will be used.
+    -   Added the `dataPortal`.
+        -   This is a special portal that only works on web requests and must be specified in the URL.
+        -   Setting it to a Bot ID will return the JSON of the bot with the given ID.
+        -   Setting it to a tag will return all the values corresponding to the given tag.
+        -   Using a tag with a common extension (like `.html`) will tag the data as the corresponding content type so that normal software know how to interpret the data.
+
 ## V1.1.15
 
 ### Date: 7/2/2020

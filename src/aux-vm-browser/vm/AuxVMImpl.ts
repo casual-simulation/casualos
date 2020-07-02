@@ -7,7 +7,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer } from 'comlink';
-import { AuxConfig, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
+import {
+    AuxConfig,
+    AuxVM,
+    AuxUser,
+    ChannelActionResult,
+} from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
     AuxStatic,
@@ -165,6 +170,23 @@ export class AuxVMImpl implements AuxVM {
     async sendEvents(events: BotAction[]): Promise<void> {
         if (!this._proxy) return null;
         return await this._proxy.sendEvents(events);
+    }
+
+    /**
+     * Executes a shout with the given event name on the given bot IDs with the given argument.
+     * Also dispatches any actions and errors that occur.
+     * Returns the results from the event.
+     * @param eventName The name of the event.
+     * @param botIds The IDs of the bots that the shout is being sent to.
+     * @param arg The argument to include in the shout.
+     */
+    async shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult> {
+        if (!this._proxy) return null;
+        return await this._proxy.shout(eventName, botIds, arg);
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
