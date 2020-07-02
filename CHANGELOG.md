@@ -20,6 +20,7 @@
 
 -   Bug Fixes
     -   Fixed an issue where remote shouts would be sent to yourself twice.
+    -   Fixed an issue where labels would not always follow the `labelAlignment` tag when the text in the label was small enough to fit within the bot.
 
 ## V1.1.14
 
