@@ -17,6 +17,9 @@
         -   Additionally, they are triggered whenever connection to the other players is lost.
         -   `that` is an object with the following properties:
             -   `playerId` - The ID of the player that joined/left the story.
+    -   Added the `uuid()` function.
+        -   This function generates and returns a random [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+        -   Useful for creating unique identifiers.
 
 -   Bug Fixes
     -   Fixed an issue where remote shouts would be sent to yourself twice.
