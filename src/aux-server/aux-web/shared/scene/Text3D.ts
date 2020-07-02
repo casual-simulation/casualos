@@ -144,7 +144,7 @@ export class Text3D extends Object3D {
             center.multiply(worldScale);
         }
 
-        const [pos, rotation] = this._calculateAnchorPosition(
+        const [pos, rotation, anchor] = this._calculateAnchorPosition(
             worldScale,
             center
         );
@@ -153,35 +153,15 @@ export class Text3D extends Object3D {
         this.parent.localToWorld(worldPos);
 
         this.position.copy(pos);
+        let changed = this._mesh.anchorX !== anchor;
+        this._mesh.anchorX = anchor;
         this._mesh.rotation.copy(new Euler(rotation.x, rotation.y, rotation.z));
 
-        // DebugObjectManager.drawBox3(
-        //     this._boundingBox.clone(),
-        //     new Color(255, 0, 0),
-        //     3
-        // );
-        // DebugObjectManager.drawBox3(targetLocalBounds.clone(), new Color(0, 255, 0), 3);
-        // DebugObjectManager.drawBox3(thisLocalBounds.clone(), new Color(255, 255, 0), 3);
-        DebugObjectManager.drawPoint(
-            objCenter.clone(),
-            1,
-            new Color(0, 255, 255),
-            3
-        );
-        DebugObjectManager.drawPoint(
-            center.clone(),
-            1,
-            new Color(255, 0, 255),
-            3
-        );
-        // DebugObjectManager.drawPoint(
-        //     worldPos.clone(),
-        //     1,
-        //     new Color(255, 0, 255),
-        //     3
-        // );
-
-        this.updateBoundingBox();
+        if (changed) {
+            this._mesh.sync(() => this._onSync());
+        } else {
+            this.updateBoundingBox();
+        }
     }
 
     public setWorldPosition(worldPos: Vector3) {
@@ -311,10 +291,8 @@ export class Text3D extends Object3D {
         this._anchor = anchor;
 
         if (anchor === 'floating') {
-            this._mesh.anchorX = 'center';
             this._mesh.anchorY = 'bottom';
         } else {
-            this._mesh.anchorX = 'center';
             this._mesh.anchorY = 'middle';
         }
 
@@ -337,7 +315,7 @@ export class Text3D extends Object3D {
     private _calculateAnchorPosition(
         scale: Vector3,
         objCenter: Vector3
-    ): [Vector3, Euler] {
+    ): [Vector3, Euler, 'left' | 'right' | 'center'] {
         // // Position the mesh some distance above the given object's bounding box.
         let targetSize = scale;
         let targetCenter = objCenter
@@ -347,70 +325,158 @@ export class Text3D extends Object3D {
         const positionMultiplier = 0.5;
 
         if (this._anchor === 'floating') {
-            //let posOffset = this.container.position.clone().sub(bottomCenter);
-            let pos = new Vector3(
-                targetCenter.x,
-                targetCenter.y +
-                    targetSize.y * positionMultiplier +
-                    Text3D.floatingExtraSpace,
-                targetCenter.z
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'x',
+                this._mesh.textAlign,
+                1,
+                new Vector3(
+                    0,
+                    targetCenter.y +
+                        targetSize.y * positionMultiplier +
+                        Text3D.floatingExtraSpace,
+                    targetCenter.z
+                )
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+            return [pos, new Euler(0, ThreeMath.degToRad(0), 0), anchor];
         } else if (this._anchor === 'front') {
-            let pos = new Vector3(
-                targetCenter.x,
-                targetCenter.y,
-                targetCenter.z +
-                    targetSize.z * positionMultiplier +
-                    Text3D.extraSpace
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'x',
+                this._mesh.textAlign,
+                1,
+                new Vector3(
+                    0,
+                    targetCenter.y,
+                    targetCenter.z +
+                        targetSize.z * positionMultiplier +
+                        Text3D.extraSpace
+                )
             );
 
-            return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
+            return [pos, new Euler(ThreeMath.degToRad(0), 0, 0), anchor];
         } else if (this._anchor === 'back') {
-            let pos = new Vector3(
-                targetCenter.x,
-                targetCenter.y,
-                targetCenter.z -
-                    targetSize.z * positionMultiplier -
-                    Text3D.extraSpace
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'x',
+                this._mesh.textAlign,
+                -1,
+                new Vector3(
+                    0,
+                    targetCenter.y,
+                    targetCenter.z -
+                        targetSize.z * positionMultiplier -
+                        Text3D.extraSpace
+                )
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
+            return [pos, new Euler(0, ThreeMath.degToRad(180), 0), anchor];
         } else if (this._anchor === 'left') {
-            let pos = new Vector3(
-                targetCenter.x +
-                    targetSize.x * positionMultiplier +
-                    Text3D.extraSpace,
-                targetCenter.y,
-                targetCenter.z
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'z',
+                this._mesh.textAlign,
+                -1,
+                new Vector3(
+                    targetCenter.x +
+                        targetSize.x * positionMultiplier +
+                        Text3D.extraSpace,
+                    targetCenter.y,
+                    0
+                )
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
+            return [pos, new Euler(0, ThreeMath.degToRad(90), 0), anchor];
         } else if (this._anchor === 'right') {
-            let pos = new Vector3(
-                targetCenter.x -
-                    targetSize.x * positionMultiplier -
-                    Text3D.extraSpace,
-                targetCenter.y,
-                targetCenter.z
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'z',
+                this._mesh.textAlign,
+                1,
+                new Vector3(
+                    targetCenter.x -
+                        targetSize.x * positionMultiplier -
+                        Text3D.extraSpace,
+                    targetCenter.y,
+                    0
+                )
             );
-
-            return [pos, new Euler(0, ThreeMath.degToRad(-90), 0)];
+            return [pos, new Euler(0, ThreeMath.degToRad(-90), 0), anchor];
         } else {
             // default to top
-            let pos = new Vector3(
-                targetCenter.x,
-                targetCenter.y +
-                    targetSize.y * positionMultiplier +
-                    Text3D.extraSpace,
-                targetCenter.z
+            let [pos, anchor] = this._positionOffset(
+                targetCenter,
+                targetSize,
+                'x',
+                this._mesh.textAlign,
+                1,
+                new Vector3(
+                    0,
+                    targetCenter.y +
+                        targetSize.y * positionMultiplier +
+                        Text3D.extraSpace,
+                    targetCenter.z
+                )
             );
 
             return [
                 pos,
                 new Euler(ThreeMath.degToRad(-90), ThreeMath.degToRad(0), 0),
+                anchor,
             ];
         }
+    }
+
+    private _positionOffset(
+        center: Vector3,
+        size: Vector3,
+        alignAxis: 'x' | 'y' | 'z',
+        align: 'left' | 'right' | 'center' | 'justify',
+        alignMultiplier: number,
+        offset: Vector3
+    ) {
+        const half = 0.5;
+        let final = offset.clone();
+        let alignOffset = new Vector3(
+            alignAxis === 'x'
+                ? align === 'left'
+                    ? center.x - size.x * half
+                    : align === 'right'
+                    ? center.x + size.x * half
+                    : center.x
+                : 0,
+            alignAxis === 'y'
+                ? align === 'left'
+                    ? center.y - size.y * half
+                    : align === 'right'
+                    ? center.y + size.y * half
+                    : center.y
+                : 0,
+            alignAxis === 'z'
+                ? align === 'left'
+                    ? center.z - size.z * half
+                    : align === 'right'
+                    ? center.z + size.z * half
+                    : center.z
+                : 0
+        );
+        alignOffset.multiplyScalar(alignMultiplier);
+        let anchor: 'left' | 'right' | 'center';
+        if (align === 'left') {
+            anchor = 'left';
+        } else if (align === 'right') {
+            anchor = 'right';
+        } else {
+            anchor = 'center';
+        }
+
+        final.add(alignOffset);
+        return [final, anchor] as const;
     }
 }
