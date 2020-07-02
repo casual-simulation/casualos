@@ -1365,6 +1365,38 @@ This is similar to a Skype or Zoom call except that all data is encrypted and is
 
 Only available on the player bot.
 
+### `dataPortal`
+
+The data portal is a special portal that can be used in a web request to get bot data directly from the server.
+Similar to webhooks, you specify the story and data portal in the query string of the URL.
+
+If given a bot ID, then the bot will be returned as JSON.
+
+If no bot matches the given value, then it will be treated as a tag and all the values for the given tag will be returned.
+
+If the tag ends with a common extension (like `.html` or `.txt` or `.json`), then the returned data will be [tagged](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) with the corresponding [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types).
+This will let web browsers and other common software know what type of data they are dealing with and handle it correctly. (i.e. display a webpage)
+Alternatively, you can specify the `dataPortalContentType` query parameter to override the default content type.
+
+If there is only one tag and it ends with an extension like specified above then the content directly from the tag will be returned.
+
+#### Examples:
+
+1. Request the JSON of the Bot with the given ID:
+```
+https://auxplayer.com?story=my-story&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+```
+
+2. Request all the <TagLink tag='label'/> tags values.
+```
+https://auxplayer.com?story=my-story&dataPortal=label
+```
+
+3. Request a web page from the `test.html` tag.
+```
+https://auxplayer.com?story=my-story&dataPortal=test.html
+```
+
 ### `pagePortalConfigBot`
 
 <Badges>
