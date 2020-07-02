@@ -1,6 +1,6 @@
 import * as Http from 'http';
 import * as Https from 'https';
-import express, { Response } from 'express';
+import express, { Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
@@ -23,6 +23,9 @@ import {
     ON_WEBHOOK_ACTION_NAME,
     merge,
     hasValue,
+    DATA_PORTAL,
+    createBot,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
@@ -86,6 +89,8 @@ import {
 import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
+import mime from 'mime';
+import sortBy from 'lodash/sortBy';
 
 const connect = pify(MongoClient.connect);
 
@@ -595,6 +600,14 @@ export class Server {
                 await this._handleWebhook(req, res);
             })
         );
+        this._app.get(
+            '/',
+            dataPortalMiddleware(
+                asyncMiddleware(async (req, res) => {
+                    await this._handleDataPortal(req, res);
+                })
+            )
+        );
 
         if (this._botServer) {
             this._app.use(this._botServer.app);
@@ -611,6 +624,77 @@ export class Server {
         const botStore = new MongoDBBotStore(this._config.bots, db);
         this._botServer = new BotHttpServer(botStore);
         this._botServer.configure();
+    }
+
+    private async _handleDataPortal(req: Request, res: Response) {
+        const id = req.query.story;
+        if (!id) {
+            res.sendStatus(400);
+            return;
+        }
+
+        const portal = req.query[DATA_PORTAL];
+        if (!portal) {
+            res.sendStatus(400);
+            return;
+        }
+
+        const exists = await this._webhooksClient
+            .branchInfo(id)
+            .pipe(
+                first(),
+                map(info => info.exists)
+            )
+            .toPromise();
+
+        if (!exists) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const user = getWebhooksUser();
+        const simulation = nodeSimulationForBranch(
+            user,
+            this._webhooksClient,
+            id
+        );
+        try {
+            await simulation.init();
+
+            // Wait for full sync
+            await simulation.connection.syncStateChanged
+                .pipe(first(synced => synced))
+                .toPromise();
+
+            const bot = simulation.helper.botsState[portal];
+            if (!!bot) {
+                res.send(createBot(bot.id, bot.tags));
+                return;
+            }
+
+            const bots = sortBy(
+                simulation.index.findBotsWithTag(portal),
+                b => b.id
+            );
+            const values = bots.map(b => calculateBotValue(null, b, portal));
+            const portalContentType = mime.getType(portal);
+            const contentType =
+                req.query[`${DATA_PORTAL}ContentType`] ||
+                portalContentType ||
+                'application/json';
+
+            if (hasValue(contentType)) {
+                res.set('Content-Type', contentType);
+            }
+
+            if (hasValue(portalContentType)) {
+                res.send(values[0] || '');
+            } else {
+                res.send(values);
+            }
+        } finally {
+            simulation.unsubscribe();
+        }
     }
 
     private async _handleWebhook(req: Request, res: Response) {
@@ -1001,5 +1085,20 @@ function getWebhooksUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-webhooks-token',
+    };
+}
+
+/**
+ * Middleware that calls the given function if the request is for the data portal
+ * and skips it if the request is not.
+ * @param func
+ */
+function dataPortalMiddleware(func: express.Handler) {
+    return function(req: Request, res: Response, next: NextFunction) {
+        if (hasValue(req.query.story) && hasValue(req.query[DATA_PORTAL])) {
+            return func(req, res, next);
+        } else {
+            return next();
+        }
     };
 }

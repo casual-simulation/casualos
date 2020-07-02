@@ -908,6 +908,11 @@ export const AUX_BOT_VERSION: number = 1;
 export const MEET_PORTAL: string = 'meetPortal';
 
 /**
+ * The name of the data portal.
+ */
+export const DATA_PORTAL: string = 'dataPortal';
+
+/**
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
@@ -950,6 +955,7 @@ export const KNOWN_TAGS: string[] = [
 
     MEET_PORTAL,
     `${MEET_PORTAL}ConfigBot`,
+    DATA_PORTAL,
 
     '_editingBot',
 
