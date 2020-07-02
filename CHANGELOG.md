@@ -13,6 +13,11 @@
             -   `data` - The value that should be used as the body of the response.
             -   `headers` - An object that contains the HTTP headers that should be set on the response. (Optional)
             -   `status` - The numerical status code that should be set on the response. (Optional) If omitted, status code 200 will be used.
+    -   Added the `dataPortal`.
+        -   This is a special portal that only works on web requests and must be specified in the URL.
+        -   Setting it to a Bot ID will return the JSON of the bot with the given ID.
+        -   Setting it to a tag will return all the values corresponding to the given tag.
+        -   Using a tag with a common extension (like `.html`) will tag the data as the corresponding content type so that normal software know how to interpret the data.
 
 ## V1.1.15
 
