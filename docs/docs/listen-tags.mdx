@@ -856,6 +856,13 @@ let response: {
 }
 ```
 
+The `headers` property is an object that specifies the [HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers) that should be set on the response.
+Each property is a header name and the value is the value set on the header.
+
+The `status` property is the numerical [status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) that should be set on the response. If omitted, then status code 200 will be used.
+
+The `data` property is the data that should be included in the response body.
+
 #### Examples:
 
 1. Return an arbitrary string of data.
