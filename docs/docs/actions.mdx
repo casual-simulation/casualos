@@ -537,6 +537,19 @@ const response = await webhook.post('https://example.com', {
 player.toast(response);
 ```
 
+### `uuid()`
+
+Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
+
+#### Examples:
+
+1. Generate a new UUID and toast it:
+```typescript
+const id = uuid();
+
+player.toast(id);
+```
+
 ## Bot Filters
 
 ### `byTag(tag, value?)`
@@ -2380,6 +2393,22 @@ Returns a promise that resolves with the list of story names.
 const stories = await server.stories();
 
 player.toast("Stories " + stories.join(','));
+```
+
+### `server.storyStatuses()`
+
+Gets the list of stories that are stored on the server along with the last time that they were updated.
+Returns a promise that resolves with the list of stories.
+
+The resolved list is sorted by the most recently updated first and the least recently updated last.
+
+#### Examples
+
+1. Get the list of stories on the server along with their status.
+```typescript
+const stories = await server.storyStatuses();
+
+player.toast("Stories " + getJSON(stories));
 ```
 
 ### `server.players()`

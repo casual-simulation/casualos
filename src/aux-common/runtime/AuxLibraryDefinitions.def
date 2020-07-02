@@ -1860,6 +1860,11 @@ declare global {
          */
         post(url: string, data?: any, options?: WebhookOptions): Promise<WebhookResult>;
     };
+    
+    /**
+    * Creates a Universally Unique IDentifier (UUID).
+    */
+    function uuid(): string;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.
@@ -2632,6 +2637,14 @@ declare global {
          * Gets the list of stories that are on the server.
          */
         stories(): Promise<string[]>;
+
+        /**
+         * Gets the list of stories that are on the server.
+         */
+        storyStatuses(): Promise<{
+            story: string,
+            lastUpdateTime: Date
+        }[]>;
 
         /**
          * Gets the list of player IDs that are connected to the story.

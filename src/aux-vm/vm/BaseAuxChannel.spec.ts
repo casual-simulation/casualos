@@ -7,6 +7,7 @@ import {
     DeviceAction,
     remote,
     DeviceInfo,
+    Action,
 } from '@casual-simulation/causal-trees';
 import {
     createBot,
@@ -26,12 +27,15 @@ import {
     toast,
     createBotClientPartition,
     AuxPartitions,
+    action,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import uuid from 'uuid/v4';
 import merge from 'lodash/merge';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { Subject } from 'rxjs';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -357,6 +361,133 @@ describe('BaseAuxChannel', () => {
                     event: botAdded(createBot('abc')),
                 },
             ]);
+        });
+
+        it('should buffer events that are sent before the channel is initialized', async () => {
+            let localEvents = [] as Action[];
+            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+
+            await channel.sendEvents([toast('abc')]);
+
+            expect(localEvents).toEqual([]);
+
+            await channel.initAndWait();
+
+            let deviceEvents: DeviceAction[] = [];
+            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+
+            expect(localEvents).toEqual([toast('abc')]);
+        });
+
+        it('should wait for the initial state before running actions', async () => {
+            // Setup a custom subject for all the onBotsAdded events
+            // this lets us control when the memory partition first sends a state
+            // update to the channel.
+            const _memory = <any>memory;
+            const subject = new Subject<Bot[]>();
+            Object.defineProperty(_memory, 'onBotsAdded', {
+                get() {
+                    return subject;
+                },
+            });
+            // _memory.onBotsAdded = subject;
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                },
+            };
+
+            channel = new AuxChannelImpl(user, device, config);
+
+            let localEvents = [] as Action[];
+            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test1', {
+                        test: '@player.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await channel.sendEvents([action('test')]);
+
+            expect(localEvents).toEqual([]);
+
+            await channel.initAndWait();
+
+            expect(localEvents).toEqual([]);
+
+            subject.next([
+                createBot('test1', {
+                    test: '@player.toast("abc");',
+                }),
+            ]);
+            await waitAsync();
+
+            expect(localEvents).toEqual([toast('abc')]);
+        });
+
+        it('should wait for the initial state even if the helper is initialized', async () => {
+            // Setup a custom subject for all the onBotsAdded events
+            // this lets us control when the memory partition first sends a state
+            // update to the channel.
+            const _memory = <any>memory;
+            const subject = new Subject<Bot[]>();
+            Object.defineProperty(_memory, 'onBotsAdded', {
+                get() {
+                    return subject;
+                },
+            });
+            // _memory.onBotsAdded = subject;
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                },
+            };
+
+            channel = new AuxChannelImpl(user, device, config);
+
+            let localEvents = [] as Action[];
+            channel.onLocalEvents.subscribe(e => localEvents.push(...e));
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test1', {
+                        test: '@player.toast("abc");',
+                    })
+                ),
+            ]);
+
+            expect(localEvents).toEqual([]);
+
+            await channel.initAndWait();
+
+            await channel.sendEvents([action('test')]);
+            expect(localEvents).toEqual([]);
+
+            subject.next([
+                createBot('test1', {
+                    test: '@player.toast("abc");',
+                }),
+            ]);
+            await waitAsync();
+
+            expect(localEvents).toEqual([toast('abc')]);
         });
 
         describe('load_space', () => {

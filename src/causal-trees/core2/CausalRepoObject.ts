@@ -27,6 +27,11 @@ export interface CausalRepoBranch {
      * The hash of the commit/index that this branch is pointing at.
      */
     hash: string;
+
+    /**
+     * The time that the branch was updated.
+     */
+    time?: Date;
 }
 
 /**
@@ -75,7 +80,20 @@ export interface CausalRepoSitelog {
      * The time that the sitelog was created at.
      */
     time: Date;
+
+    /**
+     * The type of the sitelog.
+     */
+    sitelogType?: CausalRepoSitelogType;
 }
+
+/**
+ * Defines a list of possible sitelog types.
+ * - null means that the type is not specified.
+ * - 'WATCH' means that the sitelog indicates that the branch was starting to be watched.
+ * - 'UNWATCH' means that the sitelog indicates that the branch was stopped being watched.
+ */
+export type CausalRepoSitelogType = null | 'WATCH' | 'UNWATCH';
 
 /**
  * Defines information about an index in a causal repo.
@@ -143,12 +161,18 @@ export interface CausalRepoAtom {
  * Creates a new causal repo branch.
  * @param name The name of the branch.
  * @param hash The hash that the branch points to.
+ * @param time The time that the branch was updated.
  */
-export function repoBranch(name: string, hash: string): CausalRepoBranch {
+export function repoBranch(
+    name: string,
+    hash: string,
+    time?: Date
+): CausalRepoBranch {
     return {
         type: 'branch',
         name: name,
         hash: hash,
+        time: time,
     };
 }
 
@@ -156,15 +180,17 @@ export function repoBranch(name: string, hash: string): CausalRepoBranch {
  * Creates a new CausalRepoBranch.
  * @param name The name of the branch.
  * @param ref The reference that the branch should point to.
+ * @param time The time that the branch should store.
  */
 export function branch(
     name: string,
-    ref: CausalRepoCommit | CausalRepoIndex | string
+    ref: CausalRepoCommit | CausalRepoIndex | string,
+    time?: Date
 ): CausalRepoBranch {
     if (typeof ref === 'string') {
-        return repoBranch(name, ref);
+        return repoBranch(name, ref, time);
     }
-    return repoBranch(name, getObjectHash(ref));
+    return repoBranch(name, getObjectHash(ref), time);
 }
 
 /**
@@ -184,12 +210,17 @@ export function reflog(head: CausalRepoBranch): CausalRepoReflog {
  * Creates a sitelog for the given branch.
  * @param branch The branch.
  */
-export function sitelog(branch: string, site: string): CausalRepoSitelog {
+export function sitelog(
+    branch: string,
+    site: string,
+    type?: CausalRepoSitelogType
+): CausalRepoSitelog {
     return {
         type: 'sitelog',
         branch: branch,
         site: site,
         time: new Date(),
+        sitelogType: type,
     };
 }
 

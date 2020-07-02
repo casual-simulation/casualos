@@ -29,6 +29,9 @@ import {
     botAdded,
     getPlayers,
     asyncResult,
+    action,
+    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+    ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { bot, tag, value, del } from '../aux-format-2';
@@ -187,7 +190,7 @@ describe('OtherPlayersPartition', () => {
                         remote(getPlayers(), undefined, undefined, 'task1'),
                     ]);
 
-                    expect(events).toEqual([
+                    expect(events.slice(2)).toEqual([
                         asyncResult('task1', [
                             'info1Session',
                             'info2Session',
@@ -244,7 +247,7 @@ describe('OtherPlayersPartition', () => {
                         remote(getPlayers(), undefined, undefined, 'task1'),
                     ]);
 
-                    expect(events).toEqual([
+                    expect(events.slice(3)).toEqual([
                         asyncResult('task1', [
                             'info1Session',
                             // Should include the current player
@@ -605,7 +608,7 @@ describe('OtherPlayersPartition', () => {
                 expect(connection.sentMessages.slice(1)).toEqual([]);
             });
 
-            it('should ignore the server user', async () => {
+            it('should not ignore the server user', async () => {
                 partition.connect();
 
                 await waitAsync();
@@ -620,7 +623,16 @@ describe('OtherPlayersPartition', () => {
 
                 await waitAsync();
 
-                expect(connection.sentMessages.slice(1)).toEqual([]);
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: WATCH_BRANCH,
+                        data: {
+                            branch: 'testBranch-player-server',
+                            temporary: true,
+                            siteId: expect.any(String),
+                        },
+                    },
+                ]);
             });
 
             it('should use the specified space', async () => {
@@ -673,6 +685,89 @@ describe('OtherPlayersPartition', () => {
                 // Should make a new state object on updates.
                 // This is because AuxHelper expects this in order for its caching to work properly.
                 expect(partition.state).not.toBe(state);
+            });
+
+            it('should send a onRemotePlayerSubscribed shout', async () => {
+                partition.connect();
+
+                await waitAsync();
+                const device1 = deviceInfo(
+                    'device1Username',
+                    'device1DeviceId',
+                    'device1SessionId'
+                );
+
+                let events = [] as Action[];
+                partition.onEvents.subscribe(e => events.push(...e));
+
+                deviceConnected.next({
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    action(
+                        ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                        null,
+                        null,
+                        {
+                            playerId: 'device1SessionId',
+                        }
+                    ),
+                ]);
+            });
+
+            it('should send a onRemotePlayerUnsubscribed shout', async () => {
+                partition.connect();
+
+                await waitAsync();
+                const device1 = deviceInfo(
+                    'device1Username',
+                    'device1DeviceId',
+                    'device1SessionId'
+                );
+
+                let events = [] as Action[];
+                partition.onEvents.subscribe(e => events.push(...e));
+
+                deviceConnected.next({
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                deviceDisconnected.next({
+                    branch: 'testBranch',
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    action(
+                        ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                        null,
+                        null,
+                        {
+                            playerId: 'device1SessionId',
+                        }
+                    ),
+                    action(
+                        ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                        null,
+                        null,
+                        {
+                            playerId: 'device1SessionId',
+                        }
+                    ),
+                ]);
             });
         });
 

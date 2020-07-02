@@ -1,5 +1,30 @@
 # CasualOS Changelog
 
+## V1.1.15
+
+### Date: 7/2/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added player space to the server.
+        -   This lets you send remote whispers to the `server` player.
+    -   Added the `server.storyStatuses()` function.
+        -   Returns a promise that resolves with a list of stories and the last time each story was updated.
+    -   Added the `@onRemotePlayerSubscribed` and `@onRemotePlayerUnsubscribed` listen tags.
+        -   They are triggered on _every_ other player when a player joins or leaves the story.
+        -   Additionally, they are triggered whenever connection to the other players is lost.
+        -   `that` is an object with the following properties:
+            -   `playerId` - The ID of the player that joined/left the story.
+    -   Added the `uuid()` function.
+        -   This function generates and returns a random [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+        -   Useful for creating unique identifiers.
+
+-   Bug Fixes
+    -   Fixed an issue where remote shouts would be sent to yourself twice.
+    -   Fixed an issue where labels would not always follow the `labelAlignment` tag when the text in the label was small enough to fit within the bot.
+
 ## V1.1.14
 
 ### Date: 6/29/2020

@@ -84,6 +84,7 @@ import {
     getStories,
     getPlayers,
     action,
+    getStoryStatuses,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -91,7 +92,7 @@ import {
     remote as calcRemote,
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
-import uuid from 'uuid/v4';
+import uuidv4 from 'uuid/v4';
 import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
@@ -297,6 +298,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteWhisper,
             remoteShout,
             webhook,
+            uuid,
 
             __energyCheck,
 
@@ -373,6 +375,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 storyPlayerCount,
                 totalPlayerCount,
                 stories,
+                storyStatuses,
                 players,
             },
 
@@ -1579,6 +1582,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of stories that are on the server.
+     */
+    function storyStatuses(): Promise<
+        {
+            story: string;
+            lastUpdateTime: Date;
+        }[]
+    > {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getStoryStatuses(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Gets the list of player IDs that are connected to the story.
      */
     function players(): Promise<string[]> {
@@ -1672,6 +1694,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcWebhook(<any>options, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates a Universally Unique IDentifier (UUID).
+     */
+    function uuid() {
+        return uuidv4();
     }
 
     // /**
@@ -2021,7 +2050,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      */
     function create(...mods: Mod[]) {
-        return createBase(() => uuid(), ...mods);
+        return createBase(() => uuidv4(), ...mods);
     }
 
     function createBase(idFactory: () => string, ...datas: Mod[]) {

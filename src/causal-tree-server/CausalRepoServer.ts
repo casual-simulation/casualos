@@ -63,11 +63,13 @@ import {
     WatchBranchEvent,
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
+    BRANCHES_STATUS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
 import { map, concatMap } from 'rxjs/operators';
 import { Observable, merge } from 'rxjs';
+import orderBy from 'lodash/orderBy';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -79,6 +81,10 @@ export class CausalRepoServer {
     private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
     private _repoPromises: Map<string, Promise<CausalRepo>>;
+    /**
+     * The map of branch and device IDs to their site ID.
+     */
+    private _branchSiteIds: Map<string, string>;
     private _branches: Map<string, WatchBranchEvent>;
 
     /**
@@ -98,6 +104,7 @@ export class CausalRepoServer {
         this._repos = new Map();
         this._repoPromises = new Map();
         this._branches = new Map();
+        this._branchSiteIds = new Map();
         this._stage = stageStore;
     }
 
@@ -131,9 +138,14 @@ export class CausalRepoServer {
                             this._branches.set(branch, event);
                         }
                         if (!event.temporary && event.siteId) {
+                            this._branchSiteIds.set(
+                                branchSiteIdKey(branch, device.id),
+                                event.siteId
+                            );
                             await this._store.logSite(
                                 event.branch,
-                                event.siteId
+                                event.siteId,
+                                'WATCH'
                             );
                         }
                         const repo = await this._getOrLoadRepo(
@@ -418,6 +430,7 @@ export class CausalRepoServer {
                         }
                         await this._deviceManager.leaveChannel(device, info);
 
+                        await this._logDisconnectedFromBranch(device, branch);
                         this._sendDisconnectedFromBranch(device, branch);
                         await this._tryUnloadBranch(info);
                     },
@@ -491,6 +504,21 @@ export class CausalRepoServer {
                             branches: branches.map(b => b.name),
                         });
                     },
+                    [BRANCHES_STATUS]: async () => {
+                        const branches = await this._store.getBranches(null);
+                        const sorted = orderBy(
+                            branches,
+                            [b => b.time || new Date(0, 1, 1)],
+                            ['desc']
+                        );
+
+                        conn.send(BRANCHES_STATUS, {
+                            branches: sorted.map(b => ({
+                                branch: b.name,
+                                lastUpdateTime: b.time || null,
+                            })),
+                        });
+                    },
                     [DEVICES]: async branch => {
                         let devices: DeviceConnection<any>[];
                         if (typeof branch !== 'undefined' && branch !== null) {
@@ -522,6 +550,10 @@ export class CausalRepoServer {
                     this._deviceManager.disconnectDevice(device);
 
                     for (let channel of channels) {
+                        await this._logDisconnectedFromBranch(
+                            device,
+                            channel.info.id
+                        );
                         this._sendDisconnectedFromBranch(
                             device,
                             channel.info.id
@@ -619,6 +651,19 @@ export class CausalRepoServer {
         info = devicesBranchInfo(branch);
         devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
+    }
+
+    private async _logDisconnectedFromBranch(
+        device: DeviceConnection<Connection>,
+        branch: string
+    ) {
+        const siteId = this._branchSiteIds.get(
+            branchSiteIdKey(branch, device.id)
+        );
+        if (siteId) {
+            this._store.logSite(branch, siteId, 'UNWATCH');
+        }
+        this._branchSiteIds.delete(branchSiteIdKey(branch, device.id));
     }
 
     private async _tryUnloadBranch(info: RealtimeChannelInfo) {
@@ -815,4 +860,8 @@ function handleEvents(
             return callback(value);
         })
     );
+}
+
+function branchSiteIdKey(branch: string, deviceId: string): string {
+    return `${branch}-${deviceId}`;
 }

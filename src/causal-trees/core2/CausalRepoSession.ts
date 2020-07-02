@@ -54,6 +54,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/unwatch_branch_devices': string;
     'repo/branch_info': string;
     'repo/branches': void;
+    'repo/branches_status': void;
     'repo/devices': string;
     'repo/commit': CommitEvent;
     'repo/watch_commits': string;

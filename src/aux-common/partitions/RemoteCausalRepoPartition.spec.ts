@@ -18,6 +18,8 @@ import {
     WATCH_BRANCH,
     DEVICES,
     DevicesEvent,
+    BRANCHES_STATUS,
+    BranchesStatusEvent,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -45,6 +47,7 @@ import {
     getPlayers,
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    getStoryStatuses,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -89,6 +92,7 @@ describe('RemoteCausalRepoPartition', () => {
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
+        let errors: any[];
         let sub: Subscription;
 
         beforeEach(async () => {
@@ -104,6 +108,7 @@ describe('RemoteCausalRepoPartition', () => {
             added = [];
             removed = [];
             updated = [];
+            errors = [];
 
             setupPartition({
                 type: 'remote_causal_repo',
@@ -234,6 +239,28 @@ describe('RemoteCausalRepoPartition', () => {
                         },
                     },
                 ]);
+            });
+
+            it('should not send the remote event if remote events are disabled', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    remoteEvents: false,
+                });
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        {
+                            type: 'def',
+                        },
+                        {
+                            deviceId: 'device',
+                        }
+                    ),
+                ]);
+
+                expect(connection.sentMessages).toEqual([]);
             });
 
             it('should listen for device events from the connection', async () => {
@@ -471,6 +498,30 @@ describe('RemoteCausalRepoPartition', () => {
                     ]);
                 });
 
+                it(`should send a ${BRANCHES_STATUS} event to the server if told to include statuses`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getStoryStatuses(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            name: BRANCHES_STATUS,
+                            data: undefined,
+                        },
+                    ]);
+                });
+
                 it(`should send an async result with the response`, async () => {
                     setupPartition({
                         type: 'remote_causal_repo',
@@ -528,6 +579,67 @@ describe('RemoteCausalRepoPartition', () => {
 
                     expect(events).toEqual([
                         asyncResult('task1', ['abc', 'def']),
+                    ]);
+                });
+
+                it(`should filter out branches that start with a dollar sign when including statuses`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    const branches = new Subject<BranchesStatusEvent>();
+                    connection.events.set(BRANCHES_STATUS, branches);
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getStoryStatuses(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    branches.next({
+                        branches: [
+                            {
+                                branch: '$admin',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: '$$other',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: 'abc',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                branch: 'def',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                        ],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            {
+                                story: 'abc',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                            {
+                                story: 'def',
+                                lastUpdateTime: new Date(2019, 1, 1),
+                            },
+                        ]),
                     ]);
                 });
             });
@@ -779,6 +891,27 @@ describe('RemoteCausalRepoPartition', () => {
                 await waitAsync();
 
                 expect(connection.sentMessages.slice(1)).toEqual([]);
+            });
+
+            it('should handle an ADD_ATOMS event without any new atoms', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    static: true,
+                });
+
+                partition.connect();
+
+                const a1 = atom(atomId('a', 1), null, {});
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    removedAtoms: [a1.hash],
+                });
+                await waitAsync();
+
+                expect(errors).toEqual([]);
             });
         });
 
@@ -1176,6 +1309,7 @@ describe('RemoteCausalRepoPartition', () => {
             sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
             sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
             sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+            sub.add(partition.onError.subscribe(e => errors.push(e)));
         }
     });
 });

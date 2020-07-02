@@ -477,6 +477,7 @@ describe('CausalRepo', () => {
                     type: 'branch',
                     name: 'missing',
                     hash: null,
+                    time: expect.any(Date),
                 });
                 expect(repo.currentCommit).toEqual(null);
             });
@@ -491,6 +492,7 @@ describe('CausalRepo', () => {
                     type: 'branch',
                     name: 'master',
                     hash: null,
+                    time: expect.any(Date),
                 });
                 expect(repo.currentCommit).toBe(null);
             });
@@ -504,6 +506,7 @@ describe('CausalRepo', () => {
                     type: 'branch',
                     name: 'master',
                     hash: idx.data.hash,
+                    time: expect.any(Date),
                 });
 
                 const c = repo.currentCommit;
@@ -811,7 +814,9 @@ describe('CausalRepo', () => {
 
                 await repo.reset(c1.hash);
 
-                expect(repo.getHead()).toEqual(branch('master', c1));
+                expect(repo.getHead()).toEqual(
+                    branch('master', c1, expect.any(Date))
+                );
                 expect(repo.currentCommit).toEqual({
                     commit: c1,
                     index: idx,

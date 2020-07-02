@@ -43,6 +43,8 @@ import {
     DevicesEvent,
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
+    BRANCHES_STATUS,
+    BranchesStatusEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -1217,6 +1219,74 @@ describe('CausalRepoClient', () => {
             expect(infos).toEqual([
                 {
                     branches: ['abc', 'def'],
+                },
+            ]);
+        });
+    });
+
+    describe('branchesStatus()', () => {
+        it('should send a branches_status event after connecting', async () => {
+            client.branchesStatus().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: BRANCHES_STATUS,
+                    data: undefined,
+                },
+            ]);
+        });
+
+        it('should return an observable of info for the branches', async () => {
+            const branches = new Subject<BranchesStatusEvent>();
+            connection.events.set(BRANCHES_STATUS, branches);
+
+            let infos = [] as BranchesStatusEvent[];
+            client.branchesStatus().subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            branches.next({
+                branches: [
+                    {
+                        branch: 'abc',
+                        lastUpdateTime: new Date(2019, 1, 1),
+                    },
+                    {
+                        branch: 'def',
+                        lastUpdateTime: new Date(2018, 12, 31),
+                    },
+                ],
+            });
+            await waitAsync();
+
+            branches.next({
+                branches: [
+                    {
+                        branch: 'abc',
+                        lastUpdateTime: new Date(2019, 1, 1),
+                    },
+                ],
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branches: [
+                        {
+                            branch: 'abc',
+                            lastUpdateTime: new Date(2019, 1, 1),
+                        },
+                        {
+                            branch: 'def',
+                            lastUpdateTime: new Date(2018, 12, 31),
+                        },
+                    ],
                 },
             ]);
         });
