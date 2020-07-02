@@ -25,6 +25,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
+import { ChannelActionResult } from '../vm';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -164,6 +165,21 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         const botIds = bots ? bots.map(f => f.id) : null;
         const actionData = action(eventName, botIds, this.userId, arg);
         await this._vm.sendEvents([actionData]);
+    }
+
+    /**
+     * Runs the given event on the given bots.
+     * @param eventName The name of the event to run.
+     * @param bots The bots that should be searched for handlers for the event name.
+     * @param arg The argument that should be passed to the event handlers.
+     */
+    async shout(
+        eventName: string,
+        bots: Bot[],
+        arg?: any
+    ): Promise<ChannelActionResult> {
+        const botIds = bots ? bots.map(f => f.id) : null;
+        return await this._vm.shout(eventName, botIds, arg);
     }
 
     /**
