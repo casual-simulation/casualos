@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V1.1.16
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+    -   Added the ability to respond to webhooks by returning data from `@onWebhook`.
+        -   If the returned value is a string, then it will be used for the response.
+        -   If the returned value is an object, then it should have the following properties:
+            -   `data` - The value that should be used as the body of the response.
+            -   `headers` - An object that contains the HTTP headers that should be set on the response. (Optional)
+            -   `status` - The numerical status code that should be set on the response. (Optional) If omitted, status code 200 will be used.
+
 ## V1.1.15
 
 ### Date: 7/2/2020
