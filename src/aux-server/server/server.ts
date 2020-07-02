@@ -19,7 +19,11 @@ import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBRepoStore } from '@casual-simulation/causal-tree-store-mongodb';
-import { ON_WEBHOOK_ACTION_NAME, merge } from '@casual-simulation/aux-common';
+import {
+    ON_WEBHOOK_ACTION_NAME,
+    merge,
+    hasValue,
+} from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
@@ -579,18 +583,24 @@ export class Server {
         await this._serveDirectory();
         await this._startDirectoryClient();
 
-        this._app.use(this._client.app);
-
-        if (this._botServer) {
-            this._app.use(this._botServer.app);
-        }
-
         this._app.all(
             '/webhook/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
+        this._app.all(
+            '/webhook',
+            asyncMiddleware(async (req, res) => {
+                await this._handleWebhook(req, res);
+            })
+        );
+
+        if (this._botServer) {
+            this._app.use(this._botServer.app);
+        }
+
+        this._app.use(this._client.app);
     }
 
     private _configureBotHttpServer() {
@@ -610,16 +620,19 @@ export class Server {
             return;
         }
 
-        let handled = await this._handleV2Webhook(req, id);
+        let handled = await this._handleV2Webhook(req, res, id);
         if (handled) {
-            res.sendStatus(204);
             return;
         }
 
         res.sendStatus(404);
     }
 
-    private async _handleV2Webhook(req: Request, id: string): Promise<boolean> {
+    private async _handleV2Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
         const exists = await this._webhooksClient
             .branchInfo(id)
             .pipe(
@@ -640,22 +653,52 @@ export class Server {
         );
         try {
             await simulation.init();
-            await this._sendWebhook(req, simulation);
+            return await this._sendWebhook(req, res, simulation);
         } finally {
             simulation.unsubscribe();
         }
-
-        return true;
     }
 
-    private async _sendWebhook(req: Request, simulation: Simulation) {
+    private async _sendWebhook(
+        req: Request,
+        res: Response,
+        simulation: Simulation
+    ) {
         const fullUrl = requestUrl(req, req.protocol);
-        await simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
-            method: req.method,
-            url: fullUrl,
-            data: req.body,
-            headers: req.headers,
-        });
+        const result = await simulation.helper.shout(
+            ON_WEBHOOK_ACTION_NAME,
+            null,
+            {
+                method: req.method,
+                url: fullUrl,
+                data: req.body,
+                headers: req.headers,
+            }
+        );
+
+        if (result.results.length > 0) {
+            let firstValue = result.results.find(r => hasValue(r));
+            if (firstValue) {
+                if (typeof firstValue === 'object') {
+                    if (typeof firstValue.headers === 'object') {
+                        res.set(firstValue.headers);
+                    }
+
+                    if (typeof firstValue.status === 'number') {
+                        res.status(firstValue.status);
+                    }
+
+                    res.send(firstValue.data);
+                } else {
+                    res.send(firstValue);
+                }
+            } else {
+                res.sendStatus(204);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private async _serveDirectory() {
