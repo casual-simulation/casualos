@@ -830,6 +830,7 @@ let that: {
 ### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.
+If data is returned, the first result will be used as the HTTP response.
 
 #### Arguments:
 ```typescript
@@ -838,6 +839,45 @@ let that: {
   url: string,
   data: any,
   headers: any
+};
+```
+
+#### Return Value:
+
+If an object is returned, it is expected to have the following form:
+
+```typescript
+let response: {
+    headers?: {
+        [key: string]: any
+    },
+    status?: number,
+    data: any,
+}
+```
+
+The `headers` property is an object that specifies the [HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers) that should be set on the response.
+Each property is a header name and the value is the value set on the header.
+
+The `status` property is the numerical [status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) that should be set on the response. If omitted, then status code 200 will be used.
+
+The `data` property is the data that should be included in the response body.
+
+#### Examples:
+
+1. Return an arbitrary string of data.
+```typescript
+return 'hello from webhook!';
+```
+
+2. Return a response with a custom header.
+```typescript
+return {
+    headers: {
+        'Content-Type': 'text/plain',
+        MyCustomHeader: 'custom value'
+    },
+    data: 'hello from webhook!'
 };
 ```
 

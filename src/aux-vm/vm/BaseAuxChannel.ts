@@ -1,6 +1,6 @@
 import { Subject, SubscriptionLike } from 'rxjs';
 import { tap, first } from 'rxjs/operators';
-import { AuxChannel } from './AuxChannel';
+import { AuxChannel, ChannelActionResult } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
@@ -276,6 +276,24 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         } else {
             this._eventBuffer.push(...events);
         }
+    }
+
+    async shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult> {
+        if (!this._runtime) {
+            throw new Error(
+                'Unable to execute a shout without being initialized.'
+            );
+        }
+        const result = this._runtime.shout(eventName, botIds, arg);
+
+        return {
+            actions: result.actions,
+            results: await Promise.all(result.results),
+        };
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {

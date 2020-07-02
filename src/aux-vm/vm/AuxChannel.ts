@@ -3,6 +3,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     BotDependentInfo,
+    ActionResult,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
@@ -86,6 +87,20 @@ export interface AuxChannel {
     sendEvents(events: BotAction[]): Promise<void>;
 
     /**
+     * Executes a shout with the given event name on the given bot IDs with the given argument.
+     * Also dispatches any actions and errors that occur.
+     * Returns the results from the event.
+     * @param eventName The name of the event.
+     * @param botIds The IDs of the bots that the shout is being sent to.
+     * @param arg The argument to include in the shout.
+     */
+    shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult>;
+
+    /**
      * Runs the given list of formulas.
      * @param formulas The formulas.
      */
@@ -118,4 +133,16 @@ export interface AuxChannel {
      * Gets the list of tags that are in use.
      */
     getTags(): Promise<string[]>;
+}
+
+export interface ChannelActionResult {
+    /**
+     * The actions that were queued.
+     */
+    actions: BotAction[];
+
+    /**
+     * The results from the scripts that were run.
+     */
+    results: any[];
 }

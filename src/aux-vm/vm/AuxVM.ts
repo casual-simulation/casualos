@@ -10,6 +10,7 @@ import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { StoredAux } from '../StoredAux';
+import { ChannelActionResult } from './AuxChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -62,6 +63,20 @@ export interface AuxVM extends Initable {
      * @param events The events to send to the simulation.
      */
     sendEvents(events: BotAction[]): Promise<void>;
+
+    /**
+     * Executes a shout with the given event name on the given bot IDs with the given argument.
+     * Also dispatches any actions and errors that occur.
+     * Returns the results from the event.
+     * @param eventName The name of the event.
+     * @param botIds The IDs of the bots that the shout is being sent to.
+     * @param arg The argument to include in the shout.
+     */
+    shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): Promise<ChannelActionResult>;
 
     /**
      * Runs the given list of formulas as actions in a batch.

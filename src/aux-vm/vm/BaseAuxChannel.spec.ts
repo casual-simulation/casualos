@@ -600,6 +600,69 @@ describe('BaseAuxChannel', () => {
         });
     });
 
+    describe('shout()', () => {
+        it('should execute the given shout and return the results', async () => {
+            await channel.initAndWait();
+
+            await channel.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        getValue: `@return 99;`,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        getValue: `@player.toast("abc");`,
+                    })
+                ),
+            ]);
+
+            const result = await channel.shout('getValue');
+
+            expect(result).toEqual({
+                results: [99, undefined],
+                actions: [toast('abc')],
+            });
+        });
+
+        it('should unwrap all promises', async () => {
+            await channel.initAndWait();
+
+            await channel.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        getValue: `@return 99;`,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        getValue: `@player.toast("abc");`,
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        getValue: `@await Promise.resolve(); return 'fun';`,
+                    })
+                ),
+            ]);
+
+            const result = await channel.shout('getValue');
+
+            expect(result).toEqual({
+                results: [99, undefined, 'fun'],
+                actions: [toast('abc')],
+            });
+        });
+
+        it('should fail when not initialized', async () => {
+            expect(channel.shout('getValue')).rejects.toEqual(
+                new Error(
+                    'Unable to execute a shout without being initialized.'
+                )
+            );
+        });
+    });
+
     describe('formulaBatch()', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
