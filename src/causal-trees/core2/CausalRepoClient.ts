@@ -53,6 +53,8 @@ import {
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -467,12 +469,23 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param message The commit message.
      */
-    commit(branch: string, message: string) {
-        const event: CommitEvent = {
-            branch: branch,
-            message: message,
-        };
-        this._client.send(COMMIT, event);
+    commit(branch: string, message: string): Observable<CommitCreatedEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: CommitEvent = {
+                    branch: branch,
+                    message: message,
+                };
+                this._client.send(COMMIT, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<CommitCreatedEvent>(COMMIT_CREATED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     /**

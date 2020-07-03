@@ -2423,7 +2423,8 @@ describe('AuxLibrary', () => {
 
         describe('server.markHistory()', () => {
             it('should emit a mark_history event', () => {
-                const action = library.api.server.markHistory({
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.markHistory({
                     message: 'testMark',
                 });
                 const expected = remote(
@@ -2431,10 +2432,21 @@ describe('AuxLibrary', () => {
                         message: 'testMark',
                     }),
                     undefined,
-                    false
+                    false,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.markHistory({
+                    message: 'test',
+                });
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

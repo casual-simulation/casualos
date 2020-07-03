@@ -1456,7 +1456,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      */
     function markHistory(options: MarkHistoryOptions) {
-        return remote(calcMarkHistory(options), undefined, false);
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcMarkHistory(options),
+            undefined,
+            false,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**

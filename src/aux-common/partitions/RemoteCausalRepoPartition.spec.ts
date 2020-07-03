@@ -20,6 +20,8 @@ import {
     DevicesEvent,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -390,6 +392,39 @@ describe('RemoteCausalRepoPartition', () => {
                             },
                         },
                     ]);
+                });
+
+                it(`should emit an async result for the task`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    let commitCreated = new Subject<CommitCreatedEvent>();
+                    connection.events.set(COMMIT_CREATED, commitCreated);
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            <any>{
+                                type: 'mark_history',
+                                message: 'newCommit',
+                            },
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    commitCreated.next({
+                        branch: 'testBranch',
+                    });
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', undefined)]);
                 });
             });
 

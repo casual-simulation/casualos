@@ -48,6 +48,7 @@ import {
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
+    COMMIT_CREATED,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -2223,6 +2224,12 @@ describe('CausalRepoServer', () => {
                         commits: [newCommit],
                     },
                 },
+                {
+                    name: COMMIT_CREATED,
+                    data: {
+                        branch: 'testBranch',
+                    },
+                },
             ]);
         });
 
@@ -2294,12 +2301,72 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             // Should have the newly added atoms in the stage
-            expect(device.messages.slice(2)).toEqual([
+            expect(device.messages.slice(3)).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3, a4, a5, a6],
+                    },
+                },
+            ]);
+        });
+
+        it('should send a commit created event to the device that requested the commit', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const makeCommit = new Subject<CommitEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(COMMIT, makeCommit);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            makeCommit.next({
+                branch: 'testBranch',
+                message: 'newCommit',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: COMMIT_CREATED,
+                    data: {
+                        branch: 'testBranch',
                     },
                 },
             ]);

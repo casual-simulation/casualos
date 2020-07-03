@@ -189,7 +189,24 @@ export class RemoteCausalRepoPartitionImpl
             if (event.type === 'remote') {
                 if (event.event.type === 'mark_history') {
                     const markHistory = <MarkHistoryAction>event.event;
-                    this._client.commit(this._branch, markHistory.message);
+                    this._client
+                        .commit(this._branch, markHistory.message)
+                        .subscribe(
+                            () => {
+                                if (hasValue(event.taskId)) {
+                                    this._onEvents.next([
+                                        asyncResult(event.taskId, undefined),
+                                    ]);
+                                }
+                            },
+                            err => {
+                                if (hasValue(event.taskId)) {
+                                    this._onEvents.next([
+                                        asyncError(event.taskId, err),
+                                    ]);
+                                }
+                            }
+                        );
                 } else if (event.event.type === 'browse_history') {
                     this._onEvents.next([
                         loadSpace(

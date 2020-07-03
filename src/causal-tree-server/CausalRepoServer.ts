@@ -64,6 +64,7 @@ import {
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
+    COMMIT_CREATED,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -260,6 +261,9 @@ export class CausalRepoServer {
 
                         if (repo.hasChanges()) {
                             await this._commitToRepo(event, repo);
+                            sendToDevices([device], COMMIT_CREATED, {
+                                branch: event.branch,
+                            });
                         }
                     },
                     [WATCH_COMMITS]: async branch => {

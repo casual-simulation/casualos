@@ -9387,7 +9387,8 @@ describe('original action tests', () => {
                         message: 'testMark',
                     }),
                     undefined,
-                    false
+                    false,
+                    'uuid-0'
                 ),
             ]);
         });
