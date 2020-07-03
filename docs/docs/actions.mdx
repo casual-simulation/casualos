@@ -2181,6 +2181,8 @@ await server.browseHistory();
 Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
 Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
 
+Returns a promise that resolves when the history mark has been created.
+
 The **first parameter** are the options that should be used to mark the history point.
 It should be an object with the following properties:
 - `message` - The message that the new mark should have. Use this as a way to communicate what was special about this save point.
@@ -2189,7 +2191,7 @@ It should be an object with the following properties:
 
 1. Save the current state of the `shared` space.
 ```typescript
-server.markHistory({
+await server.markHistory({
     message: 'First Version of my AUX'
 });
 ```
