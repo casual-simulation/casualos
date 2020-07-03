@@ -10,6 +10,13 @@
     -   Improved the `player.run()` function to return a promise that can be awaited to get the result of the script (or wait until the script has been executed).
     -   Improved the `server.loadErrors()` function to return a promise that can be awaited to get the list of bots that were loaded.
     -   Improved the `server.destroyErrors()` function to return a promise that resolves once the error bots are destroyed.
+    -   Improved the `server.loadFile()` function to return a promise that resolves once the file is loaded.
+    -   Improved the `server.saveFile()` function to return a promise that resolves once the file is saved.
+    -   Improved the `server.setupStory()` function to return a promise that resolves once the story is setup.
+    -   Improved the `server.browseHistory()` function to return a promise that resolves once the history is loaded.
+    -   Improved the `server.markHistory()` function to return a promise that resolves once the history is saved.
+    -   Improved the `server.restoreHistoryMark()` function to return a promise that resolves once the history is restored.
+    -   Improved the `server.restoreHistoryMarkToStory()` function to return a promise that resolves once the history is restored.
 
 ## V1.1.17
 
