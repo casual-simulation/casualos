@@ -2451,28 +2451,52 @@ describe('AuxLibrary', () => {
 
         describe('server.loadFile()', () => {
             it('should issue a LoadFileAction in a remote event', () => {
-                const action = library.api.server.loadFile('path');
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.loadFile('path');
                 const expected = remote(
                     loadFile({
                         path: 'path',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.loadFile('path');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.saveFile()', () => {
             it('should issue a SaveFileAction in a remote event', () => {
-                const action = library.api.server.saveFile('path', 'data');
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.saveFile('path', 'data');
                 const expected = remote(
                     saveFile({
                         path: 'path',
                         data: 'data',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.saveFile('path', 'data');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

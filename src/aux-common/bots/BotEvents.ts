@@ -55,8 +55,6 @@ export type ExtraActions =
     | UnloadStoryAction
     | SuperShoutAction
     | SendWebhookAction
-    | LoadFileAction
-    | SaveFileAction
     | GoToDimensionAction
     | GoToURLAction
     | PlaySoundAction
@@ -103,6 +101,8 @@ export type AsyncActions =
     | ClearSpaceAction
     | SendWebhookAction
     | UnlockSpaceAction
+    | LoadFileAction
+    | SaveFileAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -118,6 +118,12 @@ export interface AsyncAction extends Action {
      * The ID of the async task.
      */
     taskId: number | string;
+
+    /**
+     * The ID of the player that created this task.
+     * Set by remote action handlers when a task is recieved from a remote player.
+     */
+    playerId?: string;
 }
 
 /**
@@ -709,7 +715,7 @@ export interface WebhookOptions {
 /**
  * Defines an event that is used to load a file.
  */
-export interface LoadFileAction extends Action {
+export interface LoadFileAction extends AsyncAction {
     type: 'load_file';
 
     /**
@@ -736,7 +742,7 @@ export interface LoadFileOptions {
 /**
  * Defines an event that is used to save a file to a drive.
  */
-export interface SaveFileAction extends Action {
+export interface SaveFileAction extends AsyncAction {
     type: 'save_file';
 
     /**
@@ -1905,22 +1911,32 @@ export function webhook(
 /**
  * Creates a new LoadFileAction.
  * @param options The options.
+ * @param taskId The ID of the async task.
  */
-export function loadFile(options: LoadFileOptions): LoadFileAction {
+export function loadFile(
+    options: LoadFileOptions,
+    taskId?: number | string
+): LoadFileAction {
     return {
         type: 'load_file',
         options: options,
+        taskId,
     };
 }
 
 /**
  * Creates a new SaveFileAction.
  * @param options The options.
+ * @param taskId The ID of the async task.
  */
-export function saveFile(options: SaveFileOptions): SaveFileAction {
+export function saveFile(
+    options: SaveFileOptions,
+    taskId?: number | string
+): SaveFileAction {
     return {
         type: 'save_file',
         options: options,
+        taskId,
     };
 }
 

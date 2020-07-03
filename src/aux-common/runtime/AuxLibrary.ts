@@ -1484,12 +1484,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options.
      */
     function loadFile(path: string, options?: LoadFileOptions) {
-        return remote(
+        const task = context.createTask(true, true);
+        const event = calcRemote(
             calcLoadFile({
                 path: path,
                 ...(options || {}),
-            })
+            }),
+            undefined,
+            undefined,
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1499,13 +1504,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options to use.
      */
     function saveFile(path: string, data: string, options?: SaveFileOptions) {
-        return remote(
+        const task = context.createTask(true, true);
+        const event = calcRemote(
             calcSaveFile({
                 path: path,
                 data: data,
                 ...(options || {}),
-            })
+            }),
+            undefined,
+            undefined,
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**

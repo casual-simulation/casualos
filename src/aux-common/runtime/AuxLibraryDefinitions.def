@@ -839,6 +839,15 @@ declare interface LoadFileOptions {
 }
 
 /**
+ * The data returned from loading a file.
+ */
+declare interface LoadFileResult {
+    path: string;
+    url: string;
+    data: string | Buffer;
+}
+
+/**
  * Defines an event that is used to save a file to a drive.
  */
 declare interface SaveFileAction extends Action {
@@ -873,6 +882,14 @@ declare interface SaveFileOptions {
      * Whether to overwrite existing files.
      */
     overwriteExistingFile?: boolean;
+}
+
+/**
+ * The data returned from saving a file.
+ */
+declare interface SaveFileResult {
+    path: string;
+    url: string;
 }
 
 /**
@@ -2656,14 +2673,14 @@ declare global {
          * @param path The path of the file.
          * @param options The options.
          */
-        loadFile(path: string, options?: LoadFileOptions): RemoteAction;
+        loadFile(path: string, options?: LoadFileOptions): Promise<LoadFileResult>;
     
         /**
          * Saves a file on the server at the given path.
          * @param path The path of the file.
          * @param options The options.
          */
-        saveFile(path: string, data: string, options?: SaveFileOptions): RemoteAction;
+        saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
     
         /**
          * Finishes the checkout process by charging the payment fee to the user.

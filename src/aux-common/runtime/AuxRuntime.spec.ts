@@ -7173,7 +7173,10 @@ describe('original action tests', () => {
                 remote(
                     loadFile({
                         path: 'path',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'uuid-0'
                 ),
             ]);
         });
