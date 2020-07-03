@@ -9409,7 +9409,9 @@ describe('original action tests', () => {
             const botAction = action('test', ['thisBot'], 'userBot');
             const result = calculateActionResults(state, botAction);
 
-            expect(result.actions).toEqual([remote(browseHistory())]);
+            expect(result.actions).toEqual([
+                remote(browseHistory(), undefined, undefined, 'uuid-0'),
+            ]);
         });
     });
 

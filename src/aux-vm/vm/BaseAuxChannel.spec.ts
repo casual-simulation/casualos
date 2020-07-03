@@ -725,9 +725,9 @@ describe('BaseAuxChannel', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
 
-            await channel.formulaBatch(['server.browseHistory()']);
+            await channel.formulaBatch(['remote(player.toast("abc"))']);
 
-            expect(channel.remoteEvents).toEqual([remote(browseHistory())]);
+            expect(channel.remoteEvents).toEqual([remote(toast('abc'))]);
         });
     });
 
