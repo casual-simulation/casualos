@@ -189,6 +189,16 @@ module.exports = {
                 events: true,
                 entry: path.resolve(__dirname, 'shared', 'sw.ts'),
             },
+            cacheMaps: [
+                {
+                    match: function(url) {
+                        if (url.searchParams.has('dataPortal')) {
+                            return url;
+                        }
+                    },
+                    requestTypes: ['navigate'],
+                },
+            ],
             externals: [],
         }),
         new CopyPlugin([

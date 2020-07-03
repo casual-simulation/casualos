@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.17
+
+### Date: 7/3/2020
+
+### Changes:
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where the web browser service worker would incorrectly intercept requests for data portals.
+
 ## V1.1.16
 
 ### Date: 7/2/2020
