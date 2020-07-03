@@ -986,6 +986,8 @@ Runs the given script.
 The script will be executed in a separate environment with no `bot`, `tags`, `this`, `data`, and `that` variables.
 This means that you need to use the <ActionLink action='getBot(...filters)'/> or <ActionLink action='getBots(...filters)'/> functions to read bot data.
 
+Returns a promise that resolves with the returned script value after it has been executed.
+
 The **first parameter** is the script that should be executed.
 
 #### Examples:
@@ -998,6 +1000,12 @@ player.run("player.toast('hello');");
 2. Run a script from the `#script` tag on the current bot.
 ```typescript
 player.run(tags.script);
+```
+
+3. Run a script and toast the result.
+```typescript
+const result = await player.run("return 594 + 391");
+player.toast(result);
 ```
 
 ### `player.replaceDragBot(botOrMod)`
