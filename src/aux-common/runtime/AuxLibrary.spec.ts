@@ -2478,9 +2478,9 @@ describe('AuxLibrary', () => {
 
         describe('server.destroyErrors()', () => {
             it('should issue a ClearSpaceAction', () => {
-                const action = library.api.server.destroyErrors();
-                const expected = clearSpace('error');
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.destroyErrors();
+                const expected = clearSpace('error', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

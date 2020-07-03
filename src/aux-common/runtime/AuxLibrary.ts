@@ -1512,7 +1512,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Destroys all the errors in the story.
      */
     function destroyErrors() {
-        return addAction(clearSpace('error'));
+        const task = context.createTask();
+        const event = clearSpace('error', task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

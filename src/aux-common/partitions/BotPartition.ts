@@ -39,6 +39,7 @@ import {
     Bot,
     BotsState,
     asyncResult,
+    ClearSpaceAction,
 } from '../bots';
 import values from 'lodash/values';
 
@@ -126,7 +127,7 @@ export class BotPartitionImpl implements BotPartition {
             if (e.type === 'load_bots') {
                 this._loadBots(e);
             } else if (e.type === 'clear_space') {
-                this._clearBots();
+                this._clearBots(e);
             }
         }
 
@@ -193,12 +194,16 @@ export class BotPartitionImpl implements BotPartition {
         }
     }
 
-    private async _clearBots() {
+    private async _clearBots(event: ClearSpaceAction) {
         await this._client.clearBots(this._story);
 
         const ids = sortBy(values(this.state).map(b => b.id));
         this.state = {};
 
         this._onBotsRemoved.next(ids);
+
+        if (hasValue(event.taskId)) {
+            this._onEvents.next([asyncResult(event.taskId, undefined)]);
+        }
     }
 }

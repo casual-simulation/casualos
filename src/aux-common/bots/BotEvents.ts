@@ -85,7 +85,6 @@ export type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | ClearSpaceAction
     | LocalFormAnimationAction
     | GetPlayerCountAction;
 
@@ -99,6 +98,7 @@ export type AsyncActions =
     | ShareAction
     | RunScriptAction
     | LoadBotsAction
+    | ClearSpaceAction
     | SendWebhookAction
     | UnlockSpaceAction
     | RemoteAction
@@ -1197,7 +1197,7 @@ export interface TagFilter {
  * Only supported for the following spaces:
  * - error
  */
-export interface ClearSpaceAction {
+export interface ClearSpaceAction extends AsyncAction {
     type: 'clear_space';
 
     /**
@@ -2190,11 +2190,16 @@ export function loadBots(
  * - error
  *
  * @param space The space to clear.
+ * @param taskId The ID of the async task.
  */
-export function clearSpace(space: BotSpace): ClearSpaceAction {
+export function clearSpace(
+    space: BotSpace,
+    taskId?: number | string
+): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+        taskId,
     };
 }
 

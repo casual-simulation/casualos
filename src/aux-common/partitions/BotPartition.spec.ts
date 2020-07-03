@@ -320,5 +320,31 @@ describe('BotPartition', () => {
             expect(removed).toEqual(['test1', 'test2']);
             expect(subject.state).toEqual({});
         });
+
+        it('should emit a async result when the bots are cleared', async () => {
+            await client.addBots('story', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let events = [] as Action[];
+            subject.onEvents.subscribe(e => events.push(...e));
+
+            await subject.applyEvents([clearSpace(<any>'space', 99)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([asyncResult(99, undefined)]);
+        });
     });
 });

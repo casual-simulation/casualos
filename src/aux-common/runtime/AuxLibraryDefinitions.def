@@ -2613,7 +2613,7 @@ declare global {
         /**
          * Clears all the errors in the story.
          */
-        destroyErrors(): ClearSpaceAction;
+        destroyErrors(): Promise<void>;
     
         /**
          * Loads the errors for the given bot and tag.
