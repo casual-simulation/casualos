@@ -2202,6 +2202,8 @@ await server.markHistory({
 Restores the current state to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
 
+Returns a promise that resolves when the history mark has been restored.
+
 The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
 #### Examples:
@@ -2212,7 +2214,7 @@ The **first parameter** is the bot or bot ID of the mark that should be restored
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMark(mark);
+await server.restoreHistoryMark(mark);
 ```
 
 ### `server.restoreHistoryMarkToStory(mark, story)`
@@ -2220,6 +2222,8 @@ server.restoreHistoryMark(mark);
 
 Restores the state in the given story to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes in the story and another mark with the state that was saved by the given mark.
+
+Returns a promise that resolves when the history mark has been restored.
 
 The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
@@ -2233,7 +2237,7 @@ The **second parameter** is the story that the state should be restored to. If `
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMarkToStory(mark, "test");
+await server.restoreHistoryMarkToStory(mark, "test");
 ```
 
 ### `server.shell(script)`
