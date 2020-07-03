@@ -29,6 +29,7 @@ import {
     AuxPartitions,
     action,
     Bot,
+    runScript,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -598,6 +599,62 @@ describe('BaseAuxChannel', () => {
                 // should know that the new partition is delayed instead of immediate
                 expect(actions).toContainEqual(toast(null));
             });
+
+            it('should resolve load_space events that have a task id', async () => {
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then(val => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'tempLocal',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                        taskId: task.taskId,
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should resolve if the space is already loaded', async () => {
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then(val => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'shared',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                        taskId: task.taskId,
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+            });
         });
     });
 
@@ -757,6 +814,11 @@ class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
     private _device: DeviceInfo;
+
+    get runtime() {
+        return this._runtime;
+    }
+
     constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
         super(user, config, {});
         this._device = device;

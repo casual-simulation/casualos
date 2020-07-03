@@ -422,6 +422,41 @@ describe('RemoteCausalRepoPartition', () => {
                         },
                     ]);
                 });
+
+                it(`should delegate the task to the load_space action`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            <any>{
+                                type: 'browse_history',
+                            },
+                            undefined,
+                            undefined,
+                            99
+                        ),
+                    ]);
+
+                    expect(events).toEqual([
+                        {
+                            type: 'load_space',
+                            space: 'history',
+                            config: {
+                                type: 'causal_repo_history_client',
+                                branch: 'testBranch',
+                                client: expect.anything(),
+                            },
+                            taskId: 99,
+                        },
+                    ]);
+                });
             });
 
             describe('get_player_count', () => {

@@ -1152,7 +1152,7 @@ export interface RestoreHistoryMarkAction {
 /**
  * Defines an event that loads a space into the story.
  */
-export interface LoadSpaceAction {
+export interface LoadSpaceAction extends Partial<AsyncAction> {
     type: 'load_space';
 
     /**
@@ -2104,12 +2104,18 @@ export function restoreHistoryMark(
  * Loads a space into the story.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
+ * @param taskId The ID of the async task.
  */
-export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
+export function loadSpace(
+    space: BotSpace,
+    config: any,
+    taskId?: number | string
+): LoadSpaceAction {
     return {
         type: 'load_space',
         space,
         config,
+        taskId,
     };
 }
 

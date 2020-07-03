@@ -98,6 +98,10 @@ export class AuxRuntime
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
 
+    get context() {
+        return this._globalContext;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory

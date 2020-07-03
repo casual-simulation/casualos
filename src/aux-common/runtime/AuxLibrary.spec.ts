@@ -2440,10 +2440,24 @@ describe('AuxLibrary', () => {
 
         describe('server.browseHistory()', () => {
             it('should emit a browse_history event', () => {
-                const action = library.api.server.browseHistory();
-                const expected = remote(browseHistory());
-                expect(action).toEqual(expected);
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.browseHistory();
+                const expected = remote(
+                    browseHistory(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.browseHistory();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

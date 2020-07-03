@@ -1463,7 +1463,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Loads the "history" space into the story.
      */
     function browseHistory() {
-        return remote(calcBrowseHistory());
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcBrowseHistory(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**

@@ -192,13 +192,15 @@ export class RemoteCausalRepoPartitionImpl
                     this._client.commit(this._branch, markHistory.message);
                 } else if (event.event.type === 'browse_history') {
                     this._onEvents.next([
-                        loadSpace('history', <
-                            CausalRepoHistoryClientPartitionConfig
-                        >{
-                            type: 'causal_repo_history_client',
-                            branch: this._branch,
-                            client: this._client,
-                        }),
+                        loadSpace(
+                            'history',
+                            <CausalRepoHistoryClientPartitionConfig>{
+                                type: 'causal_repo_history_client',
+                                branch: this._branch,
+                                client: this._client,
+                            },
+                            event.taskId
+                        ),
                     ]);
                 } else if (event.event.type === 'get_player_count') {
                     const action = <GetPlayerCountAction>event.event;

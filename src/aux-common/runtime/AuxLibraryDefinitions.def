@@ -2716,7 +2716,7 @@ declare global {
         /**
          * Loads the "history" space into the story.
          */
-        browseHistory(): BrowseHistoryAction;
+        browseHistory(): Promise<void>;
     
         /**
          * Restores the current state to the given mark.
