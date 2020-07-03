@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.1.18
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+    -   Improved the `player.run()` function to return a promise that can be awaited to get the result of the script (or wait until the script has been executed).
+
 ## V1.1.17
 
 ### Date: 7/3/2020
