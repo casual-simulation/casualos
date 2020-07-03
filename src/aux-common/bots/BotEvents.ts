@@ -85,7 +85,6 @@ export type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction
     | GetPlayerCountAction;
@@ -99,6 +98,7 @@ export type AsyncActions =
     | ShowInputAction
     | ShareAction
     | RunScriptAction
+    | LoadBotsAction
     | SendWebhookAction
     | UnlockSpaceAction
     | RemoteAction
@@ -1161,7 +1161,7 @@ export interface LoadSpaceAction {
 /**
  * Defines an event that loads bots from the given space that match the given tags and values.
  */
-export interface LoadBotsAction {
+export interface LoadBotsAction extends AsyncAction {
     type: 'load_bots';
 
     /**
@@ -2168,12 +2168,18 @@ export function exitFullscreen(): ExitFullscreenAction {
  * Requests that bots matching the given tags be loaded from the given space.
  * @param space The space that the bots should be loaded from.
  * @param tags The tags that should be on the loaded bots.
+ * @param taskId The ID of the async task for this action.
  */
-export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
+export function loadBots(
+    space: BotSpace,
+    tags: TagFilter[],
+    taskId?: number | string
+): LoadBotsAction {
     return {
         type: 'load_bots',
         space: space,
         tags: tags,
+        taskId,
     };
 }
 

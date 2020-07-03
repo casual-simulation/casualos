@@ -1520,9 +1520,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that the errors should be loaded for.
      * @param tag The tag that the errors should be loaded for.
      */
-    function loadErrors(bot: string | Bot, tag: string) {
-        return addAction(
-            loadBots('error', [
+    function loadErrors(bot: string | Bot, tag: string): Promise<Bot[]> {
+        const task = context.createTask();
+        const event = loadBots(
+            'error',
+            [
                 {
                     tag: 'error',
                     value: true,
@@ -1535,8 +1537,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     tag: 'errorTag',
                     value: tag,
                 },
-            ])
+            ],
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**

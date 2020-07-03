@@ -2620,7 +2620,7 @@ declare global {
          * @param bot The bot that the errors should be loaded for.
          * @param tag The tag that the errors should be loaded for.
          */
-        loadErrors(bot: string | Bot, tag: string): LoadBotsAction;
+        loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
          * Gets the number of players that are viewing the current story.

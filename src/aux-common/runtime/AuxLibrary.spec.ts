@@ -2487,42 +2487,53 @@ describe('AuxLibrary', () => {
 
         describe('server.loadErrors()', () => {
             it('should issue a LoadBotsAction for the given tag and bot ID', () => {
-                const action = library.api.server.loadErrors('test', 'abc');
-                const expected = loadBots('error', [
-                    {
-                        tag: 'error',
-                        value: true,
-                    },
-                    {
-                        tag: 'errorBot',
-                        value: 'test',
-                    },
-                    {
-                        tag: 'errorTag',
-                        value: 'abc',
-                    },
-                ]);
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.loadErrors(
+                    'test',
+                    'abc'
+                );
+                const expected = loadBots(
+                    'error',
+                    [
+                        {
+                            tag: 'error',
+                            value: true,
+                        },
+                        {
+                            tag: 'errorBot',
+                            value: 'test',
+                        },
+                        {
+                            tag: 'errorTag',
+                            value: 'abc',
+                        },
+                    ],
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support being passed a runtime bot', () => {
-                const action = library.api.server.loadErrors(bot1, 'abc');
-                const expected = loadBots('error', [
-                    {
-                        tag: 'error',
-                        value: true,
-                    },
-                    {
-                        tag: 'errorBot',
-                        value: bot1.id,
-                    },
-                    {
-                        tag: 'errorTag',
-                        value: 'abc',
-                    },
-                ]);
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.loadErrors(bot1, 'abc');
+                const expected = loadBots(
+                    'error',
+                    [
+                        {
+                            tag: 'error',
+                            value: true,
+                        },
+                        {
+                            tag: 'errorBot',
+                            value: bot1.id,
+                        },
+                        {
+                            tag: 'errorTag',
+                            value: 'abc',
+                        },
+                    ],
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
