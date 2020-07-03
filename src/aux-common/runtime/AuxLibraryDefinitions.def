@@ -2608,7 +2608,7 @@ declare global {
          * @param story The story.
          * @param botOrMod The bot or mod that should be cloned into the new story.
          */
-        setupStory(story: string, botOrMod?: Mod): SetupChannelAction;
+        setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
          * Executes the given shell script on the server.

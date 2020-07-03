@@ -1383,7 +1383,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param botOrMod The bot or mod that should be cloned into the new story.
      */
     function setupStory(story: string, botOrMod?: Mod) {
-        return remote(calcSetupStory(story, context.unwrapBot(botOrMod)));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcSetupStory(story, context.unwrapBot(botOrMod)),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**

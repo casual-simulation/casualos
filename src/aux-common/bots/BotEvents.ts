@@ -72,7 +72,6 @@ export type ExtraActions =
     | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
-    | SetupChannelAction
     | SetClipboardAction
     | ShowChatBarAction
     | ShowUploadAuxFileAction
@@ -103,6 +102,7 @@ export type AsyncActions =
     | UnlockSpaceAction
     | LoadFileAction
     | SaveFileAction
+    | SetupChannelAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -1030,7 +1030,7 @@ export interface RejectAction {
 /**
  * Defines an event that creates a channel if it doesn't exist.
  */
-export interface SetupChannelAction {
+export interface SetupChannelAction extends AsyncAction {
     type: 'setup_story';
 
     /**
@@ -2000,15 +2000,20 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * Creates a channel if it doesn't exist and places the given bot in it.
  * @param channel The ID of the channel to setup.
  * @param botOrMod The bot that should be cloned into the new channel.
+ * @param taskId The ID of the async task.
  */
 export function setupStory(
     channel: string,
-    botOrMod?: Bot | BotTags
+    botOrMod?: Bot | BotTags,
+    taskId?: string | number,
+    playerId?: string
 ): SetupChannelAction {
     return {
         type: 'setup_story',
         channel,
         botOrMod,
+        taskId,
+        playerId,
     };
 }
 

@@ -9192,7 +9192,10 @@ describe('original action tests', () => {
                         createBot('thisBot', {
                             test: '@server.setupStory("channel", this)',
                         })
-                    )
+                    ),
+                    undefined,
+                    undefined,
+                    'uuid-0'
                 ),
             ]);
         });

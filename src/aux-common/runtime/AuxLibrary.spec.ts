@@ -113,6 +113,10 @@ describe('AuxLibrary', () => {
         library = createDefaultLibrary(context);
     });
 
+    afterEach(() => {
+        uuidMock.mockReset();
+    });
+
     const falsyCases = [['false', false], ['0', 0]];
     const emptyCases = [['null', null], ['empty string', '']];
     const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
@@ -2309,13 +2313,28 @@ describe('AuxLibrary', () => {
 
         describe('server.setupStory()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
-                const action = library.api.server.setupStory('channel', bot1);
-                const expected = remote(
-                    setupStory('channel', createBot(bot1.id, bot1.tags))
+                const action: any = library.api.server.setupStory(
+                    'channel',
+                    bot1
                 );
-                expect(action).toEqual(expected);
+                const expected = remote(
+                    setupStory('channel', createBot(bot1.id, bot1.tags)),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.setupStory('channel');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
@@ -3804,6 +3823,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to destroy a bot that was just created', () => {
+            uuidMock.mockReturnValueOnce('uuid');
             const newBot = library.api.create();
             library.api.destroy(newBot);
             expect(context.bots).not.toContain(newBot);
