@@ -2327,6 +2327,8 @@ Finds bots by searching the error space for bots with the following tags:
 -   `errorBot` must be the ID of the bot that was specified.
 -   `errorTag` must be the tag that was specified.
 
+Returns a promise that resolves with the list of bots that were loaded.
+
 The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
 
 The **second parameter** is the name of the tag that the errors should be loaded for.
@@ -2335,7 +2337,7 @@ The **second parameter** is the name of the tag that the errors should be loaded
 
 1. Load all errors that have occurred for this script:
 ```typescript
-server.loadErrors(this, tagName);
+let bots = await server.loadErrors(this, tagName);
 ```
 
 ### `server.destroyErrors()`
