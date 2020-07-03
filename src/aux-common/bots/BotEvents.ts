@@ -128,6 +128,12 @@ export interface AsyncResultAction extends AsyncAction {
      * The result value.
      */
     result: any;
+
+    /**
+     * Whether to map any bots found in the result to their actual bot counterparts.
+     * Defaults to false.
+     */
+    mapBotsInResult?: boolean;
 }
 
 /**
@@ -2229,15 +2235,18 @@ export function localFormAnimation(
  * Creates an action that resolves an async task with the given result.
  * @param taskId The ID of the task.
  * @param result The result.
+ * @param mapBots Whether to map any bots found in the result to their actual counterparts.
  */
 export function asyncResult(
     taskId: number | string,
-    result: any
+    result: any,
+    mapBots?: boolean
 ): AsyncResultAction {
     return {
         type: 'async_result',
         taskId,
         result,
+        mapBotsInResult: mapBots,
     };
 }
 

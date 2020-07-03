@@ -315,11 +315,11 @@ export class AuxRuntime
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);
         } else if (action.type === 'async_result') {
-            this._globalContext.resolveTask(
-                action.taskId,
-                action.result,
-                false
-            );
+            const value =
+                action.mapBotsInResult === true
+                    ? this._mapBotsToRuntimeBots(action.result)
+                    : action.result;
+            this._globalContext.resolveTask(action.taskId, value, false);
         } else if (action.type === 'async_error') {
             this._globalContext.rejectTask(action.taskId, action.error, false);
         } else if (action.type === 'device_result') {

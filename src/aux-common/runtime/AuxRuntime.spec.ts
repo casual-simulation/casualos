@@ -1533,6 +1533,43 @@ describe('AuxRuntime', () => {
             expect(events.slice(1)).toEqual([[], [toast('abc')]]);
         });
 
+        it('should support mapping bots in async actions results', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+            ]);
+
+            runtime.process([
+                runScript(
+                    'player.showInput().then(result => player.toast(result.tags.abc))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [showInput(undefined, undefined, expect.any(Number))],
+            ]);
+
+            const taskId = (<any>events[0][0]).taskId as number;
+
+            runtime.process([
+                asyncResult(
+                    taskId,
+                    {
+                        id: 'test1',
+                        tags: {},
+                    },
+                    true
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('def')]]);
+        });
+
         it('should support rejecting async actions', async () => {
             runtime.process([
                 runScript(
