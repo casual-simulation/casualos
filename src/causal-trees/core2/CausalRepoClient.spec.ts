@@ -47,6 +47,8 @@ import {
     BranchesStatusEvent,
     CommitCreatedEvent,
     COMMIT_CREATED,
+    RestoredEvent,
+    RESTORED,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -696,7 +698,10 @@ describe('CausalRepoClient', () => {
 
     describe('restore()', () => {
         it('should send a restore event', async () => {
-            client.restore('abc', 'commit');
+            client.restore('abc', 'commit').subscribe();
+
+            connection.connect();
+            await waitAsync();
 
             expect(connection.sentMessages).toEqual([
                 {
@@ -705,6 +710,33 @@ describe('CausalRepoClient', () => {
                         branch: 'abc',
                         commit: 'commit',
                     },
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves when the commit has been created', async () => {
+            const restored = new Subject<RestoredEvent>();
+            connection.events.set(RESTORED, restored);
+
+            let infos = [] as RestoredEvent[];
+            client.restore('abc', 'newCommit').subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            restored.next({
+                branch: 'abc',
+            });
+            await waitAsync();
+
+            restored.next({
+                branch: 'wrong',
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branch: 'abc',
                 },
             ]);
         });

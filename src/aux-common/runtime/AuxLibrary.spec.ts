@@ -2475,22 +2475,52 @@ describe('AuxLibrary', () => {
 
         describe('server.restoreHistoryMark()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMark('mark');
-                const expected = remote(restoreHistoryMark('mark'));
-                expect(action).toEqual(expected);
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMark(
+                    'mark'
+                );
+                const expected = remote(
+                    restoreHistoryMark('mark'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMark('mark');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.restoreHistoryMarkToStory()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMarkToStory(
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMarkToStory(
                     'mark',
                     'story'
                 );
-                const expected = remote(restoreHistoryMark('mark', 'story'));
-                expect(action).toEqual(expected);
+                const expected = remote(
+                    restoreHistoryMark('mark', 'story'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMarkToStory('mark', 'story');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

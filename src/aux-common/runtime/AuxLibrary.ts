@@ -1486,7 +1486,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function restoreHistoryMark(mark: Bot | string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcRestoreHistoryMark(id),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1496,7 +1503,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id, story));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcRestoreHistoryMark(id, story),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**

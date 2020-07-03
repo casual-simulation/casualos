@@ -20,6 +20,9 @@ import {
     createBot,
     RestoreHistoryMarkAction,
     BotSpace,
+    asyncResult,
+    hasValue,
+    asyncError,
 } from '../bots';
 import {
     PartitionConfig,
@@ -152,7 +155,24 @@ export class RemoteCausalRepoHistoryPartitionImpl
                     continue;
                 }
                 const hash = bot.tags.markHash;
-                this._client.restore(restoreMark.story || this._branch, hash);
+                this._client
+                    .restore(restoreMark.story || this._branch, hash)
+                    .subscribe(
+                        () => {
+                            if (hasValue(event.taskId)) {
+                                this._onEvents.next([
+                                    asyncResult(event.taskId, undefined),
+                                ]);
+                            }
+                        },
+                        err => {
+                            if (hasValue(event.taskId)) {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
+                        }
+                    );
             }
         }
     }

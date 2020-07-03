@@ -49,6 +49,7 @@ import {
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
     COMMIT_CREATED,
+    RESTORED,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -2775,6 +2776,12 @@ describe('CausalRepoServer', () => {
                         branch: 'testBranch',
                         atoms: [a3],
                         removedAtoms: [a4.hash, a5.hash],
+                    },
+                },
+                {
+                    name: RESTORED,
+                    data: {
+                        branch: 'testBranch',
                     },
                 },
             ]);

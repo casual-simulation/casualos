@@ -73,6 +73,11 @@ export const CHECKOUT = 'repo/checkout';
 export const RESTORE = 'repo/restore';
 
 /**
+ * The name of the event which notifies that a branch was restored.
+ */
+export const RESTORED = 'repo/restored';
+
+/**
  * The name of the event which notifies that a commit was added.
  */
 export const ADD_COMMITS = 'repo/add_commits';
@@ -271,6 +276,16 @@ export interface RestoreEvent {
      * The hash of the commit to restore.
      */
     commit: string;
+}
+
+/**
+ * Defines an event which indicates that a commit was restored to a branch.
+ */
+export interface RestoredEvent {
+    /**
+     * The branch to restore.
+     */
+    branch: string;
 }
 
 /**

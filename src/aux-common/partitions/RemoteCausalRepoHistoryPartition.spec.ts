@@ -18,10 +18,18 @@ import {
     index,
     commit,
     RESTORE,
+    RestoredEvent,
+    RESTORED,
 } from '@casual-simulation/causal-trees/core2';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote, Action } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../test/TestHelpers';
-import { createBot, Bot, UpdatedBot, restoreHistoryMark } from '../bots';
+import {
+    createBot,
+    Bot,
+    UpdatedBot,
+    restoreHistoryMark,
+    asyncResult,
+} from '../bots';
 import { CausalRepoHistoryClientPartitionConfig } from './AuxPartitionConfig';
 import uuid from 'uuid/v5';
 
@@ -190,6 +198,65 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                             },
                         },
                     ]);
+                });
+
+                it('should send a async result when finished', async () => {
+                    const addCommits = new Subject<AddCommitsEvent>();
+                    const restored = new Subject<RestoredEvent>();
+                    connection.events.set(ADD_COMMITS, addCommits);
+                    connection.events.set(RESTORED, restored);
+
+                    partition.connect();
+
+                    await waitAsync();
+
+                    const a1 = atom(atomId('a', 1), null, {});
+                    const a2 = atom(atomId('a', 2), a1, {});
+                    const idx1 = index(a1);
+                    const idx2 = index(a1, a2);
+                    const c1 = commit(
+                        'commit1',
+                        new Date(1900, 1, 1),
+                        idx1,
+                        null
+                    );
+                    const c2 = commit(
+                        'commit2',
+                        new Date(1900, 1, 1),
+                        idx2,
+                        c1
+                    );
+
+                    addCommits.next({
+                        branch: 'testBranch',
+                        commits: [c2, c1],
+                    });
+
+                    await waitAsync();
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            restoreHistoryMark(
+                                uuid(c1.hash, COMMIT_ID_NAMESPACE)
+                            ),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    restored.next({
+                        branch: 'testBranch',
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', undefined)]);
                 });
             });
         });

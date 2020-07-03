@@ -55,6 +55,8 @@ import {
     BranchesStatusEvent,
     CommitCreatedEvent,
     COMMIT_CREATED,
+    RestoredEvent,
+    RESTORED,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -501,12 +503,23 @@ export class CausalRepoClient {
         this._client.send(CHECKOUT, event);
     }
 
-    restore(branch: string, hash: string) {
-        const event: RestoreEvent = {
-            branch: branch,
-            commit: hash,
-        };
-        this._client.send(RESTORE, event);
+    restore(branch: string, hash: string): Observable<RestoredEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: RestoreEvent = {
+                    branch: branch,
+                    commit: hash,
+                };
+                this._client.send(RESTORE, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<RestoredEvent>(RESTORED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {

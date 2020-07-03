@@ -2722,7 +2722,7 @@ declare global {
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
          */
-        restoreHistoryMark(mark: Bot | string): RestoreHistoryMarkAction;
+        restoreHistoryMark(mark: Bot | string): Promise<void>;
     
         /**
          * Restores the current state to the given mark.
@@ -2732,7 +2732,7 @@ declare global {
         restoreHistoryMarkToStory(
             mark: Bot | string,
             story: string
-        ): RestoreHistoryMarkAction;
+        ): Promise<void>;
     };
 
     /**

@@ -9433,7 +9433,12 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                remote(restoreHistoryMark('mark')),
+                remote(
+                    restoreHistoryMark('mark'),
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
             ]);
         });
     });
@@ -9455,11 +9460,16 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                remote(<RestoreHistoryMarkAction>{
-                    type: 'restore_history_mark',
-                    mark: 'mark',
-                    story: 'story',
-                }),
+                remote(
+                    <RestoreHistoryMarkAction>{
+                        type: 'restore_history_mark',
+                        mark: 'mark',
+                        story: 'story',
+                    },
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
             ]);
         });
     });
