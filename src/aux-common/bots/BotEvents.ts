@@ -23,6 +23,8 @@ export type BotAction =
     | ExtraActions
     | AsyncActions
     | RemoteAction
+    | RemoteActionResult
+    | RemoteActionError
     | DeviceAction;
 
 /**

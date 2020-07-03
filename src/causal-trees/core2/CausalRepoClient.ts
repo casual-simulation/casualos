@@ -60,6 +60,7 @@ import {
     RemoteAction,
     DeviceActionResult,
     DeviceActionError,
+    RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
 import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
@@ -454,7 +455,7 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param action The action.
      */
-    sendEvent(branch: string, action: RemoteAction) {
+    sendEvent(branch: string, action: RemoteActions) {
         this._client.send(SEND_EVENT, {
             branch: branch,
             action: action,

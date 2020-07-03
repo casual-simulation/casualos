@@ -48,6 +48,7 @@ import {
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
     getStoryStatuses,
+    AsyncAction,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -327,6 +328,42 @@ describe('RemoteCausalRepoPartition', () => {
                 ]);
 
                 expect(connection.sentMessages).toEqual([]);
+            });
+
+            describe('device', () => {
+                it('should set the playerId and taskId on the inner event', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const action = device(
+                        deviceInfo('username', 'device', 'session'),
+                        {
+                            type: 'abc',
+                        },
+                        'task1'
+                    );
+                    partition.connect();
+
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: action,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).not.toEqual([action]);
+                    expect(events).toEqual([
+                        device(
+                            deviceInfo('username', 'device', 'session'),
+                            {
+                                type: 'abc',
+                                taskId: 'task1',
+                                playerId: 'session',
+                            } as AsyncAction,
+                            'task1'
+                        ),
+                    ]);
+                });
             });
 
             describe('mark_history', () => {

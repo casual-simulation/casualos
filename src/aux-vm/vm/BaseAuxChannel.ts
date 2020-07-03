@@ -27,6 +27,7 @@ import {
     RemoteAction,
     DeviceInfo,
     Action,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
@@ -345,7 +346,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.sendRemoteEvents) {
                 await partition.sendRemoteEvents(events);

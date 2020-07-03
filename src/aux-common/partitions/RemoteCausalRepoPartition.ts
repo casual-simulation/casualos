@@ -6,6 +6,8 @@ import {
     USERNAME_CLAIM,
     remote,
     SESSION_ID_CLAIM,
+    device,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import {
     Atom,
@@ -40,6 +42,8 @@ import {
     action,
     ShoutAction,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    hasValue,
+    AsyncAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -177,83 +181,94 @@ export class RemoteCausalRepoPartitionImpl
         this._synced = false;
     }
 
-    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         if (this._readOnly || !this._remoteEvents) {
             return;
         }
         for (let event of events) {
-            if (event.event.type === 'mark_history') {
-                const markHistory = <MarkHistoryAction>event.event;
-                this._client.commit(this._branch, markHistory.message);
-            } else if (event.event.type === 'browse_history') {
-                this._onEvents.next([
-                    loadSpace('history', <
-                        CausalRepoHistoryClientPartitionConfig
-                    >{
-                        type: 'causal_repo_history_client',
-                        branch: this._branch,
-                        client: this._client,
-                    }),
-                ]);
-            } else if (event.event.type === 'get_player_count') {
-                const action = <GetPlayerCountAction>event.event;
-                this._client.devices(action.story).subscribe(
-                    e => {
-                        const devices = e.devices.filter(
-                            d => d.claims[USERNAME_CLAIM] !== 'Server'
+            if (event.type === 'remote') {
+                if (event.event.type === 'mark_history') {
+                    const markHistory = <MarkHistoryAction>event.event;
+                    this._client.commit(this._branch, markHistory.message);
+                } else if (event.event.type === 'browse_history') {
+                    this._onEvents.next([
+                        loadSpace('history', <
+                            CausalRepoHistoryClientPartitionConfig
+                        >{
+                            type: 'causal_repo_history_client',
+                            branch: this._branch,
+                            client: this._client,
+                        }),
+                    ]);
+                } else if (event.event.type === 'get_player_count') {
+                    const action = <GetPlayerCountAction>event.event;
+                    this._client.devices(action.story).subscribe(
+                        e => {
+                            const devices = e.devices.filter(
+                                d => d.claims[USERNAME_CLAIM] !== 'Server'
+                            );
+                            this._onEvents.next([
+                                asyncResult(event.taskId, devices.length),
+                            ]);
+                        },
+                        err => {
+                            this._onEvents.next([
+                                asyncError(event.taskId, err),
+                            ]);
+                        }
+                    );
+                } else if (event.event.type === 'get_stories') {
+                    const action = <GetStoriesAction>event.event;
+                    if (action.includeStatuses) {
+                        this._client.branchesStatus().subscribe(
+                            e => {
+                                this._onEvents.next([
+                                    asyncResult(
+                                        event.taskId,
+                                        e.branches
+                                            .filter(
+                                                b => !b.branch.startsWith('$')
+                                            )
+                                            .map(b => ({
+                                                story: b.branch,
+                                                lastUpdateTime:
+                                                    b.lastUpdateTime,
+                                            }))
+                                    ),
+                                ]);
+                            },
+                            err => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
                         );
-                        this._onEvents.next([
-                            asyncResult(event.taskId, devices.length),
-                        ]);
-                    },
-                    err => {
-                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    } else {
+                        this._client.branches().subscribe(
+                            e => {
+                                this._onEvents.next([
+                                    asyncResult(
+                                        event.taskId,
+                                        e.branches.filter(
+                                            b => !b.startsWith('$')
+                                        )
+                                    ),
+                                ]);
+                            },
+                            err => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
+                        );
                     }
-                );
-            } else if (event.event.type === 'get_stories') {
-                const action = <GetStoriesAction>event.event;
-                if (action.includeStatuses) {
-                    this._client.branchesStatus().subscribe(
-                        e => {
-                            this._onEvents.next([
-                                asyncResult(
-                                    event.taskId,
-                                    e.branches
-                                        .filter(b => !b.branch.startsWith('$'))
-                                        .map(b => ({
-                                            story: b.branch,
-                                            lastUpdateTime: b.lastUpdateTime,
-                                        }))
-                                ),
-                            ]);
-                        },
-                        err => {
-                            this._onEvents.next([
-                                asyncError(event.taskId, err),
-                            ]);
-                        }
-                    );
+                } else if (event.event.type === 'get_players') {
+                    // Do nothing for get_players since it will be handled by the OtherPlayersPartition.
+                    // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
+                    //       we do this type of logic.
                 } else {
-                    this._client.branches().subscribe(
-                        e => {
-                            this._onEvents.next([
-                                asyncResult(
-                                    event.taskId,
-                                    e.branches.filter(b => !b.startsWith('$'))
-                                ),
-                            ]);
-                        },
-                        err => {
-                            this._onEvents.next([
-                                asyncError(event.taskId, err),
-                            ]);
-                        }
-                    );
+                    this._client.sendEvent(this._branch, event);
                 }
-            } else if (event.event.type === 'get_players') {
-                // Do nothing for get_players since it will be handled by the OtherPlayersPartition.
-                // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
-                //       we do this type of logic.
             } else {
                 this._client.sendEvent(this._branch, event);
             }
@@ -420,27 +435,42 @@ export class RemoteCausalRepoPartitionImpl
                         if (event.type === 'atoms') {
                             this._applyAtoms(event.atoms, event.removedAtoms);
                         } else if (event.type === 'event') {
-                            if (
-                                event.action.type === 'device' &&
-                                event.action.event.type === 'action'
-                            ) {
-                                const remoteAction = event.action
-                                    .event as ShoutAction;
-                                this._onEvents.next([
-                                    action(
-                                        ON_REMOTE_WHISPER_ACTION_NAME,
-                                        null,
-                                        null,
+                            if (event.action.type === 'device') {
+                                if (event.action.event.type === 'action') {
+                                    const remoteAction = event.action
+                                        .event as ShoutAction;
+                                    this._onEvents.next([
+                                        action(
+                                            ON_REMOTE_WHISPER_ACTION_NAME,
+                                            null,
+                                            null,
+                                            {
+                                                name: remoteAction.eventName,
+                                                that: remoteAction.argument,
+                                                playerId:
+                                                    event.action.device.claims[
+                                                        SESSION_ID_CLAIM
+                                                    ],
+                                            }
+                                        ),
+                                    ]);
+                                } else if (hasValue(event.action.taskId)) {
+                                    const newEvent = device(
+                                        event.action.device,
                                         {
-                                            name: remoteAction.eventName,
-                                            that: remoteAction.argument,
+                                            ...event.action.event,
+                                            taskId: event.action.taskId,
                                             playerId:
                                                 event.action.device.claims[
                                                     SESSION_ID_CLAIM
                                                 ],
-                                        }
-                                    ),
-                                ]);
+                                        } as AsyncAction,
+                                        event.action.taskId
+                                    );
+                                    this._onEvents.next([newEvent]);
+                                } else {
+                                    this._onEvents.next([event.action]);
+                                }
                             } else {
                                 this._onEvents.next([event.action]);
                             }

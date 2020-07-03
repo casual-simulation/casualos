@@ -31,7 +31,12 @@ import {
     AsyncActions,
     asyncError,
 } from '@casual-simulation/aux-common';
-import { RemoteAction, DeviceAction } from '@casual-simulation/causal-trees';
+import {
+    RemoteAction,
+    DeviceAction,
+    RemoteActionResult,
+    RemoteActions,
+} from '@casual-simulation/causal-trees';
 import { Subject } from 'rxjs';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
@@ -52,7 +57,7 @@ export class AuxHelper extends BaseHelper<Bot> {
     private _partitions: AuxPartitions;
     private _runtime: AuxRuntime;
     private _localEvents: Subject<LocalActions[]>;
-    private _remoteEvents: Subject<RemoteAction[]>;
+    private _remoteEvents: Subject<RemoteActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _partitionStates: Map<string, BotsState>;
     private _stateCache: Map<string, BotsState>;
@@ -464,6 +469,10 @@ export class AuxHelper extends BaseHelper<Bot> {
     private _partitionForEvent(event: BotAction): AuxPartition {
         if (event.type === 'remote') {
             return null;
+        } else if (event.type === 'remote_result') {
+            return null;
+        } else if (event.type === 'remote_error') {
+            return null;
         } else if (event.type === 'device') {
             return null;
         } else if (event.type === 'add_bot') {
@@ -523,12 +532,16 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     private _sendOtherEvents(events: BotAction[]) {
-        let remoteEvents: RemoteAction[] = [];
+        let remoteEvents: RemoteActions[] = [];
         let localEvents: LocalActions[] = [];
         let deviceEvents: DeviceAction[] = [];
 
         for (let event of events) {
-            if (event.type === 'remote') {
+            if (
+                event.type === 'remote' ||
+                event.type === 'remote_result' ||
+                event.type === 'remote_error'
+            ) {
                 remoteEvents.push(event);
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
