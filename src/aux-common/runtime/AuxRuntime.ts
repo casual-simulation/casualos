@@ -304,6 +304,13 @@ export class AuxRuntime
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false);
             this.process(result.actions);
+            if (hasValue(action.taskId)) {
+                this._globalContext.resolveTask(
+                    action.taskId,
+                    result.result,
+                    false
+                );
+            }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);

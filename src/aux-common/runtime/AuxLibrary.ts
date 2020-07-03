@@ -897,7 +897,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param script The script that should be executed.
      */
     function run(script: string) {
-        return addAction(runScript(script));
+        const task = context.createTask();
+        const event = runScript(script, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

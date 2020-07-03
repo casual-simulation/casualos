@@ -1627,6 +1627,26 @@ describe('AuxRuntime', () => {
 
             expect(events).toEqual([[toast('abc')]]);
         });
+
+        it('should resolve run_script tasks', async () => {
+            const result = runtime.execute(
+                'return await player.run("return 123");'
+            );
+
+            runtime.process(result.actions);
+
+            expect(await result.result).toBe(123);
+        });
+
+        it('should unwrap async run_script tasks', async () => {
+            const result = runtime.execute(
+                'return await player.run("return Promise.resolve(123);");'
+            );
+
+            runtime.process(result.actions);
+
+            expect(await result.result).toBe(123);
+        });
     });
 
     describe('execute()', () => {
@@ -7575,7 +7595,7 @@ describe('original action tests', () => {
             const botAction = action('test', ['thisBot']);
             const result = calculateActionResults(state, botAction);
 
-            expect(result.actions).toEqual([runScript('abc')]);
+            expect(result.actions).toEqual([runScript('abc', 1)]);
         });
     });
 

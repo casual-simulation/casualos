@@ -75,7 +75,6 @@ export type ExtraActions =
     | SetupChannelAction
     | SetClipboardAction
     | ShowChatBarAction
-    | RunScriptAction
     | ShowUploadAuxFileAction
     | MarkHistoryAction
     | BrowseHistoryAction
@@ -99,6 +98,7 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RunScriptAction
     | SendWebhookAction
     | UnlockSpaceAction
     | RemoteAction
@@ -1082,7 +1082,7 @@ export interface ShowChatOptions {
 /**
  * Defines an event that executes a script.
  */
-export interface RunScriptAction {
+export interface RunScriptAction extends AsyncAction {
     type: 'run_script';
 
     /**
@@ -2002,11 +2002,16 @@ export function setClipboard(text: string): SetClipboardAction {
 /**
  * Creates a RunScriptAction.
  * @param script The script that should be executed.
+ * @param taskId The ID of the async task that this script represents.
  */
-export function runScript(script: string): RunScriptAction {
+export function runScript(
+    script: string,
+    taskId?: number | string
+): RunScriptAction {
     return {
         type: 'run_script',
         script,
+        taskId,
     };
 }
 

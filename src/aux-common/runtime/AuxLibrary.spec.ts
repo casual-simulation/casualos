@@ -1464,9 +1464,10 @@ describe('AuxLibrary', () => {
 
         describe('player.run()', () => {
             it('should emit a RunScriptAction', () => {
-                const action = library.api.player.run('abc');
-                expect(action).toEqual(runScript('abc'));
-                expect(context.actions).toEqual([runScript('abc')]);
+                const action: any = library.api.player.run('abc');
+                const expected = runScript('abc', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

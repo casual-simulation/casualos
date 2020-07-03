@@ -1163,7 +1163,7 @@ declare interface ShowChatOptions {
 /**
  * Defines an event that executes a script.
  */
-declare interface RunScriptAction {
+declare interface RunScriptAction extends AsyncAction {
     type: 'run_script';
 
     /**
@@ -2409,7 +2409,7 @@ declare global {
          * Enqueues the given script to execute after this script is done running.
          * @param script The script that should be executed.
          */
-        run(script: string): RunScriptAction;
+        run(script: string): Promise<any>;
 
         /**
          * Downloads the given list of bots.

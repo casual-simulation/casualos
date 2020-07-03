@@ -569,6 +569,7 @@ describe('BaseAuxChannel', () => {
                         type: 'run_script',
                         script:
                             'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); player.toast(bot)',
+                        taskId: null,
                     },
                 ]);
 
