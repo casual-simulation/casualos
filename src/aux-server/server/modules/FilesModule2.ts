@@ -1,11 +1,16 @@
 import { AuxModule2, Simulation } from '@casual-simulation/aux-vm';
-import { DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    DeviceInfo,
+    remoteResult,
+    remoteError,
+} from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     action,
     SaveFileAction,
     LoadFileAction,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import fs from 'fs';
 import path from 'path';
@@ -74,16 +79,43 @@ export class FilesModule2 implements AuxModule2 {
                 }
             }
 
-            await this._sendCallback(event, simulation, {
+            const arg = {
                 path: event.options.path,
                 error: 'file_does_not_exist',
-            });
+            };
+            await this._sendCallback(event, simulation, arg);
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await simulation.helper.transaction(
+                    remoteError(
+                        arg,
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         } catch (err) {
             await this._sendCallback(event, simulation, {
                 path: event.options.path,
                 error: 'failure',
                 exception: err,
             });
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await simulation.helper.transaction(
+                    remoteError(
+                        {
+                            path: event.options.path,
+                            error: 'failure',
+                            exception: err.toString(),
+                        },
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         }
     }
 
@@ -100,11 +132,23 @@ export class FilesModule2 implements AuxModule2 {
 
         console.log(`[FilesModule] Reading file ${path}...`);
         const data = await readFileAsync(path, { encoding: 'utf8' });
-        await this._sendCallback(event, simulation, {
+        const arg = {
             path: event.options.path,
             url: getRemotePath(path),
             data: data,
-        });
+        };
+        await this._sendCallback(event, simulation, arg);
+        if (hasValue(event.taskId) && hasValue(event.playerId)) {
+            await simulation.helper.transaction(
+                remoteResult(
+                    arg,
+                    {
+                        sessionId: event.playerId,
+                    },
+                    event.taskId
+                )
+            );
+        }
         return true;
     }
 
@@ -146,6 +190,22 @@ export class FilesModule2 implements AuxModule2 {
                 error: 'failure',
                 exception: err,
             });
+
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await simulation.helper.transaction(
+                    remoteError(
+                        {
+                            path: event.options.path,
+                            error: 'failure',
+                            exception: err.toString(),
+                        },
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         }
     }
 
@@ -167,6 +227,21 @@ export class FilesModule2 implements AuxModule2 {
                 path: event.options.path,
                 error: 'file_already_exists',
             });
+
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await simulation.helper.transaction(
+                    remoteError(
+                        {
+                            path: event.options.path,
+                            error: 'file_already_exists',
+                        },
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         } else {
             console.log(`[FilesModule] Writing file ${finalPath}...`);
             await writeFileAsync(finalPath, event.options.data);
@@ -174,6 +249,21 @@ export class FilesModule2 implements AuxModule2 {
                 path: event.options.path,
                 url: getRemotePath(filePath),
             });
+
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await simulation.helper.transaction(
+                    remoteResult(
+                        {
+                            path: event.options.path,
+                            url: getRemotePath(filePath),
+                        },
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         }
     }
 

@@ -64,6 +64,8 @@ import {
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
+    COMMIT_CREATED,
+    RESTORED,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -255,11 +257,15 @@ export class CausalRepoServer {
                             false
                         );
                         if (!repo) {
+                            // TODO: Send an error event to the device
                             return;
                         }
 
                         if (repo.hasChanges()) {
                             await this._commitToRepo(event, repo);
+                            sendToDevices([device], COMMIT_CREATED, {
+                                branch: event.branch,
+                            });
                         }
                     },
                     [WATCH_COMMITS]: async branch => {
@@ -360,6 +366,10 @@ export class CausalRepoServer {
 
                         this._sendCommits(event.branch, [newCommit]);
                         this._sendDiff(current, after, event.branch);
+
+                        sendToDevices([device], RESTORED, {
+                            branch: event.branch,
+                        });
                     },
                     [SEND_EVENT]: async event => {
                         const info = infoForBranch(event.branch);

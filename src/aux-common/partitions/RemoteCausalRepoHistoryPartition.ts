@@ -3,6 +3,7 @@ import {
     StatusUpdate,
     RemoteAction,
     Action,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import {
     CausalRepoClient,
@@ -19,6 +20,9 @@ import {
     createBot,
     RestoreHistoryMarkAction,
     BotSpace,
+    asyncResult,
+    hasValue,
+    asyncError,
 } from '../bots';
 import {
     PartitionConfig,
@@ -135,20 +139,40 @@ export class RemoteCausalRepoHistoryPartitionImpl
         this._synced = false;
     }
 
-    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         if (this._readOnly) {
             return;
         }
 
         for (let event of events) {
-            if (event.event.type === 'restore_history_mark') {
+            if (
+                event.type === 'remote' &&
+                event.event.type === 'restore_history_mark'
+            ) {
                 const restoreMark = <RestoreHistoryMarkAction>event.event;
                 const bot = this.state[restoreMark.mark];
                 if (!bot) {
                     continue;
                 }
                 const hash = bot.tags.markHash;
-                this._client.restore(restoreMark.story || this._branch, hash);
+                this._client
+                    .restore(restoreMark.story || this._branch, hash)
+                    .subscribe(
+                        () => {
+                            if (hasValue(event.taskId)) {
+                                this._onEvents.next([
+                                    asyncResult(event.taskId, undefined),
+                                ]);
+                            }
+                        },
+                        err => {
+                            if (hasValue(event.taskId)) {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            }
+                        }
+                    );
             }
         }
     }

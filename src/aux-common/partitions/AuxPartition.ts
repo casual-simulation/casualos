@@ -4,6 +4,7 @@ import {
     RemoteAction,
     User,
     Action,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
 
@@ -75,7 +76,7 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * Sends the given events to the targeted device.
      * @param events The events to send.
      */
-    sendRemoteEvents?(events: RemoteAction[]): Promise<void>;
+    sendRemoteEvents?(events: RemoteActions[]): Promise<void>;
 
     /**
      * Sets the user that the partition should use.

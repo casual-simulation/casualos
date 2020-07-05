@@ -5,6 +5,7 @@ import {
     RemoteAction,
     StatusUpdate,
     Action,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { Bot, UpdatedBot, BotAction } from '../bots';
 import { Observable, Subscription } from 'rxjs';
@@ -57,7 +58,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         return this._partition.applyEvents(events);
     }
 
-    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         if (this._partition.sendRemoteEvents) {
             await this._partition.sendRemoteEvents(events);
         }

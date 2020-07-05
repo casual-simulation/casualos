@@ -48,6 +48,11 @@ export const ADD_ATOMS = 'repo/add_atoms';
 export const COMMIT = 'repo/commit';
 
 /**
+ * The name of the event which notifies that a requested commit was created.
+ */
+export const COMMIT_CREATED = 'repo/commit_created';
+
+/**
  * The name of the event which starts watching commits made to a branch.
  */
 export const WATCH_COMMITS = 'repo/watch_commits';
@@ -66,6 +71,11 @@ export const CHECKOUT = 'repo/checkout';
  * The name of the event which restores a commit's data to a branch.
  */
 export const RESTORE = 'repo/restore';
+
+/**
+ * The name of the event which notifies that a branch was restored.
+ */
+export const RESTORED = 'repo/restored';
 
 /**
  * The name of the event which notifies that a commit was added.
@@ -214,6 +224,16 @@ export interface CommitEvent {
 }
 
 /**
+ * Defines an event which indicates that a commit was created on a branch.
+ */
+export interface CommitCreatedEvent {
+    /**
+     * The branch that was committed.
+     */
+    branch: string;
+}
+
+/**
  * Defines an event which indicates that a set of commits was added to a branch.
  */
 export interface AddCommitsEvent {
@@ -256,6 +276,16 @@ export interface RestoreEvent {
      * The hash of the commit to restore.
      */
     commit: string;
+}
+
+/**
+ * Defines an event which indicates that a commit was restored to a branch.
+ */
+export interface RestoredEvent {
+    /**
+     * The branch to restore.
+     */
+    branch: string;
 }
 
 /**

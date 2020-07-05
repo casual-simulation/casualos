@@ -38,6 +38,8 @@ import {
     UpdateBotAction,
     Bot,
     BotsState,
+    asyncResult,
+    ClearSpaceAction,
 } from '../bots';
 import values from 'lodash/values';
 
@@ -125,7 +127,7 @@ export class BotPartitionImpl implements BotPartition {
             if (e.type === 'load_bots') {
                 this._loadBots(e);
             } else if (e.type === 'clear_space') {
-                this._clearBots();
+                this._clearBots(e);
             }
         }
 
@@ -176,9 +178,9 @@ export class BotPartitionImpl implements BotPartition {
 
     private async _loadBots(event: LoadBotsAction) {
         const bots = await this._client.lookupBots(this._story, event.tags);
+        const sorted = sortBy(bots, b => b.id);
 
         if (bots.length > 0) {
-            const sorted = sortBy(bots, b => b.id);
             this.state = Object.assign({}, this.state);
             for (let bot of sorted) {
                 bot.space = <any>this.space;
@@ -186,14 +188,22 @@ export class BotPartitionImpl implements BotPartition {
             }
             this._onBotsAdded.next(sorted);
         }
+
+        if (hasValue(event.taskId)) {
+            this._onEvents.next([asyncResult(event.taskId, sorted, true)]);
+        }
     }
 
-    private async _clearBots() {
+    private async _clearBots(event: ClearSpaceAction) {
         await this._client.clearBots(this._story);
 
         const ids = sortBy(values(this.state).map(b => b.id));
         this.state = {};
 
         this._onBotsRemoved.next(ids);
+
+        if (hasValue(event.taskId)) {
+            this._onEvents.next([asyncResult(event.taskId, undefined)]);
+        }
     }
 }

@@ -839,6 +839,15 @@ declare interface LoadFileOptions {
 }
 
 /**
+ * The data returned from loading a file.
+ */
+declare interface LoadFileResult {
+    path: string;
+    url: string;
+    data: string | Buffer;
+}
+
+/**
  * Defines an event that is used to save a file to a drive.
  */
 declare interface SaveFileAction extends Action {
@@ -873,6 +882,14 @@ declare interface SaveFileOptions {
      * Whether to overwrite existing files.
      */
     overwriteExistingFile?: boolean;
+}
+
+/**
+ * The data returned from saving a file.
+ */
+declare interface SaveFileResult {
+    path: string;
+    url: string;
 }
 
 /**
@@ -1163,7 +1180,7 @@ declare interface ShowChatOptions {
 /**
  * Defines an event that executes a script.
  */
-declare interface RunScriptAction {
+declare interface RunScriptAction extends AsyncAction {
     type: 'run_script';
 
     /**
@@ -2409,7 +2426,7 @@ declare global {
          * Enqueues the given script to execute after this script is done running.
          * @param script The script that should be executed.
          */
-        run(script: string): RunScriptAction;
+        run(script: string): Promise<any>;
 
         /**
          * Downloads the given list of bots.
@@ -2591,7 +2608,7 @@ declare global {
          * @param story The story.
          * @param botOrMod The bot or mod that should be cloned into the new story.
          */
-        setupStory(story: string, botOrMod?: Mod): SetupChannelAction;
+        setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
          * Executes the given shell script on the server.
@@ -2613,14 +2630,14 @@ declare global {
         /**
          * Clears all the errors in the story.
          */
-        destroyErrors(): ClearSpaceAction;
+        destroyErrors(): Promise<void>;
     
         /**
          * Loads the errors for the given bot and tag.
          * @param bot The bot that the errors should be loaded for.
          * @param tag The tag that the errors should be loaded for.
          */
-        loadErrors(bot: string | Bot, tag: string): LoadBotsAction;
+        loadErrors(bot: string | Bot, tag: string): Promise<Bot[]>;
 
         /**
          * Gets the number of players that are viewing the current story.
@@ -2656,14 +2673,14 @@ declare global {
          * @param path The path of the file.
          * @param options The options.
          */
-        loadFile(path: string, options?: LoadFileOptions): RemoteAction;
+        loadFile(path: string, options?: LoadFileOptions): Promise<LoadFileResult>;
     
         /**
          * Saves a file on the server at the given path.
          * @param path The path of the file.
          * @param options The options.
          */
-        saveFile(path: string, data: string, options?: SaveFileOptions): RemoteAction;
+        saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
     
         /**
          * Finishes the checkout process by charging the payment fee to the user.
@@ -2699,13 +2716,13 @@ declare global {
         /**
          * Loads the "history" space into the story.
          */
-        browseHistory(): BrowseHistoryAction;
+        browseHistory(): Promise<void>;
     
         /**
          * Restores the current state to the given mark.
          * @param mark The bot or bot ID that represents the mark that should be restored.
          */
-        restoreHistoryMark(mark: Bot | string): RestoreHistoryMarkAction;
+        restoreHistoryMark(mark: Bot | string): Promise<void>;
     
         /**
          * Restores the current state to the given mark.
@@ -2715,7 +2732,7 @@ declare global {
         restoreHistoryMarkToStory(
             mark: Bot | string,
             story: string
-        ): RestoreHistoryMarkAction;
+        ): Promise<void>;
     };
 
     /**

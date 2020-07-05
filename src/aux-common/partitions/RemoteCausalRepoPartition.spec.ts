@@ -20,6 +20,8 @@ import {
     DevicesEvent,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -48,6 +50,7 @@ import {
     action,
     ON_REMOTE_WHISPER_ACTION_NAME,
     getStoryStatuses,
+    AsyncAction,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
@@ -329,6 +332,42 @@ describe('RemoteCausalRepoPartition', () => {
                 expect(connection.sentMessages).toEqual([]);
             });
 
+            describe('device', () => {
+                it('should set the playerId and taskId on the inner event', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    const action = device(
+                        deviceInfo('username', 'device', 'session'),
+                        {
+                            type: 'abc',
+                        },
+                        'task1'
+                    );
+                    partition.connect();
+
+                    receiveEvent.next({
+                        branch: 'testBranch',
+                        action: action,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).not.toEqual([action]);
+                    expect(events).toEqual([
+                        device(
+                            deviceInfo('username', 'device', 'session'),
+                            {
+                                type: 'abc',
+                                taskId: 'task1',
+                                playerId: 'session',
+                            } as AsyncAction,
+                            'task1'
+                        ),
+                    ]);
+                });
+            });
+
             describe('mark_history', () => {
                 it(`should send a ${COMMIT} event to the server`, async () => {
                     setupPartition({
@@ -353,6 +392,39 @@ describe('RemoteCausalRepoPartition', () => {
                             },
                         },
                     ]);
+                });
+
+                it(`should emit an async result for the task`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    let commitCreated = new Subject<CommitCreatedEvent>();
+                    connection.events.set(COMMIT_CREATED, commitCreated);
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            <any>{
+                                type: 'mark_history',
+                                message: 'newCommit',
+                            },
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    commitCreated.next({
+                        branch: 'testBranch',
+                    });
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', undefined)]);
                 });
             });
 
@@ -382,6 +454,41 @@ describe('RemoteCausalRepoPartition', () => {
                                 branch: 'testBranch',
                                 client: expect.anything(),
                             },
+                        },
+                    ]);
+                });
+
+                it(`should delegate the task to the load_space action`, async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe(e => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            <any>{
+                                type: 'browse_history',
+                            },
+                            undefined,
+                            undefined,
+                            99
+                        ),
+                    ]);
+
+                    expect(events).toEqual([
+                        {
+                            type: 'load_space',
+                            space: 'history',
+                            config: {
+                                type: 'causal_repo_history_client',
+                                branch: 'testBranch',
+                                client: expect.anything(),
+                            },
+                            taskId: 99,
                         },
                     ]);
                 });

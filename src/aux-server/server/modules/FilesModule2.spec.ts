@@ -1,12 +1,26 @@
-import { saveFile, loadFile } from '@casual-simulation/aux-common';
+import {
+    saveFile,
+    loadFile,
+    MemoryPartition,
+} from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { Subscription } from 'rxjs';
-import { AuxConfig, AuxUser, Simulation } from '@casual-simulation/aux-vm';
+import {
+    AuxConfig,
+    AuxUser,
+    Simulation,
+    AuxChannel,
+} from '@casual-simulation/aux-vm';
 import fs from 'fs';
 import { FilesModule2 } from './FilesModule2';
 import mockFs from 'mock-fs';
 import uuid from 'uuid/v4';
+import {
+    Action,
+    remoteResult,
+    remoteError,
+} from '@casual-simulation/causal-trees';
 let dateNowMock = (Date.now = jest.fn());
 
 console.log = jest.fn();
@@ -17,6 +31,8 @@ jest.mock('uuid/v4');
 
 describe('FilesModule2', () => {
     let simulation: Simulation;
+    let channel: AuxChannel;
+    let memory: MemoryPartition;
     let user: AuxUser;
     let config: AuxConfig;
     let subject: FilesModule2;
@@ -55,6 +71,9 @@ describe('FilesModule2', () => {
 
         simulation = nodeSimulationWithConfig(user, 'admin', config);
         await simulation.init();
+
+        channel = (<any>simulation)._vm.channel;
+        memory = (<any>channel)._partitions.shared;
 
         subject = new FilesModule2('/test/storage-dir');
         sub = await subject.setup(simulation);
@@ -225,6 +244,76 @@ describe('FilesModule2', () => {
 
                 expect(exists).toBe(true);
             });
+
+            it('should send an async result when done if the event has a task id and player id', async () => {
+                let remoteEvents = [] as Action[];
+
+                memory.sendRemoteEvents = async events => {
+                    remoteEvents.push(...events);
+                };
+
+                await simulation.helper.transaction({
+                    type: 'save_file',
+                    options: {
+                        path: '/drives/newFile.txt',
+                        data: 'test',
+                        callbackShout: 'callback',
+                    },
+                    taskId: 'task1',
+                    playerId: 'player1',
+                });
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    remoteResult(
+                        {
+                            path: '/drives/newFile.txt',
+                            url: expect.any(String),
+                        },
+                        {
+                            sessionId: 'player1',
+                        },
+                        'task1'
+                    ),
+                ]);
+            });
+
+            it('should send an async error when done if the event has a task id and player id', async () => {
+                let remoteEvents = [] as Action[];
+
+                memory.sendRemoteEvents = async events => {
+                    remoteEvents.push(...events);
+                };
+
+                fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
+
+                await simulation.helper.transaction({
+                    type: 'save_file',
+                    options: {
+                        path: '/drives/newFile.txt',
+                        data: 'test',
+                        callbackShout: 'callback',
+                    },
+                    taskId: 'task1',
+                    playerId: 'player1',
+                });
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    remoteError(
+                        {
+                            path: '/drives/newFile.txt',
+                            error: 'file_already_exists',
+                        },
+                        {
+                            sessionId: 'player1',
+                        },
+                        'task1'
+                    ),
+                ]);
+            });
         });
 
         describe('load_file', () => {
@@ -302,6 +391,71 @@ describe('FilesModule2', () => {
                 const bot = simulation.helper.botsState['callback'];
                 const tags = bot.tags;
                 expect(tags['err']).toBe('file_does_not_exist');
+            });
+
+            it('should send an async result with the file', async () => {
+                let remoteEvents = [] as Action[];
+
+                memory.sendRemoteEvents = async events => {
+                    remoteEvents.push(...events);
+                };
+
+                await simulation.helper.transaction({
+                    type: 'load_file',
+                    options: {
+                        path: '/drives/file1.txt',
+                    },
+                    taskId: 'task1',
+                    playerId: 'player1',
+                });
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    remoteResult(
+                        {
+                            path: '/drives/file1.txt',
+                            url: expect.any(String),
+                            data: 'abc',
+                        },
+                        {
+                            sessionId: 'player1',
+                        },
+                        'task1'
+                    ),
+                ]);
+            });
+
+            it('should send an async error if the file doesnt exist', async () => {
+                let remoteEvents = [] as Action[];
+
+                memory.sendRemoteEvents = async events => {
+                    remoteEvents.push(...events);
+                };
+
+                await simulation.helper.transaction({
+                    type: 'load_file',
+                    options: {
+                        path: '/drives/not_exists.txt',
+                    },
+                    taskId: 'task1',
+                    playerId: 'player1',
+                });
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    remoteError(
+                        {
+                            path: '/drives/not_exists.txt',
+                            error: 'file_does_not_exist',
+                        },
+                        {
+                            sessionId: 'player1',
+                        },
+                        'task1'
+                    ),
+                ]);
             });
         });
     });

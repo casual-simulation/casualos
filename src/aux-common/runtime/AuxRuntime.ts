@@ -98,6 +98,10 @@ export class AuxRuntime
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
 
+    get context() {
+        return this._globalContext;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
@@ -304,15 +308,22 @@ export class AuxRuntime
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false);
             this.process(result.actions);
+            if (hasValue(action.taskId)) {
+                this._globalContext.resolveTask(
+                    action.taskId,
+                    result.result,
+                    false
+                );
+            }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);
         } else if (action.type === 'async_result') {
-            this._globalContext.resolveTask(
-                action.taskId,
-                action.result,
-                false
-            );
+            const value =
+                action.mapBotsInResult === true
+                    ? this._mapBotsToRuntimeBots(action.result)
+                    : action.result;
+            this._globalContext.resolveTask(action.taskId, value, false);
         } else if (action.type === 'async_error') {
             this._globalContext.rejectTask(action.taskId, action.error, false);
         } else if (action.type === 'device_result') {

@@ -9,8 +9,10 @@ import {
     loadBots,
     Bot,
     clearSpace,
+    asyncResult,
 } from '../bots';
 import { waitAsync } from '../test/TestHelpers';
+import { Action } from '@casual-simulation/causal-trees';
 
 describe('BotPartition', () => {
     let client: MemoryBotClient;
@@ -155,6 +157,58 @@ describe('BotPartition', () => {
             });
         });
 
+        it('should emit a async result with the loaded bots', async () => {
+            await client.addBots('story', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let events = [] as Action[];
+            subject.onEvents.subscribe(e => events.push(...e));
+
+            await subject.applyEvents([
+                loadBots(
+                    <any>'space',
+                    [
+                        {
+                            tag: 'test',
+                            value: true,
+                        },
+                    ],
+                    99
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                asyncResult(
+                    99,
+                    [
+                        createBot('test1', {
+                            abc: 'def',
+                            test: true,
+                        }),
+                        createBot('test2', {
+                            num: 123,
+                            test: true,
+                        }),
+                    ],
+                    true
+                ),
+            ]);
+        });
+
         it('should put the bots into the space specified by the partition', async () => {
             subject.space = 'test';
             await client.addBots('story', [
@@ -265,6 +319,32 @@ describe('BotPartition', () => {
             // Should emit them in order of ID
             expect(removed).toEqual(['test1', 'test2']);
             expect(subject.state).toEqual({});
+        });
+
+        it('should emit a async result when the bots are cleared', async () => {
+            await client.addBots('story', [
+                createBot('test2', {
+                    num: 123,
+                    test: true,
+                }),
+                createBot('test1', {
+                    abc: 'def',
+                    test: true,
+                }),
+                createBot('test3', {
+                    wrong: true,
+                    test: false,
+                }),
+            ]);
+
+            let events = [] as Action[];
+            subject.onEvents.subscribe(e => events.push(...e));
+
+            await subject.applyEvents([clearSpace(<any>'space', 99)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([asyncResult(99, undefined)]);
         });
     });
 });

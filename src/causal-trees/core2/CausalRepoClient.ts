@@ -53,6 +53,10 @@ import {
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
+    RestoredEvent,
+    RESTORED,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -60,6 +64,7 @@ import {
     RemoteAction,
     DeviceActionResult,
     DeviceActionError,
+    RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
 import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
@@ -454,7 +459,7 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param action The action.
      */
-    sendEvent(branch: string, action: RemoteAction) {
+    sendEvent(branch: string, action: RemoteActions) {
         this._client.send(SEND_EVENT, {
             branch: branch,
             action: action,
@@ -466,12 +471,23 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param message The commit message.
      */
-    commit(branch: string, message: string) {
-        const event: CommitEvent = {
-            branch: branch,
-            message: message,
-        };
-        this._client.send(COMMIT, event);
+    commit(branch: string, message: string): Observable<CommitCreatedEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: CommitEvent = {
+                    branch: branch,
+                    message: message,
+                };
+                this._client.send(COMMIT, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<CommitCreatedEvent>(COMMIT_CREATED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     /**
@@ -487,12 +503,23 @@ export class CausalRepoClient {
         this._client.send(CHECKOUT, event);
     }
 
-    restore(branch: string, hash: string) {
-        const event: RestoreEvent = {
-            branch: branch,
-            commit: hash,
-        };
-        this._client.send(RESTORE, event);
+    restore(branch: string, hash: string): Observable<RestoredEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: RestoreEvent = {
+                    branch: branch,
+                    commit: hash,
+                };
+                this._client.send(RESTORE, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<RestoredEvent>(RESTORED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {

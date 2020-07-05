@@ -113,6 +113,10 @@ describe('AuxLibrary', () => {
         library = createDefaultLibrary(context);
     });
 
+    afterEach(() => {
+        uuidMock.mockReset();
+    });
+
     const falsyCases = [['false', false], ['0', 0]];
     const emptyCases = [['null', null], ['empty string', '']];
     const numberCases = [['0', 0], ['1', 1], ['true', true], ['false', false]];
@@ -1464,9 +1468,10 @@ describe('AuxLibrary', () => {
 
         describe('player.run()', () => {
             it('should emit a RunScriptAction', () => {
-                const action = library.api.player.run('abc');
-                expect(action).toEqual(runScript('abc'));
-                expect(context.actions).toEqual([runScript('abc')]);
+                const action: any = library.api.player.run('abc');
+                const expected = runScript('abc', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -2308,13 +2313,28 @@ describe('AuxLibrary', () => {
 
         describe('server.setupStory()', () => {
             it('should send a SetupChannelAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
                 bot1.tags.abc = true;
-                const action = library.api.server.setupStory('channel', bot1);
-                const expected = remote(
-                    setupStory('channel', createBot(bot1.id, bot1.tags))
+                const action: any = library.api.server.setupStory(
+                    'channel',
+                    bot1
                 );
-                expect(action).toEqual(expected);
+                const expected = remote(
+                    setupStory('channel', createBot(bot1.id, bot1.tags)),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.setupStory('channel');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
@@ -2403,7 +2423,8 @@ describe('AuxLibrary', () => {
 
         describe('server.markHistory()', () => {
             it('should emit a mark_history event', () => {
-                const action = library.api.server.markHistory({
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.markHistory({
                     message: 'testMark',
                 });
                 const expected = remote(
@@ -2411,117 +2432,207 @@ describe('AuxLibrary', () => {
                         message: 'testMark',
                     }),
                     undefined,
-                    false
+                    false,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.markHistory({
+                    message: 'test',
+                });
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.browseHistory()', () => {
             it('should emit a browse_history event', () => {
-                const action = library.api.server.browseHistory();
-                const expected = remote(browseHistory());
-                expect(action).toEqual(expected);
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.browseHistory();
+                const expected = remote(
+                    browseHistory(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.browseHistory();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.restoreHistoryMark()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMark('mark');
-                const expected = remote(restoreHistoryMark('mark'));
-                expect(action).toEqual(expected);
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMark(
+                    'mark'
+                );
+                const expected = remote(
+                    restoreHistoryMark('mark'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMark('mark');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.restoreHistoryMarkToStory()', () => {
             it('should emit a restore_history_mark event', () => {
-                const action = library.api.server.restoreHistoryMarkToStory(
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.restoreHistoryMarkToStory(
                     'mark',
                     'story'
                 );
-                const expected = remote(restoreHistoryMark('mark', 'story'));
-                expect(action).toEqual(expected);
+                const expected = remote(
+                    restoreHistoryMark('mark', 'story'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.restoreHistoryMarkToStory('mark', 'story');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.loadFile()', () => {
             it('should issue a LoadFileAction in a remote event', () => {
-                const action = library.api.server.loadFile('path');
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.loadFile('path');
                 const expected = remote(
                     loadFile({
                         path: 'path',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.loadFile('path');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.saveFile()', () => {
             it('should issue a SaveFileAction in a remote event', () => {
-                const action = library.api.server.saveFile('path', 'data');
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.saveFile('path', 'data');
                 const expected = remote(
                     saveFile({
                         path: 'path',
                         data: 'data',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.saveFile('path', 'data');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
         describe('server.destroyErrors()', () => {
             it('should issue a ClearSpaceAction', () => {
-                const action = library.api.server.destroyErrors();
-                const expected = clearSpace('error');
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.destroyErrors();
+                const expected = clearSpace('error', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('server.loadErrors()', () => {
             it('should issue a LoadBotsAction for the given tag and bot ID', () => {
-                const action = library.api.server.loadErrors('test', 'abc');
-                const expected = loadBots('error', [
-                    {
-                        tag: 'error',
-                        value: true,
-                    },
-                    {
-                        tag: 'errorBot',
-                        value: 'test',
-                    },
-                    {
-                        tag: 'errorTag',
-                        value: 'abc',
-                    },
-                ]);
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.loadErrors(
+                    'test',
+                    'abc'
+                );
+                const expected = loadBots(
+                    'error',
+                    [
+                        {
+                            tag: 'error',
+                            value: true,
+                        },
+                        {
+                            tag: 'errorBot',
+                            value: 'test',
+                        },
+                        {
+                            tag: 'errorTag',
+                            value: 'abc',
+                        },
+                    ],
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support being passed a runtime bot', () => {
-                const action = library.api.server.loadErrors(bot1, 'abc');
-                const expected = loadBots('error', [
-                    {
-                        tag: 'error',
-                        value: true,
-                    },
-                    {
-                        tag: 'errorBot',
-                        value: bot1.id,
-                    },
-                    {
-                        tag: 'errorTag',
-                        value: 'abc',
-                    },
-                ]);
-                expect(action).toEqual(expected);
+                const action: any = library.api.server.loadErrors(bot1, 'abc');
+                const expected = loadBots(
+                    'error',
+                    [
+                        {
+                            tag: 'error',
+                            value: true,
+                        },
+                        {
+                            tag: 'errorBot',
+                            value: bot1.id,
+                        },
+                        {
+                            tag: 'errorTag',
+                            value: 'abc',
+                        },
+                    ],
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
@@ -3768,6 +3879,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should be able to destroy a bot that was just created', () => {
+            uuidMock.mockReturnValueOnce('uuid');
             const newBot = library.api.create();
             library.api.destroy(newBot);
             expect(context.bots).not.toContain(newBot);

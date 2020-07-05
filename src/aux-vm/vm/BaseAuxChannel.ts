@@ -17,6 +17,9 @@ import {
     BotSpace,
     realtimeStrategyToRealtimeEditMode,
     AuxPartitionRealtimeEditModeProvider,
+    LoadSpaceAction,
+    hasValue,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -27,6 +30,7 @@ import {
     RemoteAction,
     DeviceInfo,
     Action,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
@@ -345,7 +349,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         for (let [, partition] of iteratePartitions(this._partitions)) {
             if (partition.sendRemoteEvents) {
                 await partition.sendRemoteEvents(events);
@@ -517,7 +521,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _handleLocalEvents(e: LocalActions[]) {
         for (let event of e) {
             if (event.type === 'load_space') {
-                this._loadPartition(event.space, event.config);
+                this._loadPartition(event.space, event.config, event);
             }
         }
         this._onLocalEvents.next(e);
@@ -527,11 +531,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onDeviceEvents.next(e);
     }
 
-    protected async _loadPartition(space: string, config: PartitionConfig) {
+    protected async _loadPartition(
+        space: string,
+        config: PartitionConfig,
+        event: LoadSpaceAction
+    ) {
         if (space in this._partitions) {
             console.log(
                 `[BaseAuxChannel] Cannot load partition for "${space}" since the space is already occupied`
             );
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
             return;
         }
 
@@ -545,6 +556,20 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._subs.push(
             ...this._getCleanupSubscriptionsForPartition(partition)
         );
+
+        if (hasValue(event.taskId)) {
+            // Wait for initial connection
+            partition.onStatusUpdated
+                .pipe(
+                    first(
+                        status =>
+                            status.type === 'sync' && status.synced === true
+                    )
+                )
+                .subscribe(() => {
+                    this.sendEvents([asyncResult(event.taskId, null)]);
+                });
+        }
 
         partition.connect();
 

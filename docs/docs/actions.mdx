@@ -986,6 +986,8 @@ Runs the given script.
 The script will be executed in a separate environment with no `bot`, `tags`, `this`, `data`, and `that` variables.
 This means that you need to use the <ActionLink action='getBot(...filters)'/> or <ActionLink action='getBots(...filters)'/> functions to read bot data.
 
+Returns a promise that resolves with the returned script value after it has been executed.
+
 The **first parameter** is the script that should be executed.
 
 #### Examples:
@@ -998,6 +1000,12 @@ player.run("player.toast('hello');");
 2. Run a script from the `#script` tag on the current bot.
 ```typescript
 player.run(tags.script);
+```
+
+3. Run a script and toast the result.
+```typescript
+const result = await player.run("return 594 + 391");
+player.toast(result);
 ```
 
 ### `player.replaceDragBot(botOrMod)`
@@ -2094,6 +2102,8 @@ Sends an action to the server that will create the given story if it does not ex
 The new bot will only be added to the story if the story did not exist.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
+Returns a promise that resolves when the story has been setup.
+
 The **first parameter** is the ID of the story that should be setup.
 
 The **second parameter** is optional and is the bot or mod that should be cloned into the new story. After the bot is created, <TagLink tag='@onCreate'/> will be triggered.
@@ -2122,12 +2132,12 @@ if (that.action.type === 'device') {
 
 1. Create the "test" story:
 ```typescript
-server.setupStory("test");
+await server.setupStory("test");
 ```
 
 2. Create the "test" story with a bot inside it:
 ```typescript
-server.setupStory("test", {
+await server.setupStory("test", {
     "name": "bob",
     "color": "red"
 });
@@ -2135,7 +2145,7 @@ server.setupStory("test", {
 
 3. Create the "test" story with a bot that places a bot in the "abc" dimension:
 ```typescript
-server.setupStory("test", {
+await server.setupStory("test", {
     "onCreate": `@
         create({
             creator: null,
@@ -2156,11 +2166,13 @@ Loads the `history` space into the current story.
 The `history` space is read-only and contains all the marks that have been created for the story.
 Each mark is a bot that is placed in the `#history` dimension.
 
+Returns a promise that resolves when the history bots are loaded.
+
 #### Examples:
 
 1. Load the `history` space.
 ```typescript
-server.browseHistory();
+await server.browseHistory();
 ```
 
 ### `server.markHistory(options)`
@@ -2168,6 +2180,8 @@ server.browseHistory();
 
 Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
 Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
+
+Returns a promise that resolves when the history mark has been created.
 
 The **first parameter** are the options that should be used to mark the history point.
 It should be an object with the following properties:
@@ -2177,7 +2191,7 @@ It should be an object with the following properties:
 
 1. Save the current state of the `shared` space.
 ```typescript
-server.markHistory({
+await server.markHistory({
     message: 'First Version of my AUX'
 });
 ```
@@ -2187,6 +2201,8 @@ server.markHistory({
 
 Restores the current state to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
+
+Returns a promise that resolves when the history mark has been restored.
 
 The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
@@ -2198,7 +2214,7 @@ The **first parameter** is the bot or bot ID of the mark that should be restored
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMark(mark);
+await server.restoreHistoryMark(mark);
 ```
 
 ### `server.restoreHistoryMarkToStory(mark, story)`
@@ -2206,6 +2222,8 @@ server.restoreHistoryMark(mark);
 
 Restores the state in the given story to the state that was saved by the given mark.
 This will create a new mark with any unsaved changes in the story and another mark with the state that was saved by the given mark.
+
+Returns a promise that resolves when the history mark has been restored.
 
 The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current story by using the <ActionLink action='server.browseHistory()'/> action.
 
@@ -2219,7 +2237,7 @@ The **second parameter** is the story that the state should be restored to. If `
 let mark = getBot(byTag("#history", true));
 
 // Restore the current state to the given mark.
-server.restoreHistoryMarkToStory(mark, "test");
+await server.restoreHistoryMarkToStory(mark, "test");
 ```
 
 ### `server.shell(script)`
@@ -2242,6 +2260,8 @@ Loads a file from the server at the given path.
 Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
 Loading a file from a USB drive is as simple as specifying the file name.
 If multiple USB drives are plugged in and have files with the same name, then the file from the USB drive in the smallest numbered port is used.
+
+Returns a promise that resolves with the data in the file.
 
 The **first parameter** is the path that the file should be loaded from. This is usually just the full name of the file to load. (name + file extension)
 
@@ -2268,6 +2288,12 @@ server.loadFile('/2/book.txt', {
 });
 ```
 
+3. Load a file named "book.txt" and toast the contents.
+```typescript
+const result = await server.loadFile('book.txt');
+player.toast(result.data);
+```
+
 ### `server.saveFile(path, data, options?)`
 
 
@@ -2277,6 +2303,8 @@ If the file already exists, then the options are used to determine if the file s
 Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
 Saving a file to a USB drive is as simple as specifying the file name.
 If multiple USB drives are plugged in and a drive is not specified, then the file will be saved to the first drive.
+
+Returns a promise that resolves when the file has been saved.
 
 The **first parameter** is the path that the file should be saved to. This is usually just the full name of the file to save. (name + file extension)
 
@@ -2300,10 +2328,19 @@ server.saveFile('book.txt', 'My memoirs', {
 
 2. Save a file named "book.txt" to drive `2` and trigger a `@onBookSaved` shout when it is loaded.
 ```typescript
-server.loadFile('/2/book.txt', 'My memoirs', {
+server.saveFile('/2/book.txt', 'My memoirs', {
     callbackShout: 'onBookSaved',
     overwriteExistingFile: true
 });
+```
+
+3. Save a file named "book.txt" and send a toast when it is finished.
+```typescript
+await server.saveFile('/2/book.txt', 'My memoirs', {
+    overwriteExistingFile: true
+});
+
+player.toast("File Saved!");
 ```
 
 ### `server.loadErrors(bot, tag)`
@@ -2319,6 +2356,8 @@ Finds bots by searching the error space for bots with the following tags:
 -   `errorBot` must be the ID of the bot that was specified.
 -   `errorTag` must be the tag that was specified.
 
+Returns a promise that resolves with the list of bots that were loaded.
+
 The **first parameter** is the Bot or Bot ID that the errors should be loaded for.
 
 The **second parameter** is the name of the tag that the errors should be loaded for.
@@ -2327,13 +2366,14 @@ The **second parameter** is the name of the tag that the errors should be loaded
 
 1. Load all errors that have occurred for this script:
 ```typescript
-server.loadErrors(this, tagName);
+let bots = await server.loadErrors(this, tagName);
 ```
 
 ### `server.destroyErrors()`
 
-
 Destroys all the error bots.
+
+Returns a promise that resolves once the bots are destroyed.
 
 #### Examples:
 

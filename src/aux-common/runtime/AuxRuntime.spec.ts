@@ -1533,6 +1533,43 @@ describe('AuxRuntime', () => {
             expect(events.slice(1)).toEqual([[], [toast('abc')]]);
         });
 
+        it('should support mapping bots in async actions results', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+            ]);
+
+            runtime.process([
+                runScript(
+                    'player.showInput().then(result => player.toast(result.tags.abc))'
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [showInput(undefined, undefined, expect.any(Number))],
+            ]);
+
+            const taskId = (<any>events[0][0]).taskId as number;
+
+            runtime.process([
+                asyncResult(
+                    taskId,
+                    {
+                        id: 'test1',
+                        tags: {},
+                    },
+                    true
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events.slice(1)).toEqual([[], [toast('def')]]);
+        });
+
         it('should support rejecting async actions', async () => {
             runtime.process([
                 runScript(
@@ -1626,6 +1663,26 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events).toEqual([[toast('abc')]]);
+        });
+
+        it('should resolve run_script tasks', async () => {
+            const result = runtime.execute(
+                'return await player.run("return 123");'
+            );
+
+            runtime.process(result.actions);
+
+            expect(await result.result).toBe(123);
+        });
+
+        it('should unwrap async run_script tasks', async () => {
+            const result = runtime.execute(
+                'return await player.run("return Promise.resolve(123);");'
+            );
+
+            runtime.process(result.actions);
+
+            expect(await result.result).toBe(123);
         });
     });
 
@@ -7116,7 +7173,10 @@ describe('original action tests', () => {
                 remote(
                     loadFile({
                         path: 'path',
-                    })
+                    }),
+                    undefined,
+                    undefined,
+                    'uuid-0'
                 ),
             ]);
         });
@@ -7575,7 +7635,7 @@ describe('original action tests', () => {
             const botAction = action('test', ['thisBot']);
             const result = calculateActionResults(state, botAction);
 
-            expect(result.actions).toEqual([runScript('abc')]);
+            expect(result.actions).toEqual([runScript('abc', 1)]);
         });
     });
 
@@ -9132,7 +9192,10 @@ describe('original action tests', () => {
                         createBot('thisBot', {
                             test: '@server.setupStory("channel", this)',
                         })
-                    )
+                    ),
+                    undefined,
+                    undefined,
+                    'uuid-0'
                 ),
             ]);
         });
@@ -9324,7 +9387,8 @@ describe('original action tests', () => {
                         message: 'testMark',
                     }),
                     undefined,
-                    false
+                    false,
+                    'uuid-0'
                 ),
             ]);
         });
@@ -9346,7 +9410,9 @@ describe('original action tests', () => {
             const botAction = action('test', ['thisBot'], 'userBot');
             const result = calculateActionResults(state, botAction);
 
-            expect(result.actions).toEqual([remote(browseHistory())]);
+            expect(result.actions).toEqual([
+                remote(browseHistory(), undefined, undefined, 'uuid-0'),
+            ]);
         });
     });
 
@@ -9367,7 +9433,12 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                remote(restoreHistoryMark('mark')),
+                remote(
+                    restoreHistoryMark('mark'),
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
             ]);
         });
     });
@@ -9389,11 +9460,16 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction);
 
             expect(result.actions).toEqual([
-                remote(<RestoreHistoryMarkAction>{
-                    type: 'restore_history_mark',
-                    mark: 'mark',
-                    story: 'story',
-                }),
+                remote(
+                    <RestoreHistoryMarkAction>{
+                        type: 'restore_history_mark',
+                        mark: 'mark',
+                        story: 'story',
+                    },
+                    undefined,
+                    undefined,
+                    'uuid-0'
+                ),
             ]);
         });
     });
