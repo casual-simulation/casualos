@@ -1138,6 +1138,9 @@ export const KNOWN_TAGS: string[] = [
 
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+
+    ON_BOT_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {
