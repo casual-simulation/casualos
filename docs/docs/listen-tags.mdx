@@ -334,6 +334,15 @@ let that: {
 };
 ```
 
+### `@onBotAdded`
+
+A whisper that is sent when the bot is added to the local story.
+
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's story, even if the bot has already been created.
+An example of this happening is when you first load a story. Even though all the bots have already been created, they still need to be added to the story in order for you to interact with them.
+
+There is no `that` argument for this listen tag.
+
 ### `@[groupName][stateName]OnEnter`
 
 A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
@@ -1004,4 +1013,21 @@ if (getID(player.getBot()) === 'server') {
         label: 'Player Left: ' + that.playerId
     });
 }
+```
+
+### `@onAnyBotsAdded`
+
+A shout that is sent when a list of bots is added to the current story.
+
+Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bot as been added to the current player's story, even if the bot has already been created.
+An example of this happening is when you first load a story. Even though all the bots have already been created, they still need to be added to the story in order for you to interact with them.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The array of bots that were added to the story.
+     */
+    bots: Bot[];
+};
 ```
