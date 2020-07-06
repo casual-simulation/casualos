@@ -17,6 +17,14 @@
     -   Improved the `server.markHistory()` function to return a promise that resolves once the history is saved.
     -   Improved the `server.restoreHistoryMark()` function to return a promise that resolves once the history is restored.
     -   Improved the `server.restoreHistoryMarkToStory()` function to return a promise that resolves once the history is restored.
+    -   Added the `@onBotAdded` and `@onAnyBotsAdded` listen tags.
+        -   These are triggered whenever a bot is added to the local story.
+        -   Note that this is different from `@onCreate` because you will be notified whenever a bot is added to the state even if it has already been created.
+        -   An example of this are bots in the `otherPlayers` space. You cannot create bots in this space but you will be notified via `@onBotAdded` and `@onAnyBotsAdded`.
+        -   `@onBotAdded` is triggered on the bot that was added. There is no `that`.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an object with the following properties:
+                -   `bots` - The array of bots that were added.
 
 ## V1.1.17
 
