@@ -27,6 +27,8 @@ import {
     getBotSpace,
     ON_ACTION_ACTION_NAME,
     breakIntoIndividualEvents,
+    ON_BOT_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -143,6 +145,10 @@ export class AuxRuntime
 
                 this._actionBatch = [];
                 this._errorBatch = [];
+
+                if (actions.length <= 0 && errors.length <= 0) {
+                    return;
+                }
 
                 // Schedule a new micro task to
                 // run at a later time with the actions.
@@ -492,6 +498,13 @@ export class AuxRuntime
 
         const changes = this._dependencies.addBots(bots);
         this._updateDependentBots(changes, update, newBotIDs);
+
+        if (update.addedBots.length > 0) {
+            this.shout(ON_BOT_ADDED_ACTION_NAME, update.addedBots);
+            this.shout(ON_ANY_BOTS_ADDED_ACTION_NAME, null, {
+                bots: newBots.map(([bot, precalc]) => bot),
+            });
+        }
 
         return update;
     }

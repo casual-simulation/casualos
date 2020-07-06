@@ -895,6 +895,16 @@ export const ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerUnsubscribed';
 
 /**
+ * The name of the event that is triggered when a bot is added to the local simulation.
+ */
+export const ON_BOT_ADDED_ACTION_NAME = 'onBotAdded';
+
+/**
+ * The name of the event that is triggered when any bot is added to the local simulation.
+ */
+export const ON_ANY_BOTS_ADDED_ACTION_NAME = 'onAnyBotsAdded';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
