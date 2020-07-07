@@ -982,6 +982,20 @@ export const KNOWN_TAGS: string[] = [
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
 
+    'pageCameraPositionX',
+    'pageCameraPositionY',
+    'pageCameraPositionZ',
+    'inventoryCameraPositionX',
+    'inventoryCameraPositionY',
+    'inventoryCameraPositionZ',
+
+    'pageCameraRotationX',
+    'pageCameraRotationY',
+    'pageCameraRotationZ',
+    'inventoryCameraRotationX',
+    'inventoryCameraRotationY',
+    'inventoryCameraRotationZ',
+
     '_editingBot',
 
     'portalColor',
