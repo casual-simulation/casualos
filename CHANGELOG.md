@@ -25,6 +25,13 @@
         -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
             -   `that` is an object with the following properties:
                 -   `bots` - The array of bots that were added.
+    -   Added the `@onAnyBotsRemoved` listen tags.
+        -   These are triggered whenever a a bot is removed from the local story.
+        -   Note that this is different from `@onDestroy` because you will be notified whenever a bot is removed from the state even if it has not been explicitly destroyed.
+        -   An example of this are bots in the `otherPlayers` space. When another player disconnects no `@onDestroy` is fired but you will get a `@onAnyBotsRemoved`.
+        -   `@onAnyBotsRemoved` is triggered on every bot whenever one or more bots are removed.
+            -   `that` is an object with the following properties:
+                -   `botIDs` - The array of bot IDs that were removed.
 
 ## V1.1.17
 
