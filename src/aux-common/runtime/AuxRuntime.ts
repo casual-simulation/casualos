@@ -29,6 +29,7 @@ import {
     breakIntoIndividualEvents,
     ON_BOT_ADDED_ACTION_NAME,
     ON_ANY_BOTS_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_REMOVED_ACTION_NAME,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -533,6 +534,12 @@ export class AuxRuntime
 
         const changes = this._dependencies.removeBots(botIds);
         this._updateDependentBots(changes, update, new Set());
+
+        if (botIds.length > 0) {
+            this.shout(ON_ANY_BOTS_REMOVED_ACTION_NAME, null, {
+                botIDs: botIds,
+            });
+        }
 
         return update;
     }

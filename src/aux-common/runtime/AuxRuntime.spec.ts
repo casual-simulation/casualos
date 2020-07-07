@@ -787,6 +787,68 @@ describe('AuxRuntime', () => {
                 ]);
             });
         });
+
+        describe('onAnyBotsRemoved', () => {
+            it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                    }),
+                ]);
+
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(['test1', 'test2'])]]);
+            });
+
+            it('should be sent after the bot is removed from the runtime', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsRemoved: `@player.toast(getBots('abc').length)`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(getBots('abc').length + 10)`,
+                    }),
+                ]);
+
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(11)]]);
+            });
+
+            it('should not be triggered from destroy()', async () => {
+                uuidMock.mockReturnValueOnce('uuid1');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        destroy: `@destroy(this)`,
+                        onBotDestroyed: `@player.toast("Hit")`,
+                    }),
+                ]);
+
+                runtime.shout('destroy');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+        });
     });
 
     describe('botsRemoved()', () => {
