@@ -17,6 +17,32 @@
     -   Improved the `server.markHistory()` function to return a promise that resolves once the history is saved.
     -   Improved the `server.restoreHistoryMark()` function to return a promise that resolves once the history is restored.
     -   Improved the `server.restoreHistoryMarkToStory()` function to return a promise that resolves once the history is restored.
+    -   Added the `@onBotAdded` and `@onAnyBotsAdded` listen tags.
+        -   These are triggered whenever a bot is added to the local story.
+        -   Note that this is different from `@onCreate` because you will be notified whenever a bot is added to the state even if it has already been created.
+        -   An example of this are bots in the `otherPlayers` space. You cannot create bots in this space but you will be notified via `@onBotAdded` and `@onAnyBotsAdded`.
+        -   `@onBotAdded` is triggered on the bot that was added. There is no `that`.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an object with the following properties:
+                -   `bots` - The array of bots that were added.
+    -   Added the `@onAnyBotsRemoved` listen tags.
+        -   These are triggered whenever a a bot is removed from the local story.
+        -   Note that this is different from `@onDestroy` because you will be notified whenever a bot is removed from the state even if it has not been explicitly destroyed.
+        -   An example of this are bots in the `otherPlayers` space. When another player disconnects no `@onDestroy` is fired but you will get a `@onAnyBotsRemoved`.
+        -   `@onAnyBotsRemoved` is triggered on every bot whenever one or more bots are removed.
+            -   `that` is an object with the following properties:
+                -   `botIDs` - The array of bot IDs that were removed.
+    -   Added the `@onBotChanged` and `@onAnyBotsChanged` listen tags.
+        -   These are triggered whenever a bot is changed in the local story.
+        -   Note that you will be notified whenever a bot is changed in the state even if it was changed by another player.
+        -   An example of this are bots in the `otherPlayers` space. You cannot update bots in this space but you will be notified via `@onBotChanged` and `@onAnyBotsChanged`.
+        -   `@onBotChanged` is triggered on the bot that was changed.
+            -   `that` is an object with the following properties:
+                -   `tags` - The list of tags that were changed on the bot.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an array containing objects with the following properties:
+                -   `bot` - The bot that was updated.
+                -   `tags` - The tags that were changed on the bot.
 
 ## V1.1.17
 

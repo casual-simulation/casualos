@@ -97,7 +97,9 @@ describe('AuxRuntime', () => {
     let memory: MemoryPartition;
     let runtime: AuxRuntime;
     let events: BotAction[][];
+    let allEvents: BotAction[];
     let errors: ScriptError[][];
+    let allErrors: ScriptError[];
     let version: AuxVersion;
     let auxDevice: AuxDevice;
 
@@ -131,10 +133,18 @@ describe('AuxRuntime', () => {
         );
 
         events = [];
+        allEvents = [];
         errors = [];
+        allErrors = [];
 
-        runtime.onActions.subscribe(a => events.push(a));
-        runtime.onErrors.subscribe(e => errors.push(e));
+        runtime.onActions.subscribe(a => {
+            events.push(a);
+            allEvents.push(...a);
+        });
+        runtime.onErrors.subscribe(e => {
+            errors.push(e);
+            allErrors.push(...e);
+        });
     });
 
     afterEach(() => {
@@ -611,6 +621,172 @@ describe('AuxRuntime', () => {
                 });
             });
         });
+
+        describe('onBotAdded', () => {
+            it('should send a onBotAdded event to the bots that were added', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotAdded: `@player.toast("Added 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotAdded: `@player.toast("Added 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Added 1!'), toast('Added 2!')],
+                ]);
+            });
+
+            it('should send a onBotAdded event after the bots were added', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotAdded: `@player.toast(getBots('abc', 'ghi').length + 10)`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotAdded: `@player.toast(getBots('abc', 'def').length + 20)`,
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(11), toast(21)]]);
+            });
+
+            it('should not include an argument', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotAdded: `@player.toast(that)`,
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(undefined)]]);
+            });
+
+            it('should not be triggered from create()', async () => {
+                uuidMock.mockReturnValueOnce('uuid1');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        create: `@create({
+                            onBotAdded: '@player.toast("hit")'
+                        })`,
+                    }),
+                ]);
+
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid1', {
+                                creator: 'test1',
+                                onBotAdded: '@player.toast("hit")',
+                            })
+                        ),
+                    ],
+                ]);
+            });
+        });
+
+        describe('onAnyBotsAdded', () => {
+            it('should send a onAnyBotsAdded event with all the bots that were added', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(3)]]);
+            });
+
+            it('should send a onAnyBotsAdded to all bots', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsAdded: `@player.toast(that.bots.length)`,
+                    }),
+                ]);
+
+                runtime.botsAdded([
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(1)], [toast(2)]]);
+            });
+
+            it('should allow updating the bots', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsAdded: `@for(let b of that.bots) { b.tags.hit = true; }`,
+                    }),
+                ]);
+
+                runtime.botsAdded([
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                hit: true,
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test2', {
+                            tags: {
+                                hit: true,
+                            },
+                        }),
+                        botUpdated('test3', {
+                            tags: {
+                                hit: true,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+        });
     });
 
     describe('botsRemoved()', () => {
@@ -737,6 +913,68 @@ describe('AuxRuntime', () => {
                     removedBots: ['test2'],
                     updatedBots: ['test'],
                 });
+            });
+        });
+
+        describe('onAnyBotsRemoved', () => {
+            it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                    }),
+                ]);
+
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(['test1', 'test2'])]]);
+            });
+
+            it('should be sent after the bot is removed from the runtime', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsRemoved: `@player.toast(getBots('abc').length)`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(getBots('abc').length + 10)`,
+                    }),
+                ]);
+
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(11)]]);
+            });
+
+            it('should not be triggered from destroy()', async () => {
+                uuidMock.mockReturnValueOnce('uuid1');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        destroy: `@destroy(this)`,
+                        onBotDestroyed: `@player.toast("Hit")`,
+                    }),
+                ]);
+
+                runtime.shout('destroy');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
             });
         });
     });
@@ -1262,6 +1500,195 @@ describe('AuxRuntime', () => {
                 expect(result.actions).toEqual([toast('different')]);
             });
         });
+
+        describe('onBotChanged', () => {
+            it('should send a onBotChanged event to the bots that were changed', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotChanged: `@player.toast("Changed 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotChanged: `@player.toast("Changed 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            onBotChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi1',
+                            onBotChanged: `@player.toast("Changed 2!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Changed 1!')],
+                    [toast('Changed 2!')],
+                ]);
+            });
+
+            it('should be sent after the bot has been updated', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotChanged: `@player.toast(getBots('zzz').length)`,
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def',
+                            zzz: 'aaa',
+                            onBotChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['zzz'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast(1)]]);
+            });
+
+            it('should send the tags that were updated', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotChanged: `@player.toast(that)`,
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            zzz: 'aaa',
+                            onBotChanged: `@player.toast(that)`,
+                        }),
+                        tags: ['abc', 'zzz'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        toast({
+                            tags: ['abc', 'zzz'],
+                        }),
+                    ],
+                ]);
+            });
+        });
+
+        describe('onAnyBotsChanged', () => {
+            it('should send a onAnyBotsChanged event with the bots that were changed', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsChanged: `@player.toast(that)`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test3', {
+                            abc: 'def1',
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi',
+                            '123': '456',
+                        }),
+                        tags: ['123'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        toast([
+                            {
+                                bot: expect.any(Object),
+                                tags: ['abc'],
+                            },
+                            {
+                                bot: expect.any(Object),
+                                tags: ['123'],
+                            },
+                        ]),
+                    ],
+                ]);
+            });
+
+            it('should be able to update bots that were updated', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsChanged: `@that[0].bot.tags.abc = true;`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test3', {
+                            abc: 'def1',
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi',
+                            '123': '456',
+                        }),
+                        tags: ['123'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test3', {
+                            tags: {
+                                abc: true,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+        });
     });
 
     describe('process()', () => {
@@ -1356,7 +1783,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[]]);
+            expect(events).toEqual([]);
         });
 
         it('should call onStoryAction() once per action in a batch', async () => {
@@ -1432,7 +1859,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[]]);
+            expect(events).toEqual([]);
         });
 
         it('should be able to filter runScript actions before they are executed', async () => {
@@ -1445,7 +1872,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[]]);
+            expect(events).toEqual([]);
         });
 
         it('should split add_state events into individual bot updates', async () => {
@@ -1530,7 +1957,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+            expect(events.slice(1)).toEqual([[toast('abc')]]);
         });
 
         it('should support mapping bots in async actions results', async () => {
@@ -1567,7 +1994,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast('def')]]);
+            expect(events.slice(1)).toEqual([[toast('def')]]);
         });
 
         it('should support rejecting async actions', async () => {
@@ -1589,7 +2016,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+            expect(events.slice(1)).toEqual([[toast('abc')]]);
         });
 
         it('should support resolving device async actions', async () => {
@@ -1610,7 +2037,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast(123)]]);
+            expect(events.slice(1)).toEqual([[toast(123)]]);
         });
 
         it('should support rejecting device async actions', async () => {
@@ -1631,7 +2058,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast('bad')]]);
+            expect(events.slice(1)).toEqual([[toast('bad')]]);
         });
 
         it('should support using await for async actions', async () => {
@@ -1654,7 +2081,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events.slice(1)).toEqual([[], [toast('abc')]]);
+            expect(events.slice(1)).toEqual([[toast('abc')]]);
         });
 
         it('should not crash if given a run_script that doesnt compile', async () => {
@@ -1843,13 +2270,13 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[]]);
+            expect(events).toEqual([]);
 
             jest.advanceTimersByTime(200);
 
             await waitAsync();
 
-            expect(events).toEqual([[], [toast('abc')], [toast('abc')]]);
+            expect(events).toEqual([[toast('abc')], [toast('abc')]]);
         });
 
         it('should dispatch events from setTimeout() callbacks', async () => {
@@ -1862,13 +2289,13 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[]]);
+            expect(events).toEqual([]);
 
             jest.advanceTimersByTime(200);
 
             await waitAsync();
 
-            expect(events).toEqual([[], [toast('abc')]]);
+            expect(events).toEqual([[toast('abc')]]);
         });
 
         it('should dispatch events from promise callbacks', async () => {
@@ -1882,7 +2309,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[], [toast('abc')], [toast('abc2')]]);
+            expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
         });
 
         it('should handle a bot getting destroyed twice due to a setTimeout() callback', async () => {
@@ -1897,13 +2324,13 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[], [botRemoved('test1')]]);
+            expect(events).toEqual([[botRemoved('test1')]]);
 
             jest.advanceTimersByTime(200);
 
             await waitAsync();
 
-            expect(events).toEqual([[], [botRemoved('test1')], []]);
+            expect(events).toEqual([[botRemoved('test1')]]);
         });
 
         it('should handle a bot getting destroyed twice', async () => {
@@ -1918,7 +2345,7 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([[botRemoved('test1')], []]);
+            expect(events).toEqual([[botRemoved('test1')]]);
         });
 
         it('should handle a bot destroying itself twice', async () => {
@@ -2028,14 +2455,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(100);
 
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botAdded(
                             createBot('uuid1', {
@@ -2061,14 +2487,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botAdded(
                             createBot('uuid1', {
@@ -2099,14 +2524,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botAdded(
                             createBot('uuid1', {
@@ -2133,7 +2557,6 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botAdded(
                             createBot('uuid1', {
@@ -2182,7 +2605,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[botRemoved('test1')], []]);
+                expect(events).toEqual([[botRemoved('test1')]]);
             });
 
             it('should be able to delete bots which get accepted to the partition', async () => {
@@ -2231,13 +2654,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
-                expect(events).toEqual([[], [botRemoved('test2')], []]);
+                expect(events).toEqual([[botRemoved('test2')]]);
             });
 
             it('should delete bots from setTimeout() callbacks', async () => {
@@ -2253,16 +2676,16 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
-                expect(events).toEqual([[], [botRemoved('test2')]]);
+                expect(events).toEqual([[botRemoved('test2')]]);
             });
 
-            it('should delete bots from from promise callbacks', async () => {
+            it('should delete bots from promise callbacks', async () => {
                 uuidMock
                     .mockReturnValueOnce('uuid1')
                     .mockReturnValueOnce('uuid2');
@@ -2279,7 +2702,6 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [botRemoved('test2')],
                     [botRemoved('test3')],
                 ]);
@@ -2491,14 +2913,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botUpdated('test1', {
                             tags: {
@@ -2527,14 +2948,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[]]);
+                expect(events).toEqual([]);
 
                 jest.advanceTimersByTime(200);
 
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botUpdated('test1', {
                             tags: {
@@ -2545,7 +2965,7 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
-            it('should update bots from from promise callbacks', async () => {
+            it('should update bots from promise callbacks', async () => {
                 uuidMock
                     .mockReturnValueOnce('uuid1')
                     .mockReturnValueOnce('uuid2');
@@ -2560,7 +2980,6 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events).toEqual([
-                    [],
                     [
                         botUpdated('test1', {
                             tags: {
@@ -3276,19 +3695,17 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([
-                    [
-                        // value should not have been updated
-                        toast(undefined),
+                expect(allEvents).toEqual([
+                    // value should not have been updated
+                    toast(undefined),
 
-                        // but it should emit a bot update
-                        // so the partition can choose to propagate it.
-                        botUpdated('test1', {
-                            tags: {
-                                value: 123,
-                            },
-                        }),
-                    ],
+                    // but it should emit a bot update
+                    // so the partition can choose to propagate it.
+                    botUpdated('test1', {
+                        tags: {
+                            value: 123,
+                        },
+                    }),
                 ]);
             });
 
@@ -3307,18 +3724,16 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(result.errors).toEqual([]);
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot(
-                                'uuid',
-                                {
-                                    value: 123,
-                                },
-                                <any>'delayed'
-                            )
-                        ),
-                    ],
+                expect(allEvents).toEqual([
+                    botAdded(
+                        createBot(
+                            'uuid',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
                 ]);
             });
 
@@ -3346,7 +3761,7 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(result.errors).toEqual([]);
-                expect(events).toEqual([[botRemoved('test2')]]);
+                expect(allEvents).toEqual([botRemoved('test2')]);
             });
         });
 
@@ -3418,7 +3833,9 @@ describe('AuxRuntime', () => {
                 getEditMode: jest.fn(),
             };
             runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe(a => events.push(a));
+            runtime.onActions.subscribe(a => {
+                allEvents.push(...a);
+            });
 
             uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
             provider.getEditMode
@@ -3441,18 +3858,16 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(result.errors).toEqual([]);
-            expect(events).toEqual([
-                [
-                    botAdded(
-                        createBot(
-                            'uuid',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        )
-                    ),
-                ],
+            expect(allEvents).toEqual([
+                botAdded(
+                    createBot(
+                        'uuid',
+                        {
+                            value: 123,
+                        },
+                        <any>'delayed'
+                    )
+                ),
             ]);
 
             const result2 = runtime.shout('create2');
@@ -3460,18 +3875,16 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(result2.errors).toEqual([]);
-            expect(events.slice(1)).toEqual([
-                [
-                    botAdded(
-                        createBot(
-                            'uuid2',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        )
-                    ),
-                ],
+            expect(allEvents.slice(1)).toEqual([
+                botAdded(
+                    createBot(
+                        'uuid2',
+                        {
+                            value: 123,
+                        },
+                        <any>'delayed'
+                    )
+                ),
             ]);
         });
     });
@@ -3488,18 +3901,16 @@ describe('AuxRuntime', () => {
 
             await waitAsync();
 
-            expect(errors).toEqual([
-                [
-                    expect.objectContaining({
-                        error: expect.any(Error),
-                        bot: expect.objectContaining(
-                            createBot('test', {
-                                onClick: '@throw new Error("abc")',
-                            })
-                        ),
-                        tag: 'onClick',
-                    }),
-                ],
+            expect(allErrors).toEqual([
+                expect.objectContaining({
+                    error: expect.any(Error),
+                    bot: expect.objectContaining(
+                        createBot('test', {
+                            onClick: '@throw new Error("abc")',
+                        })
+                    ),
+                    tag: 'onClick',
+                }),
             ]);
         });
     });

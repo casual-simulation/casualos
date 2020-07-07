@@ -182,7 +182,7 @@ class MemoryPartitionImpl implements MemoryPartition {
                 if (update) {
                     update.bot = newBot;
                     update.tags = union(update.tags, changedTags);
-                } else {
+                } else if (changedTags.length > 0) {
                     updated.set(event.id, {
                         bot: newBot,
                         tags: changedTags,
