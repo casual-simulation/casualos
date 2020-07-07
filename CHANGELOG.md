@@ -32,6 +32,17 @@
         -   `@onAnyBotsRemoved` is triggered on every bot whenever one or more bots are removed.
             -   `that` is an object with the following properties:
                 -   `botIDs` - The array of bot IDs that were removed.
+    -   Added the `@onBotChanged` and `@onAnyBotsChanged` listen tags.
+        -   These are triggered whenever a bot is changed in the local story.
+        -   Note that you will be notified whenever a bot is changed in the state even if it was changed by another player.
+        -   An example of this are bots in the `otherPlayers` space. You cannot update bots in this space but you will be notified via `@onBotChanged` and `@onAnyBotsChanged`.
+        -   `@onBotChanged` is triggered on the bot that was changed.
+            -   `that` is an object with the following properties:
+                -   `tags` - The list of tags that were changed on the bot.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an array containing objects with the following properties:
+                -   `bot` - The bot that was updated.
+                -   `tags` - The tags that were changed on the bot.
 
 ## V1.1.17
 
