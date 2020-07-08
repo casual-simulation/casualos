@@ -4501,4 +4501,56 @@ describe('AuxLibrary', () => {
             });
         });
     });
+
+    describe('player.getCameraRotation()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    pageCameraRotationX: 1,
+                    pageCameraRotationY: 2,
+                    pageCameraRotationZ: 3,
+                    inventoryCameraRotationX: 4,
+                    inventoryCameraRotationY: 5,
+                    inventoryCameraRotationZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.player.getCameraRotation();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera rotation', () => {
+            const result = library.api.player.getCameraRotation('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera rotation', () => {
+            const result = library.api.player.getCameraRotation('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
 });

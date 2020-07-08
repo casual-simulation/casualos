@@ -358,6 +358,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 inSheet,
 
                 getCameraPosition,
+                getCameraRotation,
             },
 
             server: {
@@ -2403,6 +2404,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             x: user.tags[`${portal}CameraPositionX`],
             y: user.tags[`${portal}CameraPositionY`],
             z: user.tags[`${portal}CameraPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's camera.
+     * @param portal The portal that the camera rotation should be retrieved for.
+     */
+    function getCameraRotation(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraRotationX`],
+            y: user.tags[`${portal}CameraRotationY`],
+            z: user.tags[`${portal}CameraRotationZ`],
         };
     }
 

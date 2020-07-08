@@ -2274,6 +2274,12 @@ declare global {
         getCameraPosition(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
 
         /**
+         * Gets the 3D rotation of the player's camera.
+         * @param portal The portal that the camera rotation should be retrieved for.
+         */
+        getCameraRotation(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+
+        /**
          * Shows a toast message to the user.
          * @param message The message to show.
          * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
