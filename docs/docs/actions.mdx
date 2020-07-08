@@ -1840,6 +1840,26 @@ const position = player.getCameraPosition("page");
 const position = player.getCameraPosition("inventory");
 ```
 
+### `player.getCameraRotation(portal?)`
+
+Gets the rotation that the player's camera is at in the given portal.
+
+The **first parameter** is optional and is the portal that the camera rotation should be retrieved for.
+If not specified, then the rotation of the camera in the `page` portal will be returned.
+Possible values are `page` and `inventory`.
+
+#### Examples:
+
+1. Get the rotation of the player in the page portal.
+```typescript
+const rotation = player.getCameraRotation("page");
+```
+
+2. Get the rotation of the player in the inventory portal.
+```typescript
+const rotation = player.getCameraRotation("inventory");
+```
+
 ### `player.goToDimension(dimension)`
 
 
