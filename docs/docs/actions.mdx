@@ -1822,11 +1822,19 @@ playerBot.tags.sheetPortal = "testDimension";
 
 ### `player.getCameraPosition(portal?)`
 
-Gets the position that the player's camera is at in the given portal.
+Gets the 3D position that the player's camera is at in the given portal.
 
 The **first parameter** is optional and is the portal that the camera position should be retrieved for.
-If not specified, then the position of the camera in the `page` portal will be returned.
-Possible values are `page` and `inventory`.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera position in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera position in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
 
 #### Examples:
 
@@ -1842,11 +1850,19 @@ const position = player.getCameraPosition("inventory");
 
 ### `player.getCameraRotation(portal?)`
 
-Gets the rotation that the player's camera is at in the given portal.
+Gets the 3D rotation that the player's camera is at in the given portal.
 
 The **first parameter** is optional and is the portal that the camera rotation should be retrieved for.
-If not specified, then the rotation of the camera in the `page` portal will be returned.
-Possible values are `page` and `inventory`.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera rotation in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera rotation in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
 
 #### Examples:
 
@@ -1865,7 +1881,19 @@ const rotation = player.getCameraRotation("inventory");
 Gets the position that the given pointer is at.
 
 The **first parameter** is optional and is the pointer that the position should be retrieved for.
-If not specified, then the position of the `mouse` pointer is returned. Possible values are `mouse`, `left`, and `right`.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The position of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The position of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The position of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
 
 #### Examples:
 
@@ -1884,7 +1912,19 @@ const position = player.getPointerPosition("left");
 Gets the rotation that the given pointer is at.
 
 The **first parameter** is optional and is the pointer that the rotation should be retrieved for.
-If not specified, then the rotation of the `mouse` pointer is returned. Possible values are `mouse`, `left`, and `right`.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The rotation of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The rotation of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The rotation of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
 
 #### Examples:
 
