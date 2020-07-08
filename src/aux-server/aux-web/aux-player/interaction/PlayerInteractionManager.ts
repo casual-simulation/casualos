@@ -30,7 +30,10 @@ import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import flatMap from 'lodash/flatMap';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
-import { isObjectVisible } from '../../shared/scene/SceneUtils';
+import {
+    isObjectVisible,
+    objectForwardRay,
+} from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
@@ -322,6 +325,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         const pagePos = this._game.getInput().getMousePagePos();
         const draggableGroups = this.getDraggableGroups();
         const viewports = this._game.getViewports();
+
         for (let i = 0; i < draggableGroups.length; i++) {
             const group = draggableGroups[i];
             const objects = group.objects;
@@ -369,6 +373,46 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                                 [`mousePointerRotationY`]: worldRotation.z,
                                 [`mousePointerRotationZ`]: worldRotation.y,
                                 [`mousePointerPortal`]: portal,
+                            },
+                        }
+                    );
+                }
+            }
+        }
+
+        for (let controller of input.controllers) {
+            const ray = objectForwardRay(controller.ray);
+            const mat = new Matrix4();
+            mat.lookAt(
+                ray.origin,
+                ray.direction.add(ray.origin),
+                new Vector3(0, 1, 0)
+            );
+            const worldRotation = new Euler();
+            worldRotation.setFromRotationMatrix(mat);
+            const hand = controller.inputSource.handedness;
+
+            for (let sim of this._game.getSimulations()) {
+                if (!(sim instanceof PlayerPageSimulation3D)) {
+                    continue;
+                }
+                const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
+
+                if (portal) {
+                    sim.simulation.helper.updateBot(
+                        sim.simulation.helper.userBot,
+                        {
+                            tags: {
+                                [`${hand}PointerPositionX`]:
+                                    ray.origin.x * inverseScale,
+                                [`${hand}PointerPositionY`]:
+                                    -ray.origin.z * inverseScale,
+                                [`${hand}PointerPositionZ`]:
+                                    ray.origin.y * inverseScale,
+                                [`${hand}PointerRotationX`]: worldRotation.x,
+                                [`${hand}PointerRotationY`]: worldRotation.z,
+                                [`${hand}PointerRotationZ`]: worldRotation.y,
+                                [`${hand}PointerPortal`]: portal,
                             },
                         }
                     );

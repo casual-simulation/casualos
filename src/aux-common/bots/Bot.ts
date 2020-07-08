@@ -999,11 +999,26 @@ export const KNOWN_TAGS: string[] = [
     'mousePointerPositionX',
     'mousePointerPositionY',
     'mousePointerPositionZ',
+    'rightPointerPositionX',
+    'rightPointerPositionY',
+    'rightPointerPositionZ',
+    'leftPointerPositionX',
+    'leftPointerPositionY',
+    'leftPointerPositionZ',
+
     'mousePointerRotationX',
     'mousePointerRotationY',
     'mousePointerRotationZ',
+    'rightPointerRotationX',
+    'rightPointerRotationY',
+    'rightPointerRotationZ',
+    'leftPointerRotationX',
+    'leftPointerRotationY',
+    'leftPointerRotationZ',
 
     'mousePointerPortal',
+    'rightPointerPortal',
+    'leftPointerPortal',
 
     '_editingBot',
 
