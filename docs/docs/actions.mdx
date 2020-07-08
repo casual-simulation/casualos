@@ -1820,6 +1820,26 @@ const playerBot = player.getBot();
 playerBot.tags.sheetPortal = "testDimension";
 ```
 
+### `player.getCameraPosition(portal?)`
+
+Gets the position that the player's camera is at in the given portal.
+
+The **first parameter** is optional and is the portal that the camera position should be retrieved for.
+If not specified, then the position of the camera in the `page` portal will be returned.
+Possible values are `page` and `inventory`.
+
+#### Examples:
+
+1. Get the position of the player in the page portal.
+```typescript
+const position = player.getCameraPosition("page");
+```
+
+2. Get the position of the player in the inventory portal.
+```typescript
+const position = player.getCameraPosition("inventory");
+```
+
 ### `player.goToDimension(dimension)`
 
 
