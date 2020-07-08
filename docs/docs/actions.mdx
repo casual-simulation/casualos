@@ -1938,6 +1938,89 @@ const rotation = player.getPointerRotation("mouse");
 const rotation = player.getPointerRotation("left");
 ```
 
+### `player.getInputState(controller, button)`
+
+Gets the state of the given button on the given controller.
+
+The **first parameter** is the name of the controller that the button state should be retrieved from.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mousePointer'>
+    The mouse.
+  </PossibleValueCode>
+  <PossibleValueCode value='leftPointer'>
+    The left controller. Sometimes available in VR.
+  </PossibleValueCode>
+  <PossibleValueCode value='rightPointer'>
+    The right controller. Sometimes available in VR.
+  </PossibleValueCode>
+  <PossibleValueCode value='keyboard'>
+    The keyboard.
+  </PossibleValueCode>
+  <PossibleValueCode value='touch'>
+    The touchscreen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+The **second parameter** is the name of the button that you want to get the state of.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='left'>
+    The left mouse button. Only available on the mouse pointer.
+    On mobile devices this will also be the state of the first touch.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The right mouse button. Only available on the mouse pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='middle'>
+    The middle mouse button. Only available on the mouse pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='primary'>
+    The primary controller button. Only available on the left and right pointers.
+  </PossibleValueCode>
+  <PossibleValueCode value='squeeze'>
+    The squeeze controller button. Only available on the left and right pointers.
+  </PossibleValueCode>
+  <PossibleValue value='Any Key'>
+    The button for the given key. Only available on the keyboard.
+  </PossibleValue>
+  <PossibleValueCode value='0'>
+    The first touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='1'>
+    The second touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='2'>
+    The third touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='3'>
+    The fourth touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='5'>
+    The fifth touch. Only available on the touchscreen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Send a toast if the left mouse button is clicked.
+```typescript
+const state = player.getInputState("mousePointer", "left");
+if (state) {
+    player.toast("Left mouse button is down!");
+}
+```
+
+2. Send a toast if the shift key is down.
+```typescript
+const state = player.getInputState("keyboard", "Shift");
+if (state) {
+    player.toast("Shift is down!");
+}
+```
+
 ### `player.goToDimension(dimension)`
 
 
