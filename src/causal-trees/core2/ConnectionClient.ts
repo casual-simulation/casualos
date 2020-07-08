@@ -26,6 +26,11 @@ export interface ConnectionClient {
     connectionState: Observable<ClientConnectionState>;
 
     /**
+     * Whether the client is currently connected.
+     */
+    isConnected: boolean;
+
+    /**
      * Gets an observable for events with the given name.
      * @param name The name of the events.
      */

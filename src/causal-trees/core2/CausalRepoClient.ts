@@ -75,6 +75,7 @@ import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 export class CausalRepoClient {
     private _client: ConnectionClient;
     private _sentAtoms: Map<string, Map<string, Atom<any>>>;
+    private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
 
@@ -83,6 +84,7 @@ export class CausalRepoClient {
         this._forcedOffline = false;
         this._sentAtoms = new Map();
         this._connectedDevices = new Map();
+        this._watchedBranches = new Set();
     }
 
     /**
@@ -128,6 +130,7 @@ export class CausalRepoClient {
             branchEvent = nameOrEvent;
         }
         const name = branchEvent.branch;
+        this._watchedBranches.add(name);
         return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(WATCH_BRANCH, branchEvent);
@@ -192,6 +195,7 @@ export class CausalRepoClient {
                 ).pipe(filter(isClientAtomsOrEvents))
             ),
             finalize(() => {
+                this._watchedBranches.delete(name);
                 this._client.send(UNWATCH_BRANCH, name);
             })
         );
@@ -547,6 +551,12 @@ export class CausalRepoClient {
         atoms: Atom<any>[],
         removedAtoms: string[]
     ) {
+        if (this._watchedBranches.has(branch) && !this.connection.isConnected) {
+            // Skip sending the atoms because we're watching the branch and we're not connected.
+            // This means that the new atoms are saved in the sent atoms list so they will be resent
+            // when we reconnect.
+            return;
+        }
         let event: AddAtomsEvent = {
             branch: branch,
         };
