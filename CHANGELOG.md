@@ -124,6 +124,13 @@
             -   `x`
             -   `y`
             -   `z`
+    -   Added the `player.getInputState(controller, button)` function.
+        -   `controller` is the controller (`mousePointer`, `leftPointer`, `rightPointer`, `keyboard` or `touch`) that the button state should be retrieved from.
+        -   `button` is the name of the button that should be retrieved.
+        -   Returns a string containing the state of the button or `null` if the button is not pressed.
+            -   `"down"` means that the button just started to be pressed.
+            -   `"held"` means that the button is being held down.
+            -   `null` means that the button is not pressed.
 
 ## V1.1.17
 
