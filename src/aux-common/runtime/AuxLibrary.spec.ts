@@ -4553,4 +4553,67 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('player.getPointerPosition()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    leftPointerPositionX: 1,
+                    leftPointerPositionY: 2,
+                    leftPointerPositionZ: 3,
+                    rightPointerPositionX: 4,
+                    rightPointerPositionY: 5,
+                    rightPointerPositionZ: 6,
+                    mousePointerPositionX: 7,
+                    mousePointerPositionY: 8,
+                    mousePointerPositionZ: 9,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return the x, y, and z of the player camera for the mouse', () => {
+            const result = library.api.player.getPointerPosition();
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+
+        it('should be able to get the left pointer position', () => {
+            const result = library.api.player.getPointerPosition('left');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the right pointer position', () => {
+            const result = library.api.player.getPointerPosition('right');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the mouse pointer position', () => {
+            const result = library.api.player.getPointerPosition('mouse');
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+    });
 });

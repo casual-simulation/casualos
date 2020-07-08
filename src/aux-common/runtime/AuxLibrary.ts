@@ -359,6 +359,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getCameraPosition,
                 getCameraRotation,
+                getPointerPosition,
             },
 
             server: {
@@ -2427,6 +2428,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             x: user.tags[`${portal}CameraRotationX`],
             y: user.tags[`${portal}CameraRotationY`],
             z: user.tags[`${portal}CameraRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D position of the player's pointer.
+     * @param pointer The position of the pointer to retrieve.
+     */
+    function getPointerPosition(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerPositionX`],
+            y: user.tags[`${pointer}PointerPositionY`],
+            z: user.tags[`${pointer}PointerPositionZ`],
         };
     }
 
