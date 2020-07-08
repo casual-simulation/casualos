@@ -4616,4 +4616,68 @@ describe('AuxLibrary', () => {
             });
         });
     });
+
+    describe('player.getPointerRotation()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    leftPointerRotationX: 1,
+                    leftPointerRotationY: 2,
+                    leftPointerRotationZ: 3,
+                    rightPointerRotationX: 4,
+                    rightPointerRotationY: 5,
+                    rightPointerRotationZ: 6,
+                    mousePointerRotationX: 7,
+                    mousePointerRotationY: 8,
+                    mousePointerRotationZ: 9,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return the x, y, and z of the player camera for the mouse', () => {
+            const result = library.api.player.getPointerRotation();
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+
+        it('should be able to get the left pointer position', () => {
+            const result = library.api.player.getPointerRotation('left');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the right pointer position', () => {
+            const result = library.api.player.getPointerRotation('right');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the mouse pointer position', () => {
+            const result = library.api.player.getPointerRotation('mouse');
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+    });
 });

@@ -360,6 +360,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCameraPosition,
                 getCameraRotation,
                 getPointerPosition,
+                getPointerRotation,
             },
 
             server: {
@@ -2451,6 +2452,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             x: user.tags[`${pointer}PointerPositionX`],
             y: user.tags[`${pointer}PointerPositionY`],
             z: user.tags[`${pointer}PointerPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's pointer.
+     * @param pointer The rotation of the pointer to retrieve.
+     */
+    function getPointerRotation(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerRotationX`],
+            y: user.tags[`${pointer}PointerRotationY`],
+            z: user.tags[`${pointer}PointerRotationZ`],
         };
     }
 

@@ -2284,6 +2284,13 @@ declare global {
          * @param pointer The position of the pointer to retrieve.
          */
         getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number}
+
+        /**
+         * Gets the 3D rotation of the player's pointer.
+         * @param pointer The rotation of the pointer to retrieve.
+         */
+        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
+
         /**
          * Shows a toast message to the user.
          * @param message The message to show.
