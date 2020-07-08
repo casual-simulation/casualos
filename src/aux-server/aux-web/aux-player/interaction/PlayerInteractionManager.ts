@@ -505,6 +505,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         }
 
         function checkInput(state: InputState, name: string, update: any) {
+            if (!state) {
+                return false;
+            }
             if (state.isDownOnFrame(input.time.frameCount)) {
                 inputUpdate[name] = 'down';
                 return true;
