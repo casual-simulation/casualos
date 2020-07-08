@@ -4471,6 +4471,17 @@ describe('AuxLibrary', () => {
             context.playerBot = player;
         });
 
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getCameraPosition();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
         it('should return the x, y, and z of the player camera for the page portal', () => {
             const result = library.api.player.getCameraPosition();
 
@@ -4520,6 +4531,17 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, player);
             context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getCameraRotation();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
         });
 
         it('should return the x, y, and z of the player camera for the page portal', () => {
@@ -4574,6 +4596,17 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, player);
             context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getPointerPosition();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
@@ -4638,6 +4671,17 @@ describe('AuxLibrary', () => {
             );
             addToContext(context, player);
             context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getPointerRotation();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
