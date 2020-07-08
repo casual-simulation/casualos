@@ -29,6 +29,7 @@ import {
     ControllerData,
     InputMethod,
     InputState,
+    MouseButtonId,
 } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -446,32 +447,39 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
         }
 
-        const mouse = input.getMouseData();
-        if (
-            checkInput(mouse.leftButtonState, 'mousePointer_left', inputUpdate)
-        ) {
+        const leftState = input.getButtonInputState(MouseButtonId.Left);
+        const rightState = input.getButtonInputState(MouseButtonId.Right);
+        const middleState = input.getButtonInputState(MouseButtonId.Middle);
+        if (checkInput(leftState, 'mousePointer_left', inputUpdate)) {
             hasInputUpdate = true;
         }
-        if (
-            checkInput(
-                mouse.rightButtonState,
-                'mousePointer_right',
-                inputUpdate
-            )
-        ) {
+        if (checkInput(rightState, 'mousePointer_right', inputUpdate)) {
             hasInputUpdate = true;
         }
-        if (
-            checkInput(
-                mouse.middleButtonState,
-                'mousePointer_middle',
-                inputUpdate
-            )
-        ) {
+        if (checkInput(middleState, 'mousePointer_middle', inputUpdate)) {
             hasInputUpdate = true;
         }
 
+        let inputList = [
+            'keyboard',
+            'mousePointer',
+            'touch',
+            ...input.controllers.map(c => `${c.inputSource.handedness}Pointer`),
+        ];
+
+        for (let i = 0; i < 5; i++) {
+            const touch = input.getTouchData(i);
+            if (touch) {
+                if (checkInput(touch.state, `touch_${i}`, inputUpdate)) {
+                    hasInputUpdate = true;
+                }
+            } else {
+                inputUpdate[`touch_${i}`] = null;
+            }
+        }
+
         if (hasInputUpdate) {
+            inputUpdate['inputList'] = inputList;
             for (let sim of appManager.simulationManager.simulations.values()) {
                 sim.helper.updateBot(sim.helper.userBot, {
                     tags: inputUpdate,
