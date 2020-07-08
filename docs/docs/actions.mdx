@@ -1860,6 +1860,25 @@ const rotation = player.getCameraRotation("page");
 const rotation = player.getCameraRotation("inventory");
 ```
 
+### `player.getPointerPosition(pointer?)`
+
+Gets the position that the given pointer is at.
+
+The **first parameter** is optional and is the pointer that the position should be retrieved for.
+If not specified, then the position of the `mouse` pointer is returned. Possible values are `mouse`, `left`, and `right`.
+
+#### Examples:
+
+1. Get the position of the mouse pointer.
+```typescript
+const position = player.getPointerPosition("mouse");
+```
+
+2. Get the position of the left pointer.
+```typescript
+const position = player.getPointerPosition("left");
+```
+
 ### `player.goToDimension(dimension)`
 
 
