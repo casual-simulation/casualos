@@ -103,6 +103,18 @@ export namespace Physics {
     }
 
     /**
+     * Calculates the ray from the given camera and screen position.
+     * @param screenPos The screen position to raycast from.
+     * @param camera The camera to use.
+     */
+    export function rayAtScreenPos(screenPos: Vector2, camera: Camera): Ray {
+        const raycaster = new Raycaster();
+        raycaster.setFromCamera(screenPos, camera);
+
+        return raycaster.ray;
+    }
+
+    /**
      * Performs a raycast with the given ray against the given objects.
      * @param ray The ray to use.
      * @param objects The objects to raycast against.

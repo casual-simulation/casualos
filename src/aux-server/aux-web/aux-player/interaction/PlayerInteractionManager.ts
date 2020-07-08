@@ -5,6 +5,7 @@ import {
     OrthographicCamera,
     Quaternion,
     Euler,
+    Matrix4,
 } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -16,6 +17,7 @@ import {
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
     PortalType,
     calculateGridScale,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -42,6 +44,8 @@ import { Grid3D } from '../Grid3D';
 import { PlayerPageSimulation3D } from '../scene/PlayerPageSimulation3D';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../scene/InventorySimulation3D';
+import { Physics } from '../../shared/scene/Physics';
+import { Simulation3D } from '../../shared/scene/Simulation3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -288,28 +292,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return [mainCameraRigControls, invCameraRigControls];
     }
 
-    protected _updateCameraControls() {
-        super._updateCameraControls();
-
+    protected _updatePlayerBotTags() {
         for (let sim of this._game.getSimulations()) {
             const rig = sim.getMainCameraRig();
             const cameraWorld = new Vector3();
             cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
             const cameraRotation = new Euler();
             cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
-            let portal: PortalType;
-            let gridScale: number;
-            if (sim instanceof PlayerPageSimulation3D) {
-                portal = 'page';
-                gridScale = sim.pageConfig.gridScale;
-            } else if (sim instanceof InventorySimulation3D) {
-                portal = 'inventory';
-                gridScale = sim.inventoryConfig.gridScale;
-            }
-            let inverseScale = 1 / gridScale;
+            const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
             if (portal) {
-                calculateGridScale;
                 sim.simulation.helper.updateBot(sim.simulation.helper.userBot, {
                     tags: {
                         [`${portal}CameraPositionX`]:
@@ -324,6 +316,79 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     },
                 });
             }
+        }
+
+        const input = this._game.getInput();
+        const pagePos = this._game.getInput().getMousePagePos();
+        const draggableGroups = this.getDraggableGroups();
+        const viewports = this._game.getViewports();
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const group = draggableGroups[i];
+            const objects = group.objects;
+            const camera = group.camera;
+            const viewport = group.viewport;
+
+            if (!Input.pagePositionOnViewport(pagePos, viewport, viewports)) {
+                // Page position is not on or is being obstructed by other viewports.
+                // Ignore this draggable group.
+                continue;
+            }
+
+            const screenPos = Input.screenPositionForViewport(
+                pagePos,
+                viewport
+            );
+            const ray = Physics.rayAtScreenPos(screenPos, camera);
+            const mat = new Matrix4();
+            mat.lookAt(
+                ray.origin,
+                ray.direction.add(ray.origin),
+                new Vector3(0, 1, 0)
+            );
+            const worldRotation = new Euler();
+            worldRotation.setFromRotationMatrix(mat);
+
+            for (let sim of this._game.getSimulations()) {
+                if (sim.getMainCameraRig().viewport !== group.viewport) {
+                    continue;
+                }
+                const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
+
+                if (portal) {
+                    sim.simulation.helper.updateBot(
+                        sim.simulation.helper.userBot,
+                        {
+                            tags: {
+                                [`mousePointerPositionX`]:
+                                    ray.origin.x * inverseScale,
+                                [`mousePointerPositionY`]:
+                                    -ray.origin.z * inverseScale,
+                                [`mousePointerPositionZ`]:
+                                    ray.origin.y * inverseScale,
+                                [`mousePointerRotationX`]: worldRotation.x,
+                                [`mousePointerRotationY`]: worldRotation.z,
+                                [`mousePointerRotationZ`]: worldRotation.y,
+                                [`mousePointerPortal`]: portal,
+                            },
+                        }
+                    );
+                }
+            }
+        }
+
+        function portalInfoForSim(sim: Simulation3D) {
+            let portal: PortalType;
+            let gridScale: number;
+            if (sim instanceof PlayerPageSimulation3D) {
+                portal = 'page';
+                gridScale = sim.pageConfig.gridScale;
+            } else if (sim instanceof InventorySimulation3D) {
+                portal = 'inventory';
+                gridScale = sim.inventoryConfig.gridScale;
+            }
+            let inverseScale = 1 / gridScale;
+
+            return [portal, gridScale, inverseScale] as const;
         }
     }
 

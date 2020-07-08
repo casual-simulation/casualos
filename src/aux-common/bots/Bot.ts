@@ -996,6 +996,15 @@ export const KNOWN_TAGS: string[] = [
     'inventoryCameraRotationY',
     'inventoryCameraRotationZ',
 
+    'mousePointerPositionX',
+    'mousePointerPositionY',
+    'mousePointerPositionZ',
+    'mousePointerRotationX',
+    'mousePointerRotationY',
+    'mousePointerRotationZ',
+
+    'mousePointerPortal',
+
     '_editingBot',
 
     'portalColor',
