@@ -2268,6 +2268,12 @@ declare global {
         inSheet(): boolean;
 
         /**
+         * Gets the 3D position of the player's camera.
+         * @param portal The portal that the camera position should be retrieved for.
+         */
+        getCameraPosition(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+
+        /**
          * Shows a toast message to the user.
          * @param message The message to show.
          * @param duration The number of seconds the message should be on the screen. (Defaults to 2)

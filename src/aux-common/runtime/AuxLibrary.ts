@@ -356,6 +356,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hasBotInInventory,
                 share,
                 inSheet,
+
+                getCameraPosition,
             },
 
             server: {
@@ -2379,6 +2381,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function inSheet(): boolean {
         return getPortalDimension('sheet') !== null;
+    }
+
+    /**
+     * Gets the 3D position of the player's camera.
+     * @param portal The portal that the camera position should be retrieved for.
+     */
+    function getCameraPosition(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraPositionX`],
+            y: user.tags[`${portal}CameraPositionY`],
+            z: user.tags[`${portal}CameraPositionZ`],
+        };
     }
 
     /**

@@ -301,6 +301,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return [mainCameraRigControls, invCameraRigControls];
     }
 
+    // This function is kinda the worst but should be fine
+    // as long as performance doesn't become an issue.
     protected _updatePlayerBotTags() {
         for (let sim of this._game.getSimulations()) {
             const rig = sim.getMainCameraRig();

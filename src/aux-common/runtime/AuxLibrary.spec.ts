@@ -4450,4 +4450,55 @@ describe('AuxLibrary', () => {
             expect(library.api.player.inSheet()).toBe(false);
         });
     });
+
+    describe('player.getCameraPosition()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    pageCameraPositionX: 1,
+                    pageCameraPositionY: 2,
+                    pageCameraPositionZ: 3,
+                    inventoryCameraPositionX: 4,
+                    inventoryCameraPositionY: 5,
+                    inventoryCameraPositionZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.player.getCameraPosition();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera position', () => {
+            const result = library.api.player.getCameraPosition('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera position', () => {
+            const result = library.api.player.getCameraPosition('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
 });
