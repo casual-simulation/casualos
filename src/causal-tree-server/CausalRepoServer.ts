@@ -185,10 +185,6 @@ export class CausalRepoServer {
                             return;
                         }
 
-                        console.log(
-                            '[CausalRepoServer] Add Atoms: ' + event.branch
-                        );
-
                         const branchEvent = this._branches.get(event.branch);
                         const isTemp = branchEvent
                             ? branchEvent.temporary
@@ -737,13 +733,11 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            let promise: Promise<CausalRepo> = this._repoPromises.get(branch);
-            if (!promise) {
-                if (!temporary) {
-                    promise = this._loadRepo(branch, createBranch);
-                } else {
-                    promise = this._createEmptyRepo(branch);
-                }
+            let promise: Promise<CausalRepo>;
+            if (!temporary) {
+                promise = this._loadRepo(branch, createBranch);
+            } else {
+                promise = this._createEmptyRepo(branch);
             }
 
             this._repoPromises.set(branch, promise);
