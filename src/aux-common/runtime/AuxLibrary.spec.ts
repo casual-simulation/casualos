@@ -4724,4 +4724,97 @@ describe('AuxLibrary', () => {
             });
         });
     });
+
+    describe('player.getInputState()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot('player', {}, 'tempLocal');
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return null if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getInputState('keyboard', 'a');
+
+            expect(result).toEqual(null);
+        });
+
+        const cases = [
+            [
+                'mousePointer',
+                'left',
+                {
+                    mousePointer_left: 'down',
+                },
+                'down',
+            ],
+            ['mousePointer', 'left', {}, null],
+            [
+                'mousePointer',
+                'right',
+                {
+                    mousePointer_right: 'held',
+                },
+                'held',
+            ],
+            [
+                'leftPointer',
+                'primary',
+                {
+                    leftPointer_primary: 'held',
+                },
+                'held',
+            ],
+            [
+                'rightPointer',
+                'primary',
+                {
+                    rightPointer_primary: 'down',
+                },
+                'down',
+            ],
+            [
+                'keyboard',
+                'a',
+                {
+                    keyboard_a: 'down',
+                },
+                'down',
+            ],
+            [
+                'touch',
+                '0',
+                {
+                    touch_0: 'down',
+                },
+                'down',
+            ],
+            [
+                'touch',
+                '1',
+                {
+                    touch_1: 'held',
+                },
+                'held',
+            ],
+        ];
+
+        it.each(cases)(
+            'should get the state from the %s %s button',
+            (controller, button, state, expected) => {
+                for (let tag in state) {
+                    player.tags[tag] = state[tag];
+                }
+
+                const result = library.api.player.getInputState(
+                    controller,
+                    button
+                );
+
+                expect(result).toEqual(expected);
+            }
+        );
+    });
 });

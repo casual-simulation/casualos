@@ -361,6 +361,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCameraRotation,
                 getPointerPosition,
                 getPointerRotation,
+                getInputState,
             },
 
             server: {
@@ -2476,6 +2477,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: user.tags[`${pointer}PointerRotationY`],
             z: user.tags[`${pointer}PointerRotationZ`],
         };
+    }
+
+    /**
+     * Gets the input state of the given button on the given controller.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    function getInputState(
+        controller: string,
+        button: string
+    ): null | 'down' | 'held' {
+        const user = context.playerBot;
+        if (!user) {
+            return null;
+        }
+
+        return user.tags[`${controller}_${button}`] || null;
     }
 
     /**
