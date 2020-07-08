@@ -1020,6 +1020,14 @@ export const KNOWN_TAGS: string[] = [
     'rightPointerPortal',
     'leftPointerPortal',
 
+    'mousePointer_left',
+    'mousePointer_right',
+    'mousePointer_middle',
+    'leftPointer_primary',
+    'leftPointer_squeeze',
+    'rightPointer_primary',
+    'rightPointer_squeeze',
+
     '_editingBot',
 
     'portalColor',

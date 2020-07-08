@@ -24,7 +24,12 @@ import { BaseInteractionManager } from '../../shared/interaction/BaseInteraction
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { PlayerBotClickOperation } from './ClickOperation/PlayerBotClickOperation';
-import { Input, ControllerData, InputMethod } from '../../shared/scene/Input';
+import {
+    Input,
+    ControllerData,
+    InputMethod,
+    InputState,
+} from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
@@ -392,6 +397,18 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             worldRotation.setFromRotationMatrix(mat);
             const hand = controller.inputSource.handedness;
 
+            let inputStates = {};
+            checkInput(
+                controller.primaryInputState,
+                `${hand}Pointer_primary`,
+                inputStates
+            );
+            checkInput(
+                controller.squeezeInputState,
+                `${hand}Pointer_squeeze`,
+                inputStates
+            );
+
             for (let sim of this._game.getSimulations()) {
                 if (!(sim instanceof PlayerPageSimulation3D)) {
                     continue;
@@ -403,6 +420,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                         sim.simulation.helper.userBot,
                         {
                             tags: {
+                                ...inputStates,
                                 [`${hand}PointerPositionX`]:
                                     ray.origin.x * inverseScale,
                                 [`${hand}PointerPositionY`]:
@@ -420,6 +438,47 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
         }
 
+        let inputUpdate = {} as BotTags;
+        let hasInputUpdate = false;
+        for (let key of input.getKeys()) {
+            if (checkInput(key.state, `keyboard_${key.key}`, inputUpdate)) {
+                hasInputUpdate = true;
+            }
+        }
+
+        const mouse = input.getMouseData();
+        if (
+            checkInput(mouse.leftButtonState, 'mousePointer_left', inputUpdate)
+        ) {
+            hasInputUpdate = true;
+        }
+        if (
+            checkInput(
+                mouse.rightButtonState,
+                'mousePointer_right',
+                inputUpdate
+            )
+        ) {
+            hasInputUpdate = true;
+        }
+        if (
+            checkInput(
+                mouse.middleButtonState,
+                'mousePointer_middle',
+                inputUpdate
+            )
+        ) {
+            hasInputUpdate = true;
+        }
+
+        if (hasInputUpdate) {
+            for (let sim of appManager.simulationManager.simulations.values()) {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: inputUpdate,
+                });
+            }
+        }
+
         function portalInfoForSim(sim: Simulation3D) {
             let portal: PortalType;
             let gridScale: number;
@@ -433,6 +492,20 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             let inverseScale = 1 / gridScale;
 
             return [portal, gridScale, inverseScale] as const;
+        }
+
+        function checkInput(state: InputState, name: string, update: any) {
+            if (state.isDownOnFrame(input.time.frameCount)) {
+                inputUpdate[name] = 'down';
+                return true;
+            } else if (state.isHeldOnFrame(input.time.frameCount)) {
+                inputUpdate[name] = 'held';
+                return true;
+            } else if (state.isUpOnFrame(input.time.frameCount)) {
+                inputUpdate[name] = null;
+                return true;
+            }
+            return false;
         }
     }
 
