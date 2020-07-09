@@ -4817,4 +4817,40 @@ describe('AuxLibrary', () => {
             }
         );
     });
+
+    describe('player.getInputList()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    inputList: ['abc', 'def', 'ghi'],
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return an empty list if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should return an empty list if the player bot has no input list tag', () => {
+            player.tags.inputList = null;
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should return the input list of the player', () => {
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
 });

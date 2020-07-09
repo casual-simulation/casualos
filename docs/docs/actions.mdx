@@ -2021,6 +2021,18 @@ if (state) {
 }
 ```
 
+### `player.getInputList()`
+
+Gets the list of supported inputs. The returned strings can be used for the `controller` property in <ActionLink action='player.getInputState(controller, button)'/> calls.
+
+#### Examples:
+
+1. Get a list of inputs and toast them.
+```typescript
+const state = player.getInputList();
+player.toast(state);
+```
+
 ### `player.goToDimension(dimension)`
 
 

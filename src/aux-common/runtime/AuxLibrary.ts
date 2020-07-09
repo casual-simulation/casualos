@@ -362,6 +362,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerPosition,
                 getPointerRotation,
                 getInputState,
+                getInputList,
             },
 
             server: {
@@ -2494,6 +2495,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return user.tags[`${controller}_${button}`] || null;
+    }
+
+    /**
+     * Gets the list of inputs that are currently available.
+     */
+    function getInputList(): string[] {
+        const user = context.playerBot;
+        if (!user) {
+            return null;
+        }
+
+        return user.tags.inputList || [];
     }
 
     /**

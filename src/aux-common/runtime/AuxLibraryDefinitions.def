@@ -2327,6 +2327,11 @@ declare global {
         getInputState(controller: string, button: string): null | 'down' | 'held';
 
         /**
+         * Gets the list of inputs that are currently available.
+         */
+        getInputList(): string[];
+
+        /**
          * Shows a toast message to the user.
          * @param message The message to show.
          * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
