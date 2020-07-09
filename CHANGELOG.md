@@ -131,6 +131,8 @@
             -   `"down"` means that the button just started to be pressed.
             -   `"held"` means that the button is being held down.
             -   `null` means that the button is not pressed.
+    -   Added the `player.getInputList()` function.
+        -   Returns a list of available inputs that can be used by the `player.getInputState()` function.
 
 ## V1.1.17
 
