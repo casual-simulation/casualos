@@ -18,6 +18,7 @@ import {
     PortalType,
     calculateGridScale,
     BotTags,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -55,6 +56,7 @@ import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
+import isEqual from 'lodash/isEqual';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -304,163 +306,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     // This function is kinda the worst but should be fine
     // as long as performance doesn't become an issue.
     protected _updatePlayerBotTags() {
-        for (let sim of this._game.getSimulations()) {
-            const rig = sim.getMainCameraRig();
-            const cameraWorld = new Vector3();
-            cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
-            const cameraRotation = new Euler();
-            cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
-            const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
-
-            if (portal) {
-                sim.simulation.helper.updateBot(sim.simulation.helper.userBot, {
-                    tags: {
-                        [`${portal}CameraPositionX`]:
-                            cameraWorld.x * inverseScale,
-                        [`${portal}CameraPositionY`]:
-                            -cameraWorld.z * inverseScale,
-                        [`${portal}CameraPositionZ`]:
-                            cameraWorld.y * inverseScale,
-                        [`${portal}CameraRotationX`]: cameraRotation.x,
-                        [`${portal}CameraRotationY`]: cameraRotation.z,
-                        [`${portal}CameraRotationZ`]: cameraRotation.y,
-                    },
-                });
-            }
-        }
-
         const input = this._game.getInput();
         const pagePos = this._game.getInput().getMousePagePos();
         const draggableGroups = this.getDraggableGroups();
         const viewports = this._game.getViewports();
-
-        for (let i = 0; i < draggableGroups.length; i++) {
-            const group = draggableGroups[i];
-            const objects = group.objects;
-            const camera = group.camera;
-            const viewport = group.viewport;
-
-            if (!Input.pagePositionOnViewport(pagePos, viewport, viewports)) {
-                // Page position is not on or is being obstructed by other viewports.
-                // Ignore this draggable group.
-                continue;
-            }
-
-            const screenPos = Input.screenPositionForViewport(
-                pagePos,
-                viewport
-            );
-            const ray = Physics.rayAtScreenPos(screenPos, camera);
-            const mat = new Matrix4();
-            mat.lookAt(
-                ray.origin,
-                ray.direction.add(ray.origin),
-                new Vector3(0, 1, 0)
-            );
-            const worldRotation = new Euler();
-            worldRotation.setFromRotationMatrix(mat);
-
-            for (let sim of this._game.getSimulations()) {
-                if (sim.getMainCameraRig().viewport !== group.viewport) {
-                    continue;
-                }
-                const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
-
-                if (portal) {
-                    sim.simulation.helper.updateBot(
-                        sim.simulation.helper.userBot,
-                        {
-                            tags: {
-                                [`mousePointerPositionX`]:
-                                    ray.origin.x * inverseScale,
-                                [`mousePointerPositionY`]:
-                                    -ray.origin.z * inverseScale,
-                                [`mousePointerPositionZ`]:
-                                    ray.origin.y * inverseScale,
-                                [`mousePointerRotationX`]: worldRotation.x,
-                                [`mousePointerRotationY`]: worldRotation.z,
-                                [`mousePointerRotationZ`]: worldRotation.y,
-                                [`mousePointerPortal`]: portal,
-                            },
-                        }
-                    );
-                }
-            }
-        }
-
-        for (let controller of input.controllers) {
-            const ray = objectForwardRay(controller.ray);
-            const mat = new Matrix4();
-            mat.lookAt(
-                ray.origin,
-                ray.direction.add(ray.origin),
-                new Vector3(0, 1, 0)
-            );
-            const worldRotation = new Euler();
-            worldRotation.setFromRotationMatrix(mat);
-            const hand = controller.inputSource.handedness;
-
-            let inputStates = {};
-            checkInput(
-                controller.primaryInputState,
-                `${hand}Pointer_primary`,
-                inputStates
-            );
-            checkInput(
-                controller.squeezeInputState,
-                `${hand}Pointer_squeeze`,
-                inputStates
-            );
-
-            for (let sim of this._game.getSimulations()) {
-                if (!(sim instanceof PlayerPageSimulation3D)) {
-                    continue;
-                }
-                const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
-
-                if (portal) {
-                    sim.simulation.helper.updateBot(
-                        sim.simulation.helper.userBot,
-                        {
-                            tags: {
-                                ...inputStates,
-                                [`${hand}PointerPositionX`]:
-                                    ray.origin.x * inverseScale,
-                                [`${hand}PointerPositionY`]:
-                                    -ray.origin.z * inverseScale,
-                                [`${hand}PointerPositionZ`]:
-                                    ray.origin.y * inverseScale,
-                                [`${hand}PointerRotationX`]: worldRotation.x,
-                                [`${hand}PointerRotationY`]: worldRotation.z,
-                                [`${hand}PointerRotationZ`]: worldRotation.y,
-                                [`${hand}PointerPortal`]: portal,
-                            },
-                        }
-                    );
-                }
-            }
-        }
-
-        let inputUpdate = {} as BotTags;
-        let hasInputUpdate = false;
-        for (let key of input.getKeys()) {
-            if (checkInput(key.state, `keyboard_${key.key}`, inputUpdate)) {
-                hasInputUpdate = true;
-            }
-        }
-
-        const leftState = input.getButtonInputState(MouseButtonId.Left);
-        const rightState = input.getButtonInputState(MouseButtonId.Right);
-        const middleState = input.getButtonInputState(MouseButtonId.Middle);
-        if (checkInput(leftState, 'mousePointer_left', inputUpdate)) {
-            hasInputUpdate = true;
-        }
-        if (checkInput(rightState, 'mousePointer_right', inputUpdate)) {
-            hasInputUpdate = true;
-        }
-        if (checkInput(middleState, 'mousePointer_middle', inputUpdate)) {
-            hasInputUpdate = true;
-        }
 
         let inputList = [
             'keyboard',
@@ -469,22 +318,154 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             ...input.controllers.map(c => `${c.inputSource.handedness}Pointer`),
         ];
 
+        let inputUpdate = {
+            inputList: inputList,
+        } as BotTags;
+
+        for (let key of input.getKeys()) {
+            checkInput(key.state, `keyboard_${key.key}`, inputUpdate);
+        }
+
+        const leftState = input.getButtonInputState(MouseButtonId.Left);
+        const rightState = input.getButtonInputState(MouseButtonId.Right);
+        const middleState = input.getButtonInputState(MouseButtonId.Middle);
+        checkInput(leftState, 'mousePointer_left', inputUpdate);
+        checkInput(rightState, 'mousePointer_right', inputUpdate);
+        checkInput(middleState, 'mousePointer_middle', inputUpdate);
+
         for (let i = 0; i < 5; i++) {
             const touch = input.getTouchData(i);
             if (touch) {
-                if (checkInput(touch.state, `touch_${i}`, inputUpdate)) {
-                    hasInputUpdate = true;
-                }
+                checkInput(touch.state, `touch_${i}`, inputUpdate);
             } else {
                 inputUpdate[`touch_${i}`] = null;
             }
         }
 
-        if (hasInputUpdate) {
-            inputUpdate['inputList'] = inputList;
-            for (let sim of appManager.simulationManager.simulations.values()) {
-                sim.helper.updateBot(sim.helper.userBot, {
-                    tags: inputUpdate,
+        for (let sim of this._game.getSimulations()) {
+            const rig = sim.getMainCameraRig();
+            const cameraWorld = new Vector3();
+            cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
+            const cameraRotation = new Euler();
+            cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
+            const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
+
+            let update = {
+                ...inputUpdate,
+                [`${portal}CameraPositionX`]: cameraWorld.x * inverseScale,
+                [`${portal}CameraPositionY`]: -cameraWorld.z * inverseScale,
+                [`${portal}CameraPositionZ`]: cameraWorld.y * inverseScale,
+                [`${portal}CameraRotationX`]: cameraRotation.x,
+                [`${portal}CameraRotationY`]: cameraRotation.z,
+                [`${portal}CameraRotationZ`]: cameraRotation.y,
+            };
+
+            for (let i = 0; i < draggableGroups.length; i++) {
+                const group = draggableGroups[i];
+                const objects = group.objects;
+                const camera = group.camera;
+                const viewport = group.viewport;
+
+                if (sim.getMainCameraRig().viewport !== group.viewport) {
+                    continue;
+                }
+
+                if (
+                    !Input.pagePositionOnViewport(pagePos, viewport, viewports)
+                ) {
+                    // Page position is not on or is being obstructed by other viewports.
+                    // Ignore this draggable group.
+                    continue;
+                }
+
+                const screenPos = Input.screenPositionForViewport(
+                    pagePos,
+                    viewport
+                );
+                const ray = Physics.rayAtScreenPos(screenPos, camera);
+                const mat = new Matrix4();
+                mat.lookAt(
+                    ray.origin,
+                    ray.direction.add(ray.origin),
+                    new Vector3(0, 1, 0)
+                );
+                const worldRotation = new Euler();
+                worldRotation.setFromRotationMatrix(mat);
+
+                Object.assign(update, {
+                    [`mousePointerPositionX`]: ray.origin.x * inverseScale,
+                    [`mousePointerPositionY`]: -ray.origin.z * inverseScale,
+                    [`mousePointerPositionZ`]: ray.origin.y * inverseScale,
+                    [`mousePointerRotationX`]: worldRotation.x,
+                    [`mousePointerRotationY`]: worldRotation.z,
+                    [`mousePointerRotationZ`]: worldRotation.y,
+                    [`mousePointerPortal`]: portal,
+                });
+            }
+
+            if (!(sim instanceof PlayerPageSimulation3D)) {
+                for (let controller of input.controllers) {
+                    const ray = objectForwardRay(controller.ray);
+                    const mat = new Matrix4();
+                    mat.lookAt(
+                        ray.origin,
+                        ray.direction.add(ray.origin),
+                        new Vector3(0, 1, 0)
+                    );
+                    const worldRotation = new Euler();
+                    worldRotation.setFromRotationMatrix(mat);
+                    const hand = controller.inputSource.handedness;
+
+                    let inputStates = {};
+                    checkInput(
+                        controller.primaryInputState,
+                        `${hand}Pointer_primary`,
+                        inputStates
+                    );
+                    checkInput(
+                        controller.squeezeInputState,
+                        `${hand}Pointer_squeeze`,
+                        inputStates
+                    );
+
+                    Object.assign(update, {
+                        ...inputStates,
+                        [`${hand}PointerPositionX`]:
+                            ray.origin.x * inverseScale,
+                        [`${hand}PointerPositionY`]:
+                            -ray.origin.z * inverseScale,
+                        [`${hand}PointerPositionZ`]:
+                            ray.origin.y * inverseScale,
+                        [`${hand}PointerRotationX`]: worldRotation.x,
+                        [`${hand}PointerRotationY`]: worldRotation.z,
+                        [`${hand}PointerRotationZ`]: worldRotation.y,
+                        [`${hand}PointerPortal`]: portal,
+                    });
+                }
+            }
+
+            const userBot = sim.simulation.helper.userBot;
+            for (let key in update) {
+                const userValue = userBot.tags[key];
+                const updateValue = update[key];
+                if (
+                    userValue === updateValue ||
+                    (!hasValue(userValue) && !hasValue(updateValue)) ||
+                    (hasValue(userValue) &&
+                        hasValue(updateValue) &&
+                        isEqual(userValue, updateValue)) ||
+                    (typeof userValue === 'number' &&
+                        typeof updateValue === 'number' &&
+                        isNaN(userValue) &&
+                        isNaN(updateValue))
+                ) {
+                    delete update[key];
+                }
+            }
+
+            if (Object.keys(update).length > 0) {
+                sim.simulation.helper.updateBot(sim.simulation.helper.userBot, {
+                    tags: update,
                 });
             }
         }

@@ -173,13 +173,9 @@ export class InventorySimulation3D extends PlayerSimulation3D {
                     tap(bot => {
                         const userInventoryDimensionValue =
                             bot.values['inventoryPortal'];
-                        if (
-                            !this.inventoryDimension ||
-                            this.inventoryDimension !==
-                                userInventoryDimensionValue
-                        ) {
-                            this.inventoryDimension = userInventoryDimensionValue;
-
+                        const previousDimension = this.inventoryDimension;
+                        this.inventoryDimension = userInventoryDimensionValue;
+                        if (previousDimension !== userInventoryDimensionValue) {
                             console.log(
                                 '[InventorySimulation3D] User changed inventory dimension to: ',
                                 userInventoryDimensionValue
