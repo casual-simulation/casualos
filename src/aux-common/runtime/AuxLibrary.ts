@@ -2503,7 +2503,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getInputList(): string[] {
         const user = context.playerBot;
         if (!user) {
-            return null;
+            return [];
         }
 
         return user.tags.inputList || [];
