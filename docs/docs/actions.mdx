@@ -1820,6 +1820,219 @@ const playerBot = player.getBot();
 playerBot.tags.sheetPortal = "testDimension";
 ```
 
+### `player.getCameraPosition(portal?)`
+
+Gets the 3D position that the player's camera is at in the given portal.
+
+The **first parameter** is optional and is the portal that the camera position should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera position in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera position in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the position of the player in the page portal.
+```typescript
+const position = player.getCameraPosition("page");
+```
+
+2. Get the position of the player in the inventory portal.
+```typescript
+const position = player.getCameraPosition("inventory");
+```
+
+### `player.getCameraRotation(portal?)`
+
+Gets the 3D rotation that the player's camera is at in the given portal.
+
+The **first parameter** is optional and is the portal that the camera rotation should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='page'>
+    The camera rotation in the page portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='inventory'>
+    The camera rotation in the inventory portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the rotation of the player in the page portal.
+```typescript
+const rotation = player.getCameraRotation("page");
+```
+
+2. Get the rotation of the player in the inventory portal.
+```typescript
+const rotation = player.getCameraRotation("inventory");
+```
+
+### `player.getPointerPosition(pointer?)`
+
+Gets the position that the given pointer is at.
+
+The **first parameter** is optional and is the pointer that the position should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The position of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The position of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The position of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the position of the mouse pointer.
+```typescript
+const position = player.getPointerPosition("mouse");
+```
+
+2. Get the position of the left pointer.
+```typescript
+const position = player.getPointerPosition("left");
+```
+
+### `player.getPointerRotation(pointer?)`
+
+Gets the rotation that the given pointer is at.
+
+The **first parameter** is optional and is the pointer that the rotation should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The rotation of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The rotation of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The rotation of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the rotation of the mouse pointer.
+```typescript
+const rotation = player.getPointerRotation("mouse");
+```
+
+2. Get the rotation of the left pointer.
+```typescript
+const rotation = player.getPointerRotation("left");
+```
+
+### `player.getInputState(controller, button)`
+
+Gets the state of the given button on the given controller.
+
+The **first parameter** is the name of the controller that the button state should be retrieved from.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mousePointer'>
+    The mouse.
+  </PossibleValueCode>
+  <PossibleValueCode value='leftPointer'>
+    The left controller. Sometimes available in VR.
+  </PossibleValueCode>
+  <PossibleValueCode value='rightPointer'>
+    The right controller. Sometimes available in VR.
+  </PossibleValueCode>
+  <PossibleValueCode value='keyboard'>
+    The keyboard.
+  </PossibleValueCode>
+  <PossibleValueCode value='touch'>
+    The touchscreen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+The **second parameter** is the name of the button that you want to get the state of.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='left'>
+    The left mouse button. Only available on the mouse pointer.
+    On mobile devices this will also be the state of the first touch.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The right mouse button. Only available on the mouse pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='middle'>
+    The middle mouse button. Only available on the mouse pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='primary'>
+    The primary controller button. Only available on the left and right pointers.
+  </PossibleValueCode>
+  <PossibleValueCode value='squeeze'>
+    The squeeze controller button. Only available on the left and right pointers.
+  </PossibleValueCode>
+  <PossibleValue value='Any Key'>
+    The button for the given key. Only available on the keyboard.
+  </PossibleValue>
+  <PossibleValueCode value='0'>
+    The first touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='1'>
+    The second touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='2'>
+    The third touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='3'>
+    The fourth touch. Only available on the touchscreen.
+  </PossibleValueCode>
+  <PossibleValueCode value='5'>
+    The fifth touch. Only available on the touchscreen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Send a toast if the left mouse button is clicked.
+```typescript
+const state = player.getInputState("mousePointer", "left");
+if (state) {
+    player.toast("Left mouse button is down!");
+}
+```
+
+2. Send a toast if the shift key is down.
+```typescript
+const state = player.getInputState("keyboard", "Shift");
+if (state) {
+    player.toast("Shift is down!");
+}
+```
+
+### `player.getInputList()`
+
+Gets the list of supported inputs. The returned strings can be used for the `controller` property in <ActionLink action='player.getInputState(controller, button)'/> calls.
+
+#### Examples:
+
+1. Get a list of inputs and toast them.
+```typescript
+const state = player.getInputList();
+player.toast(state);
+```
+
 ### `player.goToDimension(dimension)`
 
 

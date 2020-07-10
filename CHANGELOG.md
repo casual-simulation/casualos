@@ -43,6 +43,96 @@
             -   `that` is an array containing objects with the following properties:
                 -   `bot` - The bot that was updated.
                 -   `tags` - The tags that were changed on the bot.
+    -   Added several tags to the player bot:
+        -   These tags are updated by CasualOS and can be used to query the current state of the input system.
+        -   Camera Tags
+            -   These tags contain the position and rotation of the player's camera.
+            -   You can use this to communicate where the player is to other players.
+            -   `pageCameraPositionX`
+            -   `pageCameraPositionY`
+            -   `pageCameraPositionZ`
+            -   `inventoryCameraPositionX`
+            -   `inventoryCameraPositionY`
+            -   `inventoryCameraPositionZ`
+            -   `pageCameraRotationX`
+            -   `pageCameraRotationY`
+            -   `pageCameraRotationZ`
+            -   `inventoryCameraRotationX`
+            -   `inventoryCameraRotationY`
+            -   `inventoryCameraRotationZ`
+        -   Pointer Tags
+            -   These tags contain the position and rotation of the player's pointers.
+            -   You can use this to tell where the VR controllers are or where the mouse is pointing.
+            -   `mousePointerPositionX`
+            -   `mousePointerPositionY`
+            -   `mousePointerPositionZ`
+            -   `mousePointerRotationX`
+            -   `mousePointerRotationY`
+            -   `mousePointerRotationZ`
+            -   `mousePointerPortal`
+            -   `rightPointerPositionX`
+            -   `rightPointerPositionY`
+            -   `rightPointerPositionZ`
+            -   `rightPointerRotationX`
+            -   `rightPointerRotationY`
+            -   `rightPointerRotationZ`
+            -   `rightPointerPortal`
+            -   `leftPointerPositionX`
+            -   `leftPointerPositionY`
+            -   `leftPointerPositionZ`
+            -   `leftPointerRotationX`
+            -   `leftPointerRotationY`
+            -   `leftPointerRotationZ`
+            -   `leftPointerPortal`
+        -   Button Tags
+            -   These tags contain the state of the different buttons.
+            -   Possible values are:
+                -   `null` - Button is not pressed.
+                -   `down` - Button was just pressed.
+                -   `held` - Button is being held down.
+            -   `mousePointer_left`
+            -   `mousePointer_right`
+            -   `mousePointer_middle`
+            -   `leftPointer_primary`
+            -   `leftPointer_squeeze`
+            -   `rightPointer_primary`
+            -   `rightPointer_squeeze`
+            -   `keyboard_[key]`
+                -   Replace `[key]` with the key that you want the state of.
+                -   For example use `keyboard_a` to get the state of the `a` key.
+    -   Added the `player.getCameraPosition(portal?)` function.
+        -   `portal` is optional and is the portal (`page` or `inventory`) that the camera position should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getCameraRotation(portal?)` function.
+        -   `portal` is optional and is the portal (`page` or `inventory`) that the camera rotation should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getPointerPosition(pointer?)` function.
+        -   `pointer` is optional and is the pointer (`mouse`, `left` or `right`) that the position should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getPointerRotation(pointer?)` function.
+        -   `pointer` is optional and is the pointer (`mouse`, `left` or `right`) that the rotation should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getInputState(controller, button)` function.
+        -   `controller` is the controller (`mousePointer`, `leftPointer`, `rightPointer`, `keyboard` or `touch`) that the button state should be retrieved from.
+        -   `button` is the name of the button that should be retrieved.
+        -   Returns a string containing the state of the button or `null` if the button is not pressed.
+            -   `"down"` means that the button just started to be pressed.
+            -   `"held"` means that the button is being held down.
+            -   `null` means that the button is not pressed.
+    -   Added the `player.getInputList()` function.
+        -   Returns a list of available inputs that can be used by the `player.getInputState()` function.
 
 ## V1.1.17
 

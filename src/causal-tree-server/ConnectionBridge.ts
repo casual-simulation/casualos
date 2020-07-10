@@ -112,6 +112,10 @@ class ClientConnection implements ConnectionClient {
         });
     }
 
+    get isConnected(): boolean {
+        return true;
+    }
+
     constructor(info: DeviceInfo) {
         this._info = info;
     }

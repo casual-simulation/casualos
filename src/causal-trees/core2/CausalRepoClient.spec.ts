@@ -632,6 +632,32 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
+
+        it('should wait to send the atoms until the watched branch is connected', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            client.watchBranch('abc').subscribe();
+            client.addAtoms('abc', [a1]);
+            client.addAtoms('abc', [a2]);
+
+            connection.connect();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'abc',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
     });
 
     describe('commit()', () => {

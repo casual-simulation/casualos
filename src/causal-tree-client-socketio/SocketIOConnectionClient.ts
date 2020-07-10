@@ -71,6 +71,10 @@ export class SocketIOConnectionClient implements ConnectionClient {
         return this._connectionStateChanged;
     }
 
+    get isConnected(): boolean {
+        return this._connectionStateChanged.value.connected;
+    }
+
     private _login(
         connected: boolean,
         token: DeviceToken

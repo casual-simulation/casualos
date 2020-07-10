@@ -4450,4 +4450,407 @@ describe('AuxLibrary', () => {
             expect(library.api.player.inSheet()).toBe(false);
         });
     });
+
+    describe('player.getCameraPosition()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    pageCameraPositionX: 1,
+                    pageCameraPositionY: 2,
+                    pageCameraPositionZ: 3,
+                    inventoryCameraPositionX: 4,
+                    inventoryCameraPositionY: 5,
+                    inventoryCameraPositionZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getCameraPosition();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.player.getCameraPosition();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera position', () => {
+            const result = library.api.player.getCameraPosition('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera position', () => {
+            const result = library.api.player.getCameraPosition('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
+    describe('player.getCameraRotation()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    pageCameraRotationX: 1,
+                    pageCameraRotationY: 2,
+                    pageCameraRotationZ: 3,
+                    inventoryCameraRotationX: 4,
+                    inventoryCameraRotationY: 5,
+                    inventoryCameraRotationZ: 6,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getCameraRotation();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the page portal', () => {
+            const result = library.api.player.getCameraRotation();
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the inventory camera rotation', () => {
+            const result = library.api.player.getCameraRotation('inventory');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the page camera rotation', () => {
+            const result = library.api.player.getCameraRotation('page');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
+    describe('player.getPointerPosition()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    leftPointerPositionX: 1,
+                    leftPointerPositionY: 2,
+                    leftPointerPositionZ: 3,
+                    rightPointerPositionX: 4,
+                    rightPointerPositionY: 5,
+                    rightPointerPositionZ: 6,
+                    mousePointerPositionX: 7,
+                    mousePointerPositionY: 8,
+                    mousePointerPositionZ: 9,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getPointerPosition();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the mouse', () => {
+            const result = library.api.player.getPointerPosition();
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+
+        it('should be able to get the left pointer position', () => {
+            const result = library.api.player.getPointerPosition('left');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the right pointer position', () => {
+            const result = library.api.player.getPointerPosition('right');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the mouse pointer position', () => {
+            const result = library.api.player.getPointerPosition('mouse');
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+    });
+
+    describe('player.getPointerRotation()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    leftPointerRotationX: 1,
+                    leftPointerRotationY: 2,
+                    leftPointerRotationZ: 3,
+                    rightPointerRotationX: 4,
+                    rightPointerRotationY: 5,
+                    rightPointerRotationZ: 6,
+                    mousePointerRotationX: 7,
+                    mousePointerRotationY: 8,
+                    mousePointerRotationZ: 9,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getPointerRotation();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the mouse', () => {
+            const result = library.api.player.getPointerRotation();
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+
+        it('should be able to get the left pointer position', () => {
+            const result = library.api.player.getPointerRotation('left');
+
+            expect(result).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+
+        it('should be able to get the right pointer position', () => {
+            const result = library.api.player.getPointerRotation('right');
+
+            expect(result).toEqual({
+                x: 4,
+                y: 5,
+                z: 6,
+            });
+        });
+
+        it('should be able to get the mouse pointer position', () => {
+            const result = library.api.player.getPointerRotation('mouse');
+
+            expect(result).toEqual({
+                x: 7,
+                y: 8,
+                z: 9,
+            });
+        });
+    });
+
+    describe('player.getInputState()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot('player', {}, 'tempLocal');
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return null if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getInputState('keyboard', 'a');
+
+            expect(result).toEqual(null);
+        });
+
+        const cases = [
+            [
+                'mousePointer',
+                'left',
+                {
+                    mousePointer_left: 'down',
+                },
+                'down',
+            ],
+            ['mousePointer', 'left', {}, null],
+            [
+                'mousePointer',
+                'right',
+                {
+                    mousePointer_right: 'held',
+                },
+                'held',
+            ],
+            [
+                'leftPointer',
+                'primary',
+                {
+                    leftPointer_primary: 'held',
+                },
+                'held',
+            ],
+            [
+                'rightPointer',
+                'primary',
+                {
+                    rightPointer_primary: 'down',
+                },
+                'down',
+            ],
+            [
+                'keyboard',
+                'a',
+                {
+                    keyboard_a: 'down',
+                },
+                'down',
+            ],
+            [
+                'touch',
+                '0',
+                {
+                    touch_0: 'down',
+                },
+                'down',
+            ],
+            [
+                'touch',
+                '1',
+                {
+                    touch_1: 'held',
+                },
+                'held',
+            ],
+        ];
+
+        it.each(cases)(
+            'should get the state from the %s %s button',
+            (controller, button, state, expected) => {
+                for (let tag in state) {
+                    player.tags[tag] = state[tag];
+                }
+
+                const result = library.api.player.getInputState(
+                    controller,
+                    button
+                );
+
+                expect(result).toEqual(expected);
+            }
+        );
+    });
+
+    describe('player.getInputList()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    inputList: ['abc', 'def', 'ghi'],
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return an empty list if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should return an empty list if the player bot has no input list tag', () => {
+            player.tags.inputList = null;
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should return the input list of the player', () => {
+            const result = library.api.player.getInputList();
+
+            expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
 });

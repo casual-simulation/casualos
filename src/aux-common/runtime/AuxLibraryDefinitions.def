@@ -2268,6 +2268,70 @@ declare global {
         inSheet(): boolean;
 
         /**
+         * Gets the 3D position of the player's camera.
+         * @param portal The portal that the camera position should be retrieved for.
+         */
+        getCameraPosition(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+
+        /**
+         * Gets the 3D rotation of the player's camera.
+         * @param portal The portal that the camera rotation should be retrieved for.
+         */
+        getCameraRotation(portal?: 'page' | 'inventory'): {x: number, y: number, z: number};
+
+        /**
+         * Gets the 3D position of the player's pointer.
+         * @param pointer The position of the pointer to retrieve.
+         */
+        getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number}
+
+        /**
+         * Gets the 3D rotation of the player's pointer.
+         * @param pointer The rotation of the pointer to retrieve.
+         */
+        getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
+
+        /**
+         * Gets the input state of the given button on the mouse.
+         * @param controller The name of the controller that should be checked.
+         * @param button The name of the button on the controller.
+         */
+        getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
+
+        /**
+         * Gets the input state of the given button on the left or right controller.
+         * @param controller The name of the controller that should be checked.
+         * @param button The name of the button on the controller.
+         */
+        getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
+
+        /**
+         * Gets the input state of the given button on the keyboard.
+         * @param controller The name of the controller that should be checked.
+         * @param button The name of the button on the controller.
+         */
+        getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
+
+        /**
+         * Gets the input state of the given touch.
+         * @param controller The name of the controller that should be checked.
+         * @param button The index of the finger.
+         */
+        getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
+
+        /**
+         * Gets the input state of the given button on the given controller.
+         * @param controller The name of the controller that should be checked.
+         * @param button The name of the button on the controller.
+         */
+        getInputState(controller: string, button: string): null | 'down' | 'held';
+
+        /**
+         * Gets the list of inputs that are currently available.
+         */
+        getInputList(): string[];
+
+        /**
          * Shows a toast message to the user.
          * @param message The message to show.
          * @param duration The number of seconds the message should be on the screen. (Defaults to 2)

@@ -356,6 +356,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hasBotInInventory,
                 share,
                 inSheet,
+
+                getCameraPosition,
+                getCameraRotation,
+                getPointerPosition,
+                getPointerRotation,
+                getInputState,
+                getInputList,
             },
 
             server: {
@@ -2379,6 +2386,127 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function inSheet(): boolean {
         return getPortalDimension('sheet') !== null;
+    }
+
+    /**
+     * Gets the 3D position of the player's camera.
+     * @param portal The portal that the camera position should be retrieved for.
+     */
+    function getCameraPosition(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraPositionX`],
+            y: user.tags[`${portal}CameraPositionY`],
+            z: user.tags[`${portal}CameraPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's camera.
+     * @param portal The portal that the camera rotation should be retrieved for.
+     */
+    function getCameraRotation(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraRotationX`],
+            y: user.tags[`${portal}CameraRotationY`],
+            z: user.tags[`${portal}CameraRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D position of the player's pointer.
+     * @param pointer The position of the pointer to retrieve.
+     */
+    function getPointerPosition(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerPositionX`],
+            y: user.tags[`${pointer}PointerPositionY`],
+            z: user.tags[`${pointer}PointerPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's pointer.
+     * @param pointer The rotation of the pointer to retrieve.
+     */
+    function getPointerRotation(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerRotationX`],
+            y: user.tags[`${pointer}PointerRotationY`],
+            z: user.tags[`${pointer}PointerRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the input state of the given button on the given controller.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    function getInputState(
+        controller: string,
+        button: string
+    ): null | 'down' | 'held' {
+        const user = context.playerBot;
+        if (!user) {
+            return null;
+        }
+
+        return user.tags[`${controller}_${button}`] || null;
+    }
+
+    /**
+     * Gets the list of inputs that are currently available.
+     */
+    function getInputList(): string[] {
+        const user = context.playerBot;
+        if (!user) {
+            return [];
+        }
+
+        return user.tags.inputList || [];
     }
 
     /**

@@ -133,6 +133,9 @@ export class CausalRepoServer {
                             return;
                         }
                         const branch = event.branch;
+                        console.log(
+                            '[CausalRepoServer] Watch Branch: ' + branch
+                        );
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
                         let currentBranch = this._branches.get(branch);
@@ -187,68 +190,81 @@ export class CausalRepoServer {
                             ? branchEvent.temporary
                             : false;
 
-                        const repo = await this._getOrLoadRepo(
-                            event.branch,
-                            false,
-                            isTemp
-                        );
-
-                        let added: Atom<any>[];
-                        let removed: Atom<any>[];
-
-                        if (event.atoms) {
-                            added = repo.add(...event.atoms);
-
-                            if (!isTemp) {
-                                await this._stage.addAtoms(event.branch, added);
-                                await storeData(
-                                    this._store,
-                                    event.branch,
-                                    null,
-                                    added
-                                );
-                            }
-                        }
-                        if (event.removedAtoms) {
-                            removed = repo.remove(...event.removedAtoms);
-
-                            if (!isTemp) {
-                                await this._stage.removeAtoms(
-                                    event.branch,
-                                    removed
-                                );
-                            }
-                        }
-                        const hasAdded = added && added.length > 0;
-                        const hasRemoved = removed && removed.length > 0;
-                        if (hasAdded || hasRemoved) {
-                            const info = infoForBranch(event.branch);
-                            const devices = this._deviceManager.getConnectedDevices(
-                                info
+                        try {
+                            const repo = await this._getOrLoadRepo(
+                                event.branch,
+                                false,
+                                isTemp
                             );
 
-                            let ret: AddAtomsEvent = {
+                            let added: Atom<any>[];
+                            let removed: Atom<any>[];
+
+                            if (event.atoms) {
+                                added = repo.add(...event.atoms);
+
+                                if (!isTemp) {
+                                    await this._stage.addAtoms(
+                                        event.branch,
+                                        added
+                                    );
+                                    await storeData(
+                                        this._store,
+                                        event.branch,
+                                        null,
+                                        added
+                                    );
+                                }
+                            }
+                            if (event.removedAtoms) {
+                                removed = repo.remove(...event.removedAtoms);
+
+                                if (!isTemp) {
+                                    await this._stage.removeAtoms(
+                                        event.branch,
+                                        removed
+                                    );
+                                }
+                            }
+                            const hasAdded = added && added.length > 0;
+                            const hasRemoved = removed && removed.length > 0;
+                            if (hasAdded || hasRemoved) {
+                                const info = infoForBranch(event.branch);
+                                const devices = this._deviceManager.getConnectedDevices(
+                                    info
+                                );
+
+                                let ret: AddAtomsEvent = {
+                                    branch: event.branch,
+                                };
+
+                                if (hasAdded) {
+                                    ret.atoms = added;
+                                }
+                                if (hasRemoved) {
+                                    ret.removedAtoms = removed.map(r => r.hash);
+                                }
+
+                                sendToDevices(devices, ADD_ATOMS, ret, device);
+                            }
+
+                            const addedAtomHashes = (event.atoms || []).map(
+                                a => a.hash
+                            );
+                            const removedAtomHashes = event.removedAtoms || [];
+                            sendToDevices([device], ATOMS_RECEIVED, {
                                 branch: event.branch,
-                            };
-
-                            if (hasAdded) {
-                                ret.atoms = added;
-                            }
-                            if (hasRemoved) {
-                                ret.removedAtoms = removed.map(r => r.hash);
-                            }
-
-                            sendToDevices(devices, ADD_ATOMS, ret, device);
+                                hashes: [
+                                    ...addedAtomHashes,
+                                    ...removedAtomHashes,
+                                ],
+                            });
+                        } catch (err) {
+                            console.error(
+                                `Error while adding atoms to ${event.branch}: `,
+                                err
+                            );
                         }
-
-                        const addedAtomHashes = (event.atoms || []).map(
-                            a => a.hash
-                        );
-                        const removedAtomHashes = event.removedAtoms || [];
-                        sendToDevices([device], ATOMS_RECEIVED, {
-                            branch: event.branch,
-                            hashes: [...addedAtomHashes, ...removedAtomHashes],
-                        });
                     },
                     [COMMIT]: async event => {
                         const repo = await this._getOrLoadRepo(

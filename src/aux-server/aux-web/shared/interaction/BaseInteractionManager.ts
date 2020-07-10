@@ -220,7 +220,10 @@ export abstract class BaseInteractionManager {
 
         this._updateHoveredBots();
         this._updateFocusedBots();
+        this._updatePlayerBotTags();
     }
+
+    protected _updatePlayerBotTags() {}
 
     protected _updateCameraControls() {
         for (let controller of this._cameraRigControllers) {

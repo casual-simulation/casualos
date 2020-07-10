@@ -11,6 +11,10 @@ export class MemoryConnectionClient implements ConnectionClient {
         return this._connectionState.pipe(distinctUntilChanged());
     }
 
+    get isConnected(): boolean {
+        return this._connectionState.value.connected;
+    }
+
     sentMessages: {
         name: string;
         data: any;
