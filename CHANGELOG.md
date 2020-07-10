@@ -7,6 +7,7 @@
 ### Changes:
 
 -   :rocket: Improvements
+
     -   Improved the `player.run()` function to return a promise that can be awaited to get the result of the script (or wait until the script has been executed).
     -   Improved the `server.loadErrors()` function to return a promise that can be awaited to get the list of bots that were loaded.
     -   Improved the `server.destroyErrors()` function to return a promise that resolves once the error bots are destroyed.
@@ -133,6 +134,11 @@
             -   `null` means that the button is not pressed.
     -   Added the `player.getInputList()` function.
         -   Returns a list of available inputs that can be used by the `player.getInputState()` function.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where toasting recursive objects could break CasualOS.
+        -   Fixed by storing a map of previously converted objects to avoid reconverting them infinitely.
+        -   Also improved to gracefully handle objects that are nested too deeply.
 
 ## V1.1.17
 
