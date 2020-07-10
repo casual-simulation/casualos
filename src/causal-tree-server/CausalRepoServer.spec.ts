@@ -48,6 +48,8 @@ import {
     WATCH_BRANCH_DEVICES,
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
+    COMMIT_CREATED,
+    RESTORED,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -65,6 +67,7 @@ import {
 import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 const device1Info = deviceInfo('device1', 'device1', 'device1');
 const device2Info = deviceInfo('device2', 'device2', 'device2');
@@ -437,6 +440,75 @@ describe('CausalRepoServer', () => {
 
                 const branches = await store.getBranches('testBranch');
                 expect(branches).toEqual([]);
+            });
+
+            it('should be able to load a temporary branch immediately after loading a persistent branch', async () => {
+                server.init();
+
+                const device = new MemoryConnection(device1Info);
+                const joinBranch = new Subject<WatchBranchEvent>();
+                const addAtoms = new Subject<AddAtomsEvent>();
+                device.events.set(WATCH_BRANCH, joinBranch);
+                device.events.set(ADD_ATOMS, addAtoms);
+
+                connections.connection.next(device);
+
+                const a1 = atom(atomId('a', 1), null, {});
+                const a2 = atom(atomId('a', 2), a1, {});
+                const b1 = atom(atomId('b', 1), null, {});
+                const b2 = atom(atomId('b', 2), b1, {});
+
+                const idx = index(a1, a2);
+                const c = commit('message', new Date(2019, 9, 4), idx, null);
+                const b = branch('testBranch', c);
+
+                await storeData(store, 'testBranch', idx.data.hash, [
+                    a1,
+                    a2,
+                    idx,
+                    c,
+                ]);
+                await updateBranch(store, b);
+
+                joinBranch.next({
+                    branch: 'persistentBranch',
+                });
+
+                joinBranch.next({
+                    branch: 'tempBranch',
+                    temporary: true,
+                });
+
+                addAtoms.next({
+                    branch: 'tempBranch',
+                    atoms: [b1, b2],
+                });
+
+                await waitAsync();
+
+                expect(device.messages).toEqual([
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: 'persistentBranch',
+                            atoms: [],
+                        },
+                    },
+                    {
+                        name: ADD_ATOMS,
+                        data: {
+                            branch: 'tempBranch',
+                            atoms: [],
+                        },
+                    },
+                    {
+                        name: ATOMS_RECEIVED,
+                        data: {
+                            branch: 'tempBranch',
+                            hashes: [b1.hash, b2.hash],
+                        },
+                    },
+                ]);
             });
         });
     });
@@ -1970,6 +2042,32 @@ describe('CausalRepoServer', () => {
             expect(repoAtom).toBe(null);
         });
 
+        it('should not crash if adding atoms to a branch that does not exist', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [a1, a2, a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toBe(null);
+        });
+
         describe('temp', () => {
             it('should not store the given atoms with the current branch', async () => {
                 server.init();
@@ -2223,6 +2321,12 @@ describe('CausalRepoServer', () => {
                         commits: [newCommit],
                     },
                 },
+                {
+                    name: COMMIT_CREATED,
+                    data: {
+                        branch: 'testBranch',
+                    },
+                },
             ]);
         });
 
@@ -2294,12 +2398,72 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             // Should have the newly added atoms in the stage
-            expect(device.messages.slice(2)).toEqual([
+            expect(device.messages.slice(3)).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2, a3, a4, a5, a6],
+                    },
+                },
+            ]);
+        });
+
+        it('should send a commit created event to the device that requested the commit', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const makeCommit = new Subject<CommitEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(COMMIT, makeCommit);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            makeCommit.next({
+                branch: 'testBranch',
+                message: 'newCommit',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: COMMIT_CREATED,
+                    data: {
+                        branch: 'testBranch',
                     },
                 },
             ]);
@@ -2708,6 +2872,12 @@ describe('CausalRepoServer', () => {
                         branch: 'testBranch',
                         atoms: [a3],
                         removedAtoms: [a4.hash, a5.hash],
+                    },
+                },
+                {
+                    name: RESTORED,
+                    data: {
+                        branch: 'testBranch',
                     },
                 },
             ]);

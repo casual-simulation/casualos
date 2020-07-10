@@ -38,6 +38,9 @@ import {
     ADD_ATOMS,
     atom,
     atomId,
+    remoteResult,
+    RemoteActions,
+    remoteError,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -645,7 +648,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit remote events that are sent via transaction()', async () => {
-            let events: RemoteAction[] = [];
+            let events: RemoteActions[] = [];
             helper.remoteEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(remote(toast('test')));
@@ -653,8 +656,26 @@ describe('AuxHelper', () => {
             expect(events).toEqual([remote(toast('test'))]);
         });
 
+        it('should emit remote_result events that are sent via transaction()', async () => {
+            let events: RemoteActions[] = [];
+            helper.remoteEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(remoteResult('test'));
+
+            expect(events).toEqual([remoteResult('test')]);
+        });
+
+        it('should emit remote_error events that are sent via transaction()', async () => {
+            let events: RemoteActions[] = [];
+            helper.remoteEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(remoteError('test'));
+
+            expect(events).toEqual([remoteError('test')]);
+        });
+
         it('should not batch remote events that have allowBatching set to false', async () => {
-            let events: RemoteAction[][] = [];
+            let events: RemoteActions[][] = [];
             helper.remoteEvents.subscribe(e => events.push(e));
 
             await helper.transaction(

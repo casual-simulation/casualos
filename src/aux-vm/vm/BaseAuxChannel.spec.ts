@@ -29,6 +29,7 @@ import {
     AuxPartitions,
     action,
     Bot,
+    runScript,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -569,6 +570,7 @@ describe('BaseAuxChannel', () => {
                         type: 'run_script',
                         script:
                             'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); player.toast(bot)',
+                        taskId: null,
                     },
                 ]);
 
@@ -596,6 +598,62 @@ describe('BaseAuxChannel', () => {
                 // the toasted value should be null because the runtime
                 // should know that the new partition is delayed instead of immediate
                 expect(actions).toContainEqual(toast(null));
+            });
+
+            it('should resolve load_space events that have a task id', async () => {
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then(val => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'tempLocal',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                        taskId: task.taskId,
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should resolve if the space is already loaded', async () => {
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then(val => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_space',
+                        space: 'shared',
+                        config: <MemoryPartitionConfig>{
+                            type: 'memory',
+                            initialState: {
+                                abc: createBot('abc'),
+                            },
+                        },
+                        taskId: task.taskId,
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
             });
         });
     });
@@ -667,9 +725,9 @@ describe('BaseAuxChannel', () => {
         it('should send remote events', async () => {
             await channel.initAndWait();
 
-            await channel.formulaBatch(['server.browseHistory()']);
+            await channel.formulaBatch(['remote(player.toast("abc"))']);
 
-            expect(channel.remoteEvents).toEqual([remote(browseHistory())]);
+            expect(channel.remoteEvents).toEqual([remote(toast('abc'))]);
         });
     });
 
@@ -756,6 +814,11 @@ class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
     private _device: DeviceInfo;
+
+    get runtime() {
+        return this._runtime;
+    }
+
     constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
         super(user, config, {});
         this._device = device;

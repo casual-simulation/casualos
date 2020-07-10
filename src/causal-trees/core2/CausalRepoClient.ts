@@ -53,6 +53,10 @@ import {
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
+    RestoredEvent,
+    RESTORED,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -60,6 +64,7 @@ import {
     RemoteAction,
     DeviceActionResult,
     DeviceActionError,
+    RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
 import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
@@ -70,6 +75,7 @@ import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 export class CausalRepoClient {
     private _client: ConnectionClient;
     private _sentAtoms: Map<string, Map<string, Atom<any>>>;
+    private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
 
@@ -78,6 +84,7 @@ export class CausalRepoClient {
         this._forcedOffline = false;
         this._sentAtoms = new Map();
         this._connectedDevices = new Map();
+        this._watchedBranches = new Set();
     }
 
     /**
@@ -123,6 +130,7 @@ export class CausalRepoClient {
             branchEvent = nameOrEvent;
         }
         const name = branchEvent.branch;
+        this._watchedBranches.add(name);
         return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(WATCH_BRANCH, branchEvent);
@@ -187,6 +195,7 @@ export class CausalRepoClient {
                 ).pipe(filter(isClientAtomsOrEvents))
             ),
             finalize(() => {
+                this._watchedBranches.delete(name);
                 this._client.send(UNWATCH_BRANCH, name);
             })
         );
@@ -454,7 +463,7 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param action The action.
      */
-    sendEvent(branch: string, action: RemoteAction) {
+    sendEvent(branch: string, action: RemoteActions) {
         this._client.send(SEND_EVENT, {
             branch: branch,
             action: action,
@@ -466,12 +475,23 @@ export class CausalRepoClient {
      * @param branch The branch.
      * @param message The commit message.
      */
-    commit(branch: string, message: string) {
-        const event: CommitEvent = {
-            branch: branch,
-            message: message,
-        };
-        this._client.send(COMMIT, event);
+    commit(branch: string, message: string): Observable<CommitCreatedEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: CommitEvent = {
+                    branch: branch,
+                    message: message,
+                };
+                this._client.send(COMMIT, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<CommitCreatedEvent>(COMMIT_CREATED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     /**
@@ -487,12 +507,23 @@ export class CausalRepoClient {
         this._client.send(CHECKOUT, event);
     }
 
-    restore(branch: string, hash: string) {
-        const event: RestoreEvent = {
-            branch: branch,
-            commit: hash,
-        };
-        this._client.send(RESTORE, event);
+    restore(branch: string, hash: string): Observable<RestoredEvent> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                const event: RestoreEvent = {
+                    branch: branch,
+                    commit: hash,
+                };
+                this._client.send(RESTORE, event);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<RestoredEvent>(RESTORED)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
     }
 
     watchCommits(branch: string): Observable<AddCommitsEvent> {
@@ -520,6 +551,12 @@ export class CausalRepoClient {
         atoms: Atom<any>[],
         removedAtoms: string[]
     ) {
+        if (this._watchedBranches.has(branch) && !this.connection.isConnected) {
+            // Skip sending the atoms because we're watching the branch and we're not connected.
+            // This means that the new atoms are saved in the sent atoms list so they will be resent
+            // when we reconnect.
+            return;
+        }
         let event: AddAtomsEvent = {
             branch: branch,
         };

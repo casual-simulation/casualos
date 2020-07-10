@@ -895,6 +895,31 @@ export const ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME: string =
     'onRemotePlayerUnsubscribed';
 
 /**
+ * The name of the event that is triggered when a bot is added to the local simulation.
+ */
+export const ON_BOT_ADDED_ACTION_NAME = 'onBotAdded';
+
+/**
+ * The name of the event that is triggered when any bot is added to the local simulation.
+ */
+export const ON_ANY_BOTS_ADDED_ACTION_NAME = 'onAnyBotsAdded';
+
+/**
+ * The name of the event that is triggered when any bot is removed from the local simulation.
+ */
+export const ON_ANY_BOTS_REMOVED_ACTION_NAME = 'onAnyBotsRemoved';
+
+/**
+ * The name of the event that is triggered when a bot is changed.
+ */
+export const ON_BOT_CHANGED_ACTION_NAME = 'onBotChanged';
+
+/**
+ * The name of the event that is triggered when any bot is changed in the local simulation.
+ */
+export const ON_ANY_BOTS_CHANGED_ACTION_NAME = 'onAnyBotsChanged';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -956,6 +981,52 @@ export const KNOWN_TAGS: string[] = [
     MEET_PORTAL,
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
+
+    'pageCameraPositionX',
+    'pageCameraPositionY',
+    'pageCameraPositionZ',
+    'inventoryCameraPositionX',
+    'inventoryCameraPositionY',
+    'inventoryCameraPositionZ',
+
+    'pageCameraRotationX',
+    'pageCameraRotationY',
+    'pageCameraRotationZ',
+    'inventoryCameraRotationX',
+    'inventoryCameraRotationY',
+    'inventoryCameraRotationZ',
+
+    'mousePointerPositionX',
+    'mousePointerPositionY',
+    'mousePointerPositionZ',
+    'rightPointerPositionX',
+    'rightPointerPositionY',
+    'rightPointerPositionZ',
+    'leftPointerPositionX',
+    'leftPointerPositionY',
+    'leftPointerPositionZ',
+
+    'mousePointerRotationX',
+    'mousePointerRotationY',
+    'mousePointerRotationZ',
+    'rightPointerRotationX',
+    'rightPointerRotationY',
+    'rightPointerRotationZ',
+    'leftPointerRotationX',
+    'leftPointerRotationY',
+    'leftPointerRotationZ',
+
+    'mousePointerPortal',
+    'rightPointerPortal',
+    'leftPointerPortal',
+
+    'mousePointer_left',
+    'mousePointer_right',
+    'mousePointer_middle',
+    'leftPointer_primary',
+    'leftPointer_squeeze',
+    'rightPointer_primary',
+    'rightPointer_squeeze',
 
     '_editingBot',
 
@@ -1128,6 +1199,13 @@ export const KNOWN_TAGS: string[] = [
 
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+
+    ON_BOT_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+
+    ON_BOT_CHANGED_ACTION_NAME,
+    ON_ANY_BOTS_CHANGED_ACTION_NAME,
 ];
 
 export function onClickArg(face: string, dimension: string) {

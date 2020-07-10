@@ -298,6 +298,30 @@ export function testPartitionImplementation(
             expect(updated).toEqual([]);
         });
 
+        it('should ignore updates that set tag values to the same value that it is currently at', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+                example: 123,
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        abc: 'def',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([]);
+        });
+
         it('should only report tags that changed', async () => {
             const bot = createBot('test', {
                 abc: 'def',

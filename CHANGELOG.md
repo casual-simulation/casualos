@@ -1,5 +1,146 @@
 # CasualOS Changelog
 
+## V1.1.18
+
+### Date: 7/10/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Improved the `player.run()` function to return a promise that can be awaited to get the result of the script (or wait until the script has been executed).
+    -   Improved the `server.loadErrors()` function to return a promise that can be awaited to get the list of bots that were loaded.
+    -   Improved the `server.destroyErrors()` function to return a promise that resolves once the error bots are destroyed.
+    -   Improved the `server.loadFile()` function to return a promise that resolves once the file is loaded.
+    -   Improved the `server.saveFile()` function to return a promise that resolves once the file is saved.
+    -   Improved the `server.setupStory()` function to return a promise that resolves once the story is setup.
+    -   Improved the `server.browseHistory()` function to return a promise that resolves once the history is loaded.
+    -   Improved the `server.markHistory()` function to return a promise that resolves once the history is saved.
+    -   Improved the `server.restoreHistoryMark()` function to return a promise that resolves once the history is restored.
+    -   Improved the `server.restoreHistoryMarkToStory()` function to return a promise that resolves once the history is restored.
+    -   Added the `@onBotAdded` and `@onAnyBotsAdded` listen tags.
+        -   These are triggered whenever a bot is added to the local story.
+        -   Note that this is different from `@onCreate` because you will be notified whenever a bot is added to the state even if it has already been created.
+        -   An example of this are bots in the `otherPlayers` space. You cannot create bots in this space but you will be notified via `@onBotAdded` and `@onAnyBotsAdded`.
+        -   `@onBotAdded` is triggered on the bot that was added. There is no `that`.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an object with the following properties:
+                -   `bots` - The array of bots that were added.
+    -   Added the `@onAnyBotsRemoved` listen tags.
+        -   These are triggered whenever a a bot is removed from the local story.
+        -   Note that this is different from `@onDestroy` because you will be notified whenever a bot is removed from the state even if it has not been explicitly destroyed.
+        -   An example of this are bots in the `otherPlayers` space. When another player disconnects no `@onDestroy` is fired but you will get a `@onAnyBotsRemoved`.
+        -   `@onAnyBotsRemoved` is triggered on every bot whenever one or more bots are removed.
+            -   `that` is an object with the following properties:
+                -   `botIDs` - The array of bot IDs that were removed.
+    -   Added the `@onBotChanged` and `@onAnyBotsChanged` listen tags.
+        -   These are triggered whenever a bot is changed in the local story.
+        -   Note that you will be notified whenever a bot is changed in the state even if it was changed by another player.
+        -   An example of this are bots in the `otherPlayers` space. You cannot update bots in this space but you will be notified via `@onBotChanged` and `@onAnyBotsChanged`.
+        -   `@onBotChanged` is triggered on the bot that was changed.
+            -   `that` is an object with the following properties:
+                -   `tags` - The list of tags that were changed on the bot.
+        -   `@onAnyBotsAdded` is triggered on every bot whenever one or more bots are added.
+            -   `that` is an array containing objects with the following properties:
+                -   `bot` - The bot that was updated.
+                -   `tags` - The tags that were changed on the bot.
+    -   Added several tags to the player bot:
+        -   These tags are updated by CasualOS and can be used to query the current state of the input system.
+        -   Camera Tags
+            -   These tags contain the position and rotation of the player's camera.
+            -   You can use this to communicate where the player is to other players.
+            -   `pageCameraPositionX`
+            -   `pageCameraPositionY`
+            -   `pageCameraPositionZ`
+            -   `inventoryCameraPositionX`
+            -   `inventoryCameraPositionY`
+            -   `inventoryCameraPositionZ`
+            -   `pageCameraRotationX`
+            -   `pageCameraRotationY`
+            -   `pageCameraRotationZ`
+            -   `inventoryCameraRotationX`
+            -   `inventoryCameraRotationY`
+            -   `inventoryCameraRotationZ`
+        -   Pointer Tags
+            -   These tags contain the position and rotation of the player's pointers.
+            -   You can use this to tell where the VR controllers are or where the mouse is pointing.
+            -   `mousePointerPositionX`
+            -   `mousePointerPositionY`
+            -   `mousePointerPositionZ`
+            -   `mousePointerRotationX`
+            -   `mousePointerRotationY`
+            -   `mousePointerRotationZ`
+            -   `mousePointerPortal`
+            -   `rightPointerPositionX`
+            -   `rightPointerPositionY`
+            -   `rightPointerPositionZ`
+            -   `rightPointerRotationX`
+            -   `rightPointerRotationY`
+            -   `rightPointerRotationZ`
+            -   `rightPointerPortal`
+            -   `leftPointerPositionX`
+            -   `leftPointerPositionY`
+            -   `leftPointerPositionZ`
+            -   `leftPointerRotationX`
+            -   `leftPointerRotationY`
+            -   `leftPointerRotationZ`
+            -   `leftPointerPortal`
+        -   Button Tags
+            -   These tags contain the state of the different buttons.
+            -   Possible values are:
+                -   `null` - Button is not pressed.
+                -   `down` - Button was just pressed.
+                -   `held` - Button is being held down.
+            -   `mousePointer_left`
+            -   `mousePointer_right`
+            -   `mousePointer_middle`
+            -   `leftPointer_primary`
+            -   `leftPointer_squeeze`
+            -   `rightPointer_primary`
+            -   `rightPointer_squeeze`
+            -   `keyboard_[key]`
+                -   Replace `[key]` with the key that you want the state of.
+                -   For example use `keyboard_a` to get the state of the `a` key.
+    -   Added the `player.getCameraPosition(portal?)` function.
+        -   `portal` is optional and is the portal (`page` or `inventory`) that the camera position should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getCameraRotation(portal?)` function.
+        -   `portal` is optional and is the portal (`page` or `inventory`) that the camera rotation should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getPointerPosition(pointer?)` function.
+        -   `pointer` is optional and is the pointer (`mouse`, `left` or `right`) that the position should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getPointerRotation(pointer?)` function.
+        -   `pointer` is optional and is the pointer (`mouse`, `left` or `right`) that the rotation should be retrieved for.
+        -   Returns an object with the following properties:
+            -   `x`
+            -   `y`
+            -   `z`
+    -   Added the `player.getInputState(controller, button)` function.
+        -   `controller` is the controller (`mousePointer`, `leftPointer`, `rightPointer`, `keyboard` or `touch`) that the button state should be retrieved from.
+        -   `button` is the name of the button that should be retrieved.
+        -   Returns a string containing the state of the button or `null` if the button is not pressed.
+            -   `"down"` means that the button just started to be pressed.
+            -   `"held"` means that the button is being held down.
+            -   `null` means that the button is not pressed.
+    -   Added the `player.getInputList()` function.
+        -   Returns a list of available inputs that can be used by the `player.getInputState()` function.
+
+-   :bug: Bug Fixes
+    -   Fixed an issue where toasting recursive objects could break CasualOS.
+        -   Fixed by storing a map of previously converted objects to avoid reconverting them infinitely.
+        -   Also improved to gracefully handle objects that are nested too deeply.
+    -   Fixed an issue with the show input modal where it incorrectly errored sometimes.
+
 ## V1.1.17
 
 ### Date: 7/3/2020

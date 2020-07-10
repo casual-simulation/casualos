@@ -45,6 +45,10 @@ import {
     UNWATCH_BRANCH_DEVICES,
     BRANCHES_STATUS,
     BranchesStatusEvent,
+    CommitCreatedEvent,
+    COMMIT_CREATED,
+    RestoredEvent,
+    RESTORED,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -628,11 +632,40 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
+
+        it('should wait to send the atoms until the watched branch is connected', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            client.watchBranch('abc').subscribe();
+            client.addAtoms('abc', [a1]);
+            client.addAtoms('abc', [a2]);
+
+            connection.connect();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'abc',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
     });
 
     describe('commit()', () => {
         it('should send a commit event', async () => {
-            client.commit('abc', 'newCommit');
+            client.commit('abc', 'newCommit').subscribe();
+
+            connection.connect();
+            await waitAsync();
 
             expect(connection.sentMessages).toEqual([
                 {
@@ -641,6 +674,33 @@ describe('CausalRepoClient', () => {
                         branch: 'abc',
                         message: 'newCommit',
                     },
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves when the commit has been created', async () => {
+            const commits = new Subject<CommitCreatedEvent>();
+            connection.events.set(COMMIT_CREATED, commits);
+
+            let infos = [] as CommitCreatedEvent[];
+            client.commit('abc', 'newCommit').subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            commits.next({
+                branch: 'abc',
+            });
+            await waitAsync();
+
+            commits.next({
+                branch: 'wrong',
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branch: 'abc',
                 },
             ]);
         });
@@ -664,7 +724,10 @@ describe('CausalRepoClient', () => {
 
     describe('restore()', () => {
         it('should send a restore event', async () => {
-            client.restore('abc', 'commit');
+            client.restore('abc', 'commit').subscribe();
+
+            connection.connect();
+            await waitAsync();
 
             expect(connection.sentMessages).toEqual([
                 {
@@ -673,6 +736,33 @@ describe('CausalRepoClient', () => {
                         branch: 'abc',
                         commit: 'commit',
                     },
+                },
+            ]);
+        });
+
+        it('should return an observable that resolves when the commit has been created', async () => {
+            const restored = new Subject<RestoredEvent>();
+            connection.events.set(RESTORED, restored);
+
+            let infos = [] as RestoredEvent[];
+            client.restore('abc', 'newCommit').subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            restored.next({
+                branch: 'abc',
+            });
+            await waitAsync();
+
+            restored.next({
+                branch: 'wrong',
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branch: 'abc',
                 },
             ]);
         });

@@ -356,6 +356,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hasBotInInventory,
                 share,
                 inSheet,
+
+                getCameraPosition,
+                getCameraRotation,
+                getPointerPosition,
+                getPointerRotation,
+                getInputState,
+                getInputList,
             },
 
             server: {
@@ -897,7 +904,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param script The script that should be executed.
      */
     function run(script: string) {
-        return addAction(runScript(script));
+        const task = context.createTask();
+        const event = runScript(script, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1381,7 +1390,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param botOrMod The bot or mod that should be cloned into the new story.
      */
     function setupStory(story: string, botOrMod?: Mod) {
-        return remote(calcSetupStory(story, context.unwrapBot(botOrMod)));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcSetupStory(story, context.unwrapBot(botOrMod)),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1447,14 +1463,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      */
     function markHistory(options: MarkHistoryOptions) {
-        return remote(calcMarkHistory(options), undefined, false);
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcMarkHistory(options),
+            undefined,
+            false,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
      * Loads the "history" space into the story.
      */
     function browseHistory() {
-        return remote(calcBrowseHistory());
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcBrowseHistory(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1463,7 +1493,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function restoreHistoryMark(mark: Bot | string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcRestoreHistoryMark(id),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1473,7 +1510,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function restoreHistoryMarkToStory(mark: Bot | string, story: string) {
         const id = getID(mark);
-        return remote(calcRestoreHistoryMark(id, story));
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcRestoreHistoryMark(id, story),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1482,12 +1526,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options.
      */
     function loadFile(path: string, options?: LoadFileOptions) {
-        return remote(
+        const task = context.createTask(true, true);
+        const event = calcRemote(
             calcLoadFile({
                 path: path,
                 ...(options || {}),
-            })
+            }),
+            undefined,
+            undefined,
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1497,20 +1546,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options to use.
      */
     function saveFile(path: string, data: string, options?: SaveFileOptions) {
-        return remote(
+        const task = context.createTask(true, true);
+        const event = calcRemote(
             calcSaveFile({
                 path: path,
                 data: data,
                 ...(options || {}),
-            })
+            }),
+            undefined,
+            undefined,
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**
      * Destroys all the errors in the story.
      */
     function destroyErrors() {
-        return addAction(clearSpace('error'));
+        const task = context.createTask();
+        const event = clearSpace('error', task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -1518,9 +1574,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that the errors should be loaded for.
      * @param tag The tag that the errors should be loaded for.
      */
-    function loadErrors(bot: string | Bot, tag: string) {
-        return addAction(
-            loadBots('error', [
+    function loadErrors(bot: string | Bot, tag: string): Promise<Bot[]> {
+        const task = context.createTask();
+        const event = loadBots(
+            'error',
+            [
                 {
                     tag: 'error',
                     value: true,
@@ -1533,8 +1591,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     tag: 'errorTag',
                     value: tag,
                 },
-            ])
+            ],
+            task.taskId
         );
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -2326,6 +2386,127 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function inSheet(): boolean {
         return getPortalDimension('sheet') !== null;
+    }
+
+    /**
+     * Gets the 3D position of the player's camera.
+     * @param portal The portal that the camera position should be retrieved for.
+     */
+    function getCameraPosition(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraPositionX`],
+            y: user.tags[`${portal}CameraPositionY`],
+            z: user.tags[`${portal}CameraPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's camera.
+     * @param portal The portal that the camera rotation should be retrieved for.
+     */
+    function getCameraRotation(
+        portal: 'page' | 'inventory' = 'page'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${portal}CameraRotationX`],
+            y: user.tags[`${portal}CameraRotationY`],
+            z: user.tags[`${portal}CameraRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D position of the player's pointer.
+     * @param pointer The position of the pointer to retrieve.
+     */
+    function getPointerPosition(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerPositionX`],
+            y: user.tags[`${pointer}PointerPositionY`],
+            z: user.tags[`${pointer}PointerPositionZ`],
+        };
+    }
+
+    /**
+     * Gets the 3D rotation of the player's pointer.
+     * @param pointer The rotation of the pointer to retrieve.
+     */
+    function getPointerRotation(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const user = context.playerBot;
+        if (!user) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+
+        return {
+            x: user.tags[`${pointer}PointerRotationX`],
+            y: user.tags[`${pointer}PointerRotationY`],
+            z: user.tags[`${pointer}PointerRotationZ`],
+        };
+    }
+
+    /**
+     * Gets the input state of the given button on the given controller.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    function getInputState(
+        controller: string,
+        button: string
+    ): null | 'down' | 'held' {
+        const user = context.playerBot;
+        if (!user) {
+            return null;
+        }
+
+        return user.tags[`${controller}_${button}`] || null;
+    }
+
+    /**
+     * Gets the list of inputs that are currently available.
+     */
+    function getInputList(): string[] {
+        const user = context.playerBot;
+        if (!user) {
+            return [];
+        }
+
+        return user.tags.inputList || [];
     }
 
     /**

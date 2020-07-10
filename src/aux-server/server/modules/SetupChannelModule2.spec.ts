@@ -4,7 +4,7 @@ import {
     setupStory,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
-import { deviceInfo } from '@casual-simulation/causal-trees';
+import { deviceInfo, remoteResult } from '@casual-simulation/causal-trees';
 import { SetupChannelModule2 } from './SetupChannelModule2';
 import { AuxUser, Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
@@ -12,11 +12,15 @@ import {
     CausalRepoClient,
     MemoryCausalRepoStore,
     MemoryStageStore,
+    SEND_EVENT,
+    SendRemoteActionEvent,
 } from '@casual-simulation/causal-trees/core2';
 import {
     CausalRepoServer,
     ConnectionBridge,
     FixedConnectionServer,
+    MemoryConnection,
+    Connection,
 } from '@casual-simulation/causal-tree-server';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 console.log = jest.fn();
@@ -27,6 +31,7 @@ describe('SetupChannelModule2', () => {
     let processingUser: AuxUser;
     let subject: SetupChannelModule2;
     let serverClient: CausalRepoClient;
+    let serverConnection: Connection;
     let processingClient: CausalRepoClient;
     let simulation: Simulation;
     let sub: Subscription;
@@ -73,6 +78,7 @@ describe('SetupChannelModule2', () => {
         );
         server.init();
 
+        serverConnection = serverBridge.serverConnection;
         serverClient = new CausalRepoClient(serverBridge.clientConnection);
         processingClient = new CausalRepoClient(
             processingBridge.clientConnection
@@ -246,6 +252,34 @@ describe('SetupChannelModule2', () => {
                         'shared'
                     )
                 );
+            });
+
+            it('should send a remote result when the channel is setup', async () => {
+                expect.assertions(1);
+
+                const remoteEvents = [] as SendRemoteActionEvent[];
+                serverConnection
+                    .event<SendRemoteActionEvent>(SEND_EVENT)
+                    .subscribe(e => remoteEvents.push(e));
+
+                await simulation.helper.transaction(
+                    setupStory('newChannel', undefined, 'task1', 'player1')
+                );
+
+                await waitAsync();
+
+                expect(remoteEvents).toEqual([
+                    {
+                        branch: 'id',
+                        action: remoteResult(
+                            undefined,
+                            {
+                                sessionId: 'player1',
+                            },
+                            'task1'
+                        ),
+                    },
+                ]);
             });
         });
     });

@@ -1,7 +1,7 @@
-import mapValues from 'lodash/mapValues';
 import { isRuntimeBot, RealtimeEditMode } from './RuntimeBot';
 import { isBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
+import forOwn from 'lodash/forOwn';
 
 /**
  * Converts the given value to a copiable value.
@@ -10,27 +10,64 @@ import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
  * @param value
  */
 export function convertToCopiableValue(value: any): any {
+    try {
+        return _convertToCopiableValue(value, 0, new Map());
+    } catch (err) {
+        if (err instanceof DeepObjectError) {
+            return '[Nested object]';
+        }
+        throw err;
+    }
+}
+
+function _convertToCopiableValue(
+    value: any,
+    depth: number,
+    map: Map<any, any>
+): any {
+    if (depth > 1000) {
+        throw new DeepObjectError();
+    }
     if (typeof value === 'function') {
         return `[Function ${value.name}]`;
     } else if (value instanceof Error) {
         return `${value.name}: ${value.message}`;
     } else if (typeof value === 'object') {
+        if (map.has(value)) {
+            return map.get(value);
+        }
         if (isRuntimeBot(value)) {
-            return {
+            const result = {
                 id: value.id,
                 tags: value.tags.toJSON(),
             };
+            map.set(value, result);
+            return result;
         } else if (isBot(value)) {
-            return {
+            const result = {
                 id: value.id,
                 tags: value.tags,
             };
+            map.set(value, result);
+            return result;
         } else if (Array.isArray(value)) {
-            return value.map(val => convertToCopiableValue(val));
+            const result = [] as any[];
+            map.set(value, result);
+            result.push(
+                ...value.map(val =>
+                    _convertToCopiableValue(val, depth + 1, map)
+                )
+            );
+            return result;
         } else if (value === null || value === undefined) {
             return value;
         } else {
-            return mapValues(value, val => convertToCopiableValue(val));
+            let result = {} as any;
+            map.set(value, result);
+            forOwn(value, (val, key, object) => {
+                result[key] = _convertToCopiableValue(val, depth + 1, map);
+            });
+            return result;
         }
     }
     return value;
@@ -43,3 +80,5 @@ export function realtimeStrategyToRealtimeEditMode(
         ? RealtimeEditMode.Immediate
         : RealtimeEditMode.Delayed;
 }
+
+class DeepObjectError extends Error {}

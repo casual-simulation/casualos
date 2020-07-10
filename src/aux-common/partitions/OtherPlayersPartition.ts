@@ -13,6 +13,7 @@ import {
     DeviceInfo,
     USERNAME_CLAIM,
     SESSION_ID_CLAIM,
+    RemoteActions,
 } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
@@ -184,9 +185,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         return [];
     }
 
-    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         for (let event of events) {
-            if (event.event.type === 'get_players') {
+            if (event.type === 'remote' && event.event.type === 'get_players') {
                 const action = <GetPlayersAction>event.event;
                 const connectedDevices = [...this._devices.values()];
                 const sessionIds = sortBy([

@@ -27,6 +27,11 @@ import {
     getBotSpace,
     ON_ACTION_ACTION_NAME,
     breakIntoIndividualEvents,
+    ON_BOT_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+    ON_BOT_CHANGED_ACTION_NAME,
+    ON_ANY_BOTS_CHANGED_ACTION_NAME,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -98,6 +103,10 @@ export class AuxRuntime
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
 
+    get context() {
+        return this._globalContext;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
@@ -139,6 +148,10 @@ export class AuxRuntime
 
                 this._actionBatch = [];
                 this._errorBatch = [];
+
+                if (actions.length <= 0 && errors.length <= 0) {
+                    return;
+                }
 
                 // Schedule a new micro task to
                 // run at a later time with the actions.
@@ -304,15 +317,22 @@ export class AuxRuntime
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false);
             this.process(result.actions);
+            if (hasValue(action.taskId)) {
+                this._globalContext.resolveTask(
+                    action.taskId,
+                    result.result,
+                    false
+                );
+            }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
             this.process(events);
         } else if (action.type === 'async_result') {
-            this._globalContext.resolveTask(
-                action.taskId,
-                action.result,
-                false
-            );
+            const value =
+                action.mapBotsInResult === true
+                    ? this._mapBotsToRuntimeBots(action.result)
+                    : action.result;
+            this._globalContext.resolveTask(action.taskId, value, false);
         } else if (action.type === 'async_error') {
             this._globalContext.rejectTask(action.taskId, action.error, false);
         } else if (action.type === 'device_result') {
@@ -482,6 +502,13 @@ export class AuxRuntime
         const changes = this._dependencies.addBots(bots);
         this._updateDependentBots(changes, update, newBotIDs);
 
+        if (update.addedBots.length > 0) {
+            this.shout(ON_BOT_ADDED_ACTION_NAME, update.addedBots);
+            this.shout(ON_ANY_BOTS_ADDED_ACTION_NAME, null, {
+                bots: newBots.map(([bot, precalc]) => bot),
+            });
+        }
+
         return update;
     }
 
@@ -509,6 +536,12 @@ export class AuxRuntime
 
         const changes = this._dependencies.removeBots(botIds);
         this._updateDependentBots(changes, update, new Set());
+
+        if (botIds.length > 0) {
+            this.shout(ON_ANY_BOTS_REMOVED_ACTION_NAME, null, {
+                botIDs: botIds,
+            });
+        }
 
         return update;
     }
@@ -550,6 +583,13 @@ export class AuxRuntime
 
         const changes = this._dependencies.updateBots(updates);
         this._updateDependentBots(changes, update, new Set());
+
+        for (let update of updates) {
+            this.shout(ON_BOT_CHANGED_ACTION_NAME, [update.bot.id], {
+                tags: update.tags,
+            });
+        }
+        this.shout(ON_ANY_BOTS_CHANGED_ACTION_NAME, null, updates);
 
         return update;
     }
@@ -988,6 +1028,12 @@ export class AuxRuntime
                     this._transformBotsToRuntimeBots(result, value, key),
                 { [ORIGINAL_OBJECT]: value }
             );
+        } else if (
+            hasValue(value) &&
+            Array.isArray(value) &&
+            !(value instanceof ArrayBuffer)
+        ) {
+            return value.map(v => this._mapBotsToRuntimeBots(v));
         }
 
         return value;

@@ -123,4 +123,33 @@ describe('convertToCopiableValue()', () => {
             expect(result).toBe(expected);
         }
     );
+
+    it('should convert simple recursive objects', () => {
+        let test1 = {
+            test2: null as any,
+        };
+        let test3 = {
+            test1: test1,
+        };
+        let test2 = {
+            test3: test3,
+        };
+
+        test1.test2 = test2;
+        const result = convertToCopiableValue(test1);
+
+        expect(result).toEqual(test1);
+    });
+
+    it('should convert deep objects to a string', () => {
+        let obj = {} as any;
+        let current = obj;
+        for (let i = 0; i < 10000; i++) {
+            current = current['deep'] = {};
+        }
+
+        const result = convertToCopiableValue(obj);
+
+        expect(result).toBe('[Nested object]');
+    });
 });

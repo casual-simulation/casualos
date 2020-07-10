@@ -23,6 +23,8 @@ export type BotAction =
     | ExtraActions
     | AsyncActions
     | RemoteAction
+    | RemoteActionResult
+    | RemoteActionError
     | DeviceAction;
 
 /**
@@ -53,8 +55,6 @@ export type ExtraActions =
     | UnloadStoryAction
     | SuperShoutAction
     | SendWebhookAction
-    | LoadFileAction
-    | SaveFileAction
     | GoToDimensionAction
     | GoToURLAction
     | PlaySoundAction
@@ -72,10 +72,8 @@ export type ExtraActions =
     | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
-    | SetupChannelAction
     | SetClipboardAction
     | ShowChatBarAction
-    | RunScriptAction
     | ShowUploadAuxFileAction
     | MarkHistoryAction
     | BrowseHistoryAction
@@ -86,8 +84,6 @@ export type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction
-    | ClearSpaceAction
     | LocalFormAnimationAction
     | GetPlayerCountAction;
 
@@ -99,8 +95,14 @@ export type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
+    | RunScriptAction
+    | LoadBotsAction
+    | ClearSpaceAction
     | SendWebhookAction
     | UnlockSpaceAction
+    | LoadFileAction
+    | SaveFileAction
+    | SetupChannelAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -116,6 +118,12 @@ export interface AsyncAction extends Action {
      * The ID of the async task.
      */
     taskId: number | string;
+
+    /**
+     * The ID of the player that created this task.
+     * Set by remote action handlers when a task is recieved from a remote player.
+     */
+    playerId?: string;
 }
 
 /**
@@ -128,6 +136,12 @@ export interface AsyncResultAction extends AsyncAction {
      * The result value.
      */
     result: any;
+
+    /**
+     * Whether to map any bots found in the result to their actual bot counterparts.
+     * Defaults to false.
+     */
+    mapBotsInResult?: boolean;
 }
 
 /**
@@ -701,7 +715,7 @@ export interface WebhookOptions {
 /**
  * Defines an event that is used to load a file.
  */
-export interface LoadFileAction extends Action {
+export interface LoadFileAction extends AsyncAction {
     type: 'load_file';
 
     /**
@@ -728,7 +742,7 @@ export interface LoadFileOptions {
 /**
  * Defines an event that is used to save a file to a drive.
  */
-export interface SaveFileAction extends Action {
+export interface SaveFileAction extends AsyncAction {
     type: 'save_file';
 
     /**
@@ -1016,7 +1030,7 @@ export interface RejectAction {
 /**
  * Defines an event that creates a channel if it doesn't exist.
  */
-export interface SetupChannelAction {
+export interface SetupChannelAction extends AsyncAction {
     type: 'setup_story';
 
     /**
@@ -1082,7 +1096,7 @@ export interface ShowChatOptions {
 /**
  * Defines an event that executes a script.
  */
-export interface RunScriptAction {
+export interface RunScriptAction extends AsyncAction {
     type: 'run_script';
 
     /**
@@ -1138,7 +1152,7 @@ export interface RestoreHistoryMarkAction {
 /**
  * Defines an event that loads a space into the story.
  */
-export interface LoadSpaceAction {
+export interface LoadSpaceAction extends Partial<AsyncAction> {
     type: 'load_space';
 
     /**
@@ -1155,7 +1169,7 @@ export interface LoadSpaceAction {
 /**
  * Defines an event that loads bots from the given space that match the given tags and values.
  */
-export interface LoadBotsAction {
+export interface LoadBotsAction extends AsyncAction {
     type: 'load_bots';
 
     /**
@@ -1191,7 +1205,7 @@ export interface TagFilter {
  * Only supported for the following spaces:
  * - error
  */
-export interface ClearSpaceAction {
+export interface ClearSpaceAction extends AsyncAction {
     type: 'clear_space';
 
     /**
@@ -1897,22 +1911,32 @@ export function webhook(
 /**
  * Creates a new LoadFileAction.
  * @param options The options.
+ * @param taskId The ID of the async task.
  */
-export function loadFile(options: LoadFileOptions): LoadFileAction {
+export function loadFile(
+    options: LoadFileOptions,
+    taskId?: number | string
+): LoadFileAction {
     return {
         type: 'load_file',
         options: options,
+        taskId,
     };
 }
 
 /**
  * Creates a new SaveFileAction.
  * @param options The options.
+ * @param taskId The ID of the async task.
  */
-export function saveFile(options: SaveFileOptions): SaveFileAction {
+export function saveFile(
+    options: SaveFileOptions,
+    taskId?: number | string
+): SaveFileAction {
     return {
         type: 'save_file',
         options: options,
+        taskId,
     };
 }
 
@@ -1976,15 +2000,20 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
  * Creates a channel if it doesn't exist and places the given bot in it.
  * @param channel The ID of the channel to setup.
  * @param botOrMod The bot that should be cloned into the new channel.
+ * @param taskId The ID of the async task.
  */
 export function setupStory(
     channel: string,
-    botOrMod?: Bot | BotTags
+    botOrMod?: Bot | BotTags,
+    taskId?: string | number,
+    playerId?: string
 ): SetupChannelAction {
     return {
         type: 'setup_story',
         channel,
         botOrMod,
+        taskId,
+        playerId,
     };
 }
 
@@ -2002,11 +2031,16 @@ export function setClipboard(text: string): SetClipboardAction {
 /**
  * Creates a RunScriptAction.
  * @param script The script that should be executed.
+ * @param taskId The ID of the async task that this script represents.
  */
-export function runScript(script: string): RunScriptAction {
+export function runScript(
+    script: string,
+    taskId?: number | string
+): RunScriptAction {
     return {
         type: 'run_script',
         script,
+        taskId,
     };
 }
 
@@ -2070,12 +2104,18 @@ export function restoreHistoryMark(
  * Loads a space into the story.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
+ * @param taskId The ID of the async task.
  */
-export function loadSpace(space: BotSpace, config: any): LoadSpaceAction {
+export function loadSpace(
+    space: BotSpace,
+    config: any,
+    taskId?: number | string
+): LoadSpaceAction {
     return {
         type: 'load_space',
         space,
         config,
+        taskId,
     };
 }
 
@@ -2157,12 +2197,18 @@ export function exitFullscreen(): ExitFullscreenAction {
  * Requests that bots matching the given tags be loaded from the given space.
  * @param space The space that the bots should be loaded from.
  * @param tags The tags that should be on the loaded bots.
+ * @param taskId The ID of the async task for this action.
  */
-export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
+export function loadBots(
+    space: BotSpace,
+    tags: TagFilter[],
+    taskId?: number | string
+): LoadBotsAction {
     return {
         type: 'load_bots',
         space: space,
         tags: tags,
+        taskId,
     };
 }
 
@@ -2173,11 +2219,16 @@ export function loadBots(space: BotSpace, tags: TagFilter[]): LoadBotsAction {
  * - error
  *
  * @param space The space to clear.
+ * @param taskId The ID of the async task.
  */
-export function clearSpace(space: BotSpace): ClearSpaceAction {
+export function clearSpace(
+    space: BotSpace,
+    taskId?: number | string
+): ClearSpaceAction {
     return {
         type: 'clear_space',
         space: space,
+        taskId,
     };
 }
 
@@ -2224,15 +2275,18 @@ export function localFormAnimation(
  * Creates an action that resolves an async task with the given result.
  * @param taskId The ID of the task.
  * @param result The result.
+ * @param mapBots Whether to map any bots found in the result to their actual counterparts.
  */
 export function asyncResult(
     taskId: number | string,
-    result: any
+    result: any,
+    mapBots?: boolean
 ): AsyncResultAction {
     return {
         type: 'async_result',
         taskId,
         result,
+        mapBotsInResult: mapBots,
     };
 }
 

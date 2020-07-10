@@ -1,5 +1,9 @@
 import { AuxModule2, AuxUser, Simulation } from '@casual-simulation/aux-vm';
-import { DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    DeviceInfo,
+    remoteResult,
+    remoteError,
+} from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 import {
@@ -7,6 +11,7 @@ import {
     SetupChannelAction,
     isBot,
     CREATE_ACTION_NAME,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { nodeSimulationForBranch } from '@casual-simulation/aux-vm-node';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
@@ -31,7 +36,7 @@ export class SetupChannelModule2 implements AuxModule2 {
                 .pipe(
                     flatMap(async event => {
                         if (event.type === 'setup_story') {
-                            await this._setupChannel(event);
+                            await this._setupChannel(simulation, event);
                         }
                     })
                 )
@@ -51,7 +56,10 @@ export class SetupChannelModule2 implements AuxModule2 {
         device: DeviceInfo
     ): Promise<void> {}
 
-    private async _setupChannel(event: SetupChannelAction) {
+    private async _setupChannel(
+        currentSim: Simulation,
+        event: SetupChannelAction
+    ) {
         try {
             const hasChannel = await this._client
                 .branchInfo(event.channel)
@@ -92,12 +100,38 @@ export class SetupChannelModule2 implements AuxModule2 {
                             )
                         );
                     }
+
+                    if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                        await currentSim.helper.transaction(
+                            remoteResult(
+                                undefined,
+                                {
+                                    sessionId: event.playerId,
+                                },
+                                event.taskId
+                            )
+                        );
+                    }
                 } finally {
                     simulation.unsubscribe();
                 }
             }
         } catch (err) {
             console.error('[SetupChannelModule2]', err);
+            if (hasValue(event.taskId) && hasValue(event.playerId)) {
+                await currentSim.helper.transaction(
+                    remoteError(
+                        {
+                            error: 'failure',
+                            exception: err.toString(),
+                        },
+                        {
+                            sessionId: event.playerId,
+                        },
+                        event.taskId
+                    )
+                );
+            }
         }
     }
 }

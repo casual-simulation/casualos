@@ -455,7 +455,7 @@ export class Input {
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
     public getMouseButtonDown(buttonId: MouseButtonId): boolean {
-        const state = this._getButtonInputState(buttonId);
+        const state = this.getButtonInputState(buttonId);
         if (state) {
             return state.isDownOnFrame(this.time.frameCount);
         }
@@ -490,7 +490,7 @@ export class Input {
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
     public getMouseButtonUp(buttonId: MouseButtonId): boolean {
-        const state = this._getButtonInputState(buttonId);
+        const state = this.getButtonInputState(buttonId);
         if (state) {
             return state.isUpOnFrame(this.time.frameCount);
         }
@@ -525,7 +525,7 @@ export class Input {
      * If on mobile device, will return the held state of the first finger touching the screen.
      */
     public getMouseButtonHeld(buttonId: MouseButtonId): boolean {
-        const state = this._getButtonInputState(buttonId);
+        const state = this.getButtonInputState(buttonId);
         if (state) {
             return state.isHeldOnFrame(this.time.frameCount);
         }
@@ -586,7 +586,11 @@ export class Input {
         return controller.squeezeInputState.isHeldOnFrame(this.time.frameCount);
     }
 
-    private _getButtonInputState(buttonId: MouseButtonId): InputState {
+    /**
+     * Gets the input state for the given button ID.
+     * @param buttonId The ID of the button.
+     */
+    public getButtonInputState(buttonId: MouseButtonId): InputState {
         if (this._inputType == InputType.Mouse) {
             let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
@@ -706,6 +710,13 @@ export class Input {
 
     public getMouseData(): MouseData {
         return this._mouseData;
+    }
+
+    /**
+     * Returns the active touch data.
+     */
+    public getTouches(): TouchData[] {
+        return this._touchData;
     }
 
     /**

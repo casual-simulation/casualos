@@ -3,7 +3,6 @@ import { DeviceInfo } from './DeviceInfo';
 /**
  * Defines an interface that represents an event.
  * That is, a time-ordered action in a channel.
- * @deprecated
  */
 export interface Action {
     /**
@@ -59,6 +58,11 @@ export interface DeviceSelector {
      */
     broadcast?: boolean;
 }
+
+export type RemoteActions =
+    | RemoteAction
+    | RemoteActionResult
+    | RemoteActionError;
 
 /**
  * An event that is used to send events from this device to a remote device.
