@@ -171,7 +171,10 @@ export default class ShowInputModal extends Vue {
 
         if (this._currentBot && this._currentTag) {
             await this._saveInputForTag(value);
-        } else if (typeof this._currentTask === 'number') {
+        } else if (
+            typeof this._currentTask === 'number' ||
+            typeof this._currentTask === 'string'
+        ) {
             await this._saveInput(value);
         } else {
             console.error(
