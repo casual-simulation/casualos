@@ -139,6 +139,7 @@
     -   Fixed an issue where toasting recursive objects could break CasualOS.
         -   Fixed by storing a map of previously converted objects to avoid reconverting them infinitely.
         -   Also improved to gracefully handle objects that are nested too deeply.
+    -   Fixed an issue with the show input modal where it incorrectly errored sometimes.
 
 ## V1.1.17
 
