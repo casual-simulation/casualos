@@ -10,6 +10,7 @@ import {
     CausalRepoClientPartitionConfig,
     PLAYER_PARTITION_ID,
     OTHER_PLAYERS_PARTITION_ID,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
@@ -27,6 +28,11 @@ export function nodeSimulationForBranch(
                 ...(extraOptions || {}),
                 branch: branch,
                 client: client,
+            },
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                type: 'memory',
+                private: true,
+                initialState: {},
             },
             [PLAYER_PARTITION_ID]: {
                 type: 'causal_repo_client',
