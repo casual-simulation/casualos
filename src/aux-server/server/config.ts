@@ -46,6 +46,7 @@ export interface ClientConfig {
 
 export interface MongoDbConfig {
     url: string;
+    useNewUrlParser: boolean;
 }
 
 export type CassandraDBConfig =

@@ -7,7 +7,7 @@ import SocketIO from 'socket.io';
 import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
-import { MongoClient } from 'mongodb';
+import { MongoClient, MongoClientOptions } from 'mongodb';
 import {
     Client as CassandraClient,
     tracker as CassandraTracker,
@@ -443,7 +443,12 @@ export class Server {
 
         this._app.use(cors());
 
-        this._mongoClient = await connect(this._config.mongodb.url);
+        this._mongoClient = await connect(
+            this._config.mongodb.url,
+            {
+                useNewUrlParser: this._config.mongodb.useNewUrlParser,
+            } as MongoClientOptions
+        );
         if (this._config.cassandradb) {
             console.log('[Server] Using CassandraDB');
             const requestTracker = new CassandraTracker.RequestLogger({
