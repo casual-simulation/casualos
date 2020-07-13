@@ -291,6 +291,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });
@@ -996,6 +997,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'UNWATCH',
+                    connectionReason: 'unwatch_branch',
                 },
                 {
                     type: 'sitelog',
@@ -1003,6 +1005,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });
@@ -1025,7 +1028,7 @@ describe('CausalRepoServer', () => {
             });
             await waitAsync();
 
-            device.disconnect.next();
+            device.disconnect.next('timeout');
             await waitAsync();
 
             const log = await store.getSitelog('testBranch');
@@ -1037,6 +1040,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'UNWATCH',
+                    connectionReason: 'timeout',
                 },
                 {
                     type: 'sitelog',
@@ -1044,6 +1048,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });

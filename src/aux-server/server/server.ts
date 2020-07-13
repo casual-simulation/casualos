@@ -290,7 +290,7 @@ export class ClientServer {
                     res.status(resp.status);
                     res.send(retData);
                 } catch (ex) {
-                    console.error(ex);
+                    console.log(`[Server] Proxying to ${url} failed.`);
                     if (ex.response) {
                         res.sendStatus(ex.response.status);
                     } else {

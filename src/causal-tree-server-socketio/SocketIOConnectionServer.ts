@@ -6,6 +6,7 @@ import {
     DeviceInfo,
     DeviceToken,
     deviceInfo,
+    DisconnectionReason,
 } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subject } from 'rxjs';
 import { Server, Socket } from 'socket.io';
@@ -55,8 +56,24 @@ export class SocketIOConnection implements Connection {
         return this._device;
     }
 
-    get disconnect() {
-        return this._socketEvent('disconnect');
+    get disconnect(): Observable<DisconnectionReason> {
+        return this._socketEvent<SocketIODisconnectReason>('disconnect').pipe(
+            map(reason => {
+                if (reason === 'transport error') {
+                    return 'transport_error';
+                } else if (reason === 'transport close') {
+                    return 'transport_close';
+                } else if (reason === 'server namespace disconnect') {
+                    return 'server_disconnect';
+                } else if (reason === 'client namespace disconnect') {
+                    return 'client_disconnect';
+                } else if (reason === 'ping timeout') {
+                    return 'timeout';
+                } else {
+                    return 'other';
+                }
+            })
+        );
     }
 
     event<T>(name: string) {
@@ -79,3 +96,10 @@ export class SocketIOConnection implements Connection {
         );
     }
 }
+
+export type SocketIODisconnectReason =
+    | 'transport error'
+    | 'server namespace disconnect'
+    | 'client namespace disconnect'
+    | 'ping timeout'
+    | 'transport close';

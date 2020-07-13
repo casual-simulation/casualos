@@ -66,6 +66,8 @@ import {
     BRANCHES_STATUS,
     COMMIT_CREATED,
     RESTORED,
+    DisconnectionReason,
+    UnwatchReason,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -150,7 +152,8 @@ export class CausalRepoServer {
                             await this._store.logSite(
                                 event.branch,
                                 event.siteId,
-                                'WATCH'
+                                'WATCH',
+                                'watch_branch'
                             );
                         }
                         const repo = await this._getOrLoadRepo(
@@ -456,8 +459,17 @@ export class CausalRepoServer {
                         }
                         await this._deviceManager.leaveChannel(device, info);
 
-                        await this._logDisconnectedFromBranch(device, branch);
-                        this._sendDisconnectedFromBranch(device, branch);
+                        const reason = 'unwatch_branch';
+                        await this._logDisconnectedFromBranch(
+                            device,
+                            branch,
+                            reason
+                        );
+                        this._sendDisconnectedFromBranch(
+                            device,
+                            branch,
+                            reason
+                        );
                         await this._tryUnloadBranch(info);
                     },
                     [WATCH_BRANCHES]: async () => {
@@ -569,7 +581,7 @@ export class CausalRepoServer {
                     [UNWATCH_COMMITS]: async () => {},
                 }).subscribe();
 
-                conn.disconnect.subscribe(async () => {
+                conn.disconnect.subscribe(async reason => {
                     var channels = this._deviceManager.getConnectedChannels(
                         device
                     );
@@ -578,11 +590,13 @@ export class CausalRepoServer {
                     for (let channel of channels) {
                         await this._logDisconnectedFromBranch(
                             device,
-                            channel.info.id
+                            channel.info.id,
+                            reason
                         );
                         this._sendDisconnectedFromBranch(
                             device,
-                            channel.info.id
+                            channel.info.id,
+                            reason
                         );
                         await this._tryUnloadBranch(channel.info);
                     }
@@ -659,12 +673,13 @@ export class CausalRepoServer {
 
     private _sendDisconnectedFromBranch(
         device: DeviceConnection<Connection>,
-        branch: string
+        branch: string,
+        reason: DisconnectionReason | UnwatchReason
     ) {
         console.log(
             `[CausalRepoServer] Device ${
                 device.id
-            } disconnected from branch: ${branch}`
+            } disconnected from branch: ${branch} - ${reason}`
         );
         const event = {
             branch: branch,
@@ -681,13 +696,14 @@ export class CausalRepoServer {
 
     private async _logDisconnectedFromBranch(
         device: DeviceConnection<Connection>,
-        branch: string
+        branch: string,
+        reason: DisconnectionReason | UnwatchReason
     ) {
         const siteId = this._branchSiteIds.get(
             branchSiteIdKey(branch, device.id)
         );
         if (siteId) {
-            this._store.logSite(branch, siteId, 'UNWATCH');
+            this._store.logSite(branch, siteId, 'UNWATCH', reason);
         }
         this._branchSiteIds.delete(branchSiteIdKey(branch, device.id));
     }

@@ -37,8 +37,16 @@ export interface GenericSession {
     /**
      * Gets an observable for when the session disconnects.
      */
-    disconnect: Observable<any>;
+    disconnect: Observable<DisconnectionReason>;
 }
+
+export type DisconnectionReason =
+    | 'transport_error'
+    | 'transport_close'
+    | 'server_disconnect'
+    | 'client_disconnect'
+    | 'timeout'
+    | 'other';
 
 export interface CausalRepoMessageHandlerTypes {
     'repo/watch_branches': void;

@@ -1,6 +1,9 @@
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { Subject, never } from 'rxjs';
-import { DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    DeviceInfo,
+    DisconnectionReason,
+} from '@casual-simulation/causal-trees';
 
 export class MemoryConnectionServer implements ConnectionServer {
     connection = new Subject<Connection>();
@@ -9,7 +12,7 @@ export class MemoryConnectionServer implements ConnectionServer {
 export class MemoryConnection implements Connection {
     device: DeviceInfo;
     events = new Map<string, Subject<any>>();
-    disconnect = new Subject<void>();
+    disconnect = new Subject<DisconnectionReason>();
     messages: { name: string; data: any }[] = [];
 
     constructor(device: DeviceInfo) {

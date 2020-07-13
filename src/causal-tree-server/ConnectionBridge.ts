@@ -2,6 +2,7 @@ import { Connection } from './ConnectionServer';
 import {
     ConnectionClient,
     ClientConnectionState,
+    DisconnectionReason,
 } from '@casual-simulation/causal-trees/core2';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Observable, Subject, never, of } from 'rxjs';
@@ -81,7 +82,7 @@ class ServerConnection implements Connection {
         });
     }
 
-    get disconnect(): Observable<any> {
+    get disconnect(): Observable<DisconnectionReason> {
         return never();
     }
 

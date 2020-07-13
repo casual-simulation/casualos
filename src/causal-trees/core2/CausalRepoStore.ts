@@ -5,6 +5,7 @@ import {
     CausalRepoReflog,
     CausalRepoSitelog,
     CausalRepoSitelogType,
+    CausalRepoSitelogConnectionReason,
 } from './CausalRepoObject';
 
 /**
@@ -62,7 +63,8 @@ export interface CausalBranchStore {
     logSite(
         branch: string,
         site: string,
-        type: CausalRepoSitelogType
+        type: CausalRepoSitelogType,
+        connectionReason?: CausalRepoSitelogConnectionReason
     ): Promise<CausalRepoSitelog>;
 }
 
@@ -143,9 +145,10 @@ export class CombinedCausalRepoStore implements CausalRepoStore {
     logSite(
         branch: string,
         site: string,
-        type: CausalRepoSitelogType
+        type: CausalRepoSitelogType,
+        connectionReason: CausalRepoSitelogConnectionReason
     ): Promise<CausalRepoSitelog> {
-        return this._branches.logSite(branch, site, type);
+        return this._branches.logSite(branch, site, type, connectionReason);
     }
 
     loadIndex: (

@@ -11,6 +11,7 @@ import {
     CausalRepoSitelog,
     sitelog,
     CausalRepoSitelogType,
+    CausalRepoSitelogConnectionReason,
 } from '@casual-simulation/causal-trees/core2';
 
 /**
@@ -67,9 +68,10 @@ export class MongoDBRepoStore implements CausalRepoStore {
     async logSite(
         branch: string,
         site: string,
-        type: CausalRepoSitelogType
+        type: CausalRepoSitelogType,
+        connectionReason: CausalRepoSitelogConnectionReason
     ): Promise<CausalRepoSitelog> {
-        const log = sitelog(branch, site, type);
+        const log = sitelog(branch, site, type, connectionReason);
         await this._sitelog.insertOne(log);
         return log;
     }

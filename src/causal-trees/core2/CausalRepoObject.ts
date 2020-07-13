@@ -1,6 +1,8 @@
 import { AtomIndex, createIndex } from './AtomIndex';
 import { Atom } from './Atom2';
 import { getHash } from '@casual-simulation/crypto';
+import { DisconnectionReason } from './CausalRepoSession';
+import { UnwatchReason, WatchReason } from './CausalRepoEvents';
 
 /**
  * Defines the possible objects that can exist in a causal repo.
@@ -85,6 +87,11 @@ export interface CausalRepoSitelog {
      * The type of the sitelog.
      */
     sitelogType?: CausalRepoSitelogType;
+
+    /**
+     * Additional information about what caused the site to watch/unwatch the branch.
+     */
+    connectionReason?: CausalRepoSitelogConnectionReason;
 }
 
 /**
@@ -94,6 +101,11 @@ export interface CausalRepoSitelog {
  * - 'UNWATCH' means that the sitelog indicates that the branch was stopped being watched.
  */
 export type CausalRepoSitelogType = null | 'WATCH' | 'UNWATCH';
+
+export type CausalRepoSitelogConnectionReason =
+    | DisconnectionReason
+    | WatchReason
+    | UnwatchReason;
 
 /**
  * Defines information about an index in a causal repo.
@@ -213,7 +225,8 @@ export function reflog(head: CausalRepoBranch): CausalRepoReflog {
 export function sitelog(
     branch: string,
     site: string,
-    type?: CausalRepoSitelogType
+    type?: CausalRepoSitelogType,
+    connectionReason?: CausalRepoSitelogConnectionReason
 ): CausalRepoSitelog {
     return {
         type: 'sitelog',
@@ -221,6 +234,7 @@ export function sitelog(
         site: site,
         time: new Date(),
         sitelogType: type,
+        connectionReason: connectionReason,
     };
 }
 
