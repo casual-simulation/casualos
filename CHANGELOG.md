@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.1.19
+
+### Date: TBD
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `MONGO_USE_NEW_URL_PARSER` environment variable parameter to control whether CasualOS uses the new MongoDB URL Parser. (Defaults to false)
+
 ## V1.1.18
 
 ### Date: 7/10/2020
