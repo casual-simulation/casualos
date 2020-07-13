@@ -129,15 +129,13 @@ export class CausalRepoServer {
                 handleEvents(conn, {
                     [WATCH_BRANCH]: async event => {
                         if (!event) {
-                            console.log(
+                            console.warn(
                                 '[CasualRepoServer] Trying to watch branch with a null event!'
                             );
                             return;
                         }
                         const branch = event.branch;
-                        console.log(
-                            '[CausalRepoServer] Watch Branch: ' + branch
-                        );
+                        console.log(`[CausalRepoServer] [${branch}] Watch`);
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
                         let currentBranch = this._branches.get(branch);
@@ -323,9 +321,9 @@ export class CausalRepoServer {
                         );
 
                         console.log(
-                            `[CausalRepoServer] Checking out ${
+                            `[CausalRepoServer] [${event.branch}] [${
                                 event.commit
-                            } on ${event.branch}`
+                            }] Checking out`
                         );
                         const current = repo.currentCommit;
                         await repo.reset(event.commit);
@@ -342,9 +340,9 @@ export class CausalRepoServer {
                         );
 
                         console.log(
-                            `[CausalRepoServer] Restoring ${event.commit} on ${
-                                event.branch
-                            }`
+                            `[CausalRepoServer] [${event.branch}] [${
+                                event.commit
+                            }] Restoring`
                         );
 
                         if (repo.hasChanges()) {
@@ -365,9 +363,9 @@ export class CausalRepoServer {
                         );
                         if (!oldCommit || oldCommit.type !== 'commit') {
                             console.log(
-                                `[CausalRepoServer] Could not restore to ${
+                                `[CausalRepoServer] [${event.branch}] [${
                                     event.commit
-                                } because it does not exist!`
+                                }] Could not restore because it does not exist!`
                             );
                             return;
                         }
@@ -481,7 +479,9 @@ export class CausalRepoServer {
                         }
                     },
                     [WATCH_DEVICES]: async () => {
-                        console.log(`[CausalRepoServer] Watch Devices`);
+                        console.log(
+                            `[CausalRepoServer] [${device.id}] Watch devices`
+                        );
                         const info = devicesInfo();
                         await this._deviceManager.joinChannel(device, info);
 
@@ -497,6 +497,7 @@ export class CausalRepoServer {
                             );
                             for (let device of devices) {
                                 conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                    broadcast: true,
                                     branch: branchEvent,
                                     device: device.extra.device,
                                 });
@@ -505,7 +506,9 @@ export class CausalRepoServer {
                     },
                     [WATCH_BRANCH_DEVICES]: async branch => {
                         console.log(
-                            `[CausalRepoServer] Watch Devices for branch: ${branch}`
+                            `[CausalRepoServer] [${branch}] [${
+                                device.id
+                            }] Watch devices for branch`
                         );
                         const info = devicesBranchInfo(branch);
                         await this._deviceManager.joinChannel(device, info);
@@ -521,6 +524,7 @@ export class CausalRepoServer {
                         }
                         for (let device of devices) {
                             conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                broadcast: false,
                                 branch: branchEvent,
                                 device: device.extra.device,
                             });
@@ -619,17 +623,19 @@ export class CausalRepoServer {
 
     private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {
         console.log(
-            `[CausalRepoServer] Committing '${event.branch}' with message '${
+            `[CausalRepoServer] [${event.branch}] Committing with message '${
                 event.message
             }'...`
         );
         const commit = await repo.commit(event.message);
         if (commit) {
             await this._stage.clearStage(event.branch);
-            console.log(`[CausalRepoServer] Committed.`);
+            console.log(`[CausalRepoServer] [${event.branch}] Committed.`);
             this._sendCommits(event.branch, [commit]);
         } else {
-            console.log(`[CausalRepoServer] No Commit Created.`);
+            console.log(
+                `[CausalRepoServer] [${event.branch}] No Commit Created.`
+            );
         }
     }
 
@@ -647,11 +653,7 @@ export class CausalRepoServer {
         device: DeviceConnection<Connection>,
         branch: string
     ) {
-        console.log(
-            `[CausalRepoServer] Device ${
-                device.id
-            } connected to branch: ${branch}`
-        );
+        console.log(`[CausalRepoServer] [${branch}] [${device.id}] Connected.`);
         const branchEvent = this._branches.get(branch);
         if (!branchEvent) {
             throw new Error(
@@ -659,12 +661,16 @@ export class CausalRepoServer {
             );
         }
         const event = {
+            broadcast: false,
             branch: branchEvent,
             device: device.extra.device,
         };
         let info = devicesInfo();
         let devices = this._deviceManager.getConnectedDevices(info);
-        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, event);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
+            ...event,
+            broadcast: true,
+        });
 
         info = devicesBranchInfo(branch);
         devices = this._deviceManager.getConnectedDevices(info);
@@ -677,17 +683,21 @@ export class CausalRepoServer {
         reason: DisconnectionReason | UnwatchReason
     ) {
         console.log(
-            `[CausalRepoServer] Device ${
+            `[CausalRepoServer] [${branch}] [${
                 device.id
-            } disconnected from branch: ${branch} - ${reason}`
+            }] [${reason}] Disconnected.`
         );
         const event = {
+            broadcast: false,
             branch: branch,
             device: device.extra.device,
         };
         let info = devicesInfo();
         let devices = this._deviceManager.getConnectedDevices(info);
-        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, event);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
+            ...event,
+            broadcast: true,
+        });
 
         info = devicesBranchInfo(branch);
         devices = this._deviceManager.getConnectedDevices(info);
@@ -717,23 +727,23 @@ export class CausalRepoServer {
     }
 
     private async _unloadBranch(branch: string) {
-        console.log(`[CausalRepoServer] Unloading branch: ${branch}`);
+        console.log(`[CausalRepoServer] [${branch}] Unloading.`);
         const repo = await this._repoPromises.get(branch);
         this._repoPromises.delete(branch);
         if (repo && repo.hasChanges()) {
             console.log(
-                `[CausalRepoServer] Committing '${branch}' before unloading...`
+                `[CausalRepoServer] [${branch}] Committing before unloading...`
             );
             const c = await repo.commit(`Save ${branch} before unload`);
 
             if (c) {
                 console.log(
-                    `[CausalRepoServer] Committed '${branch}: ${c.hash}'!`
+                    `[CausalRepoServer] [${branch}] [${c.hash}] Committed!`
                 );
                 await this._stage.clearStage(branch);
             } else {
                 console.log(
-                    `[CausalRepoServer] No commit created due to no changes.`
+                    `[CausalRepoServer] [${branch}] No commit created due to no changes.`
                 );
             }
         }
@@ -768,7 +778,7 @@ export class CausalRepoServer {
     }
 
     private async _createEmptyRepo(branch: string) {
-        console.log(`[CausalRepoServer] Creating temp branch: ${branch}`);
+        console.log(`[CausalRepoServer] [${branch}] Creating temp`);
         const emptyStore = new MemoryCausalRepoStore();
         const repo = new CausalRepo(emptyStore);
         await repo.checkout(branch, {
@@ -786,7 +796,7 @@ export class CausalRepoServer {
     ): Promise<CausalRepo> {
         const startTime = process.hrtime();
         try {
-            console.log(`[CausalRepoServer] Loading branch: ${branch}`);
+            console.log(`[CausalRepoServer] [${branch}] Loading`);
             const repo = new CausalRepo(this._store);
             await repo.checkout(branch, {
                 createIfDoesntExist: createBranch
@@ -803,7 +813,7 @@ export class CausalRepoServer {
         } finally {
             const [seconds, nanoseconds] = process.hrtime(startTime);
             console.log(
-                `[CausalRepoServer] Loading took %d seconds and %d nanoseconds`,
+                `[CausalRepoServer] [${branch}] Loading took %d seconds and %d nanoseconds`,
                 seconds,
                 nanoseconds
             );

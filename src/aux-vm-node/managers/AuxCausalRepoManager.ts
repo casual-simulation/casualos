@@ -44,7 +44,7 @@ export class AuxCausalRepoManager {
                     }
                 })
             )
-            .subscribe();
+            .subscribe(null, err => console.error(err));
     }
 
     private async _deviceConnected(

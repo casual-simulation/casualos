@@ -342,6 +342,12 @@ export interface AtomsReceivedEvent {
  */
 export interface ConnectedToBranchEvent {
     /**
+     * Whether this event is for WATCH_DEVICES listeners or WATCH_BRANCH_DEVICES listeners.
+     * If true, then listeners for a specific branch should ignore the event.
+     */
+    broadcast: boolean;
+
+    /**
      * The name of the branch that was connected.
      */
     branch: WatchBranchEvent;
@@ -356,6 +362,12 @@ export interface ConnectedToBranchEvent {
  * Defines an event which indicates that a connection has been removed from a branch.
  */
 export interface DisconnectedFromBranchEvent {
+    /**
+     * Whether this event is for WATCH_DEVICES listeners or WATCH_BRANCH_DEVICES listeners.
+     * If true, then listeners for a specific branch should ignore the event.
+     */
+    broadcast: boolean;
+
     /**
      * The name of the branch that was disconnected.
      */

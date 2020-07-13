@@ -67,7 +67,6 @@ import {
     RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
-import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 /**
  * Defines a client for a causal repo.
@@ -255,6 +254,7 @@ export class CausalRepoClient {
                             DEVICE_CONNECTED_TO_BRANCH
                         )
                         .pipe(
+                            filter(e => e.broadcast === true),
                             map(
                                 e =>
                                     ({
@@ -268,6 +268,7 @@ export class CausalRepoClient {
                             DEVICE_DISCONNECTED_FROM_BRANCH
                         )
                         .pipe(
+                            filter(e => e.broadcast === true),
                             map(
                                 e =>
                                     ({
@@ -306,6 +307,7 @@ export class CausalRepoClient {
                 device =>
                     ({
                         type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                        broadcast: false,
                         branch: branch,
                         device: device,
                     } as const)
@@ -325,6 +327,11 @@ export class CausalRepoClient {
                             DEVICE_CONNECTED_TO_BRANCH
                         )
                         .pipe(
+                            filter(
+                                e =>
+                                    e.broadcast === false &&
+                                    e.branch.branch === branch
+                            ),
                             tap(e => {
                                 const devices = this._getConnectedDevices(
                                     branch
@@ -347,6 +354,10 @@ export class CausalRepoClient {
                             DEVICE_DISCONNECTED_FROM_BRANCH
                         )
                         .pipe(
+                            filter(
+                                e =>
+                                    e.broadcast === false && e.branch === branch
+                            ),
                             tap(e => {
                                 const devices = this._getConnectedDevices(
                                     branch

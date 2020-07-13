@@ -99,6 +99,7 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
             branch: {
                 branch: 'abc',
             },
@@ -135,6 +136,14 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: device1Info,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -156,6 +165,14 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: serverInfo,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -164,6 +181,12 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
+            branch: 'abc',
+            device: device1Info,
+        });
+        deviceDisconnected.next({
+            broadcast: false,
             branch: 'abc',
             device: device1Info,
         });
@@ -202,6 +225,7 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
             branch: 'abc',
             device: device1Info,
         });
@@ -222,6 +246,14 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: device1Info,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -243,6 +275,14 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: serverInfo,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -259,6 +299,7 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
             branch: {
                 branch: 'abc',
             },
@@ -280,6 +321,7 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
+            broadcast: true,
             branch: {
                 branch: 'abc',
             },
@@ -288,12 +330,14 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
             branch: 'abc',
             device: device1Info,
         });
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
             branch: 'abc',
             device: serverInfo,
         });
@@ -308,6 +352,14 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: device1Info,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -329,6 +381,14 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: serverInfo,
+        });
+        deviceConnected.next({
+            broadcast: false,
             branch: {
                 branch: 'abc',
             },
@@ -345,6 +405,7 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceConnected.next({
+            broadcast: true,
             branch: {
                 branch: 'abc',
             },
@@ -366,6 +427,7 @@ describe('AuxCausalRepoManager', () => {
 
         // Server is connected
         deviceConnected.next({
+            broadcast: true,
             branch: {
                 branch: 'abc',
             },
@@ -374,12 +436,14 @@ describe('AuxCausalRepoManager', () => {
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
             branch: 'abc',
             device: device1Info,
         });
         await waitAsync();
 
         deviceDisconnected.next({
+            broadcast: true,
             branch: 'abc',
             device: serverInfo,
         });

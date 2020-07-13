@@ -889,7 +889,9 @@ export class Server {
 
     start() {
         this._http.listen(this._config.httpPort, () =>
-            console.log(`Server listening on port ${this._config.httpPort}!`)
+            console.log(
+                `[Server] Server listening on port ${this._config.httpPort}!`
+            )
         );
 
         if (this._directoryClient) {
