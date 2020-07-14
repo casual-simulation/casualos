@@ -10,6 +10,11 @@
 
     -   Added the `MONGO_USE_NEW_URL_PARSER` environment variable parameter to control whether CasualOS uses the new MongoDB URL Parser. (Defaults to false)
     -   Added a popup to notify the user that data might be lost if they attempt to close the tab while not connected to the server.
+    -   Added the following cryptographic functions:
+        -   `crypto.sha256(data)`
+            -   Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `data` is the data to calculate the hash of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
 
 ## V1.1.18
 
