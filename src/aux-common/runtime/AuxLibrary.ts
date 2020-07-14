@@ -98,7 +98,7 @@ import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import { convertToCopiableValue } from './Utils';
-import { sha256 as hashSha256, sha512 as hashSha512 } from 'hash.js';
+import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 
 /**
@@ -414,6 +414,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             crypto: {
                 sha256,
                 sha512,
+                hmacSha256,
             },
         },
     };
@@ -1972,6 +1973,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
+        for (let d of data) {
+            if (typeof d === 'object') {
+                d = stableStringify(d);
+            } else if (typeof d !== 'string') {
+                d = d.toString();
+            }
+            sha.update(d);
+        }
+        return sha.digest('hex');
+    }
+
+    /**
+     * Calculates the HMAC SHA-256 hash of the given data.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param key The password that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmacSha256(key: string, ...data: unknown[]): string {
+        let sha = hmac(<any>hashSha256, key);
         for (let d of data) {
             if (typeof d === 'object') {
                 d = stableStringify(d);

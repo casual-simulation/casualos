@@ -5126,4 +5126,160 @@ describe('AuxLibrary', () => {
             expect(hash).not.toBe(library.api.crypto.sha512(bot4));
         });
     });
+
+    describe('crypto.hmacSha256()', () => {
+        const cases = [
+            [
+                ['hello'],
+                'key',
+                '9307b3b915efb5171ff14d8cb55fbcc798c6c0ef1456d66ded1a6aa723a58b7b',
+            ],
+            [
+                ['🙂'],
+                'key',
+                '79ec106e8106784f99972a5259331c1325d63514e3eec745ea9d44dbd884c29a',
+            ],
+            [
+                ['abc', 'def'],
+                'key',
+                '4c5277d3e85316d1762c7e219862a9440546171f5ae5f1b29499ff9fbdd4c56a',
+            ],
+            [
+                [67],
+                'key',
+                'ecc541509c57f9b9d47ed5354d112bb55b6a65f75365cf07833676f64461c8a8',
+            ],
+            [
+                [true],
+                'key',
+                '205c94f3b0222e3b464c33da902a1ae1b3a04a4494dcf7145e4228ad23333258',
+            ],
+            [
+                [false],
+                'key',
+                '2efa4359b49cb498c7ffdd1b1ad6920b9d52764bfee7a7a2ee64117237fdf23c',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'key',
+                '38c0a7feea67ce43c10292ff37a136743b962313f1b77486e68780ded5810402',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'key',
+                '4e36d71a0d8a7bf596975426c22ed528d7ab2d41b58e6dc8ff3cf073c8746035',
+            ],
+            [
+                [Number.NaN],
+                'key',
+                '7f5ef14748c13f8a903dcea8a0d22a25334be45d07371fc59cafaf0b776473ee',
+            ],
+            [
+                [{ abc: 'def' }],
+                'key',
+                '12bb607ecb4f82ecda3cc248821267a24e253f02c90d39264f5125a504055d54',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, key, expected) => {
+            expect(library.api.crypto.hmacSha256(key, ...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                'key',
+                'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                'key',
+                'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'key',
+                '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'key',
+                '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
+            ],
+            [
+                ['world', 'hello'],
+                'key',
+                '153fc5c11827588a37808916ef8814d775f6e3a72f884530544860d476d2130a',
+            ],
+            [
+                ['hello', 'world'],
+                'key',
+                '66fddc9dc92816d844d6c1fa2e6f123df58c3d5afb9387a34488a6828a60baef',
+            ],
+        ];
+
+        it.each(objectCases)(
+            'should hash %s consistently',
+            (obj, key, expected) => {
+                expect(library.api.crypto.hmacSha256(key, obj)).toBe(expected);
+            }
+        );
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.hmacSha256('key', bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"451d24ef601e8ff6dfc367f6ac19cbcac1d8e8db72c183cceb801815b55dc875"`
+            );
+            expect(hash).toBe(library.api.crypto.hmacSha256('key', bot2));
+            expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot3));
+            expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot4));
+        });
+    });
 });
