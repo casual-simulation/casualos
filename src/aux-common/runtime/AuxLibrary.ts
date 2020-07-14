@@ -1957,7 +1957,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
         for (let d of data) {
-            if (typeof d === 'object') {
+            if (!hasValue(d)) {
+                d = '';
+            } else if (typeof d === 'object') {
                 d = stableStringify(d);
             } else if (typeof d !== 'string') {
                 d = d.toString();
@@ -1974,7 +1976,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
         for (let d of data) {
-            if (typeof d === 'object') {
+            if (!hasValue(d)) {
+                d = '';
+            } else if (typeof d === 'object') {
                 d = stableStringify(d);
             } else if (typeof d !== 'string') {
                 d = d.toString();
@@ -1991,9 +1995,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data that should be hashed.
      */
     function hmacSha256(key: string, ...data: unknown[]): string {
+        if (!hasValue(key)) {
+            throw new Error('The key must not be empty, null, or undefined');
+        }
+        if (typeof key !== 'string') {
+            throw new Error('The key must be a string');
+        }
         let sha = hmac(<any>hashSha256, key);
         for (let d of data) {
-            if (typeof d === 'object') {
+            if (!hasValue(d)) {
+                d = '';
+            } else if (typeof d === 'object') {
                 d = stableStringify(d);
             } else if (typeof d !== 'string') {
                 d = d.toString();

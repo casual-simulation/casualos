@@ -4905,6 +4905,14 @@ describe('AuxLibrary', () => {
                 [{ zyx: '123', abc: 'def' }],
                 'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
             ],
+            [
+                [null],
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            ],
+            [
+                [undefined],
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            ],
         ];
 
         it.each(cases)('should hash %s', (given, expected) => {
@@ -5038,6 +5046,14 @@ describe('AuxLibrary', () => {
             [
                 [{ zyx: '123', abc: 'def' }],
                 '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                [null],
+                'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
+            ],
+            [
+                [undefined],
+                'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
             ],
         ];
 
@@ -5184,6 +5200,16 @@ describe('AuxLibrary', () => {
                 'key',
                 '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
             ],
+            [
+                [null],
+                'key',
+                '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
+            ],
+            [
+                [undefined],
+                'key',
+                '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
+            ],
         ];
 
         it.each(cases)('should hash %s', (given, key, expected) => {
@@ -5280,6 +5306,52 @@ describe('AuxLibrary', () => {
             expect(hash).toBe(library.api.crypto.hmacSha256('key', bot2));
             expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot3));
             expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot4));
+        });
+
+        it('should fail when using an empty key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha256('', 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha256(null, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha256(undefined, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+        });
+
+        it('should fail when using a non-string key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>{}, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>[], 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>false, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>true, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>0, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>1, 'hello');
+            }).toThrow(new Error('The key must be a string'));
         });
     });
 });
