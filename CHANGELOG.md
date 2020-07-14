@@ -19,6 +19,11 @@
             -   Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
             -   `data` is the data to calculate the hash of.
             -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.hmacSha256(key, data)`
+            -   Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `key` is the password that should be used for the message authentication code.
+            -   `data` is the data to calculate the HMAC of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
 
 ## V1.1.18
 
