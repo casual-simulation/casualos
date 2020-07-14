@@ -9,6 +9,7 @@
 -   :rocket: Improvements
 
     -   Added the `MONGO_USE_NEW_URL_PARSER` environment variable parameter to control whether CasualOS uses the new MongoDB URL Parser. (Defaults to false)
+    -   Added a popup to notify the user that data might be lost if they attempt to close the tab while not connected to the server.
 
 ## V1.1.18
 
