@@ -15,6 +15,10 @@
             -   Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
             -   `data` is the data to calculate the hash of.
             -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.sha512(data)`
+            -   Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `data` is the data to calculate the hash of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
 
 ## V1.1.18
 
