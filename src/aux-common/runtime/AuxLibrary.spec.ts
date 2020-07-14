@@ -83,6 +83,7 @@ import {
 import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
+import { shuffle } from 'lodash';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -4851,6 +4852,144 @@ describe('AuxLibrary', () => {
             const result = library.api.player.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('crypto.sha256()', () => {
+        const cases = [
+            [
+                ['hello'],
+                '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+            ],
+            [
+                ['🙂'],
+                'd06f1525f791397809f9bc98682b5c13318eca4c3123433467fd4dffda44fd14',
+            ],
+            [
+                ['abc', 'def'],
+                'bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721',
+            ],
+            [
+                [67],
+                '49d180ecf56132819571bf39d9b7b342522a2ac6d23c1418d3338251bfe469c8',
+            ],
+            [
+                [true],
+                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+            ],
+            [
+                [false],
+                'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'd0067cad9a63e0813759a2bb841051ca73570c0da2e08e840a8eb45db6a7a010',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'c64ddf11bcd45660f0cf66dd0c22d2b4570ef3d3fc6527a9a6f6c722aefa3c39',
+            ],
+            [
+                [Number.NaN],
+                'd5b592c05dc25b5032553f1b27f4139be95e881f73db33b02b05ab20c3f9981e',
+            ],
+            [
+                [{ abc: 'def' }],
+                '2c3fbda5f48b04e39d3a87f89e5bd00b48b6e5e3c4a093de65de0a87b8cc8b3b',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, expected) => {
+            expect(library.api.crypto.sha256(...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
+            ],
+            [
+                ['world', 'hello'],
+                'be3181b8eb39bf890c9d366a0fd33daea5ab5486d537c44c52d9e85af8da96c2',
+            ],
+            [
+                ['hello', 'world'],
+                '94bedb26fb1cb9547b5b77902e89522f313c7f7fe2e9f0175cfb0a244878ee07',
+            ],
+        ];
+
+        it.each(objectCases)('should hash %s consistently', (obj, expected) => {
+            expect(library.api.crypto.sha256(obj)).toBe(expected);
+        });
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.sha256(bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"8c9d0a8e3cb51e189048263d4b9ea98063dd056ca76275bed41a16f59239130a"`
+            );
+            expect(hash).toBe(library.api.crypto.sha256(bot2));
+            expect(hash).not.toBe(library.api.crypto.sha256(bot3));
+            expect(hash).not.toBe(library.api.crypto.sha256(bot4));
         });
     });
 });

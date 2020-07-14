@@ -43,7 +43,7 @@
     "dependencies": {
         "@types/fast-json-stable-stringify": "^2.0.0",
         "base64-js": "^1.3.0",
-        "fast-json-stable-stringify": "^2.0.0",
+        "fast-json-stable-stringify": "2.1.0",
         "hash.js": "1.1.7"
     }
 }

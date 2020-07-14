@@ -2884,6 +2884,16 @@ declare global {
         random(min?: number, max?: number): number;
     };
 
+    // @ts-ignore: Ignore redeclaration
+    const crypto: {
+        /**
+         * Calculates the SHA-256 hash of the given data.
+         * Returns the hexadecimal string of the hash.
+         * @param data The data that should be hashed.
+         */
+        sha256(...data: unknown[]): string;
+    };
+
     /**
      * Defines a set of experimental functions.
      */

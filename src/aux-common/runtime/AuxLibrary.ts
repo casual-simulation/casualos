@@ -98,6 +98,8 @@ import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import { convertToCopiableValue } from './Utils';
+import { sha256 as hashSha256 } from 'hash.js';
+import stableStringify from 'fast-json-stable-stringify';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -407,6 +409,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stdDev,
                 randomInt,
                 random,
+            },
+
+            crypto: {
+                sha256,
             },
         },
     };
@@ -1940,6 +1946,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return rand + min;
         }
+    }
+
+    /**
+     * Calculates the SHA-256 hash of the given data.
+     * @param data The data that should be hashed.
+     */
+    function sha256(...data: unknown[]): string {
+        let sha = hashSha256();
+        for (let d of data) {
+            if (typeof d === 'object') {
+                d = stableStringify(d);
+            } else if (typeof d !== 'string') {
+                d = d.toString();
+            }
+            sha.update(d);
+        }
+        return sha.digest('hex');
     }
 
     /**
