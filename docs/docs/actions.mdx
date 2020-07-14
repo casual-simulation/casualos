@@ -2838,6 +2838,35 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+## Crypto Actions
+
+### `crypto.sha256(...data)`
+
+Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the hash of a string.
+```typescript
+const hash = crypto.sha256("hello, world");
+player.toast(hash);
+```
+
+2. Calculate the hash of an object.
+```typescript
+const hash = crypto.sha256({
+    abc: "def"
+});
+player.toast(hash);
+```
+
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`
