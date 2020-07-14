@@ -2894,6 +2894,35 @@ const hash = crypto.sha512({
 player.toast(hash);
 ```
 
+### `crypto.hmacSha256(key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is the password that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the HMAC of a string with a key.
+```typescript
+const hash = crypto.hmacSha256("key", "hello, world");
+player.toast(hash);
+```
+
+2. Calculate the HMAC of an object.
+```typescript
+const hash = crypto.hmacSha256("key", {
+    abc: "def"
+});
+player.toast(hash);
+```
+
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`
