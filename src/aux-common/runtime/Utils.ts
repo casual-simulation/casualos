@@ -81,4 +81,8 @@ export function realtimeStrategyToRealtimeEditMode(
         : RealtimeEditMode.Delayed;
 }
 
-class DeepObjectError extends Error {}
+export class DeepObjectError extends Error {
+    constructor() {
+        super('Object too deeply nested.');
+    }
+}
