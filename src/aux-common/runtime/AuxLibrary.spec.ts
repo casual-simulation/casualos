@@ -5354,4 +5354,216 @@ describe('AuxLibrary', () => {
             }).toThrow(new Error('The key must be a string'));
         });
     });
+
+    describe('crypto.hmacSha512()', () => {
+        const cases = [
+            [
+                ['hello'],
+                'key',
+                'ff06ab36757777815c008d32c8e14a705b4e7bf310351a06a23b612dc4c7433e7757d20525a5593b71020ea2ee162d2311b247e9855862b270122419652c0c92',
+            ],
+            [
+                ['🙂'],
+                'key',
+                'bdc92de9e2218fdd4d55de8d98f624219479cad87c6a7b4d814f559c4bc2e175b1dc283668cab48edfc420cafbff1afdca5842857bf348e9f0b0e8ada532d648',
+            ],
+            [
+                ['abc', 'def'],
+                'key',
+                'e97348dbd79dff60a3c8e89f4e248b230d8c89c6021615f492510270dd82cf8154b28461fb625ff5554649225a0c3709e42f7f5d405a6f5fbaa1184e59976826',
+            ],
+            [
+                [67],
+                'key',
+                'd7fb21b12a486cfca737b567354334a8e97e0bac1e55bc0a6c647e2b5a3013f532069fc0a07f24892d525976a2ea0824953ca56608500556bfd28d9829299824',
+            ],
+            [
+                [true],
+                'key',
+                '92a84cd18c579c1fa626fab2b0facdb960b727e3cac7f8f21cea543382fedd18d99a1948a771ba540e5a285529c18a15bf6c275131e11f5ba13065a92327ed03',
+            ],
+            [
+                [false],
+                'key',
+                '9000cf009e127f9e69a2fb3c1c5f13db96a253b9e60c477ea2ae745d845226e56112e9d0dd569c9a0f1840122bd806dae21ff53c98c94b12f607c80275cd7ef2',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'key',
+                'ad03855ee09aa097fab9d33768ed5e420d2965c43810640f36b56bbd6815a971df96a3af535672f90458283be5ce6cd3fa230d261a69add1484f30d0138f00e9',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'key',
+                'eab4848252a948f1e0ae4af937c1b00820ee5580512a05965c29013d523a3055353834bfa87f9d2e89fec95f361682970b611839b790313053b675b6a01c2335',
+            ],
+            [
+                [Number.NaN],
+                'key',
+                '7c8698212d4dd6dc82443c02a202c737bc10db008f45d2c76e39d0a237c0355360b88aa580bfd85790c7f4b566f6adb87ba706c58935747b95056b87ca33087d',
+            ],
+            [
+                [{ abc: 'def' }],
+                'key',
+                'bf358fbab3ee5dcb98521e68a8e2dd4c14fa907d3d524b34958a8ac00f87be421a9ea59a17ea77889ec510800ea18b341598cbb75397d8e74313ef6245122f9b',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                [null],
+                'key',
+                '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
+            ],
+            [
+                [undefined],
+                'key',
+                '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, key, expected) => {
+            expect(library.api.crypto.hmacSha512(key, ...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                'key',
+                '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                'key',
+                '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'key',
+                '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'key',
+                '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
+            ],
+            [
+                ['world', 'hello'],
+                'key',
+                'd988342d1941c41b2f599dddb1402870379e9bfe11dd32aca6a22f4c5ed1b7b0655f84e81d0d8b37fb3be15705fce0842ba92ddf6bc0f55b81d2693c1f7be024',
+            ],
+            [
+                ['hello', 'world'],
+                'key',
+                'dd68ae93fad71176f9be8f97c2c6bddbadb6a021ffced6c37efa78628d6f7273afa72f431e1f4e4c20c79cfb6f056bb7672fd359fb355be4cdf9e08b8349b533',
+            ],
+        ];
+
+        it.each(objectCases)(
+            'should hash %s consistently',
+            (obj, key, expected) => {
+                expect(library.api.crypto.hmacSha512(key, obj)).toBe(expected);
+            }
+        );
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.hmacSha512('key', bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"e4da2e78fe0f3762c17fd68eb9816fd43a6a11bfb65d9281b273888ce559831b2b664be9c41a58d98f452bab19f9ee70a9d22ddc0f9d8cf9d356067ed3b51e23"`
+            );
+            expect(hash).toBe(library.api.crypto.hmacSha512('key', bot2));
+            expect(hash).not.toBe(library.api.crypto.hmacSha512('key', bot3));
+            expect(hash).not.toBe(library.api.crypto.hmacSha512('key', bot4));
+        });
+
+        it('should fail when using an empty key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha512('', 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha512(null, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha512(undefined, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+        });
+
+        it('should fail when using a non-string key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>{}, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>[], 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>false, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>true, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>0, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>1, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+        });
+    });
 });

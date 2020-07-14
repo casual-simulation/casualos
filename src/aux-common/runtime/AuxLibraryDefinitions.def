@@ -2908,6 +2908,15 @@ declare global {
          * @param data The data that should be hashed.
          */
         hmacSha256(key: string, ...data: unknown[]): string;
+
+        /**
+         * Calculates the HMAC SHA-512 hash of the given data.
+         * HMAC is commonly used to verify that a message was created with a specific key.
+         * Returns the hexadecimal string of the hash.
+         * @param key The password that should be used to sign the message.
+         * @param data The data that should be hashed.
+         */
+        hmacSha512(key: string, ...data: unknown[]): string;
     };
 
     /**

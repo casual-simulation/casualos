@@ -415,6 +415,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 sha256,
                 sha512,
                 hmacSha256,
+                hmacSha512,
             },
         },
     };
@@ -1956,17 +1957,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
-        for (let d of data) {
-            if (!hasValue(d)) {
-                d = '';
-            } else if (typeof d === 'object') {
-                d = stableStringify(d);
-            } else if (typeof d !== 'string') {
-                d = d.toString();
-            }
-            sha.update(d);
-        }
-        return sha.digest('hex');
+        return _hash(sha, data);
     }
 
     /**
@@ -1975,17 +1966,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
-        for (let d of data) {
-            if (!hasValue(d)) {
-                d = '';
-            } else if (typeof d === 'object') {
-                d = stableStringify(d);
-            } else if (typeof d !== 'string') {
-                d = d.toString();
-            }
-            sha.update(d);
-        }
-        return sha.digest('hex');
+        return _hash(sha, data);
     }
 
     /**
@@ -2002,6 +1983,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('The key must be a string');
         }
         let sha = hmac(<any>hashSha256, key);
+        return _hash(sha, data);
+    }
+
+    /**
+     * Calculates the HMAC SHA-512 hash of the given data.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param key The password that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmacSha512(key: string, ...data: unknown[]): string {
+        if (!hasValue(key)) {
+            throw new Error('The key must not be empty, null, or undefined');
+        }
+        if (typeof key !== 'string') {
+            throw new Error('The key must be a string');
+        }
+        let sha = hmac(<any>hashSha512, key);
+        return _hash(sha, data);
+    }
+
+    function _hash(hash: MessageDigest<any>, data: unknown[]): string {
         for (let d of data) {
             if (!hasValue(d)) {
                 d = '';
@@ -2010,9 +2012,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             } else if (typeof d !== 'string') {
                 d = d.toString();
             }
-            sha.update(d);
+            hash.update(d);
         }
-        return sha.digest('hex');
+        return hash.digest('hex');
     }
 
     /**
