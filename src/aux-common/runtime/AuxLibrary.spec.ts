@@ -4992,4 +4992,138 @@ describe('AuxLibrary', () => {
             expect(hash).not.toBe(library.api.crypto.sha256(bot4));
         });
     });
+
+    describe('crypto.sha512()', () => {
+        const cases = [
+            [
+                ['hello'],
+                '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043',
+            ],
+            [
+                ['🙂'],
+                '5bed63c241f2830e8eb29ac8d9fea5e9441e8bb9104768c593dd46f6c97f947a160def7ce58dcba5e9d33a88e2b75fc62802d67ab30460442d23f66403b415f4',
+            ],
+            [
+                ['abc', 'def'],
+                'e32ef19623e8ed9d267f657a81944b3d07adbb768518068e88435745564e8d4150a0a703be2a7d88b61e3d390c2bb97e2d4c311fdc69d6b1267f05f59aa920e7',
+            ],
+            [
+                [67],
+                'ce4dd661e4d69073c7999282048ea9ee91932db0d699f8b13b2db70fe532d987ac4a0aef309b82e1ad2aa6c2f2f60473093cd1e399a737cff3f9e70585d36be7',
+            ],
+            [
+                [true],
+                '9120cd5faef07a08e971ff024a3fcbea1e3a6b44142a6d82ca28c6c42e4f852595bcf53d81d776f10541045abdb7c37950629415d0dc66c8d86c64a5606d32de',
+            ],
+            [
+                [false],
+                '719fa67eef49c4b2a2b83f0c62bddd88c106aaadb7e21ae057c8802b700e36f81fe3f144812d8b05d66dc663d908b25645e153262cf6d457aa34e684af9e328d',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                '7de872ed1c41ce3901bb7f12f20b0c0106331fe5b5ecc5fbbcf3ce6c79df4da595ebb7e221ab8b7fc5d918583eac6890ade1c26436335d3835828011204b7679',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                '280bcf3496f0fbe479df09e4e6e87f48179e6364a0065ae14d9eab5902f98a74e8e8919cf35b9d881a06562e8c3b11a04d073c03ddf393791e7619d8dc215d61',
+            ],
+            [
+                [Number.NaN],
+                '441dfabd0126a33e4677d76d73e4e340c5805efdf58fe84bf4a1f7815e676f0e159be74b2de6bed17d1ff766ff1d4915ca04cb781c0c5d045e1d14886eb1f31c',
+            ],
+            [
+                [{ abc: 'def' }],
+                '3f51fd341818ef13b5943ceb3fd0972a6a2be1c3453554261b9f2a7012f3d351b5e4a8a34fce35310bcd80f85afed4b9c4e615622ca52a3fa5ea586774ada743',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, expected) => {
+            expect(library.api.crypto.sha512(...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
+            ],
+            [
+                ['world', 'hello'],
+                'be00d2974eb4998e3e629e559067f04766bf91913f9f5ce10befd6e6c048d63603178f6cf7b4d353db15e032831c63f9647204812db09212d29df1114142b754',
+            ],
+            [
+                ['hello', 'world'],
+                'f3ea9708eb605ce26918a18a24e3ca6a5f00f0455966b6fb8c65d5fe637a19a60a47b12913d5493a72acda9789bccb725feaca3a8d66a5cf94d2963fbc0cf4e6',
+            ],
+        ];
+
+        it.each(objectCases)('should hash %s consistently', (obj, expected) => {
+            expect(library.api.crypto.sha512(obj)).toBe(expected);
+        });
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.sha512(bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"4edbae64a27b3da8adce1da13c7a3dcd81ff9b05f19204f6f5b4266ebde6c8a91d0bc0b3ee1c2bf9a13cae86708462645654fa47c20f084861a3a834f54b1b2f"`
+            );
+            expect(hash).toBe(library.api.crypto.sha512(bot2));
+            expect(hash).not.toBe(library.api.crypto.sha512(bot3));
+            expect(hash).not.toBe(library.api.crypto.sha512(bot4));
+        });
+    });
 });

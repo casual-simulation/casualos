@@ -2892,6 +2892,13 @@ declare global {
          * @param data The data that should be hashed.
          */
         sha256(...data: unknown[]): string;
+
+        /**
+         * Calculates the SHA-512 hash of the given data.
+         * Returns the hexadecimal string of the hash.
+         * @param data The data that should be hashed.
+         */
+        sha512(...data: unknown[]): string;
     };
 
     /**

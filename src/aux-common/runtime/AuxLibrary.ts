@@ -98,7 +98,7 @@ import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import { convertToCopiableValue } from './Utils';
-import { sha256 as hashSha256 } from 'hash.js';
+import { sha256 as hashSha256, sha512 as hashSha512 } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
 
 /**
@@ -413,6 +413,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             crypto: {
                 sha256,
+                sha512,
             },
         },
     };
@@ -1954,6 +1955,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
+        for (let d of data) {
+            if (typeof d === 'object') {
+                d = stableStringify(d);
+            } else if (typeof d !== 'string') {
+                d = d.toString();
+            }
+            sha.update(d);
+        }
+        return sha.digest('hex');
+    }
+
+    /**
+     * Calculates the SHA-512 hash of the given data.
+     * @param data The data that should be hashed.
+     */
+    function sha512(...data: unknown[]): string {
+        let sha = hashSha512();
         for (let d of data) {
             if (typeof d === 'object') {
                 d = stableStringify(d);
