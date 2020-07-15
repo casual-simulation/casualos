@@ -58,6 +58,7 @@ import {
     AdminModule2,
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
+import { AuxDenoCausalRepoManager } from '@casual-simulation/aux-vm-deno';
 import {
     WebhooksModule2,
     FilesModule2,
@@ -945,7 +946,7 @@ export class Server {
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
-        const manager = new AuxCausalRepoManager(serverUser, client, [
+        const manager = new AuxDenoCausalRepoManager(serverUser, client, [
             new AdminModule2(),
             new FilesModule2(this._config.drives),
             new WebhooksModule2(),

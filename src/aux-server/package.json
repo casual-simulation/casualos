@@ -46,6 +46,7 @@
         "@casual-simulation/aux-common": "^1.1.18",
         "@casual-simulation/aux-vm": "^1.1.18",
         "@casual-simulation/aux-vm-browser": "^1.1.18",
+        "@casual-simulation/aux-vm-deno": "^1.1.18",
         "@casual-simulation/aux-vm-node": "^1.1.18",
         "@casual-simulation/causal-tree-client-socketio": "^1.1.18",
         "@casual-simulation/causal-tree-server": "^1.1.18",

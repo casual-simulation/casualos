@@ -31,7 +31,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
-import { AuxVMImpl } from '../vm/AuxVMImpl';
+import { DenoVM } from '../vm/DenoVM';
 import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
@@ -71,13 +71,13 @@ export class DenoSimulationImpl extends BaseSimulation
         user: AuxUser,
         id: string,
         config: AuxConfig['config'],
-        defaultHost: string = location.origin
+        defaultHost: string
     ) {
         super(
             id,
             config,
             createPartitions(),
-            config => new AuxVMImpl(user, config)
+            config => new DenoVM(user, config)
         );
         this.helper.userId = user ? user.id : null;
 

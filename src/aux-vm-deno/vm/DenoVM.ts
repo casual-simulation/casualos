@@ -108,7 +108,7 @@ export class DenoVM implements AuxVM {
 
         // TODO: Allow specifying the actual URL
         const proc = childProcess.spawn(
-            'deno run --allow-net http://localhost:3000/deno.js'
+            `deno run --allow-net http://localhost:3000/deno.js`
         );
 
         const decoder = new TextDecoder();
