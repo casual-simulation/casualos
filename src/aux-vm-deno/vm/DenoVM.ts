@@ -24,8 +24,10 @@ import {
     remapProgressPercent,
     DeviceAction,
 } from '@casual-simulation/causal-trees';
-import childProcess from 'child_process';
+import childProcess, { ChildProcess } from 'child_process';
+import { Server, AddressInfo } from 'net';
 import { MessageChannel } from 'worker_threads';
+import { MessageChannelImpl } from './MessageChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -38,8 +40,10 @@ export class DenoVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
-    private _iframe: HTMLIFrameElement;
-    private _channel: MessageChannel;
+    private _server: Server;
+    private _proc: ChildProcess;
+    // private _iframe: HTMLIFrameElement;
+    private _channel: MessageChannelImpl;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
     closed: boolean;
@@ -84,34 +88,80 @@ export class DenoVM implements AuxVM {
             progress: 0.1,
         });
 
-        this._channel = new MessageChannel();
-
-        // TODO: Allow specifying the actual URL
-        const proc = childProcess.spawn(
-            `deno run --allow-net http://localhost:3000/deno.js`
-        );
-
+        this._channel = new MessageChannelImpl();
         const decoder = new TextDecoder();
         const encoder = new TextEncoder();
-
-        this._channel.port2.on('message', e => {
-            const json = JSON.stringify(e.data);
-            const messageBytes = encoder.encode(json);
-            proc.stdin.write(messageBytes);
+        let resolveConnection: any;
+        let rejectConnection: any;
+        const connectionPromise = new Promise((res, rej) => {
+            resolveConnection = res;
+            rejectConnection = rej;
         });
 
-        proc.stdout.on('data', (data: Buffer) => {
-            // TODO: Fix to properly handle different buffer sizes
-            const uint32 = new Uint32Array(data);
-            const numBytes = uint32[0];
-            const messageBytes = data.subarray(4, numBytes + 4);
-            const json = decoder.decode(messageBytes);
-            const message = JSON.parse(json);
-            this._channel.port2.postMessage(message);
+        this._server = new Server(conn => {
+            this._channel.port2.addEventListener('message', e => {
+                try {
+                    const json = JSON.stringify(e.data);
+                    // Messages to stdout all follow the same format:
+                    // 4 bytes (32-bit number) for the length of the message
+                    // N bytes for the message JSON as UTF-8
+                    // - According to MDN UTF-8 never has more than string.length * 3 bytes (https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encodeInto)
+                    // - Using a 32-bit number means we can't have messages larger than ~4GiB
+                    const byteBuffer = new Uint8Array(4 + json.length * 3);
+                    const view = new DataView(byteBuffer.buffer);
+
+                    // Encode the JSON as UTF-8
+                    // Skip the first 4 bytes
+                    const result = encoder.encodeInto(
+                        json,
+                        byteBuffer.subarray(4)
+                    );
+                    view.setUint32(0, result.written);
+                    conn.write(byteBuffer.subarray(0, result.written));
+                } catch (err) {
+                    console.error('[DenoVM]', err);
+                }
+            });
+
+            conn.on('data', (data: Buffer) => {
+                try {
+                    console.log('[DenoVM] Got data');
+                    // TODO: Fix to properly handle different buffer sizes
+                    const uint32 = new Uint32Array(data);
+                    const numBytes = uint32[0];
+                    const messageBytes = data.subarray(4, numBytes + 4);
+                    const json = decoder.decode(messageBytes);
+                    const message = JSON.parse(json);
+                    this._channel.port2.postMessage(message);
+                } catch (err) {
+                    console.error('[DenoVM]', err);
+                }
+            });
+
+            resolveConnection();
         });
 
-        proc.stderr.on('data', data => {
-            console.log('[DenoVM]', data);
+        this._server.listen(() => {
+            const addr = this._server.address() as AddressInfo;
+
+            // TODO: Allow specifying the actual URL
+            this._proc = childProcess.spawn(`deno`, [
+                'run',
+                '--reload',
+                '--allow-net',
+                'http://localhost:3000/deno.js',
+                addr.port.toString(),
+            ]);
+
+            this._proc.stdout.setEncoding('utf8');
+            this._proc.stderr.setEncoding('utf8');
+            this._proc.stdout.on('data', data => {
+                console.log('[DenoVM]', data);
+            });
+
+            this._proc.stderr.on('data', data => {
+                console.error('[DenoVM]', data);
+            });
         });
 
         this._connectionStateChanged.next({
@@ -119,24 +169,11 @@ export class DenoVM implements AuxVM {
             message: 'Creating VM...',
             progress: 0.2,
         });
-        const wrapper = wrap<AuxStatic>({
-            addEventListener: (name, callback) => {
-                return this._channel.port1.on(name as any, callback as any);
-            },
-            removeEventListener: (name, callback) => {
-                return this._channel.port1.off(name as any, callback as any);
-            },
-            start: () => {},
-            postMessage: (message, transferList) => {
-                this._channel.port1.postMessage(message, transferList as any[]);
-            },
-            // this._channel.port1
-        });
-        this._proxy = await new wrapper(
-            location.origin,
-            this._initialUser,
-            this._config
-        );
+
+        await connectionPromise;
+
+        const wrapper = wrap<AuxStatic>(<any>this._channel.port1);
+        this._proxy = await new wrapper(null, this._initialUser, this._config);
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
@@ -244,8 +281,10 @@ export class DenoVM implements AuxVM {
         this.closed = true;
         this._channel = null;
         this._proxy = null;
-        document.body.removeChild(this._iframe);
-        this._iframe = null;
+        this._proc.kill();
+        this._proc = null;
+        this._server.close();
+        this._server = null;
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();

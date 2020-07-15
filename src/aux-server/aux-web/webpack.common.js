@@ -35,7 +35,7 @@ module.exports = {
             '..',
             'aux-vm-deno',
             'vm',
-            'DenoEntry.ts'
+            'DenoEntry.js'
         ),
     },
     output: {

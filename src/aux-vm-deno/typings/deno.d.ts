@@ -7,7 +7,11 @@ declare var Deno: {
         options?: { bufSize: number }
     ): AsyncIterableIterator<Uint8Array>;
 
+    connect(options: { port: number; hostname?: string }): Promise<Connection>;
+
     Buffer: typeof DenoBuffer;
+
+    args: string[];
 };
 
 interface Reader {
@@ -17,6 +21,8 @@ interface Reader {
 interface Writer {
     write(p: Uint8Array): Promise<number>;
 }
+
+interface Connection extends Reader, Writer {}
 
 declare class DenoBuffer {
     readonly length: number;
