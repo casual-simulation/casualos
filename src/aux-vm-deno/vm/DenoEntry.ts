@@ -1,17 +1,11 @@
-import Worker from './DenoWorker';
-
-const instance = new Worker();
+import '@casual-simulation/aux-vm/globalThis-polyfill';
+import { expose } from 'comlink';
+import { DenoAuxChannel } from './DenoAuxChannel';
 
 const channel = stdinOutMessageChannel();
-instance.postMessage(
-    {
-        type: 'init_port',
-        port: channel.port2,
-    },
-    [channel.port2]
-);
 
 console.log('[DenoEntry] Listening for messages...');
+expose(DenoAuxChannel, channel.port2);
 
 function stdinOutMessageChannel() {
     const channel = new MessageChannel();
