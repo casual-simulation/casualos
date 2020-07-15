@@ -1,1 +1,1 @@
-export * from './AuxVMImpl';
+export * from './DenoVM';

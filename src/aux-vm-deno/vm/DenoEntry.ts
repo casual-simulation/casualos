@@ -13,7 +13,7 @@ instance.postMessage(
 
 console.log('[DenoEntry] Listening for messages...');
 
-function stdinOutMessageChannel(): MessageChannel {
+function stdinOutMessageChannel() {
     const channel = new MessageChannel();
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();

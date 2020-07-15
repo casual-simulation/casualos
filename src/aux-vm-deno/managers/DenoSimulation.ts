@@ -29,8 +29,6 @@ import {
     Simulation,
     AuxConfig,
 } from '@casual-simulation/aux-vm';
-import { BotPanelManager } from './BotPanelManager';
-import { BrowserSimulation } from './BrowserSimulation';
 import { DenoVM } from '../vm/DenoVM';
 import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';

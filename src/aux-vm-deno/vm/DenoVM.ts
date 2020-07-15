@@ -25,27 +25,7 @@ import {
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import childProcess from 'child_process';
-
-/**
- * Creates a new message channel and sends port2 to the iframe in a message.
- * @param iframeWindow The window to send the port to.
- */
-export function setupChannel(iframeWindow: Window) {
-    const channel = new MessageChannel();
-
-    childProcess.spawn('deno run ');
-
-    iframeWindow.postMessage(
-        {
-            type: 'init_port',
-            port: channel.port2,
-        },
-        '*',
-        [channel.port2]
-    );
-
-    return channel;
-}
+import { MessageChannel } from 'worker_threads';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -114,7 +94,7 @@ export class DenoVM implements AuxVM {
         const decoder = new TextDecoder();
         const encoder = new TextEncoder();
 
-        this._channel.port2.addEventListener('message', e => {
+        this._channel.port2.on('message', e => {
             const json = JSON.stringify(e.data);
             const messageBytes = encoder.encode(json);
             proc.stdin.write(messageBytes);
@@ -130,16 +110,32 @@ export class DenoVM implements AuxVM {
             this._channel.port2.postMessage(message);
         });
 
+        proc.stderr.on('data', data => {
+            console.log('[DenoVM]', data);
+        });
+
         this._connectionStateChanged.next({
             type: 'progress',
             message: 'Creating VM...',
             progress: 0.2,
         });
-        const wrapper = wrap<AuxStatic>(this._channel.port1);
+        const wrapper = wrap<AuxStatic>({
+            addEventListener: (name, callback) => {
+                return this._channel.port1.on(name as any, callback as any);
+            },
+            removeEventListener: (name, callback) => {
+                return this._channel.port1.off(name as any, callback as any);
+            },
+            start: () => {},
+            postMessage: (message, transferList) => {
+                this._channel.port1.postMessage(message, transferList as any[]);
+            },
+            // this._channel.port1
+        });
         this._proxy = await new wrapper(
             location.origin,
             this._initialUser,
-            processPartitions(this._config)
+            this._config
         );
 
         let statusMapper = remapProgressPercent(0.2, 1);
@@ -257,22 +253,22 @@ export class DenoVM implements AuxVM {
     }
 }
 
-function processPartitions(config: AuxConfig): AuxConfig {
-    let transferrables = [] as any[];
-    for (let key in config.partitions) {
-        const partition = config.partitions[key];
-        if (partition.type === 'proxy') {
-            const bridge = new ProxyBridgePartitionImpl(partition.partition);
-            const channel = new MessageChannel();
-            expose(bridge, channel.port1);
-            transferrables.push(channel.port2);
-            config.partitions[key] = {
-                type: 'proxy_client',
-                editStrategy: partition.partition.realtimeStrategy,
-                private: partition.partition.private,
-                port: channel.port2,
-            };
-        }
-    }
-    return transfer(config, transferrables);
-}
+// function processPartitions(config: AuxConfig): AuxConfig {
+//     let transferrables = [] as any[];
+//     for (let key in config.partitions) {
+//         const partition = config.partitions[key];
+//         if (partition.type === 'proxy') {
+//             const bridge = new ProxyBridgePartitionImpl(partition.partition);
+//             const channel = new MessageChannel();
+//             expose(bridge, channel.port1);
+//             transferrables.push(channel.port2);
+//             config.partitions[key] = {
+//                 type: 'proxy_client',
+//                 editStrategy: partition.partition.realtimeStrategy,
+//                 private: partition.partition.private,
+//                 port: channel.port2,
+//             };
+//         }
+//     }
+//     return transfer(config, transferrables);
+// }
