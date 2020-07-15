@@ -16,20 +16,25 @@ declare var Deno: {
 
 interface Reader {
     read(p: Uint8Array): Promise<number | null>;
+    readSync(p: Uint8Array): number | null;
 }
 
 interface Writer {
     write(p: Uint8Array): Promise<number>;
+    writeSync(p: Uint8Array): number;
 }
 
 interface Connection extends Reader, Writer {}
 
-declare class DenoBuffer {
+declare class DenoBuffer implements Reader, Writer {
+    write(p: Uint8Array): Promise<number>;
+    writeSync(p: Uint8Array): number;
+    read(p: Uint8Array): Promise<number>;
+    readSync(p: Uint8Array): number;
     readonly length: number;
     readonly capacity: number;
     bytes(options?: { copy: boolean }): Uint8Array;
     truncate(num: number): void;
     grow(num: number): void;
     empty(): boolean;
-    readSync(p: Uint8Array): number | null;
 }

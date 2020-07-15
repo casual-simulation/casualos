@@ -27,7 +27,7 @@ import {
 import childProcess, { ChildProcess } from 'child_process';
 import { Server, AddressInfo } from 'net';
 import { MessageChannel } from 'worker_threads';
-import { MessageChannelImpl } from './MessageChannel';
+import { MessageChannelImpl, MessageEvent } from './MessageChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -101,6 +101,7 @@ export class DenoVM implements AuxVM {
         this._server = new Server(conn => {
             this._channel.port2.addEventListener('message', e => {
                 try {
+                    console.log('[DenoVM] Sending message');
                     const json = JSON.stringify(e.data);
                     // Messages to stdout all follow the same format:
                     // 4 bytes (32-bit number) for the length of the message
@@ -108,7 +109,10 @@ export class DenoVM implements AuxVM {
                     // - According to MDN UTF-8 never has more than string.length * 3 bytes (https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encodeInto)
                     // - Using a 32-bit number means we can't have messages larger than ~4GiB
                     const byteBuffer = new Uint8Array(4 + json.length * 3);
-                    const view = new DataView(byteBuffer.buffer);
+                    const view = new DataView(
+                        byteBuffer.buffer,
+                        byteBuffer.byteOffset
+                    );
 
                     // Encode the JSON as UTF-8
                     // Skip the first 4 bytes
@@ -116,29 +120,62 @@ export class DenoVM implements AuxVM {
                         json,
                         byteBuffer.subarray(4)
                     );
-                    view.setUint32(0, result.written);
-                    conn.write(byteBuffer.subarray(0, result.written));
+                    view.setUint32(0, result.written, true);
+                    console.log(
+                        '[DenoVM] Writing ' + result.written + ' bytes'
+                    );
+                    conn.write(byteBuffer.subarray(0, result.written + 4));
                 } catch (err) {
                     console.error('[DenoVM]', err);
                 }
             });
 
+            let messageBuffer = Buffer.alloc(0);
+            let messageSize = -1;
             conn.on('data', (data: Buffer) => {
                 try {
                     console.log('[DenoVM] Got data');
-                    // TODO: Fix to properly handle different buffer sizes
-                    const uint32 = new Uint32Array(data);
-                    const numBytes = uint32[0];
-                    const messageBytes = data.subarray(4, numBytes + 4);
-                    const json = decoder.decode(messageBytes);
-                    const message = JSON.parse(json);
-                    this._channel.port2.postMessage(message);
+                    messageBuffer = Buffer.concat([messageBuffer, data]);
+                    if (messageSize < 0 && messageBuffer.byteLength >= 4) {
+                        const view = new DataView(
+                            messageBuffer.buffer,
+                            messageBuffer.byteOffset,
+                            4
+                        );
+                        messageSize = view.getUint32(0, true);
+                        messageBuffer = messageBuffer.slice(4);
+                    }
+                    if (
+                        messageSize >= 0 &&
+                        messageBuffer.byteLength >= messageSize
+                    ) {
+                        // TODO: Fix to properly handle different buffer sizes
+                        const view = messageBuffer.subarray(0, messageSize);
+                        const json = decoder.decode(view);
+                        const message = JSON.parse(json);
+                        let buf = messageBuffer;
+                        messageBuffer = Buffer.alloc(
+                            buf.byteLength - view.byteLength
+                        );
+                        buf.copy(messageBuffer);
+                        messageSize = -1;
+                        this._channel.port2.postMessage(message);
+                    }
                 } catch (err) {
                     console.error('[DenoVM]', err);
                 }
             });
 
-            resolveConnection();
+            const listener = (e: MessageEvent) => {
+                if (e && e.data && e.data.type === 'init') {
+                    this._channel.port1.removeEventListener(
+                        'message',
+                        listener
+                    );
+                    resolveConnection();
+                }
+            };
+            this._channel.port1.addEventListener('message', listener);
         });
 
         this._server.listen(() => {
