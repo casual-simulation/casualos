@@ -8,9 +8,8 @@ import {
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
-import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 
-export class BrowserAuxChannel extends RemoteAuxChannel {
+export class DenoAuxChannel extends RemoteAuxChannel {
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
         super(user, config, {});
     }
@@ -32,13 +31,6 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
         config: PartitionConfig
     ): Promise<AuxPartition> {
         let partition = await super._createPartition(config);
-        if (!partition) {
-            partition = await createAuxPartition(
-                config,
-                createProxyClientPartition
-            );
-        }
-
         return partition;
     }
 }

@@ -47,5 +47,6 @@
     "editor.detectIndentation": false,
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
-    "workbench.colorCustomizations": {}
+    "workbench.colorCustomizations": {},
+    "deno.enable": false
 }

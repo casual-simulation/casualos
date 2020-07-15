@@ -19,19 +19,39 @@ import {
     AuxChannelErrorType,
     StoredAux,
 } from '@casual-simulation/aux-vm';
-import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,
 } from '@casual-simulation/causal-trees';
-import Bowser from 'bowser';
+import childProcess from 'child_process';
+
+/**
+ * Creates a new message channel and sends port2 to the iframe in a message.
+ * @param iframeWindow The window to send the port to.
+ */
+export function setupChannel(iframeWindow: Window) {
+    const channel = new MessageChannel();
+
+    childProcess.spawn('deno run ');
+
+    iframeWindow.postMessage(
+        {
+            type: 'init_port',
+            port: channel.port2,
+        },
+        '*',
+        [channel.port2]
+    );
+
+    return channel;
+}
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
  */
-export class AuxVMImpl implements AuxVM {
+export class DenoVM implements AuxVM {
     private _localEvents: Subject<LocalActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
@@ -83,33 +103,32 @@ export class AuxVMImpl implements AuxVM {
             message: 'Initializing web worker...',
             progress: 0.1,
         });
-        this._iframe = document.createElement('iframe');
-        this._iframe.src = '/aux-vm-iframe.html';
-        this._iframe.style.display = 'none';
 
-        // Allow the iframe to run scripts, but do nothing else.
-        // Because we're not allowing the same origin, this prevents the VM from talking to
-        // storage like IndexedDB and therefore prevents different VMs from affecting each other.
-        this._iframe.sandbox.add('allow-scripts');
+        this._channel = new MessageChannel();
 
-        const bowserResult = Bowser.parse(navigator.userAgent);
+        // TODO: Allow specifying the actual URL
+        const proc = childProcess.spawn(
+            'deno run --allow-net http://localhost:3000/deno.js'
+        );
 
-        // Safari requires the allow-same-origin option in order to load
-        // web workers using a blob.
-        if (
-            bowserResult.browser.name === 'Safari' ||
-            bowserResult.os.name === 'iOS'
-        ) {
-            console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
-            this._iframe.sandbox.add('allow-same-origin');
-        }
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
 
-        let promise = waitForLoad(this._iframe);
-        document.body.appendChild(this._iframe);
+        this._channel.port2.addEventListener('message', e => {
+            const json = JSON.stringify(e.data);
+            const messageBytes = encoder.encode(json);
+            proc.stdin.write(messageBytes);
+        });
 
-        await promise;
-
-        this._channel = setupChannel(this._iframe.contentWindow);
+        proc.stdout.on('data', (data: Buffer) => {
+            // TODO: Fix to properly handle different buffer sizes
+            const uint32 = new Uint32Array(data);
+            const numBytes = uint32[0];
+            const messageBytes = data.subarray(4, numBytes + 4);
+            const json = decoder.decode(messageBytes);
+            const message = JSON.parse(json);
+            this._channel.port2.postMessage(message);
+        });
 
         this._connectionStateChanged.next({
             type: 'progress',

@@ -1,25 +1,6 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
 
 /**
- * Creates a new message channel and sends port2 to the iframe in a message.
- * @param iframeWindow The window to send the port to.
- */
-export function setupChannel(iframeWindow: Window) {
-    const channel = new MessageChannel();
-
-    iframeWindow.postMessage(
-        {
-            type: 'init_port',
-            port: channel.port2,
-        },
-        '*',
-        [channel.port2]
-    );
-
-    return channel;
-}
-
-/**
  * Listens for the init_port event from the global context.
  */
 export function listenForChannel(): Promise<MessagePort> {

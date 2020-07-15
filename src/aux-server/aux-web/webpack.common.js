@@ -29,6 +29,14 @@ module.exports = {
             'html',
             'IframeEntry.ts'
         ),
+        deno: path.resolve(
+            __dirname,
+            '..',
+            '..',
+            'aux-vm-deno',
+            'vm',
+            'DenoEntry.ts'
+        ),
     },
     output: {
         publicPath: '/',

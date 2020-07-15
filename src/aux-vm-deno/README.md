@@ -21,6 +21,7 @@ entry: {
         'node_modules',
         '@casual-simulation',
         'aux-vm-deno',
+        'vm',
         'DenoEntry.ts'
     ),
 },
