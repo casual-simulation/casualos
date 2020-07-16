@@ -113,8 +113,19 @@ module.exports = {
                 include: [/aux-common/, /aux-vm/],
                 enforce: 'pre',
             },
+            {
+                test: /[\\\/]tweetnacl[\\\/]/,
+                loader:
+                    'exports-loader?window.nacl!imports-loader?this=>window,module=>{},require=>false',
+            },
+            {
+                test: /[\\\/]tweetnacl-auth[\\\/]/,
+                loader:
+                    'exports-loader?window.nacl.auth!imports-loader?this=>window,module=>{},require=>false',
+            },
         ],
     },
+    noParse: [/[\\\/]tweetnacl[\\\/]/, /[\\\/]tweetnacl-auth[\\\/]/],
     resolve: {
         extensions: ['.vue', '.js', '.ts', '.css'],
         alias: {

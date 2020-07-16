@@ -1337,6 +1337,23 @@ export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
 }
 
+/**
+ * Defines an event that encrypts some data with a password.
+ */
+export interface EncryptAction extends AsyncAction {
+    type: 'encrypt';
+
+    /**
+     * The password that should be used to encrypt the data.
+     */
+    password: string;
+
+    /**
+     * The data that should be encrypted.
+     */
+    data: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.

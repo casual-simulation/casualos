@@ -5566,4 +5566,37 @@ describe('AuxLibrary', () => {
             }).toThrow(new Error('The key must be a string'));
         });
     });
+
+    describe('crypto.encrypt()', () => {
+        it('should emit a EncryptAction', () => {
+            const promise: any = library.api.crypto.encrypt();
+            const expected = encrypt('password', 'data');
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support passing the current value', () => {
+            const promise: any = library.api.player.showInput('abc');
+            const expected = showInput('abc', undefined, context.tasks.size);
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support passing extra options', () => {
+            const promise: any = library.api.player.showInput('abc', {
+                backgroundColor: 'red',
+                foregroundColor: 'green',
+            });
+            const expected = showInput(
+                'abc',
+                {
+                    backgroundColor: 'red',
+                    foregroundColor: 'green',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+    });
 });
