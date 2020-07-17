@@ -84,6 +84,7 @@ import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
+import { decryptV1 } from '@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -5568,35 +5569,13 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.encrypt()', () => {
-        it('should emit a EncryptAction', () => {
-            const promise: any = library.api.crypto.encrypt();
-            const expected = encrypt('password', 'data');
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
+        it('should encrypt the given string with the given password', async () => {
+            const result = await library.api.crypto.encrypt('password', 'data');
+            const decrypted = await decryptV1('password', result);
 
-        it('should support passing the current value', () => {
-            const promise: any = library.api.player.showInput('abc');
-            const expected = showInput('abc', undefined, context.tasks.size);
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should support passing extra options', () => {
-            const promise: any = library.api.player.showInput('abc', {
-                backgroundColor: 'red',
-                foregroundColor: 'green',
-            });
-            const expected = showInput(
-                'abc',
-                {
-                    backgroundColor: 'red',
-                    foregroundColor: 'green',
-                },
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+            expect(final).toEqual('data');
         });
     });
 });

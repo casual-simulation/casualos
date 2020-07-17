@@ -100,6 +100,10 @@ import '../polyfill/Array.last.polyfill';
 import { convertToCopiableValue } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
+import {
+    encrypt as realEncrypt,
+    decrypt as realDecrypt,
+} from '@casual-simulation/crypto';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -416,6 +420,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 sha512,
                 hmacSha256,
                 hmacSha512,
+                encrypt,
             },
         },
     };
@@ -2001,6 +2006,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         let sha = hmac(<any>hashSha512, key);
         return _hash(sha, data);
+    }
+
+    /**
+     * Encrypts the given data with the given password and returns the result.
+     * @param password The password to use to secure the data.
+     * @param data The data to encrypt.
+     */
+    function encrypt(password: string, data: string): Promise<string> {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realEncrypt(password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {
