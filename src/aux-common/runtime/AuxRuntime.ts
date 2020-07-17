@@ -710,7 +710,9 @@ export class AuxRuntime
                         this._updateTag(originalBot, tag, true)
                     );
                 } else {
-                    botUpdate.tags[tag] = null;
+                    if (botUpdate.tags) {
+                        botUpdate.tags[tag] = null;
+                    }
                     botUpdate.values[tag] = null;
                 }
             }
