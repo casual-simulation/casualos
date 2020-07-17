@@ -61,12 +61,27 @@ export function encrypt(password: string, data: Uint8Array): Promise<string> {
     return encryptV1(password, data);
 }
 
-// export async function decrypt(
-//     password: string,
-//     cyphertext: string
-// ): Promise<string> {
-
-// }
+/**
+ * Decrypts the given cyphertext with the given password and returns the original plaintext.
+ * Returns null if the data was unable to be decrypted.
+ * @param password The password to use to decrypt.
+ * @param cyphertext The data to decrypt.
+ */
+export function decrypt(
+    password: string,
+    cyphertext: string
+): Promise<Uint8Array> {
+    if (!password) {
+        throw new Error('Invalid password. Must not be null or undefined.');
+    }
+    if (!cyphertext) {
+        throw new Error('Invalid cyphertext. Must not be null or undefined.');
+    }
+    if (cyphertext.startsWith('v1.')) {
+        return decryptV1(password, cyphertext);
+    }
+    return null;
+}
 
 /**
  * Encrypts the given data with the given password using version 1 of the encryption mechanisms in this file and returns the resulting
@@ -135,16 +150,19 @@ export async function decryptV1(
     const withoutVersion = cyphertext.slice('v1.'.length);
     let nextPeriod = withoutVersion.indexOf('.');
     if (nextPeriod < 0) {
-        throw new Error('Invalid cyphertext. Must contain a salt.');
+        return null;
     }
     const saltBase64 = withoutVersion.slice(0, nextPeriod);
     const withoutSalt = withoutVersion.slice(nextPeriod + 1);
     nextPeriod = withoutSalt.indexOf('.');
     if (nextPeriod < 0) {
-        throw new Error('Invalid cyphertext. Must contain a nonce.');
+        return null;
     }
     const nonceBase64 = withoutSalt.slice(0, nextPeriod);
     const dataBase64 = withoutSalt.slice(nextPeriod + 1);
+    if (dataBase64.length <= 0) {
+        return null;
+    }
 
     const salt = toByteArray(saltBase64);
     const nonce = toByteArray(nonceBase64);

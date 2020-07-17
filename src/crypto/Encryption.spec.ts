@@ -1,7 +1,57 @@
-import { encryptV1, decryptV1 } from './Encryption';
+import { encryptV1, decryptV1, encrypt, decrypt } from './Encryption';
 
 describe('Encryption', () => {
     const passwordCases = [[null], [undefined], ['']];
+
+    describe('encrypt()', () => {
+        it('should return a v1 encryption', async () => {
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = await encrypt('testPassword', dataBytes);
+            const [version, salt, nonce, result] = cyphertext.split('.');
+
+            expect(version).toBe('v1');
+            expect(salt.length).toBe(32);
+            expect(nonce.length).toBe(32);
+        });
+    });
+
+    describe('decrypt()', () => {
+        it('should be able to decrypt data from encrypt()', async () => {
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = await encrypt('testPassword', dataBytes);
+            const resultBytes = await decrypt('testPassword', cyphertext);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(resultBytes);
+            expect(final).toEqual(data);
+        });
+
+        it('should be able to decrypt data from encryptV1()', async () => {
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = await encryptV1('testPassword', dataBytes);
+            const resultBytes = await decrypt('testPassword', cyphertext);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(resultBytes);
+            expect(final).toEqual(data);
+        });
+
+        it('should return null if given a string that does not start with v1', async () => {
+            const data = 'hello, world!';
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(data);
+            const cyphertext = await encryptV1('testPassword', dataBytes);
+            const resultBytes = await decrypt('testPassword', 'abc');
+
+            expect(resultBytes).toBe(null);
+        });
+    });
 
     describe('encryptV1()', () => {
         it('should encrypt the data with the given password', async () => {
@@ -87,6 +137,20 @@ describe('Encryption', () => {
             corrupted += cyphertext[cyphertext.length - 1] === '0' ? '1' : '0';
 
             const decrypted = await decryptV1('testPassword', corrupted);
+            expect(decrypted).toBe(null);
+        });
+
+        it('should return null if given cyphertext without a nonce', async () => {
+            const decrypted = await decryptV1('testPassword', 'v1.abc.');
+            expect(decrypted).toBe(null);
+        });
+
+        it('should return null if given cyphertext without a salt', async () => {
+            const decrypted = await decryptV1('testPassword', 'v1.');
+            expect(decrypted).toBe(null);
+        });
+        it('should return null if given cyphertext without data', async () => {
+            const decrypted = await decryptV1('testPassword', 'v1.salt.nonce.');
             expect(decrypted).toBe(null);
         });
     });
