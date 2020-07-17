@@ -25,6 +25,9 @@
             -   `data` is the data to calculate the HMAC of.
             -   Supports strings, numbers, booleans, objects, arrays, and bots.
 
+-   :bug: Bug Fixes
+    -   Fixed a race condition where concurrently updating a tag in a script and triggering a dependency update on that same tag could cause the runtime to crash.
+
 ## V1.1.18
 
 ### Date: 7/10/2020

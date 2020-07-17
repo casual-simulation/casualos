@@ -915,6 +915,44 @@ describe('AuxRuntime', () => {
                     updatedBots: ['test'],
                 });
             });
+
+            it('should support removing bots that trigger dependency updates for a tag that was updated in a script but was not yet propogated through the partition', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        progressBar: '=tags.health/100',
+                        health: 100,
+                        clear: '@tags.progressBar = ""',
+                    }),
+                    createBot('test2', {
+                        health: 101,
+                    }),
+                ]);
+
+                // Script runs and updates the
+                // runtime bot.
+                // Dependency graph is not updated yet.
+                runtime.shout('clear');
+
+                // Bot removed operation happens which checks the dependency graph.
+                // The system sees that 'test' should have the progressBar tag recalculated.
+                // The problem is that the progressBar tag has been changed and no longer has a value
+                // which caused an error before this test was written.
+                const update = runtime.botsRemoved(['test2']);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                progressBar: null,
+                            },
+                        },
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2'],
+                    updatedBots: ['test'],
+                });
+            });
         });
 
         describe('onAnyBotsRemoved', () => {
