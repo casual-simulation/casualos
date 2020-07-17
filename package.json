@@ -106,6 +106,7 @@
         "jest-html-reporter": "^2.5.0",
         "jest-junit": "^6.3.0",
         "jest-raw-loader": "^1.0.1",
+        "jest-environment-node": "26.1.0",
         "js-yaml": "^3.13.1",
         "lerna": "^3.13.4",
         "mini-css-extract-plugin": "^0.5.0",
