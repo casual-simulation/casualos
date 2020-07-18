@@ -1,6 +1,6 @@
 # CasualOS Changelog
 
-## V1.1.19
+## V1.2.0
 
 ### Date: TBD
 
