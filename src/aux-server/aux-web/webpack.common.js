@@ -113,19 +113,20 @@ module.exports = {
                 include: [/aux-common/, /aux-vm/],
                 enforce: 'pre',
             },
+
+            // See https://github.com/dchest/tweetnacl-js/wiki/Using-with-Webpack
+            // Gist is that tweetnacl-js has some require() statements that webpack
+            // will parse and may try to include shims automatically.
+            // So here we tell webpack to ignore tweetnacl and import from the global
+            // window.nacl property.
             {
                 test: /[\\\/]tweetnacl[\\\/]/,
                 loader:
-                    'exports-loader?window.nacl!imports-loader?this=>window,module=>{},require=>false',
-            },
-            {
-                test: /[\\\/]tweetnacl-auth[\\\/]/,
-                loader:
-                    'exports-loader?window.nacl.auth!imports-loader?this=>window,module=>{},require=>false',
+                    'exports-loader?globalThis.nacl!imports-loader?this=>globalThis,module=>{},require=>false',
             },
         ],
+        noParse: [/[\\\/]tweetnacl[\\\/]/, /[\\\/]tweetnacl-auth[\\\/]/],
     },
-    noParse: [/[\\\/]tweetnacl[\\\/]/, /[\\\/]tweetnacl-auth[\\\/]/],
     resolve: {
         extensions: ['.vue', '.js', '.ts', '.css'],
         alias: {
