@@ -47,11 +47,11 @@ async function deriveKey(
  *
  * The returned cyphertext contains a version number at the beginning which determines the format of the following data.
  *
- * v1 encryptions use XSalsa20 as the cypher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
+ * v1 encryptions use XSalsa20 as the cipher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
  * The output string is formatted as following with periods between the components:
  * 1. The version number (v1)
  * 2. The base64 of the salt used to derive the key from the password. (pseudorandom)
- * 3. The base64 of the nonce used by the cypher. (pseudorandom)
+ * 3. The base64 of the nonce used by the cipher. (pseudorandom)
  * 4. The base64 of the encrypted data.
  *
  * @param password The password to use to encrypt.
@@ -87,11 +87,11 @@ export function decrypt(
  * Encrypts the given data with the given password using version 1 of the encryption mechanisms in this file and returns the resulting
  * cyphertext.
  *
- * version 1 encryptions use XSalsa20 as the cypher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
+ * version 1 encryptions use XSalsa20 as the cipher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
  * The output string is formatted as following with periods between the components:
  * 1. The version number (v1)
  * 2. The base64 of the salt used to derive the key from the password. (pseudorandom)
- * 3. The base64 of the nonce used by the cypher. (pseudorandom)
+ * 3. The base64 of the nonce used by the cipher. (pseudorandom)
  * 4. The base64 of the encrypted data.
  *
  * @param password The password to use to encrypt the data.
@@ -123,11 +123,11 @@ export async function encryptV1(
  * Decrypts the given data with the given password using version 1 of the encryption mechanisms in this file and returns the resulting
  * plaintext.
  *
- * version 1 encryptions use XSalsa20 as the cypher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
+ * version 1 encryptions use XSalsa20 as the cipher and Poly1305 for authentication in addition to scrypt for password-based key derivation.
  * The output string is formatted as following with periods between the components:
  * 1. The version number (v1)
  * 2. The base64 of the salt used to derive the key from the password. (pseudorandom)
- * 3. The base64 of the nonce used by the cypher. (pseudorandom)
+ * 3. The base64 of the nonce used by the cipher. (pseudorandom)
  * 4. The base64 of the encrypted data.
  *
  * @param password The password to use to decrypt the data.
