@@ -24,6 +24,10 @@
             -   `key` is the password that should be used for the message authentication code.
             -   `data` is the data to calculate the HMAC of.
             -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.encrypt(password, data)`
+            -   Encrypts the given data with the given password and returns the result as a promise.
+            -   `password` is the password to use for encrypting the data.
+            -   `data` is the data that should be encrypted.
 
 -   :bug: Bug Fixes
     -   Fixed a race condition where concurrently updating a tag in a script and triggering a dependency update on that same tag could cause the runtime to crash.
