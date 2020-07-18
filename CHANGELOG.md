@@ -28,6 +28,11 @@
             -   Encrypts the given data with the given password and returns the result as a promise.
             -   `password` is the password to use for encrypting the data.
             -   `data` is the data that should be encrypted.
+        -   `crypto.decrypt(password, data)`
+            -   Decrypts the given data with the given password and returns the result as a promise.
+            -   Only works if the given data is the output of `crypto.encrypt()`.
+            -   `password` is the password that was used to encrypt the data.
+            -   `data` is the data that should be decrypted.
 
 -   :bug: Bug Fixes
     -   Fixed a race condition where concurrently updating a tag in a script and triggering a dependency update on that same tag could cause the runtime to crash.
