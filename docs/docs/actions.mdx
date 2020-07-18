@@ -2956,6 +2956,8 @@ player.toast(hash);
 
 [Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
 
+Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
+
 _Always use a strong and unique password._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
 
 Assuming a strong password, this method will return a string of encrypted data that is _confidential_ (unreadable without the password),
@@ -2978,6 +2980,24 @@ The **second parameter** is the string data that should be encrypted.
 ```typescript
 const encrypted = crypto.encrypt("key", "hello, world");
 player.toast(encrypted);
+```
+
+### `crypto.decrypt(password, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+
+Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
+
+The **first parameter** is the password that should be used to decrypt the data. This should be the same password that was used to encrypt the data.
+
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(password, data)'/> that should be decrypted.
+
+#### Examples
+
+1. Decrypt the given data and toast it.
+```typescript
+const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+player.toast(decrypted);
 ```
 
 ## Admin Actions
