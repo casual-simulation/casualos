@@ -2978,7 +2978,7 @@ The **second parameter** is the string data that should be encrypted.
 
 1. Encrypt the given data and toast it.
 ```typescript
-const encrypted = crypto.encrypt("key", "hello, world");
+const encrypted = await crypto.encrypt("key", "hello, world");
 player.toast(encrypted);
 ```
 
@@ -2996,7 +2996,7 @@ The **second parameter** is the data from <ActionLink action='crypto.encrypt(pas
 
 1. Decrypt the given data and toast it.
 ```typescript
-const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+const decrypted = await crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
 player.toast(decrypted);
 ```
 
