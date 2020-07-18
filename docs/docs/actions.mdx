@@ -2838,6 +2838,168 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+## Crypto Actions
+
+### `crypto.sha256(...data)`
+
+Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the hash of a string.
+```typescript
+const hash = crypto.sha256("hello, world");
+player.toast(hash);
+```
+
+2. Calculate the hash of an object.
+```typescript
+const hash = crypto.sha256({
+    abc: "def"
+});
+player.toast(hash);
+```
+
+### `crypto.sha512(...data)`
+
+Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the hash of a string.
+```typescript
+const hash = crypto.sha512("hello, world");
+player.toast(hash);
+```
+
+2. Calculate the hash of an object.
+```typescript
+const hash = crypto.sha512({
+    abc: "def"
+});
+player.toast(hash);
+```
+
+### `crypto.hmacSha256(key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is the password that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the HMAC of a string with a key.
+```typescript
+const hash = crypto.hmacSha256("key", "hello, world");
+player.toast(hash);
+```
+
+2. Calculate the HMAC of an object.
+```typescript
+const hash = crypto.hmacSha256("key", {
+    abc: "def"
+});
+player.toast(hash);
+```
+
+### `crypto.hmacSha512(key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular password.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is the password that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the HMAC of a string with a key.
+```typescript
+const hash = crypto.hmacSha512("key", "hello, world");
+player.toast(hash);
+```
+
+2. Calculate the HMAC of an object.
+```typescript
+const hash = crypto.hmacSha512("key", {
+    abc: "def"
+});
+player.toast(hash);
+```
+
+### `crypto.encrypt(password, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+
+Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
+
+_Always use a strong and unique password._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Assuming a strong password, this method will return a string of encrypted data that is _confidential_ (unreadable without the password),
+_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that the password was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same password will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
+
+The **first parameter** is the password that should be used to encrypt the data. Use a strong an unique password for maximum security.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const encrypted = await crypto.encrypt("key", "hello, world");
+player.toast(encrypted);
+```
+
+### `crypto.decrypt(password, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+
+Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
+
+The **first parameter** is the password that should be used to decrypt the data. This should be the same password that was used to encrypt the data.
+
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(password, data)'/> that should be decrypted.
+
+#### Examples
+
+1. Decrypt the given data and toast it.
+```typescript
+const decrypted = await crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+player.toast(decrypted);
+```
+
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`

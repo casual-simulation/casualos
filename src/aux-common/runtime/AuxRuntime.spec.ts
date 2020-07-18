@@ -87,6 +87,7 @@ import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
+import { DeepObjectError } from './Utils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -905,6 +906,44 @@ describe('AuxRuntime', () => {
                         test: {
                             values: {
                                 numBots: 0,
+                            },
+                        },
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2'],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should support removing bots that trigger dependency updates for a tag that was updated in a script but was not yet propogated through the partition', () => {
+                runtime.botsAdded([
+                    createBot('test', {
+                        progressBar: '=tags.health/100',
+                        health: 100,
+                        clear: '@tags.progressBar = ""',
+                    }),
+                    createBot('test2', {
+                        health: 101,
+                    }),
+                ]);
+
+                // Script runs and updates the
+                // runtime bot.
+                // Dependency graph is not updated yet.
+                runtime.shout('clear');
+
+                // Bot removed operation happens which checks the dependency graph.
+                // The system sees that 'test' should have the progressBar tag recalculated.
+                // The problem is that the progressBar tag has been changed and no longer has a value
+                // which caused an error before this test was written.
+                const update = runtime.botsRemoved(['test2']);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            values: {
+                                progressBar: null,
                             },
                         },
                         test2: null,
@@ -2192,6 +2231,111 @@ describe('AuxRuntime', () => {
             await waitAsync();
 
             expect(events).toEqual([[toast('hi2')]]);
+        });
+
+        it('should map argument objects to bots if they have the right tags', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that.toJSON())',
+                }),
+                createBot('test2', {
+                    abc: 'def',
+                }),
+            ]);
+            runtime.shout('hello', null, {
+                id: 'test2',
+                tags: {},
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message).toEqual(
+                createBot('test2', {
+                    abc: 'def',
+                })
+            );
+        });
+
+        it('should handle mapping recursive objects', async () => {
+            let obj1 = {
+                obj2: null as any,
+            };
+
+            let obj2 = {
+                obj3: null as any,
+            };
+
+            let obj3 = {
+                obj1: obj1,
+            };
+
+            obj1.obj2 = obj2;
+            obj2.obj3 = obj3;
+
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            runtime.shout('hello', null, obj1);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message).toEqual(obj1);
+        });
+
+        it('should handle mapping recursive arrays', async () => {
+            let arr1 = [] as any[];
+            let arr2 = [] as any[];
+            let arr3 = [] as any[];
+
+            arr1.push(arr2);
+            arr2.push(arr3);
+            arr3.push(arr1);
+
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            runtime.shout('hello', null, arr1);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message).toEqual(arr1);
+        });
+
+        it('should fail to convert deep objects', async () => {
+            let obj = {} as any;
+            let current = obj;
+            for (let i = 0; i < 10000; i++) {
+                current = current['deep'] = {};
+            }
+
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: '@player.toast(that)',
+                }),
+            ]);
+            const result = runtime.shout('hello', null, obj);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0].type).toBe('show_toast');
+            expect((<any>events[0][0]).message).toEqual(
+                'Error: Object too deeply nested.'
+            );
         });
 
         it('should not map argument objects that have a custom prototype', async () => {

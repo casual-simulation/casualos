@@ -83,6 +83,8 @@ import {
 import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
+import { shuffle } from 'lodash';
+import { decryptV1 } from '@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -4851,6 +4853,751 @@ describe('AuxLibrary', () => {
             const result = library.api.player.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('crypto.sha256()', () => {
+        const cases = [
+            [
+                ['hello'],
+                '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+            ],
+            [
+                ['🙂'],
+                'd06f1525f791397809f9bc98682b5c13318eca4c3123433467fd4dffda44fd14',
+            ],
+            [
+                ['abc', 'def'],
+                'bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721',
+            ],
+            [
+                [67],
+                '49d180ecf56132819571bf39d9b7b342522a2ac6d23c1418d3338251bfe469c8',
+            ],
+            [
+                [true],
+                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+            ],
+            [
+                [false],
+                'fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'd0067cad9a63e0813759a2bb841051ca73570c0da2e08e840a8eb45db6a7a010',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'c64ddf11bcd45660f0cf66dd0c22d2b4570ef3d3fc6527a9a6f6c722aefa3c39',
+            ],
+            [
+                [Number.NaN],
+                'd5b592c05dc25b5032553f1b27f4139be95e881f73db33b02b05ab20c3f9981e',
+            ],
+            [
+                [{ abc: 'def' }],
+                '2c3fbda5f48b04e39d3a87f89e5bd00b48b6e5e3c4a093de65de0a87b8cc8b3b',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                [null],
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            ],
+            [
+                [undefined],
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, expected) => {
+            expect(library.api.crypto.sha256(...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'c7e4f397690dce3230846bd71f7d28b6d0fbd14763e58d41fb2713fc74015718',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                '0540a6ab3ec4db750b5092cb479c4dd10c1a7ccfe9731cff1927df0e125648a5',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                '83b4bdacd5dacdc99ede50fcf65f06989aaede20b002de17c9805a2d019054d5',
+            ],
+            [
+                ['world', 'hello'],
+                'be3181b8eb39bf890c9d366a0fd33daea5ab5486d537c44c52d9e85af8da96c2',
+            ],
+            [
+                ['hello', 'world'],
+                '94bedb26fb1cb9547b5b77902e89522f313c7f7fe2e9f0175cfb0a244878ee07',
+            ],
+        ];
+
+        it.each(objectCases)('should hash %s consistently', (obj, expected) => {
+            expect(library.api.crypto.sha256(obj)).toBe(expected);
+        });
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.sha256(bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"8c9d0a8e3cb51e189048263d4b9ea98063dd056ca76275bed41a16f59239130a"`
+            );
+            expect(hash).toBe(library.api.crypto.sha256(bot2));
+            expect(hash).not.toBe(library.api.crypto.sha256(bot3));
+            expect(hash).not.toBe(library.api.crypto.sha256(bot4));
+        });
+    });
+
+    describe('crypto.sha512()', () => {
+        const cases = [
+            [
+                ['hello'],
+                '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043',
+            ],
+            [
+                ['🙂'],
+                '5bed63c241f2830e8eb29ac8d9fea5e9441e8bb9104768c593dd46f6c97f947a160def7ce58dcba5e9d33a88e2b75fc62802d67ab30460442d23f66403b415f4',
+            ],
+            [
+                ['abc', 'def'],
+                'e32ef19623e8ed9d267f657a81944b3d07adbb768518068e88435745564e8d4150a0a703be2a7d88b61e3d390c2bb97e2d4c311fdc69d6b1267f05f59aa920e7',
+            ],
+            [
+                [67],
+                'ce4dd661e4d69073c7999282048ea9ee91932db0d699f8b13b2db70fe532d987ac4a0aef309b82e1ad2aa6c2f2f60473093cd1e399a737cff3f9e70585d36be7',
+            ],
+            [
+                [true],
+                '9120cd5faef07a08e971ff024a3fcbea1e3a6b44142a6d82ca28c6c42e4f852595bcf53d81d776f10541045abdb7c37950629415d0dc66c8d86c64a5606d32de',
+            ],
+            [
+                [false],
+                '719fa67eef49c4b2a2b83f0c62bddd88c106aaadb7e21ae057c8802b700e36f81fe3f144812d8b05d66dc663d908b25645e153262cf6d457aa34e684af9e328d',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                '7de872ed1c41ce3901bb7f12f20b0c0106331fe5b5ecc5fbbcf3ce6c79df4da595ebb7e221ab8b7fc5d918583eac6890ade1c26436335d3835828011204b7679',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                '280bcf3496f0fbe479df09e4e6e87f48179e6364a0065ae14d9eab5902f98a74e8e8919cf35b9d881a06562e8c3b11a04d073c03ddf393791e7619d8dc215d61',
+            ],
+            [
+                [Number.NaN],
+                '441dfabd0126a33e4677d76d73e4e340c5805efdf58fe84bf4a1f7815e676f0e159be74b2de6bed17d1ff766ff1d4915ca04cb781c0c5d045e1d14886eb1f31c',
+            ],
+            [
+                [{ abc: 'def' }],
+                '3f51fd341818ef13b5943ceb3fd0972a6a2be1c3453554261b9f2a7012f3d351b5e4a8a34fce35310bcd80f85afed4b9c4e615622ca52a3fa5ea586774ada743',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                [null],
+                'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
+            ],
+            [
+                [undefined],
+                'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, expected) => {
+            expect(library.api.crypto.sha512(...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                '8f2534f5d8f10fe6f78abf70de8f2c70b2286aa19ef02df494ef8e0992cb29a1e5614cdf216719b1d33d2e266a1e873c04eb08ce421bee91c52b26a702a979fc',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                '82a6687d1edca06e611f569200cdac8e15451d8537066582aca318c6236beb602f0c1cffbc8da338ffe32f80c324badc3ba3e69f03d20ecee993910d60b9702f',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'ef52465917f42013430afe76278a58657cf8de3c3f84b1709d0aacae3a88bee5e61a31e0f9f265b58672f6630bb8d5ea2384317c1b97e30fce3eaa4a646ff6c1',
+            ],
+            [
+                ['world', 'hello'],
+                'be00d2974eb4998e3e629e559067f04766bf91913f9f5ce10befd6e6c048d63603178f6cf7b4d353db15e032831c63f9647204812db09212d29df1114142b754',
+            ],
+            [
+                ['hello', 'world'],
+                'f3ea9708eb605ce26918a18a24e3ca6a5f00f0455966b6fb8c65d5fe637a19a60a47b12913d5493a72acda9789bccb725feaca3a8d66a5cf94d2963fbc0cf4e6',
+            ],
+        ];
+
+        it.each(objectCases)('should hash %s consistently', (obj, expected) => {
+            expect(library.api.crypto.sha512(obj)).toBe(expected);
+        });
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.sha512(bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"4edbae64a27b3da8adce1da13c7a3dcd81ff9b05f19204f6f5b4266ebde6c8a91d0bc0b3ee1c2bf9a13cae86708462645654fa47c20f084861a3a834f54b1b2f"`
+            );
+            expect(hash).toBe(library.api.crypto.sha512(bot2));
+            expect(hash).not.toBe(library.api.crypto.sha512(bot3));
+            expect(hash).not.toBe(library.api.crypto.sha512(bot4));
+        });
+    });
+
+    describe('crypto.hmacSha256()', () => {
+        const cases = [
+            [
+                ['hello'],
+                'key',
+                '9307b3b915efb5171ff14d8cb55fbcc798c6c0ef1456d66ded1a6aa723a58b7b',
+            ],
+            [
+                ['🙂'],
+                'key',
+                '79ec106e8106784f99972a5259331c1325d63514e3eec745ea9d44dbd884c29a',
+            ],
+            [
+                ['abc', 'def'],
+                'key',
+                '4c5277d3e85316d1762c7e219862a9440546171f5ae5f1b29499ff9fbdd4c56a',
+            ],
+            [
+                [67],
+                'key',
+                'ecc541509c57f9b9d47ed5354d112bb55b6a65f75365cf07833676f64461c8a8',
+            ],
+            [
+                [true],
+                'key',
+                '205c94f3b0222e3b464c33da902a1ae1b3a04a4494dcf7145e4228ad23333258',
+            ],
+            [
+                [false],
+                'key',
+                '2efa4359b49cb498c7ffdd1b1ad6920b9d52764bfee7a7a2ee64117237fdf23c',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'key',
+                '38c0a7feea67ce43c10292ff37a136743b962313f1b77486e68780ded5810402',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'key',
+                '4e36d71a0d8a7bf596975426c22ed528d7ab2d41b58e6dc8ff3cf073c8746035',
+            ],
+            [
+                [Number.NaN],
+                'key',
+                '7f5ef14748c13f8a903dcea8a0d22a25334be45d07371fc59cafaf0b776473ee',
+            ],
+            [
+                [{ abc: 'def' }],
+                'key',
+                '12bb607ecb4f82ecda3cc248821267a24e253f02c90d39264f5125a504055d54',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+            [
+                [null],
+                'key',
+                '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
+            ],
+            [
+                [undefined],
+                'key',
+                '5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, key, expected) => {
+            expect(library.api.crypto.hmacSha256(key, ...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'key',
+                '179c61a016c55c4e92525f84ff987a32e3fbd158555186b7386558931bca66cd',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                'key',
+                'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                'key',
+                'd22a7cc6eaaa04f29e382a829ae5404e623971036f0d8d1448d1c82564ed71ca',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'key',
+                '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'key',
+                '2bffd8725c1d6583e2264fffebf5617d0eea6f71f258df9041ed5107379e8698',
+            ],
+            [
+                ['world', 'hello'],
+                'key',
+                '153fc5c11827588a37808916ef8814d775f6e3a72f884530544860d476d2130a',
+            ],
+            [
+                ['hello', 'world'],
+                'key',
+                '66fddc9dc92816d844d6c1fa2e6f123df58c3d5afb9387a34488a6828a60baef',
+            ],
+        ];
+
+        it.each(objectCases)(
+            'should hash %s consistently',
+            (obj, key, expected) => {
+                expect(library.api.crypto.hmacSha256(key, obj)).toBe(expected);
+            }
+        );
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.hmacSha256('key', bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"451d24ef601e8ff6dfc367f6ac19cbcac1d8e8db72c183cceb801815b55dc875"`
+            );
+            expect(hash).toBe(library.api.crypto.hmacSha256('key', bot2));
+            expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot3));
+            expect(hash).not.toBe(library.api.crypto.hmacSha256('key', bot4));
+        });
+
+        it('should fail when using an empty key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha256('', 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha256(null, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha256(undefined, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+        });
+
+        it('should fail when using a non-string key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>{}, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>[], 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>false, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>true, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>0, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha256(<any>1, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+        });
+    });
+
+    describe('crypto.hmacSha512()', () => {
+        const cases = [
+            [
+                ['hello'],
+                'key',
+                'ff06ab36757777815c008d32c8e14a705b4e7bf310351a06a23b612dc4c7433e7757d20525a5593b71020ea2ee162d2311b247e9855862b270122419652c0c92',
+            ],
+            [
+                ['🙂'],
+                'key',
+                'bdc92de9e2218fdd4d55de8d98f624219479cad87c6a7b4d814f559c4bc2e175b1dc283668cab48edfc420cafbff1afdca5842857bf348e9f0b0e8ada532d648',
+            ],
+            [
+                ['abc', 'def'],
+                'key',
+                'e97348dbd79dff60a3c8e89f4e248b230d8c89c6021615f492510270dd82cf8154b28461fb625ff5554649225a0c3709e42f7f5d405a6f5fbaa1184e59976826',
+            ],
+            [
+                [67],
+                'key',
+                'd7fb21b12a486cfca737b567354334a8e97e0bac1e55bc0a6c647e2b5a3013f532069fc0a07f24892d525976a2ea0824953ca56608500556bfd28d9829299824',
+            ],
+            [
+                [true],
+                'key',
+                '92a84cd18c579c1fa626fab2b0facdb960b727e3cac7f8f21cea543382fedd18d99a1948a771ba540e5a285529c18a15bf6c275131e11f5ba13065a92327ed03',
+            ],
+            [
+                [false],
+                'key',
+                '9000cf009e127f9e69a2fb3c1c5f13db96a253b9e60c477ea2ae745d845226e56112e9d0dd569c9a0f1840122bd806dae21ff53c98c94b12f607c80275cd7ef2',
+            ],
+            [
+                [Number.POSITIVE_INFINITY],
+                'key',
+                'ad03855ee09aa097fab9d33768ed5e420d2965c43810640f36b56bbd6815a971df96a3af535672f90458283be5ce6cd3fa230d261a69add1484f30d0138f00e9',
+            ],
+            [
+                [Number.NEGATIVE_INFINITY],
+                'key',
+                'eab4848252a948f1e0ae4af937c1b00820ee5580512a05965c29013d523a3055353834bfa87f9d2e89fec95f361682970b611839b790313053b675b6a01c2335',
+            ],
+            [
+                [Number.NaN],
+                'key',
+                '7c8698212d4dd6dc82443c02a202c737bc10db008f45d2c76e39d0a237c0355360b88aa580bfd85790c7f4b566f6adb87ba706c58935747b95056b87ca33087d',
+            ],
+            [
+                [{ abc: 'def' }],
+                'key',
+                'bf358fbab3ee5dcb98521e68a8e2dd4c14fa907d3d524b34958a8ac00f87be421a9ea59a17ea77889ec510800ea18b341598cbb75397d8e74313ef6245122f9b',
+            ],
+            [
+                [{ zyx: '123', abc: 'def' }],
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                [null],
+                'key',
+                '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
+            ],
+            [
+                [undefined],
+                'key',
+                '84fa5aa0279bbc473267d05a53ea03310a987cecc4c1535ff29b6d76b8f1444a728df3aadb89d4a9a6709e1998f373566e8f824a8ca93b1821f0b69bc2a2f65e',
+            ],
+        ];
+
+        it.each(cases)('should hash %s', (given, key, expected) => {
+            expect(library.api.crypto.hmacSha512(key, ...given)).toBe(expected);
+        });
+
+        const objectCases = [
+            [
+                { zyx: '123', abc: 'def' },
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                { abc: 'def', zyx: '123' },
+                'key',
+                '41db5a3c3855fbf4dd4b0b4883323c46bbef513edbb17aa8ea2bc2420c4e12c78e3f3c944dc86ec74e152bd3dfd4f358e704467bef4810d0aac43f5fcbb30ef2',
+            ],
+            [
+                { '123': 'hello', '456': 'world' },
+                'key',
+                '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
+            ],
+            [
+                { '456': 'world', '123': 'hello' },
+                'key',
+                '3305ed6725612d54962de298fbdc7d60caa1c1638e424a147062ea42fa35ce19fc2dcfd5eecb16787068c0b05edec6847b3953161d2f8464803ba5fe13a94ad6',
+            ],
+            [
+                { '🙂': 'hello', '✌': 'world' },
+                'key',
+                '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
+            ],
+            [
+                { '✌': 'world', '🙂': 'hello' },
+                'key',
+                '319ce31fa5ac3573c8dfc8423b5eb6af0b8ead7d10a571139c61d079c2f60cbe0120471aaf44279c20849b54add37d768b768c320d22cbfae559ed351ff77162',
+            ],
+            [
+                ['world', 'hello'],
+                'key',
+                'd988342d1941c41b2f599dddb1402870379e9bfe11dd32aca6a22f4c5ed1b7b0655f84e81d0d8b37fb3be15705fce0842ba92ddf6bc0f55b81d2693c1f7be024',
+            ],
+            [
+                ['hello', 'world'],
+                'key',
+                'dd68ae93fad71176f9be8f97c2c6bddbadb6a021ffced6c37efa78628d6f7273afa72f431e1f4e4c20c79cfb6f056bb7672fd359fb355be4cdf9e08b8349b533',
+            ],
+        ];
+
+        it.each(objectCases)(
+            'should hash %s consistently',
+            (obj, key, expected) => {
+                expect(library.api.crypto.hmacSha512(key, obj)).toBe(expected);
+            }
+        );
+
+        it('should hash bots consistently', () => {
+            let bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                    ghi: 'jkl',
+                },
+                'tempLocal'
+            );
+            let bot2 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            let bot3 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'shared'
+            );
+            let bot4 = createDummyRuntimeBot(
+                'bot4',
+                {
+                    ghi: 'jkl',
+                    abc: 'def',
+                },
+                'tempLocal'
+            );
+            const hash = library.api.crypto.hmacSha512('key', bot1);
+            expect(hash).toMatchInlineSnapshot(
+                `"e4da2e78fe0f3762c17fd68eb9816fd43a6a11bfb65d9281b273888ce559831b2b664be9c41a58d98f452bab19f9ee70a9d22ddc0f9d8cf9d356067ed3b51e23"`
+            );
+            expect(hash).toBe(library.api.crypto.hmacSha512('key', bot2));
+            expect(hash).not.toBe(library.api.crypto.hmacSha512('key', bot3));
+            expect(hash).not.toBe(library.api.crypto.hmacSha512('key', bot4));
+        });
+
+        it('should fail when using an empty key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha512('', 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha512(null, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+
+            expect(() => {
+                library.api.crypto.hmacSha512(undefined, 'hello');
+            }).toThrow(
+                new Error('The key must not be empty, null, or undefined')
+            );
+        });
+
+        it('should fail when using a non-string key', () => {
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>{}, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>[], 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>false, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>true, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>0, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+
+            expect(() => {
+                library.api.crypto.hmacSha512(<any>1, 'hello');
+            }).toThrow(new Error('The key must be a string'));
+        });
+    });
+
+    describe('crypto.encrypt()', () => {
+        it('should encrypt the given string with the given password', async () => {
+            const result = await library.api.crypto.encrypt('password', 'data');
+            const decrypted = await decryptV1('password', result);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+            expect(final).toEqual('data');
+        });
+    });
+
+    describe('crypto.decrypt()', () => {
+        it('should be able to decrypt the given encrypted data', async () => {
+            const encrypted = await library.api.crypto.encrypt(
+                'password',
+                'data'
+            );
+            const result = await library.api.crypto.decrypt(
+                'password',
+                encrypted
+            );
+            expect(result).toEqual('data');
+        });
+
+        it('should return null if the data was not able to be decrypted', async () => {
+            const result = await library.api.crypto.decrypt(
+                'password',
+                'wrong'
+            );
+            expect(result).toBe(null);
         });
     });
 });

@@ -511,7 +511,9 @@ export class RemoteCausalRepoPartitionImpl
     private _applyAtoms(atoms: Atom<any>[], removedAtoms: string[]) {
         if (this._tree.weave.roots.length === 0 && atoms) {
             console.log(
-                `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
+                `[RemoteCausalRepoPartition] [${this.space}] Got ${
+                    atoms.length
+                } atoms!`
             );
         }
         let { tree, updates } = applyAtoms(

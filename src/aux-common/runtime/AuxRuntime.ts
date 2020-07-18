@@ -64,12 +64,13 @@ import { CleanupZoneSpec } from './CleanupZoneSpec';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import { convertToCopiableValue } from './Utils';
+import { convertToCopiableValue, DeepObjectError } from './Utils';
 import {
     AuxRealtimeEditModeProvider,
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
+import { forOwn } from 'lodash';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -386,7 +387,11 @@ export class AuxRuntime
         arg: any,
         batch: boolean
     ): ActionResult {
-        arg = this._mapBotsToRuntimeBots(arg);
+        try {
+            arg = this._mapBotsToRuntimeBots(arg);
+        } catch (err) {
+            arg = err;
+        }
         const { result, actions, errors } = this._batchScriptResults(() => {
             const results = this._library.api.whisper(botIds, eventName, arg);
 
@@ -705,7 +710,9 @@ export class AuxRuntime
                         this._updateTag(originalBot, tag, true)
                     );
                 } else {
-                    botUpdate.tags[tag] = null;
+                    if (botUpdate.tags) {
+                        botUpdate.tags[tag] = null;
+                    }
                     botUpdate.values[tag] = null;
                 }
             }
@@ -1007,6 +1014,17 @@ export class AuxRuntime
      * @param value The value that should be converted.
      */
     private _mapBotsToRuntimeBots(value: any): any {
+        return this._mapBotsToRuntimeBotsCore(value, 0, new Map());
+    }
+
+    private _mapBotsToRuntimeBotsCore(
+        value: any,
+        depth: number,
+        map: Map<any, any>
+    ) {
+        if (depth > 1000) {
+            throw new DeepObjectError();
+        }
         if (isBot(value)) {
             return this._globalContext.state[value.id] || value;
         } else if (Array.isArray(value) && value.some(isBot)) {
@@ -1015,25 +1033,49 @@ export class AuxRuntime
             );
             (<any>arr)[ORIGINAL_OBJECT] = value;
             return arr;
-        } else if (
-            hasValue(value) &&
-            !Array.isArray(value) &&
-            !(value instanceof ArrayBuffer) &&
-            typeof value === 'object' &&
-            Object.getPrototypeOf(value) === Object.prototype
-        ) {
-            return transform(
-                value,
-                (result, value, key) =>
-                    this._transformBotsToRuntimeBots(result, value, key),
-                { [ORIGINAL_OBJECT]: value }
-            );
-        } else if (
-            hasValue(value) &&
-            Array.isArray(value) &&
-            !(value instanceof ArrayBuffer)
-        ) {
-            return value.map(v => this._mapBotsToRuntimeBots(v));
+        } else {
+            if (map.has(value)) {
+                return map.get(value);
+            }
+            if (
+                hasValue(value) &&
+                !Array.isArray(value) &&
+                !(value instanceof ArrayBuffer) &&
+                typeof value === 'object' &&
+                Object.getPrototypeOf(value) === Object.prototype
+            ) {
+                let result = {
+                    [ORIGINAL_OBJECT]: value,
+                } as any;
+                map.set(value, result);
+                forOwn(value, (value, key, object) => {
+                    result[key] = this._mapBotsToRuntimeBotsCore(
+                        value,
+                        depth + 1,
+                        map
+                    );
+                });
+                return result;
+                // return transform(
+                //     value,
+                //     (result, value, key) =>
+                //         this._transformBotsToRuntimeBots(result, value, key),
+                //     { [ORIGINAL_OBJECT]: value }
+                // );
+            } else if (
+                hasValue(value) &&
+                Array.isArray(value) &&
+                !(value instanceof ArrayBuffer)
+            ) {
+                const result = [] as any[];
+                map.set(value, result);
+                result.push(
+                    ...value.map(v =>
+                        this._mapBotsToRuntimeBotsCore(v, depth + 1, map)
+                    )
+                );
+                return result;
+            }
         }
 
         return value;

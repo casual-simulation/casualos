@@ -44,7 +44,7 @@
         "@casual-simulation/causal-tree-client-socketio": "^1.1.18",
         "@casual-simulation/causal-trees": "^1.1.18",
         "@casual-simulation/crypto": "^1.0.24",
-        "lodash": "^4.17.14",
+        "lodash": "4.17.19",
         "rxjs": "^6.5.2",
         "uuid": "^3.3.2"
     }

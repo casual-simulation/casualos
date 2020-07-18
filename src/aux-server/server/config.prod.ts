@@ -101,6 +101,7 @@ const config: Config = {
     player: playerConfig,
     mongodb: {
         url: process.env.MONGO_URL,
+        useNewUrlParser: !!process.env.MONGO_USE_NEW_URL_PARSER,
     },
     cassandradb: cassandradb,
     redis: redisHost

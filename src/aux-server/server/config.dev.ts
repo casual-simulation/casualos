@@ -15,6 +15,7 @@ const config: Config = {
     player: playerConfig,
     mongodb: {
         url: 'mongodb://127.0.0.1:27017',
+        useNewUrlParser: false,
     },
     cassandradb: null,
     redis: {

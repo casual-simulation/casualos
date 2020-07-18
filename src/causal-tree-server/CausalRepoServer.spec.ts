@@ -291,6 +291,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });
@@ -996,6 +997,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'UNWATCH',
+                    connectionReason: 'unwatch_branch',
                 },
                 {
                     type: 'sitelog',
@@ -1003,6 +1005,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });
@@ -1025,7 +1028,7 @@ describe('CausalRepoServer', () => {
             });
             await waitAsync();
 
-            device.disconnect.next();
+            device.disconnect.next('timeout');
             await waitAsync();
 
             const log = await store.getSitelog('testBranch');
@@ -1037,6 +1040,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'UNWATCH',
+                    connectionReason: 'timeout',
                 },
                 {
                     type: 'sitelog',
@@ -1044,6 +1048,7 @@ describe('CausalRepoServer', () => {
                     site: 'testSite',
                     time: expect.any(Date),
                     sitelogType: 'WATCH',
+                    connectionReason: 'watch_branch',
                 },
             ]);
         });
@@ -3362,6 +3367,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3403,6 +3409,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3412,6 +3419,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: 'testBranch',
                         device: device2Info,
                     },
@@ -3449,6 +3457,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3458,6 +3467,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: 'testBranch',
                         device: device2Info,
                     },
@@ -3512,6 +3522,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3521,6 +3532,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch2',
                         },
@@ -3530,6 +3542,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch2',
                         },
@@ -3567,6 +3580,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: true,
                         branch: {
                             branch: 'testBranch',
                             temporary: true,
@@ -3606,6 +3620,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3647,6 +3662,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3656,6 +3672,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: 'testBranch',
                         device: device2Info,
                     },
@@ -3693,6 +3710,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3702,6 +3720,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: 'testBranch',
                         device: device2Info,
                     },
@@ -3756,6 +3775,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3765,6 +3785,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -3802,6 +3823,7 @@ describe('CausalRepoServer', () => {
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                             temporary: true,

@@ -43,8 +43,6 @@ export class AdminModule2 implements AuxModule2 {
         simulation: Simulation,
         device: DeviceInfo
     ): Promise<void> {
-        console.log('[AdminModule] Device Connected!');
-
         const userId = device.claims[SESSION_ID_CLAIM];
         if (!getUserBot()) {
             return;
@@ -65,8 +63,6 @@ export class AdminModule2 implements AuxModule2 {
         simulation: Simulation,
         device: DeviceInfo
     ): Promise<void> {
-        console.log('[AdminModule] Device Disconnected.');
-
         const userId = device.claims[SESSION_ID_CLAIM];
         let userBot = simulation.helper.botsState[userId];
         if (!userBot) {

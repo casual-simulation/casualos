@@ -320,6 +320,14 @@ export default class PlayerApp extends Vue {
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
+
+        window.addEventListener('beforeunload', e => {
+            if (this.simulations.some(sim => sim.lostConnection)) {
+                e.preventDefault();
+                e.returnValue =
+                    'Are you sure you want to exit? Some changes may be lost.';
+            }
+        });
     }
 
     copy(text: string) {

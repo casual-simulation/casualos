@@ -45,7 +45,9 @@
         "lru-cache": "^5.1.1",
         "rxjs": "^6.5.2",
         "uuid": "^3.3.2",
-        "zone.js": "0.10.3"
+        "zone.js": "0.10.3",
+        "fast-json-stable-stringify": "2.1.0",
+        "hash.js": "1.1.7"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

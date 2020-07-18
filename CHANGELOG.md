@@ -1,5 +1,42 @@
 # CasualOS Changelog
 
+## V1.2.0
+
+### Date: 7/17/2020
+
+### Changes:
+
+-   :rocket: Improvements
+
+    -   Added the `MONGO_USE_NEW_URL_PARSER` environment variable parameter to control whether CasualOS uses the new MongoDB URL Parser. (Defaults to false)
+    -   Added a popup to notify the user that data might be lost if they attempt to close the tab while not connected to the server.
+    -   Added the following cryptographic functions:
+        -   `crypto.sha256(data)`
+            -   Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `data` is the data to calculate the hash of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.sha512(data)`
+            -   Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `data` is the data to calculate the hash of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.hmacSha256(key, data)`
+            -   Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the given data.
+            -   `key` is the password that should be used for the message authentication code.
+            -   `data` is the data to calculate the HMAC of.
+            -   Supports strings, numbers, booleans, objects, arrays, and bots.
+        -   `crypto.encrypt(password, data)`
+            -   Encrypts the given data with the given password and returns the result as a promise.
+            -   `password` is the password to use for encrypting the data.
+            -   `data` is the data that should be encrypted.
+        -   `crypto.decrypt(password, data)`
+            -   Decrypts the given data with the given password and returns the result as a promise.
+            -   Only works if the given data is the output of `crypto.encrypt()`.
+            -   `password` is the password that was used to encrypt the data.
+            -   `data` is the data that should be decrypted.
+
+-   :bug: Bug Fixes
+    -   Fixed a race condition where concurrently updating a tag in a script and triggering a dependency update on that same tag could cause the runtime to crash.
+
 ## V1.1.18
 
 ### Date: 7/10/2020

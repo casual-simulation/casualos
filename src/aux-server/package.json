@@ -87,7 +87,7 @@
         "jsonwebtoken": "8.5.1",
         "jsqr": "1.2.0",
         "jszip": "3.2.2",
-        "lodash": "^4.17.14",
+        "lodash": "4.17.19",
         "mime": "2.4.6",
         "monaco-editor": "0.16.2",
         "mongodb": "3.2.3",

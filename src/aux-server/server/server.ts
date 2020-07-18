@@ -7,7 +7,7 @@ import SocketIO from 'socket.io';
 import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
-import { MongoClient } from 'mongodb';
+import { MongoClient, MongoClientOptions } from 'mongodb';
 import {
     Client as CassandraClient,
     tracker as CassandraTracker,
@@ -290,7 +290,7 @@ export class ClientServer {
                     res.status(resp.status);
                     res.send(retData);
                 } catch (ex) {
-                    console.error(ex);
+                    console.log(`[Server] Proxying to ${url} failed.`);
                     if (ex.response) {
                         res.sendStatus(ex.response.status);
                     } else {
@@ -443,7 +443,12 @@ export class Server {
 
         this._app.use(cors());
 
-        this._mongoClient = await connect(this._config.mongodb.url);
+        this._mongoClient = await connect(
+            this._config.mongodb.url,
+            {
+                useNewUrlParser: this._config.mongodb.useNewUrlParser,
+            } as MongoClientOptions
+        );
         if (this._config.cassandradb) {
             console.log('[Server] Using CassandraDB');
             const requestTracker = new CassandraTracker.RequestLogger({
@@ -884,7 +889,9 @@ export class Server {
 
     start() {
         this._http.listen(this._config.httpPort, () =>
-            console.log(`Server listening on port ${this._config.httpPort}!`)
+            console.log(
+                `[Server] Server listening on port ${this._config.httpPort}!`
+            )
         );
 
         if (this._directoryClient) {

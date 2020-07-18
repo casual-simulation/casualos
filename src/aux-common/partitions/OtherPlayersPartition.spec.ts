@@ -103,6 +103,7 @@ describe('OtherPlayersPartition', () => {
             partition.connect();
 
             deviceConnected.next({
+                broadcast: false,
                 branch: {
                     branch: 'testBranch',
                 },
@@ -172,12 +173,14 @@ describe('OtherPlayersPartition', () => {
                         'info2Session'
                     );
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
                         device: info1,
                     });
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -224,12 +227,14 @@ describe('OtherPlayersPartition', () => {
                         'info2Session'
                     );
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
                         device: info1,
                     });
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -239,6 +244,7 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        broadcast: false,
                         branch: 'testBranch',
                         device: info2,
                     });
@@ -279,12 +285,14 @@ describe('OtherPlayersPartition', () => {
                         'info2Session'
                     );
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
                         device: info1,
                     });
                     deviceConnected.next({
+                        broadcast: false,
                         branch: {
                             branch: 'testBranch',
                         },
@@ -294,6 +302,7 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        broadcast: false,
                         branch: 'testBranch',
                         device: info2,
                     });
@@ -332,6 +341,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -358,6 +368,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -401,6 +412,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -442,6 +454,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -494,6 +507,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -503,6 +517,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceDisconnected.next({
+                    broadcast: false,
                     branch: 'testBranch',
                     device: device1,
                 });
@@ -531,6 +546,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -551,6 +567,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceDisconnected.next({
+                    broadcast: false,
                     branch: 'testBranch',
                     device: device1,
                 });
@@ -567,6 +584,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -597,6 +615,7 @@ describe('OtherPlayersPartition', () => {
                 const userDevice = deviceInfo('username', 'username', 'test');
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -615,6 +634,7 @@ describe('OtherPlayersPartition', () => {
                 const serverDevice = deviceInfo('Server', 'Server', 'server');
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -642,6 +662,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -701,6 +722,7 @@ describe('OtherPlayersPartition', () => {
                 partition.onEvents.subscribe(e => events.push(...e));
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -735,6 +757,7 @@ describe('OtherPlayersPartition', () => {
                 partition.onEvents.subscribe(e => events.push(...e));
 
                 deviceConnected.next({
+                    broadcast: false,
                     branch: {
                         branch: 'testBranch',
                     },
@@ -744,6 +767,7 @@ describe('OtherPlayersPartition', () => {
                 await waitAsync();
 
                 deviceDisconnected.next({
+                    broadcast: false,
                     branch: 'testBranch',
                     device: device1,
                 });
