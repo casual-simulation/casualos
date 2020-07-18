@@ -421,6 +421,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha256,
                 hmacSha512,
                 encrypt,
+                decrypt,
             },
         },
     };
@@ -2031,6 +2032,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
             return realEncrypt(password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Decrypts the given data using the given password and returns the result.
+     * If the data was unable to be decrypted, null will be returned.
+     *
+     * @param password The password to use to decrypt the data.
+     * @param data The data to decrypt.
+     */
+    async function decrypt(password: string, data: string): Promise<string> {
+        if (typeof data === 'string') {
+            const bytes = await realDecrypt(password, data);
+            if (!bytes) {
+                return null;
+            }
+            const decoder = new TextDecoder();
+            return decoder.decode(bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }

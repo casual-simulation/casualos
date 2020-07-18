@@ -2937,6 +2937,15 @@ declare global {
          * @param data The data to encrypt.
          */
         encrypt(password: string, data: string): Promise<string>;
+
+        /**
+         * Decrypts the given data using the given password and returns the result.
+         * If the data was unable to be decrypted, null will be returned.
+         *
+         * @param password The password to use to decrypt the data.
+         * @param data The data to decrypt.
+         */
+        decrypt(password: string, data: string): Promise<string>;
     };
 
     /**

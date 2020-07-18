@@ -5578,4 +5578,26 @@ describe('AuxLibrary', () => {
             expect(final).toEqual('data');
         });
     });
+
+    describe('crypto.decrypt()', () => {
+        it('should be able to decrypt the given encrypted data', async () => {
+            const encrypted = await library.api.crypto.encrypt(
+                'password',
+                'data'
+            );
+            const result = await library.api.crypto.decrypt(
+                'password',
+                encrypted
+            );
+            expect(result).toEqual('data');
+        });
+
+        it('should return null if the data was not able to be decrypted', async () => {
+            const result = await library.api.crypto.decrypt(
+                'password',
+                'wrong'
+            );
+            expect(result).toBe(null);
+        });
+    });
 });
