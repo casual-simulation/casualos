@@ -2952,6 +2952,54 @@ const hash = crypto.hmacSha512("key", {
 player.toast(hash);
 ```
 
+### `crypto.encrypt(password, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+
+Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
+
+_Always use a strong and unique password._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Assuming a strong password, this method will return a string of encrypted data that is _confidential_ (unreadable without the password),
+_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that the password was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same password will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
+
+The **first parameter** is the password that should be used to encrypt the data. Use a strong an unique password for maximum security.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const encrypted = await crypto.encrypt("key", "hello, world");
+player.toast(encrypted);
+```
+
+### `crypto.decrypt(password, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+
+Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
+
+The **first parameter** is the password that should be used to decrypt the data. This should be the same password that was used to encrypt the data.
+
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(password, data)'/> that should be decrypted.
+
+#### Examples
+
+1. Decrypt the given data and toast it.
+```typescript
+const decrypted = await crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+player.toast(decrypted);
+```
+
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`

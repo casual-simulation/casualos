@@ -2917,6 +2917,35 @@ declare global {
          * @param data The data that should be hashed.
          */
         hmacSha512(key: string, ...data: unknown[]): string;
+
+        /**
+         * Encrypts the given data with the given password and returns the result.
+         * 
+         * @description Always choose a strong unique password. Use a password manager such as LastPass or 1Password to
+         * help you create and keep track of them.
+         * 
+         * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the password),
+         * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the password was used to encrypt the data).
+         * 
+         * As a consequence, encrypting the same data with the same password will produce different results.
+         * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+         * 
+         * Encrypts the given data using an authenticated encryption mechanism 
+         * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+         * 
+         * @param password The password to use to secure the data.
+         * @param data The data to encrypt.
+         */
+        encrypt(password: string, data: string): Promise<string>;
+
+        /**
+         * Decrypts the given data using the given password and returns the result.
+         * If the data was unable to be decrypted, null will be returned.
+         *
+         * @param password The password to use to decrypt the data.
+         * @param data The data to decrypt.
+         */
+        decrypt(password: string, data: string): Promise<string>;
     };
 
     /**

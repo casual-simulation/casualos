@@ -100,6 +100,10 @@ import '../polyfill/Array.last.polyfill';
 import { convertToCopiableValue } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
 import stableStringify from 'fast-json-stable-stringify';
+import {
+    encrypt as realEncrypt,
+    decrypt as realDecrypt,
+} from '@casual-simulation/crypto';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -416,6 +420,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 sha512,
                 hmacSha256,
                 hmacSha512,
+                encrypt,
+                decrypt,
             },
         },
     };
@@ -2001,6 +2007,54 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         let sha = hmac(<any>hashSha512, key);
         return _hash(sha, data);
+    }
+
+    /**
+     * Encrypts the given data with the given password and returns the result.
+     *
+     * @description Always choose a strong unique password. Use a password manager such as LastPass or 1Password to
+     * help you create and keep track of them.
+     *
+     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the password),
+     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the password was used to encrypt the data).
+     *
+     * As a consequence, encrypting the same data with the same password will produce different results.
+     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     *
+     * Encrypts the given data using an authenticated encryption mechanism
+     * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     *
+     * @param password The password to use to secure the data.
+     * @param data The data to encrypt.
+     */
+    function encrypt(password: string, data: string): Promise<string> {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realEncrypt(password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Decrypts the given data using the given password and returns the result.
+     * If the data was unable to be decrypted, null will be returned.
+     *
+     * @param password The password to use to decrypt the data.
+     * @param data The data to decrypt.
+     */
+    async function decrypt(password: string, data: string): Promise<string> {
+        if (typeof data === 'string') {
+            const bytes = await realDecrypt(password, data);
+            if (!bytes) {
+                return null;
+            }
+            const decoder = new TextDecoder();
+            return decoder.decode(bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

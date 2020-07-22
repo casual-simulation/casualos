@@ -84,6 +84,7 @@ import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
+import { decryptV1 } from '@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -5564,6 +5565,39 @@ describe('AuxLibrary', () => {
             expect(() => {
                 library.api.crypto.hmacSha512(<any>1, 'hello');
             }).toThrow(new Error('The key must be a string'));
+        });
+    });
+
+    describe('crypto.encrypt()', () => {
+        it('should encrypt the given string with the given password', async () => {
+            const result = await library.api.crypto.encrypt('password', 'data');
+            const decrypted = await decryptV1('password', result);
+
+            const decoder = new TextDecoder();
+            const final = decoder.decode(decrypted);
+            expect(final).toEqual('data');
+        });
+    });
+
+    describe('crypto.decrypt()', () => {
+        it('should be able to decrypt the given encrypted data', async () => {
+            const encrypted = await library.api.crypto.encrypt(
+                'password',
+                'data'
+            );
+            const result = await library.api.crypto.decrypt(
+                'password',
+                encrypted
+            );
+            expect(result).toEqual('data');
+        });
+
+        it('should return null if the data was not able to be decrypted', async () => {
+            const result = await library.api.crypto.decrypt(
+                'password',
+                'wrong'
+            );
+            expect(result).toBe(null);
         });
     });
 });

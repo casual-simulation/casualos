@@ -1,5 +1,6 @@
 import { sha256 } from 'hash.js';
 import stringify from 'fast-json-stable-stringify';
+import scrypt from 'scrypt-async';
 
 /**
  * Calculates the SHA-256 hash of the given object.
