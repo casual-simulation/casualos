@@ -6,7 +6,7 @@ import {
     ProxyBridgePartitionImpl,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer } from 'comlink';
+import { wrap, proxy, Remote, expose, transfer, Endpoint } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
@@ -26,8 +26,8 @@ import {
 } from '@casual-simulation/causal-trees';
 import childProcess, { ChildProcess } from 'child_process';
 import { Server, AddressInfo } from 'net';
-import { MessageChannel } from 'worker_threads';
-import { MessageChannelImpl, MessageEvent } from './MessageChannel';
+import { DenoWorker } from 'deno-vm';
+import { URL } from 'url';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -40,10 +40,7 @@ export class DenoVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
-    private _server: Server;
-    private _proc: ChildProcess;
-    // private _iframe: HTMLIFrameElement;
-    private _channel: MessageChannelImpl;
+    private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
     private _initialUser: AuxUser;
     closed: boolean;
@@ -88,118 +85,14 @@ export class DenoVM implements AuxVM {
             progress: 0.1,
         });
 
-        this._channel = new MessageChannelImpl();
-        const decoder = new TextDecoder();
-        const encoder = new TextEncoder();
-        let resolveConnection: any;
-        let rejectConnection: any;
-        const connectionPromise = new Promise((res, rej) => {
-            resolveConnection = res;
-            rejectConnection = rej;
-        });
-
-        this._server = new Server(conn => {
-            this._channel.port2.addEventListener('message', e => {
-                try {
-                    console.log('[DenoVM] Sending message');
-                    const json = JSON.stringify(e.data);
-                    // Messages to stdout all follow the same format:
-                    // 4 bytes (32-bit number) for the length of the message
-                    // N bytes for the message JSON as UTF-8
-                    // - According to MDN UTF-8 never has more than string.length * 3 bytes (https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encodeInto)
-                    // - Using a 32-bit number means we can't have messages larger than ~4GiB
-                    const byteBuffer = new Uint8Array(4 + json.length * 3);
-                    const view = new DataView(
-                        byteBuffer.buffer,
-                        byteBuffer.byteOffset
-                    );
-
-                    // Encode the JSON as UTF-8
-                    // Skip the first 4 bytes
-                    const result = encoder.encodeInto(
-                        json,
-                        byteBuffer.subarray(4)
-                    );
-                    view.setUint32(0, result.written, true);
-                    console.log(
-                        '[DenoVM] Writing ' + result.written + ' bytes'
-                    );
-                    conn.write(byteBuffer.subarray(0, result.written + 4));
-                } catch (err) {
-                    console.error('[DenoVM]', err);
-                }
-            });
-
-            let messageBuffer = Buffer.alloc(0);
-            let messageSize = -1;
-            conn.on('data', (data: Buffer) => {
-                try {
-                    console.log('[DenoVM] Got data');
-                    messageBuffer = Buffer.concat([messageBuffer, data]);
-                    if (messageSize < 0 && messageBuffer.byteLength >= 4) {
-                        const view = new DataView(
-                            messageBuffer.buffer,
-                            messageBuffer.byteOffset,
-                            4
-                        );
-                        messageSize = view.getUint32(0, true);
-                        messageBuffer = messageBuffer.slice(4);
-                    }
-                    if (
-                        messageSize >= 0 &&
-                        messageBuffer.byteLength >= messageSize
-                    ) {
-                        // TODO: Fix to properly handle different buffer sizes
-                        const view = messageBuffer.subarray(0, messageSize);
-                        const json = decoder.decode(view);
-                        const message = JSON.parse(json);
-                        let buf = messageBuffer;
-                        messageBuffer = Buffer.alloc(
-                            buf.byteLength - view.byteLength
-                        );
-                        buf.copy(messageBuffer);
-                        messageSize = -1;
-                        this._channel.port2.postMessage(message);
-                    }
-                } catch (err) {
-                    console.error('[DenoVM]', err);
-                }
-            });
-
-            const listener = (e: MessageEvent) => {
-                if (e && e.data && e.data.type === 'init') {
-                    this._channel.port1.removeEventListener(
-                        'message',
-                        listener
-                    );
-                    resolveConnection();
-                }
-            };
-            this._channel.port1.addEventListener('message', listener);
-        });
-
-        this._server.listen(() => {
-            const addr = this._server.address() as AddressInfo;
-
-            // TODO: Allow specifying the actual URL
-            this._proc = childProcess.spawn(`deno`, [
-                'run',
-                '--reload',
-                '--allow-net',
-                'http://localhost:3000/deno.js',
-                addr.port.toString(),
-            ]);
-
-            this._proc.stdout.setEncoding('utf8');
-            this._proc.stderr.setEncoding('utf8');
-            this._proc.stdout.on('data', data => {
-                console.log('[DenoVM]', data);
-            });
-
-            this._proc.stderr.on('data', data => {
-                console.error('[DenoVM]', data);
-            });
-        });
+        this._worker = new DenoWorker(
+            new URL('http://localhost:3000/deno.js'),
+            {
+                permissions: {
+                    allowNet: true,
+                },
+            }
+        );
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -207,9 +100,7 @@ export class DenoVM implements AuxVM {
             progress: 0.2,
         });
 
-        await connectionPromise;
-
-        const wrapper = wrap<AuxStatic>(<any>this._channel.port1);
+        const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
         this._proxy = await new wrapper(null, this._initialUser, this._config);
 
         let statusMapper = remapProgressPercent(0.2, 1);
@@ -316,35 +207,11 @@ export class DenoVM implements AuxVM {
             return;
         }
         this.closed = true;
-        this._channel = null;
-        this._proxy = null;
-        this._proc.kill();
-        this._proc = null;
-        this._server.close();
-        this._server = null;
+        this._worker.terminate();
+        this._worker = null;
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
 }
-
-// function processPartitions(config: AuxConfig): AuxConfig {
-//     let transferrables = [] as any[];
-//     for (let key in config.partitions) {
-//         const partition = config.partitions[key];
-//         if (partition.type === 'proxy') {
-//             const bridge = new ProxyBridgePartitionImpl(partition.partition);
-//             const channel = new MessageChannel();
-//             expose(bridge, channel.port1);
-//             transferrables.push(channel.port2);
-//             config.partitions[key] = {
-//                 type: 'proxy_client',
-//                 editStrategy: partition.partition.realtimeStrategy,
-//                 private: partition.partition.private,
-//                 port: channel.port2,
-//             };
-//         }
-//     }
-//     return transfer(config, transferrables);
-// }
