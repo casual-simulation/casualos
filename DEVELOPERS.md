@@ -124,6 +124,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
         -   [uuid](https://github.com/kelektiv/node-uuid) for generating UUIDs.
         -   [base64-js](https://github.com/beatgammit/base64-js) for base64 encoding/decoding of binary data.
         -   [sha.js](https://github.com/crypto-browserify/sha.js/tree/master) for SHA hashing.
+        -   [tweetnacl](https://github.com/dchest/tweetnacl-js) for Encryption/Decryption.
         -   [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) for deterministic JSON serialization. (for hashing)
     -   AUX Server
         -   [vue](https://github.com/vuejs/vue) for JS <--> HTML UI binding.
