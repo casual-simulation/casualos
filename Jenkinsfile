@@ -22,15 +22,12 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                NotifyStarted()
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
                     """).trim()
 
-                    env.gitTag = sh(returnStdout: true, script: """
-                        echo `git describe --abbrev=0 --tags`
-                    """).trim()
+                    env.gitTag = "gpio"
                 }
 
                 InstallNPMPackages()
@@ -39,11 +36,6 @@ pipeline {
         stage('Create Github Release') {
             steps {
                 CreateGithubRelease()
-            }
-        }
-        stage('Test') {
-            steps {
-                Tests()
             }
         }
         stage('Build Packages') {
@@ -57,17 +49,6 @@ pipeline {
                 PublishNPM()
             }
         }
-        stage('Publish Docs') {
-            steps {
-                PublishDocs()
-            }
-        }
-        stage('Build/Publish Docker x64') {
-            steps {
-                BuildDocker()
-                PublishDocker()
-            }
-        }
         stage('Build/Publish Docker ARM') {
             steps {
                 BuildDockerArm32()
@@ -77,14 +58,10 @@ pipeline {
     }
     post {
         success {
-            NotifySuccessful()
-            junit 'junit.xml'
-
-            Cleanup()
+            CleanupDockerArm32()
         }
         failure {
-            NotifyFailed()
-            Cleanup()
+            CleanupDockerArm32()
         }
     }
 }
@@ -101,16 +78,6 @@ def InstallNPMPackages() {
     """
 }
 
-def Tests() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    
-    echo "Running tests..."
-    npm run test:ci
-    """
-}
-
 def BuildWebpack() {
     sh """#!/bin/bash
     set -e
@@ -119,19 +86,6 @@ def BuildWebpack() {
     echo "Building..."
     NODE_ENV=production
     npm run build
-    """
-}
-
-def BuildDocker() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    
-    echo "Building..."
-
-    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
-    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
-    /usr/local/bin/docker build -t "casualsimulation/aux-redirector:${gitTag}" -t "casualsimulation/aux-redirector:latest" ./src/aux-redirector
     """
 }
 
@@ -152,7 +106,7 @@ def BuildDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
-    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 ."
+    sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} ."
     
 }
 
@@ -176,48 +130,6 @@ def PublishNPM() {
     """
 }
 
-def PublishDocs() {
-    sh """#!/bin/bash
-    set -e
-    cd docs
-    
-    echo "Installing NPM Packages..."
-    yarn install --frozen-lockfile
-
-    echo "Upgrading Casual Simulation NPM Packages.."
-    yarn upgrade --scope @casual-simulation --latest
-
-    echo "Building and deploying..."
-    GIT_USER="YETi-DevOps" USE_SSH=true yarn deploy
-    """
-}
-
-def CreateGithubRelease() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    echo \$(pwd)
-    CHANGELOG=\$(./script/most_recent_changelog.sh)
-    node ./src/make-github-release/bin/make-github-release.js release --owner "${AUX_GIT_REPO_OWNER}" --repo ${AUX_GIT_REPO_NAME} --text \"\${CHANGELOG}\" --auth ${GITHUB_RELEASE_TOKEN}
-    """
-}
-
-def PublishDocker() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    
-    echo "Publishing the x64 Docker Image...."
-    /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-    /usr/local/bin/docker push casualsimulation/aux:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux:latest
-    /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-proxy:latest
-    /usr/local/bin/docker push casualsimulation/aux-redirector:${gitTag}
-    /usr/local/bin/docker push casualsimulation/aux-redirector:latest
-    """
-}
-
 def PublishDockerArm32() {
     def remote = [:]
     remote.name = RPI_HOST
@@ -226,22 +138,7 @@ def PublishDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
-}
-
-def Cleanup() {
-    CleanupDocker()
-    CleanupDockerArm32()
-}
-
-def CleanupDocker() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    
-    echo "Removing Unused Docker Images..."
-    /usr/local/bin/docker system prune -a -f
-    """
+    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
 }
 
 def CleanupDockerArm32() {
@@ -253,33 +150,4 @@ def CleanupDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshCommand remote: remote, command: "docker system prune -a -f"
-}
-
-
-// Slack message notification functions
-def NotifyStarted() {
-    try {
-        echo "JFDebug: Sending Start Message"
-        slackSend(channel: '#casualsim-aux', color: '#FFDF17', message: "STARTED: Job '${env.JOB_NAME}'")
-    } catch (e) {
-        echo "JFDebug: oh well"
-    }
-}
-
-def NotifySuccessful() {
-    try {
-        echo "JFDebug: Sending Successful Message"
-        slackSend(channel: '#casualsim-aux', color: '#0FAD03', message: "SUCCESSFUL: Job '${env.JOB_NAME}'")
-    } catch (e) {
-        echo "JFDebug: oh well"
-    }
-}
-
-def NotifyFailed() {
-    try {
-        echo "JFDebug: Sending Message Failed"
-        slackSend(channel: '#casualsim-aux', color: '#CD2900', message: "FAILED: Job '${env.JOB_NAME}'")
-    } catch (e) {
-        echo "JFDebug: oh well"
-    }
 }
