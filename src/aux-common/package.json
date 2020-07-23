@@ -47,7 +47,8 @@
         "uuid": "^3.3.2",
         "zone.js": "0.10.3",
         "fast-json-stable-stringify": "2.1.0",
-        "hash.js": "1.1.7"
+        "hash.js": "1.1.7",
+        "onoff": "6.0.0"
     },
     "devDependencies": {
         "benchmark": "2.1.4",
