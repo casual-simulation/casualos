@@ -24,10 +24,10 @@ import {
     remapProgressPercent,
     DeviceAction,
 } from '@casual-simulation/causal-trees';
-import childProcess, { ChildProcess } from 'child_process';
-import { Server, AddressInfo } from 'net';
-import { DenoWorker } from 'deno-vm';
+import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
+
+polyfillMessageChannel();
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -100,11 +100,14 @@ export class DenoVM implements AuxVM {
             progress: 0.2,
         });
 
+        await waitForInit(this._worker);
+
+        console.log('[DenoVM] Creating VM...');
         const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
         this._proxy = await new wrapper(null, this._initialUser, this._config);
 
         let statusMapper = remapProgressPercent(0.2, 1);
-        return await this._proxy.init(
+        return await this._proxy.initAndWait(
             proxy(events => this._localEvents.next(events)),
             proxy(events => this._deviceEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
@@ -214,4 +217,16 @@ export class DenoVM implements AuxVM {
         this._localEvents.unsubscribe();
         this._localEvents = null;
     }
+}
+
+function waitForInit(worker: DenoWorker): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        const listener = (e: MessageEvent) => {
+            if (e.data.type === 'worker_init') {
+                worker.removeEventListener('message', listener);
+                resolve();
+            }
+        };
+        worker.addEventListener('message', listener);
+    });
 }

@@ -1,6 +1,11 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
+import './PolyfillWebSocket';
 import { expose } from 'comlink';
 import { DenoAuxChannel } from './DenoAuxChannel';
 
 console.log('[DenoAuxChannel.worker] Exposing API...');
 expose(DenoAuxChannel, <any>self);
+
+(<any>self).postMessage({
+    type: 'worker_init',
+});
