@@ -33,6 +33,11 @@ pipeline {
                 InstallNPMPackages()
             }
         }
+        stage('Test') {
+            steps {
+                Tests()
+            }
+        }
         stage('Build Packages') {
             steps {
                 // Webpack Build
@@ -65,6 +70,16 @@ def InstallNPMPackages() {
     echo "Installing NPM Packages..."
     npm ci
     npm run bootstrap
+    """
+}
+
+def Tests() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+    
+    echo "Running tests..."
+    npm run test:ci
     """
 }
 
