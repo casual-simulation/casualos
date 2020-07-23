@@ -33,20 +33,10 @@ pipeline {
                 InstallNPMPackages()
             }
         }
-        stage('Create Github Release') {
-            steps {
-                CreateGithubRelease()
-            }
-        }
         stage('Build Packages') {
             steps {
                 // Webpack Build
                 BuildWebpack()
-            }
-        }
-        stage('Publish Packages') {
-            steps {
-                PublishNPM()
             }
         }
         stage('Build/Publish Docker ARM') {
@@ -108,26 +98,6 @@ def BuildDockerArm32() {
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
     sshCommand remote: remote, command: "cd /home/pi; mkdir -p output; tar xzf ./output.tar.gz -C output; cd output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} ."
     
-}
-
-def PublishNPM() {
-    sh """#!/bin/bash
-    set -e
-    . ~/.bashrc
-    
-    echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-    echo "Publishing NPM Packages..."
-    npx lerna publish from-package --yes
-    
-    echo "Updating package-lock.json..."
-    # Sleep for 5 seconds to hopefully give NPM time to update the package listing
-    sleep 5
-    cd ./src/aux-server
-
-    for i in {1..5}; do 
-        npm install --package-lock-only && break || sleep 5;
-    done
-    """
 }
 
 def PublishDockerArm32() {
