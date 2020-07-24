@@ -59,6 +59,7 @@ import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
 
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
+import '../shared/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
