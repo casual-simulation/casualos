@@ -10,8 +10,8 @@
             <div v-if="!hasError" class="loading-dialog">
                 <div class="loading-text-content">
                     <div class="loading-progress">
-                        <!-- <span>Loading...</span> -->
                         <md-progress-spinner
+                            v-if="showSpinner"
                             md-mode="indeterminate"
                             :md-diameter="20"
                             :md-stroke="2"
