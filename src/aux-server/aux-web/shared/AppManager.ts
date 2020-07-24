@@ -86,6 +86,7 @@ export class AppManager {
     private _user: AuxUser;
     private _config: WebConfig;
     private _deviceConfig: AuxConfig['config']['device'];
+    private _primaryPromise: Promise<BotManager>;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -318,10 +319,15 @@ export class AppManager {
                 this.simulationManager.primary.id === channelId) ||
             this.simulationManager.primaryId === channelId
         ) {
-            return await this.simulationManager.primaryPromise;
+            return await this._primaryPromise;
         }
         this.simulationManager.primaryId = channelId;
+        this._primaryPromise = this._setPrimarySimulation(channelId);
 
+        return await this._primaryPromise;
+    }
+
+    private async _setPrimarySimulation(channelId: string) {
         this._sendProgress('Requesting channel...', 0.1);
 
         console.log('[AppManager] Setting primary simulation:', channelId);
