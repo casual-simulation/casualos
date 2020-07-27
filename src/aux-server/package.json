@@ -73,6 +73,7 @@
         "cors": "2.8.5",
         "d3": "^5.9.2",
         "dexie": "^2.0.4",
+        "deno-vm": "^0.7.0-alpha.0",
         "downloadjs": "^1.4.7",
         "es6-promise": "^4.2.5",
         "estraverse": "^4.2.0",
