@@ -9,7 +9,7 @@ import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
-import { Observable } from 'rxjs';
+import { Observable, SubscriptionLike } from 'rxjs';
 import { StoredAux } from '../StoredAux';
 
 /**
@@ -26,7 +26,7 @@ export interface AuxStatic {
  * Defines an interface for an AUX.
  * That is, a channel that interfaces with the AUX bot format in realtime.
  */
-export interface AuxChannel {
+export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that should be triggered whenever a device event is sent to the AUX.
      */

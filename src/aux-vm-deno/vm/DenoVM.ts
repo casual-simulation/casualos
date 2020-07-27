@@ -29,6 +29,8 @@ import { URL } from 'url';
 
 polyfillMessageChannel();
 
+let workerCount = 0;
+
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
@@ -88,6 +90,8 @@ export class DenoVM implements AuxVM {
         this._worker = new DenoWorker(
             new URL('http://localhost:3000/deno.js'),
             {
+                logStderr: false,
+                logStdout: false,
                 permissions: {
                     allowNet: true,
                 },
@@ -103,6 +107,27 @@ export class DenoVM implements AuxVM {
         await waitForInit(this._worker);
 
         console.log('[DenoVM] Creating VM...');
+        let workerID = workerCount + 1;
+        workerCount += 1;
+        this._worker.stdout.setEncoding('utf-8');
+        this._worker.stdout.on('data', (data: string) => {
+            let lines = data.split('\n');
+            let prefixed = lines
+                .filter(line => line.length > 0)
+                .map(line => `[deno${workerID}] ` + line);
+            let combined = prefixed.join('\n');
+            console.log(combined);
+        });
+        this._worker.stderr.setEncoding('utf-8');
+        this._worker.stderr.on('data', (data: string) => {
+            let lines = data.split('\n');
+            let prefixed = lines
+                .filter(line => line.length > 0)
+                .map(line => `[deno${workerID}] ` + line);
+            let combined = prefixed.join('\n');
+            console.log(combined);
+        });
+
         const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
         this._proxy = await new wrapper(null, this._initialUser, this._config);
 
@@ -210,6 +235,10 @@ export class DenoVM implements AuxVM {
             return;
         }
         this.closed = true;
+        if (this._proxy) {
+            this._proxy.unsubscribe();
+            this._proxy = null;
+        }
         this._worker.terminate();
         this._worker = null;
         this._connectionStateChanged.unsubscribe();
