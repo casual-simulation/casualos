@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V1.2.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added a server sandbox based on [Deno](https://deno.land/).
+    -   Security feature to prevent scripts that are running on the server from harming the underlying system or other stories.
+    -   It additionally prevents scripts from accessing random Node.js modules by using `require("module")`.
+    -   Finally, it prevents a script from denying service to other stories because the sandbox is run inside a separate process.
+
 ## V1.2.0
 
 ### Date: 7/17/2020
