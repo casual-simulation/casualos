@@ -81,6 +81,8 @@ export class DenoVM implements AuxVM {
     }
 
     private async _init(): Promise<void> {
+        const startTime = process.hrtime();
+        console.log('[DenoVM] Creating Worker...');
         this._connectionStateChanged.next({
             type: 'progress',
             message: 'Initializing web worker...',
@@ -105,6 +107,13 @@ export class DenoVM implements AuxVM {
         });
 
         await waitForInit(this._worker);
+
+        const [seconds, nanoseconds] = process.hrtime(startTime);
+        console.log(
+            '[DenoVM] Process startup took %d seconds and %d miliseconds',
+            seconds,
+            nanoseconds / 1000000
+        );
 
         console.log('[DenoVM] Creating VM...');
         let workerID = workerCount + 1;
