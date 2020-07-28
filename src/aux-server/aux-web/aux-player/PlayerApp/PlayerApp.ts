@@ -60,6 +60,7 @@ import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
+import merge from 'lodash/merge';
 
 @Component({
     components: {
@@ -953,4 +954,17 @@ export default class PlayerApp extends Vue {
                 JSON.stringify(this.alertDialogOptions)
         );
     }
+}
+
+if (typeof window !== 'undefined') {
+    merge(window, {
+        aux: {
+            toggleOffline: () => {
+                for (let [id, sim] of appManager.simulationManager
+                    .simulations) {
+                    sim.connection.toggleForceOffline();
+                }
+            },
+        },
+    });
 }
