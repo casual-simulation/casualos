@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed the `lineTo` tag to support arrays of bots and arrays of bot IDs in addition to individual bots and bot IDs.
+
 ## V1.2.0
 
 ### Date: 7/17/2020
