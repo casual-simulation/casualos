@@ -13,6 +13,7 @@ import {
     distinctUntilChanged,
 } from 'rxjs/operators';
 import { AuxUser } from '../AuxUser';
+import isEqual from 'lodash/isEqual';
 
 /**
  * Defines a class that is able to help manage the login state of a simulation.
@@ -83,7 +84,7 @@ export class LoginManager implements SubscriptionLike {
         );
         this._userChanged = this._loginStateChanged.pipe(
             map(state => state.user || null),
-            distinctUntilChanged(),
+            distinctUntilChanged(isEqual),
             shareReplay(1)
         );
 
