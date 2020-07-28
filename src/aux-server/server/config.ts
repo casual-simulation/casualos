@@ -32,7 +32,14 @@ export interface Config {
     dist: string;
     drives: string;
     tls: TLSOptions;
+
+    /**
+     * The type of sandbox that should be used.
+     */
+    sandbox: SandboxType;
 }
+
+export type SandboxType = 'none' | 'deno';
 
 export interface TLSOptions {
     key: string;
