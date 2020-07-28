@@ -9,6 +9,7 @@
 -   Fixed the `lineTo` tag to support arrays of bots and arrays of bot IDs in addition to individual bots and bot IDs.
 -   Fixed an issue where deleting a tempLocal bot that was updated in the same script would crash the runtime.
 -   Fixed an issue with the `player.showInput()` modal where Android devices using the Google GBoard keyboard wouldn't send input correctly.
+-   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
 
 ## V1.2.0
 
