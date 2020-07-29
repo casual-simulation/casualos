@@ -50,6 +50,7 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
+import MdImmediateInput from '../shared/public/MdImmediateInput';
 import VueClipboard from 'vue-clipboard2';
 import VueShortkey from 'vue-shortkey';
 
@@ -59,6 +60,7 @@ import '../shared/public/fonts/NotoSansKR/NotoSansKR.css';
 
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
+import '../shared/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
@@ -94,6 +96,7 @@ Vue.use(VueShortkey, {
     prevent: ['input', 'textarea'],
 });
 Vue.use(VueClipboard);
+Vue.use(MdImmediateInput);
 
 const routes: RouteConfig[] = [
     {

@@ -391,6 +391,20 @@ export function testPartitionImplementation(
                 },
             ]);
         });
+
+        it('should ignore updates to bots that dont exist', async () => {
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        abc: 'def',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([]);
+        });
     });
 
     describe('apply_state', () => {

@@ -40,6 +40,7 @@ import {
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
+    isInContext,
 } from './AuxGlobalContext';
 import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
 import { DependencyManager, BotDependentInfo } from './DependencyManager';
@@ -665,7 +666,8 @@ export class AuxRuntime
             .filter(bot => {
                 return (
                     Object.keys(bot.changes).length > 0 &&
-                    !this._newBots.has(bot.id)
+                    !this._newBots.has(bot.id) &&
+                    isInContext(this._globalContext, bot)
                 );
             })
             .map(bot =>

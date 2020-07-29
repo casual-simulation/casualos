@@ -135,7 +135,11 @@ export class CausalRepoServer {
                             return;
                         }
                         const branch = event.branch;
-                        console.log(`[CausalRepoServer] [${branch}] Watch`);
+                        console.log(
+                            `[CausalRepoServer] [${branch}] [${
+                                device.id
+                            }] Watch`
+                        );
                         const info = infoForBranch(branch);
                         await this._deviceManager.joinChannel(device, info);
                         let currentBranch = this._branches.get(branch);
