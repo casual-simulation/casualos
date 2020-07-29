@@ -1,7 +1,13 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
-import { Bot, isFormula, merge, hasValue } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    isFormula,
+    merge,
+    hasValue,
+    isScript,
+} from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
 import { appManager } from '../../AppManager';
 import { EventBus } from '../../EventBus';
@@ -17,6 +23,7 @@ export default class BotValue extends Vue {
 
     value: string = '';
     isFormula: boolean = false;
+    isScript: boolean = false;
 
     private _focused: boolean = false;
     private _simulation: BrowserSimulation;
@@ -79,11 +86,11 @@ export default class BotValue extends Vue {
     }
 
     private _updateValue(force?: boolean) {
-        this.isFormula = isFormula(this.value);
-
         if (!this._focused || force) {
             this._updateVisibleValue();
         }
+        this.isFormula = isFormula(this.value);
+        this.isScript = isScript(this.value);
     }
 
     private _updateVisibleValue() {

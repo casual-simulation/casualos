@@ -9,6 +9,7 @@
         :class="[
             {
                 formula: isFormula && showFormulaWhenFocused,
+                script: isScript,
             },
             tag,
         ]"
