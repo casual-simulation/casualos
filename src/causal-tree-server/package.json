@@ -3,7 +3,6 @@
     "version": "1.2.0",
     "description": "Abstractions for serving causal trees in Node.js.",
     "keywords": [
-        "socket.io",
         "crdt",
         "realtime",
         "causal-tree"
