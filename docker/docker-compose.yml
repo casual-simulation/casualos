@@ -14,6 +14,7 @@ services:
             MONGO_URL: 'mongodb://mongo:27017'
             REDIS_HOST: 'redis'
             REDIS_PORT: '6379'
+            SANDBOX_TYPE: 'deno'
     mongo:
         image: 'mongo:latest'
         restart: always

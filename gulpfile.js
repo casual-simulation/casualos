@@ -10,6 +10,7 @@ let folders = [
     `${__dirname}/src/aux-vm-client`,
     `${__dirname}/src/aux-vm-node`,
     `${__dirname}/src/aux-vm-browser`,
+    `${__dirname}/src/aux-vm-deno`,
     `${__dirname}/src/causal-trees`,
     `${__dirname}/src/causal-tree-server`,
     `${__dirname}/src/causal-tree-server-socketio`,

@@ -6,6 +6,10 @@
 
 ### :rocket: Improvements
 
+-   Added a server sandbox based on [Deno](https://deno.land/).
+    -   Security feature to prevent scripts that are running on the server from harming the underlying system or other stories.
+    -   It additionally prevents scripts from accessing random Node.js modules by using `require("module")`.
+    -   Finally, it prevents a script from denying service to other stories because the sandbox is run inside a separate process.
 -   Improved the sheet portal to display scripts with a monospace font in the sheet cells.
 
 ### :bug: Bug Fixes

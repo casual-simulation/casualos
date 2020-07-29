@@ -11,6 +11,9 @@ COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
 
 ENV PRODUCTION 1
 
+# Specify no sandbox since Deno doesn't support Arm32
+ENV SANDBOX_TYPE "none"
+
 # HTTP
 EXPOSE 3000
 

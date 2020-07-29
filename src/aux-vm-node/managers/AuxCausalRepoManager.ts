@@ -20,16 +20,30 @@ export class AuxCausalRepoManager {
     private _branches: Map<string, BranchInfo>;
     private _user: AuxUser;
     private _serverDevice: DeviceInfo;
+    private _factory: (
+        user: AuxUser,
+        client: CausalRepoClient,
+        branch: string
+    ) => Simulation;
 
     constructor(
         user: AuxUser,
         client: CausalRepoClient,
-        modules: AuxModule2[]
+        modules: AuxModule2[],
+        simulationFactory?: (
+            user: AuxUser,
+            client: CausalRepoClient,
+            branch: string
+        ) => Simulation
     ) {
         this._client = client;
         this._modules = modules;
         this._branches = new Map();
         this._user = user;
+        this._factory =
+            simulationFactory ||
+            ((user, client, branch) =>
+                nodeSimulationForBranch(user, client, branch));
     }
 
     init() {
@@ -106,11 +120,7 @@ export class AuxCausalRepoManager {
     private async _loadBranch(branch: string, allowLoadingFresh: boolean) {
         let info = this._branches.get(branch);
         if (!info && allowLoadingFresh) {
-            const sim = nodeSimulationForBranch(
-                this._user,
-                this._client,
-                branch
-            );
+            const sim = this._factory(this._user, this._client, branch);
             await sim.init();
             let sub = new Subscription();
             sub.add(sim);

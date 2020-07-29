@@ -58,6 +58,7 @@ import {
     AdminModule2,
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
+import { DenoSimulationImpl } from '@casual-simulation/aux-vm-deno';
 import {
     WebhooksModule2,
     FilesModule2,
@@ -542,6 +543,12 @@ export class Server {
             this._config.cassandradb = null;
         }
 
+        if (this._config.sandbox === 'deno') {
+            console.log('[Server] Using Deno Sandboxing');
+        } else {
+            console.log('[Server] Skipping Sandboxing');
+        }
+
         await this._configureCausalRepoServices();
         this._app.use(bodyParser.json());
 
@@ -658,11 +665,15 @@ export class Server {
         }
 
         const user = getWebhooksUser();
-        const simulation = nodeSimulationForBranch(
-            user,
-            this._webhooksClient,
-            id
-        );
+        const simulation =
+            this._config.sandbox === 'deno'
+                ? new DenoSimulationImpl(
+                      user,
+                      id,
+                      null,
+                      'http://localhost:3000'
+                  )
+                : nodeSimulationForBranch(user, this._webhooksClient, id);
         try {
             await simulation.init();
 
@@ -945,14 +956,28 @@ export class Server {
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
-        const manager = new AuxCausalRepoManager(serverUser, client, [
-            new AdminModule2(),
-            new FilesModule2(this._config.drives),
-            new WebhooksModule2(),
-            checkout.module,
-            backup.module,
-            setupChannel.module,
-        ]);
+        const manager = new AuxCausalRepoManager(
+            serverUser,
+            client,
+            [
+                new AdminModule2(),
+                new FilesModule2(this._config.drives),
+                new WebhooksModule2(),
+                checkout.module,
+                backup.module,
+                setupChannel.module,
+            ],
+            this._config.sandbox === 'deno'
+                ? (user, client, branch) =>
+                      new DenoSimulationImpl(
+                          user,
+                          branch,
+                          null,
+                          'http://localhost:3000'
+                      )
+                : (user, client, branch) =>
+                      nodeSimulationForBranch(user, client, branch)
+        );
         return {
             connections: [
                 bridge.serverConnection,
