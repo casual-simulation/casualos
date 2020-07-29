@@ -501,7 +501,7 @@ describe('OtherPlayersPartition', () => {
                 expect(partition.state).not.toBe(state);
             });
 
-            it('should stop watching the player branch when the devicec disconnects', async () => {
+            it('should stop watching the player branch when the device disconnects', async () => {
                 partition.connect();
 
                 await waitAsync();
