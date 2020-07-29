@@ -85,7 +85,7 @@ if (
     }
 }
 
-const sandboxType = process.env.SANDBOX_TYPE || 'deno';
+const sandboxType = process.env.SANDBOX_TYPE || 'none';
 
 if (sandboxType !== 'deno' && sandboxType !== 'none') {
     throw new Error('The Sandbox Type must be either "deno" or "none".');
