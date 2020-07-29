@@ -91,7 +91,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `UPSTREAM_DIRECTORY`: The URL that the directory client should report to. (If not specified then the directory client will be disabled)
 -   `PROXY_TUNNEL`: The WebSocket URL that the directory client should attempt to setup a reverse tunnel on. See [aux-proxy](../aux-proxy/README.md) for more information. (If not specified then the client won't attempt to setup a tunnel)
 -   `PROXY_IP_RANGE`: The [Express trust proxy](https://expressjs.com/en/guide/behind-proxies.html) value that should be used to tell Express which IP Addresses to trust as Proxies. (Required if using Nginx as a reverse proxy)
--   `SANDBOX_TYPE`: The type of sandboxing that should be used to separate AUX Scripts from the host environment. Possible options are `none` and `deno`. `none` provides no sandboxing and therefore no security guarentees. `deno` uses the [Deno](https://deno.land/) runtime. Defaults to `deno` for x64 and `none` for ARM.
+-   `SANDBOX_TYPE`: The type of sandboxing that should be used to separate AUX Scripts from the host environment. Possible options are `none` and `deno`. `none` provides no sandboxing and therefore no security guarentees. `deno` uses the [Deno](https://deno.land/) runtime. Defaults to `none` while the sandbox is in testing.
 
 [docker]: https://www.docker.com/
 [docker-install]: https://docs.docker.com/install/
