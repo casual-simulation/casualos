@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the sheet portal to display scripts with a monospace font in the sheet cells.
+
 ### :bug: Bug Fixes
 
 -   Fixed the `lineTo` tag to support arrays of bots and arrays of bot IDs in addition to individual bots and bot IDs.
