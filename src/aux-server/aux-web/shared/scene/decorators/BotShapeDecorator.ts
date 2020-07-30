@@ -50,7 +50,7 @@ import {
     disposeMesh,
     createSphere,
     createSprite,
-    disposeScene,
+    disposeGroup,
     disposeObject3D,
     setColor,
     buildSRGBColor,
@@ -406,7 +406,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
         }
-        disposeScene(this.scene);
+        disposeGroup(this.scene);
 
         this._animationMixer = null;
         this.mesh = null;
