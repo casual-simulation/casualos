@@ -7,6 +7,7 @@ Make sure you have all the prerequisite tools installed:
 -   [Node.js](https://nodejs.org/en/download/) 12.16.2 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
     -   Once NVM is installed, you can install the correct version of Node by running `nvm install 12.16.2` in your favorite terminal.
+-   [Deno](https://deno.land/).
 -   Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
     -   Used to make development with MongoDB easy.
     -   Once installed, make sure the `./docker/services/data` directory is shared with docker:
