@@ -12,6 +12,7 @@
     -   Finally, it prevents a script from denying service to other stories because the sandbox is run inside a separate process.
 -   Improved the sheet portal to display scripts with a monospace font in the sheet cells.
 -   Improved the documentation to clarify some things and also mension that bots can be made transparent with the "clear" color.
+-   Improved the multi-line text editor to support syntax highlighting for HTML, CSS, and JSON based on whether the tag ends with `.html`, `.css` or `.json`.
 
 ### :bug: Bug Fixes
 
