@@ -311,7 +311,11 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFormula(script) || isScript(script) ? 'javascript' : undefined;
+    return isFormula(script) || isScript(script)
+        ? 'javascript'
+        : tag.indexOf('.') >= 0
+        ? undefined
+        : 'plaintext';
 }
 
 /**
