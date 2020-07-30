@@ -21,6 +21,7 @@
 -   Fixed an issue with the `player.showInput()` modal where Android devices using the Google GBoard keyboard wouldn't send input correctly.
 -   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
 -   Fixed an issue where the iframe form on iOS 14 Beta 3 would cause the entire scene to disappear.
+-   Fixed an issue where loading an image could fail if `formAddress` tag was changed while the image was downloading.
 
 ## V1.2.0
 
