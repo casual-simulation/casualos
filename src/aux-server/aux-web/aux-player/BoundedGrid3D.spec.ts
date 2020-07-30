@@ -163,7 +163,11 @@ describe('BoundedGrid3D', () => {
 
                 expect(gridTile.tileCoordinate).toEqual(new Vector2(x, y));
                 expect(gridTile.center).toEqual(
-                    new Vector3(x * scale, 0, y * scale)
+                    new Vector3(
+                        normalizeZero(x * scale),
+                        0,
+                        normalizeZero(y * scale)
+                    )
                 );
             });
         });
@@ -199,3 +203,7 @@ describe('BoundedGrid3D', () => {
         });
     });
 });
+
+function normalizeZero(val: number): number {
+    return val === 0 && 1 / val === -Infinity ? 0 : val;
+}
