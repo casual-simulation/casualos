@@ -183,9 +183,11 @@ export abstract class BaseInteractionManager {
         const clientPos = input.getMouseClientPos();
         if (clientPos) {
             const htmlMixerContext = this._game.getHtmlMixerContext();
-            this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
-                clientPos
-            );
+            if (htmlMixerContext) {
+                this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
+                    clientPos
+                );
+            }
         }
 
         const noMouseInput =
