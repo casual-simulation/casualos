@@ -137,7 +137,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [vue-class-component](https://github.com/vuejs/vue-class-component) for class decorators on Vue classes.
             -   [vue-shortkey](https://github.com/iFgR/vue-shortkey) for keyboard shortcuts.
         -   [three](https://threejs.org/) for 3D WebGL rendering.
-            -   [troika-3d-text](https://github.com/protectwise/troika/tree/master/packages/troika-3d-text/src) for 3D text rendering.
+            -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
         -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
         -   [socket.io](https://github.com/socketio/socket.io) for WebSocket based realtime communication.

@@ -101,7 +101,7 @@
         "socket.io-client": "2.1.1",
         "stripe": "7.9.0",
         "three": "0.119.1",
-        "troika-3d-text": "0.24.1",
+        "troika-three-text": "0.30.2",
         "unique-names-generator": "4.2.0",
         "useragent": "^2.3.0",
         "uuid": "^3.3.2",
