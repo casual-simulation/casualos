@@ -20,6 +20,7 @@
 -   Fixed an issue where deleting a tempLocal bot that was updated in the same script would crash the runtime.
 -   Fixed an issue with the `player.showInput()` modal where Android devices using the Google GBoard keyboard wouldn't send input correctly.
 -   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
+-   Fixed an issue where the iframe form on iOS 14 Beta 3 would cause the entire scene to disappear.
 
 ## V1.2.0
 
