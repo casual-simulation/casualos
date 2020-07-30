@@ -491,6 +491,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             return false;
         }
         const mixerContext = this._game.getHtmlMixerContext();
+        if (!mixerContext) {
+            return false;
+        }
         const domElement = HtmlMixerHelpers.createIframeDomElement(
             'about:blank'
         );
