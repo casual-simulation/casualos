@@ -90,7 +90,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     mesh: Mesh;
 
     collider: Object3D;
-    scene: Scene;
+    scene: Group;
 
     get allowModifications() {
         return this._subShape === null && this._shape !== 'iframe';
