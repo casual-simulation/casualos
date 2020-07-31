@@ -1299,6 +1299,70 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
+        it('should not add atoms that violate cardinality', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const a2 = atom(
+                atomId('a', 2, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+
+            const idx = index();
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a1, a2],
+            });
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a1.hash, a2.hash],
+                    },
+                },
+
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1],
+                    },
+                },
+            ]);
+        });
+
         it('should notify all other devices connected to the branch', async () => {
             server.init();
 
@@ -1662,7 +1726,7 @@ describe('CausalRepoServer', () => {
             });
         });
 
-        it('should remove the given atoms from to the given branch', async () => {
+        it('should remove the given atoms from the given branch', async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -1720,6 +1784,73 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+
+        it('should not remove the given atoms if they are part of a cardinality tree', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, removeAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2, a3);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                a3,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            removeAtoms.next({
+                branch: 'testBranch',
+                removedAtoms: [a3.hash],
+            });
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
@@ -2643,6 +2774,95 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it(`should handle resetting atoms with cardinality constraints`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const watchBranch = new Subject<WatchBranchEvent>();
+            device.events.set(CHECKOUT, checkout);
+            device.events.set(WATCH_BRANCH, watchBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(
+                atomId('a', 3, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+
+            const b1 = atom(
+                atomId('b', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const b2 = atom(atomId('b', 2), b1, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(b1, b2);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                b1,
+                b2,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            watchBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(RESTORE, () => {
@@ -2883,6 +3103,101 @@ describe('CausalRepoServer', () => {
                     name: RESTORED,
                     data: {
                         branch: 'testBranch',
+                    },
+                },
+            ]);
+        });
+
+        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const restore = new Subject<RestoreEvent>();
+            const watchBranch = new Subject<WatchBranchEvent>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(RESTORE, restore);
+            device.events.set(WATCH_BRANCH, watchBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(
+                atomId('a', 3, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+
+            const b1 = atom(
+                atomId('b', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const b2 = atom(atomId('b', 2), b1, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(b1, b2);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                b1,
+                b2,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            restore.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            watchBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: RESTORED,
+                    data: {
+                        branch: 'testBranch',
+                    },
+                },
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
