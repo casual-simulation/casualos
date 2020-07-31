@@ -14,6 +14,12 @@ import {
     addedAtoms,
     removedAtoms,
     CausalRepoClient,
+    index,
+    calculateDiff,
+    commit,
+    CommitData,
+    atomMap,
+    calculateCommitDiff,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -493,6 +499,19 @@ export class RemoteCausalRepoPartitionImpl
                             } else {
                                 this._onEvents.next([event.action]);
                             }
+                        } else if (event.type === 'reset') {
+                            console.log(
+                                '[RemoteCausalRepoPartition] Got reset.'
+                            );
+                            // TODO: improve so that the updates are merged but the same effect is achieved.
+                            const currentAtoms = this._tree.weave
+                                .getAtoms()
+                                .map(a => a.hash);
+                            this._applyAtoms([], currentAtoms);
+
+                            // Re-create the tree (and therefore weave) to reset the cardinality rules.
+                            this._tree = auxTree();
+                            this._applyAtoms(event.atoms, []);
                         }
                     },
                     err => this._onError.next(err)

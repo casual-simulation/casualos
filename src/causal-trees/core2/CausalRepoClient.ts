@@ -57,6 +57,8 @@ import {
     COMMIT_CREATED,
     RestoredEvent,
     RESTORED,
+    ResetEvent,
+    RESET,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -190,7 +192,17 @@ export class CausalRepoClient {
                                         action: event.action,
                                     } as ClientEvent)
                             )
+                        ),
+                    this._client.event<ResetEvent>(RESET).pipe(
+                        filter(event => event.branch === name),
+                        map(
+                            event =>
+                                ({
+                                    type: 'reset',
+                                    atoms: event.atoms,
+                                } as ClientResetAtoms)
                         )
+                    )
                 ).pipe(filter(isClientAtomsOrEvents))
             ),
             finalize(() => {
@@ -605,6 +617,11 @@ export interface ClientAtoms {
     removedAtoms?: string[];
 }
 
+export interface ClientResetAtoms {
+    type: 'reset';
+    atoms: Atom<any>[];
+}
+
 export interface ClientAtomsReceived {
     type: 'atoms_received';
 }
@@ -617,8 +634,9 @@ export interface ClientEvent {
 export type ClientWatchBranchEvents =
     | ClientAtoms
     | ClientAtomsReceived
-    | ClientEvent;
-export type ClientAtomsOrEvent = ClientAtoms | ClientEvent;
+    | ClientEvent
+    | ClientResetAtoms;
+export type ClientAtomsOrEvent = ClientAtoms | ClientEvent | ClientResetAtoms;
 
 export function isClientAtoms(
     event: ClientWatchBranchEvents
@@ -635,7 +653,17 @@ export function isClientEvent(
 export function isClientAtomsOrEvents(
     event: ClientWatchBranchEvents
 ): event is ClientAtomsOrEvent {
-    return event.type === 'atoms' || event.type === 'event';
+    return (
+        event.type === 'atoms' ||
+        event.type === 'event' ||
+        event.type === 'reset'
+    );
+}
+
+export function isClientResetAtoms(
+    event: ClientWatchBranchEvents
+): event is ClientResetAtoms {
+    return event.type === 'reset';
 }
 
 function whenConnected(

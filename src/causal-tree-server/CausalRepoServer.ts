@@ -69,6 +69,8 @@ import {
     DisconnectionReason,
     UnwatchReason,
     Weave,
+    ResetEvent,
+    RESET,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -370,7 +372,7 @@ export class CausalRepoServer {
                             repo.weave.insert(atom);
                         }
 
-                        this._sendDiff(current, after, event.branch);
+                        this._sendReset(after, event.branch);
                     },
                     [RESTORE]: async event => {
                         const repo = await this._getOrLoadRepo(
@@ -428,7 +430,7 @@ export class CausalRepoServer {
                         }
 
                         this._sendCommits(event.branch, [newCommit]);
-                        this._sendDiff(current, after, event.branch);
+                        this._sendReset(after, event.branch);
 
                         sendToDevices([device], RESTORED, {
                             branch: event.branch,
@@ -655,16 +657,14 @@ export class CausalRepoServer {
         );
     }
 
-    private _sendDiff(current: CommitData, after: CommitData, branch: string) {
-        const delta = calculateCommitDiff(current, after);
+    private _sendReset(after: CommitData, branch: string) {
         const info = infoForBranch(branch);
         const devices = this._deviceManager.getConnectedDevices(info);
-        let ret: AddAtomsEvent = {
+        let ret: ResetEvent = {
             branch: branch,
-            atoms: [...delta.additions.values()],
-            removedAtoms: [...delta.deletions.keys()],
+            atoms: [...after.atoms.values()],
         };
-        sendToDevices(devices, ADD_ATOMS, ret);
+        sendToDevices(devices, RESET, ret);
     }
 
     private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {

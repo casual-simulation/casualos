@@ -89,6 +89,11 @@ export const RESTORE = 'repo/restore';
 export const RESTORED = 'repo/restored';
 
 /**
+ * The name of the event which notifies that a branch has been reset and that the client should reset its state.
+ */
+export const RESET = 'repo/reset';
+
+/**
  * The name of the event which notifies that a commit was added.
  */
 export const ADD_COMMITS = 'repo/add_commits';
@@ -217,6 +222,21 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+}
+
+/**
+ * Defines an event which indicates that the branch state should be reset.
+ */
+export interface ResetEvent {
+    /**
+     * The branch that the atoms are for.
+     */
+    branch: string;
+
+    /**
+     * The atoms that exist in the new state.
+     */
+    atoms: Atom<any>[];
 }
 
 /**

@@ -22,6 +22,8 @@ import {
     BranchesStatusEvent,
     CommitCreatedEvent,
     COMMIT_CREATED,
+    ResetEvent,
+    RESET,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -92,6 +94,7 @@ describe('RemoteCausalRepoPartition', () => {
         let partition: RemoteCausalRepoPartitionImpl;
         let receiveEvent: Subject<ReceiveDeviceActionEvent>;
         let addAtoms: Subject<AddAtomsEvent>;
+        let reset: Subject<ResetEvent>;
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
@@ -102,8 +105,10 @@ describe('RemoteCausalRepoPartition', () => {
             connection = new MemoryConnectionClient();
             receiveEvent = new Subject<ReceiveDeviceActionEvent>();
             addAtoms = new Subject<AddAtomsEvent>();
+            reset = new Subject<ResetEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
             connection.events.set(ADD_ATOMS, addAtoms);
+            connection.events.set(RESET, reset);
             client = new CausalRepoClient(connection);
             connection.connect();
             sub = new Subscription();
@@ -963,6 +968,54 @@ describe('RemoteCausalRepoPartition', () => {
                     }),
                 ]);
                 expect(removed).toEqual([]);
+                expect(updated).toEqual([]);
+            });
+        });
+
+        describe('remote reset', () => {
+            it('should reset the current state to the given state', async () => {
+                partition.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                const bot2 = atom(atomId('b', 1), null, bot('bot2'));
+                const tag2 = atom(atomId('b', 2), bot2, tag('tag2'));
+                const value2 = atom(atomId('b', 3), tag2, value('def'));
+                const value22 = atom(atomId('b', 4), tag2, value('xyz'));
+
+                const bot3 = atom(atomId('c', 1), null, bot('bot3'));
+                const tag3 = atom(atomId('c', 2), bot3, tag('tag3'));
+                const value3 = atom(atomId('c', 3), tag3, value('ghi'));
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1, bot2, tag2, value2],
+                });
+                await waitAsync();
+
+                reset.next({
+                    branch: 'testBranch',
+                    atoms: [bot2, tag2, value2, value22, bot3, tag3, value3],
+                });
+                await waitAsync();
+
+                expect(added).toEqual([
+                    createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                    createBot('bot2', {
+                        tag2: 'def',
+                    }),
+                    createBot('bot2', {
+                        tag2: 'xyz',
+                    }),
+                    createBot('bot3', {
+                        tag3: 'ghi',
+                    }),
+                ]);
+                expect(removed).toEqual(['bot1', 'bot2']);
                 expect(updated).toEqual([]);
             });
         });

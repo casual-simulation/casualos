@@ -50,6 +50,7 @@ import {
     BRANCHES_STATUS,
     COMMIT_CREATED,
     RESTORED,
+    RESET,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -2704,7 +2705,7 @@ describe('CausalRepoServer', () => {
             expect(branchCommit).toEqual(c1);
         });
 
-        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+        it(`should send a RESET event with the new state`, async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -2765,11 +2766,10 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: ADD_ATOMS,
+                    name: RESET,
                     data: {
                         branch: 'testBranch',
-                        atoms: [a3],
-                        removedAtoms: [a4.hash, a5.hash],
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
@@ -3031,7 +3031,7 @@ describe('CausalRepoServer', () => {
             );
         });
 
-        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+        it(`should send a RESET event with the new state`, async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -3092,11 +3092,10 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: ADD_ATOMS,
+                    name: RESET,
                     data: {
                         branch: 'testBranch',
-                        atoms: [a3],
-                        removedAtoms: [a4.hash, a5.hash],
+                        atoms: [a1, a2, a3],
                     },
                 },
                 {
@@ -3108,7 +3107,7 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
-        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+        it(`should handle resetting atoms with cardinality constraints`, async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
