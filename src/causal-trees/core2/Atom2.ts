@@ -6,6 +6,22 @@ import { getHash } from '@casual-simulation/crypto';
 export type AtomSiteId = string;
 
 /**
+ * Defines an interface that specifies the cardinality of an atom.
+ */
+export interface AtomCardinality {
+    /**
+     * The cardinality group.
+     * Atoms with the same cardinality group affect each other.
+     */
+    group: string;
+
+    /**
+     * The maximum number of atoms allowed to be in the cardinality group.
+     */
+    number: number;
+}
+
+/**
  * Defines an interface for an Atom ID.
  *
  * An Atom ID is a unique reference to a position in a causal group.
@@ -30,6 +46,13 @@ export interface AtomId {
      * Defaults to 0.
      */
     priority?: number;
+
+    /**
+     * The cardinality of the atom.
+     * For root atoms, setting this enables cardinality enforcement on all atoms with the
+     * same cardinality group.
+     */
+    cardinality?: AtomCardinality;
 }
 
 /**
@@ -96,6 +119,11 @@ export type AtomIdAlreadyExists = 'atom_id_already_exists';
 export type HashFailed = 'hash_failed';
 
 /**
+ * Defines that the atom was rejected because the specified cardinality was not a positive non-zero number.
+ */
+export type InvalidCardinality = 'invalid_cardinality';
+
+/**
  * Defines an interface for an atom that was rejected.
  */
 export interface RejectedAtom<T> {
@@ -119,20 +147,20 @@ export interface RejectedAtom<T> {
 export function atomId(
     site: string,
     timestamp: number,
-    priority?: number
+    priority?: number,
+    cardinality?: AtomCardinality
 ): AtomId {
+    let id = {
+        site,
+        timestamp,
+    } as AtomId;
     if (typeof priority === 'number') {
-        return {
-            site,
-            timestamp,
-            priority,
-        };
-    } else {
-        return {
-            site,
-            timestamp,
-        };
+        id.priority = priority;
     }
+    if (typeof cardinality === 'object') {
+        id.cardinality = cardinality;
+    }
+    return id;
 }
 
 /**
@@ -161,13 +189,24 @@ export function atomHash<T>(
     causeHash: string | null,
     value: T
 ): string {
-    return getHash([
-        causeHash || null,
-        id.site,
-        id.timestamp,
-        id.priority,
-        value,
-    ]);
+    if (id.cardinality) {
+        return getHash([
+            causeHash || null,
+            id.site,
+            id.timestamp,
+            id.priority,
+            id.cardinality,
+            value,
+        ]);
+    } else {
+        return getHash([
+            causeHash || null,
+            id.site,
+            id.timestamp,
+            id.priority,
+            value,
+        ]);
+    }
 }
 
 /**
@@ -187,11 +226,14 @@ export function atomMatchesHash(atom: Atom<any>, cause: Atom<any>): boolean {
  * @param id The ID.
  */
 export function atomIdToString(id: AtomId): string {
+    let str = `${id.site}@${id.timestamp}`;
     if (id.priority) {
-        return `${id.site}@${id.timestamp}:${id.priority}`;
-    } else {
-        return `${id.site}@${id.timestamp}`;
+        str += `:${id.priority}`;
     }
+    if (id.cardinality) {
+        str += `-${id.cardinality.group}^${id.cardinality.number}`;
+    }
+    return str;
 }
 
 /**
@@ -210,7 +252,17 @@ export function idEquals(first: AtomId, second: AtomId) {
                 (second.priority === null &&
                     typeof first.priority === 'undefined') ||
                 (typeof second.priority === 'undefined' &&
-                    first.priority === null)))
+                    first.priority === null)) &&
+            (second.cardinality === first.cardinality ||
+                ((second.cardinality === null &&
+                    typeof first.cardinality === 'undefined') ||
+                    (typeof second.cardinality === 'undefined' &&
+                        first.cardinality === null) ||
+                    (!!second.cardinality &&
+                        !!first.cardinality &&
+                        second.cardinality.group === first.cardinality.group &&
+                        second.cardinality.number ===
+                            first.cardinality.number))))
     );
 }
 
