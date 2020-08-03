@@ -113,6 +113,12 @@ export function signV1(
     return `vS1.${fromByteArray(signature)}`;
 }
 
+/**
+ * Validates that the given signature was created by the given keypair for the given data.
+ * @param keypair The keypair.
+ * @param signature The signature to validate.
+ * @param data The data that was signed.
+ */
 export function verify(
     keypair: string,
     signature: string,
@@ -137,6 +143,12 @@ export function verify(
     return false;
 }
 
+/**
+ * Validates a signature that was created by signV1().
+ * @param keypair The keypair that created the signature.
+ * @param signature The signature.
+ * @param data The data.
+ */
 export function verifyV1(
     keypair: string,
     signature: string,
