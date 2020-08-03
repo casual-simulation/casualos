@@ -103,6 +103,9 @@ import stableStringify from 'fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
+    keypair as realKeypair,
+    sign as realSign,
+    verify as realVerify,
 } from '@casual-simulation/crypto';
 
 /**
@@ -422,6 +425,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                keypair,
+                sign,
+                verify,
             },
         },
     };
@@ -2052,6 +2058,67 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             const decoder = new TextDecoder();
             return decoder.decode(bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Creates a new keypair that can be used for signing and verifying data.
+     *
+     * @description
+     * Keypairs are made up of a private key and a public key.
+     * The private key is a special value that can be used to create digital signatures and
+     * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+     *
+     * The private key is called "private" because it is encrypted using the given password
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param password The password that should be used to encrypt the private key.
+     */
+    function keypair(password: string): string {
+        return realKeypair(password);
+    }
+
+    /**
+     * Creates a digital signature for the given data using the private key from the given keypair.
+     *
+     * @description
+     * Digital signatures are used to verifying the authenticity and integrity of data.
+     *
+     * This works by leveraging asymetric encryption but in reverse.
+     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+     * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
+     * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+     *
+     * @param keypair The keypair that should be used to create the signature.
+     * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+     * @param data The data to sign.
+     */
+    function sign(keypair: string, password: string, data: string): string {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realSign(keypair, password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Validates that the given signature for the given data was created by the given keypair.
+     * @param keypair The keypair that should be used to validate the signature.
+     * @param signature The signature that was returned by the sign() operation.
+     * @param data The data that was used in the sign() operation.
+     */
+    function verify(keypair: string, signature: string, data: string): boolean {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realVerify(keypair, signature, bytes);
         } else {
             throw new Error('The data to encrypt must be a string.');
         }

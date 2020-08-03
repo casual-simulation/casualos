@@ -5591,4 +5591,32 @@ describe('AuxLibrary', () => {
             expect(result).toBe(null);
         });
     });
+
+    describe('crypto.keypair()', () => {
+        it('should create and return a keypair', () => {
+            const result = library.api.crypto.keypair('password');
+            expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.sign()', () => {
+        it('should create and return a signature for the given data', () => {
+            const keypair = library.api.crypto.keypair('password');
+            const signature = library.api.crypto.sign(
+                keypair,
+                'password',
+                'abc'
+            );
+            const valid = library.api.crypto.verify(keypair, signature, 'abc');
+            expect(typeof signature).toBe('string');
+            expect(valid).toBe(true);
+        });
+
+        it('should throw if the wrong password was given', () => {
+            const keypair = library.api.crypto.keypair('password');
+            expect(() => {
+                library.api.crypto.sign(keypair, 'wrong', 'abc');
+            }).toThrow();
+        });
+    });
 });
