@@ -2936,7 +2936,7 @@ declare global {
          * @param password The password to use to secure the data.
          * @param data The data to encrypt.
          */
-        encrypt(password: string, data: string): Promise<string>;
+        encrypt(password: string, data: string): string;
 
         /**
          * Decrypts the given data using the given password and returns the result.
@@ -2945,7 +2945,7 @@ declare global {
          * @param password The password to use to decrypt the data.
          * @param data The data to decrypt.
          */
-        decrypt(password: string, data: string): Promise<string>;
+        decrypt(password: string, data: string): string;
     };
 
     /**

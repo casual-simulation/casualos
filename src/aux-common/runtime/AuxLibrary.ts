@@ -2027,7 +2027,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to secure the data.
      * @param data The data to encrypt.
      */
-    function encrypt(password: string, data: string): Promise<string> {
+    function encrypt(password: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
@@ -2044,9 +2044,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to decrypt the data.
      * @param data The data to decrypt.
      */
-    async function decrypt(password: string, data: string): Promise<string> {
+    function decrypt(password: string, data: string): string {
         if (typeof data === 'string') {
-            const bytes = await realDecrypt(password, data);
+            const bytes = realDecrypt(password, data);
             if (!bytes) {
                 return null;
             }

@@ -5569,9 +5569,9 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.encrypt()', () => {
-        it('should encrypt the given string with the given password', async () => {
-            const result = await library.api.crypto.encrypt('password', 'data');
-            const decrypted = await decryptV1('password', result);
+        it('should encrypt the given string with the given password', () => {
+            const result = library.api.crypto.encrypt('password', 'data');
+            const decrypted = decryptV1('password', result);
 
             const decoder = new TextDecoder();
             const final = decoder.decode(decrypted);
@@ -5580,23 +5580,14 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.decrypt()', () => {
-        it('should be able to decrypt the given encrypted data', async () => {
-            const encrypted = await library.api.crypto.encrypt(
-                'password',
-                'data'
-            );
-            const result = await library.api.crypto.decrypt(
-                'password',
-                encrypted
-            );
+        it('should be able to decrypt the given encrypted data', () => {
+            const encrypted = library.api.crypto.encrypt('password', 'data');
+            const result = library.api.crypto.decrypt('password', encrypted);
             expect(result).toEqual('data');
         });
 
-        it('should return null if the data was not able to be decrypted', async () => {
-            const result = await library.api.crypto.decrypt(
-                'password',
-                'wrong'
-            );
+        it('should return null if the data was not able to be decrypted', () => {
+            const result = library.api.crypto.decrypt('password', 'wrong');
             expect(result).toBe(null);
         });
     });
