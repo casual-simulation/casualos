@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
+
 ### :rocket: Improvements
 
 -   Added a server sandbox based on [Deno](https://deno.land/).
