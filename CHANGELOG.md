@@ -22,6 +22,7 @@
 -   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
 -   Fixed an issue where the iframe form on iOS 14 Beta 3 would cause the entire scene to disappear.
 -   Fixed an issue where loading an image could fail if `formAddress` tag was changed while the image was downloading.
+-   Fixed an issue where submitting HTML forms from inside an iframe form was not allowed.
 
 ## V1.2.0
 
