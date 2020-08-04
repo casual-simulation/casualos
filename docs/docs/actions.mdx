@@ -2372,6 +2372,61 @@ await server.setupStory("test", {
 });
 ```
 
+### `server.configureGpio(pin, mode)`
+
+
+This configures a GPIO pin on the physical server so that you can access them as inputs or outputs.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the BCM Pin on the physical server.
+
+The **second parameter** is 'in' or 'out' to set the pin as an input pin or an output pin.
+
+#### Examples:
+
+1. Configure Pin 17 as output.
+```typescript
+configureGpio(17, "out")
+```
+
+### `server.setGpio(pin, value)`
+
+
+This sets a GPIO pin on the physical server to either HIGH (0) or LOW (1).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been set.
+
+The **first parameter** is the BCM Pin on the physical server.
+
+The **second parameter** is '0' or '1' to set the pin as an HIGH or LOW.
+
+#### Examples:
+
+1. Set Pin 17 to HIGH or 0.
+```typescript
+setGpio(17, 0)
+```
+
+### `server.getGpio(pin)`
+
+
+This reads a given GPIO Pin and returns the state/value of the pin.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the BCM Pin on the physical server.
+
+#### Examples:
+
+1. Read Pin 17.
+```typescript
+getGpio(17)
+```
+
 ### `server.browseHistory()`
 
 

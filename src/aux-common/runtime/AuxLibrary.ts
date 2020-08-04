@@ -85,6 +85,9 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    configureGpioPin,
+    setGpioPin,
+    getGpioPin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -373,6 +376,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupStory,
+                configureGpio,
+                getGpio,
+                setGpio,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1408,6 +1414,53 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcSetupStory(story, context.unwrapBot(botOrMod)),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to configure a GPIO pin as input or output.
+     * @param pin The physical BCM pin number.
+     * @param mode The mode of the BCM pin.
+     */
+    function configureGpio(pin: number, mode: 'in' | 'out') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            configureGpioPin(pin, mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to set a GPIO pin as HIGH or LOW.
+     * @param pin The physical BCM pin number.
+     * @param value The mode of the BCM pin.
+     */
+    function setGpio(pin: number, value: 0 | 1) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            setGpioPin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to get the value of a GPIO pin.
+     * @param pin The physical BCM pin number.
+     */
+    function getGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getGpioPin(pin),
             undefined,
             undefined,
             task.taskId

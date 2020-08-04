@@ -2675,6 +2675,26 @@ declare global {
         setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
+         * Sends an event to the server to configure a GPIO pin as input or output.
+         * @param pin The physical BCM pin number.
+         * @param mode The mode of the BCM pin.
+         */
+        configureGpio(pin: number, mode: "in" | "out"): Promise<void>;
+
+        /**
+         * Sends an event to the server to set a GPIO pin as HIGH or LOW.
+         * @param pin The physical BCM pin number.
+         * @param value The mode of the BCM pin.
+         */
+        setGpio(pin: number, value: 0 | 1): Promise<void>;
+
+        /**
+         * Sends an event to the server to get the value of a GPIO pin.
+         * @param pin The physical BCM pin number.
+         */
+        getGpio(pin: number): Promise<void>;
+
+        /**
          * Executes the given shell script on the server.
          * @param script The shell script  that should be executed.
          */

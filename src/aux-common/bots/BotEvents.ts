@@ -11,6 +11,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
+import { OuterSubscriber } from 'rxjs/internal/OuterSubscriber';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -35,7 +36,6 @@ export type BotActions =
     | RemoveBotAction
     | UpdateBotAction
     | ApplyStateAction;
-``;
 
 /**
  * Defines a set of possible local event types.
@@ -103,6 +103,9 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | SetGpioPinAction
+    | GetGpioPinAction
+    | ConfigureGpioPinAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -1044,6 +1047,40 @@ export interface SetupChannelAction extends AsyncAction {
     botOrMod?: Bot | BotTags;
 }
 
+export interface SetGpioPinAction extends AsyncAction {
+    type: 'set_gpio_pin';
+
+    /**
+     * The BCM Pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin. Either High (0) or Low (1)
+     */
+    value: 0 | 1;
+}
+export interface GetGpioPinAction extends AsyncAction {
+    type: 'get_gpio_pin';
+
+    /**
+     * The BCM Pin that you want to use.
+     */
+    pin: number;
+}
+export interface ConfigureGpioPinAction extends AsyncAction {
+    type: 'configure_gpio_pin';
+
+    /**
+     * The BCM Pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want toconfigure your BCM pin as.
+     */
+    mode: 'in' | 'out';
+}
 /**
  * Defines an event that sets some text on the user's clipboard.
  */
@@ -2012,6 +2049,66 @@ export function setupStory(
         type: 'setup_story',
         channel,
         botOrMod,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param mode The mode of the BCM pin.
+ * @param taskId The ID of the async task.
+ */
+export function configureGpioPin(
+    pin: number,
+    mode: 'in' | 'out',
+    taskId?: string | number,
+    playerId?: string
+): ConfigureGpioPinAction {
+    return {
+        type: 'configure_gpio_pin',
+        pin,
+        mode,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function setGpioPin(
+    pin: number,
+    value: 0 | 1,
+    taskId?: string | number,
+    playerId?: string
+): SetGpioPinAction {
+    return {
+        type: 'set_gpio_pin',
+        pin,
+        value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function getGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): GetGpioPinAction {
+    return {
+        type: 'get_gpio_pin',
+        pin,
         taskId,
         playerId,
     };
