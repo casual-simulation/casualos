@@ -390,6 +390,47 @@ export function validateSignedValue(
     }
 }
 
+/**
+ * Creates a revocation for the given certificate or signature atom.
+ * @param signingCert The certificate that is signing the value.
+ * @param signingPassword The password used to decrypt the private key.
+ * @param atom The value to revoke.
+ */
+export function signedRevocation(
+    signingCert: Atom<CertificateOp>,
+    signingPassword: string,
+    atom: Atom<CertificateOp> | Atom<SignatureOp>
+): RevocationOp {
+    const bytes = revocationSigningBytes(signingCert, atom);
+    const signature = sign(signingCert.value.keypair, signingPassword, bytes);
+    if (!signature) {
+        throw new Error('Unable to sign the value.');
+    }
+    return revocation(signingCert.id, signingCert.hash, signature);
+}
+
+/**
+ * Validates that the given revocation was signed with the given certificate.
+ * @param signingCert
+ * @param revocation
+ */
+export function validateRevocation(
+    signingCert: Atom<CertificateOp>,
+    revocation: Atom<RevocationOp>,
+    atom: Atom<CertificateOp> | Atom<SignatureOp>
+): boolean {
+    try {
+        const bytes = revocationSigningBytes(signingCert, atom);
+        return verify(
+            signingCert.value.keypair,
+            revocation.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
 function certSigningBytes(
     signingCert: Atom<CertificateOp> | null,
     certKeypair: string
@@ -404,6 +445,13 @@ function certSigningBytes(
 function valueSigningBytes(
     signingCert: Atom<CertificateOp>,
     value: Atom<ValueOp>
+): Uint8Array {
+    return signingBytes([signingCert.hash, value.hash]);
+}
+
+function revocationSigningBytes(
+    signingCert: Atom<CertificateOp>,
+    value: Atom<CertificateOp> | Atom<SignatureOp>
 ): Uint8Array {
     return signingBytes([signingCert.hash, value.hash]);
 }
