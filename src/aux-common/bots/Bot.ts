@@ -63,6 +63,7 @@ export interface UpdatedBot {
  * - "admin" means that the bot is shared across all stories.
  * - "player" means that the bot is temporary and shared with other players.
  * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
+ * - "certified" means that the bot is a certificate.
  */
 export type BotSpace =
     | 'shared'
@@ -72,7 +73,8 @@ export type BotSpace =
     | 'error'
     | 'admin'
     | 'player'
-    | 'otherPlayers';
+    | 'otherPlayers'
+    | 'certified';
 
 /**
  * The possible portal types.

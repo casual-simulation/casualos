@@ -1,14 +1,25 @@
-import { AuxOp, bot, tag, value, del, AuxOpType } from './AuxOpTypes';
+import {
+    AuxOp,
+    bot,
+    tag,
+    value,
+    del,
+    AuxOpType,
+    CertificateOp,
+    signedCert,
+} from './AuxOpTypes';
 import {
     Atom,
     atom,
     atomId,
     Weave,
 } from '@casual-simulation/causal-trees/core2';
-import reduce from './AuxWeaveReducer';
+import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
 import { apply } from './AuxStateHelpers';
 import { isBot } from '../bots';
+import uuidv5 from 'uuid/v5';
+import { merge } from 'lodash';
 
 describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
@@ -458,6 +469,131 @@ describe('AuxWeaveReducer', () => {
                 state = add(bot1, tag1, delete1, value1);
 
                 expect(state).toEqual({});
+            });
+        });
+
+        describe('certificate', () => {
+            const keypair1 =
+                'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
+            const keypair2 =
+                'vK1.H6/kRocyRcAAjQzjjSLi5/toJiis9Sj1NYuoYIYPQdE=.djEubjVrRzV1SmIycjFaUmszTHNxaDNhZzIrYUk1WHExYkQuM3BwU2lCa1hiMnE5Slltai96UllMcUZWb1VBdDN4alkuM0Z6K29OcFZVaXRPN01xeDA3S1M2Z3YxbnFHc2NnV0JtUDg4ektmTUxndXlsOFVlR3I5MGM2bTI0WkdSRGhOUG1tMWxXRTJMaTkwbHdhY2h3MGszcmtXS25zOCtxa01Xd2ZSL1psMSsvRUE9';
+            const keypair3 =
+                'vK1.Tn40JxRUdKePQWdeQ9H+wTIyDRqvgC07W4xXP9ppKQc=.djEuUUErTFcxaEpSaitvVDhJV0VvUnFiYUlkTTk5MVdQMGMucUxveUNKdjZ5aDRjY0kwd3NiK1FRUStTbFZUL1Y5ZngudkdNS2l2WXhHMXNvVGVvdWpvQm0vbUhkeXVrR0ppK0F6MzlQNXM0eXJQNW83NDQrQ1hXMGVid2tPSjNwaTBwd1dYVjJTYlhDb2hqczBJWndaRTU1RWxQZzI3akVvUVRBZGh6QzJpajVnTHM9';
+
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+            });
+
+            it('should add a bot for the self signed certificate', () => {
+                state = add(c1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+            });
+
+            it('should add a bot for the certificates', () => {
+                state = add(c1, c2, c3);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                    [uuidv5(c3.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c3.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair3,
+                            signature: c3.value.signature,
+                            signingCertificate: uuidv5(
+                                c2.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c3,
+                        },
+                    },
+                });
+            });
+
+            it('should not add a bot for the certificate if the signature is invalid', () => {
+                const c3Copy = merge({}, c3, {
+                    value: {
+                        signature: 'wrong',
+                    },
+                });
+                state = add(c1, c2, c3Copy);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                });
             });
         });
 

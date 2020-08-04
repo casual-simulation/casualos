@@ -18,12 +18,18 @@ import {
     ValueOp,
     DeleteOp,
     TagOp,
+    CertificateOp,
+    validateCertSignature,
 } from './AuxOpTypes';
+import uuidv5 from 'uuid/v5';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
 import { merge } from '../utils';
 import { hasValue, createBot } from '../bots/BotCalculations';
 import lodashMerge from 'lodash/merge';
 import { findBotNode, findBotNodes } from './AuxWeaveHelpers';
+
+export const CERT_ID_NAMESPACE = 'a1307e2b-8d80-4945-9792-2cd483c45e24';
+export const CERTIFIED_SPACE = 'certified';
 
 /**
  * Calculates the state update needed for the given weave result from the given weave.
@@ -63,6 +69,13 @@ function atomAddedReducer(
         return valueAtomAddedReducer(weave, atom, value, state);
     } else if (value.type === AuxOpType.delete) {
         return deleteAtomAddedReducer(weave, atom, value, state);
+    } else if (value.type === AuxOpType.certificate) {
+        return certificateAtomAddedReducer(
+            weave,
+            <Atom<CertificateOp>>atom,
+            value,
+            state
+        );
     }
 
     return {};
@@ -166,6 +179,63 @@ function deleteAtomAddedReducer(
         return deleteBotReducer(weave, <WeaveNode<BotOp>>parent, atom, state);
     }
 
+    return state;
+}
+
+function certificateAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<CertificateOp>,
+    value: CertificateOp,
+    state: PartialBotsState
+): PartialBotsState {
+    const botId = certificateId(atom);
+    let signerId: string;
+    if (atom.cause) {
+        // Walk through the chain of certificates and validate them
+        const chain = weave.referenceChain(atom.cause);
+        let i = 0;
+        let signee = atom;
+        while (i < chain.length) {
+            let signer = chain[i];
+            if (signer.atom.value.type !== AuxOpType.certificate) {
+                return state;
+            }
+            const signerCert = <Atom<CertificateOp>>signer.atom;
+            if (!validateCertSignature(signerCert, signee)) {
+                return state;
+            }
+
+            signee = signerCert;
+            i++;
+        }
+
+        // Assert that the last certificate is self signed
+        if (!!signee.cause) {
+            return state;
+        }
+        if (!validateCertSignature(null, signee)) {
+            return state;
+        }
+        signerId = certificateId(chain[0].atom);
+    } else {
+        if (!validateCertSignature(null, atom)) {
+            return state;
+        }
+        signerId = botId;
+    }
+
+    lodashMerge(state, {
+        [botId]: createBot(
+            botId,
+            {
+                keypair: value.keypair,
+                signature: value.signature,
+                signingCertificate: signerId,
+                atom: atom,
+            },
+            CERTIFIED_SPACE
+        ),
+    });
     return state;
 }
 
@@ -361,4 +431,8 @@ function valueRemovedAtomReducer(
         },
     });
     return state;
+}
+
+function certificateId(atom: Atom<any>) {
+    return uuidv5(atom.hash, CERT_ID_NAMESPACE);
 }
