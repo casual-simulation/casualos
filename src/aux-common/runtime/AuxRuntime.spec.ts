@@ -3141,6 +3141,34 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
+            it('should not update a bot that was deleted', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        update: '@tags.value = 123; destroy(this);',
+                    }),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should not update a bot that was updated after being deleted', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        update: '@destroy(this); tags.value = 123;',
+                    }),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
             // TODO: Improve the concurrency handling of the runtime
             //       to fix this issue
             it.skip('should not overwrite the current state when a race condition occurs', async () => {

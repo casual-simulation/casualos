@@ -50,7 +50,7 @@ export class SocketIOConnectionClient implements ConnectionClient {
             h => this._socket.on('connect', h),
             h => this._socket.off('connect', h)
         ).pipe(
-            tap(() => console.log('[SocketManager] Connected.')),
+            tap(() => console.log('[SocketIOConnectionClient] Connected.')),
             map(() => true)
         );
         const disconnected = onDisconnect(this._socket).pipe(

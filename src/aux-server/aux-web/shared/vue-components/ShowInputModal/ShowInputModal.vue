@@ -17,13 +17,13 @@
                 <md-dialog-content class="input-dialog-content">
                     <md-field>
                         <label :style="{ color: labelColor }">{{ currentPlaceholder }}</label>
-                        <md-input
+                        <md-immediate-input
                             v-model="currentValue"
                             @keyup.enter="saveInputDialog()"
                             ref="inputModalField"
                             style="-webkit-text-fill-color: inherit;"
                             :style="{ color: labelColor }"
-                        ></md-input>
+                        ></md-immediate-input>
                     </md-field>
                     <div class="input-dialog-color-tools" v-if="currentType === 'color'">
                         <color-picker-swatches

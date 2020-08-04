@@ -85,6 +85,12 @@ if (
     }
 }
 
+const sandboxType = process.env.SANDBOX_TYPE || 'none';
+
+if (sandboxType !== 'deno' && sandboxType !== 'none') {
+    throw new Error('The Sandbox Type must be either "deno" or "none".');
+}
+
 // Defaults to a week.
 const botsTimeToLive =
     parseInt(process.env.BOTS_TIME_TO_LIVE) || 60 * 60 * 24 * 7;
@@ -151,6 +157,7 @@ const config: Config = {
         : null,
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     drives: path.resolve(__dirname, '..', '..', 'drives'),
+    sandbox: sandboxType,
 };
 
 export default config;

@@ -9,6 +9,9 @@ import {
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
+import HtmlWorker from 'worker-loader!monaco-editor/esm/vs/language/html/html.worker';
+import CssWorker from 'worker-loader!monaco-editor/esm/vs/language/css/css.worker';
+import JsonWorker from 'worker-loader!monaco-editor/esm/vs/language/json/json.worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
@@ -26,6 +29,12 @@ export function setup() {
         getWorker: function(moduleId: string, label: string) {
             if (label === 'typescript' || label === 'javascript') {
                 return new TypescriptWorker();
+            } else if (label === 'html') {
+                return new HtmlWorker();
+            } else if (label === 'css') {
+                return new CssWorker();
+            } else if (label === 'json') {
+                return new JsonWorker();
             }
             return new EditorWorker();
         },
@@ -302,7 +311,11 @@ export function loadModel(
 }
 
 function tagScriptLanguage(tag: string, script: any): string {
-    return isFormula(script) || isScript(script) ? 'javascript' : 'plaintext';
+    return isFormula(script) || isScript(script)
+        ? 'javascript'
+        : tag.indexOf('.') >= 0
+        ? undefined
+        : 'plaintext';
 }
 
 /**
@@ -427,7 +440,7 @@ function updateLanguage(
     }
     const currentLanguage = model.getModeId();
     const nextLanguage = tagScriptLanguage(tag, value);
-    if (nextLanguage !== currentLanguage) {
+    if (typeof nextLanguage === 'string' && nextLanguage !== currentLanguage) {
         monaco.editor.setModelLanguage(model, nextLanguage);
     }
     updateDecorators(model, info, value);
@@ -505,7 +518,8 @@ function getModelUri(bot: Bot, tag: string) {
 }
 
 function getModelUriFromId(id: string, tag: string) {
-    return monaco.Uri.parse(encodeURI(`file:///${id}/${tag}.js`));
+    let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
+    return monaco.Uri.parse(encodeURI(`file:///${id}/${tagWithExtension}`));
 }
 
 export function getScript(bot: Bot, tag: string) {

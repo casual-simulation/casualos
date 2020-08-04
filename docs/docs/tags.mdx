@@ -99,6 +99,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
 </Badges>
 
 The ID of the bot that created this bot.
+The creator bot must be in the same space as this bot.
 
 ## Behavior Tags
 
@@ -263,6 +264,9 @@ The color of the bot.
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
+  <PossibleValueCode value='clear'>
+    The bot's body will be invisible.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `strokeColor`
@@ -272,7 +276,7 @@ The color of the bot's outline.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='white'>
+  <PossibleValueCode value='clear'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -284,7 +288,7 @@ The width of the bot's outline. Only works in Chrome.
 
 ### `lineTo`
 
-The Bot IDs that this bot should draw lines to.
+The bot, bot ID, list of bots, or list of bot IDs that this bot should draw lines to.
 
 ### `lineStyle`
 

@@ -161,5 +161,7 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
         }
         this._texture = null;
         this._updateTargetMeshTexture();
+
+        console.error('[TextureDecorator] Error loading texture:', error);
     }
 }

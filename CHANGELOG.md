@@ -1,5 +1,29 @@
 # CasualOS Changelog
 
+## V1.2.1
+
+#### Date: 8/4/2020
+
+### :rocket: Improvements
+
+-   Added a server sandbox based on [Deno](https://deno.land/).
+    -   Security feature to prevent scripts that are running on the server from harming the underlying system or other stories.
+    -   It additionally prevents scripts from accessing random Node.js modules by using `require("module")`.
+    -   Finally, it prevents a script from denying service to other stories because the sandbox is run inside a separate process.
+-   Improved the sheet portal to display scripts with a monospace font in the sheet cells.
+-   Improved the documentation to clarify some things and also mension that bots can be made transparent with the "clear" color.
+-   Improved the multi-line text editor to support syntax highlighting for HTML, CSS, and JSON based on whether the tag ends with `.html`, `.css` or `.json`.
+
+### :bug: Bug Fixes
+
+-   Fixed the `lineTo` tag to support arrays of bots and arrays of bot IDs in addition to individual bots and bot IDs.
+-   Fixed an issue where deleting a tempLocal bot that was updated in the same script would crash the runtime.
+-   Fixed an issue with the `player.showInput()` modal where Android devices using the Google GBoard keyboard wouldn't send input correctly.
+-   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
+-   Fixed an issue where the iframe form on iOS 14 Beta 3 would cause the entire scene to disappear.
+-   Fixed an issue where loading an image could fail if `formAddress` tag was changed while the image was downloading.
+-   Fixed an issue where submitting HTML forms from inside an iframe form was not allowed.
+
 ## V1.2.0
 
 ### Date: 7/17/2020

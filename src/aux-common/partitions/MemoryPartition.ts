@@ -155,7 +155,7 @@ class MemoryPartitionImpl implements MemoryPartition {
                     removed.push(event.id);
                 }
             } else if (event.type === 'update_bot') {
-                if (!event.update.tags) {
+                if (!event.update.tags || !this.state[event.id]) {
                     continue;
                 }
 

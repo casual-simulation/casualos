@@ -73,7 +73,6 @@ export class AuxTextureLoader {
 
     cancel(): void {
         if (!this.image) return;
-        this.image.src = '';
         this.image = null;
     }
 

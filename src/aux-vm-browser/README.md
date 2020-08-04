@@ -6,8 +6,43 @@ A set of utilities required to run an AUX in a web browser.
 
 ## Installation
 
+1. Install the NPM package
+
 ```
 npm install @casual-simulation/aux-vm-browser
+```
+
+2. Add the `IframeEntry.ts` file to your Webpack config:
+
+```
+entry: {
+    vm: path.resolve(
+        __dirname,
+        'node_modules',
+        '@casual-simulation',
+        'aux-vm-browser',
+        'html',
+        'IframeEntry.ts'
+    ),
+},
+```
+
+3. Add the `iframe_host.html` file to your webpack config via the `HtmlWebpackPlugin`:
+
+```
+new HtmlWebpackPlugin({
+    chunks: ['vm'],
+    template: path.resolve(
+        __dirname,
+        'node_modules',
+        '@casual-simulation',
+        'aux-vm-browser',
+        'html',
+        'iframe_host.html'
+    ),
+    title: 'AUX VM',
+    filename: 'aux-vm-iframe.html',
+}),
 ```
 
 ## Usage

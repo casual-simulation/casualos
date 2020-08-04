@@ -7,6 +7,8 @@ import {
     isArray,
     parseArray,
     hasValue,
+    isBot,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
@@ -59,26 +61,21 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let lineTo = this.bot3D.bot.tags['auxLineTo'];
-        // TODO: Replace with direct calls to calculateBotValue
-        if (!hasValue(lineTo)) {
-            lineTo = this.bot3D.bot.tags['lineTo'];
-        }
+        let lineTo = calculateBotValue(calc, this.bot3D.bot, 'auxLineTo');
         let validLineIds: number[];
 
         if (
-            !lineTo &&
+            !hasValue(lineTo) &&
             (!this.arrows || this.arrows.length === 0) &&
             (!this.walls || this.walls.length === 0)
         ) {
             return;
         }
 
-        if (lineTo) {
+        if (hasValue(lineTo)) {
             validLineIds = [];
 
             // Local function for setting up a line. Will add the targetBotId to the validLineIds array if successful.
-
             let lineColorValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
@@ -95,83 +92,56 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 }
             }
 
-            // Parse the line.to tag.
-            // It can either be a formula or a handtyped string.
-            if (isFormula(lineTo)) {
-                let calculatedValue = calculateBotValue(
-                    calc,
-                    this.bot3D.bot,
-                    'auxLineTo'
-                );
-
-                if (Array.isArray(calculatedValue)) {
-                    // Array of objects.
-                    calculatedValue.forEach(o => {
-                        if (o) {
-                            this._trySetupLines(
-                                calc,
-                                o.id,
-                                validLineIds,
-                                this._lineColor
-                            );
-                        }
-                    });
-                } else {
-                    // Single object.
-                    if (calculatedValue) {
+            if (Array.isArray(lineTo)) {
+                // Array of objects.
+                for (let o of lineTo) {
+                    if (isBot(o)) {
                         this._trySetupLines(
                             calc,
-                            calculatedValue.id,
+                            o.id,
+                            validLineIds,
+                            this._lineColor
+                        );
+                    } else if (typeof o === 'string') {
+                        this._trySetupLines(
+                            calc,
+                            o,
                             validLineIds,
                             this._lineColor
                         );
                     }
                 }
-            } else {
-                if (isArray(lineTo)) {
-                    // Array of strings.
-                    parseArray(<string>lineTo).forEach(s => {
-                        this._trySetupLines(
-                            calc,
-                            s,
-                            validLineIds,
-                            this._lineColor
-                        );
-                    });
-                } else {
-                    // Single string.
-                    this._trySetupLines(
-                        calc,
-                        <string>lineTo,
-                        validLineIds,
-                        this._lineColor
-                    );
-                }
+            } else if (isBot(lineTo)) {
+                // Bot
+                this._trySetupLines(
+                    calc,
+                    lineTo.id,
+                    validLineIds,
+                    this._lineColor
+                );
+            } else if (typeof lineTo === 'string') {
+                // Single string.
+                this._trySetupLines(
+                    calc,
+                    lineTo,
+                    validLineIds,
+                    this._lineColor
+                );
             }
         }
 
-        // TODO: Replace with direct calls to calculateBotValue
-        let style = this.bot3D.bot.tags['auxLineStyle'];
-        if (!hasValue(style)) {
-            style = this.bot3D.bot.tags['lineStyle'];
-        }
-        let styleValue: string;
+        let style = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxLineStyle',
+            null
+        );
 
-        if (isFormula(style)) {
-            styleValue = calculateBotValue(
-                calc,
-                this.bot3D.bot,
-                'auxLineStyle'
-            );
-        } else if (style != undefined) {
-            styleValue = <string>style;
+        if (hasValue(style)) {
+            style = style.toString().toLowerCase();
         }
 
-        if (typeof styleValue !== 'undefined' && styleValue !== null) {
-            styleValue = styleValue.toString().toLowerCase();
-        }
-
-        if (!styleValue || styleValue !== 'wall') {
+        if (!hasValue(style) || style !== 'wall') {
             if (this.arrows) {
                 // Filter out lines that are no longer being used.
                 this.arrows = this.arrows.filter(a => {
@@ -201,7 +171,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             }
         }
 
-        if (styleValue === 'wall') {
+        if (style === 'wall') {
             if (this.walls) {
                 // Filter out lines that are no longer being used.
                 this.walls = this.walls.filter(a => {
@@ -263,27 +233,18 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let style = this.bot3D.bot.tags['auxLineStyle'];
-        if (!hasValue(style)) {
-            style = this.bot3D.bot.tags['lineStyle'];
-        }
-        let styleValue: string;
+        let style = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxLineStyle',
+            null
+        );
 
-        if (isFormula(style)) {
-            styleValue = calculateBotValue(
-                calc,
-                this.bot3D.bot,
-                'auxLineStyle'
-            );
-        } else if (style != undefined) {
-            styleValue = <string>style;
+        if (hasValue(style)) {
+            style = style.toString().toLowerCase();
         }
 
-        if (typeof styleValue !== 'undefined' && styleValue !== null) {
-            styleValue = styleValue.toString().toLowerCase();
-        }
-
-        if (styleValue === 'wall') {
+        if (style === 'wall') {
             // Initialize walls array if needed.
             if (!this.walls) this.walls = [];
 
@@ -309,7 +270,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             // Initialize arrows array if needed.
             if (!this.arrows) this.arrows = [];
 
-            let hasArrowTip = styleValue !== 'line';
+            let hasArrowTip = style !== 'line';
 
             let targetArrow: Arrow3D = this._arrows.get(targetBot);
 
