@@ -394,6 +394,13 @@ function conflictReducer(
             result.loserRef,
             update
         );
+    } else if (result.loser.value.type === AuxOpType.revocation) {
+        revocationRemovedAtomReducer(
+            weave,
+            result.loser,
+            result.loser.value,
+            update
+        );
     }
 
     atomAddedReducer(
@@ -483,6 +490,8 @@ function removeAtom(
             node,
             state
         );
+    } else if (atom.value.type === AuxOpType.revocation) {
+        return revocationRemovedAtomReducer(weave, atom, atom.value, state);
     } else {
         return state;
     }
@@ -569,12 +578,43 @@ function certificateRemovedAtomReducer(
     });
 
     for (let child of iterateCausalGroup(node)) {
-        if (
-            child.atom.value.type === AuxOpType.certificate ||
-            child.atom.value.type === AuxOpType.revocation
-        ) {
-            removeAtom(weave, child.atom, child, state);
+        if (child.atom.value.type === AuxOpType.certificate) {
+            certificateRemovedAtomReducer(
+                weave,
+                child.atom,
+                child.atom.value,
+                child,
+                state
+            );
         }
+    }
+
+    return state;
+}
+
+function revocationRemovedAtomReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: RevocationOp,
+    state: PartialBotsState
+) {
+    if (!atom.cause) {
+        return state;
+    }
+
+    const parent = weave.getNode(atom.cause);
+
+    if (!parent) {
+        return state;
+    }
+
+    if (parent.atom.value.type === AuxOpType.certificate) {
+        return certificateAtomAddedReducer(
+            weave,
+            <Atom<CertificateOp>>parent.atom,
+            parent.atom.value,
+            state
+        );
     }
 
     return state;

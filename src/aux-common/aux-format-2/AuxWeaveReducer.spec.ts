@@ -763,6 +763,49 @@ describe('AuxWeaveReducer', () => {
                 });
             });
         });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+            let r3: Atom<RevocationOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+            });
+
+            it('should re-add the certificate to the state', () => {
+                weave.insert(c1);
+                weave.insert(r1);
+
+                const update = reduce(weave, weave.remove(r1));
+
+                expect(update).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+            });
+        });
     });
 
     describe('conflict', () => {
@@ -1042,6 +1085,83 @@ describe('AuxWeaveReducer', () => {
                 });
 
                 state = add(c2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c2);
+                r1 = atom(atomId('a', 4), c2, revoke1);
+
+                const revoke2 = signedRevocation(c2, 'password', c3);
+                r2 = atom(atomId('a', 4), c3, revoke2);
+            });
+
+            it('should remove the revocation and restore previous certificates if it is the loser', () => {
+                const hashes = [r1.hash, r2.hash].sort();
+                expect(hashes).toEqual([r2.hash, r1.hash]);
+
+                state = add(c1, c2, c3, r1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+
+                state = add(r2);
 
                 expect(state).toEqual({
                     [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
