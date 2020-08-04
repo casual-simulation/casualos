@@ -86,9 +86,9 @@ function atomRemovedReducer(
     result: AtomRemovedResult,
     state: PartialBotsState
 ): PartialBotsState {
-    let updates = removeAtom(weave, result.ref.atom, state);
+    let updates = removeAtom(weave, result.ref.atom, result.ref, state);
     for (let sibling of iterateSiblings(result.ref)) {
-        removeAtom(weave, sibling.atom, state);
+        removeAtom(weave, sibling.atom, sibling, state);
     }
 
     return updates;
@@ -280,6 +280,14 @@ function conflictReducer(
         if (bot.value.type === AuxOpType.bot) {
             deleteTag(result.loser, <Atom<BotOp>>bot, update);
         }
+    } else if (result.loser.value.type === AuxOpType.certificate) {
+        certificateRemovedAtomReducer(
+            weave,
+            result.loser,
+            result.loser.value,
+            result.loserRef,
+            update
+        );
     }
 
     atomAddedReducer(
@@ -354,12 +362,21 @@ function isBotDeleted(bot: WeaveNode<AuxOp>): boolean {
 function removeAtom(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
+    node: WeaveNode<AuxOp>,
     state: PartialBotsState
 ) {
     if (atom.value.type === AuxOpType.bot) {
         return deleteBot(weave, atom.value.id, state);
     } else if (atom.value.type === AuxOpType.value) {
         return valueRemovedAtomReducer(weave, atom, atom.value, state);
+    } else if (atom.value.type === AuxOpType.certificate) {
+        return certificateRemovedAtomReducer(
+            weave,
+            atom,
+            atom.value,
+            node,
+            state
+        );
     } else {
         return state;
     }
@@ -430,6 +447,30 @@ function valueRemovedAtomReducer(
             },
         },
     });
+    return state;
+}
+
+function certificateRemovedAtomReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: CertificateOp,
+    node: WeaveNode<AuxOp>,
+    state: PartialBotsState
+) {
+    const id = certificateId(atom);
+    lodashMerge(state, {
+        [id]: null,
+    });
+
+    for (let child of iterateCausalGroup(node)) {
+        if (
+            child.atom.value.type === AuxOpType.certificate ||
+            child.atom.value.type === AuxOpType.revocation
+        ) {
+            removeAtom(weave, child.atom, child, state);
+        }
+    }
+
     return state;
 }
 
