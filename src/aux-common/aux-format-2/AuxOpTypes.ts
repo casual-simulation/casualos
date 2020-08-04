@@ -1,5 +1,7 @@
 import assign from 'lodash/assign';
-import { AtomId } from '@casual-simulation/causal-trees';
+import { AtomId, Atom, atom } from '@casual-simulation/causal-trees';
+import { sign, verify, keypair } from '@casual-simulation/crypto';
+import stringify from 'fast-json-stable-stringify';
 
 /**
  * The list of operation types.
@@ -291,4 +293,123 @@ export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
         },
         extra
     );
+}
+
+/**
+ * Creates a certificate that is self signed.
+ * @param password The password used to encrypt the keypair.
+ */
+export function selfSignedCert(password: string): CertificateOp {
+    const keys = keypair(password);
+    return signedCert(null, password, keys);
+}
+
+/**
+ * Calculates a signature for the given keypair that can be used for a certificate.
+ * Returns a signature that can validate that a certificate was signed by another cert.
+ * @param signingCert The certificate that is signing the keypair. If null then the certKeypair will be signed with itself.
+ * @param signingPassword The password that is needed to decrypt the keypair in the signing certificate.
+ * @param certKeypair The keypair that should be signed.
+ */
+export function signedCert(
+    signingCert: Atom<CertificateOp> | null,
+    signingPassword: string,
+    certKeypair: string
+): CertificateOp {
+    const bytes = certSigningBytes(signingCert, certKeypair);
+    const sig = sign(
+        signingCert ? signingCert.value.keypair : certKeypair,
+        signingPassword,
+        bytes
+    );
+    if (!sig) {
+        throw new Error('Unable to sign the certificate.');
+    }
+    return cert(certKeypair, sig);
+}
+
+/**
+ * Validates that the given signed cert was signed with the given signing cert.
+ * @param signingCert The cert that created the signature.
+ * @param signedCert The cert that was signed.
+ */
+export function validateCertSignature(
+    signingCert: Atom<CertificateOp> | null,
+    signedCert: Atom<CertificateOp>
+): boolean {
+    const bytes = certSigningBytes(signingCert, signedCert.value.keypair);
+    try {
+        return verify(
+            signingCert ? signingCert.value.keypair : signedCert.value.keypair,
+            signedCert.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+/**
+ * Creates a signature for the given value atom.
+ * @param signingCert The certificate that is signing the value.
+ * @param signingPassword The password used to decrypt the private key.
+ * @param value The value to sign.
+ */
+export function signedValue(
+    signingCert: Atom<CertificateOp>,
+    signingPassword: string,
+    value: Atom<ValueOp>
+): SignatureOp {
+    const bytes = valueSigningBytes(signingCert, value);
+    const signature = sign(signingCert.value.keypair, signingPassword, bytes);
+    if (!signature) {
+        throw new Error('Unable to sign the value.');
+    }
+    return sig(signingCert.id, signingCert.hash, signature);
+}
+
+/**
+ * Validates that the given signature was signed with the given certificate.
+ * @param signingCert
+ * @param signature
+ */
+export function validateSignedValue(
+    signingCert: Atom<CertificateOp>,
+    signature: Atom<SignatureOp>,
+    value: Atom<ValueOp>
+): boolean {
+    try {
+        const bytes = valueSigningBytes(signingCert, value);
+        return verify(
+            signingCert.value.keypair,
+            signature.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+function certSigningBytes(
+    signingCert: Atom<CertificateOp> | null,
+    certKeypair: string
+): Uint8Array {
+    if (!signingCert) {
+        return signingBytes([certKeypair]);
+    } else {
+        return signingBytes([signingCert.hash, certKeypair]);
+    }
+}
+
+function valueSigningBytes(
+    signingCert: Atom<CertificateOp>,
+    value: Atom<ValueOp>
+): Uint8Array {
+    return signingBytes([signingCert.hash, value.hash]);
+}
+
+function signingBytes(data: any): Uint8Array {
+    const json = stringify(data);
+    const encoder = new TextEncoder();
+    return encoder.encode(json);
 }
