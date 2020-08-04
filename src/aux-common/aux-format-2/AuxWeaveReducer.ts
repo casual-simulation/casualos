@@ -20,6 +20,9 @@ import {
     TagOp,
     CertificateOp,
     validateCertSignature,
+    validateRevocation,
+    RevocationOp,
+    SignatureOp,
 } from './AuxOpTypes';
 import uuidv5 from 'uuid/v5';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
@@ -76,6 +79,8 @@ function atomAddedReducer(
             value,
             state
         );
+    } else if (value.type === AuxOpType.revocation) {
+        return revokeAtomAddedReducer(weave, atom, value, state);
     }
 
     return {};
@@ -197,11 +202,19 @@ function certificateAtomAddedReducer(
         let signee = atom;
         while (i < chain.length) {
             let signer = chain[i];
+
+            // Ensure that the tree is structured properly
             if (signer.atom.value.type !== AuxOpType.certificate) {
                 return state;
             }
+
+            // Check that the certificate's signature is valid
             const signerCert = <Atom<CertificateOp>>signer.atom;
             if (!validateCertSignature(signerCert, signee)) {
+                return state;
+            }
+
+            if (isCertDirectlyRevoked(weave, signer)) {
                 return state;
             }
 
@@ -214,6 +227,10 @@ function certificateAtomAddedReducer(
             return state;
         }
         if (!validateCertSignature(null, signee)) {
+            return state;
+        }
+        let signeeRef = weave.getNode(signee.id);
+        if (isCertDirectlyRevoked(weave, signeeRef)) {
             return state;
         }
         signerId = certificateId(chain[0].atom);
@@ -237,6 +254,95 @@ function certificateAtomAddedReducer(
         ),
     });
     return state;
+}
+
+function revokeAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: RevocationOp,
+    state: PartialBotsState
+): PartialBotsState {
+    const parent = weave.getNode(atom.cause);
+
+    if (!parent) {
+        return state;
+    }
+
+    if (parent.atom.value.type === AuxOpType.certificate) {
+        if (
+            !isRevocationValid(
+                weave,
+                <Atom<RevocationOp>>atom,
+                <WeaveNode<CertificateOp>>parent
+            )
+        ) {
+            return state;
+        }
+
+        return certificateRemovedAtomReducer(
+            weave,
+            parent.atom,
+            parent.atom.value,
+            parent,
+            state
+        );
+    } else if (parent.atom.value.type === AuxOpType.signature) {
+        // The signing certificate must be the same as the one that created the signature
+    }
+
+    return state;
+}
+
+/**
+ * Determines if the given certificate has been revoked directly.
+ * @param weave The weave.
+ * @param cert The certificate to check.
+ */
+function isCertDirectlyRevoked(weave: Weave<AuxOp>, cert: WeaveNode<AuxOp>) {
+    // Check if the certificate has been revoked.
+    for (let child of iterateChildren(cert)) {
+        if (
+            child.atom.value.type === AuxOpType.revocation &&
+            isRevocationValid(
+                weave,
+                <Atom<RevocationOp>>child.atom,
+                <WeaveNode<CertificateOp>>cert
+            )
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isRevocationValid(
+    weave: Weave<AuxOp>,
+    revocation: Atom<RevocationOp>,
+    parent: WeaveNode<CertificateOp>
+) {
+    // The signing certificate must be the parent or a grandparent
+    const chain = weave.referenceChain(parent.atom.id);
+    let signingCert: WeaveNode<CertificateOp>;
+    for (let node of chain) {
+        if (
+            node.atom.value.type === AuxOpType.certificate &&
+            node.atom.hash === revocation.value.certHash
+        ) {
+            signingCert = <WeaveNode<CertificateOp>>node;
+            break;
+        }
+    }
+
+    if (!signingCert) {
+        // No signing cert - return without changes
+        return false;
+    }
+
+    if (!validateRevocation(signingCert.atom, revocation, parent.atom)) {
+        return false;
+    }
+
+    return true;
 }
 
 function deleteBotReducer(

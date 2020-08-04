@@ -7,6 +7,8 @@ import {
     AuxOpType,
     CertificateOp,
     signedCert,
+    RevocationOp,
+    signedRevocation,
 } from './AuxOpTypes';
 import {
     Atom,
@@ -483,6 +485,7 @@ describe('AuxWeaveReducer', () => {
             let c1: Atom<CertificateOp>;
             let c2: Atom<CertificateOp>;
             let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
             beforeAll(() => {
                 const cert = signedCert(null, 'password', keypair1);
                 c1 = atom(atomId('a', 1), null, cert);
@@ -490,6 +493,9 @@ describe('AuxWeaveReducer', () => {
                 c2 = atom(atomId('a', 2), c1, cert2);
                 const cert3 = signedCert(c2, 'password', keypair3);
                 c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
             });
 
             it('should add a bot for the self signed certificate', () => {
@@ -594,6 +600,50 @@ describe('AuxWeaveReducer', () => {
                         },
                     },
                 });
+            });
+
+            it('should not add a bot for the certificate if the parent certificate is revoked', () => {
+                state = add(c1, r1, c2);
+
+                expect(state).toEqual({});
+            });
+
+            it('should not add a bot for the certificate if the grandparent certificate is revoked', () => {
+                state = add(c1, c2, r1, c3);
+
+                expect(state).toEqual({});
+            });
+        });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+            let r3: Atom<RevocationOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+            });
+
+            it('should remove the certificate bot from the state', () => {
+                state = add(c1, r1);
+
+                expect(state).toEqual({});
+            });
+
+            it('should remove all child certificate bots from the state', () => {
+                state = add(c1, c2, c3, r1);
+
+                expect(state).toEqual({});
             });
         });
 
