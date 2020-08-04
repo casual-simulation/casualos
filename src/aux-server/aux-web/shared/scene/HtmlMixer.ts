@@ -325,7 +325,7 @@ export namespace HtmlMixerHelpers {
         // create the iframe element
         let domElement = document.createElement('iframe');
         domElement.sandbox.value =
-            'allow-scripts allow-same-origin allow-presentation allow-popups';
+            'allow-scripts allow-forms allow-same-origin allow-presentation allow-popups';
         domElement.src = url;
         domElement.style.border = 'none';
         domElement.style.maxWidth = 'unset';
