@@ -687,9 +687,11 @@ describe('AuxWeaveReducer', () => {
             let r1: Atom<RevocationOp>;
             let s1: Atom<SignatureOp>;
 
-            let bot1 = atom(atomId('b', 1), null, bot('test'));
-            let tag1 = atom(atomId('b', 2), bot1, tag('abc'));
-            let value1 = atom(atomId('b', 3), tag1, value('def'));
+            let bot1: Atom<BotOp>;
+            let tag1: Atom<TagOp>;
+            let value1: Atom<ValueOp>;
+            let value2: Atom<ValueOp>;
+            let value3: Atom<ValueOp>;
 
             beforeAll(() => {
                 const cert = signedCert(null, 'password', keypair1);
@@ -705,6 +707,8 @@ describe('AuxWeaveReducer', () => {
                 bot1 = atom(atomId('b', 1), null, bot('test'));
                 tag1 = atom(atomId('b', 2), bot1, tag('abc'));
                 value1 = atom(atomId('b', 3), tag1, value('def'));
+                value2 = atom(atomId('b', 4), tag1, value('def'));
+                value3 = atom(atomId('b', 5), tag1, value('different'));
 
                 const signature1 = signedValue(c1, 'password', value1);
                 s1 = atom(atomId('a', 6), c1, signature1);
@@ -788,9 +792,6 @@ describe('AuxWeaveReducer', () => {
                         tags: {
                             abc: 'def',
                         },
-                        signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: null,
-                        },
                     },
                 });
             });
@@ -812,6 +813,112 @@ describe('AuxWeaveReducer', () => {
                                 CERT_ID_NAMESPACE
                             ),
                             atom: c1,
+                        },
+                    },
+                });
+            });
+
+            it('should remove the signature if a new value atom with the same actual value is added', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: true,
+                        },
+                    },
+                });
+
+                state = add(value2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should remove the previous value signature if a new value atom is added', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: true,
+                        },
+                    },
+                });
+
+                state = add(value3);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'different',
                         },
                     },
                 });
@@ -1503,7 +1610,6 @@ describe('AuxWeaveReducer', () => {
                         },
                         signatures: {
                             [tagValueHash('test', 'abc', 'def')]: true,
-                            [tagValueHash('test', 'abc', 'different')]: null,
                         },
                     },
                 });

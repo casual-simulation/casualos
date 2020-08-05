@@ -151,6 +151,17 @@ function valueAtomAddedReducer(
         return state;
     }
 
+    const sibling = first(iterateSiblings(firstValue));
+    if (sibling && sibling.atom.value.type === AuxOpType.value) {
+        lodashMerge(state, {
+            [id]: {
+                signatures: {
+                    [tagValueHash(id, tagName, sibling.atom.value.value)]: null,
+                },
+            },
+        });
+    }
+
     if (!hasValue(value.value)) {
         lodashMerge(state, {
             [id]: {

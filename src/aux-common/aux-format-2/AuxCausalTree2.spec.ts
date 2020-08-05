@@ -9,7 +9,7 @@ import {
     applyAuxResult,
     applyAtoms,
 } from './AuxCausalTree2';
-import { bot, tag, value, del } from './AuxOpTypes';
+import { bot, tag, value, del, tagValueHash } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
 import {
     newSite,
@@ -115,6 +115,13 @@ describe('AuxCausalTree2', () => {
                 '98b4f896-413d-4875-9ddc-dd394f16c034': {
                     tags: {
                         auxColor: '#89e',
+                    },
+                    signatures: {
+                        [tagValueHash(
+                            '98b4f896-413d-4875-9ddc-dd394f16c034',
+                            'auxColor',
+                            '#89ead4'
+                        )]: null,
                     },
                 },
             });

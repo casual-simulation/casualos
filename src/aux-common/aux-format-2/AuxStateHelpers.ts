@@ -35,6 +35,14 @@ export function apply(
                 }
             }
         }
+        for (let hash in botUpdate.signatures) {
+            if (bot.signatures[hash] === null) {
+                delete bot.signatures[hash];
+            }
+        }
+        if (!!bot.signatures && Object.keys(bot.signatures).length <= 0) {
+            delete bot.signatures;
+        }
     }
 
     return updatedState;
