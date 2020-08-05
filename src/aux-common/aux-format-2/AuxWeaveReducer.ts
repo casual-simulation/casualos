@@ -787,6 +787,6 @@ function revocationRemovedAtomReducer(
     return state;
 }
 
-function certificateId(atom: Atom<any>) {
+export function certificateId(atom: Atom<any>) {
     return uuidv5(atom.hash, CERT_ID_NAMESPACE);
 }

@@ -548,7 +548,7 @@ export class RemoteCausalRepoPartitionImpl
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let { tree, updates, result } = applyEvents(
+        let { tree, updates, result, actions } = applyEvents(
             this._tree,
             events,
             this.space
@@ -565,6 +565,10 @@ export class RemoteCausalRepoPartitionImpl
         const removed = removedAtoms(result.results);
         if (atoms.length > 0 || removed.length > 0) {
             this._client.addAtoms(this._branch, atoms, removed);
+        }
+
+        if (actions && actions.length > 0) {
+            this._onEvents.next(actions);
         }
     }
 

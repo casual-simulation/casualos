@@ -1,4 +1,11 @@
-import { AuxOpType, AuxOp, TagOp, ValueOp, BotOp } from './AuxOpTypes';
+import {
+    AuxOpType,
+    AuxOp,
+    TagOp,
+    ValueOp,
+    BotOp,
+    CertificateOp,
+} from './AuxOpTypes';
 import {
     Weave,
     WeaveNode,

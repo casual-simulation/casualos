@@ -16,23 +16,42 @@ import {
     WeaveResult,
     insertAtoms,
     removeAtoms,
+    AtomCardinality,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
+import {
+    AuxOp,
+    tag,
+    BotOp,
+    value,
+    bot,
+    del,
+    TagOp,
+    selfSignedCert,
+    signedCert,
+} from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
-import reducer from './AuxWeaveReducer';
+import reducer, { certificateId } from './AuxWeaveReducer';
 import { merge } from '../utils';
 import {
     apply,
     updates as stateUpdates,
     BotStateUpdates,
 } from './AuxStateHelpers';
-import { BotActions } from '../bots/BotEvents';
+import {
+    BotActions,
+    asyncError,
+    CreateCertificateAction,
+    asyncResult,
+    enqueueAsyncResult,
+    enqueueAsyncError,
+} from '../bots/BotEvents';
 import {
     findTagNode,
     findValueNode,
     findBotNode,
     findBotNodes,
 } from './AuxWeaveHelpers';
+import { Action } from '../../causal-trees';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -73,9 +92,10 @@ export function addAuxAtom(
     cause: Atom<AuxOp>,
     op: AuxOp,
     priority?: number,
-    space?: string
+    space?: string,
+    cardinality?: AtomCardinality
 ): AuxResult {
-    const treeResult = addAtom(tree, cause, op, priority);
+    const treeResult = addAtom(tree, cause, op, priority, cardinality);
     const update = reducer(tree.weave, treeResult.results[0], undefined, space);
 
     return {
@@ -191,8 +211,20 @@ export function applyEvents(
     actions: BotActions[],
     space?: string
 ) {
-    const addAtom = (cause: Atom<AuxOp>, op: AuxOp, priority?: number) => {
-        const result = addAuxAtom(tree, cause, op, priority, space);
+    const addAtom = (
+        cause: Atom<AuxOp>,
+        op: AuxOp,
+        priority?: number,
+        cardinality?: AtomCardinality
+    ) => {
+        const result = addAuxAtom(
+            tree,
+            cause,
+            op,
+            priority,
+            space,
+            cardinality
+        );
         tree = applyAuxResult(tree, result);
         return result;
     };
@@ -240,6 +272,7 @@ export function applyEvents(
 
     const prevState = tree.state;
     let result: AuxResult = auxResultIdentity();
+    let returnActions: Action[] = [];
 
     for (let event of actions) {
         let newResult: AuxResult = auxResultIdentity();
@@ -282,6 +315,91 @@ export function applyEvents(
                     });
                 }
             }
+        } else if (event.type === 'create_certificate') {
+            if (!event.signingBotId) {
+                const certOp = signedCert(
+                    null,
+                    event.signingPassword,
+                    event.keypair
+                );
+                if (!certOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+                newResult = addAtom(null, certOp, undefined, {
+                    group: 'certificates',
+                    number: 1,
+                });
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    const id = certificateId(newAtom);
+                    const bot = tree.state[id];
+                    if (bot) {
+                        enqueueAsyncResult(returnActions, event, bot, true);
+                    } else {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                    }
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                }
+            } else {
+                const signingBot = tree.state[event.signingBotId];
+                if (!signingBot) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+
+                const certOp = signedCert(
+                    signingBot.tags.atom,
+                    event.signingPassword,
+                    event.keypair
+                );
+                if (!certOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+                newResult = addAtom(signingBot.tags.atom, certOp);
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    const id = certificateId(newAtom);
+                    const bot = tree.state[id];
+                    if (bot) {
+                        enqueueAsyncResult(returnActions, event, bot, true);
+                    } else {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                    }
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                }
+            }
         }
 
         result = mergeAuxResults(result, newResult);
@@ -293,6 +411,7 @@ export function applyEvents(
         tree,
         updates,
         result,
+        actions: returnActions,
     };
 }
 

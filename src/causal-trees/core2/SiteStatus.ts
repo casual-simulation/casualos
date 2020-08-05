@@ -1,5 +1,5 @@
 import { WeaveResult, Weave, addedAtom } from './Weave2';
-import { Atom, atom, atomId } from './Atom2';
+import { Atom, atom, atomId, AtomCardinality } from './Atom2';
 import uuid from 'uuid/v4';
 
 /**
@@ -86,9 +86,14 @@ export function createAtom<T>(
     site: SiteStatus,
     cause: Atom<any>,
     value: T,
-    priority?: number
+    priority?: number,
+    cardinality?: AtomCardinality
 ): Atom<T> {
-    return atom(atomId(site.id, site.time + 1, priority), cause, value);
+    return atom(
+        atomId(site.id, site.time + 1, priority, cardinality),
+        cause,
+        value
+    );
 }
 
 function calculateTime(site: SiteStatus, atom: Atom<any>) {
