@@ -1,12 +1,16 @@
 # CasualOS Changelog
 
-## V1.2.1
+## V1.2.2
 
-#### Date: 8/4/2020
+#### Date: TBD
 
 ### :boom: Breaking Changes
 
 -   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
+
+## V1.2.1
+
+#### Date: 8/4/2020
 
 ### :rocket: Improvements
 
