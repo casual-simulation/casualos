@@ -26,6 +26,7 @@ import { isBot } from '../bots';
 import uuidv5 from 'uuid/v5';
 import { merge } from 'lodash';
 import { getHash } from '@casual-simulation/crypto';
+import reducer from './AuxWeaveReducer';
 
 const keypair1 =
     'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
@@ -704,7 +705,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: true,
                         },
                     },
                 });
@@ -746,7 +747,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: true,
                         },
                     },
                 });
@@ -760,7 +761,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('abc', 'def')]: false,
+                            [tagValueHash('test', 'abc', 'def')]: null,
                         },
                     },
                 });
@@ -943,6 +944,54 @@ describe('AuxWeaveReducer', () => {
                                 CERT_ID_NAMESPACE
                             ),
                             atom: c1,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('signature', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let s1: Atom<SignatureOp>;
+
+            let bot1 = atom(atomId('b', 1), null, bot('test'));
+            let tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+            let value1 = atom(atomId('b', 3), tag1, value('def'));
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+
+                bot1 = atom(atomId('b', 1), null, bot('test'));
+                tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                value1 = atom(atomId('b', 3), tag1, value('def'));
+
+                const signature1 = signedValue(c1, 'password', value1);
+                s1 = atom(atomId('a', 6), c1, signature1);
+            });
+
+            it('should remove the signature value from the tag', () => {
+                weave.insert(c1);
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+                weave.insert(s1);
+                const result = reducer(weave, weave.remove(s1));
+
+                expect(result).toEqual({
+                    ['test']: {
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: null,
                         },
                     },
                 });

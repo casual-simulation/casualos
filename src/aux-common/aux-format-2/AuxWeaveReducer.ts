@@ -364,7 +364,7 @@ function signatureAtomAddedReducer(
         return state;
     }
 
-    const hash = tagValueHash(tagName, realValue.value.value);
+    const hash = tagValueHash(id, tagName, realValue.value.value);
 
     lodashMerge(state, {
         [id]: {
@@ -576,6 +576,8 @@ function removeAtom(
         );
     } else if (atom.value.type === AuxOpType.revocation) {
         return revocationRemovedAtomReducer(weave, atom, atom.value, state);
+    } else if (atom.value.type === AuxOpType.signature) {
+        return signatureRemovedAtomReducer(weave, atom, atom.value, state);
     } else {
         return state;
     }
@@ -706,12 +708,16 @@ function signatureRemovedAtomReducer(
         return state;
     }
 
-    const hash = tagValueHash(tag.atom.value.name, val.atom.value.value);
+    const hash = tagValueHash(
+        bot.atom.value.id,
+        tag.atom.value.name,
+        val.atom.value.value
+    );
 
     lodashMerge(state, {
         [bot.atom.value.id]: {
             signatures: {
-                [hash]: false,
+                [hash]: null,
             },
         },
     });

@@ -464,9 +464,10 @@ function signingBytes(data: any): Uint8Array {
 
 /**
  * Gets the hash for the given tag and value.
+ * @param botId The ID of the bot.
  * @param tag The tag.
  * @param value The value.
  */
-export function tagValueHash(tag: string, value: any): string {
-    return getHash([tag, value]);
+export function tagValueHash(botId: string, tag: string, value: any): string {
+    return getHash([botId, tag, value]);
 }
