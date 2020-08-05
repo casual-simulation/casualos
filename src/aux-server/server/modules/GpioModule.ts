@@ -117,20 +117,25 @@ export class GpioModule implements AuxModule2 {
     }
     _getGpio(simulation: Simulation, event: GetGpioPinAction) {
         try {
+            // Get the pin number from the pinmap
             let pin = pinMap.get(event.pin);
+            // If there isn't an existing entry with the provided pin number
             if (!pin) {
+                // Export a new GPIO pin
                 pin = new Gpio(event.pin, 'out');
+                // And add it to the pinmap
                 pinMap.set(event.pin, pin);
             }
-            pin.readSync();
+            // Read the state of the gpio type of the provided pin
+            let state = pin.readSync(event.pin);
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
-                          undefined,
+                          state, // return the state
                           { sessionId: event.playerId },
                           event.taskId
                       )
-                    : asyncResult(event.taskId, undefined)
+                    : asyncResult(event.taskId, state) // return the state
             );
         } catch (error) {
             simulation.helper.transaction(
