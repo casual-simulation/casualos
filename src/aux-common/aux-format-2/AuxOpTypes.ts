@@ -1,6 +1,6 @@
 import assign from 'lodash/assign';
 import { AtomId, Atom, atom } from '@casual-simulation/causal-trees';
-import { sign, verify, keypair } from '@casual-simulation/crypto';
+import { sign, verify, keypair, getHash } from '@casual-simulation/crypto';
 import stringify from 'fast-json-stable-stringify';
 
 /**
@@ -150,14 +150,14 @@ export interface SignatureOp extends AuxOpBase {
     type: AuxOpType.signature;
 
     /**
-     * The ID of the atom that created this signature.
+     * The ID of the atom that created this signature was created for.
      */
-    certId: AtomId;
+    valueId: AtomId;
 
     /**
-     * The hash of the atom that created this signature.
+     * The hash of the atom that this signature was created for.
      */
-    certHash: string;
+    valueHash: string;
 
     /**
      * The signature data that was created by the certificate.
@@ -252,18 +252,18 @@ export function cert(keypair: string, signature?: string): CertificateOp {
 
 /**
  * Creates a signature op.
- * @param certId The ID of the cert that created the signature.
- * @param certHash The hash of the certificate.
+ * @param valueId The ID of the value that signature was created for.
+ * @param valueHash The hash of the value that the signature was created for.
  * @param signature The signature.
  */
 export function sig(
-    certId: AtomId,
-    certHash: string,
+    valueId: AtomId,
+    valueHash: string,
     signature: string
 ): SignatureOp {
     return op<SignatureOp>(AuxOpType.signature, {
-        certId,
-        certHash,
+        valueId,
+        valueHash,
         signature,
     });
 }
@@ -365,7 +365,7 @@ export function signedValue(
     if (!signature) {
         throw new Error('Unable to sign the value.');
     }
-    return sig(signingCert.id, signingCert.hash, signature);
+    return sig(value.id, value.hash, signature);
 }
 
 /**
@@ -460,4 +460,13 @@ function signingBytes(data: any): Uint8Array {
     const json = stringify(data);
     const encoder = new TextEncoder();
     return encoder.encode(json);
+}
+
+/**
+ * Gets the hash for the given tag and value.
+ * @param tag The tag.
+ * @param value The value.
+ */
+export function tagValueHash(tag: string, value: any): string {
+    return getHash([tag, value]);
 }

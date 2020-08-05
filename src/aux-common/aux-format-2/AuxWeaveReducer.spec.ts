@@ -9,6 +9,9 @@ import {
     signedCert,
     RevocationOp,
     signedRevocation,
+    SignatureOp,
+    signedValue,
+    tagValueHash,
 } from './AuxOpTypes';
 import {
     Atom,
@@ -22,6 +25,7 @@ import { apply } from './AuxStateHelpers';
 import { isBot } from '../bots';
 import uuidv5 from 'uuid/v5';
 import { merge } from 'lodash';
+import { getHash } from '@casual-simulation/crypto';
 
 const keypair1 =
     'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
@@ -644,6 +648,144 @@ describe('AuxWeaveReducer', () => {
                 state = add(c1, c2, c3, r1);
 
                 expect(state).toEqual({});
+            });
+        });
+
+        describe('signature', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let s1: Atom<SignatureOp>;
+
+            let bot1 = atom(atomId('b', 1), null, bot('test'));
+            let tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+            let value1 = atom(atomId('b', 3), tag1, value('def'));
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+
+                bot1 = atom(atomId('b', 1), null, bot('test'));
+                tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                value1 = atom(atomId('b', 3), tag1, value('def'));
+
+                const signature1 = signedValue(c1, 'password', value1);
+                s1 = atom(atomId('a', 6), c1, signature1);
+            });
+
+            it('should add a signature value for the tag', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('abc', 'def')]: true,
+                        },
+                    },
+                });
+            });
+
+            it('should not add a signature value for the tag if the certificate is revoked', () => {
+                state = add(c1, bot1, tag1, value1, r1, s1);
+
+                expect(state).toEqual({
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should remove the signatures when revoking a certificate', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('abc', 'def')]: true,
+                        },
+                    },
+                });
+
+                state = add(r1);
+
+                expect(state).toEqual({
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('abc', 'def')]: false,
+                        },
+                    },
+                });
+            });
+
+            it('should not add a signature value for the tag if the bot is destroyed', () => {
+                const del1 = atom(atomId('b', 4), bot1, del());
+
+                state = add(c1, bot1, tag1, value1, del1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
             });
         });
 

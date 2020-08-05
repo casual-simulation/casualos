@@ -45,6 +45,11 @@ export interface Bot {
      * The set of tags that the bot contains.
      */
     tags: BotTags;
+
+    /**
+     * The set of signatures that the bot contains.
+     */
+    signatures?: BotSignatures;
 }
 
 export interface UpdatedBot {
@@ -90,6 +95,19 @@ export type PortalType =
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
+}
+
+/**
+ * Defines an interface for a map of tag+value hashes to booleans.
+ *
+ * Each key in the object is the hash of an array with the tag name as the first value
+ * and the value as the second value using the getHash() function from the crypto package.
+ *
+ * This means that you can lookup if a tag/value pair has a hash by simply calculating the hash for it and then checking if the corresponding value
+ * in the object is set to true.
+ */
+export interface BotSignatures {
+    [hash: string]: boolean;
 }
 
 export interface BotTags {

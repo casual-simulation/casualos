@@ -23,6 +23,8 @@ import {
     validateRevocation,
     RevocationOp,
     SignatureOp,
+    validateSignedValue,
+    tagValueHash,
 } from './AuxOpTypes';
 import uuidv5 from 'uuid/v5';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
@@ -81,6 +83,8 @@ function atomAddedReducer(
         );
     } else if (value.type === AuxOpType.revocation) {
         return revokeAtomAddedReducer(weave, atom, value, state);
+    } else if (value.type === AuxOpType.signature) {
+        return signatureAtomAddedReducer(weave, atom, value, state);
     }
 
     return {};
@@ -196,44 +200,10 @@ function certificateAtomAddedReducer(
     const botId = certificateId(atom);
     let signerId: string;
     if (atom.cause) {
-        // Walk through the chain of certificates and validate them
-        const chain = weave.referenceChain(atom.cause);
-        let i = 0;
-        let signee = atom;
-        while (i < chain.length) {
-            let signer = chain[i];
-
-            // Ensure that the tree is structured properly
-            if (signer.atom.value.type !== AuxOpType.certificate) {
-                return state;
-            }
-
-            // Check that the certificate's signature is valid
-            const signerCert = <Atom<CertificateOp>>signer.atom;
-            if (!validateCertSignature(signerCert, signee)) {
-                return state;
-            }
-
-            if (isCertDirectlyRevoked(weave, signer)) {
-                return state;
-            }
-
-            signee = signerCert;
-            i++;
-        }
-
-        // Assert that the last certificate is self signed
-        if (!!signee.cause) {
+        if (!isCertificateChainValid(weave, atom)) {
             return state;
         }
-        if (!validateCertSignature(null, signee)) {
-            return state;
-        }
-        let signeeRef = weave.getNode(signee.id);
-        if (isCertDirectlyRevoked(weave, signeeRef)) {
-            return state;
-        }
-        signerId = certificateId(chain[0].atom);
+        signerId = certificateId(weave.getNode(atom.cause).atom);
     } else {
         if (!validateCertSignature(null, atom)) {
             return state;
@@ -254,6 +224,50 @@ function certificateAtomAddedReducer(
         ),
     });
     return state;
+}
+
+function isCertificateChainValid(
+    weave: Weave<AuxOp>,
+    atom: Atom<CertificateOp>
+) {
+    const chain = weave.referenceChain(atom.cause);
+    let i = 0;
+    let signee = atom;
+    while (i < chain.length) {
+        let signer = chain[i];
+
+        // Ensure that the tree is structured properly
+        if (signer.atom.value.type !== AuxOpType.certificate) {
+            return false;
+        }
+
+        // Check that the certificate's signature is valid
+        const signerCert = <Atom<CertificateOp>>signer.atom;
+        if (!validateCertSignature(signerCert, signee)) {
+            return false;
+        }
+
+        if (isCertDirectlyRevoked(weave, signer)) {
+            return false;
+        }
+
+        signee = signerCert;
+        i++;
+    }
+
+    // Assert that the last certificate is self signed
+    if (!!signee.cause) {
+        return false;
+    }
+    if (!validateCertSignature(null, signee)) {
+        return false;
+    }
+    let signeeRef = weave.getNode(signee.id);
+    if (isCertDirectlyRevoked(weave, signeeRef)) {
+        return false;
+    }
+
+    return true;
 }
 
 function revokeAtomAddedReducer(
@@ -289,6 +303,76 @@ function revokeAtomAddedReducer(
     } else if (parent.atom.value.type === AuxOpType.signature) {
         // The signing certificate must be the same as the one that created the signature
     }
+
+    return state;
+}
+
+function signatureAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: SignatureOp,
+    state: PartialBotsState
+): PartialBotsState {
+    const parent = weave.getNode(atom.cause);
+
+    if (!parent) {
+        return state;
+    }
+
+    if (parent.atom.value.type !== AuxOpType.certificate) {
+        return state;
+    }
+
+    const cert = <Atom<CertificateOp>>parent.atom;
+    const signature = <Atom<SignatureOp>>atom;
+
+    const [val, tag, bot] = weave.referenceChain(value.valueId);
+    if (val.atom.hash !== value.valueHash) {
+        return state;
+    }
+
+    if (!tag || !bot) {
+        return state;
+    }
+
+    if (bot.atom.value.type !== AuxOpType.bot) {
+        return state;
+    }
+
+    if (tag.atom.value.type !== AuxOpType.tag) {
+        return state;
+    }
+
+    if (!hasValue(tag.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tag.atom.value.name;
+    const id = bot.atom.value.id;
+
+    const isDeleted = isBotDeleted(bot);
+    if (isDeleted) {
+        return state;
+    }
+
+    if (!isCertificateChainValid(weave, cert)) {
+        return state;
+    }
+
+    const realValue = <Atom<ValueOp>>val.atom;
+    if (!validateSignedValue(cert, signature, realValue)) {
+        return state;
+    }
+
+    const hash = tagValueHash(tagName, realValue.value.value);
+
+    lodashMerge(state, {
+        [id]: {
+            signatures: {
+                [hash]: true,
+            },
+        },
+    });
 
     return state;
 }
@@ -586,8 +670,51 @@ function certificateRemovedAtomReducer(
                 child,
                 state
             );
+        } else if (child.atom.value.type === AuxOpType.signature) {
+            signatureRemovedAtomReducer(
+                weave,
+                child.atom,
+                child.atom.value,
+                state
+            );
         }
     }
+
+    return state;
+}
+
+function signatureRemovedAtomReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: SignatureOp,
+    state: PartialBotsState
+) {
+    const [val, tag, bot] = weave.referenceChain(value.valueId);
+    if (!val || !tag || !bot) {
+        return state;
+    }
+    if (val.atom.hash !== value.valueHash) {
+        return state;
+    }
+    if (val.atom.value.type !== AuxOpType.value) {
+        return state;
+    }
+    if (tag.atom.value.type !== AuxOpType.tag) {
+        return state;
+    }
+    if (bot.atom.value.type !== AuxOpType.bot) {
+        return state;
+    }
+
+    const hash = tagValueHash(tag.atom.value.name, val.atom.value.value);
+
+    lodashMerge(state, {
+        [bot.atom.value.id]: {
+            signatures: {
+                [hash]: false,
+            },
+        },
+    });
 
     return state;
 }
