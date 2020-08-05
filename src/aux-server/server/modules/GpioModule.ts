@@ -7,7 +7,6 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    SendWebhookAction,
     SetGpioPinAction,
     ConfigureGpioPinAction,
     GetGpioPinAction,
@@ -15,14 +14,9 @@ import {
     asyncError,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { sendWebhook } from '../../shared/WebhookUtils';
-const Gpio = require('onoff').Gpio; //require onoff to control GPIO
+const Gpio = require('onoff').Gpio;
 
 let pinMap = new Map<number, typeof Gpio>();
-
-// for (let i=0; i<26; i++){
-//     pinMap.set(i, new Gpio(i, 'out'))
-// }
 
 /**
  * Defines an AuxModule that adds GPIO functionality to the module.
@@ -128,7 +122,7 @@ export class GpioModule implements AuxModule2 {
                 pin = new Gpio(event.pin, 'out');
                 pinMap.set(event.pin, pin);
             }
-            pin.readSync(event.pin);
+            pin.readSync();
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
