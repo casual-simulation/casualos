@@ -302,6 +302,22 @@ function revokeAtomAddedReducer(
         );
     } else if (parent.atom.value.type === AuxOpType.signature) {
         // The signing certificate must be the same as the one that created the signature
+        if (
+            !isRevocationValid(
+                weave,
+                <Atom<RevocationOp>>atom,
+                <WeaveNode<SignatureOp>>parent
+            )
+        ) {
+            return state;
+        }
+
+        return signatureRemovedAtomReducer(
+            weave,
+            parent.atom,
+            parent.atom.value,
+            state
+        );
     }
 
     return state;
@@ -402,7 +418,7 @@ function isCertDirectlyRevoked(weave: Weave<AuxOp>, cert: WeaveNode<AuxOp>) {
 function isRevocationValid(
     weave: Weave<AuxOp>,
     revocation: Atom<RevocationOp>,
-    parent: WeaveNode<CertificateOp>
+    parent: WeaveNode<CertificateOp> | WeaveNode<SignatureOp>
 ) {
     // The signing certificate must be the parent or a grandparent
     const chain = weave.referenceChain(parent.atom.id);
@@ -480,6 +496,13 @@ function conflictReducer(
         );
     } else if (result.loser.value.type === AuxOpType.revocation) {
         revocationRemovedAtomReducer(
+            weave,
+            result.loser,
+            result.loser.value,
+            update
+        );
+    } else if (result.loser.value.type === AuxOpType.signature) {
+        signatureRemovedAtomReducer(
             weave,
             result.loser,
             result.loser.value,
