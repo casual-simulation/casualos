@@ -53,10 +53,12 @@ import {
     ON_REMOTE_WHISPER_ACTION_NAME,
     getStoryStatuses,
     AsyncAction,
+    createCertificate,
 } from '../bots';
 import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
 import { info } from 'console';
+import { keypair } from '@casual-simulation/crypto';
 
 console.log = jest.fn();
 
@@ -215,6 +217,32 @@ describe('RemoteCausalRepoPartition', () => {
                         siteId: partition.tree.site.id,
                     },
                 },
+            ]);
+        });
+
+        it('should emit an async result for a certificate', async () => {
+            setupPartition({
+                type: 'remote_causal_repo',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
+
+            let events = [] as Action[];
+            partition.onEvents.subscribe(e => events.push(...e));
+
+            const keys = keypair('password');
+            await partition.applyEvents([
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'task1'
+                ),
+            ]);
+
+            expect(events).toEqual([
+                asyncResult('task1', expect.any(Object), true),
             ]);
         });
 

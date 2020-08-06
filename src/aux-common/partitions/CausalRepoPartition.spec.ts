@@ -1,5 +1,8 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { CausalRepoPartitionImpl } from './CausalRepoPartition';
+import { Action } from '@casual-simulation/causal-trees';
+import { keypair } from '@casual-simulation/crypto';
+import { createCertificate, asyncResult } from '../bots';
 
 describe('CausalRepoPartition', () => {
     testPartitionImplementation(
@@ -27,6 +30,36 @@ describe('CausalRepoPartition', () => {
         );
 
         expect(partition.realtimeStrategy).toEqual('immediate');
+    });
+
+    it('should emit an async result for a certificate', async () => {
+        const partition = new CausalRepoPartitionImpl(
+            {
+                id: 'test',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            },
+            { type: 'causal_repo' }
+        );
+
+        let events = [] as Action[];
+        partition.onEvents.subscribe(e => events.push(...e));
+
+        const keys = keypair('password');
+        await partition.applyEvents([
+            createCertificate(
+                {
+                    keypair: keys,
+                    signingPassword: 'password',
+                },
+                'task1'
+            ),
+        ]);
+
+        expect(events).toEqual([
+            asyncResult('task1', expect.any(Object), true),
+        ]);
     });
 
     // it('should use the given space for bot events', async () => {

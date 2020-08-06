@@ -50,6 +50,7 @@ import {
     ON_REMOTE_WHISPER_ACTION_NAME,
     hasValue,
     AsyncAction,
+    CreateCertificateAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -335,14 +336,16 @@ export class RemoteCausalRepoPartitionImpl
         let finalEvents = [] as (
             | AddBotAction
             | RemoveBotAction
-            | UpdateBotAction)[];
+            | UpdateBotAction
+            | CreateCertificateAction)[];
         for (let e of events) {
             if (e.type === 'apply_state') {
                 finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot'
+                e.type === 'update_bot' ||
+                e.type === 'create_certificate'
             ) {
                 finalEvents.push(e);
             } else if (e.type === 'unlock_space') {
@@ -546,7 +549,11 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _applyEvents(
-        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+        events: (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction
+            | CreateCertificateAction)[]
     ) {
         let { tree, updates, result, actions } = applyEvents(
             this._tree,
