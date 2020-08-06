@@ -202,6 +202,38 @@ describe('AuxStateHelpers', () => {
                 });
             });
 
+            it('should record new signatures', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: {
+                        signatures: {
+                            abc: true,
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                signatures: {
+                                    abc: true,
+                                },
+                            },
+                            tags: new Set(),
+                            signatures: new Set(['abc']),
+                        },
+                    ],
+                });
+            });
+
             it('should record updated tags', () => {
                 const current = {
                     test: createBot('test', {

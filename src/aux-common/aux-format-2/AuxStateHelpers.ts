@@ -125,6 +125,7 @@ export function updates(
                         : {
                               bot: updatedBot,
                               tags: updatedTags,
+                              signatures: updatedSignatures,
                           }
                 );
             }

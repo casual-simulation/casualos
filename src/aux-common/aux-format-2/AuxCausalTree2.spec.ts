@@ -949,6 +949,11 @@ describe('AuxCausalTree2', () => {
                             },
                         },
                         tags: new Set(),
+                        signatures: new Set([
+                            tagValueHash('test', 'abc', {
+                                some: 'object',
+                            }),
+                        ]),
                     },
                 ]);
                 expect(actions).toEqual([asyncResult('task1', undefined)]);
