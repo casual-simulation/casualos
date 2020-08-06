@@ -3410,6 +3410,7 @@ describe('AuxLibrary', () => {
                     fun: true,
                 },
                 listeners: {},
+                signatures: {},
             });
         });
         it('should add the new bot to the context', () => {
@@ -3439,6 +3440,7 @@ describe('AuxLibrary', () => {
                 listeners: {
                     onCreate: expect.any(Function),
                 },
+                signatures: {},
             });
         });
 

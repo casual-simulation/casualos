@@ -88,6 +88,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
+import { tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -786,6 +787,43 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+        });
+
+        describe('signatures', () => {
+            it('should add the signatures to the precalculated bot', () => {
+                const update = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: true,
+                        },
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
             });
         });
     });
@@ -1726,6 +1764,53 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+        });
+
+        describe('signatures', () => {
+            it('should handle updates to signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: true,
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                        tags: [],
+                        signatures: [tagValueHash('test', 'abc', 'def')],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
             });
         });
     });

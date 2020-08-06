@@ -55,6 +55,7 @@ export interface Bot {
 export interface UpdatedBot {
     bot: Bot;
     tags: string[];
+    signatures?: string[];
 }
 
 /**

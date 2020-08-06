@@ -490,6 +490,11 @@ export class AuxRuntime
                 newBot.space = bot.space;
                 precalculated.space = bot.space;
             }
+
+            if (hasValue(bot.signatures)) {
+                newBot.signatures = bot.signatures;
+                precalculated.signatures = bot.signatures;
+            }
             newBots.push([newBot, precalculated]);
             newBotIDs.add(newBot.id);
             update.state[bot.id] = precalculated;
@@ -582,6 +587,18 @@ export class AuxRuntime
             } as Partial<PrecalculatedBot>;
             for (let tag of u.tags) {
                 partial.tags[tag] = u.bot.tags[tag];
+            }
+
+            if (u.signatures) {
+                if (!compiled.signatures) {
+                    compiled.signatures = {};
+                }
+                partial.signatures = {};
+                for (let sig of u.signatures) {
+                    const val = u.bot.signatures[sig];
+                    compiled.signatures[sig] = val;
+                    partial.signatures[sig] = val;
+                }
             }
 
             update.state[u.bot.id] = <any>partial;
@@ -788,6 +805,10 @@ export class AuxRuntime
         }
         this.getValue(bot, tag);
         return bot.listeners[tag] || null;
+    }
+
+    getSignature(bot: CompiledBot, signature: string): boolean {
+        return !!bot.signatures ? bot.signatures[signature] : undefined;
     }
 
     private _updateTag(
