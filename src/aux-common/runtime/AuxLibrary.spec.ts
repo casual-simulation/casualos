@@ -88,6 +88,7 @@ import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
 import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
+import { tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -5757,6 +5758,39 @@ describe('AuxLibrary', () => {
             );
             expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
             expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('crypto.verifyTag()', () => {
+        let bot1: RuntimeBot;
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                },
+                undefined,
+                {
+                    [tagValueHash('bot1', 'abc', 'def')]: true,
+                }
+            );
+            addToContext(context, bot1);
+        });
+
+        it('should return true if the bot has a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(true);
+        });
+
+        it('should return false if the bot does not have a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'missing');
+            expect(result).toBe(false);
+        });
+
+        it('should return false if the bot has a signature for the given tag but the value is different', () => {
+            bot1.tags.abc = 'different';
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(false);
         });
     });
 });

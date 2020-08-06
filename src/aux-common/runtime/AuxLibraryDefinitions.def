@@ -3073,6 +3073,13 @@ declare global {
          * @param tag The tag that should be signed.
          */
         signTag(certificate: Bot | string, password: string, bot: Bot | string, tag: string): Promise<void>;
+
+        /**
+         * Verifies that the given tag on the given bot has been signed by a certificate.
+         * @param bot The bot.
+         * @param tag The tag to check.
+         */
+        verifyTag(bot: Bot | string, tag: string): boolean;
     };
 
     /**

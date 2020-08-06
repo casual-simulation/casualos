@@ -109,6 +109,7 @@ import {
     sign as realSign,
     verify as realVerify,
 } from '@casual-simulation/crypto';
+import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -432,6 +433,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 verify,
                 createCertificate,
                 signTag,
+                verifyTag,
             },
         },
     };
@@ -2191,6 +2193,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, action);
+    }
+
+    /**
+     * Verifies that the given tag on the given bot has been signed by a certificate.
+     * @param bot The bot.
+     * @param tag The tag to check.
+     */
+    function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
+        const id = getID(bot);
+        const realBot = isRuntimeBot(bot) ? bot : getBot('id', id);
+        if (!realBot.signatures) {
+            return false;
+        }
+        const value = realBot.raw[tag];
+        const sig = tagValueHash(id, tag, value);
+        return realBot.signatures[sig] === true;
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

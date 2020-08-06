@@ -1,4 +1,10 @@
-import { PrecalculatedBot, BotTags, BotSpace, Bot } from '../../bots';
+import {
+    PrecalculatedBot,
+    BotTags,
+    BotSpace,
+    Bot,
+    BotSignatures,
+} from '../../bots';
 import {
     createRuntimeBot,
     RuntimeBotInterface,
@@ -33,7 +39,8 @@ export class TestScriptBotFactory implements RuntimeBotFactory {
 export function createDummyRuntimeBot(
     id: string,
     tags: BotTags = {},
-    space?: BotSpace
+    space?: BotSpace,
+    signatures?: BotSignatures
 ): RuntimeBot {
     let functions = pickBy(tags, (t: any) => typeof t === 'function');
     const precalc = createCompiledBot(
@@ -42,7 +49,8 @@ export function createDummyRuntimeBot(
         undefined,
         space,
         undefined,
-        functions
+        functions,
+        signatures
     );
     return createRuntimeBot(precalc, testScriptBotInterface);
 }

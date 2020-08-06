@@ -595,7 +595,9 @@ export class RemoteCausalRepoPartitionImpl
                 updates.updatedBots.map(u => ({
                     bot: <any>u.bot,
                     tags: [...u.tags.values()],
-                    signatures: u.signatures ? [...u.signatures.values()] : [],
+                    signatures: u.signatures
+                        ? [...u.signatures.values()]
+                        : undefined,
                 }))
             );
         }

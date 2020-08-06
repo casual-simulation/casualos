@@ -4,6 +4,7 @@ import {
     PrecalculatedTags,
     BotSpace,
     hasValue,
+    BotSignatures,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { RuntimeBot } from './RuntimeBot';
@@ -88,7 +89,8 @@ export function createCompiledBot(
     tags?: Bot['tags'],
     space?: BotSpace,
     compiledValues: CompiledBotValues = {},
-    listeners: CompiledBotListeners = {}
+    listeners: CompiledBotListeners = {},
+    signatures?: BotSignatures
 ): CompiledBot {
     if (hasValue(space)) {
         return {
@@ -102,6 +104,7 @@ export function createCompiledBot(
                 ...compiledValues,
             },
             listeners: listeners,
+            signatures,
             script: null,
         };
     }
@@ -115,6 +118,7 @@ export function createCompiledBot(
             ...compiledValues,
         },
         listeners: listeners,
+        signatures,
         script: null,
     };
 }
