@@ -54,11 +54,21 @@ import {
     getStoryStatuses,
     AsyncAction,
     createCertificate,
+    signTag,
 } from '../bots';
-import { AuxOpType, bot, tag, value, AuxCausalTree } from '../aux-format-2';
+import {
+    AuxOpType,
+    bot,
+    tag,
+    value,
+    AuxCausalTree,
+    CertificateOp,
+    signedCert,
+} from '../aux-format-2';
 import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
 import { info } from 'console';
 import { keypair } from '@casual-simulation/crypto';
+import { certificateId } from '../aux-format-2/AuxWeaveReducer';
 
 console.log = jest.fn();
 
@@ -244,6 +254,57 @@ describe('RemoteCausalRepoPartition', () => {
             expect(events).toEqual([
                 asyncResult('task1', expect.any(Object), true),
             ]);
+        });
+
+        const keypair1 =
+            'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
+
+        let c1: Atom<CertificateOp>;
+
+        beforeAll(() => {
+            const cert = signedCert(null, 'password', keypair1);
+            c1 = atom(atomId('a', 0), null, cert);
+        });
+
+        it('should emit an async result for a signature', async () => {
+            setupPartition({
+                type: 'remote_causal_repo',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
+
+            let events = [] as Action[];
+            partition.onEvents.subscribe(e => events.push(...e));
+
+            partition.connect();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [c1],
+            });
+
+            await waitAsync();
+
+            await partition.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+
+            await partition.applyEvents([
+                signTag(
+                    certificateId(c1),
+                    'password',
+                    'test',
+                    'abc',
+                    'def',
+                    'task1'
+                ),
+            ]);
+
+            expect(events).toEqual([asyncResult('task1', undefined)]);
         });
 
         describe('remote events', () => {

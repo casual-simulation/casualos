@@ -24,6 +24,7 @@ import {
     unlockSpace,
     asyncError,
     createCertificate,
+    signTag,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -286,6 +287,35 @@ describe('AuxHelper', () => {
                     },
                     'test1'
                 ),
+            ]);
+        });
+
+        it('should send sign_tag actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            const keys = keypair('password');
+            await helper.transaction(
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
             ]);
         });
 

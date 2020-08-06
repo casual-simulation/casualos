@@ -107,6 +107,8 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | CreateCertificateAction
+    | SignTagAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -203,7 +205,7 @@ export interface CreateCertificateOptions {
     /**
      * The password that should be used to sign the new certificate.
      */
-    signingPassword?: string;
+    signingPassword: string;
 }
 
 /**
@@ -240,6 +242,11 @@ export interface SignTagAction extends AsyncAction {
      * The tag that should be signed.
      */
     tag: string;
+
+    /**
+     * The value that should be signed.
+     */
+    value: any;
 }
 
 /**
@@ -2462,12 +2469,14 @@ export function createCertificate(
  * @param signingPassword The password used to decrypt the certificate's private key.
  * @param botId The ID of the bot whose tag is being signed.
  * @param tag The tag that is being signed.
+ * @param value The value that is being signed.
  */
 export function signTag(
     signingBotId: string,
     signingPassword: string,
     botId: string,
     tag: string,
+    value: any,
     taskId?: number | string
 ): SignTagAction {
     return {
@@ -2476,6 +2485,7 @@ export function signTag(
         signingPassword,
         botId,
         tag,
+        value,
         taskId,
     };
 }

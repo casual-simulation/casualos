@@ -76,6 +76,7 @@ export function updates(
             result.removedBots.push(existingBot.id);
         } else {
             let updatedTags = new Set<string>();
+            let updatedSignatures = new Set<string>();
             // bot was updated
             let updatedBot = {
                 ...existingBot,
@@ -83,6 +84,11 @@ export function updates(
                     ...existingBot.tags,
                 },
             };
+            if (existingBot.signatures) {
+                updatedBot.signatures = {
+                    ...existingBot.signatures,
+                };
+            }
 
             if (botUpdate.tags) {
                 for (let tag in botUpdate.tags) {
@@ -94,13 +100,33 @@ export function updates(
                     }
                     updatedTags.add(tag);
                 }
-
-                if (updatedTags.size > 0) {
-                    result.updatedBots.push({
-                        bot: updatedBot,
-                        tags: updatedTags,
-                    });
+            }
+            if (botUpdate.signatures) {
+                for (let tag in botUpdate.signatures) {
+                    const value = botUpdate.signatures[tag];
+                    if (value === null) {
+                        delete updatedBot.signatures[tag];
+                    } else {
+                        if (!updatedBot.signatures) {
+                            updatedBot.signatures = {};
+                        }
+                        updatedBot.signatures[tag] = value;
+                    }
+                    updatedSignatures.add(tag);
                 }
+            }
+            if (updatedTags.size > 0 || updatedSignatures.size > 0) {
+                result.updatedBots.push(
+                    updatedSignatures.size <= 0
+                        ? {
+                              bot: updatedBot,
+                              tags: updatedTags,
+                          }
+                        : {
+                              bot: updatedBot,
+                              tags: updatedTags,
+                          }
+                );
             }
         }
     }
@@ -130,4 +156,9 @@ export interface UpdatedBot {
      * The tags that were updated on the bot.
      */
     tags: Set<string>;
+
+    /**
+     * The tags that had updated signatures.
+     */
+    signatures?: Set<string>;
 }

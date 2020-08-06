@@ -51,6 +51,8 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    createCertificate as calcCreateCertificate,
+    signTag as calcSignTag,
     clearSpace,
     loadBots,
     BotAction,
@@ -428,6 +430,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 keypair,
                 sign,
                 verify,
+                createCertificate,
+                signTag,
             },
         },
     };
@@ -2122,6 +2126,71 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
+    }
+
+    /**
+     * Creates a new certified bot that is signed using the given certified bot.
+     * @param certificate The certified bot that the new certificate should be signed with.
+     *                    This is commonly known as the signing certificate.
+     *                    If given null, then the new certificate will be self-signed.
+     * @param password The signing certificate's password. This is the password that was used to create
+     *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+     *                 is the password that was used to create the given keypair.
+     * @param keypair The keypair that the new certificate should use.
+     */
+    function createCertificate(
+        certificate: Bot | string,
+        password: string,
+        keypair: string
+    ): Promise<RuntimeBot> {
+        const signingBotId = getID(certificate);
+        const task = context.createTask();
+        const action = hasValue(signingBotId)
+            ? calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingBotId: signingBotId,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              )
+            : calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              );
+
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Signs the tag on the given bot using the given certificate and password.
+     * @param certificate The certificate to use to create the signature.
+     * @param password The password to use to decrypt the certificate's private key.
+     * @param bot The bot that should be signed.
+     * @param tag The tag that should be signed.
+     */
+    function signTag(
+        certificate: Bot | string,
+        password: string,
+        bot: Bot | string,
+        tag: string
+    ): Promise<void> {
+        const signingBotId = getID(certificate);
+        const realBot = getBot('id', getID(bot));
+        const value = realBot.raw[tag];
+        const task = context.createTask();
+        const action = calcSignTag(
+            signingBotId,
+            password,
+            realBot.id,
+            tag,
+            value,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

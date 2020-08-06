@@ -28,6 +28,7 @@ import {
     TagOp,
     selfSignedCert,
     signedCert,
+    signedValue,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -50,6 +51,7 @@ import {
     findValueNode,
     findBotNode,
     findBotNodes,
+    findValueNodeByValue,
 } from './AuxWeaveHelpers';
 import { Action } from '../../causal-trees';
 
@@ -337,9 +339,9 @@ export function applyEvents(
                 const newAtom = addedAtom(newResult.results[0]);
                 if (newAtom) {
                     const id = certificateId(newAtom);
-                    const bot = tree.state[id];
-                    if (bot) {
-                        enqueueAsyncResult(returnActions, event, bot, true);
+                    const newBot = tree.state[id];
+                    if (newBot) {
+                        enqueueAsyncResult(returnActions, event, newBot, true);
                     } else {
                         enqueueAsyncError(
                             returnActions,
@@ -365,26 +367,39 @@ export function applyEvents(
                     continue;
                 }
 
-                const certOp = signedCert(
-                    signingBot.tags.atom,
-                    event.signingPassword,
-                    event.keypair
-                );
-                if (!certOp) {
-                    enqueueAsyncError(
-                        returnActions,
-                        event,
-                        new Error('Unable to create certificate.')
+                try {
+                    const certOp = signedCert(
+                        signingBot.tags.atom,
+                        event.signingPassword,
+                        event.keypair
                     );
-                    continue;
-                }
-                newResult = addAtom(signingBot.tags.atom, certOp);
-                const newAtom = addedAtom(newResult.results[0]);
-                if (newAtom) {
-                    const id = certificateId(newAtom);
-                    const bot = tree.state[id];
-                    if (bot) {
-                        enqueueAsyncResult(returnActions, event, bot, true);
+                    if (!certOp) {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                        continue;
+                    }
+                    newResult = addAtom(signingBot.tags.atom, certOp);
+                    const newAtom = addedAtom(newResult.results[0]);
+                    if (newAtom) {
+                        const id = certificateId(newAtom);
+                        const newBot = tree.state[id];
+                        if (newBot) {
+                            enqueueAsyncResult(
+                                returnActions,
+                                event,
+                                newBot,
+                                true
+                            );
+                        } else {
+                            enqueueAsyncError(
+                                returnActions,
+                                event,
+                                new Error('Unable to create certificate.')
+                            );
+                        }
                     } else {
                         enqueueAsyncError(
                             returnActions,
@@ -392,13 +407,86 @@ export function applyEvents(
                             new Error('Unable to create certificate.')
                         );
                     }
-                } else {
+                } catch (err) {
                     enqueueAsyncError(
                         returnActions,
                         event,
                         new Error('Unable to create certificate.')
                     );
+                    continue;
                 }
+            }
+        } else if (event.type === 'sign_tag') {
+            const signingBot = tree.state[event.signingBotId];
+            if (!signingBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const botNode = findBotNode(tree.weave, event.botId);
+            if (!botNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const tagNode = findTagNode(botNode, event.tag);
+            if (!tagNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const valueNode = findValueNodeByValue(tagNode, event.value);
+            if (!valueNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+
+            try {
+                const signOp = signedValue(
+                    signingBot.tags.atom,
+                    event.signingPassword,
+                    valueNode.atom
+                );
+                if (!signOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create signature.')
+                    );
+                    continue;
+                }
+
+                newResult = addAtom(signingBot.tags.atom, signOp);
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    enqueueAsyncResult(returnActions, event, undefined);
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create signature.')
+                    );
+                }
+            } catch (err) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
             }
         }
 

@@ -153,6 +153,8 @@ declare type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
+    | CreateCertificateAction
+    | SignTagAction
     | ApplyStateAction;
 ``;
 
@@ -219,7 +221,8 @@ declare type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
-    | ShareAction;
+    | ShareAction
+    | CreateCertificateAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -279,6 +282,63 @@ declare interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
     update: Partial<Bot>;
+}
+
+
+/**
+ * Defines the set of options required for creating a certificate.
+ */
+export interface CreateCertificateOptions {
+    /**
+     * The keypair that should be used for the certificate.
+     */
+    keypair: string;
+
+    /**
+     * The ID of the certified bot that is signing the new certificate.
+     */
+    signingBotId?: string;
+
+    /**
+     * The password that should be used to sign the new certificate.
+     */
+    signingPassword: string;
+}
+
+/**
+ * Defines a bot event that creates a new certificate from the given keypair.
+ */
+export interface CreateCertificateAction
+    extends AsyncAction,
+        CreateCertificateOptions {
+    type: 'create_certificate';
+}
+
+/**
+ * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
+ */
+export interface SignTagAction extends AsyncAction {
+    type: 'sign_tag';
+
+    /**
+     * The ID of the certified bot that is signing the tag value.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the value.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the bot whose tag is being signed.
+     */
+    botId: string;
+
+    /**
+     * The tag that should be signed.
+     */
+    tag: string;
 }
 
 /**
@@ -2992,6 +3052,27 @@ declare global {
          * @param data The data that was used in the sign() operation.
          */
         verify(keypair: string, signature: string, data: string): boolean;
+
+        /**
+         * Creates a new certified bot that is signed using the given certified bot.
+         * @param certificate The certified bot that the new certificate should be signed with. 
+         *                    This is commonly known as the signing certificate.
+         *                    If given null, then the new certificate will be self-signed.
+         * @param password The signing certificate's password. This is the password that was used to create
+         *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+         *                 is the password that was used to create the given keypair.
+         * @param keypair The keypair that the new certificate should use.
+         */
+        createCertificate(certificate: Bot | string, password: string, keypair: string): Promise<Bot>;
+
+        /**
+         * Signs the tag on the given bot using the given certificate and password.
+         * @param certificate The certificate to use to create the signature.
+         * @param password The password to use to decrypt the certificate's private key.
+         * @param bot The bot that should be signed.
+         * @param tag The tag that should be signed.
+         */
+        signTag(certificate: Bot | string, password: string, bot: Bot | string, tag: string): Promise<void>;
     };
 
     /**
