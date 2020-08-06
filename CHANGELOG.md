@@ -8,6 +8,10 @@
 
 -   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
 
+### :rocket: Improvements
+
+-   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()` functions to help with creating certificate chains and signing and validating tag data.
+
 ## V1.2.1
 
 #### Date: 8/4/2020
