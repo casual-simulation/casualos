@@ -487,6 +487,8 @@ export class AuxHelper extends BaseHelper<Bot> {
             return this._partitionForBotType('shared');
         } else if (event.type === 'sign_tag') {
             return this._partitionForBotType('shared');
+        } else if (event.type === 'revoke_certificate') {
+            return this._partitionForBotType('shared');
         } else if (event.type === 'transaction') {
             return undefined;
         } else if (event.type === 'load_bots') {

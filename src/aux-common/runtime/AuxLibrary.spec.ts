@@ -70,6 +70,7 @@ import {
     getStoryStatuses,
     createCertificate,
     signTag,
+    revokeCertificate,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5791,6 +5792,68 @@ describe('AuxLibrary', () => {
             bot1.tags.abc = 'different';
             const result = library.api.crypto.verifyTag(bot1, 'abc');
             expect(result).toBe(false);
+        });
+    });
+
+    describe('crypto.revokeCertificate()', () => {
+        let bot1: RuntimeBot;
+        let cert: RuntimeBot;
+        beforeEach(() => {
+            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1, cert);
+        });
+
+        it('should emit a RevokeCertificateAction', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                'test1',
+                'password',
+                'bot1'
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given bots', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password',
+                bot1
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given a single bot', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password'
+            );
+
+            const expected = revokeCertificate(
+                'test1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
         });
     });
 });

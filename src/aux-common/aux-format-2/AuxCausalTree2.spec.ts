@@ -35,6 +35,7 @@ import {
     asyncResult,
     asyncError,
     signTag,
+    revokeCertificate,
 } from '../bots';
 import { BotStateUpdates } from './AuxStateHelpers';
 import reducer, { CERTIFIED_SPACE, certificateId } from './AuxWeaveReducer';
@@ -1018,6 +1019,59 @@ describe('AuxCausalTree2', () => {
                             },
                         ],
                     });
+                });
+            });
+
+            describe('revoke_certificate', () => {
+                let c1: Atom<CertificateOp>;
+                beforeAll(() => {
+                    const cert = signedCert(null, 'password', keypair1);
+                    c1 = atom(atomId('a', 0), null, cert);
+                });
+
+                beforeEach(() => {
+                    ({ tree } = applyAtoms(tree, [c1]));
+                    ({ tree } = applyEvents(tree, [
+                        botAdded(
+                            createBot('test', {
+                                abc: {
+                                    some: 'object',
+                                },
+                            })
+                        ),
+                    ]));
+                });
+
+                it('should delete the certificate bot', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        revokeCertificate(
+                            certificateId(c1),
+                            'password',
+                            certificateId(c1),
+                            'task1'
+                        ),
+                    ]));
+
+                    expect(updates.removedBots).toEqual([certificateId(c1)]);
+                    expect(actions).toEqual([asyncResult('task1', undefined)]);
+                });
+
+                it('should reject if the password for the certificate is wrong', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        revokeCertificate(
+                            certificateId(c1),
+                            'wrong',
+                            certificateId(c1),
+                            'task1'
+                        ),
+                    ]));
+
+                    expect(actions).toEqual([
+                        asyncError(
+                            'task1',
+                            new Error('Unable to revoke certificate.')
+                        ),
+                    ]);
                 });
             });
         });

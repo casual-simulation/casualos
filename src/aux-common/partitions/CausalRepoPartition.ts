@@ -17,6 +17,7 @@ import {
     breakIntoIndividualEvents,
     CreateCertificateAction,
     SignTagAction,
+    RevokeCertificateAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -113,7 +114,8 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
                 e.type === 'remove_bot' ||
                 e.type === 'update_bot' ||
                 e.type === 'create_certificate' ||
-                e.type === 'sign_tag'
+                e.type === 'sign_tag' ||
+                e.type === 'revoke_certificate'
             ) {
                 return [e] as const;
             } else {
@@ -156,7 +158,8 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
             | RemoveBotAction
             | UpdateBotAction
             | CreateCertificateAction
-            | SignTagAction)[]
+            | SignTagAction
+            | RevokeCertificateAction)[]
     ) {
         let { tree, updates, actions } = applyEvents(
             this._tree,

@@ -29,6 +29,7 @@ import {
     selfSignedCert,
     signedCert,
     signedValue,
+    signedRevocation,
 } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer, { certificateId } from './AuxWeaveReducer';
@@ -485,6 +486,63 @@ export function applyEvents(
                     returnActions,
                     event,
                     new Error('Unable to create signature.')
+                );
+                continue;
+            }
+        } else if (event.type === 'revoke_certificate') {
+            const signingBot = tree.state[event.signingBotId];
+            if (!signingBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error(
+                        'Unable to revoke certificate. Signing certificate does not exist!'
+                    )
+                );
+                continue;
+            }
+            const certificateBot = tree.state[event.certificateBotId];
+            if (!certificateBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error(
+                        'Unable to revoke certificate. Certificate does not exist!'
+                    )
+                );
+                continue;
+            }
+            try {
+                const revokeOp = signedRevocation(
+                    signingBot.tags.atom,
+                    event.signingPassword,
+                    certificateBot.tags.atom
+                );
+                if (!revokeOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to revoke certificate.')
+                    );
+                    continue;
+                }
+
+                newResult = addAtom(signingBot.tags.atom, revokeOp);
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    enqueueAsyncResult(returnActions, event, undefined);
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to revoke certificate.')
+                    );
+                }
+            } catch (err) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to revoke certificate.')
                 );
                 continue;
             }

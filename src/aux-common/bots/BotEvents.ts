@@ -38,6 +38,7 @@ export type BotActions =
     | UpdateBotAction
     | CreateCertificateAction
     | SignTagAction
+    | RevokeCertificateAction
     | ApplyStateAction;
 ``;
 
@@ -109,6 +110,7 @@ export type AsyncActions =
     | SetupChannelAction
     | CreateCertificateAction
     | SignTagAction
+    | RevokeCertificateAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -247,6 +249,28 @@ export interface SignTagAction extends AsyncAction {
      * The value that should be signed.
      */
     value: any;
+}
+
+/**
+ * Defines a bot event that revokes a certificate.
+ */
+export interface RevokeCertificateAction extends AsyncAction {
+    type: 'revoke_certificate';
+
+    /**
+     * The ID of the bot that should be used to sign the revocation.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the revocation.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the certificate that should be revoked.
+     */
+    certificateBotId: string;
 }
 
 /**
@@ -2486,6 +2510,28 @@ export function signTag(
         botId,
         tag,
         value,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that requests that a certificate be revoked.
+ * @param signingBotId The ID of the certificate that is signing the revocation.
+ * @param signingPassword The password used to decrypt the signing certificate's private key.
+ * @param certificateBotId The ID of the bot whose tag is being signed.
+ * @param taskId The task ID.
+ */
+export function revokeCertificate(
+    signingBotId: string,
+    signingPassword: string,
+    certificateBotId: string,
+    taskId?: number | string
+): RevokeCertificateAction {
+    return {
+        type: 'revoke_certificate',
+        signingBotId,
+        signingPassword,
+        certificateBotId,
         taskId,
     };
 }

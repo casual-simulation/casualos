@@ -55,6 +55,7 @@ import {
     AsyncAction,
     createCertificate,
     signTag,
+    revokeCertificate,
 } from '../bots';
 import {
     AuxOpType,
@@ -300,6 +301,37 @@ describe('RemoteCausalRepoPartition', () => {
                     'test',
                     'abc',
                     'def',
+                    'task1'
+                ),
+            ]);
+
+            expect(events).toEqual([asyncResult('task1', undefined)]);
+        });
+
+        it('should emit an async result for a revocation', async () => {
+            setupPartition({
+                type: 'remote_causal_repo',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
+
+            let events = [] as Action[];
+            partition.onEvents.subscribe(e => events.push(...e));
+
+            partition.connect();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [c1],
+            });
+
+            await waitAsync();
+
+            await partition.applyEvents([
+                revokeCertificate(
+                    certificateId(c1),
+                    'password',
+                    certificateId(c1),
                     'task1'
                 ),
             ]);

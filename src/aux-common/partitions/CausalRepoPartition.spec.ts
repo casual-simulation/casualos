@@ -9,6 +9,7 @@ import {
     createBot,
     signTag,
     AsyncResultAction,
+    revokeCertificate,
 } from '../bots';
 import { CertificateOp, signedCert } from '../aux-format-2';
 
@@ -120,6 +121,45 @@ describe('CausalRepoPartition', () => {
                 'test',
                 'abc',
                 'def',
+                'task1'
+            ),
+        ]);
+
+        expect(events.slice(1)).toEqual([asyncResult('task1', undefined)]);
+    });
+
+    it('should emit an async result for a revocation', async () => {
+        const partition = new CausalRepoPartitionImpl(
+            {
+                id: 'test',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            },
+            { type: 'causal_repo' }
+        );
+
+        let events = [] as Action[];
+        partition.onEvents.subscribe(e => events.push(...e));
+
+        partition.connect();
+
+        await partition.applyEvents([
+            createCertificate(
+                {
+                    keypair: keypair1,
+                    signingPassword: 'password',
+                },
+                'task1'
+            ),
+        ]);
+        const certificateResult = events[0] as AsyncResultAction;
+
+        await partition.applyEvents([
+            revokeCertificate(
+                certificateResult.result.id,
+                'password',
+                certificateResult.result.id,
                 'task1'
             ),
         ]);

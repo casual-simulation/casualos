@@ -53,6 +53,7 @@ import {
     share as calcShare,
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
+    revokeCertificate as calcRevokeCertificate,
     clearSpace,
     loadBots,
     BotAction,
@@ -434,6 +435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 createCertificate,
                 signTag,
                 verifyTag,
+                revokeCertificate,
             },
         },
     };
@@ -2209,6 +2211,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const value = realBot.raw[tag];
         const sig = tagValueHash(id, tag, value);
         return realBot.signatures[sig] === true;
+    }
+
+    /**
+     * Revokes the given certificate using the given password.
+     * In effect, this deletes the certificate bot from the story.
+     * Additionally, any tags signed with the given certificate will no longer be verified.
+     *
+     * If given a signer, then the specified certificate will be used to sign the revocation.
+     * This lets you use a parent or grandparent certificate to remove the child.
+     *
+     * If no signer is given, then the certificate will be used to revoke itself.
+     *
+     * @param certificate The certificate that should be revoked.
+     * @param password The password that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
+     *                 then this is the password for the revoked certificate.
+     * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+     */
+    function revokeCertificate(
+        certificate: Bot | string,
+        password: string,
+        signer?: Bot | string
+    ): Promise<void> {
+        const certId = getID(certificate);
+        const signerId = getID(signer || certificate);
+        const task = context.createTask();
+        const action = calcRevokeCertificate(
+            signerId,
+            password,
+            certId,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

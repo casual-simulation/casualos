@@ -52,6 +52,7 @@ import {
     AsyncAction,
     CreateCertificateAction,
     SignTagAction,
+    RevokeCertificateAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -339,7 +340,8 @@ export class RemoteCausalRepoPartitionImpl
             | RemoveBotAction
             | UpdateBotAction
             | CreateCertificateAction
-            | SignTagAction)[];
+            | SignTagAction
+            | RevokeCertificateAction)[];
         for (let e of events) {
             if (e.type === 'apply_state') {
                 finalEvents.push(...breakIntoIndividualEvents(this.state, e));
@@ -348,7 +350,8 @@ export class RemoteCausalRepoPartitionImpl
                 e.type === 'remove_bot' ||
                 e.type === 'update_bot' ||
                 e.type === 'create_certificate' ||
-                e.type === 'sign_tag'
+                e.type === 'sign_tag' ||
+                e.type === 'revoke_certificate'
             ) {
                 finalEvents.push(e);
             } else if (e.type === 'unlock_space') {
@@ -557,7 +560,8 @@ export class RemoteCausalRepoPartitionImpl
             | RemoveBotAction
             | UpdateBotAction
             | CreateCertificateAction
-            | SignTagAction)[]
+            | SignTagAction
+            | RevokeCertificateAction)[]
     ) {
         let { tree, updates, result, actions } = applyEvents(
             this._tree,

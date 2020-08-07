@@ -25,6 +25,7 @@ import {
     asyncError,
     createCertificate,
     signTag,
+    revokeCertificate,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -306,7 +307,6 @@ describe('AuxHelper', () => {
 
             const sharedSpy = jest.spyOn(shared, 'applyEvents');
             const memSpy = jest.spyOn(mem, 'applyEvents');
-            const keys = keypair('password');
             await helper.transaction(
                 signTag('test1', 'password', 'test2', 'tag', 'value', 'task1')
             );
@@ -316,6 +316,34 @@ describe('AuxHelper', () => {
             ]);
             expect(memSpy).not.toBeCalledWith([
                 signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+        });
+
+        it('should send revoke_certificate actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            await helper.transaction(
+                revokeCertificate('test1', 'password', 'test2')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
             ]);
         });
 

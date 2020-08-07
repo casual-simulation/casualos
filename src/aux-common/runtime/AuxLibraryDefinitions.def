@@ -3080,6 +3080,24 @@ declare global {
          * @param tag The tag to check.
          */
         verifyTag(bot: Bot | string, tag: string): boolean;
+
+        /**
+         * Revokes the given certificate using the given password.
+         * In effect, this deletes the certificate bot from the story.
+         * Additionally, any tags signed with the given certificate will no longer be verified.
+         * 
+         * If given a signer, then the specified certificate will be used to sign the revocation.
+         * This lets you use a parent or grandparent certificate to remove the child.
+         * 
+         * If no signer is given, then the certificate will be used to revoke itself.
+         * 
+         * @param certificate The certificate that should be revoked.
+         * @param password The password that should be used to decrypt the corresponding certificate's private key.
+         *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
+         *                 then this is the password for the revoked certificate.
+         * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+         */
+        revokeCertificate(certificate: Bot | string, password: string, signer?: Bot | string): Promise<void>;
     };
 
     /**
