@@ -3094,7 +3094,7 @@ player.toast(valid);
 
 ### `crypto.createCertificate(certificate, password, keypair)`
 
-Creates a new certified bot from the given keypair that is signed by the given certified bot using the given password.
+Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given password.
 Returns a promise that resolves with the new bot.
 
 Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
@@ -3199,6 +3199,48 @@ if (valid) {
 } else {
     player.toast('onClick is not valid.');
 }
+```
+
+### `crypto.revokeCertificate(certificate, password, signer?)`
+
+Revokes the given certificate and any signatures that it has created.
+In effect, this deletes the certificate bot from the story.
+Additionally, any tags signed with the given certificate will no longer be verified.
+
+Returns a promise that resolves when the certificate has been revoked.
+
+Revoking a certificate works by creating another record (called a revocation) that is signed by either the original certificate 
+or an ancestor of the original certificate. This record is then stored in the shared space and lets everyone see that the certificate is no longer valid.
+
+The **first parameter** is the certificate that should be revoked.
+
+The **second parameter** is the password that should be used to decrypt the corresponding certificate's private key.
+If the signer parameter is specified, then this is the password for the signer certificate.
+If the signer parameter is omitted, then this is the password for the certificate that is being revoked.
+
+The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
+If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
+If specified, then the revocation will be signed using the given certificate.
+Note that any certificate that is specified must either be the original certificate or an ancestor of the original certificate.
+
+#### Examples:
+
+1. Revoke a certificate with itself.
+```typescript
+const cert = getBot('id', certificateId);
+await crypto.revokeCertificate(cert, 'passwordForCert');
+
+player.toast('Certificate revoked!');
+```
+
+2. Revoke a certificate using another certificate.
+```typescript
+const certToRevoke = getBot('id', certToRevokeId);
+const signingCert = getBot('id', signingCertId);
+
+await crypto.revokeCertificate(certToRevoke, 'passwordForSigningCert', signingCert);
+
+player.toast('Certificate revoked!');
 ```
 
 ## Admin Actions
