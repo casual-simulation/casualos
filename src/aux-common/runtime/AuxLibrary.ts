@@ -88,6 +88,9 @@ import {
     configureGpioPin,
     setGpioPin,
     getGpioPin,
+    rpioOpenPin,
+    rpioReadPin,
+    rpioWritePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -379,6 +382,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 configureGpio,
                 setGpio,
                 getGpio,
+                rpioOpen,
+                rpioRead,
+                rpioWrite,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1461,6 +1467,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getGpioPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to configure a GPIO pin as input or output.
+     * @param pin The physical BCM pin number.
+     * @param mode The mode of the BCM pin.
+     * @param options The state you want to initialize your pin as.
+     */
+    function rpioOpen(
+        pin: number,
+        mode: 'INPUT' | 'OUTPUT' | 'PWM',
+        options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioOpenPin(pin, mode, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to get the value of a GPIO pin.
+     * @param pin The physical BCM pin number.
+     */
+    function rpioRead(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to set a GPIO pin as HIGH or LOW.
+     * @param pin The physical BCM pin number.
+     * @param value The mode of the BCM pin.
+     */
+    function rpioWrite(pin: number, value: 'HIGH' | 'LOW') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWritePin(pin, value),
             undefined,
             undefined,
             task.taskId

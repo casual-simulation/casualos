@@ -2695,6 +2695,26 @@ declare global {
         getGpio(pin: number): Promise<void>;
 
         /**
+         * Sends an event to the server to configure a GPIO pin as input or output.
+         * @param pin The physical BCM pin number.
+         * @param mode The mode of the BCM pin.
+         */
+        rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to get the value of a GPIO pin.
+         * @param pin The physical BCM pin number.
+         */
+        rpioRead(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to set a GPIO pin as HIGH or LOW.
+         * @param pin The physical BCM pin number.
+         * @param value The mode of the BCM pin.
+         */
+        rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+        /**
          * Executes the given shell script on the server.
          * @param script The shell script  that should be executed.
          */

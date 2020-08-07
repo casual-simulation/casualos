@@ -106,6 +106,9 @@ export type AsyncActions =
     | ConfigureGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
+    | RpioOpenAction
+    | RpioReadAction
+    | RpioWriteAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -1047,6 +1050,19 @@ export interface SetupChannelAction extends AsyncAction {
     botOrMod?: Bot | BotTags;
 }
 
+export interface ConfigureGpioPinAction extends AsyncAction {
+    type: 'configure_gpio_pin';
+
+    /**
+     * The BCM Pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want toconfigure your BCM pin as.
+     */
+    mode: 'in' | 'out';
+}
 export interface SetGpioPinAction extends AsyncAction {
     type: 'set_gpio_pin';
 
@@ -1068,8 +1084,8 @@ export interface GetGpioPinAction extends AsyncAction {
      */
     pin: number;
 }
-export interface ConfigureGpioPinAction extends AsyncAction {
-    type: 'configure_gpio_pin';
+export interface RpioOpenAction extends AsyncAction {
+    type: 'rpio_open';
 
     /**
      * The BCM Pin that you want to configure.
@@ -1079,7 +1095,33 @@ export interface ConfigureGpioPinAction extends AsyncAction {
     /**
      * The mode you want toconfigure your BCM pin as.
      */
-    mode: 'in' | 'out';
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+export interface RpioReadAction extends AsyncAction {
+    type: 'rpio_read';
+
+    /**
+     * The BCM Pin that you want to use.
+     */
+    pin: number;
+}
+export interface RpioWriteAction extends AsyncAction {
+    type: 'rpio_write';
+
+    /**
+     * The BCM Pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin. Either High (0) or Low (1)
+     */
+    value: 'HIGH' | 'LOW';
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2109,6 +2151,68 @@ export function getGpioPin(
     return {
         type: 'get_gpio_pin',
         pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param mode The mode of the BCM pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioOpenPin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioOpenAction {
+    return {
+        type: 'rpio_open',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioReadAction {
+    return {
+        type: 'rpio_read',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWritePin(
+    pin: number,
+    value: 'HIGH' | 'LOW',
+    taskId?: string | number,
+    playerId?: string
+): RpioWriteAction {
+    return {
+        type: 'rpio_write',
+        pin,
+        value,
         taskId,
         playerId,
     };
