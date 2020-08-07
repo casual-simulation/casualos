@@ -3092,6 +3092,115 @@ const valid = crypto.verify(keypair, signature, "hello");
 player.toast(valid);
 ```
 
+### `crypto.createCertificate(certificate, password, keypair)`
+
+Creates a new certified bot from the given keypair that is signed by the given certified bot using the given password.
+Returns a promise that resolves with the new bot.
+
+Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
+
+Certificates are similar to keypairs except that they themselves are signed by another certificate.
+This creates a [chain of trust](https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to establish the validity of any arbitrary certificate.
+The certificate that created the signature is called the "signing/signer certificate" and the certificate that recieved the signature is called the "signee certificate".
+
+Each certificate contains the following information:
+
+- A keypair.
+- A reference to the signing certificate.
+- A signature from the signing certificate.
+
+In CasualOS, there are two types of certificates:
+
+1. Root certificates.
+2. Non-root certificates.
+
+_Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
+As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per story on a first-come first-serve basis.
+Once a root certificate is created for a story, another cannot be created.
+
+_Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
+As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
+If the chain does not end at the root certificate for the story, then the certificate is invalid and any signatures created by it will also be invalid.
+
+Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.signTag(certificate, password, bot, tag)'/> to create signatures for a certificate.
+
+The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
+
+The **second parameter** is the password that should be used to decrypt the private key. If the first parameter is null, then this should be the password for the keypair.
+
+The **third parameter** is the keypair that the new certificate should have.
+
+#### Examples:
+
+1. Create a root certificate and toast the Bot ID:
+```typescript
+const keypair = await crypto.keypair('passwordForRootCert');
+const cert = await crypto.createCertificate(null, 'passwordForRootCert', keypair);
+
+player.toast(getID(cert));
+```
+
+2. Create a non-root certificate and toast the Bot ID:
+```typescript
+const rootKeypair = getBot('id', rootCertID);
+
+const nonRootKeypair = await crypto.keypair('passwordForNonRootCert');
+const nonRoot = await crypto.createCertificate(rootCert, 'passwordForRootCert', nonRootKeypair);
+
+player.toast(getID(nonRoot));
+```
+
+### `crypto.signTag(certificate, password, bot, tag)`
+
+Creates a signature for the given bot, tag, and current value using the given certificate and password.
+Returns a promise that resolves once the tag value has been signed.
+
+When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
+
+The **first parameter** is the certificate bot that should be used to create the signature.
+
+The **second parameter** is the password used to decrypt the private key of the certificate.
+
+The **third parameter** is the bot whose tag value should be signed.
+
+The **fourth parameter** is the tag whose value should be signed.
+
+Use <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> to create certificates that can be used with this function.
+
+Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
+
+#### Examples:
+
+1. Sign the `@onClick` script on a bot.
+```typescript
+const cert = getBot('id', certID);
+await crypto.signTag(cert, 'passwordForCert', bot, 'onClick');
+```
+
+### `crypto.verifyTag(bot, tag)`
+
+Validates that the tag value stored in the given tag on the given bot has been signed by a valid certificate.
+Returns true if the tag value is valid. Returns false otherwise.
+
+The **first parameter** is the bot whose tag value should be checked.
+
+The **second parameter** is the tag whose value should be checked.
+
+#### Examples:
+
+1. Check if the `@onClick` script is signed.
+```typescript
+const valid = crypto.verifyTag(bot, 'onClick');
+
+if (valid) {
+    player.toast('onClick is valid!');
+} else {
+    player.toast('onClick is not valid.');
+}
+```
+
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`

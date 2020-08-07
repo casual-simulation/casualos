@@ -10,7 +10,7 @@
 
 ### :rocket: Improvements
 
--   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()` functions to help with creating certificate chains and signing and validating tag data.
+-   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()` functions to help with creating certificate chains and signing and validating tag data. Check the docs for detailed usage information.
 
 ## V1.2.1
 
