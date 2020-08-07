@@ -55,6 +55,26 @@
     color: #c22;
 }
 
+.editor-signed {
+    flex: 0 1;
+    text-align: right;
+}
+
+.editor-signed > div {
+    display: inline-block;
+    padding: 0 8px;
+}
+
+.editor-signed i.md-icon {
+    height: 20px;
+    width: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 20px !important;
+    color: #19c53e;
+    background-color: var(--disabled-cell-color);
+}
+
 .editor-button.active {
     background-color: #999;
     color: #000;
