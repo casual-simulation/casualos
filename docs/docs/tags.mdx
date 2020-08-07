@@ -92,7 +92,9 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
   </PossibleValueCode>
   <PossibleValueCode value='certified'>
     The bot represents a <a href="https://en.wikipedia.org/wiki/Public_key_certificate">cryptographic certificate</a>.
-    You can create certificates using the <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> function.
+    Certified bots cannot be edited or destroyed using traditional means.
+    Instead, you can create and destroy certificates using the <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> and 
+    <ActionLink action='crypto.revokeCertificate(certificate, password, signer?)'/> functions.
   </PossibleValueCode>
 </PossibleValuesTable>
 
