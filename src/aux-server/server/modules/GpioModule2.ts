@@ -14,7 +14,7 @@ import {
     asyncError,
     hasValue,
 } from '@casual-simulation/aux-common';
-var rpio = require('rpio').rpio;
+const rpio = require('rpio').rpio;
 
 /**
  * https://www.npmjs.com/package/rpio
@@ -93,14 +93,16 @@ export class GpioModule2 implements AuxModule2 {
         try {
             if (event.pin) {
                 let pin = event.pin;
-                let mode = rpio.OUTPUT;
-                var options: [];
+                var mode;
+                var options;
                 if (event.mode == 'INPUT') {
                     mode = rpio.INPUT;
                 } else if (event.mode == 'OUTPUT') {
                     mode = rpio.OUTPUT;
                 } else if (event.mode == 'PWM') {
                     mode = rpio.PWM;
+                } else {
+                    mode = rpio.OUTPUT;
                 }
 
                 if (event.options == 'HIGH') {
@@ -143,9 +145,11 @@ export class GpioModule2 implements AuxModule2 {
     }
     _rpioRead(simulation: Simulation, event: RpioReadAction) {
         try {
-            let state = rpio.LOW;
+            let state;
             if (event.pin) {
                 state = rpio.read(event.pin);
+            } else {
+                state = rpio.LOW;
             }
             simulation.helper.transaction(
                 hasValue(event.playerId)
