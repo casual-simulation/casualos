@@ -756,6 +756,30 @@ describe('AuxWeaveReducer', () => {
                 });
             });
 
+            it('should not add a signature value for the tag if the value atom does not exist', () => {
+                state = add(c1, bot1, tag1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {},
+                    },
+                });
+            });
+
             it('should remove the signatures when revoking a certificate', () => {
                 state = add(c1, bot1, tag1, value1, s1);
 

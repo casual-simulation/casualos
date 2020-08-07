@@ -595,7 +595,9 @@ export class AuxRuntime
                 }
                 partial.signatures = {};
                 for (let sig of u.signatures) {
-                    const val = u.bot.signatures[sig];
+                    const val = !!u.bot.signatures
+                        ? u.bot.signatures[sig] || null
+                        : null;
                     compiled.signatures[sig] = val;
                     partial.signatures[sig] = val;
                 }

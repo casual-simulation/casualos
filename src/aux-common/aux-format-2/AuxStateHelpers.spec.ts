@@ -119,6 +119,39 @@ describe('AuxStateHelpers', () => {
                 });
             });
         });
+
+        describe('deleted signatures', () => {
+            it('should delete signatures that are set to null', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            sig: true,
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        signatures: {
+                            sig: null as boolean,
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+        });
     });
 
     describe('updates()', () => {

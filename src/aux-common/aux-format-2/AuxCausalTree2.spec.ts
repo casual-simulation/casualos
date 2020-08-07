@@ -757,227 +757,268 @@ describe('AuxCausalTree2', () => {
             });
         });
 
-        describe('create_certificate', () => {
-            beforeEach(() => {
-                ({ tree } = applyEvents(tree, [
-                    botAdded(
-                        createBot('test', {
-                            abc: 'def',
-                        })
-                    ),
-                ]));
-            });
+        describe('certificates', () => {
+            describe('create_certificate', () => {
+                beforeEach(() => {
+                    ({ tree } = applyEvents(tree, [
+                        botAdded(
+                            createBot('test', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]));
+                });
 
-            it('should create a certificate bot with the given keypair', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair1,
-                            signingPassword: 'password',
-                        },
-                        'task1'
-                    ),
-                ]));
-
-                expect(updates.addedBots).toEqual([
-                    createBot(
-                        expect.any(String),
-                        {
-                            keypair: keypair1,
-                            signature: expect.any(String),
-                            signingCertificate: expect.any(String),
-                            atom: expect.any(Object),
-                        },
-                        CERTIFIED_SPACE
-                    ),
-                ]);
-                expect(actions).toEqual([
-                    asyncResult('task1', updates.addedBots[0], true),
-                ]);
-            });
-
-            it('should error when trying to create a second root certificate', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair1,
-                            signingPassword: 'password',
-                        },
-                        'task1'
-                    ),
-                ]));
-
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair2,
-                            signingPassword: 'password',
-                        },
-                        'task2'
-                    ),
-                ]));
-
-                expect(updates.addedBots).toEqual([]);
-                expect(actions).toEqual([
-                    asyncError(
-                        'task2',
-                        new Error('Unable to create certificate.')
-                    ),
-                ]);
-            });
-
-            it('should create a certificate bot signed by the root cert', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair1,
-                            signingPassword: 'password',
-                        },
-                        'task1'
-                    ),
-                ]));
-
-                let rootCert = updates.addedBots[0];
-
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair2,
-                            signingBotId: rootCert.id,
-                            signingPassword: 'password',
-                        },
-                        'task2'
-                    ),
-                ]));
-
-                expect(updates.addedBots).toEqual([
-                    createBot(
-                        expect.any(String),
-                        {
-                            keypair: keypair2,
-                            signature: expect.any(String),
-                            signingCertificate: rootCert.id,
-                            atom: expect.any(Object),
-                        },
-                        CERTIFIED_SPACE
-                    ),
-                ]);
-                expect(actions).toEqual([
-                    asyncResult('task2', updates.addedBots[0], true),
-                ]);
-            });
-
-            it('should error if given the wrong password', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair1,
-                            signingPassword: 'password',
-                        },
-                        'task1'
-                    ),
-                ]));
-
-                let rootCert = updates.addedBots[0];
-
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    createCertificate(
-                        {
-                            keypair: keypair2,
-                            signingBotId: rootCert.id,
-                            signingPassword: 'wrong',
-                        },
-                        'task2'
-                    ),
-                ]));
-
-                expect(updates.addedBots).toEqual([]);
-                expect(actions).toEqual([
-                    asyncError(
-                        'task2',
-                        new Error('Unable to create certificate.')
-                    ),
-                ]);
-            });
-        });
-
-        describe('sign_tag', () => {
-            let c1: Atom<CertificateOp>;
-            beforeAll(() => {
-                const cert = signedCert(null, 'password', keypair1);
-                c1 = atom(atomId('a', 0), null, cert);
-            });
-
-            beforeEach(() => {
-                ({ tree } = applyAtoms(tree, [c1]));
-                ({ tree } = applyEvents(tree, [
-                    botAdded(
-                        createBot('test', {
-                            abc: {
-                                some: 'object',
+                it('should create a certificate bot with the given keypair', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair1,
+                                signingPassword: 'password',
                             },
-                        })
-                    ),
-                ]));
+                            'task1'
+                        ),
+                    ]));
+
+                    expect(updates.addedBots).toEqual([
+                        createBot(
+                            expect.any(String),
+                            {
+                                keypair: keypair1,
+                                signature: expect.any(String),
+                                signingCertificate: expect.any(String),
+                                atom: expect.any(Object),
+                            },
+                            CERTIFIED_SPACE
+                        ),
+                    ]);
+                    expect(actions).toEqual([
+                        asyncResult('task1', updates.addedBots[0], true),
+                    ]);
+                });
+
+                it('should error when trying to create a second root certificate', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair1,
+                                signingPassword: 'password',
+                            },
+                            'task1'
+                        ),
+                    ]));
+
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair2,
+                                signingPassword: 'password',
+                            },
+                            'task2'
+                        ),
+                    ]));
+
+                    expect(updates.addedBots).toEqual([]);
+                    expect(actions).toEqual([
+                        asyncError(
+                            'task2',
+                            new Error('Unable to create certificate.')
+                        ),
+                    ]);
+                });
+
+                it('should create a certificate bot signed by the root cert', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair1,
+                                signingPassword: 'password',
+                            },
+                            'task1'
+                        ),
+                    ]));
+
+                    let rootCert = updates.addedBots[0];
+
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair2,
+                                signingBotId: rootCert.id,
+                                signingPassword: 'password',
+                            },
+                            'task2'
+                        ),
+                    ]));
+
+                    expect(updates.addedBots).toEqual([
+                        createBot(
+                            expect.any(String),
+                            {
+                                keypair: keypair2,
+                                signature: expect.any(String),
+                                signingCertificate: rootCert.id,
+                                atom: expect.any(Object),
+                            },
+                            CERTIFIED_SPACE
+                        ),
+                    ]);
+                    expect(actions).toEqual([
+                        asyncResult('task2', updates.addedBots[0], true),
+                    ]);
+                });
+
+                it('should error if given the wrong password', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair1,
+                                signingPassword: 'password',
+                            },
+                            'task1'
+                        ),
+                    ]));
+
+                    let rootCert = updates.addedBots[0];
+
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        createCertificate(
+                            {
+                                keypair: keypair2,
+                                signingBotId: rootCert.id,
+                                signingPassword: 'wrong',
+                            },
+                            'task2'
+                        ),
+                    ]));
+
+                    expect(updates.addedBots).toEqual([]);
+                    expect(actions).toEqual([
+                        asyncError(
+                            'task2',
+                            new Error('Unable to create certificate.')
+                        ),
+                    ]);
+                });
             });
 
-            it('should create a signature for the given tag and value', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    signTag(
-                        certificateId(c1),
-                        'password',
-                        'test',
-                        'abc',
-                        tree.state['test'].tags.abc,
-                        'task1'
-                    ),
-                ]));
+            describe('sign_tag', () => {
+                let c1: Atom<CertificateOp>;
+                beforeAll(() => {
+                    const cert = signedCert(null, 'password', keypair1);
+                    c1 = atom(atomId('a', 0), null, cert);
+                });
 
-                expect(updates.updatedBots).toEqual([
-                    {
-                        bot: {
-                            id: 'test',
-                            tags: {
+                beforeEach(() => {
+                    ({ tree } = applyAtoms(tree, [c1]));
+                    ({ tree } = applyEvents(tree, [
+                        botAdded(
+                            createBot('test', {
                                 abc: {
                                     some: 'object',
                                 },
+                            })
+                        ),
+                    ]));
+                });
+
+                it('should create a signature for the given tag and value', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        signTag(
+                            certificateId(c1),
+                            'password',
+                            'test',
+                            'abc',
+                            tree.state['test'].tags.abc,
+                            'task1'
+                        ),
+                    ]));
+
+                    expect(updates.updatedBots).toEqual([
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {
+                                    abc: {
+                                        some: 'object',
+                                    },
+                                },
+                                signatures: {
+                                    [tagValueHash('test', 'abc', {
+                                        some: 'object',
+                                    })]: true,
+                                },
                             },
-                            signatures: {
-                                [tagValueHash('test', 'abc', {
+                            tags: new Set(),
+                            signatures: new Set([
+                                tagValueHash('test', 'abc', {
                                     some: 'object',
-                                })]: true,
-                            },
+                                }),
+                            ]),
                         },
-                        tags: new Set(),
-                        signatures: new Set([
-                            tagValueHash('test', 'abc', {
-                                some: 'object',
-                            }),
-                        ]),
-                    },
-                ]);
-                expect(actions).toEqual([asyncResult('task1', undefined)]);
-            });
+                    ]);
+                    expect(actions).toEqual([asyncResult('task1', undefined)]);
+                });
 
-            it('should reject if the password for the certificate is wrong', () => {
-                ({ tree, updates, actions } = applyEvents(tree, [
-                    signTag(
-                        certificateId(c1),
-                        'wrong',
-                        'test',
-                        'abc',
-                        tree.state['test'].tags.abc,
-                        'task1'
-                    ),
-                ]));
+                it('should reject if the password for the certificate is wrong', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        signTag(
+                            certificateId(c1),
+                            'wrong',
+                            'test',
+                            'abc',
+                            tree.state['test'].tags.abc,
+                            'task1'
+                        ),
+                    ]));
 
-                expect(updates.updatedBots).toEqual([]);
-                expect(actions).toEqual([
-                    asyncError(
-                        'task1',
-                        new Error('Unable to create signature.')
-                    ),
-                ]);
+                    expect(updates.updatedBots).toEqual([]);
+                    expect(actions).toEqual([
+                        asyncError(
+                            'task1',
+                            new Error('Unable to create signature.')
+                        ),
+                    ]);
+                });
+
+                it('should set the signature of a value to null if the value is changed', () => {
+                    ({ tree, updates, actions } = applyEvents(tree, [
+                        signTag(
+                            certificateId(c1),
+                            'password',
+                            'test',
+                            'abc',
+                            tree.state['test'].tags.abc,
+                            'task1'
+                        ),
+                    ]));
+
+                    ({ tree, updates } = applyEvents(tree, [
+                        botUpdated('test', {
+                            tags: {
+                                abc: 'def',
+                            },
+                        }),
+                    ]));
+
+                    expect(updates).toEqual({
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [
+                            {
+                                bot: createBot('test', {
+                                    abc: 'def',
+                                }),
+                                tags: new Set(['abc']),
+                                signatures: new Set([
+                                    tagValueHash('test', 'abc', {
+                                        some: 'object',
+                                    }),
+                                ]),
+                            },
+                        ],
+                    });
+                });
             });
         });
     });

@@ -354,11 +354,11 @@ function signatureAtomAddedReducer(
     const signature = <Atom<SignatureOp>>atom;
 
     const [val, tag, bot] = weave.referenceChain(value.valueId);
-    if (val.atom.hash !== value.valueHash) {
+    if (!val || !tag || !bot) {
         return state;
     }
 
-    if (!tag || !bot) {
+    if (val.atom.hash !== value.valueHash) {
         return state;
     }
 

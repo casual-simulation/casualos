@@ -114,6 +114,12 @@ export function updates(
                     }
                     updatedSignatures.add(tag);
                 }
+                if (
+                    !!updatedBot.signatures &&
+                    Object.keys(updatedBot.signatures).length <= 0
+                ) {
+                    delete updatedBot.signatures;
+                }
             }
             if (updatedTags.size > 0 || updatedSignatures.size > 0) {
                 result.updatedBots.push(

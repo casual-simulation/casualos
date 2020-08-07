@@ -1768,7 +1768,82 @@ describe('AuxRuntime', () => {
         });
 
         describe('signatures', () => {
-            it('should handle updates to signatures', () => {
+            it('should handle new bots with signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: true,
+                        },
+                    },
+                ]);
+
+                expect(update1).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should handle adding signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                        tags: [],
+                        signatures: [tagValueHash('test', 'abc', 'def')],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: true,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing signatures', () => {
                 const update1 = runtime.botsAdded([
                     {
                         id: 'test',
@@ -1788,9 +1863,6 @@ describe('AuxRuntime', () => {
                             tags: {
                                 abc: 'def',
                             },
-                            signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
-                            },
                         },
                         tags: [],
                         signatures: [tagValueHash('test', 'abc', 'def')],
@@ -1803,7 +1875,7 @@ describe('AuxRuntime', () => {
                             tags: {},
                             values: {},
                             signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
+                                [tagValueHash('test', 'abc', 'def')]: null,
                             },
                         },
                     },
