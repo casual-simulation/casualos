@@ -2210,7 +2210,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         const value = realBot.raw[tag];
         const sig = tagValueHash(id, tag, value);
-        return realBot.signatures[sig] === true;
+        return realBot.signatures[sig] === tag;
     }
 
     /**

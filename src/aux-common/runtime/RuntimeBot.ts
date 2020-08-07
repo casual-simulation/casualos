@@ -337,7 +337,7 @@ export interface RuntimeBotInterface {
      * @param bot The bot.
      * @param signature The tag.
      */
-    getSignature(bot: CompiledBot, signature: string): boolean;
+    getSignature(bot: CompiledBot, signature: string): string;
 }
 
 /**

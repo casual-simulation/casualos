@@ -99,7 +99,7 @@ export interface ScriptTags extends PrecalculatedTags {
 }
 
 /**
- * Defines an interface for a map of tag+value hashes to booleans.
+ * Defines an interface for a map of tag+value hashes to tag names.
  *
  * Each key in the object is the hash of an array with the tag name as the first value
  * and the value as the second value using the getHash() function from the crypto package.
@@ -108,7 +108,7 @@ export interface ScriptTags extends PrecalculatedTags {
  * in the object is set to true.
  */
 export interface BotSignatures {
-    [hash: string]: boolean;
+    [hash: string]: string;
 }
 
 export interface BotTags {

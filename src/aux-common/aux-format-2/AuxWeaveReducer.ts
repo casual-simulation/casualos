@@ -396,7 +396,7 @@ function signatureAtomAddedReducer(
     lodashMerge(state, {
         [id]: {
             signatures: {
-                [hash]: true,
+                [hash]: tagName,
             },
         },
     });

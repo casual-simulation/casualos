@@ -5772,7 +5772,7 @@ describe('AuxLibrary', () => {
                 },
                 undefined,
                 {
-                    [tagValueHash('bot1', 'abc', 'def')]: true,
+                    [tagValueHash('bot1', 'abc', 'def')]: 'abc',
                 }
             );
             addToContext(context, bot1);

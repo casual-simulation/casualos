@@ -96,7 +96,7 @@ describe('StateUpdatedEvent', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            sig: true,
+                            sig: 'abc',
                         },
                     },
                 },
@@ -152,7 +152,7 @@ describe('StateUpdatedEvent', () => {
                 state: {
                     bot: <any>{
                         signatures: {
-                            sig: true,
+                            sig: 'abc',
                         },
                     },
                 },
@@ -175,7 +175,7 @@ describe('StateUpdatedEvent', () => {
                         abc: 'def',
                     },
                     signatures: {
-                        sig: true,
+                        sig: 'abc',
                     },
                 },
             });

@@ -737,7 +737,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 });
@@ -803,7 +803,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 });
@@ -865,7 +865,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 });
@@ -918,7 +918,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 });
@@ -1606,7 +1606,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'different',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'different')]: true,
+                            [tagValueHash('test', 'abc', 'different')]: 'abc',
                         },
                     },
                 });
@@ -1633,7 +1633,7 @@ describe('AuxWeaveReducer', () => {
                             abc: 'different',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 });

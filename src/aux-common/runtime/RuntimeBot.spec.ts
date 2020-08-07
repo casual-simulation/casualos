@@ -88,9 +88,9 @@ describe('RuntimeBot', () => {
             'shared'
         );
         precalc.signatures = {
-            sig1: true,
-            sig2: true,
-            sig3: true,
+            sig1: 'abc',
+            sig2: 'def',
+            sig3: 'ghi',
         };
 
         script = createRuntimeBot(precalc, manager);
@@ -418,18 +418,18 @@ describe('RuntimeBot', () => {
         });
 
         it('should not allow changing signatures', () => {
-            script.signatures.sig1 = false;
-            expect(script.signatures.sig1).toEqual(true);
+            script.signatures.sig1 = 'wrong';
+            expect(script.signatures.sig1).toEqual('abc');
         });
 
         it('should not allow adding signatures', () => {
-            script.signatures.newSig = true;
+            script.signatures.newSig = 'def';
             expect(script.signatures.newSig).toBeUndefined();
         });
 
         it('should not allow deleting signatures', () => {
             delete script.signatures.sig1;
-            expect(script.signatures.sig1).toBe(true);
+            expect(script.signatures.sig1).toBe('abc');
         });
     });
 

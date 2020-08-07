@@ -129,14 +129,14 @@ describe('AuxStateHelpers', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            sig: true,
+                            sig: 'abc',
                         },
                     },
                 };
                 const update = {
                     test: {
                         signatures: {
-                            sig: null as boolean,
+                            sig: null as string,
                         },
                     },
                 };
@@ -242,7 +242,7 @@ describe('AuxStateHelpers', () => {
                 const update = {
                     test: {
                         signatures: {
-                            abc: true,
+                            abc: 'tag',
                         },
                     },
                 };
@@ -257,7 +257,7 @@ describe('AuxStateHelpers', () => {
                                 id: 'test',
                                 tags: {},
                                 signatures: {
-                                    abc: true,
+                                    abc: 'tag',
                                 },
                             },
                             tags: new Set(),

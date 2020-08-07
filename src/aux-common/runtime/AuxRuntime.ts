@@ -72,6 +72,7 @@ import {
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
 import { forOwn } from 'lodash';
+import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -104,6 +105,7 @@ export class AuxRuntime
 
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
+    private _forceSignedScripts: boolean;
 
     get context() {
         return this._globalContext;
@@ -112,6 +114,7 @@ export class AuxRuntime
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
+     * @param forceSignedScripts Whether to force the runtime to only allow scripts that are signed.
      */
     constructor(
         version: AuxVersion,
@@ -119,11 +122,13 @@ export class AuxRuntime
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
-        editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider()
+        editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
+        forceSignedScripts: boolean = false
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
         this._editModeProvider = editModeProvider;
+        this._forceSignedScripts = forceSignedScripts;
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
@@ -492,7 +497,6 @@ export class AuxRuntime
             }
 
             if (hasValue(bot.signatures)) {
-                newBot.signatures = bot.signatures;
                 precalculated.signatures = bot.signatures;
             }
             newBots.push([newBot, precalculated]);
@@ -598,8 +602,19 @@ export class AuxRuntime
                     const val = !!u.bot.signatures
                         ? u.bot.signatures[sig] || null
                         : null;
+                    const current = compiled.signatures[sig];
                     compiled.signatures[sig] = val;
                     partial.signatures[sig] = val;
+
+                    if (!val && current) {
+                        this._compileTag(
+                            compiled,
+                            current,
+                            compiled.tags[current]
+                        );
+                    } else if (val && !current) {
+                        this._compileTag(compiled, val, compiled.tags[val]);
+                    }
                 }
             }
 
@@ -763,6 +778,9 @@ export class AuxRuntime
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;
         }
+        if (hasValue(bot.signatures)) {
+            compiledBot.signatures = bot.signatures;
+        }
         compiledBot.script = this._createRuntimeBot(compiledBot);
         const tags = tagsOnBot(compiledBot);
         this._compileTags(tags, compiledBot, bot);
@@ -809,7 +827,7 @@ export class AuxRuntime
         return bot.listeners[tag] || null;
     }
 
-    getSignature(bot: CompiledBot, signature: string): boolean {
+    getSignature(bot: CompiledBot, signature: string): string {
         return !!bot.signatures ? bot.signatures[signature] : undefined;
     }
 
@@ -926,6 +944,15 @@ export class AuxRuntime
         script: string,
         options: CompileOptions
     ) {
+        if (this._forceSignedScripts) {
+            const hash = tagValueHash(bot.id, tag, script);
+            if (!bot.signatures || bot.signatures[hash] !== tag) {
+                throw new Error(
+                    'Unable to compile script. It is not signed with a valid certificate.'
+                );
+            }
+        }
+
         return this._compiler.compile(script, {
             // TODO: Support all the weird features
             context: {
@@ -1120,4 +1147,11 @@ interface CompileOptions {
      * If false, then the script will set the bot's editable value to false for the duration of the script.
      */
     allowsEditing: boolean;
+}
+
+interface UncompiledScript {
+    bot: CompiledBot;
+    tag: string;
+    script: string;
+    hash: string;
 }

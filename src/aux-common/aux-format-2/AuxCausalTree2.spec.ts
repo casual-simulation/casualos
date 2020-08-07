@@ -947,7 +947,7 @@ describe('AuxCausalTree2', () => {
                                 signatures: {
                                     [tagValueHash('test', 'abc', {
                                         some: 'object',
-                                    })]: true,
+                                    })]: 'abc',
                                 },
                             },
                             tags: new Set(),

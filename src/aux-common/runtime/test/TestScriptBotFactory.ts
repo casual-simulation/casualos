@@ -70,7 +70,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
     getListener(bot: CompiledBot, tag: string) {
         return bot.listeners[tag];
     },
-    getSignature(bot: PrecalculatedBot, signature: string): boolean {
+    getSignature(bot: PrecalculatedBot, signature: string): string {
         if (bot.signatures) {
             return bot.signatures[signature];
         } else {

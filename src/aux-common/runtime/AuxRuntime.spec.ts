@@ -799,7 +799,7 @@ describe('AuxRuntime', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 ]);
@@ -816,7 +816,7 @@ describe('AuxRuntime', () => {
                                 abc: 'def',
                             },
                             signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
                             },
                         },
                     },
@@ -1776,7 +1776,7 @@ describe('AuxRuntime', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 ]);
@@ -1793,7 +1793,7 @@ describe('AuxRuntime', () => {
                                 abc: 'def',
                             },
                             signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
                             },
                         },
                     },
@@ -1819,7 +1819,7 @@ describe('AuxRuntime', () => {
                             id: 'test',
                             tags: {},
                             signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
                             },
                         },
                         tags: [],
@@ -1833,7 +1833,7 @@ describe('AuxRuntime', () => {
                             tags: {},
                             values: {},
                             signatures: {
-                                [tagValueHash('test', 'abc', 'def')]: true,
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
                             },
                         },
                     },
@@ -1851,7 +1851,7 @@ describe('AuxRuntime', () => {
                             abc: 'def',
                         },
                         signatures: {
-                            [tagValueHash('test', 'abc', 'def')]: true,
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
                         },
                     },
                 ]);
@@ -4300,6 +4300,122 @@ describe('AuxRuntime', () => {
 
         expect(zones.length).toBe(1);
         expect(zones[0]).toBe(root);
+    });
+
+    describe('forceSignedScripts', () => {
+        beforeEach(() => {
+            runtime = new AuxRuntime(
+                version,
+                auxDevice,
+                undefined,
+                new DefaultRealtimeEditModeProvider(
+                    new Map<BotSpace, RealtimeEditMode>([
+                        ['shared', RealtimeEditMode.Immediate],
+                        [<any>'delayed', RealtimeEditMode.Delayed],
+                    ])
+                ),
+                true
+            );
+
+            events = [];
+            allEvents = [];
+            errors = [];
+            allErrors = [];
+
+            runtime.onActions.subscribe(a => {
+                events.push(a);
+                allEvents.push(...a);
+            });
+            runtime.onErrors.subscribe(e => {
+                errors.push(e);
+                allErrors.push(...e);
+            });
+        });
+
+        it('should only allow scripts that have signatures', () => {
+            runtime.botsAdded([
+                createBot('test', {
+                    script: '@player.toast("abc")',
+                }),
+                {
+                    id: 'test2',
+                    tags: {
+                        script: '@player.toast("def")',
+                    },
+                    signatures: {
+                        [tagValueHash(
+                            'test2',
+                            'script',
+                            '@player.toast("def")'
+                        )]: 'script',
+                    },
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('def')]);
+        });
+
+        it('should compile scripts that had signatures added afterwards', () => {
+            runtime.botsAdded([
+                createBot('test', {
+                    script: '@player.toast("abc")',
+                }),
+            ]);
+
+            const hash = tagValueHash('test', 'script', '@player.toast("abc")');
+
+            runtime.botsUpdated([
+                {
+                    bot: {
+                        id: 'test',
+                        tags: {},
+                        signatures: {
+                            [hash]: 'script',
+                        },
+                    },
+                    tags: [],
+                    signatures: [hash],
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
+
+        it('should remove scripts that had signatures removed afterwards', () => {
+            runtime.botsAdded([
+                {
+                    id: 'test',
+                    tags: {
+                        script: '@player.toast("def")',
+                    },
+                    signatures: {
+                        [tagValueHash(
+                            'test',
+                            'script',
+                            '@player.toast("def")'
+                        )]: 'script',
+                    },
+                },
+            ]);
+
+            const hash = tagValueHash('test', 'script', '@player.toast("def")');
+
+            runtime.botsUpdated([
+                {
+                    bot: {
+                        id: 'test',
+                        tags: {},
+                    },
+                    tags: [],
+                    signatures: [hash],
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([]);
+        });
     });
 });
 
