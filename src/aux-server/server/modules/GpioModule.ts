@@ -7,8 +7,8 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    SetGpioPinAction,
     ConfigureGpioPinAction,
+    SetGpioPinAction,
     GetGpioPinAction,
     asyncResult,
     asyncError,

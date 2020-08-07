@@ -103,9 +103,9 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | ConfigureGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
-    | ConfigureGpioPinAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError

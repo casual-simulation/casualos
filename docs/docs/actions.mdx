@@ -2388,13 +2388,13 @@ The **second parameter** is 'in' or 'out' to set the pin as an input pin or an o
 
 1. Configure Pin 17 as output.
 ```typescript
-configureGpio(17, "out")
+server.configureGpio(17, "out")
 ```
 
 ### `server.setGpio(pin, value)`
 
 
-This sets a GPIO pin on the physical server to either HIGH (0) or LOW (1).
+This sets a GPIO pin on the physical server to either HIGH (1) or LOW (0).
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the pin has been set.
@@ -2405,9 +2405,9 @@ The **second parameter** is '0' or '1' to set the pin as an HIGH or LOW.
 
 #### Examples:
 
-1. Set Pin 17 to HIGH or 0.
+1. Set Pin 17 to LOW or 0.
 ```typescript
-setGpio(17, 0)
+server.setGpio(17, 0)
 ```
 
 ### `server.getGpio(pin)`
@@ -2424,7 +2424,9 @@ The **first parameter** is the BCM Pin on the physical server.
 
 1. Read Pin 17.
 ```typescript
-getGpio(17)
+await server.getGpio(17)
+```
+
 ```
 
 ### `server.browseHistory()`

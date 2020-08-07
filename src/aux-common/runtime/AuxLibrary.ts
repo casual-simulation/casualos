@@ -377,8 +377,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             server: {
                 setupStory,
                 configureGpio,
-                getGpio,
                 setGpio,
+                getGpio,
                 shell,
                 backupToGithub,
                 backupAsDownload,
