@@ -7,9 +7,9 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    ConfigureRpioPinAction,
-    SetRpioPinAction,
-    GetRpioPinAction,
+    RpioOpenAction,
+    RpioReadAction,
+    RpioWriteAction,
     asyncResult,
     asyncError,
     hasValue,

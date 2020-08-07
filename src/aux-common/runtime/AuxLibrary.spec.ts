@@ -71,9 +71,9 @@ import {
     configureGpioPin,
     setGpioPin,
     getGpioPin,
-    rpioOpen,
-    rpioRead,
-    rpioWrite,
+    rpioOpenPin,
+    rpioReadPin,
+    rpioWritePin,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2420,7 +2420,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.rpioOpen(99, 'INPUT');
                 const expected = remote(
-                    rpioOpen(99, 'INPUT'),
+                    rpioOpenPin(99, 'INPUT'),
                     undefined,
                     undefined,
                     'task1'
@@ -2443,7 +2443,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.rpioRead(99);
                 const expected = remote(
-                    rpioRead(99),
+                    rpioReadPin(99),
                     undefined,
                     undefined,
                     'task1'
@@ -2466,7 +2466,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 const action: any = library.api.server.rpioWrite(99, 'HIGH');
                 const expected = remote(
-                    rpioWrite(99, 'HIGH'),
+                    rpioWritePin(99, 'HIGH'),
                     undefined,
                     undefined,
                     'task1'
