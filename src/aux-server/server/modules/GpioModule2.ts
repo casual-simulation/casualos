@@ -91,10 +91,31 @@ export class GpioModule2 implements AuxModule2 {
 
     _rpioOpen(simulation: Simulation, event: RpioOpenAction) {
         try {
-            if (event.options) {
-                rpio.open(event.pin, rpio.event.mode, event.options);
-            } else {
-                rpio.open(event.pin, rpio.event.mode);
+            if (event.pin) {
+                let pin = event.pin;
+                let mode = rpio.OUTPUT;
+                var options: [];
+                if (event.mode == 'INPUT') {
+                    mode = rpio.INPUT;
+                } else if (event.mode == 'OUTPUT') {
+                    mode = rpio.OUTPUT;
+                } else if (event.mode == 'PWM') {
+                    mode = rpio.PWM;
+                }
+
+                if (event.options == 'HIGH') {
+                    options = rpio.HIGH;
+                } else if (event.options == 'LOW') {
+                    options = rpio.LOW;
+                } else if (event.options == 'PULL_OFF') {
+                    options = rpio.PULL_OFF;
+                } else if (event.options == 'PULL_DOWN') {
+                    options = rpio.PULL_DOWN;
+                } else if (event.options == 'PULL_UP') {
+                    options = rpio.PULL_UP;
+                }
+
+                rpio.open(pin, mode, options);
             }
             simulation.helper.transaction(
                 hasValue(event.playerId)
@@ -122,7 +143,10 @@ export class GpioModule2 implements AuxModule2 {
     }
     _rpioRead(simulation: Simulation, event: RpioReadAction) {
         try {
-            let state = rpio.read(event.pin);
+            let state = rpio.LOW;
+            if (event.pin) {
+                state = rpio.read(event.pin);
+            }
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -149,7 +173,17 @@ export class GpioModule2 implements AuxModule2 {
     }
     _rpioWrite(simulation: Simulation, event: RpioWriteAction) {
         try {
-            rpio.write(event.pin, rpio.event.value);
+            if (event.pin) {
+                let pin = event.pin;
+                let value;
+                if (event.value == 'HIGH') {
+                    value = rpio.HIGH;
+                } else if (event.value == 'LOW') {
+                    value = rpio.LOW;
+                }
+
+                rpio.write(pin, value);
+            }
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
