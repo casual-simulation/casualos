@@ -68,6 +68,9 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    createCertificate,
+    signTag,
+    revokeCertificate,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -84,7 +87,9 @@ import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
-import { decryptV1 } from '@casual-simulation/crypto';
+import { decryptV1, keypair } from '@casual-simulation/crypto';
+import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
+import { tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -3407,6 +3412,7 @@ describe('AuxLibrary', () => {
                     fun: true,
                 },
                 listeners: {},
+                signatures: {},
             });
         });
         it('should add the new bot to the context', () => {
@@ -3436,6 +3442,7 @@ describe('AuxLibrary', () => {
                 listeners: {
                     onCreate: expect.any(Function),
                 },
+                signatures: {},
             });
         });
 
@@ -5569,9 +5576,9 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.encrypt()', () => {
-        it('should encrypt the given string with the given password', async () => {
-            const result = await library.api.crypto.encrypt('password', 'data');
-            const decrypted = await decryptV1('password', result);
+        it('should encrypt the given string with the given password', () => {
+            const result = library.api.crypto.encrypt('password', 'data');
+            const decrypted = decryptV1('password', result);
 
             const decoder = new TextDecoder();
             const final = decoder.decode(decrypted);
@@ -5580,24 +5587,323 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.decrypt()', () => {
-        it('should be able to decrypt the given encrypted data', async () => {
-            const encrypted = await library.api.crypto.encrypt(
-                'password',
-                'data'
-            );
-            const result = await library.api.crypto.decrypt(
-                'password',
-                encrypted
-            );
+        it('should be able to decrypt the given encrypted data', () => {
+            const encrypted = library.api.crypto.encrypt('password', 'data');
+            const result = library.api.crypto.decrypt('password', encrypted);
             expect(result).toEqual('data');
         });
 
-        it('should return null if the data was not able to be decrypted', async () => {
-            const result = await library.api.crypto.decrypt(
-                'password',
-                'wrong'
-            );
+        it('should return null if the data was not able to be decrypted', () => {
+            const result = library.api.crypto.decrypt('password', 'wrong');
             expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.keypair()', () => {
+        it('should create and return a keypair', () => {
+            const result = library.api.crypto.keypair('password');
+            expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.sign()', () => {
+        it('should create and return a signature for the given data', () => {
+            const keypair = library.api.crypto.keypair('password');
+            const signature = library.api.crypto.sign(
+                keypair,
+                'password',
+                'abc'
+            );
+            const valid = library.api.crypto.verify(keypair, signature, 'abc');
+            expect(typeof signature).toBe('string');
+            expect(valid).toBe(true);
+        });
+
+        it('should throw if the wrong password was given', () => {
+            const keypair = library.api.crypto.keypair('password');
+            expect(() => {
+                library.api.crypto.sign(keypair, 'wrong', 'abc');
+            }).toThrow();
+        });
+    });
+
+    describe('crypto.verify()', () => {
+        it('should create and return a signature for the given data', () => {
+            const keypair = library.api.crypto.keypair('password');
+            const signature = library.api.crypto.sign(
+                keypair,
+                'password',
+                'abc'
+            );
+            const valid = library.api.crypto.verify(keypair, signature, 'abc');
+            expect(typeof signature).toBe('string');
+            expect(valid).toBe(true);
+        });
+
+        it('should throw if the wrong password was given', () => {
+            const keypair = library.api.crypto.keypair('password');
+            expect(() => {
+                library.api.crypto.verify(keypair, 'wrong', 'abc');
+            }).toThrow();
+        });
+    });
+
+    const keypair1 =
+        'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
+    describe('crypto.createCertificate()', () => {
+        it('should emit a CreateCertificateAction for self-signed certs', () => {
+            const promise: any = library.api.crypto.createCertificate(
+                null,
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should emit a CreateCertificateAction for normal certs', () => {
+            const cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            addToContext(context, cert);
+            const promise: any = library.api.crypto.createCertificate(
+                cert,
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingBotId: 'test1',
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given a bot ID', () => {
+            const promise: any = library.api.crypto.createCertificate(
+                'test1',
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingBotId: 'test1',
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('crypto.signTag()', () => {
+        let bot1: RuntimeBot;
+        let cert: RuntimeBot;
+        beforeEach(() => {
+            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1, cert);
+        });
+
+        it('should emit a SignTagAction', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '#abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '@abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given bots', () => {
+            const promise: any = library.api.crypto.signTag(
+                cert,
+                'password',
+                bot1,
+                'abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('crypto.verifyTag()', () => {
+        let bot1: RuntimeBot;
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                },
+                undefined,
+                {
+                    [tagValueHash('bot1', 'abc', 'def')]: 'abc',
+                }
+            );
+            addToContext(context, bot1);
+        });
+
+        it('should return true if the bot has a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(true);
+        });
+
+        it('should return false if the bot does not have a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'missing');
+            expect(result).toBe(false);
+        });
+
+        it('should return false if the bot has a signature for the given tag but the value is different', () => {
+            bot1.tags.abc = 'different';
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(false);
+        });
+
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '#abc');
+            expect(result).toBe(true);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '@abc');
+            expect(result).toBe(true);
+        });
+    });
+
+    describe('crypto.revokeCertificate()', () => {
+        let bot1: RuntimeBot;
+        let cert: RuntimeBot;
+        beforeEach(() => {
+            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1, cert);
+        });
+
+        it('should emit a RevokeCertificateAction', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                'test1',
+                'password',
+                'bot1'
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given bots', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password',
+                bot1
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given a single bot', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password'
+            );
+
+            const expected = revokeCertificate(
+                'test1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
         });
     });
 });

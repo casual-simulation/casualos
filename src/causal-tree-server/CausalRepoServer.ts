@@ -68,6 +68,9 @@ import {
     RESTORED,
     DisconnectionReason,
     UnwatchReason,
+    Weave,
+    ResetEvent,
+    RESET,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -83,8 +86,8 @@ export class CausalRepoServer {
     private _deviceManager: DeviceManager;
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
-    private _repos: Map<string, CausalRepo>;
-    private _repoPromises: Map<string, Promise<CausalRepo>>;
+    private _repos: Map<string, RepoData>;
+    private _repoPromises: Map<string, Promise<RepoData>>;
     /**
      * The map of branch and device IDs to their site ID.
      */
@@ -163,7 +166,7 @@ export class CausalRepoServer {
                             true,
                             event.temporary
                         );
-                        const atoms = repo.getAtoms();
+                        const atoms = repo.repo.getAtoms();
 
                         this._sendConnectedToBranch(device, branch);
                         conn.send(ADD_ATOMS, {
@@ -178,7 +181,7 @@ export class CausalRepoServer {
                             true,
                             false
                         );
-                        const atoms = repo.getAtoms();
+                        const atoms = repo.repo.getAtoms();
                         conn.send(ADD_ATOMS, {
                             branch: branch,
                             atoms: atoms,
@@ -206,7 +209,19 @@ export class CausalRepoServer {
                             let removed: Atom<any>[];
 
                             if (event.atoms) {
-                                added = repo.add(...event.atoms);
+                                // Only allow adding atoms that were valid
+                                // This lets us keep track of the special logic for cardinality.
+                                let addable = event.atoms.filter(a => {
+                                    const result = repo.weave.insert(a);
+                                    return (
+                                        result.type === 'atom_added' ||
+                                        result.type === 'atom_already_added' ||
+                                        result.type === 'nothing_happened' ||
+                                        (result.type === 'conflict' &&
+                                            result.winner === a)
+                                    );
+                                });
+                                added = repo.repo.add(...addable);
 
                                 if (!isTemp) {
                                     await this._stage.addAtoms(
@@ -222,7 +237,24 @@ export class CausalRepoServer {
                                 }
                             }
                             if (event.removedAtoms) {
-                                removed = repo.remove(...event.removedAtoms);
+                                // Only allow removing atoms that are not part of a cardinality tree.
+                                let removable = event.removedAtoms.filter(
+                                    hash => {
+                                        let node = repo.weave.getNodeByHash(
+                                            hash
+                                        );
+                                        if (!node) {
+                                            return true;
+                                        }
+                                        let chain = repo.weave.referenceChain(
+                                            node.atom.id
+                                        );
+                                        return chain.every(
+                                            node => !node.atom.id.cardinality
+                                        );
+                                    }
+                                );
+                                removed = repo.repo.remove(...removable);
 
                                 if (!isTemp) {
                                     await this._stage.removeAtoms(
@@ -282,8 +314,8 @@ export class CausalRepoServer {
                             return;
                         }
 
-                        if (repo.hasChanges()) {
-                            await this._commitToRepo(event, repo);
+                        if (repo.repo.hasChanges()) {
+                            await this._commitToRepo(event, repo.repo);
                             sendToDevices([device], COMMIT_CREATED, {
                                 branch: event.branch,
                             });
@@ -302,13 +334,13 @@ export class CausalRepoServer {
                             return;
                         }
 
-                        if (!repo.currentCommit) {
+                        if (!repo.repo.currentCommit) {
                             return;
                         }
 
                         const commits = await listCommits(
                             this._store,
-                            repo.currentCommit.commit.hash
+                            repo.repo.currentCommit.commit.hash
                         );
                         let e: AddCommitsEvent = {
                             branch: branch,
@@ -329,12 +361,18 @@ export class CausalRepoServer {
                                 event.commit
                             }] Checking out`
                         );
-                        const current = repo.currentCommit;
-                        await repo.reset(event.commit);
+                        const current = repo.repo.currentCommit;
+                        await repo.repo.reset(event.commit);
                         await this._stage.clearStage(event.branch);
-                        const after = repo.currentCommit;
+                        const after = repo.repo.currentCommit;
 
-                        this._sendDiff(current, after, event.branch);
+                        // Reset the weave so that cardinality is properly calculated.
+                        repo.weave = new Weave();
+                        for (let atom of repo.repo.getAtoms()) {
+                            repo.weave.insert(atom);
+                        }
+
+                        this._sendReset(after, event.branch);
                     },
                     [RESTORE]: async event => {
                         const repo = await this._getOrLoadRepo(
@@ -349,7 +387,7 @@ export class CausalRepoServer {
                             }] Restoring`
                         );
 
-                        if (repo.hasChanges()) {
+                        if (repo.repo.hasChanges()) {
                             await this._commitToRepo(
                                 {
                                     branch: event.branch,
@@ -357,11 +395,11 @@ export class CausalRepoServer {
                                         event.branch
                                     } before restore`,
                                 },
-                                repo
+                                repo.repo
                             );
                         }
 
-                        const current = repo.currentCommit;
+                        const current = repo.repo.currentCommit;
                         const oldCommit = await this._store.getObject(
                             event.commit
                         );
@@ -382,11 +420,17 @@ export class CausalRepoServer {
                         await storeData(this._store, event.branch, null, [
                             newCommit,
                         ]);
-                        await repo.reset(newCommit);
-                        const after = repo.currentCommit;
+                        await repo.repo.reset(newCommit);
+                        const after = repo.repo.currentCommit;
+
+                        // Reset the weave so that cardinality is properly calculated.
+                        repo.weave = new Weave();
+                        for (let atom of repo.repo.getAtoms()) {
+                            repo.weave.insert(atom);
+                        }
 
                         this._sendCommits(event.branch, [newCommit]);
-                        this._sendDiff(current, after, event.branch);
+                        this._sendReset(after, event.branch);
 
                         sendToDevices([device], RESTORED, {
                             branch: event.branch,
@@ -613,16 +657,14 @@ export class CausalRepoServer {
         );
     }
 
-    private _sendDiff(current: CommitData, after: CommitData, branch: string) {
-        const delta = calculateCommitDiff(current, after);
+    private _sendReset(after: CommitData, branch: string) {
         const info = infoForBranch(branch);
         const devices = this._deviceManager.getConnectedDevices(info);
-        let ret: AddAtomsEvent = {
+        let ret: ResetEvent = {
             branch: branch,
-            atoms: [...delta.additions.values()],
-            removedAtoms: [...delta.deletions.keys()],
+            atoms: [...after.atoms.values()],
         };
-        sendToDevices(devices, ADD_ATOMS, ret);
+        sendToDevices(devices, RESET, ret);
     }
 
     private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {
@@ -734,11 +776,11 @@ export class CausalRepoServer {
         console.log(`[CausalRepoServer] [${branch}] Unloading.`);
         const repo = await this._repoPromises.get(branch);
         this._repoPromises.delete(branch);
-        if (repo && repo.hasChanges()) {
+        if (repo && repo.repo.hasChanges()) {
             console.log(
                 `[CausalRepoServer] [${branch}] Committing before unloading...`
             );
-            const c = await repo.commit(`Save ${branch} before unload`);
+            const c = await repo.repo.commit(`Save ${branch} before unload`);
 
             if (c) {
                 console.log(
@@ -763,7 +805,7 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            let promise: Promise<CausalRepo>;
+            let promise: Promise<RepoData>;
             if (!temporary) {
                 promise = this._loadRepo(branch, createBranch);
             } else {
@@ -781,7 +823,7 @@ export class CausalRepoServer {
         return repo;
     }
 
-    private async _createEmptyRepo(branch: string) {
+    private async _createEmptyRepo(branch: string): Promise<RepoData> {
         console.log(`[CausalRepoServer] [${branch}] Creating temp`);
         const emptyStore = new MemoryCausalRepoStore();
         const repo = new CausalRepo(emptyStore);
@@ -791,13 +833,18 @@ export class CausalRepoServer {
             },
         });
 
-        return repo;
+        const weave = new Weave<any>();
+
+        return {
+            repo,
+            weave,
+        };
     }
 
     private async _loadRepo(
         branch: string,
         createBranch: boolean
-    ): Promise<CausalRepo> {
+    ): Promise<RepoData> {
         const startTime = process.hrtime();
         try {
             console.log(`[CausalRepoServer] [${branch}] Loading`);
@@ -813,7 +860,16 @@ export class CausalRepoServer {
             repo.addMany(stage.additions);
             const hashes = Object.keys(stage.deletions);
             repo.removeMany(hashes);
-            return repo;
+            const weave = new Weave<any>();
+
+            for (let atom of repo.getAtoms()) {
+                weave.insert(atom);
+            }
+
+            return {
+                repo,
+                weave,
+            };
         } finally {
             const [seconds, nanoseconds] = process.hrtime(startTime);
             console.log(
@@ -920,4 +976,9 @@ function handleEvents(
 
 function branchSiteIdKey(branch: string, deviceId: string): string {
     return `${branch}-${deviceId}`;
+}
+
+interface RepoData {
+    repo: CausalRepo;
+    weave: Weave<any>;
 }

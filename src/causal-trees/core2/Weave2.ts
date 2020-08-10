@@ -22,6 +22,8 @@ export type WeaveResult =
     | AtomConflictResult
     | InvalidArgumentResult
     | AtomNotFoundResult
+    | InvalidCardinalityResult
+    | CardinalityViolatedResult
     | NothingResult;
 
 /**
@@ -112,6 +114,30 @@ export interface AtomNotFoundResult {
 }
 
 /**
+ * Defines an interface that indicates that the cardinality of the atom was invalid.
+ */
+export interface InvalidCardinalityResult {
+    type: 'invalid_cardinality';
+
+    /**
+     * The atom that was rejected.
+     */
+    atom: Atom<any>;
+}
+
+/**
+ * Defines an interface that indicates that the given atom violated the cardinality restraints of another atom that was already in the weave.
+ */
+export interface CardinalityViolatedResult {
+    type: 'cardinality_violated';
+
+    /**
+     * The atom that was rejected.
+     */
+    atom: Atom<any>;
+}
+
+/**
  * Defines an interface that indicates that nothing happened.
  */
 export interface NothingResult {
@@ -138,6 +164,11 @@ export interface WeaveNode<T> {
     prev: WeaveNode<T>;
 }
 
+interface CardinalityStats {
+    current: number;
+    max: number;
+}
+
 /**
  * Defines a weave.
  * That is, the depth-first preorder traversal of a causal tree.
@@ -147,6 +178,7 @@ export interface WeaveNode<T> {
  */
 export class Weave<T> {
     private _roots: WeaveNode<T>[];
+    private _cardinality: Map<string, CardinalityStats>;
     private _idMap: Map<string, WeaveNode<T>>;
     private _hashMap: Map<string, WeaveNode<T>>;
 
@@ -187,6 +219,7 @@ export class Weave<T> {
         this._roots = [];
         this._idMap = new Map();
         this._hashMap = new Map();
+        this._cardinality = new Map();
     }
 
     /**
@@ -203,9 +236,49 @@ export class Weave<T> {
                 };
             }
 
+            // Check cardinality
+            if (
+                (typeof atom.id.cardinality !== 'object' &&
+                    typeof atom.id.cardinality !== 'undefined') ||
+                (typeof atom.id.cardinality === 'object' &&
+                    (typeof atom.id.cardinality.number !== 'number' ||
+                        typeof atom.id.cardinality.group !== 'string' ||
+                        atom.id.cardinality.number <= 0))
+            ) {
+                return {
+                    type: 'invalid_cardinality',
+                    atom: atom,
+                };
+            }
+
             const existing = this.getNode(atom.id);
             if (existing) {
                 return this._resolveConflict(existing, atom, null);
+            }
+
+            // Check against current cardinality
+            if (atom.id.cardinality) {
+                let cardinality = this._cardinality.get(
+                    atom.id.cardinality.group
+                );
+                if (cardinality && cardinality.current >= cardinality.max) {
+                    return {
+                        type: 'cardinality_violated',
+                        atom: atom,
+                    };
+                }
+                if (!cardinality) {
+                    cardinality = {
+                        current: 0,
+                        max: atom.id.cardinality.number,
+                    };
+                }
+                cardinality = {
+                    current: cardinality.current + 1,
+                    max: Math.min(cardinality.max, atom.id.cardinality.number),
+                };
+                // Update cardinality
+                this._cardinality.set(atom.id.cardinality.group, cardinality);
             }
 
             // Atom is a root

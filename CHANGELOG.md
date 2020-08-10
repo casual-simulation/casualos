@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V1.2.2
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
+
+### :rocket: Improvements
+
+-   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()`, `crypto.revokeCertificate()` functions to help with creating certificate chains and signing and validating tag data. Check the docs for detailed usage information.
+-   Added an indicator to the multi-line editor that is shown when a tag value is verified.
+-   Added the ability to force all scripts to be verified in order to be executed using the `forceSignedScripts` query parameter.
+    -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
+    -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
+
 ## V1.2.1
 
 #### Date: 8/4/2020

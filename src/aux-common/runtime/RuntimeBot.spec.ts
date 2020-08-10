@@ -23,6 +23,7 @@ describe('RuntimeBot', () => {
     let updateTagMock: jest.Mock;
     let getListenerMock: jest.Mock;
     let getRawValueMock: jest.Mock;
+    let getSignatureMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -56,6 +57,10 @@ describe('RuntimeBot', () => {
         getRawValueMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
             return bot.tags[tag];
         });
+
+        getSignatureMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
+            return bot.signatures[tag];
+        });
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
@@ -63,6 +68,7 @@ describe('RuntimeBot', () => {
             },
             getRawValue: getRawValueMock,
             getListener: getListenerMock,
+            getSignature: getSignatureMock,
         };
 
         precalc = createCompiledBot(
@@ -81,6 +87,11 @@ describe('RuntimeBot', () => {
             },
             'shared'
         );
+        precalc.signatures = {
+            sig1: 'abc',
+            sig2: 'def',
+            sig3: 'ghi',
+        };
 
         script = createRuntimeBot(precalc, manager);
     });
@@ -385,6 +396,40 @@ describe('RuntimeBot', () => {
         it('should get the raw value from the manager', () => {
             const fun = script.raw.fun;
             expect(manager.getRawValue).toHaveBeenCalledWith(precalc, 'fun');
+        });
+    });
+
+    describe('signatures', () => {
+        it('should contain the signatures from the precalculated bot', () => {
+            expect(script.signatures).toEqual({
+                ...precalc.signatures,
+            });
+        });
+
+        it('should be able to enumerate the signatures on the bot', () => {
+            let objectTags = Object.keys(script.signatures);
+            let forTags = [] as string[];
+            for (let tag in script.signatures) {
+                forTags.push(tag);
+            }
+
+            expect(objectTags).toEqual(forTags);
+            expect(forTags).toEqual(['sig1', 'sig2', 'sig3']);
+        });
+
+        it('should not allow changing signatures', () => {
+            script.signatures.sig1 = 'wrong';
+            expect(script.signatures.sig1).toEqual('abc');
+        });
+
+        it('should not allow adding signatures', () => {
+            script.signatures.newSig = 'def';
+            expect(script.signatures.newSig).toBeUndefined();
+        });
+
+        it('should not allow deleting signatures', () => {
+            delete script.signatures.sig1;
+            expect(script.signatures.sig1).toBe('abc');
         });
     });
 

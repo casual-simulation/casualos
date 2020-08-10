@@ -14,6 +14,12 @@ import {
     addedAtoms,
     removedAtoms,
     CausalRepoClient,
+    index,
+    calculateDiff,
+    commit,
+    CommitData,
+    atomMap,
+    calculateCommitDiff,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -44,6 +50,9 @@ import {
     ON_REMOTE_WHISPER_ACTION_NAME,
     hasValue,
     AsyncAction,
+    CreateCertificateAction,
+    SignTagAction,
+    RevokeCertificateAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -329,14 +338,20 @@ export class RemoteCausalRepoPartitionImpl
         let finalEvents = [] as (
             | AddBotAction
             | RemoveBotAction
-            | UpdateBotAction)[];
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction)[];
         for (let e of events) {
             if (e.type === 'apply_state') {
                 finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot'
+                e.type === 'update_bot' ||
+                e.type === 'create_certificate' ||
+                e.type === 'sign_tag' ||
+                e.type === 'revoke_certificate'
             ) {
                 finalEvents.push(e);
             } else if (e.type === 'unlock_space') {
@@ -493,6 +508,19 @@ export class RemoteCausalRepoPartitionImpl
                             } else {
                                 this._onEvents.next([event.action]);
                             }
+                        } else if (event.type === 'reset') {
+                            console.log(
+                                '[RemoteCausalRepoPartition] Got reset.'
+                            );
+                            // TODO: improve so that the updates are merged but the same effect is achieved.
+                            const currentAtoms = this._tree.weave
+                                .getAtoms()
+                                .map(a => a.hash);
+                            this._applyAtoms([], currentAtoms);
+
+                            // Re-create the tree (and therefore weave) to reset the cardinality rules.
+                            this._tree = auxTree();
+                            this._applyAtoms(event.atoms, []);
                         }
                     },
                     err => this._onError.next(err)
@@ -527,9 +555,15 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _applyEvents(
-        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+        events: (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction)[]
     ) {
-        let { tree, updates, result } = applyEvents(
+        let { tree, updates, result, actions } = applyEvents(
             this._tree,
             events,
             this.space
@@ -547,6 +581,10 @@ export class RemoteCausalRepoPartitionImpl
         if (atoms.length > 0 || removed.length > 0) {
             this._client.addAtoms(this._branch, atoms, removed);
         }
+
+        if (actions && actions.length > 0) {
+            this._onEvents.next(actions);
+        }
     }
 
     private _sendUpdates(updates: BotStateUpdates) {
@@ -561,6 +599,9 @@ export class RemoteCausalRepoPartitionImpl
                 updates.updatedBots.map(u => ({
                     bot: <any>u.bot,
                     tags: [...u.tags.values()],
+                    signatures: u.signatures
+                        ? [...u.signatures.values()]
+                        : undefined,
                 }))
             );
         }

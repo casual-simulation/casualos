@@ -58,6 +58,28 @@ describe('Atom2', () => {
 
             expect(hash1).not.toBe(hash2);
         });
+
+        it('should include the priority', () => {
+            const hash1 = atomHash(atomId('A', 1), null, {});
+            const hash2 = atomHash(atomId('A', 1, 1), null, {});
+
+            expect(hash1).not.toBe(hash2);
+        });
+
+        it('should include the cardinality', () => {
+            const hash1 = atomHash(
+                atomId('A', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const hash2 = atomHash(
+                atomId('A', 1, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+
+            expect(hash1).not.toBe(hash2);
+        });
     });
 
     describe('atomMatchesHash()', () => {
@@ -87,6 +109,24 @@ describe('Atom2', () => {
             expect(atomIdToString(atomId('b', 1, 110))).toBe('b@1:110');
             expect(atomIdToString(atomId('c', 3))).toBe('c@3');
         });
+
+        it('should include the timestamp, site, priority, and cardinality', () => {
+            expect(
+                atomIdToString(
+                    atomId('a', 1, undefined, { group: 'abc', number: 1 })
+                )
+            ).toBe('a@1-abc^1');
+            expect(
+                atomIdToString(
+                    atomId('b', 1, 110, { group: 'abc', number: 50 })
+                )
+            ).toBe('b@1:110-abc^50');
+            expect(
+                atomIdToString(
+                    atomId('c', 3, undefined, { group: 'xyz', number: 99 })
+                )
+            ).toBe('c@3-xyz^99');
+        });
     });
 
     describe('atomId()', () => {
@@ -109,12 +149,30 @@ describe('Atom2', () => {
             expect(idEquals(atomId('a', 2), atomId('a', 2))).toBe(true);
             expect(idEquals(atomId('b', 1), atomId('b', 1))).toBe(true);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1, 1))).toBe(true);
+            expect(
+                idEquals(
+                    atomId('a', 1, 1, { group: 'abc', number: 1 }),
+                    atomId('a', 1, 1, { group: 'abc', number: 1 })
+                )
+            ).toBe(true);
 
             expect(idEquals(atomId('a', 2), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('b', 1), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('b', 2), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1, 2))).toBe(false);
+            expect(
+                idEquals(
+                    atomId('a', 1, 1, { group: 'abc', number: 1 }),
+                    atomId('a', 1, 1, { group: 'abc', number: 2 })
+                )
+            ).toBe(false);
+            expect(
+                idEquals(
+                    atomId('a', 1, 1, { group: 'abc', number: 1 }),
+                    atomId('a', 1, 1, { group: 'def', number: 1 })
+                )
+            ).toBe(false);
         });
 
         it('should handle null/undefined priorities', () => {

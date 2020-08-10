@@ -512,7 +512,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             buildVersionNumber(this._config.config),
             this._config.config ? this._config.config.device : null,
             undefined,
-            this._partitionEditModeProvider
+            this._partitionEditModeProvider,
+            this._config.config
+                ? this._config.config.forceSignedScripts || false
+                : false
         );
         runtime.userId = this.user ? this.user.id : null;
         return runtime;

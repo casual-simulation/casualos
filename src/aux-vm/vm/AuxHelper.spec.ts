@@ -23,6 +23,9 @@ import {
     createCausalRepoClientPartition,
     unlockSpace,
     asyncError,
+    createCertificate,
+    signTag,
+    revokeCertificate,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -51,6 +54,7 @@ import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
 import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test/TestScriptBotFactory';
+import { keypair } from '../../aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -238,6 +242,109 @@ describe('AuxHelper', () => {
 
             expect(Object.keys(helper.botsState)).toEqual(['abcdefghijklmnop']);
             expect(Object.keys(mem.state)).toEqual(['abcdefghijklmnop']);
+        });
+
+        it('should send create_certificate actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            const keys = keypair('password');
+            await helper.transaction(
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                )
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                ),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                ),
+            ]);
+        });
+
+        it('should send sign_tag actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            await helper.transaction(
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+        });
+
+        it('should send revoke_certificate actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            await helper.transaction(
+                revokeCertificate('test1', 'password', 'test2')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
+            ]);
         });
 
         it('should ignore bots going to partitions that dont exist', async () => {

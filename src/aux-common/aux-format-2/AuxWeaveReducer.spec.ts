@@ -1,14 +1,42 @@
-import { AuxOp, bot, tag, value, del, AuxOpType } from './AuxOpTypes';
+import {
+    AuxOp,
+    bot,
+    tag,
+    value,
+    del,
+    AuxOpType,
+    CertificateOp,
+    signedCert,
+    RevocationOp,
+    signedRevocation,
+    SignatureOp,
+    signedValue,
+    tagValueHash,
+    ValueOp,
+    TagOp,
+    BotOp,
+} from './AuxOpTypes';
 import {
     Atom,
     atom,
     atomId,
     Weave,
 } from '@casual-simulation/causal-trees/core2';
-import reduce from './AuxWeaveReducer';
+import reduce, { CERT_ID_NAMESPACE, CERTIFIED_SPACE } from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
 import { apply } from './AuxStateHelpers';
 import { isBot } from '../bots';
+import uuidv5 from 'uuid/v5';
+import { merge } from 'lodash';
+import { getHash } from '@casual-simulation/crypto';
+import reducer from './AuxWeaveReducer';
+
+const keypair1 =
+    'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
+const keypair2 =
+    'vK1.H6/kRocyRcAAjQzjjSLi5/toJiis9Sj1NYuoYIYPQdE=.djEubjVrRzV1SmIycjFaUmszTHNxaDNhZzIrYUk1WHExYkQuM3BwU2lCa1hiMnE5Slltai96UllMcUZWb1VBdDN4alkuM0Z6K29OcFZVaXRPN01xeDA3S1M2Z3YxbnFHc2NnV0JtUDg4ektmTUxndXlsOFVlR3I5MGM2bTI0WkdSRGhOUG1tMWxXRTJMaTkwbHdhY2h3MGszcmtXS25zOCtxa01Xd2ZSL1psMSsvRUE9';
+const keypair3 =
+    'vK1.Tn40JxRUdKePQWdeQ9H+wTIyDRqvgC07W4xXP9ppKQc=.djEuUUErTFcxaEpSaitvVDhJV0VvUnFiYUlkTTk5MVdQMGMucUxveUNKdjZ5aDRjY0kwd3NiK1FRUStTbFZUL1Y5ZngudkdNS2l2WXhHMXNvVGVvdWpvQm0vbUhkeXVrR0ppK0F6MzlQNXM0eXJQNW83NDQrQ1hXMGVid2tPSjNwaTBwd1dYVjJTYlhDb2hqczBJWndaRTU1RWxQZzI3akVvUVRBZGh6QzJpajVnTHM9';
 
 describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
@@ -461,6 +489,466 @@ describe('AuxWeaveReducer', () => {
             });
         });
 
+        describe('certificate', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+            });
+
+            it('should add a bot for the self signed certificate', () => {
+                state = add(c1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+            });
+
+            it('should add a bot for the certificates', () => {
+                state = add(c1, c2, c3);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                    [uuidv5(c3.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c3.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair3,
+                            signature: c3.value.signature,
+                            signingCertificate: uuidv5(
+                                c2.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c3,
+                        },
+                    },
+                });
+            });
+
+            it('should not add a bot for the certificate if the signature is invalid', () => {
+                const c3Copy = merge({}, c3, {
+                    value: {
+                        signature: 'wrong',
+                    },
+                });
+                state = add(c1, c2, c3Copy);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                });
+            });
+
+            it('should not add a bot for the certificate if the parent certificate is revoked', () => {
+                state = add(c1, r1, c2);
+
+                expect(state).toEqual({});
+            });
+
+            it('should not add a bot for the certificate if the grandparent certificate is revoked', () => {
+                state = add(c1, c2, r1, c3);
+
+                expect(state).toEqual({});
+            });
+        });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+            let r3: Atom<RevocationOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+            });
+
+            it('should remove the certificate bot from the state', () => {
+                state = add(c1, r1);
+
+                expect(state).toEqual({});
+            });
+
+            it('should remove all child certificate bots from the state', () => {
+                state = add(c1, c2, c3, r1);
+
+                expect(state).toEqual({});
+            });
+
+            it('should remove the signature from the state', () => {
+                let bot1 = atom(atomId('b', 1), null, bot('test'));
+                let tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                let value1 = atom(atomId('b', 3), tag1, value('def'));
+                const signature1 = signedValue(c1, 'password', value1);
+                const s1 = atom(atomId('a', 6), c1, signature1);
+                const revoke2 = signedRevocation(c1, 'password', s1);
+                const r2 = atom(atomId('a', 7), s1, revoke2);
+
+                weave.insert(c1);
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+                weave.insert(s1);
+                const result = reducer(weave, weave.insert(r2));
+
+                expect(result).toEqual({
+                    ['test']: {
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: null,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('signature', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let s1: Atom<SignatureOp>;
+
+            let bot1: Atom<BotOp>;
+            let tag1: Atom<TagOp>;
+            let value1: Atom<ValueOp>;
+            let value2: Atom<ValueOp>;
+            let value3: Atom<ValueOp>;
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+
+                bot1 = atom(atomId('b', 1), null, bot('test'));
+                tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                value1 = atom(atomId('b', 3), tag1, value('def'));
+                value2 = atom(atomId('b', 4), tag1, value('def'));
+                value3 = atom(atomId('b', 5), tag1, value('different'));
+
+                const signature1 = signedValue(c1, 'password', value1);
+                s1 = atom(atomId('a', 6), c1, signature1);
+            });
+
+            it('should add a signature value for the tag', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                });
+            });
+
+            it('should not add a signature value for the tag if the certificate is revoked', () => {
+                state = add(c1, bot1, tag1, value1, r1, s1);
+
+                expect(state).toEqual({
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should not add a signature value for the tag if the value atom does not exist', () => {
+                state = add(c1, bot1, tag1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {},
+                    },
+                });
+            });
+
+            it('should remove the signatures when revoking a certificate', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                });
+
+                state = add(r1);
+
+                expect(state).toEqual({
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should not add a signature value for the tag if the bot is destroyed', () => {
+                const del1 = atom(atomId('b', 4), bot1, del());
+
+                state = add(c1, bot1, tag1, value1, del1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+            });
+
+            it('should remove the signature if a new value atom with the same actual value is added', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                });
+
+                state = add(value2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should remove the previous value signature if a new value atom is added', () => {
+                state = add(c1, bot1, tag1, value1, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                });
+
+                state = add(value3);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'different',
+                        },
+                    },
+                });
+            });
+        });
+
         // TODO: Add support for inserts
     });
 
@@ -539,6 +1027,133 @@ describe('AuxWeaveReducer', () => {
                 );
 
                 expect(update).toEqual({});
+            });
+        });
+
+        describe('certificate', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+            });
+
+            it('should remove the certificate bot from the state', () => {
+                weave.insert(c1);
+                const update = reduce(weave, weave.remove(c1));
+
+                expect(update).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: null,
+                });
+            });
+
+            it('should remove the certificate bot and all its child certs from the state', () => {
+                weave.insert(c1);
+                weave.insert(c2);
+                weave.insert(c3);
+                const update = reduce(weave, weave.remove(c1));
+
+                expect(update).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: null,
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: null,
+                    [uuidv5(c3.hash, CERT_ID_NAMESPACE)]: null,
+                });
+            });
+        });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+            let r3: Atom<RevocationOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+            });
+
+            it('should re-add the certificate to the state', () => {
+                weave.insert(c1);
+                weave.insert(r1);
+
+                const update = reduce(weave, weave.remove(r1));
+
+                expect(update).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('signature', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let s1: Atom<SignatureOp>;
+
+            let bot1 = atom(atomId('b', 1), null, bot('test'));
+            let tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+            let value1 = atom(atomId('b', 3), tag1, value('def'));
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+
+                bot1 = atom(atomId('b', 1), null, bot('test'));
+                tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                value1 = atom(atomId('b', 3), tag1, value('def'));
+
+                const signature1 = signedValue(c1, 'password', value1);
+                s1 = atom(atomId('a', 6), c1, signature1);
+            });
+
+            it('should remove the signature value from the tag', () => {
+                weave.insert(c1);
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+                weave.insert(s1);
+                const result = reducer(weave, weave.remove(s1));
+
+                expect(result).toEqual({
+                    ['test']: {
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: null,
+                        },
+                    },
+                });
             });
         });
     });
@@ -768,6 +1383,260 @@ describe('AuxWeaveReducer', () => {
                 state = add(bot1, delete1A, delete1B);
 
                 expect(state).toEqual({});
+            });
+        });
+
+        describe('certificate', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c1, 'password', keypair3);
+                c3 = atom(atomId('a', 2), c1, cert3);
+            });
+
+            it('should remove the certificate bot if it is the loser', () => {
+                const hashes = [c2.hash, c3.hash].sort();
+                expect(hashes).toEqual([c2.hash, c3.hash]);
+
+                state = add(c1, c3);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c3.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c3.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair3,
+                            signature: c3.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c3,
+                        },
+                    },
+                });
+
+                state = add(c2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('revocation', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let r2: Atom<RevocationOp>;
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c2);
+                r1 = atom(atomId('a', 4), c2, revoke1);
+
+                const revoke2 = signedRevocation(c2, 'password', c3);
+                r2 = atom(atomId('a', 4), c3, revoke2);
+            });
+
+            it('should remove the revocation and restore previous certificates if it is the loser', () => {
+                const hashes = [r1.hash, r2.hash].sort();
+                expect(hashes).toEqual([r2.hash, r1.hash]);
+
+                state = add(c1, c2, c3, r1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                });
+
+                state = add(r2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    [uuidv5(c2.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c2.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair2,
+                            signature: c2.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c2,
+                        },
+                    },
+                });
+            });
+        });
+
+        describe('signature', () => {
+            let c1: Atom<CertificateOp>;
+            let c2: Atom<CertificateOp>;
+            let c3: Atom<CertificateOp>;
+            let r1: Atom<RevocationOp>;
+            let s1: Atom<SignatureOp>;
+            let s2: Atom<SignatureOp>;
+
+            let bot1: Atom<BotOp>;
+            let tag1: Atom<TagOp>;
+            let value1: Atom<ValueOp>;
+            let value2: Atom<ValueOp>;
+
+            beforeAll(() => {
+                const cert = signedCert(null, 'password', keypair1);
+                c1 = atom(atomId('a', 1), null, cert);
+                const cert2 = signedCert(c1, 'password', keypair2);
+                c2 = atom(atomId('a', 2), c1, cert2);
+                const cert3 = signedCert(c2, 'password', keypair3);
+                c3 = atom(atomId('a', 3), c2, cert3);
+
+                const revoke1 = signedRevocation(c1, 'password', c1);
+                r1 = atom(atomId('a', 4), c1, revoke1);
+
+                bot1 = atom(atomId('b', 1), null, bot('test'));
+                tag1 = atom(atomId('b', 2), bot1, tag('abc'));
+                value1 = atom(atomId('b', 3), tag1, value('def'));
+                value2 = atom(atomId('b', 4), tag1, value('different'));
+
+                const signature1 = signedValue(c1, 'password', value2);
+                s1 = atom(atomId('a', 6), c1, signature1);
+
+                const signature2 = signedValue(c1, 'password', value1);
+                s2 = atom(atomId('a', 6), c1, signature2);
+            });
+
+            it('should remove the losing signature', () => {
+                const hashes = [s1.hash, s2.hash].sort();
+                expect(hashes).toEqual([s2.hash, s1.hash]);
+
+                state = add(c1, bot1, tag1, value1, value2, s1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'different',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'different')]: 'abc',
+                        },
+                    },
+                });
+
+                state = add(s2);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'different',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                });
             });
         });
     });

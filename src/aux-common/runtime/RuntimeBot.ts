@@ -7,6 +7,7 @@ import {
     BOT_SPACE_TAG,
     getBotSpace,
     createPrecalculatedBot,
+    BotSignatures,
 } from '../bots';
 import {
     CompiledBot,
@@ -46,6 +47,11 @@ export interface RuntimeBot {
      * The changes that have been made to the bot.
      */
     changes: BotTags;
+
+    /**
+     * The signatures that are on the bot.
+     */
+    signatures: BotSignatures;
 
     /**
      * The calculated listener functions.
@@ -213,12 +219,18 @@ export function createRuntimeBot(
             }
             return manager.getListener(bot, key);
         },
-        // set(target, key: string, value, receiver) {
-        //     return true;
-        // },
-        // deleteProperty(target, key: string) {
-        //     return true;
-        // },
+    });
+
+    const signaturesProxy = new Proxy(bot.signatures || {}, {
+        get(target, key: string, proxy) {
+            return manager.getSignature(bot, key);
+        },
+        set(target, key: string, proxy) {
+            return true;
+        },
+        deleteProperty(target: any, key: any) {
+            return true;
+        },
     });
 
     // Define a toJSON() function but
@@ -240,6 +252,7 @@ export function createRuntimeBot(
         raw: rawProxy,
         changes: changedRawTags,
         listeners: listenersProxy,
+        signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
     };
 
@@ -318,6 +331,13 @@ export interface RuntimeBotInterface {
      * @param tag The tag.
      */
     getListener(bot: CompiledBot, tag: string): CompiledBotListener;
+
+    /**
+     * Gets whether the given signature on the bot is valid.
+     * @param bot The bot.
+     * @param signature The tag.
+     */
+    getSignature(bot: CompiledBot, signature: string): string;
 }
 
 /**

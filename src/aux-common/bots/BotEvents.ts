@@ -8,6 +8,8 @@ import {
     RemoteActionError,
     DeviceActionResult,
     DeviceActionError,
+    remoteResult,
+    remoteError,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
@@ -34,6 +36,9 @@ export type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
     | ApplyStateAction;
 ``;
 
@@ -103,6 +108,9 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -180,6 +188,89 @@ export interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
     update: PartialBot;
+}
+
+/**
+ * Defines the set of options required for creating a certificate.
+ */
+export interface CreateCertificateOptions {
+    /**
+     * The keypair that should be used for the certificate.
+     */
+    keypair: string;
+
+    /**
+     * The ID of the certified bot that is signing the new certificate.
+     */
+    signingBotId?: string;
+
+    /**
+     * The password that should be used to sign the new certificate.
+     */
+    signingPassword: string;
+}
+
+/**
+ * Defines a bot event that creates a new certificate from the given keypair.
+ */
+export interface CreateCertificateAction
+    extends AsyncAction,
+        CreateCertificateOptions {
+    type: 'create_certificate';
+}
+
+/**
+ * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
+ */
+export interface SignTagAction extends AsyncAction {
+    type: 'sign_tag';
+
+    /**
+     * The ID of the certified bot that is signing the tag value.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the value.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the bot whose tag is being signed.
+     */
+    botId: string;
+
+    /**
+     * The tag that should be signed.
+     */
+    tag: string;
+
+    /**
+     * The value that should be signed.
+     */
+    value: any;
+}
+
+/**
+ * Defines a bot event that revokes a certificate.
+ */
+export interface RevokeCertificateAction extends AsyncAction {
+    type: 'revoke_certificate';
+
+    /**
+     * The ID of the bot that should be used to sign the revocation.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the revocation.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the certificate that should be revoked.
+     */
+    certificateBotId: string;
 }
 
 /**
@@ -2272,6 +2363,64 @@ export function localFormAnimation(
 }
 
 /**
+ * Enqueues an async result to the given list for the given event.
+ * @param list The list to add the result to.
+ * @param event The event that the result is for.
+ * @param result The result.
+ * @param mapBots Whether the result should have the argument mapped for bots.
+ */
+export function enqueueAsyncResult(
+    list: Action[],
+    event: AsyncAction,
+    result: any,
+    mapBots?: boolean
+) {
+    if (hasValue(event.taskId)) {
+        if (hasValue(event.playerId)) {
+            list.push(
+                remoteResult(
+                    result,
+                    {
+                        sessionId: event.playerId,
+                    },
+                    event.taskId
+                )
+            );
+        } else {
+            list.push(asyncResult(event.taskId, result, mapBots));
+        }
+    }
+}
+
+/**
+ * Enqueues an async error to the given list for the given event.
+ * @param list The list to add the error to.
+ * @param event The event that the error is for.
+ * @param error The error.
+ */
+export function enqueueAsyncError(
+    list: Action[],
+    event: AsyncAction,
+    error: any
+) {
+    if (hasValue(event.taskId)) {
+        if (hasValue(event.playerId)) {
+            list.push(
+                remoteError(
+                    error,
+                    {
+                        sessionId: event.playerId,
+                    },
+                    event.taskId
+                )
+            );
+        } else {
+            list.push(asyncError(event.taskId, error));
+        }
+    }
+}
+
+/**
  * Creates an action that resolves an async task with the given result.
  * @param taskId The ID of the task.
  * @param result The result.
@@ -2319,5 +2468,70 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that requests a new certificate be created.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function createCertificate(
+    options: CreateCertificateOptions,
+    taskId?: number | string
+): CreateCertificateAction {
+    return {
+        type: 'create_certificate',
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that requests a tag on a bot be signed.
+ * @param signingBotId The ID of the certificate bot that is creating the signature.
+ * @param signingPassword The password used to decrypt the certificate's private key.
+ * @param botId The ID of the bot whose tag is being signed.
+ * @param tag The tag that is being signed.
+ * @param value The value that is being signed.
+ */
+export function signTag(
+    signingBotId: string,
+    signingPassword: string,
+    botId: string,
+    tag: string,
+    value: any,
+    taskId?: number | string
+): SignTagAction {
+    return {
+        type: 'sign_tag',
+        signingBotId,
+        signingPassword,
+        botId,
+        tag,
+        value,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that requests that a certificate be revoked.
+ * @param signingBotId The ID of the certificate that is signing the revocation.
+ * @param signingPassword The password used to decrypt the signing certificate's private key.
+ * @param certificateBotId The ID of the bot whose tag is being signed.
+ * @param taskId The task ID.
+ */
+export function revokeCertificate(
+    signingBotId: string,
+    signingPassword: string,
+    certificateBotId: string,
+    taskId?: number | string
+): RevokeCertificateAction {
+    return {
+        type: 'revoke_certificate',
+        signingBotId,
+        signingPassword,
+        certificateBotId,
+        taskId,
     };
 }

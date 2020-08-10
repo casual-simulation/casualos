@@ -2,6 +2,7 @@ import {
     CausalRepoClient,
     isClientAtoms,
     isClientEvent,
+    isClientResetAtoms,
 } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -49,6 +50,8 @@ import {
     COMMIT_CREATED,
     RestoredEvent,
     RESTORED,
+    ResetEvent,
+    RESET,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -205,6 +208,42 @@ describe('CausalRepoClient', () => {
                     type: 'abc',
                 }),
             ]);
+        });
+
+        it('should return an observable of resets for the branch', async () => {
+            const reset = new Subject<ResetEvent>();
+            connection.events.set(RESET, reset);
+
+            let atoms = [] as Atom<any>[];
+            connection.connect();
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientResetAtoms),
+                    map(e => e.atoms)
+                )
+                .subscribe(a => atoms.push(...a));
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const b1 = atom(atomId('b', 1), null, {});
+            const b2 = atom(atomId('b', 2), a1, {});
+
+            reset.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+            });
+
+            reset.next({
+                branch: 'other',
+                atoms: [b1, b2],
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2]);
         });
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {

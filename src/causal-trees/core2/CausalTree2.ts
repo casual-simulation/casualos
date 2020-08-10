@@ -7,7 +7,7 @@ import {
     mergeSites,
     calculateTimeFromId,
 } from './SiteStatus';
-import { Atom } from './Atom2';
+import { Atom, AtomCardinality } from './Atom2';
 
 /**
  * Defines an interface for a casual tree that can be operated on.
@@ -94,9 +94,10 @@ export function addAtom<T, O extends T>(
     tree: CausalTree<T>,
     cause: Atom<T>,
     op: O,
-    priority?: number
+    priority?: number,
+    cardinality?: AtomCardinality
 ): TreeResult {
-    const atom = createAtom(tree.site, cause, op, priority);
+    const atom = createAtom(tree.site, cause, op, priority, cardinality);
     return insertAtom<T, O>(tree, atom);
 }
 
