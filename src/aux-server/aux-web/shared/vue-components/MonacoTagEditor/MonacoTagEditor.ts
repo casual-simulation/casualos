@@ -196,9 +196,9 @@ export default class MonacoTagEditor extends Vue {
         }
 
         if (bot.signatures) {
-            this.signed =
-                bot.signatures[tagValueHash(bot.id, tag, bot.tags[tag])] ===
-                true;
+            this.signed = !!bot.signatures[
+                tagValueHash(bot.id, tag, bot.tags[tag])
+            ];
         } else {
             this.signed = false;
         }
