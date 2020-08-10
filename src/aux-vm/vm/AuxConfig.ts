@@ -17,6 +17,12 @@ export interface AuxConfigParameters {
     versionHash: string;
     builder?: string;
     device?: AuxDevice;
+
+    /**
+     * Whether to only allow compiling and runing scripts
+     * that have valid signatures.
+     */
+    forceSignedScripts?: boolean;
 }
 
 export function buildVersionNumber(config: AuxConfigParameters) {

@@ -92,11 +92,18 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
+            const params = new URLSearchParams(location.search);
+            const forceSignedScripts =
+                params.get('forceSignedScripts') === 'true';
+            if (forceSignedScripts) {
+                console.log('[AppManager] Forcing signed scripts for ' + id);
+            }
             return new BotManager(this._user, id, {
                 version: this.version.latestTaggedVersion,
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
                 builder: JSON.stringify(builder),
+                forceSignedScripts,
             });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);

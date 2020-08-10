@@ -107,6 +107,10 @@ export class AuxRuntime
     private _editModeProvider: AuxRealtimeEditModeProvider;
     private _forceSignedScripts: boolean;
 
+    get forceSignedScripts() {
+        return this._forceSignedScripts;
+    }
+
     get context() {
         return this._globalContext;
     }

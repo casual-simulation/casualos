@@ -292,6 +292,27 @@ describe('BaseAuxChannel', () => {
                 auxDimensionConfig: '_user_user_1',
             });
         });
+
+        it('should pass the forceSignedScripts config option to the runtime', async () => {
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    forceSignedScripts: true,
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        initialState: {},
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await channel.initAndWait();
+
+            expect(channel.runtime.forceSignedScripts).toBe(true);
+        });
     });
 
     describe('sendEvents()', () => {
