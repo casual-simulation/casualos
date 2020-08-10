@@ -12,7 +12,7 @@
 
 -   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()`, `crypto.revokeCertificate()` functions to help with creating certificate chains and signing and validating tag data. Check the docs for detailed usage information.
 -   Added an indicator to the multi-line editor that is shown when a tag value is verified.
--   Added the ability to force all scripts to be signed in order to be executed using the `forceSignedScripts` query parameter.
+-   Added the ability to force all scripts to be verified in order to be executed using the `forceSignedScripts` query parameter.
     -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
     -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
 
