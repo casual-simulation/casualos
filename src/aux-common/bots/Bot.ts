@@ -1048,6 +1048,7 @@ export const KNOWN_TAGS: string[] = [
     'leftPointer_squeeze',
     'rightPointer_primary',
     'rightPointer_squeeze',
+    'forceSignedScripts',
 
     '_editingBot',
 
