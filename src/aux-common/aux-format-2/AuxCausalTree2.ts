@@ -54,7 +54,7 @@ import {
     findBotNodes,
     findValueNodeByValue,
 } from './AuxWeaveHelpers';
-import { Action } from '../../causal-trees';
+import { Action } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.

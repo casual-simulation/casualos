@@ -155,6 +155,7 @@ declare type BotActions =
     | UpdateBotAction
     | CreateCertificateAction
     | SignTagAction
+    | RevokeCertificateAction
     | ApplyStateAction;
 ``;
 
@@ -222,7 +223,9 @@ declare type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShareAction
-    | CreateCertificateAction;
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -339,6 +342,28 @@ export interface SignTagAction extends AsyncAction {
      * The tag that should be signed.
      */
     tag: string;
+}
+
+/**
+ * Defines a bot event that revokes a certificate.
+ */
+export interface RevokeCertificateAction extends AsyncAction {
+    type: 'revoke_certificate';
+
+    /**
+     * The ID of the bot that should be used to sign the revocation.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the revocation.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the certificate that should be revoked.
+     */
+    certificateBotId: string;
 }
 
 /**
