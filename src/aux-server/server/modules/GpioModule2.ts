@@ -14,7 +14,7 @@ import {
     asyncError,
     hasValue,
 } from '@casual-simulation/aux-common';
-const rpio = require('rpio').rpio;
+const rpio = require('rpio');
 
 /**
  * https://www.npmjs.com/package/rpio
