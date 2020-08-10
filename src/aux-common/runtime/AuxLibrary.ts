@@ -2182,6 +2182,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: Bot | string,
         tag: string
     ): Promise<void> {
+        tag = trimTag(tag);
         const signingBotId = getID(certificate);
         const realBot = getBot('id', getID(bot));
         const value = realBot.raw[tag];
@@ -2203,6 +2204,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tag The tag to check.
      */
     function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
+        tag = trimTag(tag);
         const id = getID(bot);
         const realBot = isRuntimeBot(bot) ? bot : getBot('id', id);
         if (!realBot.signatures) {

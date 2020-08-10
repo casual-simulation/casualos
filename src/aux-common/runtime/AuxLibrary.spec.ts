@@ -5741,6 +5741,46 @@ describe('AuxLibrary', () => {
             expect(context.actions).toEqual([expected]);
         });
 
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '#abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '@abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
         it('should be able to be given bots', () => {
             const promise: any = library.api.crypto.signTag(
                 cert,
@@ -5792,6 +5832,16 @@ describe('AuxLibrary', () => {
             bot1.tags.abc = 'different';
             const result = library.api.crypto.verifyTag(bot1, 'abc');
             expect(result).toBe(false);
+        });
+
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '#abc');
+            expect(result).toBe(true);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '@abc');
+            expect(result).toBe(true);
         });
     });
 
