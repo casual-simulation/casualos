@@ -16,6 +16,10 @@
     -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
     -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where using `player.showInput()` with an existing value would not prefill the text box with the existing value.
+
 ## V1.2.1
 
 #### Date: 8/4/2020
