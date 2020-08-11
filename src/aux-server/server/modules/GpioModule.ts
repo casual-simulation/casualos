@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     ExportGpioPinAction,
+    UnexportGpioPinAction,
     SetGpioPinAction,
     GetGpioPinAction,
     asyncResult,
@@ -36,6 +37,9 @@ export class GpioModule implements AuxModule2 {
                         if (event.type === 'export_gpio_pin') {
                             await this._exportGpio(simulation, event);
                         }
+                        if (event.type === 'unexport_gpio_pin') {
+                            await this._unexportGpio(simulation, event);
+                        }
                         if (event.type === 'set_gpio_pin') {
                             await this._setGpio(simulation, event);
                         }
@@ -58,6 +62,36 @@ export class GpioModule implements AuxModule2 {
             } else {
                 pin = new Gpio(event.pin, event.mode);
                 pinMap.set(event.pin, pin);
+            }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _unexportGpio(simulation: Simulation, event: UnexportGpioPinAction) {
+        try {
+            let pin = pinMap.get(event.pin);
+            if (pin) {
+                pin.unexport();
             }
             simulation.helper.transaction(
                 hasValue(event.playerId)

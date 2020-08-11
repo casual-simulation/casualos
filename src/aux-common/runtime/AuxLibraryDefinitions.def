@@ -2682,6 +2682,12 @@ declare global {
         exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
 
         /**
+         * Sends an event to the server to unexport a pin (BCM).
+         * @param pin The physical pin (BCM) number.
+         */
+        unexportGpio(pin: number): Promise<void>;
+
+        /**
          * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
          * @param pin The physical pin (BCM) number.
          * @param value The mode of the pin (BCM).

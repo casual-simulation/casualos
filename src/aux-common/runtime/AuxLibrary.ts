@@ -86,6 +86,7 @@ import {
     action,
     getStoryStatuses,
     exportGpioPin,
+    unexportGpioPin,
     setGpioPin,
     getGpioPin,
     rpioOpenPin,
@@ -381,6 +382,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             server: {
                 setupStory,
                 exportGpio,
+                unexportGpio,
                 setGpio,
                 getGpio,
                 rpioOpen,
@@ -1438,6 +1440,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             exportGpioPin(pin, mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to unexport a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    function unexportGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            unexportGpioPin(pin),
             undefined,
             undefined,
             task.taskId

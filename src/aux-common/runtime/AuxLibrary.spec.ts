@@ -69,6 +69,7 @@ import {
     action,
     getStoryStatuses,
     exportGpioPin,
+    unexportGpioPin,
     setGpioPin,
     getGpioPin,
     rpioOpenPin,
@@ -2364,6 +2365,29 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.exportGpio(99, 'in');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.unexportGpio()', () => {
+            it('should send a UnexportGpioPinAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.unexportGpio(99);
+                const expected = remote(
+                    unexportGpioPin(99),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.unexportGpio(99);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

@@ -104,6 +104,7 @@ export type AsyncActions =
     | SaveFileAction
     | SetupChannelAction
     | ExportGpioPinAction
+    | UnexportGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
     | RpioOpenAction
@@ -1055,7 +1056,7 @@ export interface ExportGpioPinAction extends AsyncAction {
     type: 'export_gpio_pin';
 
     /**
-     * The pin (BCM) that you want to configure.
+     * The pin (BCM) that you want to export.
      */
     pin: number;
 
@@ -1063,6 +1064,14 @@ export interface ExportGpioPinAction extends AsyncAction {
      * The mode you want to configure your pin (BCM) as.
      */
     mode: 'in' | 'out';
+}
+export interface UnexportGpioPinAction extends AsyncAction {
+    type: 'unexport_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to unexport.
+     */
+    pin: number;
 }
 export interface SetGpioPinAction extends AsyncAction {
     type: 'set_gpio_pin';
@@ -2116,7 +2125,7 @@ export function setupStory(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Exports a pin (BCM) if it doesn't exist.
  * @param pin The physical BCM Pin on the server.
  * @param mode The mode of the BCM pin.
  * @param taskId The ID of the async task.
@@ -2137,7 +2146,25 @@ export function exportGpioPin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Unexports a pin (BCM) if it exists.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function unexportGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): UnexportGpioPinAction {
+    return {
+        type: 'unexport_gpio_pin',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sets the value of a pin (BCM) to HIGH/LOW.
  * @param pin The physical BCM Pin on the server.
  * @param value The value of the BCM pin whether it's HIGH or LOW.
  * @param taskId The ID of the async task.
@@ -2158,7 +2185,7 @@ export function setGpioPin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Gets the current state of a pin (BCM).
  * @param pin The physical BCM Pin on the server.
  * @param taskId The ID of the async task.
  */
@@ -2176,7 +2203,7 @@ export function getGpioPin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Opens a pin up for use and sets its initial mode/state.
  * @param pin The physical pin on the server.
  * @param mode The mode of the pin.
  * @param taskId The ID of the async task.
@@ -2199,7 +2226,7 @@ export function rpioOpenPin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Changes a pin's mode/value.
  * @param pin The physical pin on the server.
  * @param mode The mode of the pin.
  * @param taskId The ID of the async task.
@@ -2222,7 +2249,7 @@ export function rpioModePin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Reads a pin's current value.
  * @param pin The physical BCM Pin on the server.
  * @param taskId The ID of the async task.
  */
@@ -2240,7 +2267,7 @@ export function rpioReadPin(
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
+ * Sets a pin's value.
  * @param pin The physical BCM Pin on the server.
  * @param value The value of the BCM pin whether it's HIGH or LOW.
  * @param taskId The ID of the async task.
