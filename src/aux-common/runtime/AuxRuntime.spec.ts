@@ -4416,6 +4416,36 @@ describe('AuxRuntime', () => {
             const result = runtime.shout('script');
             expect(result.actions).toEqual([]);
         });
+
+        it('should allow scripts on tempLocal bots', () => {
+            runtime.botsAdded([
+                createBot(
+                    'test',
+                    {
+                        script: '@player.toast("abc")',
+                    },
+                    'tempLocal'
+                ),
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
+
+        it('should allow scripts on local bots', () => {
+            runtime.botsAdded([
+                createBot(
+                    'test',
+                    {
+                        script: '@player.toast("abc")',
+                    },
+                    'local'
+                ),
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
     });
 });
 

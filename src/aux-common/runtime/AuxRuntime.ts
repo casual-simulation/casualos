@@ -32,6 +32,7 @@ import {
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
+    BotSpace,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -106,6 +107,7 @@ export class AuxRuntime
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
     private _forceSignedScripts: boolean;
+    private _exemptSpaces: BotSpace[];
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -119,6 +121,7 @@ export class AuxRuntime
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
      * @param forceSignedScripts Whether to force the runtime to only allow scripts that are signed.
+     * @param exemptSpaces The spaces that are exempt from requiring signed scripts.
      */
     constructor(
         version: AuxVersion,
@@ -127,12 +130,14 @@ export class AuxRuntime
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
-        forceSignedScripts: boolean = false
+        forceSignedScripts: boolean = false,
+        exemptSpaces: BotSpace[] = ['local', 'tempLocal']
     ) {
         this._globalContext = new MemoryGlobalContext(version, device, this);
         this._library = libraryFactory(this._globalContext);
         this._editModeProvider = editModeProvider;
         this._forceSignedScripts = forceSignedScripts;
+        this._exemptSpaces = exemptSpaces;
         this._onActions = new Subject();
         this._onErrors = new Subject();
 
@@ -949,11 +954,13 @@ export class AuxRuntime
         options: CompileOptions
     ) {
         if (this._forceSignedScripts) {
-            const hash = tagValueHash(bot.id, tag, script);
-            if (!bot.signatures || bot.signatures[hash] !== tag) {
-                throw new Error(
-                    'Unable to compile script. It is not signed with a valid certificate.'
-                );
+            if (this._exemptSpaces.indexOf(bot.space) < 0) {
+                const hash = tagValueHash(bot.id, tag, script);
+                if (!bot.signatures || bot.signatures[hash] !== tag) {
+                    throw new Error(
+                        'Unable to compile script. It is not signed with a valid certificate.'
+                    );
+                }
             }
         }
 
