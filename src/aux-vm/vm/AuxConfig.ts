@@ -1,4 +1,9 @@
-import { AuxPartitionConfig, AuxDevice } from '@casual-simulation/aux-common';
+import {
+    AuxPartitionConfig,
+    AuxDevice,
+    BotsState,
+} from '@casual-simulation/aux-common';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -16,6 +21,7 @@ export interface AuxConfigParameters {
     version: string;
     versionHash: string;
     builder?: string;
+    bootstrapState?: StoredAux;
     device?: AuxDevice;
 
     /**

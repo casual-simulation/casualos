@@ -138,6 +138,28 @@ describe('BaseAuxChannel', () => {
             });
         });
 
+        it('should not load builder if bootstrap state was included', async () => {
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 0,
+                            }),
+                        }),
+                        bootstrapState: {},
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toBeUndefined();
+        });
+
         it('should not overwrite changes to builder from the aux file if the version is not newer', async () => {
             await memory.applyEvents([
                 botAdded(
@@ -249,6 +271,37 @@ describe('BaseAuxChannel', () => {
                     builderState: 'Enabled',
                 },
             });
+        });
+
+        it('should destroy builder if the bootstrap state is included', async () => {
+            await memory.applyEvents([
+                botAdded(
+                    createBot('builder', {
+                        abc: 'def',
+                        builderVersion: 0,
+                    })
+                ),
+            ]);
+
+            channel = new AuxChannelImpl(
+                user,
+                device,
+                merge({}, config, {
+                    config: {
+                        builder: JSON.stringify({
+                            builder: createBot('builder', {
+                                abc: 'def',
+                                builderVersion: 0,
+                            }),
+                        }),
+                        bootstrapState: {},
+                    },
+                })
+            );
+            await channel.initAndWait();
+
+            const builderBot = channel.helper.botsState['builder'];
+            expect(builderBot).toBeUndefined();
         });
 
         it('should error if unable to construct a partition', async () => {

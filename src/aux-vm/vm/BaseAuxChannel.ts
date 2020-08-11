@@ -615,12 +615,28 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         ) {
             return;
         }
-        try {
-            await this._helper.createOrUpdateBuilderBots(
-                this._config.config.builder
-            );
-        } catch (err) {
-            console.error('[BaseAuxChannel] Unable to init builder bot:', err);
+        if (!!this._config.config.bootstrapState) {
+            try {
+                await this._helper.destroyBuilderBots(
+                    this._config.config.builder
+                );
+            } catch (err) {
+                console.error(
+                    '[BaseAuxChannel] Unable to destroy builder bot:',
+                    err
+                );
+            }
+        } else {
+            try {
+                await this._helper.createOrUpdateBuilderBots(
+                    this._config.config.builder
+                );
+            } catch (err) {
+                console.error(
+                    '[BaseAuxChannel] Unable to init builder bot:',
+                    err
+                );
+            }
         }
     }
 

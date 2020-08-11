@@ -30,6 +30,7 @@ import {
     runScript,
     AsyncActions,
     asyncError,
+    botRemoved,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -365,6 +366,24 @@ export class AuxHelper extends BaseHelper<Bot> {
         if (needsUpdate) {
             console.log('[AuxHelper] Updating Builder...');
             await this.transaction(addState(state));
+        }
+    }
+
+    async destroyBuilderBots(builder: string) {
+        let parsed: StoredAux = JSON.parse(builder);
+        let state = getBotsStateFromStoredAux(parsed);
+        const objects = getActiveObjects(state);
+        let events = [] as BotActions[];
+        for (let bot of objects) {
+            const sameBot = this.botsState[bot.id];
+            if (sameBot) {
+                events.push(botRemoved(bot.id));
+            }
+        }
+
+        if (events.length > 0) {
+            console.log('[AuxHelper] Destroying Builder...');
+            await this.transaction(...events);
         }
     }
 
