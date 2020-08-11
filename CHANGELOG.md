@@ -15,6 +15,8 @@
 -   Added the ability to force all scripts to be verified in order to be executed using the `forceSignedScripts` query parameter.
     -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
     -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
+-   Replaced builder with ab-1.
+    -   ab-1 is a new version of builder which is designed to be easy to extend and improve.
 
 ### :bug: Bug Fixes
 
