@@ -2447,9 +2447,6 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('task1');
                 var options = {
                     gpiomem: true,
-                    mapping: 'physical',
-                    mock: undefined,
-                    close_on_exit: true,
                 };
                 const action: any = library.api.server.rpioInit(options);
                 const expected = remote(
@@ -2466,9 +2463,6 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 var options = {
                     gpiomem: true,
-                    mapping: 'physical',
-                    mock: undefined,
-                    close_on_exit: true,
                 };
                 library.api.server.rpioInit(options);
 

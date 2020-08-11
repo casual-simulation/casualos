@@ -22,19 +22,19 @@ const rpio = require('rpio');
 /**
  * https://www.npmjs.com/package/rpio
  *
- * WIP - rpio.init([options])
+ *  DONE - rpio.init([options])
  * TODO - rpio.exit()
- * DONE - rpio.open(pin, mode[, option])
- * DONE - rpio.mode(pin, mode[, option])       //changes the mode input|output
- * DONE - rpio.read(pin)
+ *  DONE - rpio.open(pin, mode[, option])
+ *  DONE - rpio.mode(pin, mode[, option])
+ *  DONE - rpio.read(pin)
  * TODO - rpio.readbuf(pin, buffer[, length])
- * DONE - rpio.write(pin, value)               //changes the state high|low
+ *  DONE - rpio.write(pin, value)
  * TODO - rpio.writebuf(pin, buffer[, length])
  * TODO - rpio.readpad(group)
  * TODO - rpio.writepad(group, control)
  * TODO - rpio.pud(pin, state)
  * TODO - rpio.poll(pin, cb[, direction])
- * WIP - rpio.close(pin[, reset])
+ *  DONE - rpio.close(pin[, reset])
  *
  * TODO - rpio.i2cBegin()
  * TODO - rpio.i2cSetSlaveAddress()
