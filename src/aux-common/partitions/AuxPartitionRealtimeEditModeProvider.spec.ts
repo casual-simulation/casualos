@@ -69,6 +69,12 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
             );
         });
 
+        it('should default bootstrap to None', () => {
+            expect(subject.getEditMode('bootstrap')).toEqual(
+                RealtimeEditMode.None
+            );
+        });
+
         it('should default to Immediate', () => {
             expect(subject.getEditMode('missing')).toEqual(
                 RealtimeEditMode.Immediate

@@ -613,6 +613,11 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const PLAYER_PARTITION_ID = 'player';
 
 /**
+ * The partition ID for bots that are automatically added to the story.
+ */
+export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
+
+/**
  * The partition ID for other player bots.
  */
 export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';

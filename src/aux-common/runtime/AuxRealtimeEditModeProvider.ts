@@ -23,6 +23,7 @@ export const DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP: SpaceRealtimeEditModeMap = ne
         ['error', RealtimeEditMode.Delayed],
         ['admin', RealtimeEditMode.Delayed],
         ['certified', RealtimeEditMode.None],
+        ['bootstrap', RealtimeEditMode.None],
     ]
 );
 

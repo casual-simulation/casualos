@@ -26,6 +26,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
+import bootstrap from './builder/ab-1.bootstrap.json';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -103,6 +104,7 @@ export class AppManager {
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
                 builder: JSON.stringify(builder),
+                bootstrapState: bootstrap,
                 forceSignedScripts,
             });
         });
