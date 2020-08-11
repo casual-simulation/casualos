@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     RpioOpenAction,
+    RpioModeAction,
     RpioReadAction,
     RpioWriteAction,
     asyncResult,
@@ -20,11 +21,11 @@ const rpio = require('rpio');
  * https://www.npmjs.com/package/rpio
  *
  * TODO - rpio.exit()
- * WIP - rpio.open(pin, mode[, option])
- * WIP - rpio.mode(pin, mode[, option])       //changes the mode input|output
- * WIP - rpio.read(pin)
+ * DONE - rpio.open(pin, mode[, option])
+ * DONE - rpio.mode(pin, mode[, option])       //changes the mode input|output
+ * DONE - rpio.read(pin)
  * TODO - rpio.readbuf(pin, buffer[, length])
- * WIP - rpio.write(pin, value)               //changes the state high|low
+ * DONE - rpio.write(pin, value)               //changes the state high|low
  * TODO - rpio.writebuf(pin, buffer[, length])
  * TODO - rpio.readpad(group)
  * TODO - rpio.writepad(group, control)
@@ -74,6 +75,9 @@ export class GpioModule2 implements AuxModule2 {
                     flatMap(async event => {
                         if (event.type === 'rpio_open') {
                             await this._rpioOpen(simulation, event);
+                        }
+                        if (event.type === 'rpio_mode') {
+                            await this._rpioMode(simulation, event);
                         }
                         if (event.type === 'rpio_read') {
                             await this._rpioRead(simulation, event);
@@ -143,6 +147,60 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
+    _rpioMode(simulation: Simulation, event: RpioModeAction) {
+        try {
+            if (event.pin) {
+                let pin = event.pin;
+                var mode;
+                var options;
+                if (event.mode == 'INPUT') {
+                    mode = rpio.INPUT;
+                } else if (event.mode == 'OUTPUT') {
+                    mode = rpio.OUTPUT;
+                } else if (event.mode == 'PWM') {
+                    mode = rpio.PWM;
+                } else {
+                    mode = rpio.OUTPUT;
+                }
+
+                if (event.options == 'HIGH') {
+                    options = rpio.HIGH;
+                } else if (event.options == 'LOW') {
+                    options = rpio.LOW;
+                } else if (event.options == 'PULL_OFF') {
+                    options = rpio.PULL_OFF;
+                } else if (event.options == 'PULL_DOWN') {
+                    options = rpio.PULL_DOWN;
+                } else if (event.options == 'PULL_UP') {
+                    options = rpio.PULL_UP;
+                }
+
+                rpio.mode(pin, mode, options);
+            }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
     _rpioRead(simulation: Simulation, event: RpioReadAction) {
         try {
             let state;
@@ -182,7 +240,7 @@ export class GpioModule2 implements AuxModule2 {
                 let value;
                 if (event.value == 'HIGH') {
                     value = rpio.HIGH;
-                } else if (event.value == 'LOW') {
+                } else {
                     value = rpio.LOW;
                 }
 

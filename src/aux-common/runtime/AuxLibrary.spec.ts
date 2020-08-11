@@ -68,10 +68,11 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
-    configureGpioPin,
+    exportGpioPin,
     setGpioPin,
     getGpioPin,
     rpioOpenPin,
+    rpioModePin,
     rpioReadPin,
     rpioWritePin,
 } from '../bots';
@@ -2346,12 +2347,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.configureGpio()', () => {
-            it('should send a ConfigureGpioPinAction in a RemoteAction', () => {
+        describe('server.exportGpio()', () => {
+            it('should send a ExportGpioPinAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.configureGpio(99, 'in');
+                const action: any = library.api.server.exportGpio(99, 'in');
                 const expected = remote(
-                    configureGpioPin(99, 'in'),
+                    exportGpioPin(99, 'in'),
                     undefined,
                     undefined,
                     'task1'
@@ -2362,7 +2363,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.configureGpio(99, 'in');
+                library.api.server.exportGpio(99, 'in');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -2432,6 +2433,29 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.rpioOpen(99, 'INPUT');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioMode()', () => {
+            it('should send a RpioModeAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioMode(99, 'INPUT');
+                const expected = remote(
+                    rpioModePin(99, 'INPUT'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioMode(99, 'INPUT');
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

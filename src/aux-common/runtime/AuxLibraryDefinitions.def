@@ -2675,48 +2675,57 @@ declare global {
         setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
-         * Sends an event to the server to configure a GPIO pin as input or output.
-         * @param pin The physical BCM pin number.
-         * @param mode The mode of the BCM pin.
+         * Sends an event to the server to export a pin (BCM) as input or output.
+         * @param pin The physical pin (BCM) number.
+         * @param mode The mode of the pin (BCM).
          */
-        configureGpio(pin: number, mode: "in" | "out"): Promise<void>;
+        exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
 
         /**
-         * Sends an event to the server to set a GPIO pin as HIGH or LOW.
-         * @param pin The physical BCM pin number.
-         * @param value The mode of the BCM pin.
+         * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+         * @param pin The physical pin (BCM) number.
+         * @param value The mode of the pin (BCM).
          */
         setGpio(pin: number, value: 0 | 1): Promise<void>;
 
         /**
-         * Sends an event to the server to get the value of a GPIO pin.
-         * @param pin The physical BCM pin number.
+         * Sends an event to the server to get the value of a pin (BCM).
+         * @param pin The physical pin (BCM) number.
          */
         getGpio(pin: number): Promise<void>;
 
         /**
-         * Sends an event to the server to configure a GPIO pin as input or output.
-         * @param pin The physical BCM pin number.
-         * @param mode The mode of the BCM pin.
+         * Sends an event to the server to open a pin as input or output and set its initial state.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
          */
         rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
 
         /**
-         * Sends an event to the server to get the value of a GPIO pin.
-         * @param pin The physical BCM pin number.
+         * Sends an event to the server to change the mode and optionally the state, of a previously opened pin.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
+         */
+        rpioMode(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to read the value of a pin.
+         * @param pin The physical pin number.
          */
         rpioRead(pin: number): Promise<void>;
 
         /**
-         * Sends an event to the server to set a GPIO pin as HIGH or LOW.
-         * @param pin The physical BCM pin number.
-         * @param value The mode of the BCM pin.
+         * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+         * @param pin The physical pin number.
+         * @param value The mode of the pin.
          */
         rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
 
         /**
          * Executes the given shell script on the server.
-         * @param script The shell script  that should be executed.
+         * @param script The shell script that should be executed.
          */
         shell(script: string): ShellAction;
     

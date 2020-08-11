@@ -7,7 +7,7 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    ConfigureGpioPinAction,
+    ExportGpioPinAction,
     SetGpioPinAction,
     GetGpioPinAction,
     asyncResult,
@@ -33,8 +33,8 @@ export class GpioModule implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     flatMap(async event => {
-                        if (event.type === 'configure_gpio_pin') {
-                            await this._configureGpio(simulation, event);
+                        if (event.type === 'export_gpio_pin') {
+                            await this._exportGpio(simulation, event);
                         }
                         if (event.type === 'set_gpio_pin') {
                             await this._setGpio(simulation, event);
@@ -50,7 +50,7 @@ export class GpioModule implements AuxModule2 {
         return sub;
     }
 
-    _configureGpio(simulation: Simulation, event: ConfigureGpioPinAction) {
+    _exportGpio(simulation: Simulation, event: ExportGpioPinAction) {
         try {
             let pin = pinMap.get(event.pin);
             if (pin) {

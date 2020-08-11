@@ -103,10 +103,11 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
-    | ConfigureGpioPinAction
+    | ExportGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
     | RpioOpenAction
+    | RpioModeAction
     | RpioReadAction
     | RpioWriteAction
     | RemoteAction
@@ -1050,16 +1051,16 @@ export interface SetupChannelAction extends AsyncAction {
     botOrMod?: Bot | BotTags;
 }
 
-export interface ConfigureGpioPinAction extends AsyncAction {
-    type: 'configure_gpio_pin';
+export interface ExportGpioPinAction extends AsyncAction {
+    type: 'export_gpio_pin';
 
     /**
-     * The BCM Pin that you want to configure.
+     * The pin (BCM) that you want to configure.
      */
     pin: number;
 
     /**
-     * The mode you want toconfigure your BCM pin as.
+     * The mode you want to configure your pin (BCM) as.
      */
     mode: 'in' | 'out';
 }
@@ -1067,12 +1068,12 @@ export interface SetGpioPinAction extends AsyncAction {
     type: 'set_gpio_pin';
 
     /**
-     * The BCM Pin that you want to use.
+     * The pin (BCM) that you want to use.
      */
     pin: number;
 
     /**
-     * The value of the pin. Either High (0) or Low (1)
+     * The value of the pin (BCM). Either High (0) or Low (1)
      */
     value: 0 | 1;
 }
@@ -1080,7 +1081,7 @@ export interface GetGpioPinAction extends AsyncAction {
     type: 'get_gpio_pin';
 
     /**
-     * The BCM Pin that you want to use.
+     * The pin (BCM) that you want to use.
      */
     pin: number;
 }
@@ -1088,12 +1089,30 @@ export interface RpioOpenAction extends AsyncAction {
     type: 'rpio_open';
 
     /**
-     * The BCM Pin that you want to configure.
+     * The pin that you want to configure.
      */
     pin: number;
 
     /**
-     * The mode you want toconfigure your BCM pin as.
+     * The mode you want toconfigure your pin as.
+     */
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+export interface RpioModeAction extends AsyncAction {
+    type: 'rpio_mode';
+
+    /**
+     * The pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want to configure your pin as.
      */
     mode: 'INPUT' | 'OUTPUT' | 'PWM';
 
@@ -1106,7 +1125,7 @@ export interface RpioReadAction extends AsyncAction {
     type: 'rpio_read';
 
     /**
-     * The BCM Pin that you want to use.
+     * The pin that you want to use.
      */
     pin: number;
 }
@@ -1114,7 +1133,7 @@ export interface RpioWriteAction extends AsyncAction {
     type: 'rpio_write';
 
     /**
-     * The BCM Pin that you want to use.
+     * The pin that you want to use.
      */
     pin: number;
 
@@ -2102,14 +2121,14 @@ export function setupStory(
  * @param mode The mode of the BCM pin.
  * @param taskId The ID of the async task.
  */
-export function configureGpioPin(
+export function exportGpioPin(
     pin: number,
     mode: 'in' | 'out',
     taskId?: string | number,
     playerId?: string
-): ConfigureGpioPinAction {
+): ExportGpioPinAction {
     return {
-        type: 'configure_gpio_pin',
+        type: 'export_gpio_pin',
         pin,
         mode,
         taskId,
@@ -2158,8 +2177,8 @@ export function getGpioPin(
 
 /**
  * Creates a channel if it doesn't exist and places the given bot in it.
- * @param pin The physical BCM Pin on the server.
- * @param mode The mode of the BCM pin.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
  * @param taskId The ID of the async task.
  */
 export function rpioOpenPin(
@@ -2171,6 +2190,29 @@ export function rpioOpenPin(
 ): RpioOpenAction {
     return {
         type: 'rpio_open',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioModePin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioModeAction {
+    return {
+        type: 'rpio_mode',
         pin,
         mode,
         options,
