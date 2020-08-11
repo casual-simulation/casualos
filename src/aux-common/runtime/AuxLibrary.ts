@@ -89,10 +89,12 @@ import {
     unexportGpioPin,
     setGpioPin,
     getGpioPin,
+    rpioInitPin,
     rpioOpenPin,
     rpioModePin,
     rpioReadPin,
     rpioWritePin,
+    rpioClosePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -385,10 +387,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unexportGpio,
                 setGpio,
                 getGpio,
+                rpioInit,
                 rpioOpen,
                 rpioMode,
                 rpioRead,
                 rpioWrite,
+                rpioClose,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1494,6 +1498,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sends an event to the server to initialize rpio with provided settings
+     * @param options An object containing values to initilize with.
+     *
+     * @example
+     * // Initialize with default settings
+     * server.rpioInit({
+     *   gpiomem: true,
+     *   mapping: 'physical',
+     *   mock: undefined,
+     *   close_on_exit: false
+     * });
+     */
+    function rpioInit(options: object) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioInitPin(options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Sends an event to the server to open a pin as input or output.
      * @param pin The physical pin number.
      * @param mode The mode of the pin.
@@ -1559,6 +1587,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioWritePin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to close a pin and what state to leave it in.
+     * @param pin The physical pin number.
+     * @param options The state to leave the pin in upon closing.
+     */
+    function rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioClosePin(pin, options),
             undefined,
             undefined,
             task.taskId

@@ -7,10 +7,12 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
+    RpioInitAction,
     RpioOpenAction,
     RpioModeAction,
     RpioReadAction,
     RpioWriteAction,
+    RpioCloseAction,
     asyncResult,
     asyncError,
     hasValue,
@@ -20,6 +22,7 @@ const rpio = require('rpio');
 /**
  * https://www.npmjs.com/package/rpio
  *
+ * WIP - rpio.init([options])
  * TODO - rpio.exit()
  * DONE - rpio.open(pin, mode[, option])
  * DONE - rpio.mode(pin, mode[, option])       //changes the mode input|output
@@ -73,6 +76,9 @@ export class GpioModule2 implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     flatMap(async event => {
+                        if (event.type === 'rpio_init') {
+                            await this._rpioInit(simulation, event);
+                        }
                         if (event.type === 'rpio_open') {
                             await this._rpioOpen(simulation, event);
                         }
@@ -85,6 +91,9 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_write') {
                             await this._rpioWrite(simulation, event);
                         }
+                        if (event.type === 'rpio_close') {
+                            await this._rpioClose(simulation, event);
+                        }
                     })
                 )
                 .subscribe()
@@ -93,6 +102,33 @@ export class GpioModule2 implements AuxModule2 {
         return sub;
     }
 
+    _rpioInit(simulation: Simulation, event: RpioInitAction) {
+        try {
+            rpio.init(event.options);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
     _rpioOpen(simulation: Simulation, event: RpioOpenAction) {
         try {
             if (event.pin) {
@@ -245,6 +281,43 @@ export class GpioModule2 implements AuxModule2 {
                 }
 
                 rpio.write(pin, value);
+            }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+
+    _rpioClose(simulation: Simulation, event: RpioCloseAction) {
+        try {
+            if (event.pin) {
+                let pin = event.pin;
+                let options;
+                if (event.options == 'PIN_PRESERVE') {
+                    options = rpio.PIN_PRESERVE;
+                } else {
+                    options = rpio.PIN_RESET;
+                }
+                rpio.close(pin, options);
             }
             simulation.helper.transaction(
                 hasValue(event.playerId)

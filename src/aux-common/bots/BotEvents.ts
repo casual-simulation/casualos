@@ -107,10 +107,12 @@ export type AsyncActions =
     | UnexportGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
+    | RpioInitAction
     | RpioOpenAction
     | RpioModeAction
     | RpioReadAction
     | RpioWriteAction
+    | RpioCloseAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -1052,6 +1054,9 @@ export interface SetupChannelAction extends AsyncAction {
     botOrMod?: Bot | BotTags;
 }
 
+/**
+ * Export a pin (BCM) for use.
+ */
 export interface ExportGpioPinAction extends AsyncAction {
     type: 'export_gpio_pin';
 
@@ -1065,6 +1070,10 @@ export interface ExportGpioPinAction extends AsyncAction {
      */
     mode: 'in' | 'out';
 }
+
+/**
+ * Unexport a pin (BCM) that is done being used.
+ */
 export interface UnexportGpioPinAction extends AsyncAction {
     type: 'unexport_gpio_pin';
 
@@ -1073,6 +1082,10 @@ export interface UnexportGpioPinAction extends AsyncAction {
      */
     pin: number;
 }
+
+/**
+ * Set the value of the provided pin (BCM).
+ */
 export interface SetGpioPinAction extends AsyncAction {
     type: 'set_gpio_pin';
 
@@ -1086,6 +1099,10 @@ export interface SetGpioPinAction extends AsyncAction {
      */
     value: 0 | 1;
 }
+
+/**
+ * Get the value of the provided pin (BCM).
+ */
 export interface GetGpioPinAction extends AsyncAction {
     type: 'get_gpio_pin';
 
@@ -1094,6 +1111,30 @@ export interface GetGpioPinAction extends AsyncAction {
      */
     pin: number;
 }
+
+/**
+ * Initialize rpio with the provided settings.
+ */
+export interface RpioInitAction extends AsyncAction {
+    type: 'rpio_init';
+
+    /**
+     * Defaults:
+     * gpiomem: true            Use /dev/gpiomem
+     *                          true | false
+     * mapping: 'physical'      Use the P1-P40 numbering scheme
+     *                          gpio | physical
+     * mock: undefined          Emulate specific hardware in mock mode
+     *                          raspi-b-r1 | raspi-a | raspi-b | raspi-a+ | raspi-b+ | raspi-2 | raspi-3 | raspi-zero | raspi-zero-w
+     * close_on_exit: true      On node process exit automatically close rpio
+     *                          true | false
+     */
+    options: object;
+}
+
+/**
+ * Open a pin for use.
+ */
 export interface RpioOpenAction extends AsyncAction {
     type: 'rpio_open';
 
@@ -1112,6 +1153,10 @@ export interface RpioOpenAction extends AsyncAction {
      */
     options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
 }
+
+/**
+ * Set the mode of the provided pin.
+ */
 export interface RpioModeAction extends AsyncAction {
     type: 'rpio_mode';
 
@@ -1121,7 +1166,7 @@ export interface RpioModeAction extends AsyncAction {
     pin: number;
 
     /**
-     * The mode you want to configure your pin as.
+     * The mode you want to set your pin as.
      */
     mode: 'INPUT' | 'OUTPUT' | 'PWM';
 
@@ -1130,6 +1175,10 @@ export interface RpioModeAction extends AsyncAction {
      */
     options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
 }
+
+/**
+ * Read the value of the provided pin.
+ */
 export interface RpioReadAction extends AsyncAction {
     type: 'rpio_read';
 
@@ -1138,6 +1187,10 @@ export interface RpioReadAction extends AsyncAction {
      */
     pin: number;
 }
+
+/**
+ * Write a new value for the provided pin.
+ */
 export interface RpioWriteAction extends AsyncAction {
     type: 'rpio_write';
 
@@ -1150,6 +1203,23 @@ export interface RpioWriteAction extends AsyncAction {
      * The value of the pin. Either High (0) or Low (1)
      */
     value: 'HIGH' | 'LOW';
+}
+
+/**
+ * Close a pin to remove it from use.
+ */
+export interface RpioCloseAction extends AsyncAction {
+    type: 'rpio_close';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
+     */
+    options?: 'PIN_RESET' | 'PIN_PRESERVE';
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2203,6 +2273,33 @@ export function getGpioPin(
 }
 
 /**
+ * Sends an event to the server to initialize rpio with provided settings
+ * @param options An object containing values to initilize with.
+ * @param taskId The ID of the async task.
+ *
+ * @example
+ * // Initialize with default settings
+ * server.rpioInit({
+ *   gpiomem: true,
+ *   mapping: 'physical',
+ *   mock: undefined,
+ *   close_on_exit: false
+ * });
+ */
+export function rpioInitPin(
+    options: object,
+    taskId?: string | number,
+    playerId?: string
+): RpioInitAction {
+    return {
+        type: 'rpio_init',
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
  * Opens a pin up for use and sets its initial mode/state.
  * @param pin The physical pin on the server.
  * @param mode The mode of the pin.
@@ -2282,6 +2379,27 @@ export function rpioWritePin(
         type: 'rpio_write',
         pin,
         value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sends an event to the server to close a pin and what state to leave it in.
+ * @param pin The physical pin number.
+ * @param options The state to leave the pin in upon closing.
+ * @param taskId The ID of the async task.
+ */
+export function rpioClosePin(
+    pin: number,
+    options?: 'PIN_RESET' | 'PIN_PRESERVE',
+    taskId?: string | number,
+    playerId?: string
+): RpioCloseAction {
+    return {
+        type: 'rpio_close',
+        pin,
+        options,
         taskId,
         playerId,
     };

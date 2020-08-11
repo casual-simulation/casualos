@@ -2458,6 +2458,36 @@ player.shout(state);
 
 ```
 
+### `server.rpioInit(options)`
+
+
+Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been initialized.
+
+The **first parameter** is an object with the settings to initialize with.
+
+**gpiomem** can be either `true` or `false`.
+**mapping** can be either `gpio` or `physical`.
+**mock** can be any of `raspi-b-r1` or `raspi-a` or `raspi-b` or `raspi-a+` or `raspi-b+` or `raspi-2` or `raspi-3` or `raspi-zero` or `raspi-zero-w`.
+**close_on_exit** can be `true` or `false`.
+
+
+#### Examples:
+
+1. Initialize rpio with the default options explicitly stated.
+```typescript
+let options = {
+        gpiomem: true,          /* Use /dev/gpiomem */
+        mapping: 'physical',    /* Use the P1-P40 numbering scheme */
+        mock: undefined,        /* Emulate specific hardware in mock mode */
+        close_on_exit: true,    /* On node process exit automatically close rpio */
+}
+
+server.rpioInit(options);
+```
+
 ### `server.rpioOpen(pin, mode, options)`
 
 
@@ -2568,6 +2598,34 @@ var led_pin = 11;
 
 server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
 server.rpioWrite(led_pin, 'HIGH');
+```
+
+### `server.rpioClose(pin, options)`
+
+
+Indicate that the pin will no longer be used, and clear any poll events associated with it.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been closed.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PIN_RESET' or 'PIN_PRESERVE' and can be used to configure the state that pin will be left in after close.
+
+#### Examples:
+
+1. Close pin 11 and let the state reset by default.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin);
+```
+
+2. Close pin 11 and preserve the state.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin, 'PIN_PRESERVE');
 ```
 
 ### `server.browseHistory()`

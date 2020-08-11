@@ -2701,6 +2701,21 @@ declare global {
         getGpio(pin: number): Promise<void>;
 
         /**
+         * Sends an event to the server to initialize rpio with provided settings
+         * @param options An object containing values to initilize with.
+         * 
+         * @example
+         * // Initialize with default settings
+         * server.rpioInit({
+         *   gpiomem: true,
+         *   mapping: 'physical',
+         *   mock: undefined,
+         *   close_on_exit: false
+         * }); 
+         */
+        rpioInit(options?: object): Promise<void>;
+
+        /**
          * Sends an event to the server to open a pin as input or output and set its initial state.
          * @param pin The physical pin number.
          * @param mode The mode of the pin.
@@ -2728,6 +2743,13 @@ declare global {
          * @param value The mode of the pin.
          */
         rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+        /**
+         * Sends an event to the server to close a pin and what state to leave it in.
+         * @param pin The physical pin number.
+         * @param options The state to leave the pin in upon closing.
+         */
+        rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
 
         /**
          * Executes the given shell script on the server.
