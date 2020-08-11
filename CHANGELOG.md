@@ -19,6 +19,10 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where using `player.showInput()` with an existing value would not prefill the text box with the existing value.
+-   Fixed a performance issue where formulas which were recalculated after every change had a factorial (!) performance cost.
+    -   Was caused by two things:
+        1.  Some formulas don't have enough information to determine what tags they are dependent on. In these cases, we callback to using an "all" dependency which means that the formula will be recalculated whenever any tag changes.
+        2.  These "all" dependencies were included when searching for nested dependencies which meant that we were resolving every "all" dependency for every other "all" dependency. This gives us the effect of searching every possible combination of dependencies instead of only the ones we need, which has a factorial cost.
 
 ## V1.2.1
 
