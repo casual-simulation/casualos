@@ -4787,6 +4787,54 @@ describe('CausalRepoServer', () => {
         });
     });
 
+    describe(AUTHENTICATE_BRANCH_WRITES, () => {
+        it('should respond with an message indicating that the password was wrong', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const hash1 = hashPassword('password1');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'wrong',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: false,
+                    },
+                },
+            ]);
+        });
+    });
+
     describe(DEVICES, () => {
         it('should send a response with the list of devices', async () => {
             server.init();

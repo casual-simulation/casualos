@@ -724,6 +724,7 @@ export class CausalRepoServer {
                             false,
                             false
                         );
+                        let valid = false;
                         if (repo) {
                             const settings = repo.settings;
                             if (settings.passwordHash) {
@@ -744,16 +745,14 @@ export class CausalRepoServer {
                                     authenticatedDevices.add(device);
                                     authenticatedBranches.add(event.branch);
 
-                                    sendToDevices(
-                                        [device],
-                                        AUTHENTICATED_TO_BRANCH,
-                                        {
-                                            branch: event.branch,
-                                            authenticated: true,
-                                        } as AuthenticatedToBranchEvent
-                                    );
+                                    valid = true;
                                 }
                             }
+
+                            sendToDevices([device], AUTHENTICATED_TO_BRANCH, {
+                                branch: event.branch,
+                                authenticated: valid,
+                            } as AuthenticatedToBranchEvent);
 
                             await this._tryUnloadBranch(info);
                         }

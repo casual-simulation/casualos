@@ -24,6 +24,10 @@ import {
     COMMIT_CREATED,
     ResetEvent,
     RESET,
+    AuthenticatedToBranchEvent,
+    AUTHENTICATED_TO_BRANCH,
+    AuthenticateBranchWritesEvent,
+    AUTHENTICATE_BRANCH_WRITES,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -1197,6 +1201,12 @@ describe('RemoteCausalRepoPartition', () => {
         });
 
         describe('static mode', () => {
+            let authenticated: Subject<AuthenticatedToBranchEvent>;
+            beforeEach(() => {
+                authenticated = new Subject<AuthenticatedToBranchEvent>();
+                connection.events.set(AUTHENTICATED_TO_BRANCH, authenticated);
+            });
+
             it('should send a GET_BRANCH event when in static mode', async () => {
                 setupPartition({
                     type: 'remote_causal_repo',
@@ -1295,6 +1305,13 @@ describe('RemoteCausalRepoPartition', () => {
                     ),
                 ]);
 
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: true,
+                });
+
+                await waitAsync();
+
                 expect(partition.state).toEqual({
                     bot1: createBot('bot1', {
                         tag1: 'abc',
@@ -1347,7 +1364,14 @@ describe('RemoteCausalRepoPartition', () => {
                     ),
                 ]);
 
-                expect(connection.sentMessages.slice(2)).toEqual([
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: true,
+                });
+
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(3)).toEqual([
                     {
                         name: ADD_ATOMS,
                         data: {
@@ -1387,6 +1411,13 @@ describe('RemoteCausalRepoPartition', () => {
                     ),
                 ]);
 
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: false,
+                });
+
+                await waitAsync();
+
                 expect(connection.sentMessages.slice(2)).toEqual([]);
             });
 
@@ -1401,7 +1432,10 @@ describe('RemoteCausalRepoPartition', () => {
 
                 await partition.applyEvents([unlockSpace('admin', '3342')]);
 
-                expect(connection.sentMessages.length).toEqual(0);
+                expect(
+                    connection.sentMessages.filter(e => e.name === WATCH_BRANCH)
+                        .length
+                ).toEqual(0);
             });
 
             it('should be able to unlock while waiting for the initial connection to finish', async () => {
@@ -1421,10 +1455,24 @@ describe('RemoteCausalRepoPartition', () => {
 
                 await partition.applyEvents([unlockSpace('admin', '3342')]);
 
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: true,
+                });
+
+                await waitAsync();
+
                 expect(connection.sentMessages).toEqual([
                     {
                         name: GET_BRANCH,
                         data: 'testBranch',
+                    },
+                    {
+                        name: AUTHENTICATE_BRANCH_WRITES,
+                        data: {
+                            branch: 'testBranch',
+                            password: '3342',
+                        },
                     },
                 ]);
 
@@ -1433,7 +1481,7 @@ describe('RemoteCausalRepoPartition', () => {
                     atoms: [bot1, tag1, value1],
                 });
 
-                expect(connection.sentMessages.slice(1)).toEqual([
+                expect(connection.sentMessages.slice(2)).toEqual([
                     {
                         name: WATCH_BRANCH,
                         data: {
@@ -1469,6 +1517,11 @@ describe('RemoteCausalRepoPartition', () => {
                 await partition.applyEvents([
                     unlockSpace('admin', '3342', 123),
                 ]);
+
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: true,
+                });
 
                 await waitAsync();
 
@@ -1530,6 +1583,11 @@ describe('RemoteCausalRepoPartition', () => {
                 await partition.applyEvents([
                     unlockSpace('admin', 'wrong', 123),
                 ]);
+
+                authenticated.next({
+                    branch: 'testBranch',
+                    authenticated: false,
+                });
 
                 await waitAsync();
 

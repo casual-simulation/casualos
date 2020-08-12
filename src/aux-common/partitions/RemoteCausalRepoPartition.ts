@@ -29,7 +29,7 @@ import {
     applyAtoms,
 } from '../aux-format-2';
 import { Observable, Subscription, Subject } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { startWith, first } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
@@ -308,28 +308,31 @@ export class RemoteCausalRepoPartitionImpl
             for (let i = 0; i < events.length; i++) {
                 const event = events[i];
                 if (event.type === 'unlock_space') {
-                    if (this._unlockSpace(event.password)) {
-                        const extraEvents = await this.applyEvents(
-                            events.slice(i + 1)
-                        );
+                    this._unlockSpace(event.password).then(async unlocked => {
+                        if (unlocked) {
+                            const extraEvents = await this.applyEvents(
+                                events.slice(i + 1)
+                            );
 
-                        // Resolve the unlock_space task
-                        this._onEvents.next([
-                            asyncResult(event.taskId, undefined),
-                        ]);
+                            // Resolve the unlock_space task
+                            this._onEvents.next([
+                                asyncResult(event.taskId, undefined),
+                            ]);
 
-                        return extraEvents;
-                    } else {
-                        // Reject the unlock_space task
-                        this._onEvents.next([
-                            asyncError(
-                                event.taskId,
-                                new Error(
-                                    'Unable to unlock the space because the passcode is incorrect.'
-                                )
-                            ),
-                        ]);
-                    }
+                            return extraEvents;
+                        } else {
+                            // Reject the unlock_space task
+                            this._onEvents.next([
+                                asyncError(
+                                    event.taskId,
+                                    new Error(
+                                        'Unable to unlock the space because the passcode is incorrect.'
+                                    )
+                                ),
+                            ]);
+                        }
+                    });
+                    return [];
                 }
             }
             return [];
@@ -365,9 +368,13 @@ export class RemoteCausalRepoPartitionImpl
         return [];
     }
 
-    private _unlockSpace(password: string) {
-        // TODO: Improve with a better mechanism
-        if (password !== '3342') {
+    private async _unlockSpace(password: string): Promise<boolean> {
+        const authenticated = await this._client
+            .authenticateBranchWrites(this._branch, password)
+            .pipe(first())
+            .toPromise();
+
+        if (!authenticated) {
             return false;
         }
         this._static = false;
