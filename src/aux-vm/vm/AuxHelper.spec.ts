@@ -44,6 +44,7 @@ import {
     remoteResult,
     RemoteActions,
     remoteError,
+    AUTHENTICATE_BRANCH_WRITES,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -973,9 +974,10 @@ describe('AuxHelper', () => {
 
                 expect(connection.sentMessages.slice(1)).toEqual([
                     {
-                        name: WATCH_BRANCH,
+                        name: AUTHENTICATE_BRANCH_WRITES,
                         data: {
                             branch: 'story',
+                            password: '3342',
                         },
                     },
                 ]);
