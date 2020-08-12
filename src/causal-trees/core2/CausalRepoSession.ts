@@ -9,6 +9,7 @@ import {
     CheckoutEvent,
     RestoreEvent,
     WatchBranchEvent,
+    SetBranchPasswordEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -69,6 +70,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/unwatch_commits': string;
     'repo/checkout': CheckoutEvent;
     'repo/restore': RestoreEvent;
+    'repo/set_branch_password': SetBranchPasswordEvent;
 }
 
 export type CausalRepoMessageHandlerMethods = {

@@ -34,6 +34,11 @@ export interface CausalRepoBranch {
      * The time that the branch was updated.
      */
     time?: Date;
+
+    /**
+     * The hash of the password that is securing the branch.
+     */
+    passwordHash?: string;
 }
 
 /**
@@ -174,17 +179,20 @@ export interface CausalRepoAtom {
  * @param name The name of the branch.
  * @param hash The hash that the branch points to.
  * @param time The time that the branch was updated.
+ * @param passwordHash The password hash that should be stored for the branch.
  */
 export function repoBranch(
     name: string,
     hash: string,
-    time?: Date
+    time?: Date,
+    passwordHash?: string
 ): CausalRepoBranch {
     return {
         type: 'branch',
         name: name,
         hash: hash,
         time: time,
+        passwordHash,
     };
 }
 
@@ -193,16 +201,18 @@ export function repoBranch(
  * @param name The name of the branch.
  * @param ref The reference that the branch should point to.
  * @param time The time that the branch should store.
+ * @param passwordHash The hash of the password that is used to secure the branch.
  */
 export function branch(
     name: string,
     ref: CausalRepoCommit | CausalRepoIndex | string,
-    time?: Date
+    time?: Date,
+    passwordHash?: string
 ): CausalRepoBranch {
     if (typeof ref === 'string') {
-        return repoBranch(name, ref, time);
+        return repoBranch(name, ref, time, passwordHash);
     }
-    return repoBranch(name, getObjectHash(ref), time);
+    return repoBranch(name, getObjectHash(ref), time, passwordHash);
 }
 
 /**

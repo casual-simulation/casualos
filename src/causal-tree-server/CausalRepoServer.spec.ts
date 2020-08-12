@@ -51,6 +51,7 @@ import {
     COMMIT_CREATED,
     RESTORED,
     RESET,
+    SetBranchPasswordEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -64,8 +65,13 @@ import {
     deviceResult,
     remoteError,
     deviceError,
+    SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees';
 import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
+import {
+    hashPassword,
+    verifyPassword,
+} from '../causal-trees/node_modules/@casual-simulation/crypto';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -4345,6 +4351,130 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe(SET_BRANCH_PASSWORD, () => {
+        it('should change the password if given the previous password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const hash1 = hashPassword('password1');
+            const b1 = branch('testBranch', c, undefined, hash1);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'password1',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const [storedBranch] = await store.getBranches('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedBranch.passwordHash)
+            ).toBe(true);
+        });
+
+        it('should be able to set the password of a branch that doesnt have a password by using 3342 as the old password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: '3342',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const [storedBranch] = await store.getBranches('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedBranch.passwordHash)
+            ).toBe(true);
+        });
+
+        it('should not be able to set the password of a branch if the old password is wrong', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const hash1 = hashPassword('password1');
+            const b1 = branch('testBranch', c, undefined, hash1);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'wrong',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const [storedBranch] = await store.getBranches('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedBranch.passwordHash)
+            ).toBe(false);
         });
     });
 

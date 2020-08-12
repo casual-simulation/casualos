@@ -71,12 +71,14 @@ import {
     Weave,
     ResetEvent,
     RESET,
+    SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
 import { map, concatMap } from 'rxjs/operators';
 import { Observable, merge } from 'rxjs';
 import orderBy from 'lodash/orderBy';
+import { verifyPassword, hashPassword } from '../crypto';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -623,6 +625,39 @@ export class CausalRepoServer {
                         conn.send(DEVICES, {
                             devices: devices.map(d => d.extra.device),
                         });
+                    },
+                    [SET_BRANCH_PASSWORD]: async event => {
+                        const branches = await this._store.getBranches(
+                            event.branch
+                        );
+                        const branch = branches.find(
+                            b => b.name === event.branch
+                        );
+                        let updateBranch = false;
+                        if (branch) {
+                            if (!branch.passwordHash) {
+                                if (event.oldPassword === '3342') {
+                                    updateBranch = true;
+                                }
+                            } else if (
+                                verifyPassword(
+                                    event.oldPassword,
+                                    branch.passwordHash
+                                ) === true
+                            ) {
+                                updateBranch = true;
+                            }
+                        }
+
+                        if (updateBranch) {
+                            const newHash = hashPassword(event.newPassword);
+                            const newBranch = {
+                                ...branch,
+                                passwordHash: newHash,
+                            };
+
+                            await this._store.saveBranch(newBranch);
+                        }
                     },
                     [UNWATCH_BRANCHES]: async () => {},
                     [UNWATCH_DEVICES]: async () => {},

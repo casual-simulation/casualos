@@ -175,6 +175,11 @@ export const BRANCHES_STATUS = 'repo/branches_status';
 export const DEVICES = 'repo/devices';
 
 /**
+ * The name of the event which sets the password used to edit the branch.
+ */
+export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -222,6 +227,26 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+}
+
+/**
+ * Defines an event which indicates that the branch password should be set to the given new password.
+ */
+export interface SetBranchPasswordEvent {
+    /**
+     * The branch that should have its password changed.
+     */
+    branch: string;
+
+    /**
+     * The old password for the branch.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the branch.
+     */
+    newPassword: string;
 }
 
 /**
