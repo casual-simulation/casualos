@@ -12,7 +12,7 @@ const BLOCK_SIZE = 8;
 const PARALLELISM = 1;
 const KEY_LENGTH = secretbox.keyLength;
 
-function deriveKey(password: Uint8Array, salt: Uint8Array): DerivedKey {
+export function deriveKey(password: Uint8Array, salt: Uint8Array): DerivedKey {
     const result = syncScrypt(
         password,
         salt,
