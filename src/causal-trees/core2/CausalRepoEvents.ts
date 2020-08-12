@@ -180,6 +180,11 @@ export const DEVICES = 'repo/devices';
 export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
 
 /**
+ * The name of the event which is used to authenticate a device to write to a branch.
+ */
+export const AUTHENTICATE_BRANCH_WRITES = 'repo/authenticate_branch_writes';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -227,6 +232,21 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+}
+
+/**
+ * Defines an event which indicates that writing to the specified branch should be authenticated using the given password.
+ */
+export interface AuthenticateBranchWritesEvent {
+    /**
+     * The branch that should be authenticated.
+     */
+    branch: string;
+
+    /**
+     * The password that should be used.
+     */
+    password: string;
 }
 
 /**

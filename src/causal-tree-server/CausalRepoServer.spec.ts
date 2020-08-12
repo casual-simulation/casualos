@@ -52,6 +52,7 @@ import {
     RESTORED,
     RESET,
     SetBranchPasswordEvent,
+    AuthenticateBranchWritesEvent,
     branchSettings,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
@@ -67,6 +68,7 @@ import {
     remoteError,
     deviceError,
     SET_BRANCH_PASSWORD,
+    AUTHENTICATE_BRANCH_WRITES,
 } from '@casual-simulation/causal-trees';
 import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
 import {
@@ -2336,6 +2338,134 @@ describe('CausalRepoServer', () => {
                     },
                 ]);
             });
+        });
+
+        it('should prevent adding atoms to a branch that has a password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toBe(null);
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [],
+                    },
+                },
+            ]);
+        });
+
+        it('should allow adding atoms to a branch that has a password when authenticated', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'password',
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toEqual({
+                type: 'atom',
+                data: a3,
+            });
+
+            expect(device.messages.slice(1)).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+            ]);
         });
     });
 

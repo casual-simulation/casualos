@@ -409,6 +409,13 @@ export class CausalRepo {
     currentCommit: CommitData = null;
 
     /**
+     * The branch that is currently checked out.
+     */
+    get head() {
+        return this._head;
+    }
+
+    /**
      *
      * @param store
      */

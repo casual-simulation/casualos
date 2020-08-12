@@ -72,6 +72,9 @@ import {
     ResetEvent,
     RESET,
     SET_BRANCH_PASSWORD,
+    AUTHENTICATE_BRANCH_WRITES,
+    CausalRepoBranchSettings,
+    branchSettings,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -206,6 +209,18 @@ export class CausalRepoServer {
                                 false,
                                 isTemp
                             );
+
+                            if (
+                                repo.repo.head &&
+                                repo.settings.passwordHash &&
+                                !repo.authenticatedDevices.has(device.id)
+                            ) {
+                                sendToDevices([device], ATOMS_RECEIVED, {
+                                    branch: event.branch,
+                                    hashes: [],
+                                });
+                                return;
+                            }
 
                             let added: Atom<any>[];
                             let removed: Atom<any>[];
@@ -660,6 +675,29 @@ export class CausalRepoServer {
                                 repo.settings = newSettings;
                                 repo.authenticatedDevices.clear();
                             }
+                        }
+                    },
+                    [AUTHENTICATE_BRANCH_WRITES]: async event => {
+                        const info = infoForBranch(event.branch);
+                        let repo = await this._getOrLoadRepo(
+                            event.branch,
+                            false,
+                            false
+                        );
+                        if (repo) {
+                            const settings = repo.settings;
+                            if (settings.passwordHash) {
+                                if (
+                                    verifyPassword(
+                                        event.password,
+                                        settings.passwordHash
+                                    ) === true
+                                ) {
+                                    repo.authenticatedDevices.add(device.id);
+                                }
+                            }
+
+                            await this._tryUnloadBranch(info);
                         }
                     },
                     [UNWATCH_BRANCHES]: async () => {},
