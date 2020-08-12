@@ -59,6 +59,12 @@ import {
     RESTORED,
     ResetEvent,
     RESET,
+    SET_BRANCH_PASSWORD,
+    SetBranchPasswordEvent,
+    AUTHENTICATE_BRANCH_WRITES,
+    AuthenticateBranchWritesEvent,
+    AuthenticatedToBranchEvent,
+    AUTHENTICATED_TO_BRANCH,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -423,6 +429,60 @@ export class CausalRepoClient {
             }),
             switchMap(connected =>
                 merge(this._client.event<BranchesEvent>(BRANCHES).pipe(first()))
+            )
+        );
+    }
+
+    /**
+     * Requests that the given branch have its password changed.
+     * @param branch The branch.
+     * @param oldPassword The old password.
+     * @param newPassword The new password.
+     */
+    setBranchPassword(
+        branch: string,
+        oldPassword: string,
+        newPassword: string
+    ) {
+        return this._whenConnected().pipe(
+            first(connected => connected),
+            tap(connected => {
+                this._client.send(SET_BRANCH_PASSWORD, {
+                    branch,
+                    oldPassword,
+                    newPassword,
+                } as SetBranchPasswordEvent);
+            })
+        );
+    }
+
+    /**
+     * Requests that the current session be able to write to the given branch.
+     * @param branch The branch.
+     * @param password The password.
+     */
+    authenticateBranchWrites(
+        branch: string,
+        password: string
+    ): Observable<boolean> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(AUTHENTICATE_BRANCH_WRITES, {
+                    branch,
+                    password,
+                } as AuthenticateBranchWritesEvent);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<AuthenticatedToBranchEvent>(
+                            AUTHENTICATED_TO_BRANCH
+                        )
+                        .pipe(
+                            filter(e => e.branch === branch),
+                            map(e => e.authenticated)
+                        )
+                )
             )
         );
     }

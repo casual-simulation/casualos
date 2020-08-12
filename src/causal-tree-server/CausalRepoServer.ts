@@ -75,6 +75,8 @@ import {
     AUTHENTICATE_BRANCH_WRITES,
     CausalRepoBranchSettings,
     branchSettings,
+    AUTHENTICATED_TO_BRANCH,
+    AuthenticatedToBranchEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -100,6 +102,16 @@ export class CausalRepoServer {
     private _branches: Map<string, WatchBranchEvent>;
 
     /**
+     * A map of branches to the list of devices that are authenticated.
+     */
+    private _branchAuthentications: Map<string, Set<DeviceConnection<any>>>;
+
+    /**
+     * A map of device IDs to the list of branches they are authenticated in.
+     */
+    private _deviceAuthentications: Map<string, Set<string>>;
+
+    /**
      * Gets or sets the default device selector that should be used
      * for events that are sent without a selector.
      */
@@ -117,6 +129,8 @@ export class CausalRepoServer {
         this._repoPromises = new Map();
         this._branches = new Map();
         this._branchSiteIds = new Map();
+        this._branchAuthentications = new Map();
+        this._deviceAuthentications = new Map();
         this._stage = stageStore;
     }
 
@@ -210,10 +224,13 @@ export class CausalRepoServer {
                                 isTemp
                             );
 
+                            const authenticatedDevices = setForKey(
+                                this._branchAuthentications,
+                                event.branch
+                            );
                             if (
-                                repo.repo.head &&
                                 repo.settings.passwordHash &&
-                                !repo.authenticatedDevices.has(device.id)
+                                !authenticatedDevices.has(device)
                             ) {
                                 sendToDevices([device], ATOMS_RECEIVED, {
                                     branch: event.branch,
@@ -672,8 +689,31 @@ export class CausalRepoServer {
                             };
                             await this._store.saveSettings(newSettings);
                             if (repo) {
+                                const authenticatedDevices = setForKey(
+                                    this._branchAuthentications,
+                                    event.branch
+                                );
+                                const authenticatedBranches = setForKey(
+                                    this._deviceAuthentications,
+                                    device.id
+                                );
+
+                                const unauthenticatedDevices = [
+                                    ...authenticatedDevices,
+                                ];
+
+                                authenticatedDevices.clear();
+                                authenticatedBranches.delete(event.branch);
                                 repo.settings = newSettings;
-                                repo.authenticatedDevices.clear();
+
+                                sendToDevices(
+                                    unauthenticatedDevices,
+                                    AUTHENTICATED_TO_BRANCH,
+                                    {
+                                        branch: event.branch,
+                                        authenticated: false,
+                                    } as AuthenticatedToBranchEvent
+                                );
                             }
                         }
                     },
@@ -693,7 +733,25 @@ export class CausalRepoServer {
                                         settings.passwordHash
                                     ) === true
                                 ) {
-                                    repo.authenticatedDevices.add(device.id);
+                                    const authenticatedDevices = setForKey(
+                                        this._branchAuthentications,
+                                        event.branch
+                                    );
+                                    const authenticatedBranches = setForKey(
+                                        this._deviceAuthentications,
+                                        device.id
+                                    );
+                                    authenticatedDevices.add(device);
+                                    authenticatedBranches.add(event.branch);
+
+                                    sendToDevices(
+                                        [device],
+                                        AUTHENTICATED_TO_BRANCH,
+                                        {
+                                            branch: event.branch,
+                                            authenticated: true,
+                                        } as AuthenticatedToBranchEvent
+                                    );
                                 }
                             }
 
@@ -917,7 +975,6 @@ export class CausalRepoServer {
             repo,
             weave,
             settings,
-            authenticatedDevices,
         };
     }
 
@@ -945,7 +1002,6 @@ export class CausalRepoServer {
             for (let atom of repo.getAtoms()) {
                 weave.insert(atom);
             }
-            const authenticatedDevices = new Set<string>();
 
             const settings =
                 (await this._store.getBranchSettings(branch)) ||
@@ -955,7 +1011,6 @@ export class CausalRepoServer {
                 repo,
                 weave,
                 settings,
-                authenticatedDevices,
             };
         } finally {
             const [seconds, nanoseconds] = process.hrtime(startTime);
@@ -1069,5 +1124,16 @@ interface RepoData {
     repo: CausalRepo;
     weave: Weave<any>;
     settings: CausalRepoBranchSettings;
-    authenticatedDevices: Set<string>;
+}
+
+function setForKey<TKey, TVal>(
+    map: Map<TKey, Set<TVal>>,
+    key: TKey
+): Set<TVal> {
+    let set = map.get(key);
+    if (!set) {
+        set = new Set();
+        map.set(key, set);
+    }
+    return set;
 }

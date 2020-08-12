@@ -185,6 +185,11 @@ export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
 export const AUTHENTICATE_BRANCH_WRITES = 'repo/authenticate_branch_writes';
 
 /**
+ * The name of the event which is used to notify that the device is authenticated to a branch.
+ */
+export const AUTHENTICATED_TO_BRANCH = 'repo/authenticated_to_branch';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -247,6 +252,21 @@ export interface AuthenticateBranchWritesEvent {
      * The password that should be used.
      */
     password: string;
+}
+
+/**
+ * Defines an event which indicates that the device is authenticated to a branch.
+ */
+export interface AuthenticatedToBranchEvent {
+    /**
+     * The branch.
+     */
+    branch: string;
+
+    /**
+     * Whether the device is authenticated.
+     */
+    authenticated: boolean;
 }
 
 /**
