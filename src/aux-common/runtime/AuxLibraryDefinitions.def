@@ -2701,6 +2701,12 @@ declare global {
         getGpio(pin: number): Promise<void>;
 
         /**
+         * Sleeps for time in ms.
+         * @param time Time in ms. 1 second is 1000ms.
+         */
+        sleep(time: number): Promise<void>;
+
+        /**
          * Sends an event to the server to initialize rpio with provided settings
          * @param options An object containing values to initilize with.
          * 
@@ -2743,11 +2749,27 @@ declare global {
         rpioRead(pin: number): Promise<void>;
 
         /**
+         * Sends an event to the server to read the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to read.
+         * @param length The length of the buffer.
+         */
+        rpioReadBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
+        /**
          * Sends an event to the server to write to a pin and set it as HIGH or LOW.
          * @param pin The physical pin number.
          * @param value The mode of the pin.
          */
         rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+        /**
+         * Sends an event to the server to write to the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to write to.
+         * @param length The length of the buffer.
+         */
+        rpioWriteBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
 
         /**
          * Sends an event to the server to close a pin and what state to leave it in.

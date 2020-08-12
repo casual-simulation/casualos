@@ -2458,6 +2458,25 @@ player.shout(state);
 
 ```
 
+### `server.sleep(time)`
+
+
+Waits the amount of time provided, in ms.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the time has been waited.
+
+The **first parameter** is time in ms to wait. 1 second is 1000ms.
+
+#### Examples:
+
+1. Wait 2 seconds before proceeding.
+```typescript
+player.shout("Stop!");
+server.sleep(2000);
+player.shout("Hammer Time!");
+```
+
 ### `server.rpioInit(options)`
 
 
@@ -2599,6 +2618,28 @@ player.shout(state);
 
 ```
 
+### `server.rpioReadBuf(pin, buffer, length)`
+
+Read length bits from pin into buffer as fast as possible. If length isn't specified it defaults to `buffer.length`.
+This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the buffer to read.
+
+The **third parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Read the value of Pin 16 10,000 times in a row, storing the values in buf
+```typescript
+var buf = new Buffer(10000);
+server.readbuf(16, buf);
+```
+
 ### `server.rpioWrite(pin, value)`
 
 
@@ -2619,6 +2660,30 @@ var led_pin = 11;
 
 server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
 server.rpioWrite(led_pin, 'HIGH');
+```
+
+### `server.rpioWriteBuf(pin, buffer, length)`
+
+
+Write length bits to pin from buffer as fast as possible. If length isn't specified it defaults to `buffer.length`.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been written to.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the buffer to write to.
+
+The **third parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Write ???? to Pin 13 
+```typescript
+var buf = new Buffer(10000);
+
+server.rpioWritebuf(13, buf);
+
 ```
 
 ### `server.rpioClose(pin, options)`

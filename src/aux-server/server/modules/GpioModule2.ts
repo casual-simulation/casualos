@@ -7,12 +7,15 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
+    SleepAction,
     RpioInitAction,
     RpioExitAction,
     RpioOpenAction,
     RpioModeAction,
     RpioReadAction,
+    RpioReadBufAction,
     RpioWriteAction,
+    RpioWriteBufAction,
     RpioCloseAction,
     asyncResult,
     asyncError,
@@ -24,13 +27,13 @@ const rpio = require('rpio');
  * https://www.npmjs.com/package/rpio
  *
  *  DONE - rpio.init([options])
- * WIP - rpio.exit()
+ *  DONE - rpio.exit()
  *  DONE - rpio.open(pin, mode[, option])
  *  DONE - rpio.mode(pin, mode[, option])
  *  DONE - rpio.read(pin)
- * TODO - rpio.readbuf(pin, buffer[, length])
+ *  DONE - rpio.readbuf(pin, buffer[, length])
  *  DONE - rpio.write(pin, value)
- * TODO - rpio.writebuf(pin, buffer[, length])
+ *  DONE - rpio.writebuf(pin, buffer[, length])
  * TODO - rpio.readpad(group)
  * TODO - rpio.writepad(group, control)
  * TODO - rpio.pud(pin, state)
@@ -77,6 +80,9 @@ export class GpioModule2 implements AuxModule2 {
             simulation.localEvents
                 .pipe(
                     flatMap(async event => {
+                        if (event.type === 'sleep') {
+                            await this._sleep(simulation, event);
+                        }
                         if (event.type === 'rpio_init') {
                             await this._rpioInit(simulation, event);
                         }
@@ -92,8 +98,14 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_read') {
                             await this._rpioRead(simulation, event);
                         }
+                        if (event.type === 'rpio_readbuf') {
+                            await this._rpioReadBuf(simulation, event);
+                        }
                         if (event.type === 'rpio_write') {
                             await this._rpioWrite(simulation, event);
+                        }
+                        if (event.type === 'rpio_writebuf') {
+                            await this._rpioWriteBuf(simulation, event);
                         }
                         if (event.type === 'rpio_close') {
                             await this._rpioClose(simulation, event);
@@ -106,6 +118,35 @@ export class GpioModule2 implements AuxModule2 {
         return sub;
     }
 
+    _sleep(simulation: Simulation, event: SleepAction) {
+        try {
+            let time = event.time;
+            let sleepy = new Promise(resolve => setTimeout(resolve, time));
+
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          sleepy,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, sleepy)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
     _rpioInit(simulation: Simulation, event: RpioInitAction) {
         try {
             rpio.init(event.options);
@@ -300,6 +341,47 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
+    _rpioReadBuf(simulation: Simulation, event: RpioReadBufAction) {
+        try {
+            let pin;
+            let buffer;
+            let length;
+            if (event.pin) {
+                pin = event.pin;
+                if (event.buffer) {
+                    buffer = event.buffer;
+                } else {
+                    buffer = 0;
+                }
+                if (event.length) {
+                    length = event.length;
+                }
+                rpio.readbuf(pin, buffer, length);
+            }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          buffer,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, buffer)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
     _rpioWrite(simulation: Simulation, event: RpioWriteAction) {
         try {
             if (event.pin) {
@@ -313,6 +395,49 @@ export class GpioModule2 implements AuxModule2 {
 
                 rpio.write(pin, value);
             }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+
+    _rpioWriteBuf(simulation: Simulation, event: RpioWriteBufAction) {
+        try {
+            let pin;
+            let buffer;
+            let length;
+            if (event.pin) {
+                pin = event.pin;
+                if (event.buffer) {
+                    buffer = event.buffer;
+                } else {
+                    buffer = 0;
+                }
+                if (event.length) {
+                    length = event.length;
+                }
+                rpio.writebuf(pin, buffer, length);
+            }
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
