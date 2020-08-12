@@ -108,6 +108,7 @@ export type AsyncActions =
     | SetGpioPinAction
     | GetGpioPinAction
     | RpioInitAction
+    | RpioExitAction
     | RpioOpenAction
     | RpioModeAction
     | RpioReadAction
@@ -1132,6 +1133,12 @@ export interface RpioInitAction extends AsyncAction {
     options: object;
 }
 
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ */
+export interface RpioExitAction extends AsyncAction {
+    type: 'rpio_exit';
+}
 /**
  * Open a pin for use.
  */
@@ -2294,6 +2301,21 @@ export function rpioInitPin(
     return {
         type: 'rpio_init',
         options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ * @param taskId The ID of the async task.
+ */
+export function rpioExitPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioExitAction {
+    return {
+        type: 'rpio_exit',
         taskId,
         playerId,
     };

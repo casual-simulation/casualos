@@ -73,6 +73,7 @@ import {
     setGpioPin,
     getGpioPin,
     rpioOpenPin,
+    rpioExitPin,
     rpioInitPin,
     rpioModePin,
     rpioReadPin,
@@ -2465,6 +2466,29 @@ describe('AuxLibrary', () => {
                     gpiomem: true,
                 };
                 library.api.server.rpioInit(options);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioExit()', () => {
+            it('should send a RpioExitAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioExit();
+                const expected = remote(
+                    rpioExitPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioExit();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

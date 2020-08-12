@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     RpioInitAction,
+    RpioExitAction,
     RpioOpenAction,
     RpioModeAction,
     RpioReadAction,
@@ -23,7 +24,7 @@ const rpio = require('rpio');
  * https://www.npmjs.com/package/rpio
  *
  *  DONE - rpio.init([options])
- * TODO - rpio.exit()
+ * WIP - rpio.exit()
  *  DONE - rpio.open(pin, mode[, option])
  *  DONE - rpio.mode(pin, mode[, option])
  *  DONE - rpio.read(pin)
@@ -79,6 +80,9 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_init') {
                             await this._rpioInit(simulation, event);
                         }
+                        if (event.type === 'rpio_exit') {
+                            await this._rpioExit(simulation, event);
+                        }
                         if (event.type === 'rpio_open') {
                             await this._rpioOpen(simulation, event);
                         }
@@ -105,6 +109,33 @@ export class GpioModule2 implements AuxModule2 {
     _rpioInit(simulation: Simulation, event: RpioInitAction) {
         try {
             rpio.init(event.options);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioExit(simulation: Simulation, event: RpioExitAction) {
+        try {
+            rpio.exit();
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(

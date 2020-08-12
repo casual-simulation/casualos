@@ -2716,6 +2716,11 @@ declare global {
         rpioInit(options?: object): Promise<void>;
 
         /**
+         * Shuts down rpio, unmaps, and clears everything.
+         */
+        rpioExit(): Promise<void>;
+
+        /**
          * Sends an event to the server to open a pin as input or output and set its initial state.
          * @param pin The physical pin number.
          * @param mode The mode of the pin.

@@ -2488,6 +2488,27 @@ let options = {
 server.rpioInit(options);
 ```
 
+### `server.rpioExit()`
+
+
+Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
+This method is provided to allow explicit shutdown when using `close_on_exit: false` and a custom exit handler.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Initialize rpio with `close_on_exit: false` and manually exiting.
+```typescript
+server.rpioInit({close_on_exit: false});
+ 
+process.on('exit', function() {
+        /* Insert any custom cleanup code here. */
+        server.rpioExit();
+});
+```
+
 ### `server.rpioOpen(pin, mode, options)`
 
 

@@ -90,6 +90,7 @@ import {
     setGpioPin,
     getGpioPin,
     rpioInitPin,
+    rpioExitPin,
     rpioOpenPin,
     rpioModePin,
     rpioReadPin,
@@ -388,6 +389,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setGpio,
                 getGpio,
                 rpioInit,
+                rpioExit,
                 rpioOpen,
                 rpioMode,
                 rpioRead,
@@ -1514,6 +1516,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioInitPin(options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shuts down rpio, unmaps, and clears everything.
+     */
+    function rpioExit() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioExitPin(),
             undefined,
             undefined,
             task.taskId
