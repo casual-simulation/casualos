@@ -34,11 +34,6 @@ export interface CausalRepoBranch {
      * The time that the branch was updated.
      */
     time?: Date;
-
-    /**
-     * The hash of the password that is securing the branch.
-     */
-    passwordHash?: string;
 }
 
 /**
@@ -97,6 +92,29 @@ export interface CausalRepoSitelog {
      * Additional information about what caused the site to watch/unwatch the branch.
      */
     connectionReason?: CausalRepoSitelogConnectionReason;
+}
+
+/**
+ * Defines settings for a branch.
+ * This is a separate record that is able to store arbitrary data about a branch.
+ */
+export interface CausalRepoBranchSettings {
+    type: 'branch_settings';
+
+    /**
+     * The name of the branch that these settings represent.
+     */
+    branch: string;
+
+    /**
+     * The time that these settings were created on.
+     */
+    time: Date;
+
+    /**
+     * The password hash that is used to secure the branch.
+     */
+    passwordHash?: string;
 }
 
 /**
@@ -179,20 +197,17 @@ export interface CausalRepoAtom {
  * @param name The name of the branch.
  * @param hash The hash that the branch points to.
  * @param time The time that the branch was updated.
- * @param passwordHash The password hash that should be stored for the branch.
  */
 export function repoBranch(
     name: string,
     hash: string,
-    time?: Date,
-    passwordHash?: string
+    time?: Date
 ): CausalRepoBranch {
     return {
         type: 'branch',
         name: name,
         hash: hash,
         time: time,
-        passwordHash,
     };
 }
 
@@ -201,18 +216,16 @@ export function repoBranch(
  * @param name The name of the branch.
  * @param ref The reference that the branch should point to.
  * @param time The time that the branch should store.
- * @param passwordHash The hash of the password that is used to secure the branch.
  */
 export function branch(
     name: string,
     ref: CausalRepoCommit | CausalRepoIndex | string,
-    time?: Date,
-    passwordHash?: string
+    time?: Date
 ): CausalRepoBranch {
     if (typeof ref === 'string') {
-        return repoBranch(name, ref, time, passwordHash);
+        return repoBranch(name, ref, time);
     }
-    return repoBranch(name, getObjectHash(ref), time, passwordHash);
+    return repoBranch(name, getObjectHash(ref), time);
 }
 
 /**
@@ -245,6 +258,23 @@ export function sitelog(
         time: new Date(),
         sitelogType: type,
         connectionReason: connectionReason,
+    };
+}
+
+/**
+ * Creates settings for the given branch.
+ * @param branch The branch.
+ * @param passwordHash The password hash used to secure the branch.
+ */
+export function branchSettings(
+    branch: string,
+    passwordHash?: string
+): CausalRepoBranchSettings {
+    return {
+        type: 'branch_settings',
+        branch,
+        time: new Date(),
+        passwordHash,
     };
 }
 

@@ -52,6 +52,7 @@ import {
     RESTORED,
     RESET,
     SetBranchPasswordEvent,
+    branchSettings,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -4370,8 +4371,10 @@ describe('CausalRepoServer', () => {
 
             const idx = index(a1, a2);
             const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
             const hash1 = hashPassword('password1');
-            const b1 = branch('testBranch', c, undefined, hash1);
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
 
             await storeData(store, 'testBranch', idx.data.hash, [
                 a1,
@@ -4389,10 +4392,10 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            const [storedBranch] = await store.getBranches('testBranch');
+            const storedSettings = await store.getBranchSettings('testBranch');
 
             expect(
-                verifyPassword('newPassword', storedBranch.passwordHash)
+                verifyPassword('newPassword', storedSettings.passwordHash)
             ).toBe(true);
         });
 
@@ -4429,10 +4432,10 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            const [storedBranch] = await store.getBranches('testBranch');
+            const storedSettings = await store.getBranchSettings('testBranch');
 
             expect(
-                verifyPassword('newPassword', storedBranch.passwordHash)
+                verifyPassword('newPassword', storedSettings.passwordHash)
             ).toBe(true);
         });
 
@@ -4451,8 +4454,10 @@ describe('CausalRepoServer', () => {
 
             const idx = index(a1, a2);
             const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
             const hash1 = hashPassword('password1');
-            const b1 = branch('testBranch', c, undefined, hash1);
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
 
             await storeData(store, 'testBranch', idx.data.hash, [
                 a1,
@@ -4470,11 +4475,94 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
-            const [storedBranch] = await store.getBranches('testBranch');
+            const storedSettings = await store.getBranchSettings('testBranch');
 
             expect(
-                verifyPassword('newPassword', storedBranch.passwordHash)
+                verifyPassword('newPassword', storedSettings.passwordHash)
             ).toBe(false);
+        });
+
+        it('should not allow adding atoms when the password was changed while authenticated', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            device2.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'password',
+            });
+
+            await waitAsync();
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'password',
+                newPassword: 'different',
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toEqual(null);
+
+            expect(device.messages.slice(1)).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [],
+                    },
+                },
+            ]);
         });
     });
 

@@ -627,22 +627,22 @@ export class CausalRepoServer {
                         });
                     },
                     [SET_BRANCH_PASSWORD]: async event => {
-                        const branches = await this._store.getBranches(
-                            event.branch
-                        );
-                        const branch = branches.find(
-                            b => b.name === event.branch
-                        );
+                        const repo = this._repos.get(event.branch);
+                        const settings = !!repo
+                            ? repo.settings
+                            : (await this._store.getBranchSettings(
+                                  event.branch
+                              )) || branchSettings(event.branch);
                         let updateBranch = false;
-                        if (branch) {
-                            if (!branch.passwordHash) {
+                        if (settings) {
+                            if (!settings.passwordHash) {
                                 if (event.oldPassword === '3342') {
                                     updateBranch = true;
                                 }
                             } else if (
                                 verifyPassword(
                                     event.oldPassword,
-                                    branch.passwordHash
+                                    settings.passwordHash
                                 ) === true
                             ) {
                                 updateBranch = true;
@@ -651,12 +651,15 @@ export class CausalRepoServer {
 
                         if (updateBranch) {
                             const newHash = hashPassword(event.newPassword);
-                            const newBranch = {
-                                ...branch,
+                            const newSettings = {
+                                ...settings,
                                 passwordHash: newHash,
                             };
-
-                            await this._store.saveBranch(newBranch);
+                            await this._store.saveSettings(newSettings);
+                            if (repo) {
+                                repo.settings = newSettings;
+                                repo.authenticatedDevices.clear();
+                            }
                         }
                     },
                     [UNWATCH_BRANCHES]: async () => {},
@@ -869,10 +872,14 @@ export class CausalRepoServer {
         });
 
         const weave = new Weave<any>();
+        const authenticatedDevices = new Set<string>();
+        const settings = branchSettings(branch);
 
         return {
             repo,
             weave,
+            settings,
+            authenticatedDevices,
         };
     }
 
@@ -900,10 +907,17 @@ export class CausalRepoServer {
             for (let atom of repo.getAtoms()) {
                 weave.insert(atom);
             }
+            const authenticatedDevices = new Set<string>();
+
+            const settings =
+                (await this._store.getBranchSettings(branch)) ||
+                branchSettings(branch);
 
             return {
                 repo,
                 weave,
+                settings,
+                authenticatedDevices,
             };
         } finally {
             const [seconds, nanoseconds] = process.hrtime(startTime);
@@ -1016,4 +1030,6 @@ function branchSiteIdKey(branch: string, deviceId: string): string {
 interface RepoData {
     repo: CausalRepo;
     weave: Weave<any>;
+    settings: CausalRepoBranchSettings;
+    authenticatedDevices: Set<string>;
 }
