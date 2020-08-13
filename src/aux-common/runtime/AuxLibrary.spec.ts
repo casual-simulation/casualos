@@ -4439,6 +4439,7 @@ describe('AuxLibrary', () => {
 
         it('should return an array of results from the other formulas', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1, 2]);
         });
