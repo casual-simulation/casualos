@@ -43,13 +43,15 @@ export async function mongoConnectionInfo(
     const indexesCollection = db.collection('indexes');
     const reflogCollection = db.collection('reflog');
     const sitelogCollection = db.collection('sitelog');
+    const branchSettingsCollection = db.collection('branchSettings');
 
     const mongoStore = new MongoDBRepoStore(
         objectsCollection,
         headsCollection,
         indexesCollection,
         reflogCollection,
-        sitelogCollection
+        sitelogCollection,
+        branchSettingsCollection
     );
     await mongoStore.init();
     return mongoStore;
