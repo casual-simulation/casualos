@@ -84,6 +84,7 @@ import {
     createCertificate,
     signTag,
     revokeCertificate,
+    setSpacePassword,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3379,6 +3380,23 @@ describe('AuxLibrary', () => {
                 const expected = unlockSpace(
                     'admin',
                     'password',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('adminSpace.setPassword()', () => {
+            it('should issue a set_space_password event with the given password', () => {
+                const promise: any = library.api.adminSpace.setPassword(
+                    'old',
+                    'new'
+                );
+                const expected = setSpacePassword(
+                    'admin',
+                    'old',
+                    'new',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

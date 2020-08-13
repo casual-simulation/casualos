@@ -53,6 +53,7 @@ import {
     CreateCertificateAction,
     SignTagAction,
     RevokeCertificateAction,
+    SetSpacePasswordAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -333,6 +334,8 @@ export class RemoteCausalRepoPartitionImpl
                         }
                     });
                     return [];
+                } else if (event.type === 'set_space_password') {
+                    this._setPassword(event);
                 }
             }
             return [];
@@ -360,12 +363,34 @@ export class RemoteCausalRepoPartitionImpl
             } else if (e.type === 'unlock_space') {
                 // Resolve the unlock_space task
                 this._onEvents.next([asyncResult(e.taskId, undefined)]);
+            } else if (e.type === 'set_space_password') {
+                this._setPassword(e);
             }
         }
 
         this._applyEvents(finalEvents);
 
         return [];
+    }
+
+    private async _setPassword(event: SetSpacePasswordAction) {
+        try {
+            await this._client
+                .setBranchPassword(
+                    this._branch,
+                    event.oldPassword,
+                    event.newPassword
+                )
+                .toPromise();
+            this._onEvents.next([asyncResult(event.taskId, undefined)]);
+        } catch (err) {
+            this._onEvents.next([
+                asyncError(
+                    event.taskId,
+                    new Error('Unable to set the space password.')
+                ),
+            ]);
+        }
     }
 
     private async _unlockSpace(password: string): Promise<boolean> {
