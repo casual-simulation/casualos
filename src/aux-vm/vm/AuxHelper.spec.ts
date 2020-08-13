@@ -26,6 +26,7 @@ import {
     createCertificate,
     signTag,
     revokeCertificate,
+    setSpacePassword,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -45,6 +46,7 @@ import {
     RemoteActions,
     remoteError,
     AUTHENTICATE_BRANCH_WRITES,
+    SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -989,6 +991,90 @@ describe('AuxHelper', () => {
                 helper.localEvents.subscribe(e => events.push(...e));
                 await helper.transaction(
                     unlockSpace(<any>'missing', 'passcode', 123)
+                );
+
+                await waitAsync();
+
+                expect(events).toContainEqual(
+                    asyncError(
+                        123,
+                        new Error(
+                            `The action was sent to a space that was not found.`
+                        )
+                    )
+                );
+            });
+        });
+
+        describe('set_space_password', () => {
+            it('should be able to set a space password', async () => {
+                let connection = new MemoryConnectionClient();
+                let client = new CausalRepoClient(connection);
+                let addAtoms = new Subject<AddAtomsEvent>();
+                connection.events.set(ADD_ATOMS, addAtoms);
+
+                let admin = await createCausalRepoClientPartition(
+                    {
+                        type: 'causal_repo_client',
+                        branch: 'story',
+                        client: client,
+                        static: true,
+                    },
+                    {
+                        id: userId,
+                        username: 'username',
+                        name: 'name',
+                        token: 'token',
+                    }
+                );
+
+                helper = createHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    admin: admin,
+                });
+                helper.userId = userId;
+
+                connection.connect();
+                admin.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                addAtoms.next({
+                    branch: 'story',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await waitAsync();
+
+                await helper.transaction(
+                    setSpacePassword('admin', '3342', 'password')
+                );
+
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: SET_BRANCH_PASSWORD,
+                        data: {
+                            branch: 'story',
+                            oldPassword: '3342',
+                            newPassword: 'password',
+                        },
+                    },
+                ]);
+            });
+
+            it('should be rejected if sent to a non-existant space', async () => {
+                let events = [] as BotAction[];
+
+                helper.localEvents.subscribe(e => events.push(...e));
+                await helper.transaction(
+                    setSpacePassword(<any>'missing', 'passcode', 'new', 123)
                 );
 
                 await waitAsync();

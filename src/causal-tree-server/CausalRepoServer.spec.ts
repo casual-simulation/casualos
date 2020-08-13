@@ -4833,6 +4833,49 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should be able to authenticate to branches without passwords by using 3342 as the password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: '3342',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: true,
+                    },
+                },
+            ]);
+        });
     });
 
     describe(DEVICES, () => {

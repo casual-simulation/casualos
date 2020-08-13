@@ -55,6 +55,10 @@ export class MongoDBRepoStore implements CausalRepoStore {
             { sort: { time: -1 } }
         );
 
+        if (!settings) {
+            return null;
+        }
+
         return {
             type: 'branch_settings',
             branch: settings.branch,

@@ -88,6 +88,7 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    setSpacePassword,
     exportGpioPin,
     unexportGpioPin,
     setGpioPin,
@@ -433,6 +434,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             adminSpace: {
                 unlock: unlockAdminSpace,
+                setPassword: setAdminSpacePassword,
             },
 
             experiment: {
@@ -2108,6 +2110,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function unlockAdminSpace(password: string) {
         const task = context.createTask();
         const event = unlockSpace('admin', password, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the password that should be used for admin space.
+     * @param oldPassword The old password for the admin space.
+     * @param newPassword The new password that should be used.
+     */
+    function setAdminSpacePassword(oldPassword: string, newPassword: string) {
+        const task = context.createTask();
+        const event = setSpacePassword(
+            'admin',
+            oldPassword,
+            newPassword,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

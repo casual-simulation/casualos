@@ -212,7 +212,6 @@ declare type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | UnlockSpaceAction
     | LocalFormAnimationAction;
 
 /**
@@ -225,7 +224,9 @@ declare type AsyncActions =
     | ShareAction
     | CreateCertificateAction
     | SignTagAction
-    | RevokeCertificateAction;
+    | RevokeCertificateAction
+    | UnlockSpaceAction
+    | SetSpacePasswordAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1402,6 +1403,28 @@ export interface UnlockSpaceAction {
      * The password to use to unlock the space.
      */
     password: string;
+}
+
+/**
+ * Defines an event that sets the password used to unlock the given space for editing.
+ */
+export interface SetSpacePasswordAction extends AsyncAction {
+    type: 'set_space_password';
+
+    /**
+     * The space to set the password for.
+     */
+    space: BotSpace;
+
+    /**
+     * The old password for the space.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the space.
+     */
+    newPassword: string;
 }
 
 /**
@@ -3015,6 +3038,13 @@ declare global {
          * @param password The password to use to unlock admin space.
          */
         unlock(): Promise<void>;
+
+        /**
+         * Sets the password that should be used for admin space.
+         * @param oldPassword The old password for the admin space.
+         * @param newPassword The new password that should be used.
+         */
+        setPassword(oldPassword: string, newPassword: string): Promise<void>;
     };
 
     /**

@@ -104,6 +104,7 @@ export type AsyncActions =
     | ClearSpaceAction
     | SendWebhookAction
     | UnlockSpaceAction
+    | SetSpacePasswordAction
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
@@ -1544,6 +1545,28 @@ export interface UnlockSpaceAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that sets the password used to unlock the given space for editing.
+ */
+export interface SetSpacePasswordAction extends AsyncAction {
+    type: 'set_space_password';
+
+    /**
+     * The space to set the password for.
+     */
+    space: BotSpace;
+
+    /**
+     * The old password for the space.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the space.
+     */
+    newPassword: string;
+}
+
+/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  */
@@ -2827,6 +2850,32 @@ export function unlockSpace(
         type: 'unlock_space',
         space,
         password,
+        taskId,
+    };
+}
+
+/**
+ * Requests that the given new password be used to unlock the space for editing.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ *
+ * @param space The space to unlock.
+ * @param oldPassword The old password.
+ * @param newPassword The new password to use to unlock the space.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function setSpacePassword(
+    space: BotSpace,
+    oldPassword: string,
+    newPassword: string,
+    taskId?: number | string
+): SetSpacePasswordAction {
+    return {
+        type: 'set_space_password',
+        space,
+        oldPassword,
+        newPassword,
         taskId,
     };
 }

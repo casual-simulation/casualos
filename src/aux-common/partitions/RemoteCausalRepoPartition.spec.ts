@@ -28,6 +28,7 @@ import {
     AUTHENTICATED_TO_BRANCH,
     AuthenticateBranchWritesEvent,
     AUTHENTICATE_BRANCH_WRITES,
+    SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -60,6 +61,7 @@ import {
     createCertificate,
     signTag,
     revokeCertificate,
+    setSpacePassword,
 } from '../bots';
 import {
     AuxOpType,
@@ -906,6 +908,32 @@ describe('RemoteCausalRepoPartition', () => {
                                 undefined,
                                 'task1'
                             ),
+                        },
+                    });
+                });
+            });
+
+            describe('set_space_password', () => {
+                it('should try to set the branch password', async () => {
+                    setupPartition({
+                        type: 'remote_causal_repo',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    partition.connect();
+
+                    await partition.applyEvents([
+                        setSpacePassword('shared', 'old', 'new', 'task1'),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toContainEqual({
+                        name: SET_BRANCH_PASSWORD,
+                        data: {
+                            branch: 'testBranch',
+                            oldPassword: 'old',
+                            newPassword: 'new',
                         },
                     });
                 });

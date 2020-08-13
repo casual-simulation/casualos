@@ -3596,6 +3596,29 @@ try {
 }
 ```
 
+### `adminSpace.setPassword(oldPassword, newPassword)`
+
+Sets the password that should be used to unlock admin space.
+Returns a Promise that resolves once the password is changed.
+
+If given the correct password, admin space will use the new password.
+
+The **first parameter** is the password that is currently used to unlock admin space.
+
+The **second parameter** is the password that should be used to unlock admin space.
+
+#### Examples
+
+1. Change the admin space password.
+```typescript
+try {
+    await adminSpace.setPassword("old-password", "new-password");
+    player.toast("Admin Space Password Changed!");
+} catch(err) {
+    player.toast("Failed to change the password " + err);
+}
+```
+
 ## Experimental Actions
 
 ### `experiment.localFormAnimation(bot, animation)`
