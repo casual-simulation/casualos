@@ -1557,7 +1557,23 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should support specifying the .aux extension manually', () => {});
+            it('should support specifying the .aux extension manually', () => {
+                const action = library.api.player.downloadBots(
+                    [bot1, bot2],
+                    'test.aux'
+                );
+                const expected = download(
+                    JSON.stringify({
+                        version: 1,
+                        state: {
+                            [bot1.id]: bot1,
+                            [bot2.id]: bot2,
+                        },
+                    }),
+                    'test.aux',
+                    'application/json'
+                );
+            });
         });
 
         describe('player.downloadStory()', () => {
@@ -4519,6 +4535,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onListen whisper to all the targeted bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4539,6 +4561,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onAnyListen shout', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.shout('sayHello', 123);
@@ -4661,6 +4689,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onListen whisper to all the targeted bots', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4681,6 +4715,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onAnyListen shout', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                throw new Error('abc');
+            }));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);

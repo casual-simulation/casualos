@@ -11,7 +11,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import { OuterSubscriber } from 'rxjs/internal/OuterSubscriber';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 

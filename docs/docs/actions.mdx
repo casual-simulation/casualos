@@ -2489,7 +2489,7 @@ The **first parameter** is an object with the settings to initialize with.
 **gpiomem** can be either `true` or `false`.
 **mapping** can be either `gpio` or `physical`.
 **mock** can be any of `raspi-b-r1` or `raspi-a` or `raspi-b` or `raspi-a+` or `raspi-b+` or `raspi-2` or `raspi-3` or `raspi-zero` or `raspi-zero-w`.
-**close_on_exit** can be `true` or `false`.
+**close_on_exit** can be `true` or `false`. It is recommended to always be `true`.
 
 
 #### Examples:
@@ -2510,21 +2510,15 @@ server.rpioInit(options);
 
 
 Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
-This method is provided to allow explicit shutdown when using `close_on_exit: false` and a custom exit handler.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when rpio has been exited.
 
 #### Examples:
 
-1. Initialize rpio with `close_on_exit: false` and manually exiting.
+1. Manually cleanup rpio.
 ```typescript
-server.rpioInit({close_on_exit: false});
- 
-process.on('exit', function() {
-        /* Insert any custom cleanup code here. */
-        server.rpioExit();
-});
+server.rpioExit();
 ```
 
 ### `server.rpioOpen(pin, mode, options)`
