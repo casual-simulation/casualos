@@ -1,5 +1,9 @@
-import { createDefaultLibrary } from './AuxLibrary';
-import { addToContext, MemoryGlobalContext } from './AuxGlobalContext';
+import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
+import {
+    AuxGlobalContext,
+    addToContext,
+    MemoryGlobalContext,
+} from './AuxGlobalContext';
 import {
     toast,
     showJoinCode,
@@ -82,6 +86,10 @@ import {
     revokeCertificate,
 } from '../bots';
 import { types } from 'util';
+import {
+    possibleTagNameCases,
+    possibleTagValueCases,
+} from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -1027,17 +1035,17 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function that returns true when any of the given functions return true', () => {
-                const filter = library.api.either(() => false, () => true);
+                const filter = library.api.either(b => false, b => true);
                 expect(filter(bot1)).toEqual(true);
             });
 
             it('should return a function that returns false when all of the given functions return false', () => {
-                const filter = library.api.either(() => false, () => false);
+                const filter = library.api.either(b => false, b => false);
                 expect(filter(bot1)).toEqual(false);
             });
 
             it('should return a function that doesnt have a sort function', () => {
-                const filter = library.api.either(() => false, () => true);
+                const filter = library.api.either(b => false, b => true);
                 expect(typeof filter.sort).toEqual('undefined');
             });
         });
