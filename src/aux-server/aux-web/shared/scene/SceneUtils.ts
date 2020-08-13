@@ -32,6 +32,7 @@ import {
     Camera,
     Sphere,
     PerspectiveCamera,
+    Group,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -425,14 +426,14 @@ export function disposeObject3D(
 }
 
 /**
- * Disposes of the entire scene.
- * @param scene The scene to dispose.
+ * Disposes of the entire group.
+ * @param group The group to dispose.
  */
-export function disposeScene(scene: Scene) {
-    if (!scene) {
+export function disposeGroup(group: Group) {
+    if (!group) {
         return;
     }
-    scene.traverse(obj => disposeObject3D(obj));
+    group.traverse(obj => disposeObject3D(obj));
 }
 
 /**

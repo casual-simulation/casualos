@@ -196,7 +196,7 @@ export namespace DebugObjectManager {
         const lineMaterial = <LineBasicMaterial>(
             (<LineSegments>box3Helper).material
         );
-        lineMaterial.vertexColors = NoColors;
+        lineMaterial.vertexColors = false;
         lineMaterial.color = color;
 
         _scene.add(box3Helper);
@@ -234,7 +234,7 @@ export namespace DebugObjectManager {
         );
 
         const lineMaterial = <LineBasicMaterial>cubeHelper.material;
-        lineMaterial.vertexColors = NoColors;
+        lineMaterial.vertexColors = false;
         lineMaterial.color = color;
 
         _scene.add(cubeHelper);
@@ -280,7 +280,7 @@ export namespace DebugObjectManager {
         const lineMaterial = <LineBasicMaterial>(
             (<LineSegments>planeHelper).material
         );
-        lineMaterial.vertexColors = NoColors;
+        lineMaterial.vertexColors = false;
         lineMaterial.color = lineColor;
 
         const fill = <Mesh>planeHelper.children[0];
@@ -326,7 +326,7 @@ export namespace DebugObjectManager {
         pointHelper.size = size;
 
         const lineMaterial = <LineBasicMaterial>pointHelper.material;
-        lineMaterial.vertexColors = NoColors;
+        lineMaterial.vertexColors = false;
         lineMaterial.color = color;
 
         _scene.add(pointHelper);
@@ -363,7 +363,7 @@ export namespace DebugObjectManager {
         lineHelper.end = end;
 
         const lineMaterial = <LineBasicMaterial>lineHelper.material;
-        lineMaterial.vertexColors = NoColors;
+        lineMaterial.vertexColors = false;
         lineMaterial.color = color;
 
         _scene.add(lineHelper);

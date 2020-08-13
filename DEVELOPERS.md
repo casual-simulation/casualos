@@ -7,6 +7,7 @@ Make sure you have all the prerequisite tools installed:
 -   [Node.js](https://nodejs.org/en/download/) 12.16.2 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
     -   Once NVM is installed, you can install the correct version of Node by running `nvm install 12.16.2` in your favorite terminal.
+-   [Deno](https://deno.land/).
 -   Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
     -   Used to make development with MongoDB easy.
     -   Once installed, make sure the `./docker/services/data` directory is shared with docker:
@@ -124,6 +125,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
         -   [uuid](https://github.com/kelektiv/node-uuid) for generating UUIDs.
         -   [base64-js](https://github.com/beatgammit/base64-js) for base64 encoding/decoding of binary data.
         -   [sha.js](https://github.com/crypto-browserify/sha.js/tree/master) for SHA hashing.
+        -   [tweetnacl](https://github.com/dchest/tweetnacl-js) for Encryption/Decryption.
         -   [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) for deterministic JSON serialization. (for hashing)
     -   AUX Server
         -   [vue](https://github.com/vuejs/vue) for JS <--> HTML UI binding.
@@ -135,7 +137,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [vue-class-component](https://github.com/vuejs/vue-class-component) for class decorators on Vue classes.
             -   [vue-shortkey](https://github.com/iFgR/vue-shortkey) for keyboard shortcuts.
         -   [three](https://threejs.org/) for 3D WebGL rendering.
-            -   [troika-3d-text](https://github.com/protectwise/troika/tree/master/packages/troika-3d-text/src) for 3D text rendering.
+            -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
         -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
         -   [socket.io](https://github.com/socketio/socket.io) for WebSocket based realtime communication.

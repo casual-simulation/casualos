@@ -90,6 +90,12 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
     You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
   </PossibleValueCode>
+  <PossibleValueCode value='certified'>
+    The bot represents a <a href="https://en.wikipedia.org/wiki/Public_key_certificate">cryptographic certificate</a>.
+    Certified bots cannot be edited or destroyed using traditional means.
+    Instead, you can create and destroy certificates using the <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> and 
+    <ActionLink action='crypto.revokeCertificate(certificate, password, signer?)'/> functions.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `creator`
@@ -99,6 +105,7 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
 </Badges>
 
 The ID of the bot that created this bot.
+The creator bot must be in the same space as this bot.
 
 ## Behavior Tags
 
@@ -263,6 +270,9 @@ The color of the bot.
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
+  <PossibleValueCode value='clear'>
+    The bot's body will be invisible.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `strokeColor`
@@ -272,7 +282,7 @@ The color of the bot's outline.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='white'>
+  <PossibleValueCode value='clear'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -284,7 +294,7 @@ The width of the bot's outline. Only works in Chrome.
 
 ### `lineTo`
 
-The Bot IDs that this bot should draw lines to.
+The bot, bot ID, list of bots, or list of bot IDs that this bot should draw lines to.
 
 ### `lineStyle`
 
@@ -1820,6 +1830,28 @@ The state that the given touch index is in.
   </PossibleValueCode>
   <PossibleValueCode value='held'>
     The touch is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `forceSignedScripts`
+
+Whether to force all shared scripts to have been signed by a certificate in order to be executed.
+
+This option only takes effect if it is set in the query string of the URL.
+Additionally, changing the tag value has no effect.
+
+If the story is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
+
+`tempLocal` and `local` spaces are exempt from this requirement.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Scripts do not have to be signed in order to be executed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Scripts have to be signed in order to be executed.
   </PossibleValueCode>
 </PossibleValuesTable>
 

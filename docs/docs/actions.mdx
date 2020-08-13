@@ -3283,7 +3283,7 @@ player.toast(hash);
 
 ### `crypto.encrypt(password, data)`
 
-[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
 
 Use the <ActionLink action='crypto.decrypt(password, data)'/> function to decrypt the data.
 
@@ -3307,13 +3307,13 @@ The **second parameter** is the string data that should be encrypted.
 
 1. Encrypt the given data and toast it.
 ```typescript
-const encrypted = await crypto.encrypt("key", "hello, world");
+const encrypted = crypto.encrypt("key", "hello, world");
 player.toast(encrypted);
 ```
 
 ### `crypto.decrypt(password, data)`
 
-[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result as a promise.
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given password and returns the result.
 
 Use the <ActionLink action='crypto.encrypt(password, data)'/> function to encrypt the data.
 
@@ -3325,8 +3325,251 @@ The **second parameter** is the data from <ActionLink action='crypto.encrypt(pas
 
 1. Decrypt the given data and toast it.
 ```typescript
-const decrypted = await crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
 player.toast(decrypted);
+```
+
+### `crypto.keypair(password)`
+
+Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
+
+Use <ActionLink action='crypto.sign(keypair, password, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
+
+Keypairs are made up of a private key and a public key.
+The private key is a special value that can be used to create digital signatures and
+the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+
+The private key is called "private" because it is encrypted using the given password
+while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+
+Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+they have access to it.
+
+The **first parameter** is the password that should be used to encrypt the private key of the keypair.
+
+#### Examples:
+
+1. Create a keypair and toast it.
+```typescript
+const keypair = crypto.keypair("password");
+player.toast(keypair);
+```
+
+### `crypt.sign(keypair, password, data)`
+
+Calculates the digital signature for the given data using the given keypair and password.
+
+Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate signatures.
+
+Digital signatures are used to verifying the authenticity and integrity of data.
+
+This works by leveraging asymetric encryption but in reverse.
+
+If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+the data was encrypted (i.e. signed) by the corresponding private key.
+
+And since the public key is available to everyone but the private
+key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+
+Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
+
+The **first parameter** is the keypair that should be used to sign the data.
+
+The **second parameter** is the password that was used to encrypt the private key of the keypair.
+
+The **third parameter** is the string data that should be signed.
+
+#### Examples:
+
+1. Create a signature for the string `"hello"`.
+```typescript
+// Returned from crypto.keypair()
+const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+
+const signature = crypto.sign(keypair, "password", "hello");
+player.toast(signature);
+```
+
+### `crypto.verify(keypair, signature, data)`
+
+Validates that the given signature was created by the given keypair for the given data.
+Returns true if the signature is valid. Returns false otherwise.
+
+Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.sign(keypair, password, data)'/> to create signatures.
+
+The **first parameter** is the keypair that was used to create the signature.
+
+The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, password, data)'/>.
+
+The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, password, data)'/>.
+
+#### Examples:
+
+1. Validate a signature.
+```typescript
+// Returned from crypto.keypair()
+const keypair = "vK1.qaG7S8rjXL5G03lbCwMsYybi/M6xFHEo6TDpofyx2Uc=.djEuRWp5TGZjRVNmTXNGZ2Q4SXArcjRSbXNVRXdTK2ZzK2wuZHhNM0RiM2VPNWgwNk5FQitVVW91YStWS1RyRkVLSzEuTkVjZDZtd0hGNDltT0hGWC9OODQxb2JqbWs0QU1yNndTWWxsSGlMS0M1UEs4ZW9vem83WVFieUxVcGJJcW4vcUZDbTVWZWhpdmRteHF0enlmQjNEeEQraklRVFRKcU1aaFpkYkZtdFFnZ2M9";
+
+// Returned from crypto.sign()
+const signature = "vS1./su0SXu8r9PvsVgELmKPCdfYr9GlLCChAfITsqt40PXEr74H/MMwcO5oaZCLXtZHOiSy9AHZiRYqLPFPiaRkDg==";
+
+const valid = crypto.verify(keypair, signature, "hello");
+player.toast(valid);
+```
+
+### `crypto.createCertificate(certificate, password, keypair)`
+
+Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given password.
+Returns a promise that resolves with the new bot.
+
+Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
+
+Certificates are similar to keypairs except that they themselves are signed by another certificate.
+This creates a [chain of trust](https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to establish the validity of any arbitrary certificate.
+The certificate that created the signature is called the "signing/signer certificate" and the certificate that recieved the signature is called the "signee certificate".
+
+Each certificate contains the following information:
+
+- A keypair.
+- A reference to the signing certificate.
+- A signature from the signing certificate.
+
+In CasualOS, there are two types of certificates:
+
+1. Root certificates.
+2. Non-root certificates.
+
+_Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
+As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per story on a first-come first-serve basis.
+Once a root certificate is created for a story, another cannot be created.
+
+_Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
+As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
+If the chain does not end at the root certificate for the story, then the certificate is invalid and any signatures created by it will also be invalid.
+
+Use <ActionLink action='crypto.keypair(password)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.signTag(certificate, password, bot, tag)'/> to create signatures for a certificate.
+
+The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
+
+The **second parameter** is the password that should be used to decrypt the private key. If the first parameter is null, then this should be the password for the keypair.
+
+The **third parameter** is the keypair that the new certificate should have.
+
+#### Examples:
+
+1. Create a root certificate and toast the Bot ID:
+```typescript
+const keypair = await crypto.keypair('passwordForRootCert');
+const cert = await crypto.createCertificate(null, 'passwordForRootCert', keypair);
+
+player.toast(getID(cert));
+```
+
+2. Create a non-root certificate and toast the Bot ID:
+```typescript
+const rootKeypair = getBot('id', rootCertID);
+
+const nonRootKeypair = await crypto.keypair('passwordForNonRootCert');
+const nonRoot = await crypto.createCertificate(rootCert, 'passwordForRootCert', nonRootKeypair);
+
+player.toast(getID(nonRoot));
+```
+
+### `crypto.signTag(certificate, password, bot, tag)`
+
+Creates a signature for the given bot, tag, and current value using the given certificate and password.
+Returns a promise that resolves once the tag value has been signed.
+
+When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
+
+The **first parameter** is the certificate bot that should be used to create the signature.
+
+The **second parameter** is the password used to decrypt the private key of the certificate.
+
+The **third parameter** is the bot whose tag value should be signed.
+
+The **fourth parameter** is the tag whose value should be signed.
+
+Use <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> to create certificates that can be used with this function.
+
+Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
+
+#### Examples:
+
+1. Sign the `@onClick` script on a bot.
+```typescript
+const cert = getBot('id', certID);
+await crypto.signTag(cert, 'passwordForCert', bot, 'onClick');
+```
+
+### `crypto.verifyTag(bot, tag)`
+
+Validates that the tag value stored in the given tag on the given bot has been signed by a valid certificate.
+Returns true if the tag value is valid. Returns false otherwise.
+
+The **first parameter** is the bot whose tag value should be checked.
+
+The **second parameter** is the tag whose value should be checked.
+
+#### Examples:
+
+1. Check if the `@onClick` script is signed.
+```typescript
+const valid = crypto.verifyTag(bot, 'onClick');
+
+if (valid) {
+    player.toast('onClick is valid!');
+} else {
+    player.toast('onClick is not valid.');
+}
+```
+
+### `crypto.revokeCertificate(certificate, password, signer?)`
+
+Revokes the given certificate and any signatures that it has created.
+In effect, this deletes the certificate bot from the story.
+Additionally, any tags signed with the given certificate will no longer be verified.
+
+Returns a promise that resolves when the certificate has been revoked.
+
+Revoking a certificate works by creating another record (called a revocation) that is signed by either the original certificate 
+or an ancestor of the original certificate. This record is then stored in the shared space and lets everyone see that the certificate is no longer valid.
+
+The **first parameter** is the certificate that should be revoked.
+
+The **second parameter** is the password that should be used to decrypt the corresponding certificate's private key.
+If the signer parameter is specified, then this is the password for the signer certificate.
+If the signer parameter is omitted, then this is the password for the certificate that is being revoked.
+
+The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
+If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
+If specified, then the revocation will be signed using the given certificate.
+Note that any certificate that is specified must either be the original certificate or an ancestor of the original certificate.
+
+#### Examples:
+
+1. Revoke a certificate with itself.
+```typescript
+const cert = getBot('id', certificateId);
+await crypto.revokeCertificate(cert, 'passwordForCert');
+
+player.toast('Certificate revoked!');
+```
+
+2. Revoke a certificate using another certificate.
+```typescript
+const certToRevoke = getBot('id', certToRevokeId);
+const signingCert = getBot('id', signingCertId);
+
+await crypto.revokeCertificate(certToRevoke, 'passwordForSigningCert', signingCert);
+
+player.toast('Certificate revoked!');
 ```
 
 ## Admin Actions

@@ -5,6 +5,7 @@ import {
     repoBranch,
     index,
     branch,
+    branchSettings,
 } from '../CausalRepoObject';
 import { CausalRepoStore } from '../CausalRepoStore';
 import { storeData, loadBranch } from '../CausalRepo';
@@ -185,6 +186,22 @@ export default function causalRepoStoreTests(
                     sitelogType: 'WATCH',
                 },
             ]);
+        });
+    });
+
+    describe('branch settings', () => {
+        it('should be able to save the given settings', async () => {
+            await store.saveSettings(branchSettings('test', 'hash'));
+            await store.saveSettings(branchSettings('test', 'hash2'));
+            await store.saveSettings(branchSettings('test', 'hash3'));
+
+            const settings = await store.getBranchSettings('test');
+            expect(settings).toEqual({
+                type: 'branch_settings',
+                branch: 'test',
+                time: expect.any(Date),
+                passwordHash: 'hash3',
+            });
         });
     });
 

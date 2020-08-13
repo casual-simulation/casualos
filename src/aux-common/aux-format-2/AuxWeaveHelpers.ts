@@ -1,4 +1,11 @@
-import { AuxOpType, AuxOp, TagOp, ValueOp, BotOp } from './AuxOpTypes';
+import {
+    AuxOpType,
+    AuxOp,
+    TagOp,
+    ValueOp,
+    BotOp,
+    CertificateOp,
+} from './AuxOpTypes';
 import {
     Weave,
     WeaveNode,
@@ -9,6 +16,7 @@ import {
     first,
 } from '@casual-simulation/causal-trees/core2';
 import reducer from './AuxWeaveReducer';
+import isEqual from 'lodash/isEqual';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -69,6 +77,27 @@ export function findTagNode(
 export function findValueNode(tag: WeaveNode<AuxOp>): WeaveNode<ValueOp> {
     for (let node of iterateCausalGroup(tag)) {
         if (node.atom.value.type === AuxOpType.value) {
+            return node as WeaveNode<ValueOp>;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Finds the first value weave node for the given tag node and value.
+ * @param tag The tag node that should be searched.
+ * @param value The value that should be matched.
+ */
+export function findValueNodeByValue(
+    tag: WeaveNode<AuxOp>,
+    value: any
+): WeaveNode<ValueOp> {
+    for (let node of iterateCausalGroup(tag)) {
+        if (
+            node.atom.value.type === AuxOpType.value &&
+            isEqual(node.atom.value.value, value)
+        ) {
             return node as WeaveNode<ValueOp>;
         }
     }

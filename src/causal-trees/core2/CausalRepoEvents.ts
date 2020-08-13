@@ -89,6 +89,11 @@ export const RESTORE = 'repo/restore';
 export const RESTORED = 'repo/restored';
 
 /**
+ * The name of the event which notifies that a branch has been reset and that the client should reset its state.
+ */
+export const RESET = 'repo/reset';
+
+/**
  * The name of the event which notifies that a commit was added.
  */
 export const ADD_COMMITS = 'repo/add_commits';
@@ -170,6 +175,21 @@ export const BRANCHES_STATUS = 'repo/branches_status';
 export const DEVICES = 'repo/devices';
 
 /**
+ * The name of the event which sets the password used to edit the branch.
+ */
+export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
+
+/**
+ * The name of the event which is used to authenticate a device to write to a branch.
+ */
+export const AUTHENTICATE_BRANCH_WRITES = 'repo/authenticate_branch_writes';
+
+/**
+ * The name of the event which is used to notify that the device is authenticated to a branch.
+ */
+export const AUTHENTICATED_TO_BRANCH = 'repo/authenticated_to_branch';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -217,6 +237,71 @@ export interface AddAtomsEvent {
      * The list of atom hashes that were removed.
      */
     removedAtoms?: string[];
+}
+
+/**
+ * Defines an event which indicates that writing to the specified branch should be authenticated using the given password.
+ */
+export interface AuthenticateBranchWritesEvent {
+    /**
+     * The branch that should be authenticated.
+     */
+    branch: string;
+
+    /**
+     * The password that should be used.
+     */
+    password: string;
+}
+
+/**
+ * Defines an event which indicates that the device is authenticated to a branch.
+ */
+export interface AuthenticatedToBranchEvent {
+    /**
+     * The branch.
+     */
+    branch: string;
+
+    /**
+     * Whether the device is authenticated.
+     */
+    authenticated: boolean;
+}
+
+/**
+ * Defines an event which indicates that the branch password should be set to the given new password.
+ */
+export interface SetBranchPasswordEvent {
+    /**
+     * The branch that should have its password changed.
+     */
+    branch: string;
+
+    /**
+     * The old password for the branch.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the branch.
+     */
+    newPassword: string;
+}
+
+/**
+ * Defines an event which indicates that the branch state should be reset.
+ */
+export interface ResetEvent {
+    /**
+     * The branch that the atoms are for.
+     */
+    branch: string;
+
+    /**
+     * The atoms that exist in the new state.
+     */
+    atoms: Atom<any>[];
 }
 
 /**

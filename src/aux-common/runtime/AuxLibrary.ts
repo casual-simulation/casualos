@@ -51,6 +51,9 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    createCertificate as calcCreateCertificate,
+    signTag as calcSignTag,
+    revokeCertificate as calcRevokeCertificate,
     clearSpace,
     loadBots,
     BotAction,
@@ -116,7 +119,11 @@ import stableStringify from 'fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
+    keypair as realKeypair,
+    sign as realSign,
+    verify as realVerify,
 } from '@casual-simulation/crypto';
+import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -449,6 +456,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                keypair,
+                sign,
+                verify,
+                createCertificate,
+                signTag,
+                verifyTag,
+                revokeCertificate,
             },
         },
     };
@@ -2284,7 +2298,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to secure the data.
      * @param data The data to encrypt.
      */
-    function encrypt(password: string, data: string): Promise<string> {
+    function encrypt(password: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
@@ -2301,9 +2315,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to decrypt the data.
      * @param data The data to decrypt.
      */
-    async function decrypt(password: string, data: string): Promise<string> {
+    function decrypt(password: string, data: string): string {
         if (typeof data === 'string') {
-            const bytes = await realDecrypt(password, data);
+            const bytes = realDecrypt(password, data);
             if (!bytes) {
                 return null;
             }
@@ -2312,6 +2326,183 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
+    }
+
+    /**
+     * Creates a new keypair that can be used for signing and verifying data.
+     *
+     * @description
+     * Keypairs are made up of a private key and a public key.
+     * The private key is a special value that can be used to create digital signatures and
+     * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+     *
+     * The private key is called "private" because it is encrypted using the given password
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param password The password that should be used to encrypt the private key.
+     */
+    function keypair(password: string): string {
+        return realKeypair(password);
+    }
+
+    /**
+     * Creates a digital signature for the given data using the private key from the given keypair.
+     *
+     * @description
+     * Digital signatures are used to verifying the authenticity and integrity of data.
+     *
+     * This works by leveraging asymetric encryption but in reverse.
+     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+     * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
+     * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+     *
+     * @param keypair The keypair that should be used to create the signature.
+     * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+     * @param data The data to sign.
+     */
+    function sign(keypair: string, password: string, data: string): string {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realSign(keypair, password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Validates that the given signature for the given data was created by the given keypair.
+     * @param keypair The keypair that should be used to validate the signature.
+     * @param signature The signature that was returned by the sign() operation.
+     * @param data The data that was used in the sign() operation.
+     */
+    function verify(keypair: string, signature: string, data: string): boolean {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realVerify(keypair, signature, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Creates a new certified bot that is signed using the given certified bot.
+     * @param certificate The certified bot that the new certificate should be signed with.
+     *                    This is commonly known as the signing certificate.
+     *                    If given null, then the new certificate will be self-signed.
+     * @param password The signing certificate's password. This is the password that was used to create
+     *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+     *                 is the password that was used to create the given keypair.
+     * @param keypair The keypair that the new certificate should use.
+     */
+    function createCertificate(
+        certificate: Bot | string,
+        password: string,
+        keypair: string
+    ): Promise<RuntimeBot> {
+        const signingBotId = getID(certificate);
+        const task = context.createTask();
+        const action = hasValue(signingBotId)
+            ? calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingBotId: signingBotId,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              )
+            : calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              );
+
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Signs the tag on the given bot using the given certificate and password.
+     * @param certificate The certificate to use to create the signature.
+     * @param password The password to use to decrypt the certificate's private key.
+     * @param bot The bot that should be signed.
+     * @param tag The tag that should be signed.
+     */
+    function signTag(
+        certificate: Bot | string,
+        password: string,
+        bot: Bot | string,
+        tag: string
+    ): Promise<void> {
+        tag = trimTag(tag);
+        const signingBotId = getID(certificate);
+        const realBot = getBot('id', getID(bot));
+        const value = realBot.raw[tag];
+        const task = context.createTask();
+        const action = calcSignTag(
+            signingBotId,
+            password,
+            realBot.id,
+            tag,
+            value,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Verifies that the given tag on the given bot has been signed by a certificate.
+     * @param bot The bot.
+     * @param tag The tag to check.
+     */
+    function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
+        tag = trimTag(tag);
+        const id = getID(bot);
+        const realBot = isRuntimeBot(bot) ? bot : getBot('id', id);
+        if (!realBot.signatures) {
+            return false;
+        }
+        const value = realBot.raw[tag];
+        const sig = tagValueHash(id, tag, value);
+        return realBot.signatures[sig] === tag;
+    }
+
+    /**
+     * Revokes the given certificate using the given password.
+     * In effect, this deletes the certificate bot from the story.
+     * Additionally, any tags signed with the given certificate will no longer be verified.
+     *
+     * If given a signer, then the specified certificate will be used to sign the revocation.
+     * This lets you use a parent or grandparent certificate to remove the child.
+     *
+     * If no signer is given, then the certificate will be used to revoke itself.
+     *
+     * @param certificate The certificate that should be revoked.
+     * @param password The password that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
+     *                 then this is the password for the revoked certificate.
+     * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+     */
+    function revokeCertificate(
+        certificate: Bot | string,
+        password: string,
+        signer?: Bot | string
+    ): Promise<void> {
+        const certId = getID(certificate);
+        const signerId = getID(signer || certificate);
+        const task = context.createTask();
+        const action = calcRevokeCertificate(
+            signerId,
+            password,
+            certId,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

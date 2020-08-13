@@ -40,7 +40,6 @@ export function createHtmlMixerContext(
     webglCanvas.style.width = '100%';
     webglCanvas.style.height = '100%';
     webglCanvas.style.pointerEvents = 'none';
-    css3dElement.appendChild(webglCanvas);
 
     return mixerContext;
 }

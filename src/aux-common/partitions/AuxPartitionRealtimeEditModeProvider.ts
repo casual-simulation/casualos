@@ -21,6 +21,11 @@ export class AuxPartitionRealtimeEditModeProvider
                 this._partitions[space].realtimeStrategy
             );
         }
+        if (space === 'certified') {
+            return RealtimeEditMode.None;
+        } else if (space === 'bootstrap') {
+            return RealtimeEditMode.None;
+        }
         return DEFAULT_REALTIME_EDIT_MODE;
     }
 }

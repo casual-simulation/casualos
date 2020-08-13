@@ -1,8 +1,58 @@
 # CasualOS Changelog
 
+## V1.2.2
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
+
+### :rocket: Improvements
+
+-   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()`, `crypto.revokeCertificate()` functions to help with creating certificate chains and signing and validating tag data. Check the docs for detailed usage information.
+-   Added an indicator to the multi-line editor that is shown when a tag value is verified.
+-   Added the ability to force all scripts to be verified in order to be executed using the `forceSignedScripts` query parameter.
+    -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
+    -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
+-   Replaced builder with ab-1.
+    -   ab-1 is a new version of builder which is designed to be easy to extend and improve.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using `player.showInput()` with an existing value would not prefill the text box with the existing value.
+-   Fixed a performance issue where formulas which were recalculated after every change had a factorial (!) performance cost.
+    -   Was caused by two things:
+        1.  Some formulas don't have enough information to determine what tags they are dependent on. In these cases, we callback to using an "all" dependency which means that the formula will be recalculated whenever any tag changes.
+        2.  These "all" dependencies were included when searching for nested dependencies which meant that we were resolving every "all" dependency for every other "all" dependency. This gives us the effect of searching every possible combination of dependencies instead of only the ones we need, which has a factorial cost.
+
+## V1.2.1
+
+#### Date: 8/4/2020
+
+### :rocket: Improvements
+
+-   Added a server sandbox based on [Deno](https://deno.land/).
+    -   Security feature to prevent scripts that are running on the server from harming the underlying system or other stories.
+    -   It additionally prevents scripts from accessing random Node.js modules by using `require("module")`.
+    -   Finally, it prevents a script from denying service to other stories because the sandbox is run inside a separate process.
+-   Improved the sheet portal to display scripts with a monospace font in the sheet cells.
+-   Improved the documentation to clarify some things and also mension that bots can be made transparent with the "clear" color.
+-   Improved the multi-line text editor to support syntax highlighting for HTML, CSS, and JSON based on whether the tag ends with `.html`, `.css` or `.json`.
+
+### :bug: Bug Fixes
+
+-   Fixed the `lineTo` tag to support arrays of bots and arrays of bot IDs in addition to individual bots and bot IDs.
+-   Fixed an issue where deleting a tempLocal bot that was updated in the same script would crash the runtime.
+-   Fixed an issue with the `player.showInput()` modal where Android devices using the Google GBoard keyboard wouldn't send input correctly.
+-   Fixed an issue where a `@onPlayerPortalChanged` event would be incorrectly triggered after reconnecting to the server.
+-   Fixed an issue where the iframe form on iOS 14 Beta 3 would cause the entire scene to disappear.
+-   Fixed an issue where loading an image could fail if `formAddress` tag was changed while the image was downloading.
+-   Fixed an issue where submitting HTML forms from inside an iframe form was not allowed.
+
 ## V1.2.0
 
-### Date: TBD
+### Date: 7/17/2020
 
 ### Changes:
 

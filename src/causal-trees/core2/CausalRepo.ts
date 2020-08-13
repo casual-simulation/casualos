@@ -368,6 +368,11 @@ export interface CommitDiff {
     deletions: Map<string, Atom<any>>;
 }
 
+interface CardinalityStats {
+    current: number;
+    max: number;
+}
+
 /**
  * Defines an interface that represents a causal repo.
  * That is, a repository of atoms stored in a weave.
@@ -386,6 +391,7 @@ export class CausalRepo {
 
     private _store: CausalRepoStore;
     private _head: CausalRepoBranch = null;
+    private _cardinalities: Map<string, CardinalityStats>;
 
     /**
      * Gets an observable that resolves whenever a diff is added to the repo.
@@ -403,11 +409,19 @@ export class CausalRepo {
     currentCommit: CommitData = null;
 
     /**
+     * The branch that is currently checked out.
+     */
+    get head() {
+        return this._head;
+    }
+
+    /**
      *
      * @param store
      */
     constructor(store: CausalRepoStore) {
         this._store = store;
+        this._cardinalities = new Map();
         this._setCurrentCommit(null);
     }
 
@@ -430,6 +444,7 @@ export class CausalRepo {
 
     /**
      * Adds the given atoms to the stage.
+     * Returns the atoms that were added.
      * @param atoms The atoms to add.
      */
     add(...atoms: Atom<any>[]) {
@@ -438,6 +453,7 @@ export class CausalRepo {
 
     /**
      * Adds the given atoms to the stage.
+     * Returns the atoms that were added.
      * @param atoms The atoms to add.
      */
     addMany(atoms: Atom<any>[]) {

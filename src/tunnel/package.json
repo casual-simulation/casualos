@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/tunnel",
-    "version": "1.0.24",
+    "version": "1.2.1",
     "description": "An WebSockets-based TCP tunnel.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -44,8 +44,8 @@
         "commander": "4.0.1",
         "jsonwebtoken": "8.5.1",
         "rxjs": "^6.5.2",
-        "socket.io": "2.2.0",
-        "socket.io-client": "2.2.0",
+        "socket.io": "2.1.1",
+        "socket.io-client": "2.1.1",
         "uuid": "^3.3.2",
         "ws": "7.1.2"
     }

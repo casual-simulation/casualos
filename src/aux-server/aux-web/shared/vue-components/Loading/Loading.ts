@@ -17,6 +17,8 @@ export default class Loading extends Vue {
     @Prop({ default: null }) error: string;
     @Prop({ default: false }) show: boolean;
 
+    showSpinner: boolean;
+
     get hasError(): boolean {
         return hasValue(this.error);
     }
@@ -31,5 +33,13 @@ export default class Loading extends Vue {
 
     onErrorDismiss() {
         this.$emit('dismiss');
+    }
+
+    created() {
+        const circleElement = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'circle'
+        );
+        this.showSpinner = circleElement instanceof SVGElement;
     }
 }

@@ -57,6 +57,17 @@ export function applyUpdates(
                     delete bot.values[tag];
                 }
             }
+            if (botUpdate.signatures) {
+                for (let sig in botUpdate.signatures) {
+                    if (bot.signatures[sig] === null) {
+                        delete bot.signatures[sig];
+                    }
+                }
+
+                if (Object.keys(bot.signatures).length <= 0) {
+                    delete bot.signatures;
+                }
+            }
         }
 
         return updatedState;

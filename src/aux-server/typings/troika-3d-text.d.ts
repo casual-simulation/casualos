@@ -1,10 +1,10 @@
-declare module 'troika-3d-text/dist/textmesh-standalone.esm' {
+declare module 'troika-three-text' {
     import { Color, Material, Mesh } from 'three';
 
     /**
      * Defines a class that is able to render some text as a Three.js mesh.
      */
-    export class TextMesh extends Mesh {
+    export class Text extends Mesh {
         /**
          * The text rendered by the mesh.
          */

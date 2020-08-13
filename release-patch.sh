@@ -8,7 +8,7 @@ git reset origin/develop --hard
 
 # Step 2: Replace "TBD" with the current date
 CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
-sed -i '' -e "s!### Date: TBD!### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
+sed -i '' -e "s!#### Date: TBD!#### Date: ${CURRENT_DATE}!g" ./CHANGELOG.md
 
 # Step 3: Commit Change
 git add CHANGELOG.md

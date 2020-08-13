@@ -10,7 +10,11 @@ module.exports = merge.smart(common, {
     mode: 'production',
     devtool: 'source-map',
     output: {
-        filename: '[name].[contenthash].js',
+        filename: pathData => {
+            return pathData.chunk.name === 'deno'
+                ? '[name].js'
+                : '[name].[contenthash].js';
+        },
         path: path.resolve(__dirname, 'dist'),
     },
     module: {

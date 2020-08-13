@@ -169,8 +169,8 @@ export interface AsyncTask {
  * @param context The context.
  * @param bot The bot.
  */
-function indexInContext(context: AuxGlobalContext, bot: RuntimeBot): number {
-    const index = sortedIndexBy(context.bots, bot, sb => sb.id);
+function indexInContext(context: AuxGlobalContext, bot: Bot): number {
+    const index = sortedIndexBy(context.bots, <RuntimeBot>bot, sb => sb.id);
     const expected = context.bots.length > index ? context.bots[index] : null;
     if (!!expected && expected.id === bot.id) {
         return index;
@@ -211,6 +211,15 @@ export function removeFromContext(
         context.bots.splice(index, 1);
         delete context.state[bot.id];
     }
+}
+
+/**
+ * Gets whether a bot with the given ID is in the given context.
+ * @param context The context.
+ * @param bot The bot.
+ */
+export function isInContext(context: AuxGlobalContext, bot: Bot) {
+    return indexInContext(context, bot) >= 0;
 }
 
 /**

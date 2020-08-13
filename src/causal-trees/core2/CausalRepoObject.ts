@@ -95,6 +95,29 @@ export interface CausalRepoSitelog {
 }
 
 /**
+ * Defines settings for a branch.
+ * This is a separate record that is able to store arbitrary data about a branch.
+ */
+export interface CausalRepoBranchSettings {
+    type: 'branch_settings';
+
+    /**
+     * The name of the branch that these settings represent.
+     */
+    branch: string;
+
+    /**
+     * The time that these settings were created on.
+     */
+    time: Date;
+
+    /**
+     * The password hash that is used to secure the branch.
+     */
+    passwordHash?: string;
+}
+
+/**
  * Defines a list of possible sitelog types.
  * - null means that the type is not specified.
  * - 'WATCH' means that the sitelog indicates that the branch was starting to be watched.
@@ -235,6 +258,23 @@ export function sitelog(
         time: new Date(),
         sitelogType: type,
         connectionReason: connectionReason,
+    };
+}
+
+/**
+ * Creates settings for the given branch.
+ * @param branch The branch.
+ * @param passwordHash The password hash used to secure the branch.
+ */
+export function branchSettings(
+    branch: string,
+    passwordHash?: string
+): CausalRepoBranchSettings {
+    return {
+        type: 'branch_settings',
+        branch,
+        time: new Date(),
+        passwordHash,
     };
 }
 

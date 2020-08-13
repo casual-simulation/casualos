@@ -1,0 +1,59 @@
+{
+    "name": "@casual-simulation/aux-vm-deno",
+    "version": "1.2.1",
+    "description": "A set of utilities required to securely run an AUX in Deno.",
+    "keywords": [
+        "aux"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://casualsimulation.com/",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/aux-vm .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/aux-common": "^1.2.1",
+        "@casual-simulation/aux-vm": "^1.2.1",
+        "@casual-simulation/aux-vm-client": "^1.2.1",
+        "@casual-simulation/causal-tree-client-socketio": "^1.2.1",
+        "@casual-simulation/causal-trees": "^1.1.18",
+        "@casual-simulation/crypto": "^1.0.24",
+        "@casual-simulation/crypto-browser": "^1.0.24",
+        "comlink": "^4.0.1",
+        "deno-vm": "^0.7.2",
+        "lodash": "4.17.19",
+        "rxjs": "^6.5.2",
+        "uuid": "^3.3.2"
+    },
+    "devDependencies": {
+        "worker-loader": "^2.0.0"
+    }
+}

@@ -1,4 +1,7 @@
 import assign from 'lodash/assign';
+import { AtomId, Atom, atom } from '@casual-simulation/causal-trees';
+import { sign, verify, keypair, getHash } from '@casual-simulation/crypto';
+import stringify from 'fast-json-stable-stringify';
 
 /**
  * The list of operation types.
@@ -10,12 +13,23 @@ export enum AuxOpType {
     value = 3,
     delete = 4,
     insert = 5,
+    certificate = 6,
+    revocation = 7,
+    signature = 8,
 }
 
 /**
  * Defines a union of all the possible op types.
  */
-export type AuxOp = BotOp | TagOp | ValueOp | InsertOp | DeleteOp;
+export type AuxOp =
+    | BotOp
+    | TagOp
+    | ValueOp
+    | InsertOp
+    | DeleteOp
+    | CertificateOp
+    | SignatureOp
+    | RevocationOp;
 
 /**
  * Defines an interface for all the AUX atom values.
@@ -107,6 +121,73 @@ export interface DeleteOp extends AuxOpBase {
 }
 
 /**
+ * Defines an atom value that instructs the system to create a certificate. (See https://en.wikipedia.org/wiki/Public_key_certificate)
+ * Certificates create a chain of trust (https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to validate that specific tag values have been created by a particular certificate.
+ */
+export interface CertificateOp extends AuxOpBase {
+    type: AuxOpType.certificate;
+
+    /**
+     * The keypair that is stored in the certificate.
+     * Stores both the public and private keys in the format specified in
+     * the crypto package.
+     * The public key is unencrypted and available for anyone to use
+     * while the private key is encrypted with a password.
+     */
+    keypair: string;
+
+    /**
+     * The signature that is applied to this certificate.
+     * Must be from the atom's cause.
+     */
+    signature: string;
+}
+
+/**
+ * Defines an atom value that represents a signature applied to a value.
+ */
+export interface SignatureOp extends AuxOpBase {
+    type: AuxOpType.signature;
+
+    /**
+     * The ID of the atom that created this signature was created for.
+     */
+    valueId: AtomId;
+
+    /**
+     * The hash of the atom that this signature was created for.
+     */
+    valueHash: string;
+
+    /**
+     * The signature data that was created by the certificate.
+     */
+    signature: string;
+}
+
+/**
+ * Defines an atom value that represents the revocation of a certificate.
+ */
+export interface RevocationOp extends AuxOpBase {
+    type: AuxOpType.revocation;
+
+    /**
+     * The ID of the certificate that created this revocation.
+     */
+    certId: AtomId;
+
+    /**
+     * The hash of the certificate that created this revocation.
+     */
+    certHash: string;
+
+    /**
+     * The signature data that was created by the certificate.
+     */
+    signature: string;
+}
+
+/**
  * Creates a bot atom op.
  */
 export function bot(id: string): BotOp {
@@ -157,6 +238,54 @@ export function del(start?: number, end?: number): DeleteOp {
     });
 }
 
+/**
+ * Creates a certificate op.
+ * @param keypair The keypair for the certificate.
+ * @param signature The signature for the certificate.
+ */
+export function cert(keypair: string, signature?: string): CertificateOp {
+    return op<CertificateOp>(AuxOpType.certificate, {
+        keypair,
+        signature: signature || null,
+    });
+}
+
+/**
+ * Creates a signature op.
+ * @param valueId The ID of the value that signature was created for.
+ * @param valueHash The hash of the value that the signature was created for.
+ * @param signature The signature.
+ */
+export function sig(
+    valueId: AtomId,
+    valueHash: string,
+    signature: string
+): SignatureOp {
+    return op<SignatureOp>(AuxOpType.signature, {
+        valueId,
+        valueHash,
+        signature,
+    });
+}
+
+/**
+ * Creates a revocation op.
+ * @param certId The ID of the cert that created the signature.
+ * @param certHash The hash of the certificate.
+ * @param signature The signature.
+ */
+export function revocation(
+    certId: AtomId,
+    certHash: string,
+    signature: string
+): RevocationOp {
+    return op<RevocationOp>(AuxOpType.revocation, {
+        certId,
+        certHash,
+        signature,
+    });
+}
+
 export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
     return <T>assign(
         {
@@ -164,4 +293,181 @@ export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
         },
         extra
     );
+}
+
+/**
+ * Creates a certificate that is self signed.
+ * @param password The password used to encrypt the keypair.
+ */
+export function selfSignedCert(password: string): CertificateOp {
+    const keys = keypair(password);
+    return signedCert(null, password, keys);
+}
+
+/**
+ * Calculates a signature for the given keypair that can be used for a certificate.
+ * Returns a signature that can validate that a certificate was signed by another cert.
+ * @param signingCert The certificate that is signing the keypair. If null then the certKeypair will be signed with itself.
+ * @param signingPassword The password that is needed to decrypt the keypair in the signing certificate.
+ * @param certKeypair The keypair that should be signed.
+ */
+export function signedCert(
+    signingCert: Atom<CertificateOp> | null,
+    signingPassword: string,
+    certKeypair: string
+): CertificateOp {
+    const bytes = certSigningBytes(signingCert, certKeypair);
+    const sig = sign(
+        signingCert ? signingCert.value.keypair : certKeypair,
+        signingPassword,
+        bytes
+    );
+    if (!sig) {
+        throw new Error('Unable to sign the certificate.');
+    }
+    return cert(certKeypair, sig);
+}
+
+/**
+ * Validates that the given signed cert was signed with the given signing cert.
+ * @param signingCert The cert that created the signature.
+ * @param signedCert The cert that was signed.
+ */
+export function validateCertSignature(
+    signingCert: Atom<CertificateOp> | null,
+    signedCert: Atom<CertificateOp>
+): boolean {
+    const bytes = certSigningBytes(signingCert, signedCert.value.keypair);
+    try {
+        return verify(
+            signingCert ? signingCert.value.keypair : signedCert.value.keypair,
+            signedCert.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+/**
+ * Creates a signature for the given value atom.
+ * @param signingCert The certificate that is signing the value.
+ * @param signingPassword The password used to decrypt the private key.
+ * @param value The value to sign.
+ */
+export function signedValue(
+    signingCert: Atom<CertificateOp>,
+    signingPassword: string,
+    value: Atom<ValueOp>
+): SignatureOp {
+    const bytes = valueSigningBytes(signingCert, value);
+    const signature = sign(signingCert.value.keypair, signingPassword, bytes);
+    if (!signature) {
+        throw new Error('Unable to sign the value.');
+    }
+    return sig(value.id, value.hash, signature);
+}
+
+/**
+ * Validates that the given signature was signed with the given certificate.
+ * @param signingCert
+ * @param signature
+ */
+export function validateSignedValue(
+    signingCert: Atom<CertificateOp>,
+    signature: Atom<SignatureOp>,
+    value: Atom<ValueOp>
+): boolean {
+    try {
+        const bytes = valueSigningBytes(signingCert, value);
+        return verify(
+            signingCert.value.keypair,
+            signature.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+/**
+ * Creates a revocation for the given certificate or signature atom.
+ * @param signingCert The certificate that is signing the value.
+ * @param signingPassword The password used to decrypt the private key.
+ * @param atom The value to revoke.
+ */
+export function signedRevocation(
+    signingCert: Atom<CertificateOp>,
+    signingPassword: string,
+    atom: Atom<CertificateOp> | Atom<SignatureOp>
+): RevocationOp {
+    const bytes = revocationSigningBytes(signingCert, atom);
+    const signature = sign(signingCert.value.keypair, signingPassword, bytes);
+    if (!signature) {
+        throw new Error('Unable to sign the value.');
+    }
+    return revocation(signingCert.id, signingCert.hash, signature);
+}
+
+/**
+ * Validates that the given revocation was signed with the given certificate.
+ * @param signingCert
+ * @param revocation
+ */
+export function validateRevocation(
+    signingCert: Atom<CertificateOp>,
+    revocation: Atom<RevocationOp>,
+    atom: Atom<CertificateOp> | Atom<SignatureOp>
+): boolean {
+    try {
+        const bytes = revocationSigningBytes(signingCert, atom);
+        return verify(
+            signingCert.value.keypair,
+            revocation.value.signature,
+            bytes
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+function certSigningBytes(
+    signingCert: Atom<CertificateOp> | null,
+    certKeypair: string
+): Uint8Array {
+    if (!signingCert) {
+        return signingBytes([certKeypair]);
+    } else {
+        return signingBytes([signingCert.hash, certKeypair]);
+    }
+}
+
+function valueSigningBytes(
+    signingCert: Atom<CertificateOp>,
+    value: Atom<ValueOp>
+): Uint8Array {
+    return signingBytes([signingCert.hash, value.hash]);
+}
+
+function revocationSigningBytes(
+    signingCert: Atom<CertificateOp>,
+    value: Atom<CertificateOp> | Atom<SignatureOp>
+): Uint8Array {
+    return signingBytes([signingCert.hash, value.hash]);
+}
+
+function signingBytes(data: any): Uint8Array {
+    const json = stringify(data);
+    const encoder = new TextEncoder();
+    return encoder.encode(json);
+}
+
+/**
+ * Gets the hash for the given tag and value.
+ * @param botId The ID of the bot.
+ * @param tag The tag.
+ * @param value The value.
+ */
+export function tagValueHash(botId: string, tag: string, value: any): string {
+    return getHash([botId, tag, value]);
 }

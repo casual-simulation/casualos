@@ -26,6 +26,7 @@ import * as monaco from '../../MonacoLibs';
 import { filter, tap } from 'rxjs/operators';
 import groupBy from 'lodash/groupBy';
 import sumBy from 'lodash/sumBy';
+import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 
 setup();
 
@@ -47,6 +48,7 @@ export default class MonacoTagEditor extends Vue {
     private _requestedErrors: Set<string>;
 
     scriptErrors: BotError[];
+    signed: boolean;
 
     showErrors: boolean;
 
@@ -95,6 +97,7 @@ export default class MonacoTagEditor extends Vue {
         this._errorIds = new Set();
         this._requestedErrors = new Set();
         this.showErrors = false;
+        this.signed = false;
 
         this._sub = new Subscription();
         this._sub.add(
@@ -190,6 +193,14 @@ export default class MonacoTagEditor extends Vue {
 
         if (this.$refs.editor) {
             (<MonacoEditor>this.$refs.editor).setModel(this._model);
+        }
+
+        if (bot.signatures) {
+            this.signed = !!bot.signatures[
+                tagValueHash(bot.id, tag, bot.tags[tag])
+            ];
+        } else {
+            this.signed = false;
         }
 
         const scriptErrors = this._allErrors.filter(

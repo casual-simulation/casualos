@@ -16,23 +16,45 @@ import {
     WeaveResult,
     insertAtoms,
     removeAtoms,
+    AtomCardinality,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
+import {
+    AuxOp,
+    tag,
+    BotOp,
+    value,
+    bot,
+    del,
+    TagOp,
+    selfSignedCert,
+    signedCert,
+    signedValue,
+    signedRevocation,
+} from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
-import reducer from './AuxWeaveReducer';
+import reducer, { certificateId } from './AuxWeaveReducer';
 import { merge } from '../utils';
 import {
     apply,
     updates as stateUpdates,
     BotStateUpdates,
 } from './AuxStateHelpers';
-import { BotActions } from '../bots/BotEvents';
+import {
+    BotActions,
+    asyncError,
+    CreateCertificateAction,
+    asyncResult,
+    enqueueAsyncResult,
+    enqueueAsyncError,
+} from '../bots/BotEvents';
 import {
     findTagNode,
     findValueNode,
     findBotNode,
     findBotNodes,
+    findValueNodeByValue,
 } from './AuxWeaveHelpers';
+import { Action } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -73,9 +95,10 @@ export function addAuxAtom(
     cause: Atom<AuxOp>,
     op: AuxOp,
     priority?: number,
-    space?: string
+    space?: string,
+    cardinality?: AtomCardinality
 ): AuxResult {
-    const treeResult = addAtom(tree, cause, op, priority);
+    const treeResult = addAtom(tree, cause, op, priority, cardinality);
     const update = reducer(tree.weave, treeResult.results[0], undefined, space);
 
     return {
@@ -191,8 +214,20 @@ export function applyEvents(
     actions: BotActions[],
     space?: string
 ) {
-    const addAtom = (cause: Atom<AuxOp>, op: AuxOp, priority?: number) => {
-        const result = addAuxAtom(tree, cause, op, priority, space);
+    const addAtom = (
+        cause: Atom<AuxOp>,
+        op: AuxOp,
+        priority?: number,
+        cardinality?: AtomCardinality
+    ) => {
+        const result = addAuxAtom(
+            tree,
+            cause,
+            op,
+            priority,
+            space,
+            cardinality
+        );
         tree = applyAuxResult(tree, result);
         return result;
     };
@@ -240,6 +275,7 @@ export function applyEvents(
 
     const prevState = tree.state;
     let result: AuxResult = auxResultIdentity();
+    let returnActions: Action[] = [];
 
     for (let event of actions) {
         let newResult: AuxResult = auxResultIdentity();
@@ -282,6 +318,234 @@ export function applyEvents(
                     });
                 }
             }
+        } else if (event.type === 'create_certificate') {
+            if (!event.signingBotId) {
+                const certOp = signedCert(
+                    null,
+                    event.signingPassword,
+                    event.keypair
+                );
+                if (!certOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+                newResult = addAtom(null, certOp, undefined, {
+                    group: 'certificates',
+                    number: 1,
+                });
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    const id = certificateId(newAtom);
+                    const newBot = tree.state[id];
+                    if (newBot) {
+                        enqueueAsyncResult(returnActions, event, newBot, true);
+                    } else {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                    }
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                }
+            } else {
+                const signingBot = tree.state[event.signingBotId];
+                if (!signingBot) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+
+                try {
+                    const certOp = signedCert(
+                        signingBot.tags.atom,
+                        event.signingPassword,
+                        event.keypair
+                    );
+                    if (!certOp) {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                        continue;
+                    }
+                    newResult = addAtom(signingBot.tags.atom, certOp);
+                    const newAtom = addedAtom(newResult.results[0]);
+                    if (newAtom) {
+                        const id = certificateId(newAtom);
+                        const newBot = tree.state[id];
+                        if (newBot) {
+                            enqueueAsyncResult(
+                                returnActions,
+                                event,
+                                newBot,
+                                true
+                            );
+                        } else {
+                            enqueueAsyncError(
+                                returnActions,
+                                event,
+                                new Error('Unable to create certificate.')
+                            );
+                        }
+                    } else {
+                        enqueueAsyncError(
+                            returnActions,
+                            event,
+                            new Error('Unable to create certificate.')
+                        );
+                    }
+                } catch (err) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create certificate.')
+                    );
+                    continue;
+                }
+            }
+        } else if (event.type === 'sign_tag') {
+            const signingBot = tree.state[event.signingBotId];
+            if (!signingBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const botNode = findBotNode(tree.weave, event.botId);
+            if (!botNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const tagNode = findTagNode(botNode, event.tag);
+            if (!tagNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+            const valueNode = findValueNodeByValue(tagNode, event.value);
+            if (!valueNode) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+
+            try {
+                const signOp = signedValue(
+                    signingBot.tags.atom,
+                    event.signingPassword,
+                    valueNode.atom
+                );
+                if (!signOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create signature.')
+                    );
+                    continue;
+                }
+
+                newResult = addAtom(signingBot.tags.atom, signOp);
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    enqueueAsyncResult(returnActions, event, undefined);
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to create signature.')
+                    );
+                }
+            } catch (err) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to create signature.')
+                );
+                continue;
+            }
+        } else if (event.type === 'revoke_certificate') {
+            const signingBot = tree.state[event.signingBotId];
+            if (!signingBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error(
+                        'Unable to revoke certificate. Signing certificate does not exist!'
+                    )
+                );
+                continue;
+            }
+            const certificateBot = tree.state[event.certificateBotId];
+            if (!certificateBot) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error(
+                        'Unable to revoke certificate. Certificate does not exist!'
+                    )
+                );
+                continue;
+            }
+            try {
+                const revokeOp = signedRevocation(
+                    signingBot.tags.atom,
+                    event.signingPassword,
+                    certificateBot.tags.atom
+                );
+                if (!revokeOp) {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to revoke certificate.')
+                    );
+                    continue;
+                }
+
+                newResult = addAtom(signingBot.tags.atom, revokeOp);
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    enqueueAsyncResult(returnActions, event, undefined);
+                } else {
+                    enqueueAsyncError(
+                        returnActions,
+                        event,
+                        new Error('Unable to revoke certificate.')
+                    );
+                }
+            } catch (err) {
+                enqueueAsyncError(
+                    returnActions,
+                    event,
+                    new Error('Unable to revoke certificate.')
+                );
+                continue;
+            }
         }
 
         result = mergeAuxResults(result, newResult);
@@ -293,6 +557,7 @@ export function applyEvents(
         tree,
         updates,
         result,
+        actions: returnActions,
     };
 }
 

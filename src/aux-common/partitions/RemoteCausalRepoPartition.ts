@@ -14,6 +14,12 @@ import {
     addedAtoms,
     removedAtoms,
     CausalRepoClient,
+    index,
+    calculateDiff,
+    commit,
+    CommitData,
+    atomMap,
+    calculateCommitDiff,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -23,7 +29,7 @@ import {
     applyAtoms,
 } from '../aux-format-2';
 import { Observable, Subscription, Subject } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { startWith, first } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
@@ -44,6 +50,9 @@ import {
     ON_REMOTE_WHISPER_ACTION_NAME,
     hasValue,
     AsyncAction,
+    CreateCertificateAction,
+    SignTagAction,
+    RevokeCertificateAction,
 } from '../bots';
 import flatMap from 'lodash/flatMap';
 import {
@@ -299,28 +308,31 @@ export class RemoteCausalRepoPartitionImpl
             for (let i = 0; i < events.length; i++) {
                 const event = events[i];
                 if (event.type === 'unlock_space') {
-                    if (this._unlockSpace(event.password)) {
-                        const extraEvents = await this.applyEvents(
-                            events.slice(i + 1)
-                        );
+                    this._unlockSpace(event.password).then(async unlocked => {
+                        if (unlocked) {
+                            const extraEvents = await this.applyEvents(
+                                events.slice(i + 1)
+                            );
 
-                        // Resolve the unlock_space task
-                        this._onEvents.next([
-                            asyncResult(event.taskId, undefined),
-                        ]);
+                            // Resolve the unlock_space task
+                            this._onEvents.next([
+                                asyncResult(event.taskId, undefined),
+                            ]);
 
-                        return extraEvents;
-                    } else {
-                        // Reject the unlock_space task
-                        this._onEvents.next([
-                            asyncError(
-                                event.taskId,
-                                new Error(
-                                    'Unable to unlock the space because the passcode is incorrect.'
-                                )
-                            ),
-                        ]);
-                    }
+                            return extraEvents;
+                        } else {
+                            // Reject the unlock_space task
+                            this._onEvents.next([
+                                asyncError(
+                                    event.taskId,
+                                    new Error(
+                                        'Unable to unlock the space because the passcode is incorrect.'
+                                    )
+                                ),
+                            ]);
+                        }
+                    });
+                    return [];
                 }
             }
             return [];
@@ -329,14 +341,20 @@ export class RemoteCausalRepoPartitionImpl
         let finalEvents = [] as (
             | AddBotAction
             | RemoveBotAction
-            | UpdateBotAction)[];
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction)[];
         for (let e of events) {
             if (e.type === 'apply_state') {
                 finalEvents.push(...breakIntoIndividualEvents(this.state, e));
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot'
+                e.type === 'update_bot' ||
+                e.type === 'create_certificate' ||
+                e.type === 'sign_tag' ||
+                e.type === 'revoke_certificate'
             ) {
                 finalEvents.push(e);
             } else if (e.type === 'unlock_space') {
@@ -350,9 +368,13 @@ export class RemoteCausalRepoPartitionImpl
         return [];
     }
 
-    private _unlockSpace(password: string) {
-        // TODO: Improve with a better mechanism
-        if (password !== '3342') {
+    private async _unlockSpace(password: string): Promise<boolean> {
+        const authenticated = await this._client
+            .authenticateBranchWrites(this._branch, password)
+            .pipe(first())
+            .toPromise();
+
+        if (!authenticated) {
             return false;
         }
         this._static = false;
@@ -493,6 +515,19 @@ export class RemoteCausalRepoPartitionImpl
                             } else {
                                 this._onEvents.next([event.action]);
                             }
+                        } else if (event.type === 'reset') {
+                            console.log(
+                                '[RemoteCausalRepoPartition] Got reset.'
+                            );
+                            // TODO: improve so that the updates are merged but the same effect is achieved.
+                            const currentAtoms = this._tree.weave
+                                .getAtoms()
+                                .map(a => a.hash);
+                            this._applyAtoms([], currentAtoms);
+
+                            // Re-create the tree (and therefore weave) to reset the cardinality rules.
+                            this._tree = auxTree();
+                            this._applyAtoms(event.atoms, []);
                         }
                     },
                     err => this._onError.next(err)
@@ -527,9 +562,15 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _applyEvents(
-        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+        events: (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction)[]
     ) {
-        let { tree, updates, result } = applyEvents(
+        let { tree, updates, result, actions } = applyEvents(
             this._tree,
             events,
             this.space
@@ -547,6 +588,10 @@ export class RemoteCausalRepoPartitionImpl
         if (atoms.length > 0 || removed.length > 0) {
             this._client.addAtoms(this._branch, atoms, removed);
         }
+
+        if (actions && actions.length > 0) {
+            this._onEvents.next(actions);
+        }
     }
 
     private _sendUpdates(updates: BotStateUpdates) {
@@ -561,6 +606,9 @@ export class RemoteCausalRepoPartitionImpl
                 updates.updatedBots.map(u => ({
                     bot: <any>u.bot,
                     tags: [...u.tags.values()],
+                    signatures: u.signatures
+                        ? [...u.signatures.values()]
+                        : undefined,
                 }))
             );
         }

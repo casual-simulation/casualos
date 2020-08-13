@@ -2353,6 +2353,27 @@ describe('Dependencies', () => {
                     },
                 ],
             ],
+            // TODO: Implement
+            // [
+            //     'getBots(getID(this))',
+            //     [
+            //         {
+            //             type: 'bot',
+            //             name: 'id',
+            //             dependencies: [],
+            //         },
+            //     ],
+            // ],
+            // [
+            //     'getBots("id", getID(this))',
+            //     [
+            //         {
+            //             type: 'bot',
+            //             name: 'id',
+            //             dependencies: [],
+            //         },
+            //     ],
+            // ],
         ];
 
         it.each(cases)('%s', (formula, expected) => {

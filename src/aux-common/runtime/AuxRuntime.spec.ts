@@ -88,6 +88,7 @@ import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError } from './Utils';
+import { tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -786,6 +787,43 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+        });
+
+        describe('signatures', () => {
+            it('should add the signatures to the precalculated bot', () => {
+                const update = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
             });
         });
     });
@@ -1726,6 +1764,125 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+        });
+
+        describe('signatures', () => {
+            it('should handle new bots with signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                ]);
+
+                expect(update1).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should handle adding signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
+                            },
+                        },
+                        tags: [],
+                        signatures: [tagValueHash('test', 'abc', 'def')],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: 'abc',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing signatures', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            [tagValueHash('test', 'abc', 'def')]: 'abc',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: {
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                        tags: [],
+                        signatures: [tagValueHash('test', 'abc', 'def')],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {},
+                            signatures: {
+                                [tagValueHash('test', 'abc', 'def')]: null,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
             });
         });
     });
@@ -3141,6 +3298,34 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
+            it('should not update a bot that was deleted', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        update: '@tags.value = 123; destroy(this);',
+                    }),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should not update a bot that was updated after being deleted', async () => {
+                uuidMock.mockReturnValue('uuid');
+                runtime.botsAdded([
+                    createBot('test1', {
+                        update: '@destroy(this); tags.value = 123;',
+                    }),
+                ]);
+                runtime.shout('update');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
             // TODO: Improve the concurrency handling of the runtime
             //       to fix this issue
             it.skip('should not overwrite the current state when a race condition occurs', async () => {
@@ -4115,6 +4300,152 @@ describe('AuxRuntime', () => {
 
         expect(zones.length).toBe(1);
         expect(zones[0]).toBe(root);
+    });
+
+    describe('forceSignedScripts', () => {
+        beforeEach(() => {
+            runtime = new AuxRuntime(
+                version,
+                auxDevice,
+                undefined,
+                new DefaultRealtimeEditModeProvider(
+                    new Map<BotSpace, RealtimeEditMode>([
+                        ['shared', RealtimeEditMode.Immediate],
+                        [<any>'delayed', RealtimeEditMode.Delayed],
+                    ])
+                ),
+                true
+            );
+
+            events = [];
+            allEvents = [];
+            errors = [];
+            allErrors = [];
+
+            runtime.onActions.subscribe(a => {
+                events.push(a);
+                allEvents.push(...a);
+            });
+            runtime.onErrors.subscribe(e => {
+                errors.push(e);
+                allErrors.push(...e);
+            });
+        });
+
+        it('should only allow scripts that have signatures', () => {
+            runtime.botsAdded([
+                createBot('test', {
+                    script: '@player.toast("abc")',
+                }),
+                {
+                    id: 'test2',
+                    tags: {
+                        script: '@player.toast("def")',
+                    },
+                    signatures: {
+                        [tagValueHash(
+                            'test2',
+                            'script',
+                            '@player.toast("def")'
+                        )]: 'script',
+                    },
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('def')]);
+        });
+
+        it('should compile scripts that had signatures added afterwards', () => {
+            runtime.botsAdded([
+                createBot('test', {
+                    script: '@player.toast("abc")',
+                }),
+            ]);
+
+            const hash = tagValueHash('test', 'script', '@player.toast("abc")');
+
+            runtime.botsUpdated([
+                {
+                    bot: {
+                        id: 'test',
+                        tags: {},
+                        signatures: {
+                            [hash]: 'script',
+                        },
+                    },
+                    tags: [],
+                    signatures: [hash],
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
+
+        it('should remove scripts that had signatures removed afterwards', () => {
+            runtime.botsAdded([
+                {
+                    id: 'test',
+                    tags: {
+                        script: '@player.toast("def")',
+                    },
+                    signatures: {
+                        [tagValueHash(
+                            'test',
+                            'script',
+                            '@player.toast("def")'
+                        )]: 'script',
+                    },
+                },
+            ]);
+
+            const hash = tagValueHash('test', 'script', '@player.toast("def")');
+
+            runtime.botsUpdated([
+                {
+                    bot: {
+                        id: 'test',
+                        tags: {},
+                    },
+                    tags: [],
+                    signatures: [hash],
+                },
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([]);
+        });
+
+        it('should allow scripts on tempLocal bots', () => {
+            runtime.botsAdded([
+                createBot(
+                    'test',
+                    {
+                        script: '@player.toast("abc")',
+                    },
+                    'tempLocal'
+                ),
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
+
+        it('should allow scripts on local bots', () => {
+            runtime.botsAdded([
+                createBot(
+                    'test',
+                    {
+                        script: '@player.toast("abc")',
+                    },
+                    'local'
+                ),
+            ]);
+
+            const result = runtime.shout('script');
+            expect(result.actions).toEqual([toast('abc')]);
+        });
     });
 });
 

@@ -30,6 +30,7 @@ import {
     runScript,
     AsyncActions,
     asyncError,
+    botRemoved,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -368,6 +369,24 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
     }
 
+    async destroyBuilderBots(builder: string) {
+        let parsed: StoredAux = JSON.parse(builder);
+        let state = getBotsStateFromStoredAux(parsed);
+        const objects = getActiveObjects(state);
+        let events = [] as BotActions[];
+        for (let bot of objects) {
+            const sameBot = this.botsState[bot.id];
+            if (sameBot) {
+                events.push(botRemoved(bot.id));
+            }
+        }
+
+        if (events.length > 0) {
+            console.log('[AuxHelper] Destroying Builder...');
+            await this.transaction(...events);
+        }
+    }
+
     async formulaBatch(formulas: string[]): Promise<void> {
         this._runtime.process(formulas.map(f => runScript(f)));
     }
@@ -483,6 +502,12 @@ export class AuxHelper extends BaseHelper<Bot> {
             return this._partitionForBotEvent(event);
         } else if (event.type === 'apply_state') {
             return undefined;
+        } else if (event.type === 'create_certificate') {
+            return this._partitionForBotType('shared');
+        } else if (event.type === 'sign_tag') {
+            return this._partitionForBotType('shared');
+        } else if (event.type === 'revoke_certificate') {
+            return this._partitionForBotType('shared');
         } else if (event.type === 'transaction') {
             return undefined;
         } else if (event.type === 'load_bots') {

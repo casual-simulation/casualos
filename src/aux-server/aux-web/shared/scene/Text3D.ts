@@ -20,7 +20,7 @@ import {
     BotLabelAlignment,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import { TextMesh } from 'troika-3d-text/dist/textmesh-standalone.esm';
+import { Text as TextMesh } from 'troika-three-text';
 import Roboto from '../public/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export interface Text3DFont {

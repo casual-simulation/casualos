@@ -14,7 +14,7 @@ import {
 } from 'three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
-import { disposeScene, objectForwardRay } from '../SceneUtils';
+import { disposeGroup, objectForwardRay } from '../SceneUtils';
 import values from 'lodash/values';
 import { XRFrame, XRPose, XRSpace, XRInputSource } from './WebXRTypes';
 import { copyPose } from './WebXRHelpers';
@@ -29,7 +29,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
     inputSource: XRInputSource;
     group: Group;
 
-    private _scene: Scene;
+    private _scene: Group;
     private _root: Object3D;
     private _nodes: Map<string, Object3D>;
     private _pointer: PointerRay3D;
@@ -242,7 +242,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         }
         this.closed = true;
         if (this._scene) {
-            disposeScene(this._scene);
+            disposeGroup(this._scene);
             this._scene = null;
         }
         if (this._pointer) {

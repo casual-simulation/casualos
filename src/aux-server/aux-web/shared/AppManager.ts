@@ -26,6 +26,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
+import bootstrap from './builder/ab-1.bootstrap.json';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -86,16 +87,25 @@ export class AppManager {
     private _user: AuxUser;
     private _config: WebConfig;
     private _deviceConfig: AuxConfig['config']['device'];
+    private _primaryPromise: Promise<BotManager>;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
+            const params = new URLSearchParams(location.search);
+            const forceSignedScripts =
+                params.get('forceSignedScripts') === 'true';
+            if (forceSignedScripts) {
+                console.log('[AppManager] Forcing signed scripts for ' + id);
+            }
             return new BotManager(this._user, id, {
                 version: this.version.latestTaggedVersion,
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
                 builder: JSON.stringify(builder),
+                bootstrapState: bootstrap,
+                forceSignedScripts,
             });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
@@ -318,10 +328,15 @@ export class AppManager {
                 this.simulationManager.primary.id === channelId) ||
             this.simulationManager.primaryId === channelId
         ) {
-            return await this.simulationManager.primaryPromise;
+            return await this._primaryPromise;
         }
         this.simulationManager.primaryId = channelId;
+        this._primaryPromise = this._setPrimarySimulation(channelId);
 
+        return await this._primaryPromise;
+    }
+
+    private async _setPrimarySimulation(channelId: string) {
         this._sendProgress('Requesting channel...', 0.1);
 
         console.log('[AppManager] Setting primary simulation:', channelId);

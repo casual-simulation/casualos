@@ -12,6 +12,7 @@ import {
     sitelog,
     CausalRepoSitelogType,
     CausalRepoSitelogConnectionReason,
+    CausalRepoBranchSettings,
 } from '@casual-simulation/causal-trees/core2';
 
 /**
@@ -23,19 +24,22 @@ export class MongoDBRepoStore implements CausalRepoStore {
     private _indexes: Collection<MongoDBIndex>;
     private _reflog: Collection<MongoDBReflog>;
     private _sitelog: Collection<MongoDBSitelog>;
+    private _settings: Collection<MongoDBBranchSettings>;
 
     constructor(
         objectsCollection: Collection<MongoDBObject>,
         headsCollection: Collection<MongoDBHead>,
         indexesCollection: Collection<MongoDBIndex>,
         reflogCollection: Collection<MongoDBReflog>,
-        sitelogCollection: Collection<MongoDBSitelog>
+        sitelogCollection: Collection<MongoDBSitelog>,
+        branchSettingsCollection: Collection<MongoDBBranchSettings>
     ) {
         this._objects = objectsCollection;
         this._heads = headsCollection;
         this._indexes = indexesCollection;
         this._reflog = reflogCollection;
         this._sitelog = sitelogCollection;
+        this._settings = branchSettingsCollection;
     }
 
     async init() {
@@ -43,6 +47,24 @@ export class MongoDBRepoStore implements CausalRepoStore {
         await this._reflog.createIndex({ branch: 1, time: -1 });
         await this._sitelog.createIndex({ branch: 1, time: -1 });
         await this._sitelog.createIndex({ site: 1, branch: 1, time: -1 });
+    }
+
+    async getBranchSettings(branch: string): Promise<CausalRepoBranchSettings> {
+        const settings = await this._settings.findOne(
+            { branch },
+            { sort: { time: -1 } }
+        );
+
+        return {
+            type: 'branch_settings',
+            branch: settings.branch,
+            passwordHash: settings.passwordHash,
+            time: settings.time,
+        };
+    }
+
+    async saveSettings(settings: CausalRepoBranchSettings): Promise<void> {
+        await this._settings.insertOne(settings);
     }
 
     async getSitelog(branch: string): Promise<CausalRepoSitelog[]> {
@@ -262,6 +284,13 @@ export interface MongoDBSitelog {
     site: string;
     time: Date;
     sitelogType?: CausalRepoSitelogType;
+}
+
+export interface MongoDBBranchSettings {
+    _id?: any;
+    branch: string;
+    time: Date;
+    passwordHash?: string;
 }
 
 export function escapeRegex(value: string): string {

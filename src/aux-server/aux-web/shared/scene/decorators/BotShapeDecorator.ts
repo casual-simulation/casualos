@@ -50,7 +50,7 @@ import {
     disposeMesh,
     createSphere,
     createSprite,
-    disposeScene,
+    disposeGroup,
     disposeObject3D,
     setColor,
     buildSRGBColor,
@@ -90,7 +90,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     mesh: Mesh;
 
     collider: Object3D;
-    scene: Scene;
+    scene: Group;
 
     get allowModifications() {
         return this._subShape === null && this._shape !== 'iframe';
@@ -406,7 +406,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
         }
-        disposeScene(this.scene);
+        disposeGroup(this.scene);
 
         this._animationMixer = null;
         this.mesh = null;
@@ -491,6 +491,9 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
             return false;
         }
         const mixerContext = this._game.getHtmlMixerContext();
+        if (!mixerContext) {
+            return false;
+        }
         const domElement = HtmlMixerHelpers.createIframeDomElement(
             'about:blank'
         );

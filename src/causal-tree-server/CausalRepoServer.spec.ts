@@ -50,6 +50,11 @@ import {
     BRANCHES_STATUS,
     COMMIT_CREATED,
     RESTORED,
+    RESET,
+    SetBranchPasswordEvent,
+    AuthenticateBranchWritesEvent,
+    branchSettings,
+    AUTHENTICATED_TO_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -63,8 +68,14 @@ import {
     deviceResult,
     remoteError,
     deviceError,
+    SET_BRANCH_PASSWORD,
+    AUTHENTICATE_BRANCH_WRITES,
 } from '@casual-simulation/causal-trees';
 import { bot } from '../aux-vm/node_modules/@casual-simulation/aux-common/aux-format-2';
+import {
+    hashPassword,
+    verifyPassword,
+} from '../causal-trees/node_modules/@casual-simulation/crypto';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -1299,6 +1310,70 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
+        it('should not add atoms that violate cardinality', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const a2 = atom(
+                atomId('a', 2, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+
+            const idx = index();
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a1, a2],
+            });
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a1.hash, a2.hash],
+                    },
+                },
+
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1],
+                    },
+                },
+            ]);
+        });
+
         it('should notify all other devices connected to the branch', async () => {
             server.init();
 
@@ -1662,7 +1737,7 @@ describe('CausalRepoServer', () => {
             });
         });
 
-        it('should remove the given atoms from to the given branch', async () => {
+        it('should remove the given atoms from the given branch', async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -1720,6 +1795,73 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+
+        it('should not remove the given atoms if they are part of a cardinality tree', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, removeAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2, a3);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                a3,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            removeAtoms.next({
+                branch: 'testBranch',
+                removedAtoms: [a3.hash],
+            });
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
@@ -2198,6 +2340,208 @@ describe('CausalRepoServer', () => {
                 ]);
             });
         });
+
+        it('should prevent adding atoms to a branch that has a password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toBe(null);
+
+            expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [],
+                    },
+                },
+            ]);
+        });
+
+        it('should allow adding atoms to a branch that has a password when authenticated', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'password',
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toEqual({
+                type: 'atom',
+                data: a3,
+            });
+
+            expect(device.messages.slice(2)).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+            ]);
+        });
+
+        it('should remember that the device is authenticated if the device authenticates without watching', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'password',
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toEqual({
+                type: 'atom',
+                data: a3,
+            });
+
+            expect(device.messages).toEqual([
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: true,
+                    },
+                },
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(COMMIT, () => {
@@ -2573,7 +2917,7 @@ describe('CausalRepoServer', () => {
             expect(branchCommit).toEqual(c1);
         });
 
-        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+        it(`should send a RESET event with the new state`, async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -2634,11 +2978,99 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
+                    name: RESET,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
+
+        it(`should handle resetting atoms with cardinality constraints`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const checkout = new Subject<CheckoutEvent>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const watchBranch = new Subject<WatchBranchEvent>();
+            device.events.set(CHECKOUT, checkout);
+            device.events.set(WATCH_BRANCH, watchBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(
+                atomId('a', 3, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+
+            const b1 = atom(
+                atomId('b', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const b2 = atom(atomId('b', 2), b1, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(b1, b2);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                b1,
+                b2,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            checkout.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            watchBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
                     name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
-                        atoms: [a3],
-                        removedAtoms: [a4.hash, a5.hash],
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
@@ -2811,7 +3243,7 @@ describe('CausalRepoServer', () => {
             );
         });
 
-        it(`should send a ADD_ATOMS event with difference between the two commits`, async () => {
+        it(`should send a RESET event with the new state`, async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
@@ -2872,17 +3304,111 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: ADD_ATOMS,
+                    name: RESET,
                     data: {
                         branch: 'testBranch',
-                        atoms: [a3],
-                        removedAtoms: [a4.hash, a5.hash],
+                        atoms: [a1, a2, a3],
                     },
                 },
                 {
                     name: RESTORED,
                     data: {
                         branch: 'testBranch',
+                    },
+                },
+            ]);
+        });
+
+        it(`should handle resetting atoms with cardinality constraints`, async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const restore = new Subject<RestoreEvent>();
+            const watchBranch = new Subject<WatchBranchEvent>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(RESTORE, restore);
+            device.events.set(WATCH_BRANCH, watchBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            connections.connection.next(device);
+
+            const a1 = atom(
+                atomId('a', 1, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(
+                atomId('a', 3, undefined, { group: 'abc', number: 2 }),
+                null,
+                {}
+            );
+
+            const b1 = atom(
+                atomId('b', 1, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const b2 = atom(atomId('b', 2), b1, {});
+
+            const idx1 = index(a1, a2);
+            const idx2 = index(b1, b2);
+            const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
+            const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
+            const b = branch('testBranch', c2);
+
+            await storeData(store, 'testBranch', idx1.data.hash, [
+                a1,
+                a2,
+                idx1,
+            ]);
+            await storeData(store, 'testBranch', idx2.data.hash, [
+                b1,
+                b2,
+                idx2,
+            ]);
+            await storeData(store, 'testBranch', null, [c1, c2]);
+            await updateBranch(store, b);
+
+            restore.next({
+                branch: 'testBranch',
+                commit: c1.hash,
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            watchBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: RESTORED,
+                    data: {
+                        branch: 'testBranch',
+                    },
+                },
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
                     },
                 },
             ]);
@@ -4028,6 +4554,281 @@ describe('CausalRepoServer', () => {
                                 lastUpdateTime: null,
                             },
                         ],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(SET_BRANCH_PASSWORD, () => {
+        it('should change the password if given the previous password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const hash1 = hashPassword('password1');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'password1',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const storedSettings = await store.getBranchSettings('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedSettings.passwordHash)
+            ).toBe(true);
+        });
+
+        it('should be able to set the password of a branch that doesnt have a password by using 3342 as the old password', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: '3342',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const storedSettings = await store.getBranchSettings('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedSettings.passwordHash)
+            ).toBe(true);
+        });
+
+        it('should not be able to set the password of a branch if the old password is wrong', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            device.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const hash1 = hashPassword('password1');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'wrong',
+                newPassword: 'newPassword',
+            });
+
+            await waitAsync();
+
+            const storedSettings = await store.getBranchSettings('testBranch');
+
+            expect(
+                verifyPassword('newPassword', storedSettings.passwordHash)
+            ).toBe(false);
+        });
+
+        it('should not allow adding atoms when the password was changed while authenticated', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            const setPassword = new Subject<SetBranchPasswordEvent>();
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            device2.events.set(SET_BRANCH_PASSWORD, setPassword);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const hash1 = hashPassword('password');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'password',
+            });
+
+            await waitAsync();
+
+            setPassword.next({
+                branch: 'testBranch',
+                oldPassword: 'password',
+                newPassword: 'different',
+            });
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const repoAtom = await store.getObject(a3.hash);
+            expect(repoAtom).toEqual(null);
+
+            expect(device.messages.slice(1)).toEqual([
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: true,
+                    },
+                },
+
+                // Disconnected because the password changed
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: false,
+                    },
+                },
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                // in this case, no atoms were accepted
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(AUTHENTICATE_BRANCH_WRITES, () => {
+        it('should respond with an message indicating that the password was wrong', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const authenticate = new Subject<AuthenticateBranchWritesEvent>();
+            device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const hash1 = hashPassword('password1');
+            const settings = branchSettings('testBranch', hash1);
+            await store.saveSettings(settings);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b1);
+
+            authenticate.next({
+                branch: 'testBranch',
+                password: 'wrong',
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: AUTHENTICATED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        authenticated: false,
                     },
                 },
             ]);

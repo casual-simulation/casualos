@@ -1,18 +1,6 @@
 import { randomBytes, secretbox } from 'tweetnacl';
-import scrypt, { Options } from 'scrypt-async';
+import { syncScrypt } from 'scrypt-js';
 import { fromByteArray, toByteArray } from 'base64-js';
-
-function scryptAsync(
-    password: string | Uint8Array,
-    salt: string | Uint8Array,
-    options: Options
-): Promise<string | Uint8Array | Array<number>> {
-    return new Promise((resolve, reject) => {
-        scrypt(<any>password, <any>salt, options, (result: any) =>
-            resolve(result)
-        );
-    });
-}
 
 interface DerivedKey {
     salt: Uint8Array;
@@ -24,17 +12,15 @@ const BLOCK_SIZE = 8;
 const PARALLELISM = 1;
 const KEY_LENGTH = secretbox.keyLength;
 
-async function deriveKey(
-    password: string,
-    salt: Uint8Array
-): Promise<DerivedKey> {
-    const result = (await scryptAsync(password, salt, {
-        N: ITERATIONS,
-        r: BLOCK_SIZE,
-        p: PARALLELISM,
-        dkLen: KEY_LENGTH,
-        encoding: 'binary',
-    })) as Uint8Array;
+export function deriveKey(password: Uint8Array, salt: Uint8Array): DerivedKey {
+    const result = syncScrypt(
+        password,
+        salt,
+        ITERATIONS,
+        BLOCK_SIZE,
+        PARALLELISM,
+        KEY_LENGTH
+    );
 
     return {
         salt: salt,
@@ -57,7 +43,7 @@ async function deriveKey(
  * @param password The password to use to encrypt.
  * @param data The data to encrypt.
  */
-export function encrypt(password: string, data: Uint8Array): Promise<string> {
+export function encrypt(password: string, data: Uint8Array): string {
     return encryptV1(password, data);
 }
 
@@ -67,10 +53,7 @@ export function encrypt(password: string, data: Uint8Array): Promise<string> {
  * @param password The password to use to decrypt.
  * @param cyphertext The data to decrypt.
  */
-export function decrypt(
-    password: string,
-    cyphertext: string
-): Promise<Uint8Array> {
+export function decrypt(password: string, cyphertext: string): Uint8Array {
     if (!password) {
         throw new Error('Invalid password. Must not be null or undefined.');
     }
@@ -97,10 +80,7 @@ export function decrypt(
  * @param password The password to use to encrypt the data.
  * @param data The data to encrypt.
  */
-export async function encryptV1(
-    password: string,
-    data: Uint8Array
-): Promise<string> {
+export function encryptV1(password: string, data: Uint8Array): string {
     if (!password) {
         throw new Error('Invalid password. Must not be null or undefined.');
     }
@@ -110,7 +90,9 @@ export async function encryptV1(
     const nonce = randomBytes(secretbox.nonceLength);
     const salt = randomBytes(secretbox.nonceLength);
 
-    const key = await deriveKey(password, salt);
+    const textEncoder = new TextEncoder();
+    const passwordBytes = textEncoder.encode(password);
+    const key = deriveKey(passwordBytes, salt);
     const cypherBytes = secretbox(data, nonce, key.hash);
     const cyphertext = `v1.${fromByteArray(salt)}.${fromByteArray(
         nonce
@@ -133,10 +115,7 @@ export async function encryptV1(
  * @param password The password to use to decrypt the data.
  * @param cyphertext The cyphertext produced from encryptV1().
  */
-export async function decryptV1(
-    password: string,
-    cyphertext: string
-): Promise<Uint8Array> {
+export function decryptV1(password: string, cyphertext: string): Uint8Array {
     if (!password) {
         throw new Error('Invalid password. Must not be null or undefined.');
     }
@@ -168,7 +147,9 @@ export async function decryptV1(
     const nonce = toByteArray(nonceBase64);
     const data = toByteArray(dataBase64);
 
-    const key = await deriveKey(password, salt);
+    const textEncoder = new TextEncoder();
+    const passwordBytes = textEncoder.encode(password);
+    const key = deriveKey(passwordBytes, salt);
 
     return secretbox.open(data, nonce, key.hash);
 }

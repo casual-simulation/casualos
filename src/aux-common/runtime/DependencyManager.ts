@@ -324,7 +324,12 @@ export class DependencyManager {
         for (let key in update) {
             const botTags = [...update[key]];
 
-            const dependents = botTags.map(t => this.getDependents(t, key));
+            // We can skip "all dependencies" in our call to
+            // _getDependents because they should already be included
+            // by the time we call _deepDependencies
+            const dependents = botTags.map(t =>
+                this._getDependents(t, key, false)
+            );
             for (let dep of dependents) {
                 for (let tag in dep) {
                     deepTags.push(tag);
@@ -350,7 +355,13 @@ export class DependencyManager {
         }
 
         const tagsArray = [...deepTags];
-        const dependents = tagsArray.map(t => this.getDependents(t));
+
+        // We can skip "all dependencies" in our call to
+        // _getDependents because they should already be included
+        // by the time we call _deepDependencies
+        const dependents = tagsArray.map(t =>
+            this._getDependents(t, undefined, false)
+        );
         const updates = reduce(
             dependents,
             (first, second) => this._mergeDependents(first, second),
@@ -384,13 +395,29 @@ export class DependencyManager {
      * @param id The optional bot ID to search for.
      */
     getDependents(tag: string, id?: string): BotDependentInfo {
+        return this._getDependents(tag, id, true);
+    }
+
+    /**
+     * Gets the list of bots that would be affected by a change to the given tag.
+     * @param tag The tag to search for.
+     * @param id The optional bot ID to search for.
+     * @param includeAll Whether to include bots that are dependent on all tags.
+     */
+    private _getDependents(
+        tag: string,
+        id: string,
+        includeAll: boolean
+    ): BotDependentInfo {
         let general = this._dependentMap.get(tag);
         if (id) {
             const bot = this._dependentMap.get(`${id}:${tag}`);
 
             general = this._mergeDependents(general, bot);
         }
-        general = this._mergeDependents(general, this._allMap);
+        if (includeAll) {
+            general = this._mergeDependents(general, this._allMap);
+        }
         return general || {};
     }
 

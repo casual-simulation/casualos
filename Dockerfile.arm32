@@ -1,4 +1,4 @@
-FROM arm32v7/node:11
+FROM arm32v7/node:12
 
 WORKDIR /usr/src/app
 
@@ -10,6 +10,9 @@ COPY ./src/aux-server/server/dist ./server/dist/
 COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
 
 ENV PRODUCTION 1
+
+# Specify no sandbox since Deno doesn't support Arm32
+ENV SANDBOX_TYPE "none"
 
 # HTTP
 EXPOSE 3000
