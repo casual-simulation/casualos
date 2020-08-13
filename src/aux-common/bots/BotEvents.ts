@@ -107,15 +107,14 @@ export type AsyncActions =
     | UnexportGpioPinAction
     | SetGpioPinAction
     | GetGpioPinAction
-    | SleepAction
     | RpioInitAction
     | RpioExitAction
     | RpioOpenAction
     | RpioModeAction
     | RpioReadAction
-    | RpioReadBufAction
+    | RpioReadSequenceAction
     | RpioWriteAction
-    | RpioWriteBufAction
+    | RpioWriteSequenceAction
     | RpioCloseAction
     | RemoteAction
     | RemoteActionResult
@@ -1117,18 +1116,6 @@ export interface GetGpioPinAction extends AsyncAction {
 }
 
 /**
- * Sleeps for provided time before continuing execution.
- */
-export interface SleepAction extends AsyncAction {
-    type: 'sleep';
-
-    /**
-     * The time in ms to sleep for.
-     */
-    time: number;
-}
-
-/**
  * Initialize rpio with the provided settings.
  */
 export interface RpioInitAction extends AsyncAction {
@@ -1213,17 +1200,13 @@ export interface RpioReadAction extends AsyncAction {
 /**
  * Read the buffer of the provided pin.
  */
-export interface RpioReadBufAction extends AsyncAction {
-    type: 'rpio_readbuf';
+export interface RpioReadSequenceAction extends AsyncAction {
+    type: 'rpio_read_sequence';
 
     /**
      * The pin that you want to use.
      */
     pin: number;
-    /**
-     * The buffer that you want read.
-     */
-    buffer: Buffer;
     /**
      * The length of the buffer.
      */
@@ -1250,8 +1233,8 @@ export interface RpioWriteAction extends AsyncAction {
 /**
  * Write the buffer to the provided pin.
  */
-export interface RpioWriteBufAction extends AsyncAction {
-    type: 'rpio_writebuf';
+export interface RpioWriteSequenceAction extends AsyncAction {
+    type: 'rpio_write_sequence';
 
     /**
      * The pin that you want to use.
@@ -1260,11 +1243,7 @@ export interface RpioWriteBufAction extends AsyncAction {
     /**
      * The buffer that you want write.
      */
-    buffer: Buffer;
-    /**
-     * The length of the buffer.
-     */
-    length: number;
+    buffer: number[];
 }
 
 /**
@@ -2335,24 +2314,6 @@ export function getGpioPin(
 }
 
 /**
- * Sleeps for provided time before continuing execution.
- * @param time The Time to sleep in ms. 1 second is 1000 ms.
- * @param taskId The ID of the async task.
- */
-export function sleepPin(
-    time: number,
-    taskId?: string | number,
-    playerId?: string
-): SleepAction {
-    return {
-        type: 'sleep',
-        time,
-        taskId,
-        playerId,
-    };
-}
-
-/**
  * Sends an event to the server to initialize rpio with provided settings
  * @param options An object containing values to initilize with.
  * @param taskId The ID of the async task.
@@ -2461,21 +2422,18 @@ export function rpioReadPin(
 /**
  * Reads a pin's current buffer.
  * @param pin The physical BCM Pin on the server.
- * @param buffer The buffer to read from the pin.
  * @param length The length of the buffer.
  * @param taskId The ID of the async task.
  */
-export function rpioReadBufPin(
+export function rpioReadSequencePin(
     pin: number,
-    buffer: Buffer,
-    length?: number,
+    length: number,
     taskId?: string | number,
     playerId?: string
-): RpioReadBufAction {
+): RpioReadSequenceAction {
     return {
-        type: 'rpio_readbuf',
+        type: 'rpio_read_sequence',
         pin,
-        buffer,
         length,
         taskId,
         playerId,
@@ -2507,21 +2465,18 @@ export function rpioWritePin(
  * Writes to a pin's buffer.
  * @param pin The physical BCM Pin on the server.
  * @param buffer The buffer to write to the pin.
- * @param length The length of the buffer.
  * @param taskId The ID of the async task.
  */
-export function rpioWriteBufPin(
+export function rpioWriteSequencePin(
     pin: number,
-    buffer: Buffer,
-    length?: number,
+    buffer: number[],
     taskId?: string | number,
     playerId?: string
-): RpioWriteBufAction {
+): RpioWriteSequenceAction {
     return {
-        type: 'rpio_writebuf',
+        type: 'rpio_write_sequence',
         pin,
         buffer,
-        length,
         taskId,
         playerId,
     };

@@ -89,15 +89,14 @@ import {
     unexportGpioPin,
     setGpioPin,
     getGpioPin,
-    sleepPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
     rpioModePin,
     rpioReadPin,
-    rpioReadBufPin,
+    rpioReadSequencePin,
     rpioWritePin,
-    rpioWriteBufPin,
+    rpioWriteSequencePin,
     rpioClosePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
@@ -319,6 +318,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteShout,
             webhook,
             uuid,
+            sleep,
 
             __energyCheck,
 
@@ -391,15 +391,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unexportGpio,
                 setGpio,
                 getGpio,
-                sleep,
                 rpioInit,
                 rpioExit,
                 rpioOpen,
                 rpioMode,
                 rpioRead,
-                rpioReadBuf,
+                rpioReadSequence,
                 rpioWrite,
-                rpioWriteBuf,
+                rpioWriteSequence,
                 rpioClose,
                 shell,
                 backupToGithub,
@@ -1506,21 +1505,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sleeps for time in ms.
-     * @param time The Time to sleep in ms. 1 second is 1000 ms.
-     */
-    function sleep(time: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            sleepPin(time),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
      * Sends an event to the server to initialize rpio with provided settings
      * @param options An object containing values to initilize with.
      *
@@ -1618,13 +1602,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Reads a pin's current buffer.
      * @param pin The physical BCM Pin on the server.
-     * @param buffer The buffer to read from the pin.
      * @param length The length of the buffer.
      */
-    function rpioReadBuf(pin: number, buffer: Buffer, length?: number) {
+    function rpioReadSequence(pin: number, length: number) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            rpioReadBufPin(pin, buffer, length),
+            rpioReadSequencePin(pin, length),
             undefined,
             undefined,
             task.taskId
@@ -1652,12 +1635,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Writes to a pin's current buffer.
      * @param pin The physical BCM Pin on the server.
      * @param buffer The buffer to write to  the pin.
-     * @param length The length of the buffer.
      */
-    function rpioWriteBuf(pin: number, buffer: Buffer, length?: number) {
+    function rpioWriteSequence(pin: number, buffer: number[]) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            rpioWriteBufPin(pin, buffer, length),
+            rpioWriteSequencePin(pin, buffer),
             undefined,
             undefined,
             task.taskId
@@ -2042,6 +2024,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function uuid() {
         return uuidv4();
+    }
+
+    /**
+     * Sleeps for time in ms.
+     * @param time The Time to sleep in ms. 1 second is 1000 ms.
+     */
+    function sleep(time: number) {
+        let sleepy = new Promise(resolve => setTimeout(resolve, time));
+        return sleepy;
     }
 
     // /**

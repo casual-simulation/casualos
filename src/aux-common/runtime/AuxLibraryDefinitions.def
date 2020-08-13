@@ -1884,6 +1884,12 @@ declare global {
     function uuid(): string;
 
     /**
+     * Sleeps for time in ms.
+     * @param time Time in ms. 1 second is 1000ms.
+     */
+    function sleep(time: number): Promise<void>;
+
+    /**
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
@@ -2699,12 +2705,6 @@ declare global {
          * @param pin The physical pin (BCM) number.
          */
         getGpio(pin: number): Promise<void>;
-
-        /**
-         * Sleeps for time in ms.
-         * @param time Time in ms. 1 second is 1000ms.
-         */
-        sleep(time: number): Promise<void>;
 
         /**
          * Sends an event to the server to initialize rpio with provided settings

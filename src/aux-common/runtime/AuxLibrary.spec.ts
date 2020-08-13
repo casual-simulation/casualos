@@ -1,9 +1,5 @@
-import { AuxLibrary, createDefaultLibrary } from './AuxLibrary';
-import {
-    AuxGlobalContext,
-    addToContext,
-    MemoryGlobalContext,
-} from './AuxGlobalContext';
+import { createDefaultLibrary } from './AuxLibrary';
+import { addToContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     toast,
     showJoinCode,
@@ -72,22 +68,17 @@ import {
     unexportGpioPin,
     setGpioPin,
     getGpioPin,
-    sleepPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
     rpioModePin,
     rpioReadPin,
-    rpioReadBufPin,
+    rpioReadSequencePin,
     rpioWritePin,
-    rpioWriteBufPin,
+    rpioWriteSequencePin,
     rpioClosePin,
 } from '../bots';
 import { types } from 'util';
-import {
-    possibleTagNameCases,
-    possibleTagValueCases,
-} from '../bots/test/BotTestHelpers';
 import { remote } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -97,7 +88,6 @@ import {
 import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
-import { shuffle } from 'lodash';
 import { decryptV1 } from '@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -1031,17 +1021,17 @@ describe('AuxLibrary', () => {
             });
 
             it('should return a function that returns true when any of the given functions return true', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(() => false, () => true);
                 expect(filter(bot1)).toEqual(true);
             });
 
             it('should return a function that returns false when all of the given functions return false', () => {
-                const filter = library.api.either(b => false, b => false);
+                const filter = library.api.either(() => false, () => false);
                 expect(filter(bot1)).toEqual(false);
             });
 
             it('should return a function that doesnt have a sort function', () => {
-                const filter = library.api.either(b => false, b => true);
+                const filter = library.api.either(() => false, () => true);
                 expect(typeof filter.sort).toEqual('undefined');
             });
         });
@@ -1567,23 +1557,7 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should support specifying the .aux extension manually', () => {
-                const action = library.api.player.downloadBots(
-                    [bot1, bot2],
-                    'test.aux'
-                );
-                const expected = download(
-                    JSON.stringify({
-                        version: 1,
-                        state: {
-                            [bot1.id]: bot1,
-                            [bot2.id]: bot2,
-                        },
-                    }),
-                    'test.aux',
-                    'application/json'
-                );
-            });
+            it('should support specifying the .aux extension manually', () => {});
         });
 
         describe('player.downloadStory()', () => {
@@ -2446,29 +2420,6 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.sleep()', () => {
-            it('should send a SleepAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.sleep(1000);
-                const expected = remote(
-                    sleepPin(1000),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.sleep(1000);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
         describe('server.rpioInit()', () => {
             it('should send a RpioInitAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
@@ -2590,13 +2541,12 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.rpioReadBuf()', () => {
-            it('should send a RpioReadBufAction in a RemoteAction', () => {
+        describe('server.rpioReadSequence()', () => {
+            it('should send a RpioReadSequenceAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                var buf = new Buffer(10000);
-                const action: any = library.api.server.rpioReadBuf(99, buf);
+                const action: any = library.api.server.rpioReadSequence(99, 10);
                 const expected = remote(
-                    rpioReadBufPin(99, buf),
+                    rpioReadSequencePin(99, 10),
                     undefined,
                     undefined,
                     'task1'
@@ -2607,8 +2557,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                var buf = new Buffer(10000);
-                library.api.server.rpioReadBuf(99, buf);
+                library.api.server.rpioReadSequence(99, 10);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -2638,13 +2587,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.rpioWriteBuf()', () => {
-            it('should send a RpioWriteBufAction in a RemoteAction', () => {
+        describe('server.rpioWriteSequence()', () => {
+            it('should send a RpioWriteSequenceAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
-                var buf = new Buffer(10000);
-                const action: any = library.api.server.rpioWriteBuf(99, buf);
+                const action: any = library.api.server.rpioWriteSequence(99, [
+                    10,
+                    10,
+                ]);
                 const expected = remote(
-                    rpioWriteBufPin(99, buf),
+                    rpioWriteSequencePin(99, [10, 10]),
                     undefined,
                     undefined,
                     'task1'
@@ -2655,8 +2606,7 @@ describe('AuxLibrary', () => {
 
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                var buf = new Buffer(10000);
-                library.api.server.rpioWriteBuf(99, buf);
+                library.api.server.rpioWriteSequence(99, [10, 10]);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
@@ -4012,7 +3962,7 @@ describe('AuxLibrary', () => {
                 return library.api.create({ test: true, abc, def });
             });
 
-            let [newBot] = library.api.shout('create');
+            let [] = library.api.shout('create');
             library.api.shout('abc');
 
             expect(abc).toBeCalledTimes(1);
@@ -4456,9 +4406,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should return an array of results from the other formulas', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1, 2]);
         });
@@ -4572,13 +4519,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onListen whisper to all the targeted bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4599,13 +4539,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onAnyListen shout', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.shout('sayHello', 123);
@@ -4728,13 +4661,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onListen whisper to all the targeted bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4755,13 +4681,6 @@ describe('AuxLibrary', () => {
         });
 
         it('should send a onAnyListen shout', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
