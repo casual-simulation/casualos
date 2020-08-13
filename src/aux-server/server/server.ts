@@ -92,6 +92,8 @@ import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 import mime from 'mime';
 import sortBy from 'lodash/sortBy';
+import { GpioModule } from './modules/GpioModule';
+import { GpioModule2 } from './modules/GpioModule2';
 
 const connect = pify(MongoClient.connect);
 
@@ -963,6 +965,8 @@ export class Server {
                 new AdminModule2(),
                 new FilesModule2(this._config.drives),
                 new WebhooksModule2(),
+                new GpioModule(),
+                new GpioModule2(),
                 checkout.module,
                 backup.module,
                 setupChannel.module,

@@ -550,6 +550,24 @@ const id = uuid();
 player.toast(id);
 ```
 
+### `sleep(time)`
+
+
+Waits the amount of time provided, in ms.
+
+Returns a promise that resolves when the time has been waited.
+
+The **first parameter** is time in ms to wait. 1 second is 1000ms.
+
+#### Examples:
+
+1. Wait 2 seconds before proceeding.
+```typescript
+player.shout("Stop!");
+await sleep(2000);
+player.shout("Hammer Time!");
+```
+
 ## Bot Filters
 
 ### `byTag(tag, value?)`
@@ -2370,6 +2388,317 @@ await server.setupStory("test", {
         destroy(this);
     `
 });
+```
+
+### `server.exportGpio(pin, mode)`
+
+
+This exports a GPIO pin (BCM) on the physical server so that you can access them as inputs or outputs.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been exported.
+
+The **first parameter** is the pin (BCM) on the physical server.
+
+The **second parameter** is 'in' or 'out' to set the pin (BCM) as an input pin or an output pin.
+
+#### Examples:
+
+1. Export pin 17 as output.
+```typescript
+let led_pin = 17;
+
+server.exportGpio(led_pin, 'out');
+```
+
+### `server.unexportGpio(pin, mode)`
+
+
+This unexports a GPIO pin (BCM) on the physical server so that it's freed up once you're done with it.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been unexported.
+
+The **first parameter** is the pin (BCM) on the physical server.
+
+#### Examples:
+
+1. Unexport pin 17.
+```typescript
+let led_pin = 17;
+
+server.exportGpio(led_pin, 'out');
+
+server.unexportGpio(led_pin);
+```
+
+### `server.setGpio(pin, value)`
+
+
+This sets a GPIO pin (BCM) on the physical server to either HIGH (1) or LOW (0).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been set.
+
+The **first parameter** is the pin (BCM) on the physical server.
+
+The **second parameter** is '0' or '1' to set the pin (BCM) as an HIGH or LOW.
+
+#### Examples:
+
+1. Set pin 17 to LOW or 0.
+```typescript
+let led_pin = 17;
+
+server.exportGpio(led_pin, 'out');
+server.setGpio(led_pin, 0);
+```
+
+### `server.getGpio(pin)`
+
+
+This reads a given GPIO pin (BCM) and returns the state/value of the pin.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin (BCM) on the physical server.
+
+#### Examples:
+
+1. Shouts the state of pin 17.
+```typescript
+let led_pin = 17;
+
+server.exportGpio(led_pin, 'out');
+let state = await server.getGpio(led_pin);
+player.shout(state);
+
+```
+
+### `server.rpioInit(options)`
+
+
+Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been initialized.
+
+The **first parameter** is an object with the settings to initialize with.
+
+**gpiomem** can be either `true` or `false`.
+**mapping** can be either `gpio` or `physical`.
+**mock** can be any of `raspi-b-r1` or `raspi-a` or `raspi-b` or `raspi-a+` or `raspi-b+` or `raspi-2` or `raspi-3` or `raspi-zero` or `raspi-zero-w`.
+**close_on_exit** can be `true` or `false`. It is recommended to always be `true`.
+
+
+#### Examples:
+
+1. Initialize rpio with the default options explicitly stated.
+```typescript
+let options = {
+        gpiomem: true,          /* Use /dev/gpiomem */
+        mapping: 'physical',    /* Use the P1-P40 numbering scheme */
+        mock: undefined,        /* Emulate specific hardware in mock mode */
+        close_on_exit: true,    /* On node process exit automatically close rpio */
+}
+
+server.rpioInit(options);
+```
+
+### `server.rpioExit()`
+
+
+Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Manually cleanup rpio.
+```typescript
+server.rpioExit();
+```
+
+### `server.rpioOpen(pin, mode, options)`
+
+
+Open a pin for input or output.
+For input pins, `options` can be used to configure the internal pullup or pulldown resistors.
+For output pins, `options` defines the initial state of the pin, rather than having to issue a separate `.write()` call. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
+
+The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
+
+#### Examples:
+
+1. Configure pin 11 as output.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT');
+```
+
+2. Configure pin 11 as output and initialize the pin as 'LOW'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+```
+
+3. Configure pin 11 as input and initialize the pin as 'PULL_DOWN'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'INPUT', 'PULL_DOWN');
+```
+
+### `server.rpioMode(pin, mode, options)`
+
+
+Switch a pin that has already been opened in one mode to a different mode. 
+This is provided primarily for performance reasons, as it avoids some of the setup work done by `.open()`. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
+
+The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
+
+#### Examples:
+
+1. Change pin 11 mode to output and initialize the pin as 'LOW'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'INPUT');
+server.rpioMode(led_pin, 'OUTPUT', 'LOW');
+```
+
+2. Change pin 11 mode to input and initialize the pin as 'PULL_DOWN'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT');
+server.rpioMode(led_pin, 'INPUT', 'PULL_DOWN');
+```
+
+### `server.rpioRead(pin)`
+
+
+Read the current value of pin, returning either `1` (high) or `0` (low).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin on the physical server.
+
+#### Examples:
+
+1. Shout the state of pin 11.
+```typescript
+var led_pin = 11;
+
+server.rpioOpen(led_pin, 'OUTPUT');
+let state = await server.rpioRead(led_pin);
+
+player.shout(state);
+
+```
+
+### `server.rpioReadSequence(pin, length)`
+
+Read length bits from pin into buffer as fast as possible.
+This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the length of the buffer to read.
+
+#### Examples:
+
+1. Read the value of Pin 16 10 times in a row
+```typescript
+server.rpioReadSequence(16, 10);
+```
+
+### `server.rpioWrite(pin, value)`
+
+
+Set the specified pin either high or low.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'HIGH' or 'LOW' to set the pin as an HIGH or LOW.
+
+#### Examples:
+
+1. Set pin 11 to HIGH.
+```typescript
+var led_pin = 11;
+
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioWrite(led_pin, 'HIGH');
+```
+
+### `server.rpioWriteSequence(pin, buffer)`
+
+
+Write length bits to pin from buffer as fast as possible.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been written to.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is array of numbers.
+
+#### Examples:
+
+1. Write a sequence of numbers to Pin 13 
+```typescript
+
+server.rpioWriteSequence(13, [10, 10]);
+
+```
+
+### `server.rpioClose(pin, options)`
+
+
+Indicate that the pin will no longer be used, and clear any poll events associated with it.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been closed.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PIN_RESET' or 'PIN_PRESERVE' and can be used to configure the state that pin will be left in after close.
+
+#### Examples:
+
+1. Close pin 11 and let the state reset by default.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin);
+```
+
+2. Close pin 11 and preserve the state.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin, 'PIN_PRESERVE');
 ```
 
 ### `server.browseHistory()`

@@ -40,7 +40,6 @@ export type BotActions =
     | SignTagAction
     | RevokeCertificateAction
     | ApplyStateAction;
-``;
 
 /**
  * Defines a set of possible local event types.
@@ -108,6 +107,19 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | ExportGpioPinAction
+    | UnexportGpioPinAction
+    | SetGpioPinAction
+    | GetGpioPinAction
+    | RpioInitAction
+    | RpioExitAction
+    | RpioOpenAction
+    | RpioModeAction
+    | RpioReadAction
+    | RpioReadSequenceAction
+    | RpioWriteAction
+    | RpioWriteSequenceAction
+    | RpioCloseAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1136,6 +1148,211 @@ export interface SetupChannelAction extends AsyncAction {
 }
 
 /**
+ * Export a pin (BCM) for use.
+ */
+export interface ExportGpioPinAction extends AsyncAction {
+    type: 'export_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to export.
+     */
+    pin: number;
+
+    /**
+     * The mode you want to configure your pin (BCM) as.
+     */
+    mode: 'in' | 'out';
+}
+
+/**
+ * Unexport a pin (BCM) that is done being used.
+ */
+export interface UnexportGpioPinAction extends AsyncAction {
+    type: 'unexport_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to unexport.
+     */
+    pin: number;
+}
+
+/**
+ * Set the value of the provided pin (BCM).
+ */
+export interface SetGpioPinAction extends AsyncAction {
+    type: 'set_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin (BCM). Either High (0) or Low (1)
+     */
+    value: 0 | 1;
+}
+
+/**
+ * Get the value of the provided pin (BCM).
+ */
+export interface GetGpioPinAction extends AsyncAction {
+    type: 'get_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to use.
+     */
+    pin: number;
+}
+
+/**
+ * Initialize rpio with the provided settings.
+ */
+export interface RpioInitAction extends AsyncAction {
+    type: 'rpio_init';
+
+    /**
+     * Defaults:
+     * gpiomem: true            Use /dev/gpiomem
+     *                          true | false
+     * mapping: 'physical'      Use the P1-P40 numbering scheme
+     *                          gpio | physical
+     * mock: undefined          Emulate specific hardware in mock mode
+     *                          raspi-b-r1 | raspi-a | raspi-b | raspi-a+ | raspi-b+ | raspi-2 | raspi-3 | raspi-zero | raspi-zero-w
+     * close_on_exit: true      On node process exit automatically close rpio
+     *                          true | false
+     */
+    options: object;
+}
+
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ */
+export interface RpioExitAction extends AsyncAction {
+    type: 'rpio_exit';
+}
+/**
+ * Open a pin for use.
+ */
+export interface RpioOpenAction extends AsyncAction {
+    type: 'rpio_open';
+
+    /**
+     * The pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want toconfigure your pin as.
+     */
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+
+/**
+ * Set the mode of the provided pin.
+ */
+export interface RpioModeAction extends AsyncAction {
+    type: 'rpio_mode';
+
+    /**
+     * The pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want to set your pin as.
+     */
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+
+/**
+ * Read the value of the provided pin.
+ */
+export interface RpioReadAction extends AsyncAction {
+    type: 'rpio_read';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+}
+
+/**
+ * Read the buffer of the provided pin.
+ */
+export interface RpioReadSequenceAction extends AsyncAction {
+    type: 'rpio_read_sequence';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+    /**
+     * The length of the buffer.
+     */
+    length: number;
+}
+
+/**
+ * Write a new value for the provided pin.
+ */
+export interface RpioWriteAction extends AsyncAction {
+    type: 'rpio_write';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin. Either High (0) or Low (1)
+     */
+    value: 'HIGH' | 'LOW';
+}
+
+/**
+ * Write the buffer to the provided pin.
+ */
+export interface RpioWriteSequenceAction extends AsyncAction {
+    type: 'rpio_write_sequence';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+    /**
+     * The buffer that you want write.
+     */
+    buffer: number[];
+}
+
+/**
+ * Close a pin to remove it from use.
+ */
+export interface RpioCloseAction extends AsyncAction {
+    type: 'rpio_close';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
+     */
+    options?: 'PIN_RESET' | 'PIN_PRESERVE';
+}
+/**
  * Defines an event that sets some text on the user's clipboard.
  */
 export interface SetClipboardAction {
@@ -2103,6 +2320,274 @@ export function setupStory(
         type: 'setup_story',
         channel,
         botOrMod,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Exports a pin (BCM) if it doesn't exist.
+ * @param pin The physical BCM Pin on the server.
+ * @param mode The mode of the BCM pin.
+ * @param taskId The ID of the async task.
+ */
+export function exportGpioPin(
+    pin: number,
+    mode: 'in' | 'out',
+    taskId?: string | number,
+    playerId?: string
+): ExportGpioPinAction {
+    return {
+        type: 'export_gpio_pin',
+        pin,
+        mode,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Unexports a pin (BCM) if it exists.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function unexportGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): UnexportGpioPinAction {
+    return {
+        type: 'unexport_gpio_pin',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sets the value of a pin (BCM) to HIGH/LOW.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function setGpioPin(
+    pin: number,
+    value: 0 | 1,
+    taskId?: string | number,
+    playerId?: string
+): SetGpioPinAction {
+    return {
+        type: 'set_gpio_pin',
+        pin,
+        value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Gets the current state of a pin (BCM).
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function getGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): GetGpioPinAction {
+    return {
+        type: 'get_gpio_pin',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sends an event to the server to initialize rpio with provided settings
+ * @param options An object containing values to initilize with.
+ * @param taskId The ID of the async task.
+ *
+ * @example
+ * // Initialize with default settings
+ * server.rpioInit({
+ *   gpiomem: true,
+ *   mapping: 'physical',
+ *   mock: undefined,
+ *   close_on_exit: false
+ * });
+ */
+export function rpioInitPin(
+    options: object,
+    taskId?: string | number,
+    playerId?: string
+): RpioInitAction {
+    return {
+        type: 'rpio_init',
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ * @param taskId The ID of the async task.
+ */
+export function rpioExitPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioExitAction {
+    return {
+        type: 'rpio_exit',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Opens a pin up for use and sets its initial mode/state.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioOpenPin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioOpenAction {
+    return {
+        type: 'rpio_open',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Changes a pin's mode/value.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioModePin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioModeAction {
+    return {
+        type: 'rpio_mode',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Reads a pin's current value.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioReadAction {
+    return {
+        type: 'rpio_read',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Reads a pin's current buffer.
+ * @param pin The physical BCM Pin on the server.
+ * @param length The length of the buffer.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadSequencePin(
+    pin: number,
+    length: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioReadSequenceAction {
+    return {
+        type: 'rpio_read_sequence',
+        pin,
+        length,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sets a pin's value.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWritePin(
+    pin: number,
+    value: 'HIGH' | 'LOW',
+    taskId?: string | number,
+    playerId?: string
+): RpioWriteAction {
+    return {
+        type: 'rpio_write',
+        pin,
+        value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Writes to a pin's buffer.
+ * @param pin The physical BCM Pin on the server.
+ * @param buffer The buffer to write to the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWriteSequencePin(
+    pin: number,
+    buffer: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioWriteSequenceAction {
+    return {
+        type: 'rpio_write_sequence',
+        pin,
+        buffer,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sends an event to the server to close a pin and what state to leave it in.
+ * @param pin The physical pin number.
+ * @param options The state to leave the pin in upon closing.
+ * @param taskId The ID of the async task.
+ */
+export function rpioClosePin(
+    pin: number,
+    options?: 'PIN_RESET' | 'PIN_PRESERVE',
+    taskId?: string | number,
+    playerId?: string
+): RpioCloseAction {
+    return {
+        type: 'rpio_close',
+        pin,
+        options,
         taskId,
         playerId,
     };

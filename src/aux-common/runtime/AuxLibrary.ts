@@ -88,6 +88,19 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    exportGpioPin,
+    unexportGpioPin,
+    setGpioPin,
+    getGpioPin,
+    rpioInitPin,
+    rpioExitPin,
+    rpioOpenPin,
+    rpioModePin,
+    rpioReadPin,
+    rpioReadSequencePin,
+    rpioWritePin,
+    rpioWriteSequencePin,
+    rpioClosePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -312,6 +325,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteShout,
             webhook,
             uuid,
+            sleep,
 
             __energyCheck,
 
@@ -380,6 +394,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupStory,
+                exportGpio,
+                unexportGpio,
+                setGpio,
+                getGpio,
+                rpioInit,
+                rpioExit,
+                rpioOpen,
+                rpioMode,
+                rpioRead,
+                rpioReadSequence,
+                rpioWrite,
+                rpioWriteSequence,
+                rpioClose,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1430,6 +1457,227 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sends an event to the server to export a pin (BCM) as input or output.
+     * @param pin The physical pin (BCM) number.
+     * @param mode The mode of the pin (BCM).
+     */
+    function exportGpio(pin: number, mode: 'in' | 'out') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            exportGpioPin(pin, mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to unexport a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    function unexportGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            unexportGpioPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+     * @param pin The physical pin (BCM) number.
+     * @param value The mode of the pin (BCM).
+     */
+    function setGpio(pin: number, value: 0 | 1) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            setGpioPin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to get the value of a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    function getGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getGpioPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to initialize rpio with provided settings
+     * @param options An object containing values to initilize with.
+     *
+     * @example
+     * // Initialize with default settings
+     * server.rpioInit({
+     *   gpiomem: true,
+     *   mapping: 'physical',
+     *   mock: undefined,
+     *   close_on_exit: false
+     * });
+     */
+    function rpioInit(options: object) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioInitPin(options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shuts down rpio, unmaps, and clears everything.
+     */
+    function rpioExit() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioExitPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to open a pin as input or output.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The state you want to initialize your pin as.
+     */
+    function rpioOpen(
+        pin: number,
+        mode: 'INPUT' | 'OUTPUT' | 'PWM',
+        options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioOpenPin(pin, mode, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to change the mode of a pin as input or output.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The state you want to initialize your pin as.
+     */
+    function rpioMode(
+        pin: number,
+        mode: 'INPUT' | 'OUTPUT' | 'PWM',
+        options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioModePin(pin, mode, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to read the value of a pin.
+     * @param pin The physical BCM pin number.
+     */
+    function rpioRead(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Reads a pin's current buffer.
+     * @param pin The physical BCM Pin on the server.
+     * @param length The length of the buffer.
+     */
+    function rpioReadSequence(pin: number, length: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadSequencePin(pin, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+     * @param pin The physical pin number.
+     * @param value The mode of the pin.
+     */
+    function rpioWrite(pin: number, value: 'HIGH' | 'LOW') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWritePin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Writes to a pin's current buffer.
+     * @param pin The physical BCM Pin on the server.
+     * @param buffer The buffer to write to  the pin.
+     */
+    function rpioWriteSequence(pin: number, buffer: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWriteSequencePin(pin, buffer),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to close a pin and what state to leave it in.
+     * @param pin The physical pin number.
+     * @param options The state to leave the pin in upon closing.
+     */
+    function rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioClosePin(pin, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
      */
@@ -1790,6 +2038,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function uuid() {
         return uuidv4();
+    }
+
+    /**
+     * Sleeps for time in ms.
+     * @param time The Time to sleep in ms. 1 second is 1000 ms.
+     */
+    function sleep(time: number) {
+        let sleepy = new Promise(resolve => setTimeout(resolve, time));
+        return sleepy;
     }
 
     // /**

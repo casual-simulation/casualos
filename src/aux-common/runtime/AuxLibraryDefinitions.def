@@ -1969,6 +1969,12 @@ declare global {
     function uuid(): string;
 
     /**
+     * Sleeps for time in ms.
+     * @param time Time in ms. 1 second is 1000ms.
+     */
+    function sleep(time: number): Promise<void>;
+
+    /**
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
@@ -2760,8 +2766,106 @@ declare global {
         setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
+         * Sends an event to the server to export a pin (BCM) as input or output.
+         * @param pin The physical pin (BCM) number.
+         * @param mode The mode of the pin (BCM).
+         */
+        exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
+
+        /**
+         * Sends an event to the server to unexport a pin (BCM).
+         * @param pin The physical pin (BCM) number.
+         */
+        unexportGpio(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+         * @param pin The physical pin (BCM) number.
+         * @param value The mode of the pin (BCM).
+         */
+        setGpio(pin: number, value: 0 | 1): Promise<void>;
+
+        /**
+         * Sends an event to the server to get the value of a pin (BCM).
+         * @param pin The physical pin (BCM) number.
+         */
+        getGpio(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to initialize rpio with provided settings
+         * @param options An object containing values to initilize with.
+         * 
+         * @example
+         * // Initialize with default settings
+         * server.rpioInit({
+         *   gpiomem: true,
+         *   mapping: 'physical',
+         *   mock: undefined,
+         *   close_on_exit: false
+         * }); 
+         */
+        rpioInit(options?: object): Promise<void>;
+
+        /**
+         * Shuts down rpio, unmaps, and clears everything.
+         */
+        rpioExit(): Promise<void>;
+
+        /**
+         * Sends an event to the server to open a pin as input or output and set its initial state.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
+         */
+        rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to change the mode and optionally the state, of a previously opened pin.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
+         */
+        rpioMode(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to read the value of a pin.
+         * @param pin The physical pin number.
+         */
+        rpioRead(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to read the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to read.
+         * @param length The length of the buffer.
+         */
+        rpioReadBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+         * @param pin The physical pin number.
+         * @param value The mode of the pin.
+         */
+        rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+        /**
+         * Sends an event to the server to write to the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to write to.
+         * @param length The length of the buffer.
+         */
+        rpioWriteBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to close a pin and what state to leave it in.
+         * @param pin The physical pin number.
+         * @param options The state to leave the pin in upon closing.
+         */
+        rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
+
+        /**
          * Executes the given shell script on the server.
-         * @param script The shell script  that should be executed.
+         * @param script The shell script that should be executed.
          */
         shell(script: string): ShellAction;
     
