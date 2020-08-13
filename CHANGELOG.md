@@ -17,6 +17,26 @@
     -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
 -   Replaced builder with ab-1.
     -   ab-1 is a new version of builder which is designed to be easy to extend and improve.
+-   Added the `adminSpace.setPassword(oldPassword, newPassword)` function.
+    -   Allows changing the password that is used to unlock admin space.
+    -   The first parameter is the old password that was used to unlock the space.
+    -   The second parameter is the new password that should be used to unlock the space.
+-   Added several functions to allow using the GPIO pins on Rasberry Pi.
+    -   Currently, all of these functions are experimental and only work on Raspberry Pi.
+    -   See the documentation for more information.
+    -   `server.exportGpio(pin, mode)`
+    -   `server.unexportGpio(pin, mode)`
+    -   `server.setGpio(pin, value)`
+    -   `server.getGpio(pin)`
+    -   `server.rpioInit(options)`
+    -   `server.rpioExit()`
+    -   `server.rpioOpen(pin, mode, options)`
+    -   `server.rpioMode(pin, mode, options)`
+    -   `server.rpioRead(pin)`
+    -   `server.rpioReadSequence(pin, length)`
+    -   `server.rpioWrite(pin, value)`
+    -   `server.rpioWriteSequence(pin, buffer)`
+    -   `server.rpioClose(pin, options)`
 
 ### :bug: Bug Fixes
 
