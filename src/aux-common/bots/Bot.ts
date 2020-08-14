@@ -959,6 +959,11 @@ export const AUX_BOT_VERSION: number = 1;
 export const MEET_PORTAL: string = 'meetPortal';
 
 /**
+ * The name of the tag portal.
+ */
+export const TAG_PORTAL: string = 'tagPortal';
+
+/**
  * The name of the data portal.
  */
 export const DATA_PORTAL: string = 'dataPortal';

@@ -1,0 +1,45 @@
+.tag-portal {
+    position: absolute;
+    z-index: 3;
+    overflow: hidden;
+    background: #fff;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+.tag-portal.invisible {
+    display: none;
+}
+
+.tag-portal .editor-wrapper {
+    height: 100%;
+    margin-top: 0;
+}
+
+.tag-portal .tag-value-editor-wrapper {
+    max-height: 80vh;
+}
+
+.other-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.md-button.md-fab.exit-sheet.md-theme-default {
+    background-color: #fff;
+}
+
+.md-button.exit-sheet .md-icon.md-icon-font.md-theme-default {
+    color: #333;
+}
+
+.exit-sheet {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    margin-right: 18px;
+    margin-bottom: 16px;
+}

@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <load-app>
+            <tag-portal></tag-portal>
             <meet-portal>
                 <md-toolbar v-if="showChatBar">
                     <div class="md-toolbar-section-start">

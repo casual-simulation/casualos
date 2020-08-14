@@ -2326,6 +2326,28 @@ export function calculateStringTagValue(
 }
 
 /**
+ * Calcualtes the given of the given tag on the given bot as a bot ID.
+ * @param context The context.
+ * @param bot The bot.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBotIdTagValue(
+    context: BotCalculationContext,
+    bot: Object,
+    tag: string,
+    defaultValue: string
+): string {
+    const result = calculateBotValue(context, bot, tag);
+    if (typeof result === 'string' && result !== null) {
+        return result;
+    } else if (isBot(result)) {
+        return result.id;
+    }
+    return defaultValue;
+}
+
+/**
  * Determines if the given bot is able to be destroyed.
  * Defaults to true.
  * @param calc The bot calculation context.

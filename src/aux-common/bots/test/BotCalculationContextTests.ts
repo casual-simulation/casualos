@@ -58,6 +58,7 @@ import {
     getBotScaleMode,
     getBotMeetPortalAnchorPoint,
     getBotMeetPortalAnchorPointOffset,
+    calculateBotIdTagValue,
 } from '../BotCalculations';
 import {
     Bot,
@@ -372,6 +373,52 @@ export function botCalculationContextTests(
 
             const calc = createPrecalculatedContext([bot]);
             expect(calculateStringTagValue(calc, bot, 'auxTag', 'empty')).toBe(
+                'abc'
+            );
+        });
+    });
+
+    describe('calculateBotIdTagValue()', () => {
+        stringTagValueTests('test', (value, expected) => {
+            let bot = createBot('test', {
+                tag: value,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'test')).toBe(
+                expected
+            );
+        });
+
+        it('should return the ID of the bot', () => {
+            let bot = createBot('test', {
+                tag: createBot('botId'),
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
+                'botId'
+            );
+        });
+
+        it('should return the default if the object is not a bot', () => {
+            let bot = createBot('test', {
+                tag: {},
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
+                'empty'
+            );
+        });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 'abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'auxTag', 'empty')).toBe(
                 'abc'
             );
         });
