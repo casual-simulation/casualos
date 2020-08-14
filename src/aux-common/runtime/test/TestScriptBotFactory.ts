@@ -77,4 +77,5 @@ export const testScriptBotInterface: RuntimeBotInterface = {
             return undefined;
         }
     },
+    notifyChange() {},
 };

@@ -9,7 +9,7 @@ import {
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
 import { createBot, botAdded, botRemoved } from '../bots';
-import { RealtimeEditMode } from './RuntimeBot';
+import { RealtimeEditMode, RuntimeBatcher } from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import uuid from 'uuid/v4';
@@ -20,9 +20,13 @@ jest.mock('uuid/v4');
 describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
     let factory: TestScriptBotFactory;
+    let notifier: RuntimeBatcher;
 
     beforeEach(() => {
         factory = new TestScriptBotFactory();
+        notifier = {
+            notifyChange: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             {
                 hash: 'hash',
@@ -35,7 +39,8 @@ describe('AuxGlobalContext', () => {
                 supportsAR: false,
                 supportsVR: false,
             },
-            factory
+            factory,
+            notifier
         );
     });
 
@@ -124,6 +129,16 @@ describe('AuxGlobalContext', () => {
                 ),
             ]);
         });
+
+        it('should notify of a change', () => {
+            context.createBot(
+                createBot('test1', {
+                    value: 123,
+                })
+            );
+
+            expect(notifier.notifyChange).toBeCalledTimes(1);
+        });
     });
 
     describe('destroyBot()', () => {
@@ -173,6 +188,15 @@ describe('AuxGlobalContext', () => {
             const actions = context.dequeueActions();
             expect(actions).toEqual([]);
         });
+
+        it('should notify of a change', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+
+            context.destroyBot(bot1);
+
+            expect(notifier.notifyChange).toBeCalledTimes(1);
+        });
     });
 
     describe('enqueueError()', () => {
@@ -181,6 +205,13 @@ describe('AuxGlobalContext', () => {
             expect(() => {
                 context.enqueueError(err);
             }).toThrow(err);
+        });
+
+        it('should notify of a change', () => {
+            const err = new Error();
+            context.enqueueError(err);
+
+            expect(notifier.notifyChange).toBeCalledTimes(1);
         });
     });
 

@@ -300,7 +300,7 @@ export function createRuntimeBot(
  * Defines an interface for an object that provides the API that script bots use for housekeeping.
  * T is the type of bots that the generated script bots are representing.
  */
-export interface RuntimeBotInterface {
+export interface RuntimeBotInterface extends RuntimeBatcher {
     /**
      * Updates the tag of the given bot.
      * Returns the realtime edit mode that should be used for this particular assignment.
@@ -361,6 +361,17 @@ export interface RuntimeBotFactory {
      * @param bot The bot.
      */
     destroyScriptBot(bot: RuntimeBot): RealtimeEditMode;
+}
+
+/**
+ * Defines an interface for an object that is able to batch script results.
+ */
+export interface RuntimeBatcher {
+    /**
+     * Notifies the batcher that a change has happened and that it should schedule
+     * a handler to grab the changes and apply them.
+     */
+    notifyChange(): void;
 }
 
 /**

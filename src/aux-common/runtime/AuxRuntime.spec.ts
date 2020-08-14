@@ -2613,6 +2613,64 @@ describe('AuxRuntime', () => {
             expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
         });
 
+        it('should dispatch events from promise callbacks when using await', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: `@await Promise.resolve(0);
+                        player.toast("abc");`,
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('abc')]]);
+        });
+
+        it('should dispatch events that happen between async events', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: `@await Promise.resolve(0);
+                        player.toast("abc");
+
+                        // Never gets resolved but that is fine because we
+                        // want to ensure that the toast happens
+                        await new Promise(() => {});`,
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([[toast('abc')]]);
+        });
+
+        it('should dispatch changes that happen between async events', async () => {
+            runtime.botsAdded([
+                createBot('test1', {
+                    hello: `@await Promise.resolve(0);
+                        bot.tags.abc = true;
+
+                        // Never gets resolved but that is fine because we
+                        // want to ensure that the toast happens
+                        await new Promise(() => {});`,
+                }),
+            ]);
+            runtime.shout('hello');
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                [
+                    botUpdated('test1', {
+                        tags: {
+                            abc: true,
+                        },
+                    }),
+                ],
+            ]);
+        });
+
         it('should handle a bot getting destroyed twice due to a setTimeout() callback', async () => {
             runtime.botsAdded([
                 createBot('test1', {

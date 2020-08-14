@@ -14,6 +14,7 @@ import {
     RuntimeBotFactory,
     RuntimeBotsState,
     RealtimeEditMode,
+    RuntimeBatcher,
 } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -283,21 +284,25 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
+    private _batcher: RuntimeBatcher;
 
     /**
      * Creates a new global context.
      * @param version The version number.
      * @param device The device that we're running on.
      * @param scriptFactory The factory that should be used to create new script bots.
+     * @param batcher The batcher that should be used to batch changes.
      */
     constructor(
         version: AuxVersion,
         device: AuxDevice,
-        scriptFactory: RuntimeBotFactory
+        scriptFactory: RuntimeBotFactory,
+        batcher: RuntimeBatcher
     ) {
         this.version = version;
         this.device = device;
         this._scriptFactory = scriptFactory;
+        this._batcher = batcher;
     }
 
     /**
@@ -311,9 +316,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 this.actions[index] = action;
             } else {
                 this.actions.push(action);
+                this._batcher.notifyChange();
             }
         } else {
             this.actions.push(action);
+            this._batcher.notifyChange();
         }
     }
 
@@ -328,6 +335,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             throw error;
         }
         this.errors.push(error);
+        this._batcher.notifyChange();
     }
 
     dequeueErrors(): ScriptError[] {

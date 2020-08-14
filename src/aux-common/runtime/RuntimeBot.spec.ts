@@ -24,6 +24,7 @@ describe('RuntimeBot', () => {
     let getListenerMock: jest.Mock;
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
+    let notifyChangeMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -37,12 +38,6 @@ describe('RuntimeBot', () => {
             supportsAR: true,
             supportsVR: false,
         };
-        context = new MemoryGlobalContext(
-            version,
-            device,
-            new TestScriptBotFactory()
-        );
-
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {
             bot.values[tag] = value;
@@ -61,6 +56,7 @@ describe('RuntimeBot', () => {
         getSignatureMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
             return bot.signatures[tag];
         });
+        notifyChangeMock = jest.fn();
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
@@ -69,7 +65,14 @@ describe('RuntimeBot', () => {
             getRawValue: getRawValueMock,
             getListener: getListenerMock,
             getSignature: getSignatureMock,
+            notifyChange: notifyChangeMock,
         };
+        context = new MemoryGlobalContext(
+            version,
+            device,
+            new TestScriptBotFactory(),
+            manager
+        );
 
         precalc = createCompiledBot(
             'test',

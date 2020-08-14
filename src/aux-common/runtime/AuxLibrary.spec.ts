@@ -97,7 +97,7 @@ import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
-import { RuntimeBot } from './RuntimeBot';
+import { RuntimeBot, RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -113,6 +113,7 @@ describe('AuxLibrary', () => {
     let context: MemoryGlobalContext;
     let version: AuxVersion;
     let device: AuxDevice;
+    let notifier: RuntimeBatcher;
 
     beforeEach(() => {
         version = {
@@ -126,10 +127,14 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
         };
+        notifier = {
+            notifyChange: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             version,
             device,
-            new TestScriptBotFactory()
+            new TestScriptBotFactory(),
+            notifier
         );
         library = createDefaultLibrary(context);
     });
