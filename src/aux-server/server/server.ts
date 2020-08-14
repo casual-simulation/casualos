@@ -958,6 +958,9 @@ export class Server {
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
+        const gpioModules = this._config.gpio
+            ? [new GpioModule(), new GpioModule2()]
+            : [];
         const manager = new AuxCausalRepoManager(
             serverUser,
             client,
@@ -965,8 +968,7 @@ export class Server {
                 new AdminModule2(),
                 new FilesModule2(this._config.drives),
                 new WebhooksModule2(),
-                new GpioModule(),
-                new GpioModule2(),
+                ...gpioModules,
                 checkout.module,
                 backup.module,
                 setupChannel.module,

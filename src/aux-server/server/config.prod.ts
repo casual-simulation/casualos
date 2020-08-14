@@ -95,6 +95,8 @@ if (sandboxType !== 'deno' && sandboxType !== 'none') {
 const botsTimeToLive =
     parseInt(process.env.BOTS_TIME_TO_LIVE) || 60 * 60 * 24 * 7;
 
+const gpio = process.env.GPIO === 'true' || false;
+
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -158,6 +160,7 @@ const config: Config = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     drives: path.resolve(__dirname, '..', '..', 'drives'),
     sandbox: sandboxType,
+    gpio: gpio,
 };
 
 export default config;
