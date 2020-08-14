@@ -8,6 +8,7 @@ to get values out of IME input events immediately.
     v-bind="attributes"
     v-on:input="onInput"
     v-on="listeners"
+    v-bind:value="model"
     @focus="onFocus"
     @blur="onBlur">
 </template>

@@ -25,7 +25,7 @@ declare module '*.gltf' {
 }
 
 declare module '*.json' {
-    const json: string;
+    const json: any;
     export default json;
 }
 

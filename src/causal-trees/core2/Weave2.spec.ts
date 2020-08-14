@@ -43,6 +43,27 @@ describe('Weave2', () => {
             expect(weave.getAtoms()).toEqual([root, root2]);
         });
 
+        it('should reject root atoms that pass the cardinality of another root', () => {
+            const root = atom(
+                atomId('a', 0, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            const root2 = atom(
+                atomId('b', 0, undefined, { group: 'abc', number: 1 }),
+                null,
+                {}
+            );
+            weave.insert(root);
+            const result = weave.insert(root2);
+
+            expect(result).toEqual({
+                type: 'cardinality_violated',
+                atom: root2,
+            });
+            expect(weave.getAtoms()).toEqual([root]);
+        });
+
         it('should reject the root atom if it doesnt match its own hash', () => {
             const root = atom(atomId('a', 0), null, {});
             root.hash = 'bad';

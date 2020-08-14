@@ -26,6 +26,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
+import bootstrap from './builder/ab-1.bootstrap.json';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -92,11 +93,19 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
+            const params = new URLSearchParams(location.search);
+            const forceSignedScripts =
+                params.get('forceSignedScripts') === 'true';
+            if (forceSignedScripts) {
+                console.log('[AppManager] Forcing signed scripts for ' + id);
+            }
             return new BotManager(this._user, id, {
                 version: this.version.latestTaggedVersion,
                 versionHash: this.version.gitCommit,
                 device: this._deviceConfig,
                 builder: JSON.stringify(builder),
+                bootstrapState: bootstrap,
+                forceSignedScripts,
             });
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);

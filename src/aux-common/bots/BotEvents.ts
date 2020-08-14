@@ -8,6 +8,8 @@ import {
     RemoteActionError,
     DeviceActionResult,
     DeviceActionError,
+    remoteResult,
+    remoteError,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
@@ -34,8 +36,10 @@ export type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
     | ApplyStateAction;
-``;
 
 /**
  * Defines a set of possible local event types.
@@ -100,9 +104,26 @@ export type AsyncActions =
     | ClearSpaceAction
     | SendWebhookAction
     | UnlockSpaceAction
+    | SetSpacePasswordAction
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
+    | ExportGpioPinAction
+    | UnexportGpioPinAction
+    | SetGpioPinAction
+    | GetGpioPinAction
+    | RpioInitAction
+    | RpioExitAction
+    | RpioOpenAction
+    | RpioModeAction
+    | RpioReadAction
+    | RpioReadSequenceAction
+    | RpioWriteAction
+    | RpioWriteSequenceAction
+    | RpioCloseAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -180,6 +201,89 @@ export interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
     update: PartialBot;
+}
+
+/**
+ * Defines the set of options required for creating a certificate.
+ */
+export interface CreateCertificateOptions {
+    /**
+     * The keypair that should be used for the certificate.
+     */
+    keypair: string;
+
+    /**
+     * The ID of the certified bot that is signing the new certificate.
+     */
+    signingBotId?: string;
+
+    /**
+     * The password that should be used to sign the new certificate.
+     */
+    signingPassword: string;
+}
+
+/**
+ * Defines a bot event that creates a new certificate from the given keypair.
+ */
+export interface CreateCertificateAction
+    extends AsyncAction,
+        CreateCertificateOptions {
+    type: 'create_certificate';
+}
+
+/**
+ * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
+ */
+export interface SignTagAction extends AsyncAction {
+    type: 'sign_tag';
+
+    /**
+     * The ID of the certified bot that is signing the tag value.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the value.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the bot whose tag is being signed.
+     */
+    botId: string;
+
+    /**
+     * The tag that should be signed.
+     */
+    tag: string;
+
+    /**
+     * The value that should be signed.
+     */
+    value: any;
+}
+
+/**
+ * Defines a bot event that revokes a certificate.
+ */
+export interface RevokeCertificateAction extends AsyncAction {
+    type: 'revoke_certificate';
+
+    /**
+     * The ID of the bot that should be used to sign the revocation.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the revocation.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the certificate that should be revoked.
+     */
+    certificateBotId: string;
 }
 
 /**
@@ -1045,6 +1149,211 @@ export interface SetupChannelAction extends AsyncAction {
 }
 
 /**
+ * Export a pin (BCM) for use.
+ */
+export interface ExportGpioPinAction extends AsyncAction {
+    type: 'export_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to export.
+     */
+    pin: number;
+
+    /**
+     * The mode you want to configure your pin (BCM) as.
+     */
+    mode: 'in' | 'out';
+}
+
+/**
+ * Unexport a pin (BCM) that is done being used.
+ */
+export interface UnexportGpioPinAction extends AsyncAction {
+    type: 'unexport_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to unexport.
+     */
+    pin: number;
+}
+
+/**
+ * Set the value of the provided pin (BCM).
+ */
+export interface SetGpioPinAction extends AsyncAction {
+    type: 'set_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin (BCM). Either High (0) or Low (1)
+     */
+    value: 0 | 1;
+}
+
+/**
+ * Get the value of the provided pin (BCM).
+ */
+export interface GetGpioPinAction extends AsyncAction {
+    type: 'get_gpio_pin';
+
+    /**
+     * The pin (BCM) that you want to use.
+     */
+    pin: number;
+}
+
+/**
+ * Initialize rpio with the provided settings.
+ */
+export interface RpioInitAction extends AsyncAction {
+    type: 'rpio_init';
+
+    /**
+     * Defaults:
+     * gpiomem: true            Use /dev/gpiomem
+     *                          true | false
+     * mapping: 'physical'      Use the P1-P40 numbering scheme
+     *                          gpio | physical
+     * mock: undefined          Emulate specific hardware in mock mode
+     *                          raspi-b-r1 | raspi-a | raspi-b | raspi-a+ | raspi-b+ | raspi-2 | raspi-3 | raspi-zero | raspi-zero-w
+     * close_on_exit: true      On node process exit automatically close rpio
+     *                          true | false
+     */
+    options: object;
+}
+
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ */
+export interface RpioExitAction extends AsyncAction {
+    type: 'rpio_exit';
+}
+/**
+ * Open a pin for use.
+ */
+export interface RpioOpenAction extends AsyncAction {
+    type: 'rpio_open';
+
+    /**
+     * The pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want toconfigure your pin as.
+     */
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+
+/**
+ * Set the mode of the provided pin.
+ */
+export interface RpioModeAction extends AsyncAction {
+    type: 'rpio_mode';
+
+    /**
+     * The pin that you want to configure.
+     */
+    pin: number;
+
+    /**
+     * The mode you want to set your pin as.
+     */
+    mode: 'INPUT' | 'OUTPUT' | 'PWM';
+
+    /**
+     * The state you want to initialize your pin as.
+     */
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+
+/**
+ * Read the value of the provided pin.
+ */
+export interface RpioReadAction extends AsyncAction {
+    type: 'rpio_read';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+}
+
+/**
+ * Read the buffer of the provided pin.
+ */
+export interface RpioReadSequenceAction extends AsyncAction {
+    type: 'rpio_read_sequence';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+    /**
+     * The length of the buffer.
+     */
+    length: number;
+}
+
+/**
+ * Write a new value for the provided pin.
+ */
+export interface RpioWriteAction extends AsyncAction {
+    type: 'rpio_write';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The value of the pin. Either High (0) or Low (1)
+     */
+    value: 'HIGH' | 'LOW';
+}
+
+/**
+ * Write the buffer to the provided pin.
+ */
+export interface RpioWriteSequenceAction extends AsyncAction {
+    type: 'rpio_write_sequence';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+    /**
+     * The buffer that you want write.
+     */
+    buffer: number[];
+}
+
+/**
+ * Close a pin to remove it from use.
+ */
+export interface RpioCloseAction extends AsyncAction {
+    type: 'rpio_close';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
+     */
+    options?: 'PIN_RESET' | 'PIN_PRESERVE';
+}
+/**
  * Defines an event that sets some text on the user's clipboard.
  */
 export interface SetClipboardAction {
@@ -1233,6 +1542,28 @@ export interface UnlockSpaceAction extends AsyncAction {
      * The password to use to unlock the space.
      */
     password: string;
+}
+
+/**
+ * Defines an event that sets the password used to unlock the given space for editing.
+ */
+export interface SetSpacePasswordAction extends AsyncAction {
+    type: 'set_space_password';
+
+    /**
+     * The space to set the password for.
+     */
+    space: BotSpace;
+
+    /**
+     * The old password for the space.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the space.
+     */
+    newPassword: string;
 }
 
 /**
@@ -2018,6 +2349,274 @@ export function setupStory(
 }
 
 /**
+ * Exports a pin (BCM) if it doesn't exist.
+ * @param pin The physical BCM Pin on the server.
+ * @param mode The mode of the BCM pin.
+ * @param taskId The ID of the async task.
+ */
+export function exportGpioPin(
+    pin: number,
+    mode: 'in' | 'out',
+    taskId?: string | number,
+    playerId?: string
+): ExportGpioPinAction {
+    return {
+        type: 'export_gpio_pin',
+        pin,
+        mode,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Unexports a pin (BCM) if it exists.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function unexportGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): UnexportGpioPinAction {
+    return {
+        type: 'unexport_gpio_pin',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sets the value of a pin (BCM) to HIGH/LOW.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function setGpioPin(
+    pin: number,
+    value: 0 | 1,
+    taskId?: string | number,
+    playerId?: string
+): SetGpioPinAction {
+    return {
+        type: 'set_gpio_pin',
+        pin,
+        value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Gets the current state of a pin (BCM).
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function getGpioPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): GetGpioPinAction {
+    return {
+        type: 'get_gpio_pin',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sends an event to the server to initialize rpio with provided settings
+ * @param options An object containing values to initilize with.
+ * @param taskId The ID of the async task.
+ *
+ * @example
+ * // Initialize with default settings
+ * server.rpioInit({
+ *   gpiomem: true,
+ *   mapping: 'physical',
+ *   mock: undefined,
+ *   close_on_exit: false
+ * });
+ */
+export function rpioInitPin(
+    options: object,
+    taskId?: string | number,
+    playerId?: string
+): RpioInitAction {
+    return {
+        type: 'rpio_init',
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Shuts down rpio, unmaps, and clears everything.
+ * @param taskId The ID of the async task.
+ */
+export function rpioExitPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioExitAction {
+    return {
+        type: 'rpio_exit',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Opens a pin up for use and sets its initial mode/state.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioOpenPin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioOpenAction {
+    return {
+        type: 'rpio_open',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Changes a pin's mode/value.
+ * @param pin The physical pin on the server.
+ * @param mode The mode of the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioModePin(
+    pin: number,
+    mode: 'INPUT' | 'OUTPUT' | 'PWM',
+    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioModeAction {
+    return {
+        type: 'rpio_mode',
+        pin,
+        mode,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Reads a pin's current value.
+ * @param pin The physical BCM Pin on the server.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadPin(
+    pin: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioReadAction {
+    return {
+        type: 'rpio_read',
+        pin,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Reads a pin's current buffer.
+ * @param pin The physical BCM Pin on the server.
+ * @param length The length of the buffer.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadSequencePin(
+    pin: number,
+    length: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioReadSequenceAction {
+    return {
+        type: 'rpio_read_sequence',
+        pin,
+        length,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sets a pin's value.
+ * @param pin The physical BCM Pin on the server.
+ * @param value The value of the BCM pin whether it's HIGH or LOW.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWritePin(
+    pin: number,
+    value: 'HIGH' | 'LOW',
+    taskId?: string | number,
+    playerId?: string
+): RpioWriteAction {
+    return {
+        type: 'rpio_write',
+        pin,
+        value,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Writes to a pin's buffer.
+ * @param pin The physical BCM Pin on the server.
+ * @param buffer The buffer to write to the pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWriteSequencePin(
+    pin: number,
+    buffer: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioWriteSequenceAction {
+    return {
+        type: 'rpio_write_sequence',
+        pin,
+        buffer,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Sends an event to the server to close a pin and what state to leave it in.
+ * @param pin The physical pin number.
+ * @param options The state to leave the pin in upon closing.
+ * @param taskId The ID of the async task.
+ */
+export function rpioClosePin(
+    pin: number,
+    options?: 'PIN_RESET' | 'PIN_PRESERVE',
+    taskId?: string | number,
+    playerId?: string
+): RpioCloseAction {
+    return {
+        type: 'rpio_close',
+        pin,
+        options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
  * Creates a SetClipboardAction.
  * @param text The text that should be set to the clipboard.
  */
@@ -2256,6 +2855,32 @@ export function unlockSpace(
 }
 
 /**
+ * Requests that the given new password be used to unlock the space for editing.
+ *
+ * Only supported for the following spaces:
+ * - admin
+ *
+ * @param space The space to unlock.
+ * @param oldPassword The old password.
+ * @param newPassword The new password to use to unlock the space.
+ * @param taskId The ID of the task that this event represents.
+ */
+export function setSpacePassword(
+    space: BotSpace,
+    oldPassword: string,
+    newPassword: string,
+    taskId?: number | string
+): SetSpacePasswordAction {
+    return {
+        type: 'set_space_password',
+        space,
+        oldPassword,
+        newPassword,
+        taskId,
+    };
+}
+
+/**
  * Requests that the given animation be played for the given bot locally.
  * @param botId The bot ID.
  * @param animation The animation.
@@ -2269,6 +2894,64 @@ export function localFormAnimation(
         botId,
         animation,
     };
+}
+
+/**
+ * Enqueues an async result to the given list for the given event.
+ * @param list The list to add the result to.
+ * @param event The event that the result is for.
+ * @param result The result.
+ * @param mapBots Whether the result should have the argument mapped for bots.
+ */
+export function enqueueAsyncResult(
+    list: Action[],
+    event: AsyncAction,
+    result: any,
+    mapBots?: boolean
+) {
+    if (hasValue(event.taskId)) {
+        if (hasValue(event.playerId)) {
+            list.push(
+                remoteResult(
+                    result,
+                    {
+                        sessionId: event.playerId,
+                    },
+                    event.taskId
+                )
+            );
+        } else {
+            list.push(asyncResult(event.taskId, result, mapBots));
+        }
+    }
+}
+
+/**
+ * Enqueues an async error to the given list for the given event.
+ * @param list The list to add the error to.
+ * @param event The event that the error is for.
+ * @param error The error.
+ */
+export function enqueueAsyncError(
+    list: Action[],
+    event: AsyncAction,
+    error: any
+) {
+    if (hasValue(event.taskId)) {
+        if (hasValue(event.playerId)) {
+            list.push(
+                remoteError(
+                    error,
+                    {
+                        sessionId: event.playerId,
+                    },
+                    event.taskId
+                )
+            );
+        } else {
+            list.push(asyncError(event.taskId, error));
+        }
+    }
 }
 
 /**
@@ -2319,5 +3002,70 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that requests a new certificate be created.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function createCertificate(
+    options: CreateCertificateOptions,
+    taskId?: number | string
+): CreateCertificateAction {
+    return {
+        type: 'create_certificate',
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that requests a tag on a bot be signed.
+ * @param signingBotId The ID of the certificate bot that is creating the signature.
+ * @param signingPassword The password used to decrypt the certificate's private key.
+ * @param botId The ID of the bot whose tag is being signed.
+ * @param tag The tag that is being signed.
+ * @param value The value that is being signed.
+ */
+export function signTag(
+    signingBotId: string,
+    signingPassword: string,
+    botId: string,
+    tag: string,
+    value: any,
+    taskId?: number | string
+): SignTagAction {
+    return {
+        type: 'sign_tag',
+        signingBotId,
+        signingPassword,
+        botId,
+        tag,
+        value,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that requests that a certificate be revoked.
+ * @param signingBotId The ID of the certificate that is signing the revocation.
+ * @param signingPassword The password used to decrypt the signing certificate's private key.
+ * @param certificateBotId The ID of the bot whose tag is being signed.
+ * @param taskId The task ID.
+ */
+export function revokeCertificate(
+    signingBotId: string,
+    signingPassword: string,
+    certificateBotId: string,
+    taskId?: number | string
+): RevokeCertificateAction {
+    return {
+        type: 'revoke_certificate',
+        signingBotId,
+        signingPassword,
+        certificateBotId,
+        taskId,
     };
 }

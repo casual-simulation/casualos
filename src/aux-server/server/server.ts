@@ -92,6 +92,8 @@ import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 import mime from 'mime';
 import sortBy from 'lodash/sortBy';
+import { GpioModule } from './modules/GpioModule';
+import { GpioModule2 } from './modules/GpioModule2';
 
 const connect = pify(MongoClient.connect);
 
@@ -956,6 +958,9 @@ export class Server {
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
+        const gpioModules = this._config.gpio
+            ? [new GpioModule(), new GpioModule2()]
+            : [];
         const manager = new AuxCausalRepoManager(
             serverUser,
             client,
@@ -963,6 +968,7 @@ export class Server {
                 new AdminModule2(),
                 new FilesModule2(this._config.drives),
                 new WebhooksModule2(),
+                ...gpioModules,
                 checkout.module,
                 backup.module,
                 setupChannel.module,
@@ -1051,12 +1057,14 @@ export class Server {
         const indexesCollection = db.collection('indexes');
         const reflogCollection = db.collection('reflog');
         const sitelogCollection = db.collection('sitelog');
+        const branchSettingsCollection = db.collection('branchSettings');
         const mongoStore = new MongoDBRepoStore(
             objectsCollection,
             headsCollection,
             indexesCollection,
             reflogCollection,
-            sitelogCollection
+            sitelogCollection,
+            branchSettingsCollection
         );
         await mongoStore.init();
 

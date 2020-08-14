@@ -153,6 +153,9 @@ declare type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
     | ApplyStateAction;
 ``;
 
@@ -209,7 +212,6 @@ declare type ExtraActions =
     | ExitFullscreenAction
     | LoadBotsAction
     | ClearSpaceAction
-    | UnlockSpaceAction
     | LocalFormAnimationAction;
 
 /**
@@ -219,7 +221,12 @@ declare type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
-    | ShareAction;
+    | ShareAction
+    | CreateCertificateAction
+    | SignTagAction
+    | RevokeCertificateAction
+    | UnlockSpaceAction
+    | SetSpacePasswordAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -279,6 +286,85 @@ declare interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
     update: Partial<Bot>;
+}
+
+
+/**
+ * Defines the set of options required for creating a certificate.
+ */
+export interface CreateCertificateOptions {
+    /**
+     * The keypair that should be used for the certificate.
+     */
+    keypair: string;
+
+    /**
+     * The ID of the certified bot that is signing the new certificate.
+     */
+    signingBotId?: string;
+
+    /**
+     * The password that should be used to sign the new certificate.
+     */
+    signingPassword: string;
+}
+
+/**
+ * Defines a bot event that creates a new certificate from the given keypair.
+ */
+export interface CreateCertificateAction
+    extends AsyncAction,
+        CreateCertificateOptions {
+    type: 'create_certificate';
+}
+
+/**
+ * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
+ */
+export interface SignTagAction extends AsyncAction {
+    type: 'sign_tag';
+
+    /**
+     * The ID of the certified bot that is signing the tag value.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the value.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the bot whose tag is being signed.
+     */
+    botId: string;
+
+    /**
+     * The tag that should be signed.
+     */
+    tag: string;
+}
+
+/**
+ * Defines a bot event that revokes a certificate.
+ */
+export interface RevokeCertificateAction extends AsyncAction {
+    type: 'revoke_certificate';
+
+    /**
+     * The ID of the bot that should be used to sign the revocation.
+     */
+    signingBotId: string;
+
+    /**
+     * The password that should be used to sign the revocation.
+     */
+    signingPassword: string;
+
+    /**
+     * The ID of the certificate that should be revoked.
+     */
+    certificateBotId: string;
 }
 
 /**
@@ -1320,6 +1406,28 @@ export interface UnlockSpaceAction {
 }
 
 /**
+ * Defines an event that sets the password used to unlock the given space for editing.
+ */
+export interface SetSpacePasswordAction extends AsyncAction {
+    type: 'set_space_password';
+
+    /**
+     * The space to set the password for.
+     */
+    space: BotSpace;
+
+    /**
+     * The old password for the space.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the space.
+     */
+    newPassword: string;
+}
+
+/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  */
@@ -1882,6 +1990,12 @@ declare global {
     * Creates a Universally Unique IDentifier (UUID).
     */
     function uuid(): string;
+
+    /**
+     * Sleeps for time in ms.
+     * @param time Time in ms. 1 second is 1000ms.
+     */
+    function sleep(time: number): Promise<void>;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.
@@ -2675,8 +2789,106 @@ declare global {
         setupStory(story: string, botOrMod?: Mod): Promise<void>;
     
         /**
+         * Sends an event to the server to export a pin (BCM) as input or output.
+         * @param pin The physical pin (BCM) number.
+         * @param mode The mode of the pin (BCM).
+         */
+        exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
+
+        /**
+         * Sends an event to the server to unexport a pin (BCM).
+         * @param pin The physical pin (BCM) number.
+         */
+        unexportGpio(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+         * @param pin The physical pin (BCM) number.
+         * @param value The mode of the pin (BCM).
+         */
+        setGpio(pin: number, value: 0 | 1): Promise<void>;
+
+        /**
+         * Sends an event to the server to get the value of a pin (BCM).
+         * @param pin The physical pin (BCM) number.
+         */
+        getGpio(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to initialize rpio with provided settings
+         * @param options An object containing values to initilize with.
+         * 
+         * @example
+         * // Initialize with default settings
+         * server.rpioInit({
+         *   gpiomem: true,
+         *   mapping: 'physical',
+         *   mock: undefined,
+         *   close_on_exit: false
+         * }); 
+         */
+        rpioInit(options?: object): Promise<void>;
+
+        /**
+         * Shuts down rpio, unmaps, and clears everything.
+         */
+        rpioExit(): Promise<void>;
+
+        /**
+         * Sends an event to the server to open a pin as input or output and set its initial state.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
+         */
+        rpioOpen(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to change the mode and optionally the state, of a previously opened pin.
+         * @param pin The physical pin number.
+         * @param mode The mode of the pin.
+         * @param options The initial state of the pin.
+         */
+        rpioMode(pin: number, mode: 'INPUT' | 'OUTPUT' | 'PWM', options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Sends an event to the server to read the value of a pin.
+         * @param pin The physical pin number.
+         */
+        rpioRead(pin: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to read the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to read.
+         * @param length The length of the buffer.
+         */
+        rpioReadBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+         * @param pin The physical pin number.
+         * @param value The mode of the pin.
+         */
+        rpioWrite(pin: number, value: 'HIGH' | 'LOW'): Promise<void>;
+
+        /**
+         * Sends an event to the server to write to the pin's buffer.
+         * @param pin The physical pin number.
+         * @param buffer The buffer to write to.
+         * @param length The length of the buffer.
+         */
+        rpioWriteBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
+        /**
+         * Sends an event to the server to close a pin and what state to leave it in.
+         * @param pin The physical pin number.
+         * @param options The state to leave the pin in upon closing.
+         */
+        rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
+
+        /**
          * Executes the given shell script on the server.
-         * @param script The shell script  that should be executed.
+         * @param script The shell script that should be executed.
          */
         shell(script: string): ShellAction;
     
@@ -2826,6 +3038,13 @@ declare global {
          * @param password The password to use to unlock admin space.
          */
         unlock(): Promise<void>;
+
+        /**
+         * Sets the password that should be used for admin space.
+         * @param oldPassword The old password for the admin space.
+         * @param newPassword The new password that should be used.
+         */
+        setPassword(oldPassword: string, newPassword: string): Promise<void>;
     };
 
     /**
@@ -2936,7 +3155,7 @@ declare global {
          * @param password The password to use to secure the data.
          * @param data The data to encrypt.
          */
-        encrypt(password: string, data: string): Promise<string>;
+        encrypt(password: string, data: string): string;
 
         /**
          * Decrypts the given data using the given password and returns the result.
@@ -2945,7 +3164,99 @@ declare global {
          * @param password The password to use to decrypt the data.
          * @param data The data to decrypt.
          */
-        decrypt(password: string, data: string): Promise<string>;
+        decrypt(password: string, data: string): string;
+
+        /**
+         * Creates a new keypair that can be used for signing and verifying data.
+         *
+         * @description
+         * Keypairs are made up of a private key and a public key.
+         * The private key is a special value that can be used to create digital signatures and
+         * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+         *
+         * The private key is called "private" because it is encrypted using the given password
+         * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+         *
+         * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+         * they have access to it.
+         *
+         * @param password The password that should be used to encrypt the private key.
+         */
+        keypair(password: string): string;
+
+        /**
+         * Creates a digital signature for the given data using the private key from the given keypair.
+         *
+         * @description
+         * Digital signatures are used to verifying the authenticity and integrity of data.
+         *
+         * This works by leveraging asymetric encryption but in reverse.
+         * 
+         * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+         * the data was encrypted (i.e. signed) by the corresponding private key.
+         * 
+         * And since the public key is available to everyone but the private
+         * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+         *
+         * @param keypair The keypair that should be used to create the signature.
+         * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+         * @param data The data to sign.
+         */
+        sign(keypair: string, password: string, data: string): string;
+
+        /**
+         * Validates that the given signature for the given data was created by the given keypair.
+         * @param keypair The keypair that should be used to validate the signature.
+         * @param signature The signature that was returned by the sign() operation.
+         * @param data The data that was used in the sign() operation.
+         */
+        verify(keypair: string, signature: string, data: string): boolean;
+
+        /**
+         * Creates a new certified bot that is signed using the given certified bot.
+         * @param certificate The certified bot that the new certificate should be signed with. 
+         *                    This is commonly known as the signing certificate.
+         *                    If given null, then the new certificate will be self-signed.
+         * @param password The signing certificate's password. This is the password that was used to create
+         *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+         *                 is the password that was used to create the given keypair.
+         * @param keypair The keypair that the new certificate should use.
+         */
+        createCertificate(certificate: Bot | string, password: string, keypair: string): Promise<Bot>;
+
+        /**
+         * Signs the tag on the given bot using the given certificate and password.
+         * @param certificate The certificate to use to create the signature.
+         * @param password The password to use to decrypt the certificate's private key.
+         * @param bot The bot that should be signed.
+         * @param tag The tag that should be signed.
+         */
+        signTag(certificate: Bot | string, password: string, bot: Bot | string, tag: string): Promise<void>;
+
+        /**
+         * Verifies that the given tag on the given bot has been signed by a certificate.
+         * @param bot The bot.
+         * @param tag The tag to check.
+         */
+        verifyTag(bot: Bot | string, tag: string): boolean;
+
+        /**
+         * Revokes the given certificate using the given password.
+         * In effect, this deletes the certificate bot from the story.
+         * Additionally, any tags signed with the given certificate will no longer be verified.
+         * 
+         * If given a signer, then the specified certificate will be used to sign the revocation.
+         * This lets you use a parent or grandparent certificate to remove the child.
+         * 
+         * If no signer is given, then the certificate will be used to revoke itself.
+         * 
+         * @param certificate The certificate that should be revoked.
+         * @param password The password that should be used to decrypt the corresponding certificate's private key.
+         *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
+         *                 then this is the password for the revoked certificate.
+         * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+         */
+        revokeCertificate(certificate: Bot | string, password: string, signer?: Bot | string): Promise<void>;
     };
 
     /**

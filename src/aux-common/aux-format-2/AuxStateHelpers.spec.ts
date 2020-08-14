@@ -119,6 +119,39 @@ describe('AuxStateHelpers', () => {
                 });
             });
         });
+
+        describe('deleted signatures', () => {
+            it('should delete signatures that are set to null', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        signatures: {
+                            sig: 'abc',
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        signatures: {
+                            sig: null as string,
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+        });
     });
 
     describe('updates()', () => {
@@ -197,6 +230,38 @@ describe('AuxStateHelpers', () => {
                                 abc: 'def',
                             }),
                             tags: new Set(['abc']),
+                        },
+                    ],
+                });
+            });
+
+            it('should record new signatures', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: {
+                        signatures: {
+                            abc: 'tag',
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                signatures: {
+                                    abc: 'tag',
+                                },
+                            },
+                            tags: new Set(),
+                            signatures: new Set(['abc']),
                         },
                     ],
                 });

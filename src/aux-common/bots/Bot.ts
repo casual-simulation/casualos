@@ -45,11 +45,17 @@ export interface Bot {
      * The set of tags that the bot contains.
      */
     tags: BotTags;
+
+    /**
+     * The set of signatures that the bot contains.
+     */
+    signatures?: BotSignatures;
 }
 
 export interface UpdatedBot {
     bot: Bot;
     tags: string[];
+    signatures?: string[];
 }
 
 /**
@@ -63,6 +69,7 @@ export interface UpdatedBot {
  * - "admin" means that the bot is shared across all stories.
  * - "player" means that the bot is temporary and shared with other players.
  * - "otherPlayers" means that the bot is temporary and shared with this player from another player.
+ * - "certified" means that the bot is a certificate.
  */
 export type BotSpace =
     | 'shared'
@@ -72,7 +79,8 @@ export type BotSpace =
     | 'error'
     | 'admin'
     | 'player'
-    | 'otherPlayers';
+    | 'otherPlayers'
+    | 'certified';
 
 /**
  * The possible portal types.
@@ -88,6 +96,19 @@ export type PortalType =
 
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
+}
+
+/**
+ * Defines an interface for a map of tag+value hashes to tag names.
+ *
+ * Each key in the object is the hash of an array with the tag name as the first value
+ * and the value as the second value using the getHash() function from the crypto package.
+ *
+ * This means that you can lookup if a tag/value pair has a hash by simply calculating the hash for it and then checking if the corresponding value
+ * in the object is set to true.
+ */
+export interface BotSignatures {
+    [hash: string]: string;
 }
 
 export interface BotTags {
@@ -592,6 +613,11 @@ export const ADMIN_PARTITION_ID = 'admin';
 export const PLAYER_PARTITION_ID = 'player';
 
 /**
+ * The partition ID for bots that are automatically added to the story.
+ */
+export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
+
+/**
  * The partition ID for other player bots.
  */
 export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
@@ -1027,6 +1053,7 @@ export const KNOWN_TAGS: string[] = [
     'leftPointer_squeeze',
     'rightPointer_primary',
     'rightPointer_squeeze',
+    'forceSignedScripts',
 
     '_editingBot',
 

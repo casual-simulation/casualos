@@ -57,6 +57,14 @@ import {
     COMMIT_CREATED,
     RestoredEvent,
     RESTORED,
+    ResetEvent,
+    RESET,
+    SET_BRANCH_PASSWORD,
+    SetBranchPasswordEvent,
+    AUTHENTICATE_BRANCH_WRITES,
+    AuthenticateBranchWritesEvent,
+    AuthenticatedToBranchEvent,
+    AUTHENTICATED_TO_BRANCH,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -190,7 +198,17 @@ export class CausalRepoClient {
                                         action: event.action,
                                     } as ClientEvent)
                             )
+                        ),
+                    this._client.event<ResetEvent>(RESET).pipe(
+                        filter(event => event.branch === name),
+                        map(
+                            event =>
+                                ({
+                                    type: 'reset',
+                                    atoms: event.atoms,
+                                } as ClientResetAtoms)
                         )
+                    )
                 ).pipe(filter(isClientAtomsOrEvents))
             ),
             finalize(() => {
@@ -416,6 +434,60 @@ export class CausalRepoClient {
     }
 
     /**
+     * Requests that the given branch have its password changed.
+     * @param branch The branch.
+     * @param oldPassword The old password.
+     * @param newPassword The new password.
+     */
+    setBranchPassword(
+        branch: string,
+        oldPassword: string,
+        newPassword: string
+    ) {
+        return this._whenConnected().pipe(
+            first(connected => connected),
+            tap(connected => {
+                this._client.send(SET_BRANCH_PASSWORD, {
+                    branch,
+                    oldPassword,
+                    newPassword,
+                } as SetBranchPasswordEvent);
+            })
+        );
+    }
+
+    /**
+     * Requests that the current session be able to write to the given branch.
+     * @param branch The branch.
+     * @param password The password.
+     */
+    authenticateBranchWrites(
+        branch: string,
+        password: string
+    ): Observable<boolean> {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(AUTHENTICATE_BRANCH_WRITES, {
+                    branch,
+                    password,
+                } as AuthenticateBranchWritesEvent);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<AuthenticatedToBranchEvent>(
+                            AUTHENTICATED_TO_BRANCH
+                        )
+                        .pipe(
+                            filter(e => e.branch === branch),
+                            map(e => e.authenticated)
+                        )
+                )
+            )
+        );
+    }
+
+    /**
      * Requests status information for the list of branches.
      */
     branchesStatus() {
@@ -605,6 +677,11 @@ export interface ClientAtoms {
     removedAtoms?: string[];
 }
 
+export interface ClientResetAtoms {
+    type: 'reset';
+    atoms: Atom<any>[];
+}
+
 export interface ClientAtomsReceived {
     type: 'atoms_received';
 }
@@ -617,8 +694,9 @@ export interface ClientEvent {
 export type ClientWatchBranchEvents =
     | ClientAtoms
     | ClientAtomsReceived
-    | ClientEvent;
-export type ClientAtomsOrEvent = ClientAtoms | ClientEvent;
+    | ClientEvent
+    | ClientResetAtoms;
+export type ClientAtomsOrEvent = ClientAtoms | ClientEvent | ClientResetAtoms;
 
 export function isClientAtoms(
     event: ClientWatchBranchEvents
@@ -635,7 +713,17 @@ export function isClientEvent(
 export function isClientAtomsOrEvents(
     event: ClientWatchBranchEvents
 ): event is ClientAtomsOrEvent {
-    return event.type === 'atoms' || event.type === 'event';
+    return (
+        event.type === 'atoms' ||
+        event.type === 'event' ||
+        event.type === 'reset'
+    );
+}
+
+export function isClientResetAtoms(
+    event: ClientWatchBranchEvents
+): event is ClientResetAtoms {
+    return event.type === 'reset';
 }
 
 function whenConnected(

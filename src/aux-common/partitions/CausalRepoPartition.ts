@@ -15,6 +15,9 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
+    CreateCertificateAction,
+    SignTagAction,
+    RevokeCertificateAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -109,7 +112,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot'
+                e.type === 'update_bot' ||
+                e.type === 'create_certificate' ||
+                e.type === 'sign_tag' ||
+                e.type === 'revoke_certificate'
             ) {
                 return [e] as const;
             } else {
@@ -147,9 +153,19 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     }
 
     private _applyEvents(
-        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+        events: (
+            | AddBotAction
+            | RemoveBotAction
+            | UpdateBotAction
+            | CreateCertificateAction
+            | SignTagAction
+            | RevokeCertificateAction)[]
     ) {
-        let { tree, updates } = applyEvents(this._tree, events, this.space);
+        let { tree, updates, actions } = applyEvents(
+            this._tree,
+            events,
+            this.space
+        );
         this._tree = tree;
 
         if (updates.addedBots.length > 0) {
@@ -165,6 +181,10 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
                     tags: [...u.tags.values()],
                 }))
             );
+        }
+
+        if (actions && actions.length > 0) {
+            this._onEvents.next(actions);
         }
     }
 }

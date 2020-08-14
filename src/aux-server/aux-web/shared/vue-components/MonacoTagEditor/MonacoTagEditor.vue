@@ -21,6 +21,12 @@
                     {{ errorsLabel }}
                 </div>
             </div>
+            <div v-if="signed" class="editor-signed">
+                <div>
+                    <md-icon>verified_user</md-icon>
+                    <md-tooltip md-direction="top">Verified</md-tooltip>
+                </div>
+            </div>
         </div>
         <div class="code-editor-wrapper">
             <div v-if="showErrors" class="errors-wrapper">

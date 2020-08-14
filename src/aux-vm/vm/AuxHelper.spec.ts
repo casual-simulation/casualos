@@ -23,6 +23,10 @@ import {
     createCausalRepoClientPartition,
     unlockSpace,
     asyncError,
+    createCertificate,
+    signTag,
+    revokeCertificate,
+    setSpacePassword,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -41,6 +45,8 @@ import {
     remoteResult,
     RemoteActions,
     remoteError,
+    AUTHENTICATE_BRANCH_WRITES,
+    SET_BRANCH_PASSWORD,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import {
@@ -51,6 +57,7 @@ import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
 import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test/TestScriptBotFactory';
+import { keypair } from '../../aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -238,6 +245,109 @@ describe('AuxHelper', () => {
 
             expect(Object.keys(helper.botsState)).toEqual(['abcdefghijklmnop']);
             expect(Object.keys(mem.state)).toEqual(['abcdefghijklmnop']);
+        });
+
+        it('should send create_certificate actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            const keys = keypair('password');
+            await helper.transaction(
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                )
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                ),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                createCertificate(
+                    {
+                        keypair: keys,
+                        signingPassword: 'password',
+                    },
+                    'test1'
+                ),
+            ]);
+        });
+
+        it('should send sign_tag actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            await helper.transaction(
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
+            ]);
+        });
+
+        it('should send revoke_certificate actions to the shared partition', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = createHelper({
+                shared: shared,
+                TEST: mem,
+            });
+
+            const sharedSpy = jest.spyOn(shared, 'applyEvents');
+            const memSpy = jest.spyOn(mem, 'applyEvents');
+            await helper.transaction(
+                revokeCertificate('test1', 'password', 'test2')
+            );
+
+            expect(sharedSpy).toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
+            ]);
+            expect(memSpy).not.toBeCalledWith([
+                revokeCertificate('test1', 'password', 'test2'),
+            ]);
         });
 
         it('should ignore bots going to partitions that dont exist', async () => {
@@ -866,9 +976,10 @@ describe('AuxHelper', () => {
 
                 expect(connection.sentMessages.slice(1)).toEqual([
                     {
-                        name: WATCH_BRANCH,
+                        name: AUTHENTICATE_BRANCH_WRITES,
                         data: {
                             branch: 'story',
+                            password: '3342',
                         },
                     },
                 ]);
@@ -880,6 +991,90 @@ describe('AuxHelper', () => {
                 helper.localEvents.subscribe(e => events.push(...e));
                 await helper.transaction(
                     unlockSpace(<any>'missing', 'passcode', 123)
+                );
+
+                await waitAsync();
+
+                expect(events).toContainEqual(
+                    asyncError(
+                        123,
+                        new Error(
+                            `The action was sent to a space that was not found.`
+                        )
+                    )
+                );
+            });
+        });
+
+        describe('set_space_password', () => {
+            it('should be able to set a space password', async () => {
+                let connection = new MemoryConnectionClient();
+                let client = new CausalRepoClient(connection);
+                let addAtoms = new Subject<AddAtomsEvent>();
+                connection.events.set(ADD_ATOMS, addAtoms);
+
+                let admin = await createCausalRepoClientPartition(
+                    {
+                        type: 'causal_repo_client',
+                        branch: 'story',
+                        client: client,
+                        static: true,
+                    },
+                    {
+                        id: userId,
+                        username: 'username',
+                        name: 'name',
+                        token: 'token',
+                    }
+                );
+
+                helper = createHelper({
+                    shared: createMemoryPartition({
+                        type: 'memory',
+                        initialState: {},
+                    }),
+                    admin: admin,
+                });
+                helper.userId = userId;
+
+                connection.connect();
+                admin.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                addAtoms.next({
+                    branch: 'story',
+                    atoms: [bot1, tag1, value1],
+                });
+
+                await waitAsync();
+
+                await helper.transaction(
+                    setSpacePassword('admin', '3342', 'password')
+                );
+
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1)).toEqual([
+                    {
+                        name: SET_BRANCH_PASSWORD,
+                        data: {
+                            branch: 'story',
+                            oldPassword: '3342',
+                            newPassword: 'password',
+                        },
+                    },
+                ]);
+            });
+
+            it('should be rejected if sent to a non-existant space', async () => {
+                let events = [] as BotAction[];
+
+                helper.localEvents.subscribe(e => events.push(...e));
+                await helper.transaction(
+                    setSpacePassword(<any>'missing', 'passcode', 'new', 123)
                 );
 
                 await waitAsync();

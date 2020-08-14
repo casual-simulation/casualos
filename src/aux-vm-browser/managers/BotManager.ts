@@ -18,6 +18,7 @@ import {
     ADMIN_BRANCH_NAME,
     PLAYER_PARTITION_ID,
     OTHER_PLAYERS_PARTITION_ID,
+    BOOTSTRAP_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -39,6 +40,7 @@ import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import pickBy from 'lodash/pickBy';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
+import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -139,6 +141,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'other_players_repo',
                     branch: parsedId.channel,
                     host: host,
+                },
+                [BOOTSTRAP_PARTITION_ID]: {
+                    type: 'memory',
+                    initialState: config.bootstrapState
+                        ? getBotsStateFromStoredAux(config.bootstrapState)
+                        : {},
+                    private: true,
                 },
             };
         }

@@ -2,6 +2,7 @@ import {
     CausalRepoClient,
     isClientAtoms,
     isClientEvent,
+    isClientResetAtoms,
 } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -49,6 +50,12 @@ import {
     COMMIT_CREATED,
     RestoredEvent,
     RESTORED,
+    ResetEvent,
+    RESET,
+    SET_BRANCH_PASSWORD,
+    AUTHENTICATE_BRANCH_WRITES,
+    AuthenticatedToBranchEvent,
+    AUTHENTICATED_TO_BRANCH,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -205,6 +212,42 @@ describe('CausalRepoClient', () => {
                     type: 'abc',
                 }),
             ]);
+        });
+
+        it('should return an observable of resets for the branch', async () => {
+            const reset = new Subject<ResetEvent>();
+            connection.events.set(RESET, reset);
+
+            let atoms = [] as Atom<any>[];
+            connection.connect();
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientResetAtoms),
+                    map(e => e.atoms)
+                )
+                .subscribe(a => atoms.push(...a));
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const b1 = atom(atomId('b', 1), null, {});
+            const b2 = atom(atomId('b', 2), a1, {});
+
+            reset.next({
+                branch: 'abc',
+                atoms: [a1, a2],
+            });
+
+            reset.next({
+                branch: 'other',
+                atoms: [b1, b2],
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([a1, a2]);
         });
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {
@@ -1451,6 +1494,43 @@ describe('CausalRepoClient', () => {
         });
     });
 
+    describe('setBranchPassword()', () => {
+        it('should send a set_branch_password event after connecting', async () => {
+            client.setBranchPassword('abc', 'def', 'ghi').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: SET_BRANCH_PASSWORD,
+                    data: {
+                        branch: 'abc',
+                        oldPassword: 'def',
+                        newPassword: 'ghi',
+                    },
+                },
+            ]);
+        });
+
+        it('should complete after sending the message', async () => {
+            let sent = false;
+            client
+                .setBranchPassword('abc', 'def', 'ghi')
+                .subscribe(null, null, () => {
+                    sent = true;
+                });
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+            expect(sent).toBe(true);
+        });
+    });
+
     describe('branchesStatus()', () => {
         it('should send a branches_status event after connecting', async () => {
             client.branchesStatus().subscribe();
@@ -1582,6 +1662,61 @@ describe('CausalRepoClient', () => {
                     data: 'haha',
                 },
             ]);
+        });
+    });
+
+    describe('authenticateBranchWrites()', () => {
+        it('should send a authenticate_branch_writes event after connecting', async () => {
+            client.authenticateBranchWrites('abc', 'def').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: AUTHENTICATE_BRANCH_WRITES,
+                    data: {
+                        branch: 'abc',
+                        password: 'def',
+                    },
+                },
+            ]);
+        });
+
+        it('should resolve with results from authenticated_to_branch events', async () => {
+            const authenticated = new Subject<AuthenticatedToBranchEvent>();
+            connection.events.set(AUTHENTICATED_TO_BRANCH, authenticated);
+
+            let results = [] as boolean[];
+            client
+                .authenticateBranchWrites('abc', 'def')
+                .subscribe(e => results.push(e));
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            authenticated.next({
+                branch: 'abc',
+                authenticated: true,
+            });
+
+            authenticated.next({
+                branch: 'abc',
+                authenticated: false,
+            });
+
+            authenticated.next({
+                branch: 'abc',
+                authenticated: true,
+            });
+
+            await waitAsync();
+
+            expect(results).toEqual([true, false, true]);
         });
     });
 });

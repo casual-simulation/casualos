@@ -39,6 +39,7 @@ import {
     DEFAULT_SCALE_MODE,
     MeetPortalAnchorPoint,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
+    BotSignatures,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';

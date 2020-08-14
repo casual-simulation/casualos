@@ -51,6 +51,9 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    createCertificate as calcCreateCertificate,
+    signTag as calcSignTag,
+    revokeCertificate as calcRevokeCertificate,
     clearSpace,
     loadBots,
     BotAction,
@@ -85,6 +88,20 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    setSpacePassword,
+    exportGpioPin,
+    unexportGpioPin,
+    setGpioPin,
+    getGpioPin,
+    rpioInitPin,
+    rpioExitPin,
+    rpioOpenPin,
+    rpioModePin,
+    rpioReadPin,
+    rpioReadSequencePin,
+    rpioWritePin,
+    rpioWriteSequencePin,
+    rpioClosePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -103,7 +120,11 @@ import stableStringify from 'fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
     decrypt as realDecrypt,
+    keypair as realKeypair,
+    sign as realSign,
+    verify as realVerify,
 } from '@casual-simulation/crypto';
+import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -305,6 +326,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteShout,
             webhook,
             uuid,
+            sleep,
 
             __energyCheck,
 
@@ -373,6 +395,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupStory,
+                exportGpio,
+                unexportGpio,
+                setGpio,
+                getGpio,
+                rpioInit,
+                rpioExit,
+                rpioOpen,
+                rpioMode,
+                rpioRead,
+                rpioReadSequence,
+                rpioWrite,
+                rpioWriteSequence,
+                rpioClose,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -399,6 +434,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             adminSpace: {
                 unlock: unlockAdminSpace,
+                setPassword: setAdminSpacePassword,
             },
 
             experiment: {
@@ -422,6 +458,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 hmacSha512,
                 encrypt,
                 decrypt,
+                keypair,
+                sign,
+                verify,
+                createCertificate,
+                signTag,
+                verifyTag,
+                revokeCertificate,
             },
         },
     };
@@ -1416,6 +1459,227 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sends an event to the server to export a pin (BCM) as input or output.
+     * @param pin The physical pin (BCM) number.
+     * @param mode The mode of the pin (BCM).
+     */
+    function exportGpio(pin: number, mode: 'in' | 'out') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            exportGpioPin(pin, mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to unexport a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    function unexportGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            unexportGpioPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
+     * @param pin The physical pin (BCM) number.
+     * @param value The mode of the pin (BCM).
+     */
+    function setGpio(pin: number, value: 0 | 1) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            setGpioPin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to get the value of a pin (BCM).
+     * @param pin The physical pin (BCM) number.
+     */
+    function getGpio(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            getGpioPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to initialize rpio with provided settings
+     * @param options An object containing values to initilize with.
+     *
+     * @example
+     * // Initialize with default settings
+     * server.rpioInit({
+     *   gpiomem: true,
+     *   mapping: 'physical',
+     *   mock: undefined,
+     *   close_on_exit: false
+     * });
+     */
+    function rpioInit(options: object) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioInitPin(options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shuts down rpio, unmaps, and clears everything.
+     */
+    function rpioExit() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioExitPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to open a pin as input or output.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The state you want to initialize your pin as.
+     */
+    function rpioOpen(
+        pin: number,
+        mode: 'INPUT' | 'OUTPUT' | 'PWM',
+        options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioOpenPin(pin, mode, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to change the mode of a pin as input or output.
+     * @param pin The physical pin number.
+     * @param mode The mode of the pin.
+     * @param options The state you want to initialize your pin as.
+     */
+    function rpioMode(
+        pin: number,
+        mode: 'INPUT' | 'OUTPUT' | 'PWM',
+        options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioModePin(pin, mode, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to read the value of a pin.
+     * @param pin The physical BCM pin number.
+     */
+    function rpioRead(pin: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadPin(pin),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Reads a pin's current buffer.
+     * @param pin The physical BCM Pin on the server.
+     * @param length The length of the buffer.
+     */
+    function rpioReadSequence(pin: number, length: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadSequencePin(pin, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to write to a pin and set it as HIGH or LOW.
+     * @param pin The physical pin number.
+     * @param value The mode of the pin.
+     */
+    function rpioWrite(pin: number, value: 'HIGH' | 'LOW') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWritePin(pin, value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Writes to a pin's current buffer.
+     * @param pin The physical BCM Pin on the server.
+     * @param buffer The buffer to write to  the pin.
+     */
+    function rpioWriteSequence(pin: number, buffer: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWriteSequencePin(pin, buffer),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to the server to close a pin and what state to leave it in.
+     * @param pin The physical pin number.
+     * @param options The state to leave the pin in upon closing.
+     */
+    function rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioClosePin(pin, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
      */
@@ -1778,6 +2042,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return uuidv4();
     }
 
+    /**
+     * Sleeps for time in ms.
+     * @param time The Time to sleep in ms. 1 second is 1000 ms.
+     */
+    function sleep(time: number) {
+        let sleepy = new Promise(resolve => setTimeout(resolve, time));
+        return sleepy;
+    }
+
     // /**
     //  * Sends a web request based on the given options.
     //  * @param options The options that specify where and what to send in the web request.
@@ -1837,6 +2110,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function unlockAdminSpace(password: string) {
         const task = context.createTask();
         const event = unlockSpace('admin', password, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the password that should be used for admin space.
+     * @param oldPassword The old password for the admin space.
+     * @param newPassword The new password that should be used.
+     */
+    function setAdminSpacePassword(oldPassword: string, newPassword: string) {
+        const task = context.createTask();
+        const event = setSpacePassword(
+            'admin',
+            oldPassword,
+            newPassword,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -2027,7 +2316,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to secure the data.
      * @param data The data to encrypt.
      */
-    function encrypt(password: string, data: string): Promise<string> {
+    function encrypt(password: string, data: string): string {
         if (typeof data === 'string') {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
@@ -2044,9 +2333,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param password The password to use to decrypt the data.
      * @param data The data to decrypt.
      */
-    async function decrypt(password: string, data: string): Promise<string> {
+    function decrypt(password: string, data: string): string {
         if (typeof data === 'string') {
-            const bytes = await realDecrypt(password, data);
+            const bytes = realDecrypt(password, data);
             if (!bytes) {
                 return null;
             }
@@ -2055,6 +2344,183 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
+    }
+
+    /**
+     * Creates a new keypair that can be used for signing and verifying data.
+     *
+     * @description
+     * Keypairs are made up of a private key and a public key.
+     * The private key is a special value that can be used to create digital signatures and
+     * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+     *
+     * The private key is called "private" because it is encrypted using the given password
+     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+     * they have access to it.
+     *
+     * @param password The password that should be used to encrypt the private key.
+     */
+    function keypair(password: string): string {
+        return realKeypair(password);
+    }
+
+    /**
+     * Creates a digital signature for the given data using the private key from the given keypair.
+     *
+     * @description
+     * Digital signatures are used to verifying the authenticity and integrity of data.
+     *
+     * This works by leveraging asymetric encryption but in reverse.
+     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+     * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
+     * key is only usable when you have the password, we can use this to prove that a particular piece of data was signed by whoever knows the password.
+     *
+     * @param keypair The keypair that should be used to create the signature.
+     * @param password The password that was used when creating the keypair. Used to decrypt the private key.
+     * @param data The data to sign.
+     */
+    function sign(keypair: string, password: string, data: string): string {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realSign(keypair, password, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Validates that the given signature for the given data was created by the given keypair.
+     * @param keypair The keypair that should be used to validate the signature.
+     * @param signature The signature that was returned by the sign() operation.
+     * @param data The data that was used in the sign() operation.
+     */
+    function verify(keypair: string, signature: string, data: string): boolean {
+        if (typeof data === 'string') {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            return realVerify(keypair, signature, bytes);
+        } else {
+            throw new Error('The data to encrypt must be a string.');
+        }
+    }
+
+    /**
+     * Creates a new certified bot that is signed using the given certified bot.
+     * @param certificate The certified bot that the new certificate should be signed with.
+     *                    This is commonly known as the signing certificate.
+     *                    If given null, then the new certificate will be self-signed.
+     * @param password The signing certificate's password. This is the password that was used to create
+     *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
+     *                 is the password that was used to create the given keypair.
+     * @param keypair The keypair that the new certificate should use.
+     */
+    function createCertificate(
+        certificate: Bot | string,
+        password: string,
+        keypair: string
+    ): Promise<RuntimeBot> {
+        const signingBotId = getID(certificate);
+        const task = context.createTask();
+        const action = hasValue(signingBotId)
+            ? calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingBotId: signingBotId,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              )
+            : calcCreateCertificate(
+                  {
+                      keypair: keypair,
+                      signingPassword: password,
+                  },
+                  task.taskId
+              );
+
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Signs the tag on the given bot using the given certificate and password.
+     * @param certificate The certificate to use to create the signature.
+     * @param password The password to use to decrypt the certificate's private key.
+     * @param bot The bot that should be signed.
+     * @param tag The tag that should be signed.
+     */
+    function signTag(
+        certificate: Bot | string,
+        password: string,
+        bot: Bot | string,
+        tag: string
+    ): Promise<void> {
+        tag = trimTag(tag);
+        const signingBotId = getID(certificate);
+        const realBot = getBot('id', getID(bot));
+        const value = realBot.raw[tag];
+        const task = context.createTask();
+        const action = calcSignTag(
+            signingBotId,
+            password,
+            realBot.id,
+            tag,
+            value,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Verifies that the given tag on the given bot has been signed by a certificate.
+     * @param bot The bot.
+     * @param tag The tag to check.
+     */
+    function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
+        tag = trimTag(tag);
+        const id = getID(bot);
+        const realBot = isRuntimeBot(bot) ? bot : getBot('id', id);
+        if (!realBot.signatures) {
+            return false;
+        }
+        const value = realBot.raw[tag];
+        const sig = tagValueHash(id, tag, value);
+        return realBot.signatures[sig] === tag;
+    }
+
+    /**
+     * Revokes the given certificate using the given password.
+     * In effect, this deletes the certificate bot from the story.
+     * Additionally, any tags signed with the given certificate will no longer be verified.
+     *
+     * If given a signer, then the specified certificate will be used to sign the revocation.
+     * This lets you use a parent or grandparent certificate to remove the child.
+     *
+     * If no signer is given, then the certificate will be used to revoke itself.
+     *
+     * @param certificate The certificate that should be revoked.
+     * @param password The password that should be used to decrypt the corresponding certificate's private key.
+     *                 If given a signer, then this is the password for the signer certificate. If no signer is given,
+     *                 then this is the password for the revoked certificate.
+     * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
+     */
+    function revokeCertificate(
+        certificate: Bot | string,
+        password: string,
+        signer?: Bot | string
+    ): Promise<void> {
+        const certId = getID(certificate);
+        const signerId = getID(signer || certificate);
+        const task = context.createTask();
+        const action = calcRevokeCertificate(
+            signerId,
+            password,
+            certId,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
     }
 
     function _hash(hash: MessageDigest<any>, data: unknown[]): string {

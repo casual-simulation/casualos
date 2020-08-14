@@ -68,6 +68,23 @@ import {
     getPlayers,
     action,
     getStoryStatuses,
+    exportGpioPin,
+    unexportGpioPin,
+    setGpioPin,
+    getGpioPin,
+    rpioInitPin,
+    rpioExitPin,
+    rpioOpenPin,
+    rpioModePin,
+    rpioReadPin,
+    rpioReadSequencePin,
+    rpioWritePin,
+    rpioWriteSequencePin,
+    rpioClosePin,
+    createCertificate,
+    signTag,
+    revokeCertificate,
+    setSpacePassword,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -84,7 +101,9 @@ import { RuntimeBot } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
-import { decryptV1 } from '@casual-simulation/crypto';
+import { decryptV1, keypair } from '@casual-simulation/crypto';
+import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
+import { tagValueHash } from '../aux-format-2';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -2340,6 +2359,317 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.exportGpio()', () => {
+            it('should send a ExportGpioPinAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.exportGpio(99, 'in');
+                const expected = remote(
+                    exportGpioPin(99, 'in'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.exportGpio(99, 'in');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.unexportGpio()', () => {
+            it('should send a UnexportGpioPinAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.unexportGpio(99);
+                const expected = remote(
+                    unexportGpioPin(99),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.unexportGpio(99);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.setGpio()', () => {
+            it('should send a SetGpioPinAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.setGpio(99, 1);
+                const expected = remote(
+                    setGpioPin(99, 1),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.setGpio(99, 1);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.getGpio()', () => {
+            it('should send a GetGpioPinAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.getGpio(99);
+                const expected = remote(
+                    getGpioPin(99),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.getGpio(99);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioInit()', () => {
+            it('should send a RpioInitAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                var options = {
+                    gpiomem: true,
+                };
+                const action: any = library.api.server.rpioInit(options);
+                const expected = remote(
+                    rpioInitPin(options),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                var options = {
+                    gpiomem: true,
+                };
+                library.api.server.rpioInit(options);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioExit()', () => {
+            it('should send a RpioExitAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioExit();
+                const expected = remote(
+                    rpioExitPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioExit();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioOpen()', () => {
+            it('should send a RpioOpenAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioOpen(99, 'INPUT');
+                const expected = remote(
+                    rpioOpenPin(99, 'INPUT'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioOpen(99, 'INPUT');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioMode()', () => {
+            it('should send a RpioModeAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioMode(99, 'INPUT');
+                const expected = remote(
+                    rpioModePin(99, 'INPUT'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioMode(99, 'INPUT');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioRead()', () => {
+            it('should send a RpioReadAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioRead(99);
+                const expected = remote(
+                    rpioReadPin(99),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioRead(99);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioReadSequence()', () => {
+            it('should send a RpioReadSequenceAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioReadSequence(99, 10);
+                const expected = remote(
+                    rpioReadSequencePin(99, 10),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioReadSequence(99, 10);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioWrite()', () => {
+            it('should send a RpioWriteAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioWrite(99, 'HIGH');
+                const expected = remote(
+                    rpioWritePin(99, 'HIGH'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioWrite(99, 'HIGH');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioWriteSequence()', () => {
+            it('should send a RpioWriteSequenceAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioWriteSequence(99, [
+                    10,
+                    10,
+                ]);
+                const expected = remote(
+                    rpioWriteSequencePin(99, [10, 10]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioWriteSequence(99, [10, 10]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioClose()', () => {
+            it('should send a RpioCloseAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioClose(
+                    99,
+                    'PIN_RESET'
+                );
+                const expected = remote(
+                    rpioClosePin(99, 'PIN_RESET'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioClose(99, 'PIN_RESET');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const action = library.api.server.shell('abc');
@@ -3057,6 +3387,23 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('adminSpace.setPassword()', () => {
+            it('should issue a set_space_password event with the given password', () => {
+                const promise: any = library.api.adminSpace.setPassword(
+                    'old',
+                    'new'
+                );
+                const expected = setSpacePassword(
+                    'admin',
+                    'old',
+                    'new',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('experiment.localFormAnimation()', () => {
             it('should emit a LocalFormAnimationAction', () => {
                 const action = library.api.experiment.localFormAnimation(
@@ -3407,6 +3754,7 @@ describe('AuxLibrary', () => {
                     fun: true,
                 },
                 listeners: {},
+                signatures: {},
             });
         });
         it('should add the new bot to the context', () => {
@@ -3436,6 +3784,7 @@ describe('AuxLibrary', () => {
                 listeners: {
                     onCreate: expect.any(Function),
                 },
+                signatures: {},
             });
         });
 
@@ -3663,7 +4012,7 @@ describe('AuxLibrary', () => {
                 return library.api.create({ test: true, abc, def });
             });
 
-            let [newBot] = library.api.shout('create');
+            let [] = library.api.shout('create');
             library.api.shout('abc');
 
             expect(abc).toBeCalledTimes(1);
@@ -4109,7 +4458,6 @@ describe('AuxLibrary', () => {
         it('should return an array of results from the other formulas', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-
             const results = library.api.shout('sayHello');
             expect(results).toEqual([1, 2]);
         });
@@ -4229,7 +4577,6 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4256,7 +4603,6 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.shout('sayHello', 123);
@@ -4385,7 +4731,6 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -4412,7 +4757,6 @@ describe('AuxLibrary', () => {
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
 
             library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
@@ -5569,9 +5913,9 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.encrypt()', () => {
-        it('should encrypt the given string with the given password', async () => {
-            const result = await library.api.crypto.encrypt('password', 'data');
-            const decrypted = await decryptV1('password', result);
+        it('should encrypt the given string with the given password', () => {
+            const result = library.api.crypto.encrypt('password', 'data');
+            const decrypted = decryptV1('password', result);
 
             const decoder = new TextDecoder();
             const final = decoder.decode(decrypted);
@@ -5580,24 +5924,323 @@ describe('AuxLibrary', () => {
     });
 
     describe('crypto.decrypt()', () => {
-        it('should be able to decrypt the given encrypted data', async () => {
-            const encrypted = await library.api.crypto.encrypt(
-                'password',
-                'data'
-            );
-            const result = await library.api.crypto.decrypt(
-                'password',
-                encrypted
-            );
+        it('should be able to decrypt the given encrypted data', () => {
+            const encrypted = library.api.crypto.encrypt('password', 'data');
+            const result = library.api.crypto.decrypt('password', encrypted);
             expect(result).toEqual('data');
         });
 
-        it('should return null if the data was not able to be decrypted', async () => {
-            const result = await library.api.crypto.decrypt(
-                'password',
-                'wrong'
-            );
+        it('should return null if the data was not able to be decrypted', () => {
+            const result = library.api.crypto.decrypt('password', 'wrong');
             expect(result).toBe(null);
+        });
+    });
+
+    describe('crypto.keypair()', () => {
+        it('should create and return a keypair', () => {
+            const result = library.api.crypto.keypair('password');
+            expect(typeof result).toEqual('string');
+        });
+    });
+
+    describe('crypto.sign()', () => {
+        it('should create and return a signature for the given data', () => {
+            const keypair = library.api.crypto.keypair('password');
+            const signature = library.api.crypto.sign(
+                keypair,
+                'password',
+                'abc'
+            );
+            const valid = library.api.crypto.verify(keypair, signature, 'abc');
+            expect(typeof signature).toBe('string');
+            expect(valid).toBe(true);
+        });
+
+        it('should throw if the wrong password was given', () => {
+            const keypair = library.api.crypto.keypair('password');
+            expect(() => {
+                library.api.crypto.sign(keypair, 'wrong', 'abc');
+            }).toThrow();
+        });
+    });
+
+    describe('crypto.verify()', () => {
+        it('should create and return a signature for the given data', () => {
+            const keypair = library.api.crypto.keypair('password');
+            const signature = library.api.crypto.sign(
+                keypair,
+                'password',
+                'abc'
+            );
+            const valid = library.api.crypto.verify(keypair, signature, 'abc');
+            expect(typeof signature).toBe('string');
+            expect(valid).toBe(true);
+        });
+
+        it('should throw if the wrong password was given', () => {
+            const keypair = library.api.crypto.keypair('password');
+            expect(() => {
+                library.api.crypto.verify(keypair, 'wrong', 'abc');
+            }).toThrow();
+        });
+    });
+
+    const keypair1 =
+        'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
+    describe('crypto.createCertificate()', () => {
+        it('should emit a CreateCertificateAction for self-signed certs', () => {
+            const promise: any = library.api.crypto.createCertificate(
+                null,
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should emit a CreateCertificateAction for normal certs', () => {
+            const cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            addToContext(context, cert);
+            const promise: any = library.api.crypto.createCertificate(
+                cert,
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingBotId: 'test1',
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given a bot ID', () => {
+            const promise: any = library.api.crypto.createCertificate(
+                'test1',
+                'password',
+                keypair1
+            );
+
+            const expected = createCertificate(
+                {
+                    keypair: keypair1,
+                    signingBotId: 'test1',
+                    signingPassword: 'password',
+                },
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('crypto.signTag()', () => {
+        let bot1: RuntimeBot;
+        let cert: RuntimeBot;
+        beforeEach(() => {
+            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1, cert);
+        });
+
+        it('should emit a SignTagAction', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '#abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const promise: any = library.api.crypto.signTag(
+                'test1',
+                'password',
+                'bot1',
+                '@abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given bots', () => {
+            const promise: any = library.api.crypto.signTag(
+                cert,
+                'password',
+                bot1,
+                'abc'
+            );
+
+            const expected = signTag(
+                'test1',
+                'password',
+                'bot1',
+                'abc',
+                'def',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+    });
+
+    describe('crypto.verifyTag()', () => {
+        let bot1: RuntimeBot;
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot(
+                'bot1',
+                {
+                    abc: 'def',
+                },
+                undefined,
+                {
+                    [tagValueHash('bot1', 'abc', 'def')]: 'abc',
+                }
+            );
+            addToContext(context, bot1);
+        });
+
+        it('should return true if the bot has a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(true);
+        });
+
+        it('should return false if the bot does not have a signature for the given tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, 'missing');
+            expect(result).toBe(false);
+        });
+
+        it('should return false if the bot has a signature for the given tag but the value is different', () => {
+            bot1.tags.abc = 'different';
+            const result = library.api.crypto.verifyTag(bot1, 'abc');
+            expect(result).toBe(false);
+        });
+
+        it('should support using an # symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '#abc');
+            expect(result).toBe(true);
+        });
+
+        it('should support using an @ symbol at the beginning of a tag', () => {
+            const result = library.api.crypto.verifyTag(bot1, '@abc');
+            expect(result).toBe(true);
+        });
+    });
+
+    describe('crypto.revokeCertificate()', () => {
+        let bot1: RuntimeBot;
+        let cert: RuntimeBot;
+        beforeEach(() => {
+            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
+            bot1 = createDummyRuntimeBot('bot1', {
+                abc: 'def',
+            });
+            addToContext(context, bot1, cert);
+        });
+
+        it('should emit a RevokeCertificateAction', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                'test1',
+                'password',
+                'bot1'
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given bots', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password',
+                bot1
+            );
+
+            const expected = revokeCertificate(
+                'bot1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
+        });
+
+        it('should be able to be given a single bot', () => {
+            const promise: any = library.api.crypto.revokeCertificate(
+                cert,
+                'password'
+            );
+
+            const expected = revokeCertificate(
+                'test1',
+                'password',
+                'test1',
+                context.tasks.size
+            );
+            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+            expect(context.actions).toEqual([expected]);
         });
     });
 });

@@ -37,6 +37,11 @@ export interface Config {
      * The type of sandbox that should be used.
      */
     sandbox: SandboxType;
+
+    /**
+     * Whether to enable GPIO support.
+     */
+    gpio: boolean;
 }
 
 export type SandboxType = 'none' | 'deno';

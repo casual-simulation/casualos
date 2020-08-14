@@ -1,5 +1,51 @@
 # CasualOS Changelog
 
+## V1.2.2
+
+#### Date: 8/14/2020
+
+### :boom: Breaking Changes
+
+-   Changed `crypto.encrypt()` and `crypto.decrypt()` to return the result directly instead of returning a promise.
+
+### :rocket: Improvements
+
+-   Added the `crypto.createCertificate()`, `crypto.signTag()`, and `crypto.verifyTag()`, `crypto.revokeCertificate()` functions to help with creating certificate chains and signing and validating tag data. Check the docs for detailed usage information.
+-   Added an indicator to the multi-line editor that is shown when a tag value is verified.
+-   Added the ability to force all scripts to be verified in order to be executed using the `forceSignedScripts` query parameter.
+    -   When the query param is set to `true`, all scripts must have a valid signature in order to be executed.
+    -   This allows running in a trusted execution environment - thereby preventing unauthorized scripts from running.
+-   Replaced builder with ab-1.
+    -   ab-1 is a new version of builder which is designed to be easy to extend and improve.
+-   Added the `adminSpace.setPassword(oldPassword, newPassword)` function.
+    -   Allows changing the password that is used to unlock admin space.
+    -   The first parameter is the old password that was used to unlock the space.
+    -   The second parameter is the new password that should be used to unlock the space.
+-   Added several functions to allow using the GPIO pins on Rasberry Pi.
+    -   Currently, all of these functions are experimental and only work on Raspberry Pi.
+    -   See the documentation for more information.
+    -   `server.exportGpio(pin, mode)`
+    -   `server.unexportGpio(pin, mode)`
+    -   `server.setGpio(pin, value)`
+    -   `server.getGpio(pin)`
+    -   `server.rpioInit(options)`
+    -   `server.rpioExit()`
+    -   `server.rpioOpen(pin, mode, options)`
+    -   `server.rpioMode(pin, mode, options)`
+    -   `server.rpioRead(pin)`
+    -   `server.rpioReadSequence(pin, length)`
+    -   `server.rpioWrite(pin, value)`
+    -   `server.rpioWriteSequence(pin, buffer)`
+    -   `server.rpioClose(pin, options)`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using `player.showInput()` with an existing value would not prefill the text box with the existing value.
+-   Fixed a performance issue where formulas which were recalculated after every change had a factorial (!) performance cost.
+    -   Was caused by two things:
+        1.  Some formulas don't have enough information to determine what tags they are dependent on. In these cases, we callback to using an "all" dependency which means that the formula will be recalculated whenever any tag changes.
+        2.  These "all" dependencies were included when searching for nested dependencies which meant that we were resolving every "all" dependency for every other "all" dependency. This gives us the effect of searching every possible combination of dependencies instead of only the ones we need, which has a factorial cost.
+
 ## V1.2.1
 
 #### Date: 8/4/2020

@@ -23,6 +23,7 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
             'error',
             'history',
             'custom',
+            'certified',
         ])('%s', space => {
             it('should return the edit mode for the given space', () => {
                 partitions[space] = createMemoryPartition({
@@ -60,6 +61,18 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
                     RealtimeEditMode.Delayed
                 );
             });
+        });
+
+        it('should default certified to None', () => {
+            expect(subject.getEditMode('certified')).toEqual(
+                RealtimeEditMode.None
+            );
+        });
+
+        it('should default bootstrap to None', () => {
+            expect(subject.getEditMode('bootstrap')).toEqual(
+                RealtimeEditMode.None
+            );
         });
 
         it('should default to Immediate', () => {
