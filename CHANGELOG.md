@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where actions that were created in an async script would not be dispatched until the script finished.
+
 ## V1.2.2
 
 #### Date: 8/14/2020
