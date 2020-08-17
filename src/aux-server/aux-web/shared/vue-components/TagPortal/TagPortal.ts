@@ -37,6 +37,7 @@ export default class TagPortal extends Vue {
     private _portals: Map<BrowserSimulation, string> = new Map();
     private _currentConfig: TagPortalConfig;
     private _currentSim: BrowserSimulation;
+    private _currentSub: Subscription;
 
     currentBot: Bot = null;
     currentTag: string = null;
@@ -77,6 +78,10 @@ export default class TagPortal extends Vue {
         if (this._sub) {
             this._sub.unsubscribe();
             this._sub = null;
+        }
+        if (this._currentSub) {
+            this._currentSub.unsubscribe();
+            this._currentSub = null;
         }
     }
 
@@ -144,6 +149,10 @@ export default class TagPortal extends Vue {
             this._currentConfig.unsubscribe();
             this._currentConfig = null;
         }
+        if (this._currentSub) {
+            this._currentSub.unsubscribe();
+            this._currentSub = null;
+        }
 
         if (sim) {
             this._currentConfig = new TagPortalConfig(TAG_PORTAL, sim);
@@ -165,6 +174,9 @@ export default class TagPortal extends Vue {
             }
             this.currentBot = sim.helper.botsState[botId];
             this.currentTag = tag;
+            this._currentSub = sim.watcher.botChanged(botId).subscribe(bot => {
+                this.currentBot = bot;
+            });
         } else {
             this.currentBot = null;
             this.currentTag = null;
