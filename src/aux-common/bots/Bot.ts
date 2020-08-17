@@ -558,6 +558,12 @@ export const DEFAULT_MEET_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for the tag portal.
+ */
+export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
+
+/**
  * The default bot LOD.
  */
 export const DEFAULT_BOT_LOD: BotLOD = 'normal';
@@ -1014,6 +1020,8 @@ export const KNOWN_TAGS: string[] = [
     MEET_PORTAL,
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
+    TAG_PORTAL,
+    `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',
     'pageCameraPositionY',
@@ -1090,6 +1098,9 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+
+    'tagPortalAnchorPoint',
+    'tagPortalStyle',
 
     'color',
     'creator',

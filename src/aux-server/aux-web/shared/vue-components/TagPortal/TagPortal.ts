@@ -9,6 +9,8 @@ import {
     calculateBotValue,
     calculateStringTagValue,
     TAG_PORTAL,
+    calculateMeetPortalAnchorPointOffset,
+    DEFAULT_TAG_PORTAL_ANCHOR_POINT,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -41,6 +43,7 @@ export default class TagPortal extends Vue {
 
     currentBot: Bot = null;
     currentTag: string = null;
+    extraStyle: Object = {};
 
     get hasPortal(): boolean {
         return hasValue(this.currentBot) && hasValue(this.currentTag);
@@ -61,6 +64,9 @@ export default class TagPortal extends Vue {
         this._sub = new Subscription();
         this._simulations = new Map();
         this._portals = new Map();
+        this.extraStyle = calculateMeetPortalAnchorPointOffset(
+            DEFAULT_TAG_PORTAL_ANCHOR_POINT
+        );
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
@@ -187,13 +193,17 @@ export default class TagPortal extends Vue {
 
     private _updateConfig() {
         if (!this.currentBot || !this.currentTag) {
-            // TODO: Update options with defaults
+            this.extraStyle = calculateMeetPortalAnchorPointOffset(
+                DEFAULT_TAG_PORTAL_ANCHOR_POINT
+            );
             return;
         }
         if (this._currentConfig) {
-            // TODO: Update options from config
+            this.extraStyle = this._currentConfig.style;
         } else {
-            // TODO: Update options with defaults
+            this.extraStyle = calculateMeetPortalAnchorPointOffset(
+                DEFAULT_TAG_PORTAL_ANCHOR_POINT
+            );
         }
     }
 }

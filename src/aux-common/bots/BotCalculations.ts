@@ -40,6 +40,7 @@ import {
     MeetPortalAnchorPoint,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     BotSignatures,
+    DEFAULT_TAG_PORTAL_ANCHOR_POINT,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -1384,6 +1385,33 @@ export function getBotMeetPortalAnchorPoint(
 }
 
 /**
+ * Gets the meet portal anchor point for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotTagPortalAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): MeetPortalAnchorPoint {
+    const mode = <MeetPortalAnchorPoint>(
+        calculateBotValue(calc, bot, 'auxTagPortalAnchorPoint')
+    );
+
+    if (Array.isArray(mode)) {
+        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+            let result = mode.slice(0, 4);
+            while (result.length < 4) {
+                result.push(0);
+            }
+            return result as MeetPortalAnchorPoint;
+        }
+    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
+        return mode;
+    }
+    return DEFAULT_TAG_PORTAL_ANCHOR_POINT;
+}
+
+/**
  * Gets the anchor point offset for the bot in AUX coordinates.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1402,6 +1430,28 @@ export function getBotMeetPortalAnchorPointOffset(
     'min-width'?: string;
 } {
     const point = getBotMeetPortalAnchorPoint(calc, bot);
+    return calculateMeetPortalAnchorPointOffset(point);
+}
+
+/**
+ * Gets the anchor point offset for the bot in AUX coordinates.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotTagPortalAnchorPointOffset(
+    calc: BotCalculationContext,
+    bot: Bot
+): {
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+    height?: string;
+    width?: string;
+    'min-height'?: string;
+    'min-width'?: string;
+} {
+    const point = getBotTagPortalAnchorPoint(calc, bot);
     return calculateMeetPortalAnchorPointOffset(point);
 }
 
@@ -1475,7 +1525,7 @@ export function calculateMeetPortalAnchorPointOffset(
             };
         } else if (anchorPoint === 'left') {
             return {
-                bottom: '25px',
+                bottom: '0px',
                 height: '100%',
                 'min-height': '250px',
                 width: '50%',
@@ -1484,7 +1534,7 @@ export function calculateMeetPortalAnchorPointOffset(
             };
         } else if (anchorPoint === 'right') {
             return {
-                bottom: '25px',
+                bottom: '0px',
                 height: '100%',
                 'min-height': '250px',
                 width: '50%',

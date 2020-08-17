@@ -16,6 +16,8 @@ import {
     getBotMeetPortalAnchorPointOffset,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
+    DEFAULT_TAG_PORTAL_ANCHOR_POINT,
+    getBotTagPortalAnchorPointOffset,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -33,6 +35,19 @@ export class TagPortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
     private _updated: Subject<void>;
+    private _style: Object;
+
+    /**
+     * Gets the CSS style that should be applied.
+     */
+    get style(): Object {
+        if (hasValue(this._style)) {
+            return this._style;
+        }
+        return calculateMeetPortalAnchorPointOffset(
+            DEFAULT_TAG_PORTAL_ANCHOR_POINT
+        );
+    }
 
     unsubscribe(): void {
         this._sub.unsubscribe();
@@ -70,6 +85,7 @@ export class TagPortalConfig implements SubscriptionLike {
     }
 
     protected _clearPortalValues() {
+        this._style = null;
         this._updated.next();
     }
 
@@ -78,6 +94,32 @@ export class TagPortalConfig implements SubscriptionLike {
         bot: PrecalculatedBot,
         portalTag: string
     ) {
+        this._style = calculateBotValue(calc, bot, 'tagPortalStyle');
+        if (typeof this._style !== 'object') {
+            this._style = null;
+        }
+        const anchorPoint = calculateBotValue(
+            calc,
+            bot,
+            'auxTagPortalAnchorPoint'
+        );
+
+        if (hasValue(anchorPoint)) {
+            if (!this._style) {
+                this._style = {
+                    top: null,
+                    bottom: null,
+                    height: null,
+                    width: null,
+                    'min-height': null,
+                    'min-width': null,
+                    left: null,
+                    right: null,
+                };
+            }
+            const offset = getBotTagPortalAnchorPointOffset(calc, bot);
+            merge(this._style, offset);
+        }
         this._updated.next();
     }
 }
