@@ -172,9 +172,15 @@ export default class TagPortal extends Vue {
         }
         this._currentSim = sim;
         if (sim) {
-            const [botId, tag] = hasValue(botAndTag)
-                ? botAndTag.split('.')
-                : [];
+            if (!hasValue(botAndTag)) {
+                return false;
+            }
+            const dotIndex = botAndTag.indexOf('.');
+            if (dotIndex < 0) {
+                return false;
+            }
+            const botId = botAndTag.slice(0, dotIndex);
+            const tag = botAndTag.slice(dotIndex + 1);
             if (!hasValue(botId) || !hasValue(tag)) {
                 return false;
             }
