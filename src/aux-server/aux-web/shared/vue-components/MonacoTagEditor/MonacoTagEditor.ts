@@ -40,6 +40,7 @@ setup();
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
+    @Prop({ default: true }) showResize: boolean;
 
     private _simulation: BrowserSimulation;
     private _sub: Subscription;

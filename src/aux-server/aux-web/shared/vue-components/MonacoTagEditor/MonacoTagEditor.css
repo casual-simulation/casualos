@@ -20,9 +20,12 @@
     background-color: var(--disabled-cell-color);
     border-bottom: solid 1px var(--bot-cell-border-color);
     user-select: none;
-    cursor: row-resize;
 
     display: flex;
+}
+
+.editor-breadcrumbs.show-resize {
+    cursor: row-resize;
 }
 
 .editor-breadcrumbs .bot-tag {

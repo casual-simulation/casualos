@@ -1,6 +1,6 @@
 <template>
     <div class="editor-wrapper">
-        <div class="editor-breadcrumbs">
+        <div class="editor-breadcrumbs" :class="{ 'show-resize': showResize }">
             <bot-tag
                 :tag="tag"
                 :isScript="isScript"
