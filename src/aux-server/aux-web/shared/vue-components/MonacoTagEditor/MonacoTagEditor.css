@@ -123,3 +123,15 @@
     font-size: 20px;
     font-weight: 700;
 }
+
+.editor-toggles .md-button.md-dense.md-theme-default {
+    margin: 0;
+    width: 32px;
+    height: 22px;
+    min-width: 22px;
+    line-height: 22px;
+}
+
+.editor-toggles .md-button.active {
+    background-color: #dedede;
+}

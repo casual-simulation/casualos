@@ -7,6 +7,16 @@
                 :isFormula="isFormula"
                 :allowCloning="false"
             ></bot-tag>
+            <div class="editor-toggles">
+                <md-button @click="makeNormalTag()" class="md-dense" :class="{ active: !isScript }">
+                    <md-tooltip>Make Normal Tag</md-tooltip>
+                    <span class="hashtag">#</span>
+                </md-button>
+                <md-button @click="makeScriptTag()" class="md-dense" :class="{ active: isScript }">
+                    <md-tooltip>Make Listen Tag</md-tooltip>
+                    <span class="at-symbol">@</span>
+                </md-button>
+            </div>
             <div class="editor-errors">
                 <div v-if="scriptErrors.length === 0">
                     No Errors
