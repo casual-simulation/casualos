@@ -979,6 +979,7 @@ export const KNOWN_PORTALS: string[] = [
     'leftWristPortal',
     'rightWristPortal',
     MEET_PORTAL,
+    TAG_PORTAL,
 ];
 
 /**
@@ -988,6 +989,7 @@ export const QUERY_PORTALS: string[] = [
     'pagePortal',
     'sheetPortal',
     MEET_PORTAL,
+    TAG_PORTAL,
 ];
 
 /*
