@@ -22,6 +22,28 @@ export class GameAudio {
         sound.play();
     }
 
+    /**
+     * Preloads the audio from the given URL.
+     * Returns a promise that resolves when the audio is loaded.
+     * @param url The URL.
+     */
+    bufferFromUrl(url: string): Promise<void> {
+        const sound = new Howl({
+            src: url,
+            preload: true,
+        });
+
+        return new Promise((resolve, reject) => {
+            sound.once('load', () => {
+                resolve();
+            });
+
+            sound.once('loaderror', () => {
+                reject(new Error('Unable to load audio from: ' + url));
+            });
+        });
+    }
+
     // private _getMediaElement(url: string) {
     //     let element = this._cache.get(url);
     //     if(!element) {

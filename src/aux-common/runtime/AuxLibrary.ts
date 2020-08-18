@@ -36,6 +36,7 @@ import {
     openURL as calcOpenURL,
     checkout as calcCheckout,
     playSound as calcPlaySound,
+    bufferSound as calcBufferSound,
     setupStory as calcSetupStory,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
@@ -381,6 +382,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openDevConsole,
                 checkout,
                 playSound,
+                bufferSound,
                 hasBotInInventory,
                 share,
                 inSheet,
@@ -1409,12 +1411,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      *   Play given url's audio
      * @example
-     * // Send the player to the "welcome" dimension.
+     * // Play a cow "moo"
      * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
      */
     function playSound(url: string) {
         const event = calcPlaySound(url);
         return addAction(event);
+    }
+
+    /**
+     * Preloads the audio for the given URL.
+     * Returns a promise that resolves when the audio has finished loading.
+     * @param url The URl to preload.
+     *
+     * @example
+     * // Preload a cow "moo"
+     * player.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     */
+    function bufferSound(url: string) {
+        const task = context.createTask();
+        const event = calcBufferSound(url, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

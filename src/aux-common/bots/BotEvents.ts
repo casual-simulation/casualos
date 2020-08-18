@@ -129,7 +129,8 @@ export type AsyncActions =
     | RemoteActionError
     | DeviceAction
     | DeviceActionResult
-    | DeviceActionError;
+    | DeviceActionError
+    | BufferSoundAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1009,6 +1010,18 @@ export interface PlaySoundAction extends Action {
 
     /**
      * The URL to open.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to pre-load a sound from the given URL.
+ */
+export interface BufferSoundAction extends AsyncAction {
+    type: 'buffer_sound';
+
+    /**
+     * The URL to buffer.
      */
     url: string;
 }
@@ -2095,6 +2108,22 @@ export function playSound(url: string): PlaySoundAction {
     return {
         type: 'play_sound',
         url: url,
+    };
+}
+
+/**
+ * Creates a new BufferSoundAction.
+ * @param url The URL of the sound to play.
+ * @param taskId The ID of the async task.
+ */
+export function bufferSound(
+    url: string,
+    taskId?: string | number
+): BufferSoundAction {
+    return {
+        type: 'buffer_sound',
+        url: url,
+        taskId,
     };
 }
 

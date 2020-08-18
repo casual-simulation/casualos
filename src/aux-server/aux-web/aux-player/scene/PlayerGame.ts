@@ -30,6 +30,11 @@ import {
     DEFAULT_INVENTORY_VISIBLE,
     DEFAULT_PORTAL_SHOW_FOCUS_POINT,
     DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
+    BufferSoundAction,
+    hasValue,
+    BotAction,
+    enqueueAsyncResult,
+    enqueueAsyncError,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -44,7 +49,10 @@ import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 import { ItemDimension } from '../ItemDimension';
 import { DimensionItem } from '../DimensionItem';
-import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
+import {
+    getBotsStateFromStoredAux,
+    Simulation,
+} from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
 
 export class PlayerGame extends Game {
@@ -426,6 +434,8 @@ export class PlayerGame extends Game {
                     this.importAUX(sim, e.url);
                 } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
+                } else if (e.type === 'buffer_sound') {
+                    this.bufferAudio(playerSim3D.simulation, e);
                 } else if (e.type === 'enable_ar') {
                     if (e.enabled) {
                         this.startAR();
@@ -447,6 +457,23 @@ export class PlayerGame extends Game {
         if (url === null) return;
 
         this.audio.playFromUrl(url);
+    }
+
+    bufferAudio(sim: Simulation, event: BufferSoundAction) {
+        if (!hasValue(event.url)) return;
+
+        this.audio.bufferFromUrl(event.url).then(
+            () => {
+                let list = [] as BotAction[];
+                enqueueAsyncResult(list, event, null, false);
+                sim.helper.transaction(...list);
+            },
+            err => {
+                let list = [] as BotAction[];
+                enqueueAsyncError(list, event, err);
+                sim.helper.transaction(...list);
+            }
+        );
     }
 
     private simulationRemoved(sim: BrowserSimulation) {

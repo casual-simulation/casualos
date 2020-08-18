@@ -85,6 +85,7 @@ import {
     signTag,
     revokeCertificate,
     setSpacePassword,
+    bufferSound,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2267,6 +2268,15 @@ describe('AuxLibrary', () => {
                 const action = library.api.player.playSound('abc');
                 expect(action).toEqual(playSound('abc'));
                 expect(context.actions).toEqual([playSound('abc')]);
+            });
+        });
+
+        describe('player.bufferSound()', () => {
+            it('should emit a BufferSoundEvent', () => {
+                const promise: any = library.api.player.bufferSound('abc');
+                const expected = bufferSound('abc', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
