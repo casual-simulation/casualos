@@ -24,6 +24,7 @@ import {
     RpioSPISetCSPolarityAction,
     RpioSPISetClockDividerAction,
     RpioSPISetDataModeAction,
+    RpioSPIEndAction,
     asyncResult,
     asyncError,
     hasValue,
@@ -102,6 +103,9 @@ export class GpioModule2 implements AuxModule2 {
                         }
                         if (event.type === 'rpio_spi_setdatamode') {
                             await this._rpioSPISetDataMode(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_end') {
+                            await this._rpioSPIEnd(simulation, event);
                         }
                     })
                 )
@@ -632,6 +636,33 @@ export class GpioModule2 implements AuxModule2 {
     _rpioSPISetDataMode(simulation: Simulation, event: RpioSPISetDataModeAction) {
         try {
             rpio.spiSetDataMode(event.mode);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPIEnd(simulation: Simulation, event: RpioSPIEndAction) {
+        try {
+            rpio.spiEnd();
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(

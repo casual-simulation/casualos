@@ -110,6 +110,7 @@ import {
     rpioSPISetCSPolarityPin,
     rpioSPISetClockDividerPin,
     rpioSPISetDataModePin,
+    rpioSPIEndPin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -424,6 +425,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPISetCSPolarity,
                 rpioSPISetClockDivider,
                 rpioSPISetDataMode,
+                rpioSPIEnd,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1833,6 +1835,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
         return addAsyncAction(task, event);
     }
+
+    /**
+     * Release the pins back to general purpose use.
+     */
+    function rpioSPIEnd() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIEndPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
     /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.

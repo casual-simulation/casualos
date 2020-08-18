@@ -129,6 +129,7 @@ export type AsyncActions =
     | RpioSPISetCSPolarityAction
     | RpioSPISetClockDividerAction
     | RpioSPISetDataModeAction
+    | RpioSPIEndAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1471,6 +1472,12 @@ export interface RpioSPISetDataModeAction extends AsyncAction {
      *    3  |  1   |  1
      */
     mode: 0 | 1 | 2 | 3;
+}
+/**
+ * Release the pins back to general purpose use.
+ */
+export interface RpioSPIEndAction extends AsyncAction {
+    type: 'rpio_spi_end';
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2901,6 +2908,22 @@ export function rpioSPISetDataModePin(
         playerId,
     };
 }
+
+/**
+ * Release the pins back to general purpose use.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIEndPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIEndAction {
+    return {
+        type: 'rpio_spi_end',
+        taskId,
+        playerId,
+    };
+}
+
 /**
  * Creates a SetClipboardAction.
  * @param text The text that should be set to the clipboard.

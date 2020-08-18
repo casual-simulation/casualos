@@ -2955,6 +2955,12 @@ declare global {
          */
         rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
         
+        
+        /**
+         * Release the pins back to general purpose use.
+         */
+        rpioSPIEnd(): Promise<void>;
+        
         /**
          * Executes the given shell script on the server.
          * @param script The shell script that should be executed.

@@ -89,6 +89,7 @@ import {
     rpioSPISetCSPolarityPin,
     rpioSPISetClockDividerPin,
     rpioSPISetDataModePin,
+    rpioSPIEndPin,
     createCertificate,
     signTag,
     revokeCertificate,
@@ -2862,6 +2863,30 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.rpioSPISetDataMode(0);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+
+        describe('server.rpioSPIEnd()', () => {
+            it('should send a RpioSPIEndAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIEnd();
+                const expected = remote(
+                    rpioSPIEndPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIEnd();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

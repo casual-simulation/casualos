@@ -2844,6 +2844,20 @@ Returns a promise that resolves when a data mode has been set.
 server.rpioSPISetDataMode(0);
 ```
 
+### `server.rpioSPIEnd()`
+
+Release the pins back to general purpose use.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+#### Examples:
+
+1. Release the pins back to general purpose use.
+```typescript
+server.rpioSPIEnd();
+```
+
 ### `server.browseHistory()`
 
 
