@@ -1407,37 +1407,37 @@ export interface RpioPWMSetDataAction extends AsyncAction {
 /**
  * Initiate SPI mode.
  */
-export interface RpioSPIBeginAction extends AsyncAction{
+export interface RpioSPIBeginAction extends AsyncAction {
     type: 'rpio_spi_begin';
 }
 /**
  * Choose which of the chip select / chip enable pins to control.
  */
-export interface RpioSPIChipSelectAction extends AsyncAction{
+export interface RpioSPIChipSelectAction extends AsyncAction {
     type: 'rpio_spi_chipselect';
 
     /*
-    *  Value | Pin
-    *  ------|---------------------
-    *    0   | SPI_CE0 (24 / GPIO8)
-    *    1   | SPI_CE1 (26 / GPIO7)
-    *    2   | Both
-    */
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     */
     value: 0 | 1 | 2;
 }
 /**
  * If your device's CE pin is active high, use this to change the polarity.
  */
-export interface RpioSPISetCSPolarityAction extends AsyncAction{
+export interface RpioSPISetCSPolarityAction extends AsyncAction {
     type: 'rpio_spi_setcspolarity';
 
     /*
-    *  Value | Pin
-    *  ------|---------------------
-    *    0   | SPI_CE0 (24 / GPIO8)
-    *    1   | SPI_CE1 (26 / GPIO7)
-    *    2   | Both
-    */
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     */
     value: 0 | 1 | 2;
 
     /**
@@ -1448,7 +1448,7 @@ export interface RpioSPISetCSPolarityAction extends AsyncAction{
 /**
  * Set the SPI clock speed.
  */
-export interface RpioSPISetClockDividerAction extends AsyncAction{
+export interface RpioSPISetClockDividerAction extends AsyncAction {
     type: 'rpio_spi_setclockdivider';
 
     /**
@@ -1459,7 +1459,7 @@ export interface RpioSPISetClockDividerAction extends AsyncAction{
 /**
  * Set the SPI Data Mode.
  */
-export interface RpioSPISetDataModeAction extends AsyncAction{
+export interface RpioSPISetDataModeAction extends AsyncAction {
     type: 'rpio_spi_setdatamode';
 
     /**
