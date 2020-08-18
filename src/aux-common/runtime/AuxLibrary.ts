@@ -102,6 +102,9 @@ import {
     rpioWritePin,
     rpioWriteSequencePin,
     rpioClosePin,
+    rpioPWMSetClockDividerPin,
+    rpioPWMSetRangePin,
+    rpioPWMSetDataPin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -408,6 +411,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioWrite,
                 rpioWriteSequence,
                 rpioClose,
+                rpioPWMSetClockDivider,
+                rpioPWMSetRange,
+                rpioPWMSetData,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1672,6 +1678,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioClosePin(pin, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+
+    /**
+     * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+     * @param rate The PWM refresh rate.
+     */
+    function rpioPWMSetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetClockDividerPin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * This determines the maximum pulse width.
+     * @param pin The physical pin number.
+     * @param range The PWM range for a pin.
+     */
+    function rpioPWMSetRange(pin: number, range: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetRangePin(pin, range),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    
+    /**
+     * Set the width for a given pin.
+     * @param pin The physical pin number.
+     * @param width The PWM width for a pin.
+     */
+    function rpioPWMSetData(pin: number, width: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetDataPin(pin, width),
             undefined,
             undefined,
             task.taskId

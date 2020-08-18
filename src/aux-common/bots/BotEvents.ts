@@ -121,6 +121,9 @@ export type AsyncActions =
     | RpioWriteAction
     | RpioWriteSequenceAction
     | RpioCloseAction
+    | RpioPWMSetClockDividerAction
+    | RpioPWMSetRangeAction
+    | RpioPWMSetDataAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1352,6 +1355,50 @@ export interface RpioCloseAction extends AsyncAction {
      * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
      */
     options?: 'PIN_RESET' | 'PIN_PRESERVE';
+}
+/**
+ * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+ */
+export interface RpioPWMSetClockDividerAction extends AsyncAction{
+    type: 'rpio_pwm_setclockdivider';
+
+    /**
+     * The PWM refresh rate.
+     */
+    rate: number;
+}
+/**
+ * This determines the maximum pulse width.
+ */
+export interface RpioPWMSetRangeAction extends AsyncAction{
+    type: 'rpio_pwm_setrange';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The PWM range for a pin.
+     */
+    range: number;
+}
+/**
+ * Set the width for a given pin.
+ */
+export interface RpioPWMSetDataAction extends AsyncAction{
+    type: 'rpio_pwm_setdata';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The PWM width for a pin.
+     */
+    width: number;
+
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2611,6 +2658,67 @@ export function rpioClosePin(
         type: 'rpio_close',
         pin,
         options,
+        taskId,
+        playerId,
+    };
+}
+
+
+/**
+ * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+ * @param rate The PWM refresh rate.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetClockDividerAction {
+    return {
+        type: 'rpio_pwm_setclockdivider',
+        rate,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * This determines the maximum pulse width.
+ * @param pin The physical pin number.
+ * @param range The PWM range for a pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetRangePin(
+    pin: number,
+    range: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetRangeAction {
+    return {
+        pin,
+        range,
+        type: 'rpio_pwm_setrange',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the width for a given pin.
+ * @param pin The physical pin number.
+ * @param width The PWM width for a pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetDataPin(
+    pin: number,
+    width: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetDataAction {
+    return {
+        pin,
+        width,
+        type: 'rpio_pwm_setdata',
         taskId,
         playerId,
     };

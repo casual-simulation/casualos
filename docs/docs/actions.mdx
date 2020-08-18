@@ -2701,6 +2701,53 @@ server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
 server.rpioClose(led_pin, 'PIN_PRESERVE');
 ```
 
+### `server.rpioPWMSetClockDivider()`
+
+Set the PWM refresh rate.
+This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Set PWM refresh rate to 300kHz
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetClockDivider(64);
+```
+
+### `server.rpioPWMSetRange()`
+
+Set the PWM range for a pin.
+This determines the maximum pulse width.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Set the max width to 1024.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetRange(12, 1024);
+```
+
+### `server.rpioPWMData()`
+
+Set the PWM width for a pin.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Set the current width to 512.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMData(12, 512);
+```
+
 ### `server.browseHistory()`
 
 

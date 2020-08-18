@@ -2862,7 +2862,7 @@ declare global {
          * @param buffer The buffer to read.
          * @param length The length of the buffer.
          */
-        rpioReadBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioReadSequence(pin: number, buffer: Buffer, length?: number): Promise<void>;
 
         /**
          * Sends an event to the server to write to a pin and set it as HIGH or LOW.
@@ -2877,7 +2877,8 @@ declare global {
          * @param buffer The buffer to write to.
          * @param length The length of the buffer.
          */
-        rpioWriteBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioWriteSequence(pin: number, buffer: Buffer, length?: number): Promise<void>;
+
 
         /**
          * Sends an event to the server to close a pin and what state to leave it in.
@@ -2886,6 +2887,28 @@ declare global {
          */
         rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
 
+        
+        /**
+         * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+         * @param rate The PWM refresh rate.
+         */
+        rpioPWMSetClockDivider(rate: number): Promise<void>;
+        
+        /**
+         * This determines the maximum pulse width.
+         * @param pin The physical pin number.
+         * @param range The PWM range for a pin.
+         */
+        rpioPWMSetRange(pin: number, range: number): Promise<void>;
+        
+        
+        /**
+         * Set the width for a given pin.
+         * @param pin The physical pin number.
+         * @param width The PWM width for a pin.
+         */
+        rpioPWMSetData(pin: number, width: number): Promise<void>;
+        
         /**
          * Executes the given shell script on the server.
          * @param script The shell script that should be executed.
