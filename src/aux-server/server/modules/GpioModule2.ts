@@ -19,6 +19,11 @@ import {
     RpioPWMSetClockDividerAction,
     RpioPWMSetRangeAction,
     RpioPWMSetDataAction,
+    RpioSPIBeginAction,
+    RpioSPIChipSelectAction,
+    RpioSPISetCSPolarityAction,
+    RpioSPISetClockDividerAction,
+    RpioSPISetDataModeAction,
     asyncResult,
     asyncError,
     hasValue,
@@ -83,6 +88,21 @@ export class GpioModule2 implements AuxModule2 {
                             await this._rpioPWMSetData(simulation, event);
                         }
                         // SPI
+                        if (event.type === 'rpio_spi_begin') {
+                            await this._rpioSPIBegin(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_chipselect') {
+                            await this._rpioSPIChipSelect(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_setcspolarity') {
+                            await this._rpioSPISetCSPolarity(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_setclockdivider') {
+                            await this._rpioSPISetClockDivider(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_setdatamode') {
+                            await this._rpioSPISetDataMode(simulation, event);
+                        }
                     })
                 )
                 .subscribe()
@@ -173,7 +193,7 @@ export class GpioModule2 implements AuxModule2 {
             }
 
             rpio.open(pin, mode, options);
-            
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -226,7 +246,7 @@ export class GpioModule2 implements AuxModule2 {
             }
 
             rpio.mode(pin, mode, options);
-            
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -322,7 +342,7 @@ export class GpioModule2 implements AuxModule2 {
             }
 
             rpio.write(pin, value);
-            
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -377,7 +397,6 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-
     _rpioClose(simulation: Simulation, event: RpioCloseAction) {
         try {
             let pin = event.pin;
@@ -388,7 +407,7 @@ export class GpioModule2 implements AuxModule2 {
                 options = rpio.PIN_RESET;
             }
             rpio.close(pin, options);
-            
+
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -413,7 +432,6 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-
     // PWM
     _rpioPWMSetClockDivider(simulation: Simulation, event: RpioPWMSetClockDividerAction) {
         try {
@@ -497,6 +515,147 @@ export class GpioModule2 implements AuxModule2 {
         }
     }
     // SPI
+    _rpioSPIBegin(simulation: Simulation, event: RpioSPIBeginAction) {
+        try {
+            rpio.spiBegin();
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPIChipSelect(simulation: Simulation, event: RpioSPIChipSelectAction) {
+        try {
+            rpio.spiChipSelect(event.value);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPISetCSPolarity(simulation: Simulation, event: RpioSPISetCSPolarityAction) {
+        try {
+            var polarity;
+            if (event.polarity == 'HIGH') {
+                polarity = rpio.HIGH;
+            } else if (event.polarity == 'LOW') {
+                polarity = rpio.LOW;
+            }
+            rpio.spiSetCSPolarity(event.value, polarity);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPISetClockDivider(simulation: Simulation, event: RpioSPISetClockDividerAction) {
+        try {
+            rpio.spiSetClockDivider(event.rate);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPISetDataMode(simulation: Simulation, event: RpioSPISetDataModeAction) {
+        try {
+            rpio.spiSetDataMode(event.mode);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
     async deviceConnected(
         simulation: Simulation,
         device: DeviceInfo

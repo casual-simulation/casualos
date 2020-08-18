@@ -2733,7 +2733,7 @@ server.rpioOpen(12, 'PWM');
 server.rpioPWMSetRange(12, 1024);
 ```
 
-### `server.rpioPWMData()`
+### `server.rpioPWMSetData()`
 
 Set the PWM width for a pin.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
@@ -2746,6 +2746,102 @@ Returns a promise that resolves when rpio has been exited.
 ```typescript
 server.rpioOpen(12, 'PWM');
 server.rpioPWMSetData(12, 512);
+```
+
+### `server.rpioSPIBegin()`
+
+Initiate SPI mode.
+Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
+SPI requires `gpiomem: false` and root privileges. 
+`server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI mode has been initiated.
+
+#### Examples:
+
+1. Initiate SPI mode.
+```typescript
+server.rpioSPIBegin();
+```
+
+### `server.rpioSPIChipSelect()`
+
+Choose which of the chip select / chip enable pins to control.
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI pin(s) have been enabled.
+
+#### Examples:
+
+1. Enable SPI_CE0.
+```typescript
+server.rpioSPIChipSelect(0);
+```
+
+### `server.rpioSPISetCSPolarity()`
+
+If your device's CE pin is active high, use this to change the polarity.
+
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+
+Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
+Setting the polarity to 'LOW' means it will activate on 'LOW'.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when polarity has been set.
+
+#### Examples:
+
+1. Set SPI_CE0 HIGH to activate.
+```typescript
+server.rpioSPISetCSPolarity(0, 'HIGH');
+```
+
+### `server.rpioSPISetClockDivider()`
+
+Set the SPI clock speed.
+The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+#### Examples:
+
+1. Set SPI speed to 1.95MHz
+```typescript
+server.rpioSPISetClockDivider(128);
+```
+
+### `server.rpioSPISetDataMode()`
+
+Set the SPI Data Mode.
+
+Mode | CPOL | CPHA
+-----|------|-----
+  0  |  0   |  0
+  1  |  0   |  1
+  2  |  1   |  0
+  3  |  1   |  1
+
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when a data mode has been set.
+
+#### Examples:
+
+1. Set the data mode to 0.
+```typescript
+server.rpioSPISetDataMode(0);
 ```
 
 ### `server.browseHistory()`

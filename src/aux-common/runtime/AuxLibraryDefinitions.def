@@ -2910,6 +2910,52 @@ declare global {
         rpioPWMSetData(pin: number, width: number): Promise<void>;
         
         /**
+         * Initiate SPI mode.
+         */
+        rpioSPIBegin(): Promise<void>;
+        
+        /**
+         * Choose which of the chip select / chip enable pins to control.
+         *  Value | Pin
+         *  ------|---------------------
+         *    0   | SPI_CE0 (24 / GPIO8)
+         *    1   | SPI_CE1 (26 / GPIO7)
+         *    2   | Both
+         * @param value The value correlating to pin(s) to control.
+         */
+        rpioSPIChipSelect(value: 0 | 1 | 2): Promise<void>;
+        
+        /**
+         * If your device's CE pin is active high, use this to change the polarity.
+         * *  Value | Pin
+         *  ------|---------------------
+         *    0   | SPI_CE0 (24 / GPIO8)
+         *    1   | SPI_CE1 (26 / GPIO7)
+         *    2   | Both
+         * @param value The value correlating to pin(s) to control.
+         * @param polarity Set the polarity it activates on. HIGH or LOW
+         */
+        rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW'): Promise<void>;
+        
+        /**
+         * Set the SPI clock speed.
+         * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+         */
+        rpioSPISetClockDivider(rate: number): Promise<void>;
+        
+        /**
+         * Set the SPI Data Mode.
+         *  Mode | CPOL | CPHA
+         *  -----|------|-----
+         *    0  |  0   |  0
+         *    1  |  0   |  1
+         *    2  |  1   |  0
+         *    3  |  1   |  1
+         * @param mode The SPI Data Mode.
+         */
+        rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
+        
+        /**
          * Executes the given shell script on the server.
          * @param script The shell script that should be executed.
          */

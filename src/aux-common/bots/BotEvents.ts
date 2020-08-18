@@ -124,6 +124,11 @@ export type AsyncActions =
     | RpioPWMSetClockDividerAction
     | RpioPWMSetRangeAction
     | RpioPWMSetDataAction
+    | RpioSPIBeginAction
+    | RpioSPIChipSelectAction
+    | RpioSPISetCSPolarityAction
+    | RpioSPISetClockDividerAction
+    | RpioSPISetDataModeAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1359,7 +1364,7 @@ export interface RpioCloseAction extends AsyncAction {
 /**
  * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
  */
-export interface RpioPWMSetClockDividerAction extends AsyncAction{
+export interface RpioPWMSetClockDividerAction extends AsyncAction {
     type: 'rpio_pwm_setclockdivider';
 
     /**
@@ -1370,7 +1375,7 @@ export interface RpioPWMSetClockDividerAction extends AsyncAction{
 /**
  * This determines the maximum pulse width.
  */
-export interface RpioPWMSetRangeAction extends AsyncAction{
+export interface RpioPWMSetRangeAction extends AsyncAction {
     type: 'rpio_pwm_setrange';
 
     /**
@@ -1386,7 +1391,7 @@ export interface RpioPWMSetRangeAction extends AsyncAction{
 /**
  * Set the width for a given pin.
  */
-export interface RpioPWMSetDataAction extends AsyncAction{
+export interface RpioPWMSetDataAction extends AsyncAction {
     type: 'rpio_pwm_setdata';
 
     /**
@@ -1398,7 +1403,74 @@ export interface RpioPWMSetDataAction extends AsyncAction{
      * The PWM width for a pin.
      */
     width: number;
+}
+/**
+ * Initiate SPI mode.
+ */
+export interface RpioSPIBeginAction extends AsyncAction{
+    type: 'rpio_spi_begin';
+}
+/**
+ * Choose which of the chip select / chip enable pins to control.
+ */
+export interface RpioSPIChipSelectAction extends AsyncAction{
+    type: 'rpio_spi_chipselect';
 
+    /*
+    *  Value | Pin
+    *  ------|---------------------
+    *    0   | SPI_CE0 (24 / GPIO8)
+    *    1   | SPI_CE1 (26 / GPIO7)
+    *    2   | Both
+    */
+    value: 0 | 1 | 2;
+}
+/**
+ * If your device's CE pin is active high, use this to change the polarity.
+ */
+export interface RpioSPISetCSPolarityAction extends AsyncAction{
+    type: 'rpio_spi_setcspolarity';
+
+    /*
+    *  Value | Pin
+    *  ------|---------------------
+    *    0   | SPI_CE0 (24 / GPIO8)
+    *    1   | SPI_CE1 (26 / GPIO7)
+    *    2   | Both
+    */
+    value: 0 | 1 | 2;
+
+    /**
+     * Set the polarity it activates on. HIGH or LOW
+     */
+    polarity: 'HIGH' | 'LOW';
+}
+/**
+ * Set the SPI clock speed.
+ */
+export interface RpioSPISetClockDividerAction extends AsyncAction{
+    type: 'rpio_spi_setclockdivider';
+
+    /**
+     * It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+     */
+    rate: number;
+}
+/**
+ * Set the SPI Data Mode.
+ */
+export interface RpioSPISetDataModeAction extends AsyncAction{
+    type: 'rpio_spi_setdatamode';
+
+    /**
+     *  Mode | CPOL | CPHA
+     *  -----|------|-----
+     *    0  |  0   |  0
+     *    1  |  0   |  1
+     *    2  |  1   |  0
+     *    3  |  1   |  1
+     */
+    mode: 0 | 1 | 2 | 3;
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2724,6 +2796,111 @@ export function rpioPWMSetDataPin(
     };
 }
 
+/**
+ * Initiate SPI mode.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIBeginPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIBeginAction {
+    return {
+        type: 'rpio_spi_begin',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Choose which of the chip select / chip enable pins to control.
+ *  Value | Pin
+ *  ------|---------------------
+ *    0   | SPI_CE0 (24 / GPIO8)
+ *    1   | SPI_CE1 (26 / GPIO7)
+ *    2   | Both
+ * @param value The value correlating to pin(s) to control.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIChipSelectPin(
+    value: 0 | 1 | 2,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIChipSelectAction {
+    return {
+        value,
+        type: 'rpio_spi_chipselect',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * If your device's CE pin is active high, use this to change the polarity.
+ *  Value | Pin
+ *  ------|---------------------
+ *    0   | SPI_CE0 (24 / GPIO8)
+ *    1   | SPI_CE1 (26 / GPIO7)
+ *    2   | Both
+ * @param value The value correlating to pin(s) to control.
+ * @param polarity Set the polarity it activates on. HIGH or LOW
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetCSPolarityPin(
+    value: 0 | 1 | 2,
+    polarity: 'HIGH' | 'LOW',
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetCSPolarityAction {
+    return {
+        value,
+        polarity,
+        type: 'rpio_spi_setcspolarity',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the SPI clock speed.
+ * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetClockDividerAction {
+    return {
+        rate,
+        type: 'rpio_spi_setclockdivider',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the SPI Data Mode.
+ *  Mode | CPOL | CPHA
+ *  -----|------|-----
+ *    0  |  0   |  0
+ *    1  |  0   |  1
+ *    2  |  1   |  0
+ *    3  |  1   |  1
+ * @param mode The SPI Data Mode.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetDataModePin(
+    mode: 0 | 1 | 2 | 3,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetDataModeAction {
+    return {
+        mode,
+        type: 'rpio_spi_setdatamode',
+        taskId,
+        playerId,
+    };
+}
 /**
  * Creates a SetClipboardAction.
  * @param text The text that should be set to the clipboard.

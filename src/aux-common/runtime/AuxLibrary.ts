@@ -105,6 +105,11 @@ import {
     rpioPWMSetClockDividerPin,
     rpioPWMSetRangePin,
     rpioPWMSetDataPin,
+    rpioSPIBeginPin,
+    rpioSPIChipSelectPin,
+    rpioSPISetCSPolarityPin,
+    rpioSPISetClockDividerPin,
+    rpioSPISetDataModePin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -414,6 +419,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioPWMSetClockDivider,
                 rpioPWMSetRange,
                 rpioPWMSetData,
+                rpioSPIBegin,
+                rpioSPIChipSelect,
+                rpioSPISetCSPolarity,
+                rpioSPISetClockDivider,
+                rpioSPISetDataMode,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -1717,7 +1727,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
-    
     /**
      * Set the width for a given pin.
      * @param pin The physical pin number.
@@ -1734,6 +1743,96 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Initiate SPI mode.
+     */
+    function rpioSPIBegin() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIBeginPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Choose which of the chip select / chip enable pins to control.
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     */
+    function rpioSPIChipSelect(value: 0 | 1 | 2) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIChipSelectPin(value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * If your device's CE pin is active high, use this to change the polarity.
+     * *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     * @param polarity Set the polarity it activates on. HIGH or LOW
+     */
+    function rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetCSPolarityPin(value, polarity),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the SPI clock speed.
+     * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+     */
+    function rpioSPISetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetClockDividerPin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the SPI Data Mode.
+     *  Mode | CPOL | CPHA
+     *  -----|------|-----
+     *    0  |  0   |  0
+     *    1  |  0   |  1
+     *    2  |  1   |  0
+     *    3  |  1   |  1
+     * @param mode The SPI Data Mode.
+     */
+    function rpioSPISetDataMode(mode: 0 | 1 | 2 | 3) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetDataModePin(mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
     /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
