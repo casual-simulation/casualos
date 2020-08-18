@@ -60,6 +60,8 @@ import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
+import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
+
 import merge from 'lodash/merge';
 
 @Component({
@@ -77,6 +79,7 @@ import merge from 'lodash/merge';
         'upload-files': UploadFiles,
         'show-input': ShowInputModal,
         'meet-portal': MeetPortal,
+        'tag-portal': TagPortal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

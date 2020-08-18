@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the tag portal.
+    -   The tag portal is similar to the sheet portal but it shows only the multiline editor for the specified bot ID and tag.
+    -   Set the `tagPortal` tag on the player bot to a string with a Bot ID and a tag name separated by a period (`.`).
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where actions that were created in an async script would not be dispatched until the script finished.

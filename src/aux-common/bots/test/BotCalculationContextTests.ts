@@ -58,6 +58,9 @@ import {
     getBotScaleMode,
     getBotMeetPortalAnchorPoint,
     getBotMeetPortalAnchorPointOffset,
+    calculateBotIdTagValue,
+    getBotTagPortalAnchorPoint,
+    getBotTagPortalAnchorPointOffset,
 } from '../BotCalculations';
 import {
     Bot,
@@ -372,6 +375,52 @@ export function botCalculationContextTests(
 
             const calc = createPrecalculatedContext([bot]);
             expect(calculateStringTagValue(calc, bot, 'auxTag', 'empty')).toBe(
+                'abc'
+            );
+        });
+    });
+
+    describe('calculateBotIdTagValue()', () => {
+        stringTagValueTests('test', (value, expected) => {
+            let bot = createBot('test', {
+                tag: value,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'test')).toBe(
+                expected
+            );
+        });
+
+        it('should return the ID of the bot', () => {
+            let bot = createBot('test', {
+                tag: createBot('botId'),
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
+                'botId'
+            );
+        });
+
+        it('should return the default if the object is not a bot', () => {
+            let bot = createBot('test', {
+                tag: {},
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
+                'empty'
+            );
+        });
+
+        it('should support fallback from aux prefixed tags', () => {
+            let bot = createBot('test', {
+                tag: 'abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'auxTag', 'empty')).toBe(
                 'abc'
             );
         });
@@ -986,30 +1035,31 @@ export function botCalculationContextTests(
         });
     });
 
+    const portalAnchorPointCases = [
+        ['fullscreen', 'fullscreen'],
+        ['top', 'top'],
+        ['topRight', 'topRight'],
+        ['topLeft', 'topLeft'],
+        ['bottom', 'bottom'],
+        ['bottomRight', 'bottomRight'],
+        ['bottomLeft', 'bottomLeft'],
+        ['[1]', [1, 0, 0, 0]],
+        ['[1, 2]', [1, 2, 0, 0]],
+        ['[1, 2, 3]', [1, 2, 3, 0]],
+        ['[1, 2, 3, 4]', [1, 2, 3, 4]],
+        ['[1, 2, 3, 4, 5]', [1, 2, 3, 4]],
+        ['[a]', ['a', 0, 0, 0]],
+        ['[a, b]', ['a', 'b', 0, 0]],
+        ['[a, b, c]', ['a', 'b', 'c', 0]],
+        ['[a, b, c, d]', ['a', 'b', 'c', 'd']],
+        ['[a, b, c, d, e]', ['a', 'b', 'c', 'd']],
+    ];
+
     describe('getMeetPortalAnchorPoint()', () => {
-        const cases = [
-            ['fullscreen', 'fullscreen'],
-            ['top', 'top'],
-            ['topRight', 'topRight'],
-            ['topLeft', 'topLeft'],
-            ['bottom', 'bottom'],
-            ['bottomRight', 'bottomRight'],
-            ['bottomLeft', 'bottomLeft'],
-            ['[1]', [1, 0, 0, 0]],
-            ['[1, 2]', [1, 2, 0, 0]],
-            ['[1, 2, 3]', [1, 2, 3, 0]],
-            ['[1, 2, 3, 4]', [1, 2, 3, 4]],
-            ['[1, 2, 3, 4, 5]', [1, 2, 3, 4]],
-            ['[a]', ['a', 0, 0, 0]],
-            ['[a, b]', ['a', 'b', 0, 0]],
-            ['[a, b, c]', ['a', 'b', 'c', 0]],
-            ['[a, b, c, d]', ['a', 'b', 'c', 'd']],
-            ['[a, b, c, d, e]', ['a', 'b', 'c', 'd']],
-        ];
         const tagCases = ['auxMeetPortalAnchorPoint', 'meetPortalAnchorPoint'];
 
         describe.each(tagCases)('%s', (tag: string) => {
-            it.each(cases)(
+            it.each(portalAnchorPointCases)(
                 'should support %s',
                 (mode: string, expected: any) => {
                     const bot = createBot('test', {
@@ -1030,6 +1080,36 @@ export function botCalculationContextTests(
 
             const calc = createPrecalculatedContext([bot]);
             const shape = getBotMeetPortalAnchorPoint(calc, bot);
+
+            expect(shape).toBe('fullscreen');
+        });
+    });
+
+    describe('getTagPortalAnchorPoint()', () => {
+        const tagCases = ['auxTagPortalAnchorPoint', 'tagPortalAnchorPoint'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(portalAnchorPointCases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotTagPortalAnchorPoint(calc, bot)).toEqual(
+                        expected
+                    );
+                }
+            );
+        });
+
+        it('should default to fullscreen', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getBotTagPortalAnchorPoint(calc, bot);
 
             expect(shape).toBe('fullscreen');
         });
@@ -1079,112 +1159,107 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getMeetPortalAnchorPointOffset()', () => {
-        const cases = [
-            [
-                'fullscreen',
-                { top: '0px', bottom: '0px', left: '0px', right: '0px' },
-            ],
-            [
-                '[1, 2, 3]',
-                { top: '1px', bottom: '3px', left: '0px', right: '2px' },
-            ],
-            [
-                '[1%, 2%, 3%]',
-                { top: '1%', bottom: '3%', left: '0px', right: '2%' },
-            ],
+    const portalAnchorPointOffsetCases = [
+        [
+            'fullscreen',
+            { top: '0px', bottom: '0px', left: '0px', right: '0px' },
+        ],
+        ['[1, 2, 3]', { top: '1px', bottom: '3px', left: '0px', right: '2px' }],
+        ['[1%, 2%, 3%]', { top: '1%', bottom: '3%', left: '0px', right: '2%' }],
 
-            [
-                'top',
-                {
-                    top: '0px',
-                    height: '50%',
-                    'min-height': '250px',
-                    left: '0px',
-                    right: '0px',
-                },
-            ],
-            [
-                'topRight',
-                {
-                    top: '25px',
-                    height: '25%',
-                    'min-height': '250px',
-                    width: '25%',
-                    'min-width': '250px',
-                    right: '25px',
-                },
-            ],
-            [
-                'topLeft',
-                {
-                    top: '25px',
-                    height: '25%',
-                    'min-height': '250px',
-                    width: '25%',
-                    'min-width': '250px',
-                    left: '25px',
-                },
-            ],
-            [
-                'bottom',
-                {
-                    bottom: '0px',
-                    height: '50%',
-                    'min-height': '250px',
-                    left: '0px',
-                    right: '0px',
-                },
-            ],
-            [
-                'bottomRight',
-                {
-                    bottom: '25px',
-                    height: '25%',
-                    'min-height': '250px',
-                    width: '25%',
-                    'min-width': '250px',
-                    right: '25px',
-                },
-            ],
-            [
-                'bottomLeft',
-                {
-                    bottom: '25px',
-                    height: '25%',
-                    'min-height': '250px',
-                    width: '25%',
-                    'min-width': '250px',
-                    left: '25px',
-                },
-            ],
-            [
-                'left',
-                {
-                    bottom: '25px',
-                    height: '100%',
-                    'min-height': '250px',
-                    width: '50%',
-                    'min-width': '250px',
-                    left: '0px',
-                },
-            ],
-            [
-                'right',
-                {
-                    bottom: '25px',
-                    height: '100%',
-                    'min-height': '250px',
-                    width: '50%',
-                    'min-width': '250px',
-                    right: '0px',
-                },
-            ],
-        ];
+        [
+            'top',
+            {
+                top: '0px',
+                height: '50%',
+                'min-height': '250px',
+                left: '0px',
+                right: '0px',
+            },
+        ],
+        [
+            'topRight',
+            {
+                top: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                right: '25px',
+            },
+        ],
+        [
+            'topLeft',
+            {
+                top: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                left: '25px',
+            },
+        ],
+        [
+            'bottom',
+            {
+                bottom: '0px',
+                height: '50%',
+                'min-height': '250px',
+                left: '0px',
+                right: '0px',
+            },
+        ],
+        [
+            'bottomRight',
+            {
+                bottom: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                right: '25px',
+            },
+        ],
+        [
+            'bottomLeft',
+            {
+                bottom: '25px',
+                height: '25%',
+                'min-height': '250px',
+                width: '25%',
+                'min-width': '250px',
+                left: '25px',
+            },
+        ],
+        [
+            'left',
+            {
+                bottom: '0px',
+                height: '100%',
+                'min-height': '250px',
+                width: '50%',
+                'min-width': '250px',
+                left: '0px',
+            },
+        ],
+        [
+            'right',
+            {
+                bottom: '0px',
+                height: '100%',
+                'min-height': '250px',
+                width: '50%',
+                'min-width': '250px',
+                right: '0px',
+            },
+        ],
+    ];
+
+    describe('getBotMeetPortalAnchorPointOffset()', () => {
         const tagCases = ['auxMeetPortalAnchorPoint', 'meetPortalAnchorPoint'];
 
         describe.each(tagCases)('%s', (tag: string) => {
-            it.each(cases)(
+            it.each(portalAnchorPointOffsetCases)(
                 'should support %s',
                 (mode: string, expected: any) => {
                     const bot = createBot('test', {
@@ -1200,16 +1275,52 @@ export function botCalculationContextTests(
             );
         });
 
-        it('should default to bottom', () => {
+        it('should default to fullscreen', () => {
             const bot = createBot();
 
             const calc = createPrecalculatedContext([bot]);
-            const offset = getAnchorPointOffset(calc, bot);
+            const offset = getBotMeetPortalAnchorPointOffset(calc, bot);
 
             expect(offset).toEqual({
-                x: 0,
-                y: 0,
-                z: 0.5,
+                bottom: '0px',
+                left: '0px',
+                right: '0px',
+                top: '0px',
+            });
+        });
+    });
+
+    describe('getTagPortalAnchorPointOffset()', () => {
+        const tagCases = ['auxTagPortalAnchorPoint', 'tagPortalAnchorPoint'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(portalAnchorPointOffsetCases)(
+                'should support %s',
+                (mode: string, expected: any) => {
+                    const bot = createBot('test', {
+                        [tag]: <any>mode,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+
+                    expect(getBotTagPortalAnchorPointOffset(calc, bot)).toEqual(
+                        expected
+                    );
+                }
+            );
+        });
+
+        it('should default to fullscreen', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const offset = getBotTagPortalAnchorPointOffset(calc, bot);
+
+            expect(offset).toEqual({
+                bottom: '0px',
+                left: '0px',
+                right: '0px',
+                top: '0px',
             });
         });
     });

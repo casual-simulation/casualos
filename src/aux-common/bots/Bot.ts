@@ -558,6 +558,12 @@ export const DEFAULT_MEET_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for the tag portal.
+ */
+export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
+
+/**
  * The default bot LOD.
  */
 export const DEFAULT_BOT_LOD: BotLOD = 'normal';
@@ -959,6 +965,11 @@ export const AUX_BOT_VERSION: number = 1;
 export const MEET_PORTAL: string = 'meetPortal';
 
 /**
+ * The name of the tag portal.
+ */
+export const TAG_PORTAL: string = 'tagPortal';
+
+/**
  * The name of the data portal.
  */
 export const DATA_PORTAL: string = 'dataPortal';
@@ -974,6 +985,7 @@ export const KNOWN_PORTALS: string[] = [
     'leftWristPortal',
     'rightWristPortal',
     MEET_PORTAL,
+    TAG_PORTAL,
 ];
 
 /**
@@ -983,6 +995,7 @@ export const QUERY_PORTALS: string[] = [
     'pagePortal',
     'sheetPortal',
     MEET_PORTAL,
+    TAG_PORTAL,
 ];
 
 /*
@@ -1007,6 +1020,8 @@ export const KNOWN_TAGS: string[] = [
     MEET_PORTAL,
     `${MEET_PORTAL}ConfigBot`,
     DATA_PORTAL,
+    TAG_PORTAL,
+    `${TAG_PORTAL}ConfigBot`,
 
     'pageCameraPositionX',
     'pageCameraPositionY',
@@ -1083,6 +1098,9 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+
+    'tagPortalAnchorPoint',
+    'tagPortalStyle',
 
     'color',
     'creator',

@@ -1229,6 +1229,78 @@ Note that we wrap the curly braces in parenthesis to tell JavaScript that we wan
 })
 ```
 
+### `tagPortalAnchorPoint`
+
+The position on the screen that the tag portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='tagPortalStyle'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The tag portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The tag portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The tag portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The tag portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The tag portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The tag portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The tag portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The tag portal will occupy the left side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The tag portal will occupy the right side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The tag portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `tagPortalStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the tag portal container.
+This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='tagPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='tagPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize formulas to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the tag portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the tag portal in the center of the screen.
+Note that we wrap the curly braces in parenthesis to tell JavaScript that we want the curly braces to be intepreted as an [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer) instead of as a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block).
+```
+=({
+    top: "10%",
+    bottom: "10%",
+    left: "10%",
+    right: "10%",
+})
+```
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -1374,6 +1446,28 @@ This will join the current tab to the meeting and provide audiovisual communicat
 This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
 
 Only available on the player bot.
+
+### `tagPortal`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The Bot ID and tag that should be edited in the tag portal.
+This will show just the code editor without the rest of the sheet and makes it possible to edit just a single tag at a time.
+
+When you are setting the tag portal, you should format it so the bot ID and tag name are separated by a single period (.).
+
+Only available on the player bot.
+
+#### Examples:
+
+1. Open the tag portal for the `abc` tag on the player bot.
+```typescript
+const playerBot = player.getBot();
+const tag = "abc";
+playerBot.tags.tagPortal = getID(playerBot) + "." + tag;
+```
 
 ### `dataPortal`
 

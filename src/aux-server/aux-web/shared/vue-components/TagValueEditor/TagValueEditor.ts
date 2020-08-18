@@ -22,6 +22,7 @@ export default class TagValueEditor extends Vue {
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
     @Prop({ default: false }) showDesktopEditor: boolean;
+    @Prop({ default: true }) showResize: boolean;
 
     constructor() {
         super();
