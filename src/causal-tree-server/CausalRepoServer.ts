@@ -944,16 +944,20 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            let promise: Promise<RepoData>;
-            if (!temporary) {
-                promise = this._loadRepo(branch, createBranch);
+            let finalPromise: Promise<RepoData>;
+            let repoPromise = this._repoPromises.get(branch);
+            if (repoPromise) {
+                finalPromise = repoPromise;
             } else {
-                promise = this._createEmptyRepo(branch);
+                if (!temporary) {
+                    finalPromise = this._loadRepo(branch, createBranch);
+                } else {
+                    finalPromise = this._createEmptyRepo(branch);
+                }
+                this._repoPromises.set(branch, finalPromise);
             }
 
-            this._repoPromises.set(branch, promise);
-
-            repo = await promise;
+            repo = await finalPromise;
 
             this._repos.set(branch, repo);
             this._branchLoaded(branch);

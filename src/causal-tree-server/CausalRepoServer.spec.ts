@@ -307,6 +307,50 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
+        it('should only load the branch once when concurrent watch events arrive', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            const joinBranch2 = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, 'testBranch', idx.data.hash, [
+                a1,
+                a2,
+                idx,
+                c,
+            ]);
+            await updateBranch(store, b);
+
+            const spy = jest.spyOn(store, 'getBranches');
+
+            joinBranch.next({
+                branch: 'testBranch',
+            });
+
+            joinBranch2.next({
+                branch: 'testBranch',
+            });
+
+            await waitAsync();
+
+            expect(spy).toBeCalledTimes(1);
+        });
+
         describe('temp', () => {
             it('should load the branch without persistent data if the branch is temporary', async () => {
                 server.init();
