@@ -2729,13 +2729,15 @@ Returns a promise that resolves when i²c has been turned off.
 server.rpioI2CEnd();
 ```
 
-### `server.rpioPWMSetClockDivider()`
+### `server.rpioPWMSetClockDivider(rate)`
 
 Set the PWM refresh rate.
 This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-Returns a promise that resolves when rpio has been exited.
+Returns a promise that resolves when the rate has been set.
+
+The **first parameter** is a power-of-two divisor.
 
 #### Examples:
 
@@ -2745,13 +2747,17 @@ server.rpioOpen(12, 'PWM');
 server.rpioPWMSetClockDivider(64);
 ```
 
-### `server.rpioPWMSetRange()`
+### `server.rpioPWMSetRange(pin, range)`
 
 Set the PWM range for a pin.
 This determines the maximum pulse width.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-Returns a promise that resolves when rpio has been exited.
+Returns a promise that resolves when maximum width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the maximum width of your modulation.
 
 #### Examples:
 
@@ -2761,12 +2767,16 @@ server.rpioOpen(12, 'PWM');
 server.rpioPWMSetRange(12, 1024);
 ```
 
-### `server.rpioPWMSetData()`
+### `server.rpioPWMSetData(pin, width)`
 
 Set the PWM width for a pin.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
-Returns a promise that resolves when rpio has been exited.
+Returns a promise that resolves when the width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the width of your modulation.
 
 #### Examples:
 
@@ -2793,7 +2803,7 @@ Returns a promise that resolves when SPI mode has been initiated.
 server.rpioSPIBegin();
 ```
 
-### `server.rpioSPIChipSelect()`
+### `server.rpioSPIChipSelect(value)`
 
 Choose which of the chip select / chip enable pins to control.
 Value | Pin
@@ -2805,6 +2815,8 @@ The action is only executed if <TagLink tag='@onStoryAction'/> has been configur
 
 Returns a promise that resolves when SPI pin(s) have been enabled.
 
+The **first parameter** is the value that corresponds to the pin set you want.
+
 #### Examples:
 
 1. Enable SPI_CE0.
@@ -2812,7 +2824,7 @@ Returns a promise that resolves when SPI pin(s) have been enabled.
 server.rpioSPIChipSelect(0);
 ```
 
-### `server.rpioSPISetCSPolarity()`
+### `server.rpioSPISetCSPolarity(value, polarity)`
 
 If your device's CE pin is active high, use this to change the polarity.
 
@@ -2828,6 +2840,10 @@ The action is only executed if <TagLink tag='@onStoryAction'/> has been configur
 
 Returns a promise that resolves when polarity has been set.
 
+The **first parameter** is the value that corresponds to the pin set you want.
+
+The **second parameter** is the polarity the pin will activate on.
+
 #### Examples:
 
 1. Set SPI_CE0 HIGH to activate.
@@ -2835,13 +2851,15 @@ Returns a promise that resolves when polarity has been set.
 server.rpioSPISetCSPolarity(0, 'HIGH');
 ```
 
-### `server.rpioSPISetClockDivider()`
+### `server.rpioSPISetClockDivider(rate)`
 
 Set the SPI clock speed.
 The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the clock speed has been set.
+
+The **first parameter** is an even divisor of the base 250MHz rate.
 
 #### Examples:
 
@@ -2850,7 +2868,7 @@ Returns a promise that resolves when the clock speed has been set.
 server.rpioSPISetClockDivider(128);
 ```
 
-### `server.rpioSPISetDataMode()`
+### `server.rpioSPISetDataMode(mode)`
 
 Set the SPI Data Mode.
 
@@ -2865,6 +2883,8 @@ The action is only executed if <TagLink tag='@onStoryAction'/> has been configur
 
 Returns a promise that resolves when a data mode has been set.
 
+The **first parameter** is the data mode you want to set.
+
 #### Examples:
 
 1. Set the data mode to 0.
@@ -2872,12 +2892,14 @@ Returns a promise that resolves when a data mode has been set.
 server.rpioSPISetDataMode(0);
 ```
 
-### `server.rpioSPITransfer()`
+### `server.rpioSPITransfer(tx)`
 
 Send and recieve data via SPI. 
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a buffer the same size as the buffer sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
 
 #### Examples:
 
@@ -2886,12 +2908,14 @@ Returns a buffer the same size as the buffer sent.
 server.rpioSPITransfer([1,1]);
 ```
 
-### `server.rpioSPIWrite()`
+### `server.rpioSPIWrite(tx)`
 
 Send data via SPI.
 The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
 
 Returns a promise that resolves when the buffer has been sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
 
 #### Examples:
 
