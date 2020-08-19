@@ -2894,6 +2894,19 @@ declare global {
         
         
         /**
+         * Set the baud rate. Directly set the speed in hertz.
+         * @param rate The i2c refresh rate in hertz.
+         */
+        rpioI2CSetBaudRate(rate: number): Promise<void>;
+        
+        /**
+         * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+         * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+         */
+        rpioI2CSetClockDivider(rate: number): Promise<void>;
+        
+        
+        /**
          * Turn off the i²c interface and return the pins to GPIO.
          */
         rpioI2CEnd(): Promise<void>;

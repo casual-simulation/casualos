@@ -2715,6 +2715,38 @@ Returns a promise that resolves when i²c has been initialized.
 server.rpioI2CBegin();
 ```
 
+### `server.rpioI2CSetBaudRate(rate)`
+
+Set the baud rate. Directly set the speed in hertz.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate in hertz.
+
+#### Examples:
+
+1. Set the rate to 100kHz.
+```typescript
+server.rpioI2CSetBaudRate(100000);
+```
+
+### `server.rpioI2CSetClockDivider(rate)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate based on a divisor of the base 250MHz rate.
+
+#### Examples:
+
+1. Set the rate to 100kHz. (250MHz / 2500 = 100kHz)
+```typescript
+server.rpioI2CSetClockDivider(2500);
+```
+
 ### `server.rpioI2CEnd()`
 
 Turn off the i²c interface and return the pins to GPIO.

@@ -82,6 +82,8 @@ import {
     rpioWriteSequencePin,
     rpioClosePin,
     rpioI2CBeginPin,
+    rpioI2CSetBaudRatePin,
+    rpioI2CSetClockDividerPin,
     rpioI2CEndPin,
     rpioPWMSetClockDividerPin,
     rpioPWMSetRangePin,
@@ -2700,6 +2702,53 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.rpioI2CBegin();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+
+        describe('server.rpioI2CSetBaudRate()', () => {
+            it('should send a RpioI2CSetBaudRateAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CSetBaudRate(100000);
+                const expected = remote(
+                    rpioI2CSetBaudRatePin(100000),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CSetBaudRate(100000);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CSetClockDivider()', () => {
+            it('should send a RpioI2CSetClockDividerAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CSetClockDivider(2500);
+                const expected = remote(
+                    rpioI2CSetClockDividerPin(2500),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CSetClockDivider(2500);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

@@ -122,6 +122,8 @@ export type AsyncActions =
     | RpioWriteSequenceAction
     | RpioCloseAction
     | RpioI2CBeginAction
+    | RpioI2CSetBaudRateAction
+    | RpioI2CSetClockDividerAction
     | RpioI2CEndAction
     | RpioPWMSetClockDividerAction
     | RpioPWMSetRangeAction
@@ -1371,6 +1373,28 @@ export interface RpioCloseAction extends AsyncAction {
  */
 export interface RpioI2CBeginAction extends AsyncAction {
     type: 'rpio_i2c_begin';
+}
+/**
+ * Set the baud rate. Directly set the speed in hertz.
+ */
+export interface RpioI2CSetBaudRateAction extends AsyncAction {
+    type: 'rpio_i2c_setbaudrate';
+
+    /**
+     * The i2c refresh rate in hertz.
+     */
+    rate: number;
+}
+/**
+ * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+ */
+export interface RpioI2CSetClockDividerAction extends AsyncAction {
+    type: 'rpio_i2c_setclockdivider';
+
+    /**
+     * The i2c refresh rate based on a divisor of the base 250MHz rate.
+     */
+    rate: number;
 }
 /**
  * Turn off the i²c interface and return the pins to GPIO.
@@ -2790,6 +2814,43 @@ export function rpioI2CBeginPin(
 ): RpioI2CBeginAction {
     return {
         type: 'rpio_i2c_begin',
+        taskId,
+        playerId,
+    };
+}
+
+
+/**
+ * Set the baud rate. Directly set the speed in hertz.
+ * @param rate The i2c refresh rate in hertz.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetBaudRatePin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetBaudRateAction {
+    return {
+        rate,
+        type: 'rpio_i2c_setbaudrate',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+ * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetClockDividerAction {
+    return {
+        rate,
+        type: 'rpio_i2c_setclockdivider',
         taskId,
         playerId,
     };

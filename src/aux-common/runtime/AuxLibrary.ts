@@ -103,6 +103,8 @@ import {
     rpioWriteSequencePin,
     rpioClosePin,
     rpioI2CBeginPin,
+    rpioI2CSetBaudRatePin,
+    rpioI2CSetClockDividerPin,
     rpioI2CEndPin,
     rpioPWMSetClockDividerPin,
     rpioPWMSetRangePin,
@@ -422,6 +424,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioWriteSequence,
                 rpioClose,
                 rpioI2CBegin,
+                rpioI2CSetBaudRate,
+                rpioI2CSetClockDivider,
                 rpioI2CEnd,
                 rpioPWMSetClockDivider,
                 rpioPWMSetRange,
@@ -1712,6 +1716,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioI2CBeginPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+
+    /**
+     * Set the baud rate. Directly set the speed in hertz.
+     * @param rate The i2c refresh rate in hertz.
+     */
+    function rpioI2CSetBaudRate(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetBaudRatePin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+     * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+     */
+    function rpioI2CSetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetClockDividerPin(rate),
             undefined,
             undefined,
             task.taskId
