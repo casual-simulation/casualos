@@ -129,6 +129,8 @@ export type AsyncActions =
     | RpioSPISetCSPolarityAction
     | RpioSPISetClockDividerAction
     | RpioSPISetDataModeAction
+    | RpioSPITransferAction
+    | RpioSPIWriteAction
     | RpioSPIEndAction
     | CreateCertificateAction
     | SignTagAction
@@ -1472,6 +1474,28 @@ export interface RpioSPISetDataModeAction extends AsyncAction {
      *    3  |  1   |  1
      */
     mode: 0 | 1 | 2 | 3;
+}
+/**
+ *
+ */
+export interface RpioSPITransferAction extends AsyncAction {
+    type: 'rpio_spi_transfer';
+
+    /**
+     *
+     */
+    tx: number[];
+}
+/**
+ *
+ */
+export interface RpioSPIWriteAction extends AsyncAction {
+    type: 'rpio_spi_write';
+
+    /**
+     *
+     */
+    tx: number[];
 }
 /**
  * Release the pins back to general purpose use.
@@ -2904,6 +2928,40 @@ export function rpioSPISetDataModePin(
     return {
         mode,
         type: 'rpio_spi_setdatamode',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPITransferPin(
+    tx: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioSPITransferAction {
+    return {
+        tx,
+        type: 'rpio_spi_transfer',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIWritePin(
+    tx: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIWriteAction {
+    return {
+        tx,
+        type: 'rpio_spi_write',
         taskId,
         playerId,
     };

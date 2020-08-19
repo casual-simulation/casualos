@@ -2955,6 +2955,15 @@ declare global {
          */
         rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
         
+        /**
+         * 
+         */
+        rpioSPITransfer(tx: number[]): Promise<void>;
+        
+        /**
+         * 
+         */
+        rpioSPIWrite(tx: number[]): Promise<void>;
         
         /**
          * Release the pins back to general purpose use.

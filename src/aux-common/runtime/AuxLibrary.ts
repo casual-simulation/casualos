@@ -110,6 +110,8 @@ import {
     rpioSPISetCSPolarityPin,
     rpioSPISetClockDividerPin,
     rpioSPISetDataModePin,
+    rpioSPITransferPin,
+    rpioSPIWritePin,
     rpioSPIEndPin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
@@ -425,6 +427,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioSPISetCSPolarity,
                 rpioSPISetClockDivider,
                 rpioSPISetDataMode,
+                rpioSPITransfer,
+                rpioSPIWrite,
                 rpioSPIEnd,
                 shell,
                 backupToGithub,
@@ -1829,6 +1833,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioSPISetDataModePin(mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function rpioSPITransfer(tx: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPITransferPin(tx),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function rpioSPIWrite(tx: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIWritePin(tx),
             undefined,
             undefined,
             task.taskId

@@ -24,6 +24,8 @@ import {
     RpioSPISetCSPolarityAction,
     RpioSPISetClockDividerAction,
     RpioSPISetDataModeAction,
+    RpioSPITransferAction,
+    RpioSPIWriteAction,
     RpioSPIEndAction,
     asyncResult,
     asyncError,
@@ -103,6 +105,12 @@ export class GpioModule2 implements AuxModule2 {
                         }
                         if (event.type === 'rpio_spi_setdatamode') {
                             await this._rpioSPISetDataMode(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_transfer') {
+                            await this._rpioSPITransfer(simulation, event);
+                        }
+                        if (event.type === 'rpio_spi_write') {
+                            await this._rpioSPIWrite(simulation, event);
                         }
                         if (event.type === 'rpio_spi_end') {
                             await this._rpioSPIEnd(simulation, event);
@@ -636,6 +644,64 @@ export class GpioModule2 implements AuxModule2 {
     _rpioSPISetDataMode(simulation: Simulation, event: RpioSPISetDataModeAction) {
         try {
             rpio.spiSetDataMode(event.mode);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPITransfer(simulation: Simulation, event: RpioSPITransferAction) {
+        try {
+            let tx = Buffer.from(event.tx);
+            let rx = new Buffer(tx.length);
+            rpio.spiTransfer(tx, rx, tx.length);
+            let array = [...rx.values()];
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          array,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, array)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioSPIWrite(simulation: Simulation, event: RpioSPIWriteAction) {
+        try {
+            let tx = Buffer.from(event.tx);
+            rpio.spiWrite(tx, tx.length);
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(

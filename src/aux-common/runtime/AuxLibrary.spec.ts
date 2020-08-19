@@ -89,6 +89,8 @@ import {
     rpioSPISetCSPolarityPin,
     rpioSPISetClockDividerPin,
     rpioSPISetDataModePin,
+    rpioSPITransferPin,
+    rpioSPIWritePin,
     rpioSPIEndPin,
     createCertificate,
     signTag,
@@ -2869,6 +2871,51 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.rpioSPITransfer()', () => {
+            it('should send a RpioSPITransferAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPITransfer([1,1]);
+                const expected = remote(
+                    rpioSPITransferPin([1,1]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPITransfer([1,1]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPIWrite()', () => {
+            it('should send a RpioSPIWriteAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIWrite([1,1]);
+                const expected = remote(
+                    rpioSPIWritePin([1,1]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIWrite([1,1]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
 
         describe('server.rpioSPIEnd()', () => {
             it('should send a RpioSPIEndAction in a RemoteAction', () => {

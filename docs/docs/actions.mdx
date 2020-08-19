@@ -2844,6 +2844,34 @@ Returns a promise that resolves when a data mode has been set.
 server.rpioSPISetDataMode(0);
 ```
 
+### `server.rpioSPITransfer()`
+
+Send and recieve data via SPI. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a buffer the same size as the buffer sent.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01] and recieve the response from the server.
+```typescript
+server.rpioSPITransfer([1,1]);
+```
+
+### `server.rpioSPIWrite()`
+
+Send data via SPI.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the buffer has been sent.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01].
+```typescript
+server.rpioSPIWrite([1,1]);
+```
+
 ### `server.rpioSPIEnd()`
 
 Release the pins back to general purpose use.
