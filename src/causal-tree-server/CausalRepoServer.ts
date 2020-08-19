@@ -916,19 +916,28 @@ export class CausalRepoServer {
         const repo = await this._repoPromises.get(branch);
         this._repoPromises.delete(branch);
         if (repo && repo.repo.hasChanges()) {
-            console.log(
-                `[CausalRepoServer] [${branch}] Committing before unloading...`
-            );
-            const c = await repo.repo.commit(`Save ${branch} before unload`);
-
-            if (c) {
+            try {
                 console.log(
-                    `[CausalRepoServer] [${branch}] [${c.hash}] Committed!`
+                    `[CausalRepoServer] [${branch}] Committing before unloading...`
                 );
-                await this._stage.clearStage(branch);
-            } else {
-                console.log(
-                    `[CausalRepoServer] [${branch}] No commit created due to no changes.`
+                const c = await repo.repo.commit(
+                    `Save ${branch} before unload`
+                );
+
+                if (c) {
+                    console.log(
+                        `[CausalRepoServer] [${branch}] [${c.hash}] Committed!`
+                    );
+                    await this._stage.clearStage(branch);
+                } else {
+                    console.log(
+                        `[CausalRepoServer] [${branch}] No commit created due to no changes.`
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    `[CausalRepoServer] [${branch}] Unable to commit to branch.`,
+                    err
                 );
             }
         }
