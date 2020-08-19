@@ -121,6 +121,8 @@ export type AsyncActions =
     | RpioWriteAction
     | RpioWriteSequenceAction
     | RpioCloseAction
+    | RpioI2CBeginAction
+    | RpioI2CEndAction
     | RpioPWMSetClockDividerAction
     | RpioPWMSetRangeAction
     | RpioPWMSetDataAction
@@ -1363,6 +1365,18 @@ export interface RpioCloseAction extends AsyncAction {
      * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
      */
     options?: 'PIN_RESET' | 'PIN_PRESERVE';
+}
+/**
+ *Initializes i2c for use.
+ */
+export interface RpioI2CBeginAction extends AsyncAction {
+    type: 'rpio_i2c_begin';
+}
+/**
+ * Turn off the i²c interface and return the pins to GPIO.
+ */
+export interface RpioI2CEndAction extends AsyncAction {
+    type: 'rpio_i2c_end';
 }
 /**
  * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
@@ -2766,6 +2780,36 @@ export function rpioClosePin(
     };
 }
 
+/**
+ * Initializes i2c for use.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CBeginPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CBeginAction {
+    return {
+        type: 'rpio_i2c_begin',
+        taskId,
+        playerId,
+    };
+}
+
+
+/**
+ * Turn off the i²c interface and return the pins to GPIO.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CEndPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CEndAction {
+    return {
+        type: 'rpio_i2c_end',
+        taskId,
+        playerId,
+    };
+}
 
 /**
  * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).

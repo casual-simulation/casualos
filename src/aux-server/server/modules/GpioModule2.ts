@@ -16,6 +16,8 @@ import {
     RpioWriteAction,
     RpioWriteSequenceAction,
     RpioCloseAction,
+    RpioI2CBeginAction,
+    RpioI2CEndAction,
     RpioPWMSetClockDividerAction,
     RpioPWMSetRangeAction,
     RpioPWMSetDataAction,
@@ -80,6 +82,13 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_close') {
                             await this._rpioClose(simulation, event);
                         }
+                        // i2c
+                        if (event.type === 'rpio_i2c_begin') {
+                            await this._rpioI2CBegin(simulation, event);
+                        }
+                        // if (event.type === 'rpio_i2c_end') {
+                        //     await this._rpioI2CEnd(simulation, event);
+                        // }
                         // PWM
                         if (event.type === 'rpio_pwm_setclockdivider') {
                             await this._rpioPWMSetClockDivider(simulation, event);
@@ -420,6 +429,61 @@ export class GpioModule2 implements AuxModule2 {
             }
             rpio.close(pin, options);
 
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    // i2c
+    _rpioI2CBegin(simulation: Simulation, event: RpioI2CBeginAction) {
+        try {
+            rpio.i2cBegin();
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioI2CEnd(simulation: Simulation, event: RpioI2CEndAction) {
+        try {
+            rpio.i2cEnd();
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(

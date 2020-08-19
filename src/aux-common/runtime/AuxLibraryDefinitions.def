@@ -2887,6 +2887,17 @@ declare global {
          */
         rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
 
+        /**
+         * Initializes i2c for use.
+         */
+        rpioI2CBegin(): Promise<void>;
+        
+        
+        /**
+         * Turn off the i²c interface and return the pins to GPIO.
+         */
+        rpioI2CEnd(): Promise<void>;
+        
         
         /**
          * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).

@@ -2701,6 +2701,34 @@ server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
 server.rpioClose(led_pin, 'PIN_PRESERVE');
 ```
 
+### `server.rpioI2CBegin()`
+
+Initializes i²c for use.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been initialized.
+
+#### Examples:
+
+1. Initialize i²c.
+```typescript
+server.rpioI2CBegin();
+```
+
+### `server.rpioI2CEnd()`
+
+Turn off the i²c interface and return the pins to GPIO.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been turned off.
+
+#### Examples:
+
+1. Turn off i²c.
+```typescript
+server.rpioI2CEnd();
+```
+
 ### `server.rpioPWMSetClockDivider()`
 
 Set the PWM refresh rate.

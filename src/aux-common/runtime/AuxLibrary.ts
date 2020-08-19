@@ -102,6 +102,8 @@ import {
     rpioWritePin,
     rpioWriteSequencePin,
     rpioClosePin,
+    rpioI2CBeginPin,
+    rpioI2CEndPin,
     rpioPWMSetClockDividerPin,
     rpioPWMSetRangePin,
     rpioPWMSetDataPin,
@@ -419,6 +421,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioWrite,
                 rpioWriteSequence,
                 rpioClose,
+                rpioI2CBegin,
+                rpioI2CEnd,
                 rpioPWMSetClockDivider,
                 rpioPWMSetRange,
                 rpioPWMSetData,
@@ -1701,6 +1705,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Initializes i2c for use.
+     */
+    function rpioI2CBegin() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CBeginPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+
+    /**
+     * Turn off the i²c interface and return the pins to GPIO.
+     */
+    function rpioI2CEnd() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CEndPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
 
     /**
      * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
