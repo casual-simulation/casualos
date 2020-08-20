@@ -28,18 +28,16 @@ export class GameAudio {
      * @param url The URL.
      */
     bufferFromUrl(url: string): Promise<void> {
-        const sound = new Howl({
-            src: url,
-            preload: true,
-        });
-
         return new Promise((resolve, reject) => {
-            sound.once('load', () => {
-                resolve();
-            });
-
-            sound.once('loaderror', () => {
-                reject(new Error('Unable to load audio from: ' + url));
+            const sound = new Howl({
+                src: url,
+                preload: true,
+                onload: () => {
+                    resolve();
+                },
+                onloaderror: () => {
+                    reject(new Error('Unable to load audio from: ' + url));
+                },
             });
         });
     }
