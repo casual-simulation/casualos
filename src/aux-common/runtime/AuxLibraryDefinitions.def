@@ -2485,7 +2485,7 @@ declare global {
 
         /**
          * Play the given url's audio.
-         * Returns a promise that resolves when the sound starts playing.
+         * Returns a promise that resolves with the sound ID when the sound starts playing.
          * @param url The URL to play.
          * 
          * @example
@@ -2508,14 +2508,14 @@ declare global {
         /**
          * Cancels the sound with the given ID.
          * Returns a promise that resolves when the audio has been canceled.
-         * @param soundId The ID of the sound that is being canceled.
+         * @param soundID The ID of the sound that is being canceled.
          *
          * @example
          * // Play and cancel a sound
          * const id = await player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          * player.cancelSound(id);
          */
-        cancelSound(soundId: number): Promise<void>;
+        cancelSound(soundID: number): Promise<void>;
 
         /**
          * Shows a QR Code that contains a link to a story and dimension.

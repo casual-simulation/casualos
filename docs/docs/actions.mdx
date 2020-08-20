@@ -2108,8 +2108,10 @@ player.openDevConsole();
 
 ### `player.playSound(url)`
 
-
 Loads and plays the audio (MP3, WAV, etc.) from the given URL.
+
+Returns a promise that resolves with the ID of the sound when the sound starts playing.
+The sound ID can then be used with <ActionLink action='player.cancelSound(soundID)'/> to stop the sound.
 
 The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be played.
 
@@ -2118,6 +2120,37 @@ The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the a
 1. Play a MP3 file from another website.
 ```typescript
 player.playSound("https://www.testsounds.com/track06.mp3");
+```
+
+### `player.bufferSound(url)`
+
+Loads the audio from the given URL without playing it.
+Returns a promise that resolves once the sound has been loaded.
+
+This is useful for pre-loading a sound so that there will be no delay when playing it with <ActionLink action='player.playSound(url)'/>.
+
+The **first parameter** is the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be loaded.
+
+#### Examples:
+
+1. Pre-load a MP3 fiel from another website.
+```typescript
+player.bufferSound("https://www.testsounds.com/track06.mp3");
+```
+
+### `player.cancelSound(soundID)`
+
+Cancels the sound with the given ID.
+Returns a promise that resolves once the sound has been canceled.
+
+The **first parameter** is the ID of the sound that was returned from <ActionLink action='player.playSound(url)'/>.
+
+#### Examples:
+
+1. Cancel a sound that is playing.
+```typescript
+const id = await player.playSound("https://www.testsounds.com/track06.mp3");
+player.cancelSound(id);
 ```
 
 ### `player.isInDimension(dimension)`
