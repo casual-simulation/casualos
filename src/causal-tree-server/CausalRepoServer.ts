@@ -807,19 +807,28 @@ export class CausalRepoServer {
     }
 
     private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {
-        console.log(
-            `[CausalRepoServer] [${event.branch}] Committing with message '${
-                event.message
-            }'...`
-        );
-        const commit = await repo.commit(event.message);
-        if (commit) {
-            await this._stage.clearStage(event.branch);
-            console.log(`[CausalRepoServer] [${event.branch}] Committed.`);
-            this._sendCommits(event.branch, [commit]);
-        } else {
+        try {
             console.log(
-                `[CausalRepoServer] [${event.branch}] No Commit Created.`
+                `[CausalRepoServer] [${
+                    event.branch
+                }] Committing with message '${event.message}'...`
+            );
+            const commit = await repo.commit(event.message);
+            if (commit) {
+                await this._stage.clearStage(event.branch);
+                console.log(`[CausalRepoServer] [${event.branch}] Committed.`);
+                this._sendCommits(event.branch, [commit]);
+            } else {
+                console.log(
+                    `[CausalRepoServer] [${event.branch}] No Commit Created.`
+                );
+            }
+        } catch (err) {
+            console.error(
+                `[CausalRepoServer] [${
+                    event.branch
+                }] Unable to commit to branch.`,
+                err
             );
         }
     }
@@ -936,7 +945,7 @@ export class CausalRepoServer {
                 }
             } catch (err) {
                 console.error(
-                    `[CausalRepoServer] [${branch}] Unable to commit to branch.`,
+                    `[CausalRepoServer] [${branch}] Unable to commit to branch during unload.`,
                     err
                 );
             }
