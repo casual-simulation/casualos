@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.2.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `tagPortalShowExitButton` tag to control whether the exit button is available in the tag portal.
+    -   Defaults to `false`.
+
 ## V1.2.3
 
 #### Date: 8/20/2020
