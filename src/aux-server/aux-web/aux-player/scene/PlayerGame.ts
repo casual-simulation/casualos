@@ -35,6 +35,8 @@ import {
     BotAction,
     enqueueAsyncResult,
     enqueueAsyncError,
+    PlaySoundAction,
+    CancelSoundAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -433,9 +435,11 @@ export class PlayerGame extends Game {
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
                 } else if (e.type === 'play_sound') {
-                    this.playAudio(e.url);
+                    this.playAudio(sim, e);
                 } else if (e.type === 'buffer_sound') {
-                    this.bufferAudio(playerSim3D.simulation, e);
+                    this.bufferAudio(sim, e);
+                } else if (e.type === 'cancel_sound') {
+                    this.cancelAudio(sim, e);
                 } else if (e.type === 'enable_ar') {
                     if (e.enabled) {
                         this.startAR();
@@ -453,10 +457,21 @@ export class PlayerGame extends Game {
         );
     }
 
-    playAudio(url: string) {
-        if (url === null) return;
+    playAudio(sim: Simulation, event: PlaySoundAction) {
+        if (event.url === null) return;
 
-        this.audio.playFromUrl(url);
+        this.audio.playFromUrl(event.url, event.soundID).then(
+            () => {
+                let list = [] as BotAction[];
+                enqueueAsyncResult(list, event, event.soundID, false);
+                sim.helper.transaction(...list);
+            },
+            err => {
+                let list = [] as BotAction[];
+                enqueueAsyncError(list, event, err);
+                sim.helper.transaction(...list);
+            }
+        );
     }
 
     bufferAudio(sim: Simulation, event: BufferSoundAction) {
@@ -474,6 +489,13 @@ export class PlayerGame extends Game {
                 sim.helper.transaction(...list);
             }
         );
+    }
+
+    cancelAudio(sim: BrowserSimulation, event: CancelSoundAction) {
+        this.audio.cancelSound(event.soundID);
+        let list = [] as BotAction[];
+        enqueueAsyncResult(list, event, null, false);
+        sim.helper.transaction(...list);
     }
 
     private simulationRemoved(sim: BrowserSimulation) {

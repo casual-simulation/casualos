@@ -181,7 +181,6 @@ declare type ExtraActions =
     | SaveFileAction
     | GoToDimensionAction
     | GoToURLAction
-    | PlaySoundAction
     | OpenURLAction
     | ImportAUXAction
     | ShowInputForTagAction
@@ -227,7 +226,9 @@ declare type AsyncActions =
     | RevokeCertificateAction
     | UnlockSpaceAction
     | SetSpacePasswordAction
-    | BufferSoundAction;
+    | BufferSoundAction
+    | PlaySoundAction
+    | CancelSoundAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1071,13 +1072,18 @@ declare interface OpenURLAction extends Action {
 /**
  * Defines an event that is used to play a sound from the given url.
  */
-declare interface PlaySoundAction extends Action {
+declare interface PlaySoundAction extends AsyncAction {
     type: 'play_sound';
 
     /**
      * The URL to open.
      */
     url: string;
+
+    /**
+     * The ID of the sound.
+     */
+    soundID: number | string;
 }
 
 /**
@@ -1090,6 +1096,18 @@ export interface BufferSoundAction extends AsyncAction {
      * The URL to buffer.
      */
     url: string;
+}
+
+/**
+ * Defines an event that is used to cancel a sound that is playing.
+ */
+export interface CancelSoundAction extends AsyncAction {
+    type: 'cancel_sound';
+
+    /**
+     * The ID of the sound.
+     */
+    soundID: number;
 }
 
 /**
@@ -2466,14 +2484,15 @@ declare global {
         toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
 
         /**
-         * Play the given url's audio
+         * Play the given url's audio.
+         * Returns a promise that resolves when the sound starts playing.
          * @param url The URL to play.
          * 
          * @example
          * // Play a cow "moo"
          * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
-        playSound(url: string): PlaySoundAction;
+        playSound(url: string): Promise<void>;
 
         /**
          * Preloads the audio for the given URL.
@@ -2485,6 +2504,18 @@ declare global {
          * player.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
          */
         bufferSound(url: string): Promise<void>;
+
+        /**
+         * Cancels the sound with the given ID.
+         * Returns a promise that resolves when the audio has been canceled.
+         * @param soundId The ID of the sound that is being canceled.
+         *
+         * @example
+         * // Play and cancel a sound
+         * const id = await player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+         * player.cancelSound(id);
+         */
+        cancelSound(soundId: number): Promise<void>;
 
         /**
          * Shows a QR Code that contains a link to a story and dimension.

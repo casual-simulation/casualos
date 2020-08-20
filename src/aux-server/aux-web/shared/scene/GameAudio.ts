@@ -9,17 +9,52 @@ export class GameAudio {
     //  * It is a map of URLs to their elements.
     //  */
     // private _cache = new Map<string, HTMLMediaElement>();
+    private _playingSounds: Map<number | string, Howl>;
+
+    constructor() {
+        this._playingSounds = new Map();
+    }
 
     /**
      * Plays the audio from the given URL.
      * @param url The URL.
      */
-    playFromUrl(url: string) {
-        const sound = new Howl({
-            src: url,
+    playFromUrl(url: string, soundId: number | string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const sound = new Howl({
+                src: url,
+                onplay: () => {
+                    resolve();
+                },
+                onend: () => {
+                    this._playingSounds.delete(soundId);
+                },
+                onstop: () => {
+                    this._playingSounds.delete(soundId);
+                },
+                onloaderror: () => {
+                    this._playingSounds.delete(soundId);
+                    reject(new Error('Unable to play audio for: ' + url));
+                },
+                onplayerror: () => {
+                    this._playingSounds.delete(soundId);
+                    reject(new Error('Unable to play audio for: ' + url));
+                },
+            });
+            this._playingSounds.set(soundId, sound);
+            sound.play();
         });
+    }
 
-        sound.play();
+    /**
+     * Stops playing the sound with the given ID.
+     * @param soundId The ID of the sound to stop.
+     */
+    cancelSound(soundId: number | string): void {
+        const sound = this._playingSounds.get(soundId);
+        if (sound) {
+            sound.stop();
+        }
     }
 
     /**
