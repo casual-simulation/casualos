@@ -8,6 +8,7 @@ import {
     ScriptError,
     PrecalculatedBot,
     loadBots,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -39,6 +40,7 @@ setup();
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
+    @Prop({ default: true }) showResize: boolean;
 
     private _simulation: BrowserSimulation;
     private _sub: Subscription;
@@ -175,6 +177,50 @@ export default class MonacoTagEditor extends Vue {
 
     toggleErrors() {
         this.showErrors = !this.showErrors;
+    }
+
+    makeNormalTag() {
+        let currentValue = this.bot.tags[this.tag];
+        if (typeof currentValue === 'object') {
+            return;
+        }
+        if (!hasValue(currentValue)) {
+            currentValue = '';
+        }
+        let final = null as string;
+        if (this.isScript || this.isFormula) {
+            final = currentValue.slice(1);
+        }
+        if (final !== null) {
+            this._simulation.helper.updateBot(this.bot, {
+                tags: {
+                    [this.tag]: final,
+                },
+            });
+        }
+    }
+
+    makeScriptTag() {
+        let currentValue = this.bot.tags[this.tag];
+        if (typeof currentValue === 'object') {
+            return;
+        }
+        if (!hasValue(currentValue)) {
+            currentValue = '';
+        }
+        let final = null as string;
+        if (this.isFormula) {
+            final = '@' + currentValue.slice(1);
+        } else if (!this.isScript) {
+            final = '@' + currentValue;
+        }
+        if (final !== null) {
+            this._simulation.helper.updateBot(this.bot, {
+                tags: {
+                    [this.tag]: final,
+                },
+            });
+        }
     }
 
     private _updateModel() {

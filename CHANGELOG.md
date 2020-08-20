@@ -1,5 +1,26 @@
 # CasualOS Changelog
 
+## V1.2.3
+
+#### Date: 8/20/2020
+
+### :rocket: Improvements
+
+-   Added the tag portal.
+    -   The tag portal is similar to the sheet portal but it shows only the multiline editor for the specified bot ID and tag.
+    -   Set the `tagPortal` tag on the player bot to a string with a Bot ID and a tag name separated by a period (`.`).
+-   Improved `player.playSound(url)` to return a promise that resolves with a sound ID.
+    -   This sound ID can be used with `player.cancelSound(soundID)` to stop the sound from playing.
+-   Added the `player.bufferSound(url)` and `player.cancelSound(soundID)` functions.
+    -   `player.bufferSound(url)` can be used to pre-load a sound so that there will be no delay when using `player.playSound()`.
+        -   Returns a promise that resolves once the sound has been loaded.
+    -   `player.cancelSound(soundID)` can be used to stop a sound that is already playing.
+        -   Returns a promise that resolves once the sound has been canceled.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where actions that were created in an async script would not be dispatched until the script finished.
+
 ## V1.2.2
 
 #### Date: 8/14/2020

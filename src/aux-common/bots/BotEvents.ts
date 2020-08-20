@@ -61,7 +61,6 @@ export type ExtraActions =
     | SendWebhookAction
     | GoToDimensionAction
     | GoToURLAction
-    | PlaySoundAction
     | OpenURLAction
     | ImportAUXAction
     | ShowInputForTagAction
@@ -129,7 +128,10 @@ export type AsyncActions =
     | RemoteActionError
     | DeviceAction
     | DeviceActionResult
-    | DeviceActionError;
+    | DeviceActionError
+    | PlaySoundAction
+    | BufferSoundAction
+    | CancelSoundAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1004,13 +1006,43 @@ export interface OpenURLAction extends Action {
 /**
  * Defines an event that is used to play a sound from the given url.
  */
-export interface PlaySoundAction extends Action {
+export interface PlaySoundAction extends AsyncAction {
     type: 'play_sound';
 
     /**
      * The URL to open.
      */
     url: string;
+
+    /**
+     * The ID of the sound.
+     */
+    // NOTE: ID is capitalized to be consistent with the getID() API
+    soundID: number | string;
+}
+
+/**
+ * Defines an event that is used to pre-load a sound from the given URL.
+ */
+export interface BufferSoundAction extends AsyncAction {
+    type: 'buffer_sound';
+
+    /**
+     * The URL to buffer.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to cancel a sound that is playing.
+ */
+export interface CancelSoundAction extends AsyncAction {
+    type: 'cancel_sound';
+
+    /**
+     * The ID of the sound.
+     */
+    soundID: number | string;
 }
 
 /**
@@ -2090,11 +2122,51 @@ export function openURL(url: string): OpenURLAction {
 /**
  * Creates a new PlaySoundAction.
  * @param url The URL of the sound to play.
+ * @param soundID The ID of the sound.
+ * @param taskId The ID of the task.
  */
-export function playSound(url: string): PlaySoundAction {
+export function playSound(
+    url: string,
+    soundID: string | number,
+    taskId?: string | number
+): PlaySoundAction {
     return {
         type: 'play_sound',
         url: url,
+        soundID,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new BufferSoundAction.
+ * @param url The URL of the sound to play.
+ * @param taskId The ID of the async task.
+ */
+export function bufferSound(
+    url: string,
+    taskId?: string | number
+): BufferSoundAction {
+    return {
+        type: 'buffer_sound',
+        url: url,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CancelSoundAction.
+ * @param soundId The ID of the sound to cancel.
+ * @param taskId The ID of the async task.
+ */
+export function cancelSound(
+    soundID: number | string,
+    taskId?: string | number
+): CancelSoundAction {
+    return {
+        type: 'cancel_sound',
+        soundID,
+        taskId,
     };
 }
 

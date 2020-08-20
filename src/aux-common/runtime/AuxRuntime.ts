@@ -108,6 +108,7 @@ export class AuxRuntime
     private _editModeProvider: AuxRealtimeEditModeProvider;
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
+    private _batchPending: boolean = false;
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -133,7 +134,12 @@ export class AuxRuntime
         forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal']
     ) {
-        this._globalContext = new MemoryGlobalContext(version, device, this);
+        this._globalContext = new MemoryGlobalContext(
+            version,
+            device,
+            this,
+            this
+        );
         this._library = libraryFactory(this._globalContext);
         this._editModeProvider = editModeProvider;
         this._forceSignedScripts = forceSignedScripts;
@@ -148,35 +154,7 @@ export class AuxRuntime
 
         const batchingZone = cleanupZone.fork(
             new BatchingZoneSpec(() => {
-                // Send the batch once all the micro tasks are completed
-
-                // Grab any unbatched actions and errors.
-                // This can happen if an action is queued during a callback
-                // or promise.
-                const unbatchedActions = this._processUnbatchedActions();
-                const unbatchedErrors = this._processUnbatchedErrors();
-
-                const actions = this._actionBatch;
-                const errors = this._errorBatch;
-
-                actions.push(...unbatchedActions);
-                errors.push(...unbatchedErrors);
-
-                this._actionBatch = [];
-                this._errorBatch = [];
-
-                if (actions.length <= 0 && errors.length <= 0) {
-                    return;
-                }
-
-                // Schedule a new micro task to
-                // run at a later time with the actions.
-                // This ensures that we don't block other flush operations
-                // due to handlers running synchronously.
-                Zone.root.scheduleMicroTask('AuxRuntime#flush', () => {
-                    this._onActions.next(actions);
-                    this._onErrors.next(errors);
-                });
+                this._processBatch();
             })
         );
 
@@ -643,6 +621,15 @@ export class AuxRuntime
         return update;
     }
 
+    notifyChange(): void {
+        if (!this._batchPending) {
+            this._batchPending = true;
+            Zone.root.scheduleMicroTask('AuxRuntime#notifyChange', () => {
+                this._processBatch();
+            });
+        }
+    }
+
     createRuntimeBot(bot: Bot): RuntimeBot {
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
@@ -663,6 +650,39 @@ export class AuxRuntime
         }
 
         return mode;
+    }
+
+    private _processBatch() {
+        this._batchPending = false;
+        // Send the batch once all the micro tasks are completed
+
+        // Grab any unbatched actions and errors.
+        // This can happen if an action is queued during a callback
+        // or promise.
+        const unbatchedActions = this._processUnbatchedActions();
+        const unbatchedErrors = this._processUnbatchedErrors();
+
+        const actions = this._actionBatch;
+        const errors = this._errorBatch;
+
+        actions.push(...unbatchedActions);
+        errors.push(...unbatchedErrors);
+
+        this._actionBatch = [];
+        this._errorBatch = [];
+
+        if (actions.length <= 0 && errors.length <= 0) {
+            return;
+        }
+
+        // Schedule a new micro task to
+        // run at a later time with the actions.
+        // This ensures that we don't block other flush operations
+        // due to handlers running synchronously.
+        Zone.root.scheduleMicroTask('AuxRuntime#_processBatch', () => {
+            this._onActions.next(actions);
+            this._onErrors.next(errors);
+        });
     }
 
     private _batchScriptResults<T>(
@@ -814,6 +834,7 @@ export class AuxRuntime
                 this._compileTag(bot, tag, newValue);
             }
             this._updatedBots.set(bot.id, bot.script);
+            this.notifyChange();
             return mode;
         }
         return RealtimeEditMode.None;

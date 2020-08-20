@@ -85,6 +85,8 @@ import {
     signTag,
     revokeCertificate,
     setSpacePassword,
+    bufferSound,
+    cancelSound,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -97,7 +99,7 @@ import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
-import { RuntimeBot } from './RuntimeBot';
+import { RuntimeBot, RuntimeBatcher } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -113,6 +115,7 @@ describe('AuxLibrary', () => {
     let context: MemoryGlobalContext;
     let version: AuxVersion;
     let device: AuxDevice;
+    let notifier: RuntimeBatcher;
 
     beforeEach(() => {
         version = {
@@ -126,10 +129,14 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
         };
+        notifier = {
+            notifyChange: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             version,
             device,
-            new TestScriptBotFactory()
+            new TestScriptBotFactory(),
+            notifier
         );
         library = createDefaultLibrary(context);
     });
@@ -2259,9 +2266,42 @@ describe('AuxLibrary', () => {
 
         describe('player.playSound()', () => {
             it('should emit a PlaySoundEvent', () => {
-                const action = library.api.player.playSound('abc');
-                expect(action).toEqual(playSound('abc'));
-                expect(context.actions).toEqual([playSound('abc')]);
+                const promise: any = library.api.player.playSound('abc');
+                const expected = playSound(
+                    'abc',
+                    context.tasks.size,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.bufferSound()', () => {
+            it('should emit a BufferSoundEvent', () => {
+                const promise: any = library.api.player.bufferSound('abc');
+                const expected = bufferSound('abc', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('player.cancelSound()', () => {
+            it('should emit a CancelSoundEvent', () => {
+                const promise: any = library.api.player.cancelSound(1);
+                const expected = cancelSound(1, context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to take a PlaySoundEvent', () => {
+                const event = {
+                    [ORIGINAL_OBJECT]: playSound('abc', 1),
+                };
+                const promise: any = library.api.player.cancelSound(event);
+                const expected = cancelSound(1, context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

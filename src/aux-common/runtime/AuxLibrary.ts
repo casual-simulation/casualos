@@ -36,6 +36,8 @@ import {
     openURL as calcOpenURL,
     checkout as calcCheckout,
     playSound as calcPlaySound,
+    bufferSound as calcBufferSound,
+    cancelSound as calcCancelSound,
     setupStory as calcSetupStory,
     shell as calcShell,
     backupToGithub as calcBackupToGithub,
@@ -381,6 +383,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openDevConsole,
                 checkout,
                 playSound,
+                bufferSound,
+                cancelSound,
                 hasBotInInventory,
                 share,
                 inSheet,
@@ -1407,14 +1411,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *   Play given url's audio
+     * Play given url's audio.
+     * Returns a promise that resolves once the sound starts playing.
+     *
      * @example
-     * // Send the player to the "welcome" dimension.
+     * // Play a cow "moo"
      * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
      */
     function playSound(url: string) {
-        const event = calcPlaySound(url);
-        return addAction(event);
+        const task = context.createTask();
+        const event = calcPlaySound(url, task.taskId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Preloads the audio for the given URL.
+     * Returns a promise that resolves when the audio has finished loading.
+     * @param url The URl to preload.
+     *
+     * @example
+     * // Preload a cow "moo"
+     * player.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     */
+    function bufferSound(url: string) {
+        const task = context.createTask();
+        const event = calcBufferSound(url, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Cancels the sound with the given ID.
+     * Returns a promise that resolves when the audio has been canceled.
+     * @param soundId The ID of the sound that is being canceled.
+     *
+     * @example
+     * // Play and cancel a sound
+     * const id = await player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * player.cancelSound(id);
+     */
+    function cancelSound(soundId: number | string | object) {
+        const task = context.createTask();
+        const id =
+            typeof soundId === 'object'
+                ? getOriginalObject(soundId).soundID
+                : soundId;
+        const event = calcCancelSound(id, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
