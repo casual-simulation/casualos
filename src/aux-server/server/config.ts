@@ -136,6 +136,11 @@ export interface CausalReposServerConfig {
 
 export interface MongoDBCaualReposConfig {
     dbName: string;
+
+    /**
+     * Whether to store the atom stage in MongoDB.
+     */
+    stage: boolean;
 }
 
 /**
