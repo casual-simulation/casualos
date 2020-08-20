@@ -13,7 +13,7 @@
                 :showDesktopEditor="true"
                 :showResize="false"
             ></tag-value-editor>
-            <md-button class="md-fab exit-sheet" @click="exitSheet()">
+            <md-button v-if="showExitButton" class="md-fab exit-sheet" @click="exitSheet()">
                 <md-icon>web_asset</md-icon>
                 <md-tooltip>Page Portal</md-tooltip>
             </md-button>

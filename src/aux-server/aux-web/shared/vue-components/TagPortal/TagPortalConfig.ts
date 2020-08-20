@@ -36,6 +36,7 @@ export class TagPortalConfig implements SubscriptionLike {
     private _portalTag: string;
     private _updated: Subject<void>;
     private _style: Object;
+    private _showExitButton: boolean;
 
     /**
      * Gets the CSS style that should be applied.
@@ -47,6 +48,13 @@ export class TagPortalConfig implements SubscriptionLike {
         return calculateMeetPortalAnchorPointOffset(
             DEFAULT_TAG_PORTAL_ANCHOR_POINT
         );
+    }
+
+    get showExitButton(): boolean {
+        if (hasValue(this._showExitButton)) {
+            return this._showExitButton;
+        }
+        return false;
     }
 
     unsubscribe(): void {
@@ -86,6 +94,7 @@ export class TagPortalConfig implements SubscriptionLike {
 
     protected _clearPortalValues() {
         this._style = null;
+        this._showExitButton = null;
         this._updated.next();
     }
 
@@ -120,6 +129,13 @@ export class TagPortalConfig implements SubscriptionLike {
             const offset = getBotTagPortalAnchorPointOffset(calc, bot);
             merge(this._style, offset);
         }
+
+        this._showExitButton = calculateBooleanTagValue(
+            calc,
+            bot,
+            'auxTagPortalShowExitButton',
+            null
+        );
         this._updated.next();
     }
 }

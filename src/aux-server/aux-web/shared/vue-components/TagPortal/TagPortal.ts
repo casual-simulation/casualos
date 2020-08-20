@@ -41,6 +41,7 @@ export default class TagPortal extends Vue {
     private _currentSim: BrowserSimulation;
     private _currentSub: Subscription;
 
+    showExitButton: boolean = false;
     currentBot: Bot = null;
     currentTag: string = null;
     extraStyle: Object = {};
@@ -202,14 +203,17 @@ export default class TagPortal extends Vue {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
+            this.showExitButton = false;
             return;
         }
         if (this._currentConfig) {
             this.extraStyle = this._currentConfig.style;
+            this.showExitButton = this._currentConfig.showExitButton;
         } else {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
+            this.showExitButton = false;
         }
     }
 }
