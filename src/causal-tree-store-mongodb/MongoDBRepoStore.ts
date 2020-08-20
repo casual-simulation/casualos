@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection } from 'mongodb';
+import { MongoClient, Db, Collection, MongoError } from 'mongodb';
 import {
     CausalRepoStore,
     CausalRepoObject,
@@ -14,6 +14,8 @@ import {
     CausalRepoSitelogConnectionReason,
     CausalRepoBranchSettings,
 } from '@casual-simulation/causal-trees/core2';
+
+const MONGO_CODE_DUPLICATE_OBJECT = 11000;
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
@@ -203,7 +205,34 @@ export class MongoDBRepoStore implements CausalRepoStore {
                 .upsert()
                 .updateOne(o);
         });
-        await op.execute();
+
+        try {
+            await op.execute();
+        } catch (err) {
+            if (err instanceof MongoError) {
+                // Check if every error is a duplicate.
+                const errors = (<any>err).writeErrors as MongoError[];
+                let valid = false;
+                if (errors && Array.isArray(errors)) {
+                    if (
+                        errors.every(
+                            e => e.code === MONGO_CODE_DUPLICATE_OBJECT
+                        )
+                    ) {
+                        // If every error is a duplicate, then ignore the error
+                        valid = true;
+                    }
+                }
+
+                // If the error is not all duplicates
+                // then rethrow the error.
+                if (!valid) {
+                    throw err;
+                }
+            } else {
+                throw err;
+            }
+        }
     }
 
     /**

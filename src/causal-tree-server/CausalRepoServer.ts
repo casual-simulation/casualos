@@ -807,19 +807,28 @@ export class CausalRepoServer {
     }
 
     private async _commitToRepo(event: CommitEvent, repo: CausalRepo) {
-        console.log(
-            `[CausalRepoServer] [${event.branch}] Committing with message '${
-                event.message
-            }'...`
-        );
-        const commit = await repo.commit(event.message);
-        if (commit) {
-            await this._stage.clearStage(event.branch);
-            console.log(`[CausalRepoServer] [${event.branch}] Committed.`);
-            this._sendCommits(event.branch, [commit]);
-        } else {
+        try {
             console.log(
-                `[CausalRepoServer] [${event.branch}] No Commit Created.`
+                `[CausalRepoServer] [${
+                    event.branch
+                }] Committing with message '${event.message}'...`
+            );
+            const commit = await repo.commit(event.message);
+            if (commit) {
+                await this._stage.clearStage(event.branch);
+                console.log(`[CausalRepoServer] [${event.branch}] Committed.`);
+                this._sendCommits(event.branch, [commit]);
+            } else {
+                console.log(
+                    `[CausalRepoServer] [${event.branch}] No Commit Created.`
+                );
+            }
+        } catch (err) {
+            console.error(
+                `[CausalRepoServer] [${
+                    event.branch
+                }] Unable to commit to branch.`,
+                err
             );
         }
     }
@@ -916,19 +925,28 @@ export class CausalRepoServer {
         const repo = await this._repoPromises.get(branch);
         this._repoPromises.delete(branch);
         if (repo && repo.repo.hasChanges()) {
-            console.log(
-                `[CausalRepoServer] [${branch}] Committing before unloading...`
-            );
-            const c = await repo.repo.commit(`Save ${branch} before unload`);
-
-            if (c) {
+            try {
                 console.log(
-                    `[CausalRepoServer] [${branch}] [${c.hash}] Committed!`
+                    `[CausalRepoServer] [${branch}] Committing before unloading...`
                 );
-                await this._stage.clearStage(branch);
-            } else {
-                console.log(
-                    `[CausalRepoServer] [${branch}] No commit created due to no changes.`
+                const c = await repo.repo.commit(
+                    `Save ${branch} before unload`
+                );
+
+                if (c) {
+                    console.log(
+                        `[CausalRepoServer] [${branch}] [${c.hash}] Committed!`
+                    );
+                    await this._stage.clearStage(branch);
+                } else {
+                    console.log(
+                        `[CausalRepoServer] [${branch}] No commit created due to no changes.`
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    `[CausalRepoServer] [${branch}] Unable to commit to branch during unload.`,
+                    err
                 );
             }
         }
@@ -944,16 +962,20 @@ export class CausalRepoServer {
         let repo = this._repos.get(branch);
 
         if (!repo) {
-            let promise: Promise<RepoData>;
-            if (!temporary) {
-                promise = this._loadRepo(branch, createBranch);
+            let finalPromise: Promise<RepoData>;
+            let repoPromise = this._repoPromises.get(branch);
+            if (repoPromise) {
+                finalPromise = repoPromise;
             } else {
-                promise = this._createEmptyRepo(branch);
+                if (!temporary) {
+                    finalPromise = this._loadRepo(branch, createBranch);
+                } else {
+                    finalPromise = this._createEmptyRepo(branch);
+                }
+                this._repoPromises.set(branch, finalPromise);
             }
 
-            this._repoPromises.set(branch, promise);
-
-            repo = await promise;
+            repo = await finalPromise;
 
             this._repos.set(branch, repo);
             this._branchLoaded(branch);
