@@ -2862,7 +2862,7 @@ declare global {
          * @param buffer The buffer to read.
          * @param length The length of the buffer.
          */
-        rpioReadSequence(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioReadSequence(pin: number, buffer: number, length?: number): Promise<void>;
 
         /**
          * Sends an event to the server to write to a pin and set it as HIGH or LOW.
@@ -2877,7 +2877,7 @@ declare global {
          * @param buffer The buffer to write to.
          * @param length The length of the buffer.
          */
-        rpioWriteSequence(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioWriteSequence(pin: number, buffer: number[], length?: number): Promise<void>;
 
 
         /**
