@@ -2673,6 +2673,70 @@ server.rpioWriteSequence(13, [10, 10]);
 
 ```
 
+### `server.rpioPud(pin, state)`
+
+
+Configure the pin's internal pullup or pulldown resistors.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP' and can be used to configure the pin's resistors.
+
+#### Examples:
+
+1. Configure pin 11 to enable the pulldown resistor.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_DOWN');
+```
+
+2. Disable configured resistors on pin 11.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_OFF');
+```
+
+### `server.rpioPoll(pin, cb, options)`
+
+
+Watch `pin` for changes and execute the callback `cb()` on events.
+To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when 
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the callback executed on events.
+
+The **third parameter** is 'POLL_LOW', 'POLL_HIGH' or 'POLL_BOTH' and can be optionally used to watch for specific events.
+
+#### Examples:
+
+1. Poll pin 15 forever, and poll pin 16 to stop all polling.
+```typescript
+function nuke_button(pin) {
+        console.log('Nuke button on pin %d pressed', pin);
+        /* No need to nuke more than once. */
+        server.rpioPoll(pin, null);
+}
+ 
+function regular_button(pin) {
+        /* Watch pin 15 forever. */
+        console.log('Button event on pin %d, is now %d', pin, server.rpioRead(pin));
+}
+ 
+/*
+ * Pin 15 watches for both high and low transitions.  Pin 16 only watches for
+ * high transitions (e.g. the nuke button is pushed).
+ */
+server.rpioPoll(15, regular_button);
+server.rpioPoll(16, nuke_button, 'POLL_HIGH');
+```
+
 ### `server.rpioClose(pin, options)`
 
 

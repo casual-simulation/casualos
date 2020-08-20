@@ -120,6 +120,8 @@ export type AsyncActions =
     | RpioReadSequenceAction
     | RpioWriteAction
     | RpioWriteSequenceAction
+    | RpioPudAction
+    | RpioPollAction
     | RpioCloseAction
     | RpioI2CBeginAction
     | RpioI2CSetBaudRateAction
@@ -1352,6 +1354,43 @@ export interface RpioWriteSequenceAction extends AsyncAction {
     buffer: number[];
 }
 
+/**
+ * Configure the pin's internal pullup or pulldown resistors.
+ */
+export interface RpioPudAction extends AsyncAction {
+    type: 'rpio_pud';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+     */
+    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+/**
+ * Watch `pin` for changes and execute the callback `cb()` on events.
+ */
+export interface RpioPollAction extends AsyncAction {
+    type: 'rpio_poll';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The callback executed on events.
+     */
+    cb: any;
+
+    /**
+     * Optional. Used to watch for specific events.
+     */
+    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH';
+}
 /**
  * Close a pin to remove it from use.
  */
@@ -2778,6 +2817,52 @@ export function rpioWriteSequencePin(
         type: 'rpio_write_sequence',
         pin,
         buffer,
+        taskId,
+        playerId,
+    };
+}
+
+
+/**
+ * Configure the pin's internal pullup or pulldown resistors.
+ * @param pin The pin that you want to use.
+ * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+ * @param taskId The ID of the async task.
+ */
+export function rpioPudPin(
+    pin: number,
+    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioPudAction {
+    return {
+        pin,
+        state,
+        type: 'rpio_pud',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Watch `pin` for changes and execute the callback `cb()` on events.
+ * @param pin The pin that you want to use.
+ * @param cb The callback executed on events.
+ * @param options Optional. Used to watch for specific events.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPollPin(
+    pin: number,
+    cb: any,
+    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH',
+    taskId?: string | number,
+    playerId?: string
+): RpioPollAction {
+    return {
+        pin,
+        cb,
+        options,
+        type: 'rpio_poll',
         taskId,
         playerId,
     };

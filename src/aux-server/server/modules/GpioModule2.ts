@@ -15,6 +15,8 @@ import {
     RpioReadSequenceAction,
     RpioWriteAction,
     RpioWriteSequenceAction,
+    RpioPudAction,
+    RpioPollAction,
     RpioCloseAction,
     RpioI2CBeginAction,
     RpioI2CSetBaudRateAction,
@@ -80,6 +82,12 @@ export class GpioModule2 implements AuxModule2 {
                         }
                         if (event.type === 'rpio_write_sequence') { // Write Buffer
                             await this._rpioWriteSequence(simulation, event);
+                        }
+                        if (event.type === 'rpio_pud') {
+                            await this._rpioPud(simulation, event);
+                        }
+                        if (event.type === 'rpio_poll') {
+                            await this._rpioPoll(simulation, event);
                         }
                         if (event.type === 'rpio_close') {
                             await this._rpioClose(simulation, event);
@@ -402,6 +410,76 @@ export class GpioModule2 implements AuxModule2 {
             let buffer = Buffer.from(event.buffer);
             rpio.writebuf(pin, buffer);
 
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioPud(simulation: Simulation, event: RpioPudAction) {
+        try {
+            var state;
+            if (event.state == 'PULL_OFF') {
+                state = rpio.PULL_OFF;
+            } else if (event.state == 'PULL_DOWN') {
+                state = rpio.PULL_DOWN;
+            } else if (event.state == 'PULL_UP') {
+                state = rpio.PULL_UP;
+            }
+            rpio.pud(event.pin, state);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioPoll(simulation: Simulation, event: RpioPollAction) {
+        try {
+            var options;
+            if (event.options == 'POLL_LOW') {
+                options = rpio.POLL_LOW;
+            } else if (event.options == 'POLL_HIGH') {
+                options = rpio.POLL_HIGH;
+            } else if (event.options == 'POLL_BOTH') {
+                options = rpio.POLL_BOTH;
+            }
+            rpio.poll(event.pin, event.cb, options);
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(

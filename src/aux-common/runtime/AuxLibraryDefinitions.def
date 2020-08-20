@@ -2881,6 +2881,21 @@ declare global {
 
 
         /**
+         * Configure the pin's internal pullup or pulldown resistors.
+         * @param pin The pin that you want to use.
+         * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+         */
+        rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Watch `pin` for changes and execute the callback `cb()` on events.
+         * @param pin The pin that you want to use.
+         * @param cb The callback executed on events.
+         * @param options Optional. Used to watch for specific events.
+         */
+        rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'): Promise<void>;
+
+        /**
          * Sends an event to the server to close a pin and what state to leave it in.
          * @param pin The physical pin number.
          * @param options The state to leave the pin in upon closing.

@@ -101,6 +101,8 @@ import {
     rpioReadSequencePin,
     rpioWritePin,
     rpioWriteSequencePin,
+    rpioPudPin,
+    rpioPollPin,
     rpioClosePin,
     rpioI2CBeginPin,
     rpioI2CSetBaudRatePin,
@@ -422,6 +424,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioReadSequence,
                 rpioWrite,
                 rpioWriteSequence,
+                rpioPud,
+                rpioPoll,
                 rpioClose,
                 rpioI2CBegin,
                 rpioI2CSetBaudRate,
@@ -1686,6 +1690,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioWriteSequencePin(pin, buffer),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+
+    /**
+     * Configure the pin's internal pullup or pulldown resistors.
+     * @param pin The pin that you want to use.
+     * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+     */
+    function rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPudPin(pin, state),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Watch `pin` for changes and execute the callback `cb()` on events.
+     * @param pin The pin that you want to use.
+     * @param cb The callback executed on events.
+     * @param options Optional. Used to watch for specific events.
+     */
+    function rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPollPin(pin, cb, options),
             undefined,
             undefined,
             task.taskId
