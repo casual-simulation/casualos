@@ -46,6 +46,7 @@ const namesConfig: Config = {
 })
 export default class PlayerHome extends Vue {
     @Prop() query: Dictionary<string[] | string>;
+    @Prop() url: string;
 
     debug: boolean = false;
     isLoading: boolean = false;
@@ -68,6 +69,18 @@ export default class PlayerHome extends Vue {
             getUserBotAsync(sim).subscribe(
                 bot => {
                     this._updatePlayerTags(sim, bot);
+                },
+                err => console.error(err)
+            );
+        }
+    }
+
+    @Watch('url')
+    async onUrlChanged() {
+        for (let [sim, sub] of this._simulations) {
+            getUserBotAsync(sim).subscribe(
+                bot => {
+                    this._updateUrlTag(sim, bot);
                 },
                 err => console.error(err)
             );
@@ -209,6 +222,23 @@ export default class PlayerHome extends Vue {
                 changes[tag] = newValue;
                 hasChange = true;
             }
+        }
+        if (hasChange) {
+            await botManager.helper.updateBot(bot, {
+                tags: changes,
+            });
+        }
+    }
+
+    private async _updateUrlTag(
+        botManager: BrowserSimulation,
+        bot: PrecalculatedBot
+    ) {
+        let changes: BotTags = {};
+        let hasChange = false;
+        if (bot.tags.url !== location.href) {
+            changes.url = location.href;
+            hasChange = true;
         }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
