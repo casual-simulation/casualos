@@ -126,7 +126,7 @@
                         <div
                             v-for="(tag, tagIndex) in tags"
                             :key="`${bot.id}-${tagIndex}`"
-                            class="bot-cell"
+                            class="bot-cell value"
                             :class="getTagCellClass(bot, tag)"
                         >
                             <bot-value
