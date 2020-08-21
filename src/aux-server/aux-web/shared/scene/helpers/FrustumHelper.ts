@@ -18,8 +18,6 @@ import {
 const _vector = new Vector3();
 const _camera = new Camera();
 
-CameraHelper.prototype.update = function() {};
-
 /**
  * Creates a camera frustum.
  */
