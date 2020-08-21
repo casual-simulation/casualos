@@ -119,7 +119,31 @@ export type AsyncActions =
     | RpioReadSequenceAction
     | RpioWriteAction
     | RpioWriteSequenceAction
+    | RpioReadpadAction
+    | RpioWritepadAction
+    | RpioPudAction
+    | RpioPollAction
     | RpioCloseAction
+    | RpioI2CBeginAction
+    | RpioI2CSetSlaveAddressAction
+    | RpioI2CSetBaudRateAction
+    | RpioI2CSetClockDividerAction
+    | RpioI2CReadAction
+    | RpioI2CWriteAction
+    // | RpioI2CReadRegisterRestartAction
+    // | RpioI2CWriteReadRestartAction
+    | RpioI2CEndAction
+    | RpioPWMSetClockDividerAction
+    | RpioPWMSetRangeAction
+    | RpioPWMSetDataAction
+    | RpioSPIBeginAction
+    | RpioSPIChipSelectAction
+    | RpioSPISetCSPolarityAction
+    | RpioSPISetClockDividerAction
+    | RpioSPISetDataModeAction
+    | RpioSPITransferAction
+    | RpioSPIWriteAction
+    | RpioSPIEndAction
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
@@ -1370,6 +1394,87 @@ export interface RpioWriteSequenceAction extends AsyncAction {
 }
 
 /**
+ * Read the current state of the GPIO pad control for the specified GPIO group.
+ * On current models of Raspberry Pi there are three groups.
+ */
+export interface RpioReadpadAction extends AsyncAction {
+    type: 'rpio_readpad';
+
+    /**
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     */
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
+    /**
+     * The bitmask you want to check.
+     */
+    bitmask: 'slew' | 'hysteresis' | 'current';
+}
+/**
+ * Write `control` settings to the pad control for `group`.
+ */
+export interface RpioWritepadAction extends AsyncAction {
+    type: 'rpio_writepad';
+
+    /**
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     */
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
+
+    /**
+     * Slew rate unlimited if set to true.
+     */
+    slew?: boolean;
+    /**
+     * Hysteresis is enabled if set to true.
+     */
+    hysteresis?: boolean;
+    /**
+     * Drive current set in mA. Must be an even number 2-16.
+     */
+    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16;
+}
+/**
+ * Configure the pin's internal pullup or pulldown resistors.
+ */
+export interface RpioPudAction extends AsyncAction {
+    type: 'rpio_pud';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+     */
+    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
+}
+/**
+ * Watch `pin` for changes and execute the callback `cb()` on events.
+ */
+export interface RpioPollAction extends AsyncAction {
+    type: 'rpio_poll';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The callback executed on events.
+     */
+    cb: any;
+
+    /**
+     * Optional. Used to watch for specific events.
+     */
+    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH';
+}
+/**
  * Close a pin to remove it from use.
  */
 export interface RpioCloseAction extends AsyncAction {
@@ -1384,6 +1489,234 @@ export interface RpioCloseAction extends AsyncAction {
      * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
      */
     options?: 'PIN_RESET' | 'PIN_PRESERVE';
+}
+/**
+ *Initializes i2c for use.
+ */
+export interface RpioI2CBeginAction extends AsyncAction {
+    type: 'rpio_i2c_begin';
+}
+/**
+ * Configure the slave address.
+ */
+export interface RpioI2CSetSlaveAddressAction extends AsyncAction {
+    type: 'rpio_i2c_setslaveaddress';
+
+    /**
+     * The slave address to set.
+     */
+    address: number;
+}
+/**
+ * Set the baud rate. Directly set the speed in hertz.
+ */
+export interface RpioI2CSetBaudRateAction extends AsyncAction {
+    type: 'rpio_i2c_setbaudrate';
+
+    /**
+     * The i2c refresh rate in hertz.
+     */
+    rate: number;
+}
+/**
+ * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+ */
+export interface RpioI2CSetClockDividerAction extends AsyncAction {
+    type: 'rpio_i2c_setclockdivider';
+
+    /**
+     * The i2c refresh rate based on a divisor of the base 250MHz rate.
+     */
+    rate: number;
+}
+/**
+ * Read from the i2c slave.
+ */
+export interface RpioI2CReadAction extends AsyncAction {
+    type: 'rpio_i2c_read';
+
+    /**
+     * Buffer to read.
+     */
+    rx: number[];
+
+    /**
+     * Optional. Length of the buffer to read.
+     */
+    length?: number;
+}
+/**
+ * Write to the i2c slave.
+ */
+export interface RpioI2CWriteAction extends AsyncAction {
+    type: 'rpio_i2c_write';
+
+    /**
+     * Buffer to write.
+     */
+    tx: number[];
+
+    /**
+     * Optional. Length of the buffer to write.
+     */
+    length?: number;
+}
+/**
+ *
+ */
+// export interface RpioI2CReadRegisterRestartAction extends AsyncAction {
+//     type: 'rpio_i2c_readregisterrestart';
+// }
+/**
+ *
+ */
+// export interface RpioI2CWriteReadRestartAction extends AsyncAction {
+//     type: 'rpio_i2c_writereadrestart';
+// }
+/**
+ * Turn off the i²c interface and return the pins to GPIO.
+ */
+export interface RpioI2CEndAction extends AsyncAction {
+    type: 'rpio_i2c_end';
+}
+/**
+ * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+ */
+export interface RpioPWMSetClockDividerAction extends AsyncAction {
+    type: 'rpio_pwm_setclockdivider';
+
+    /**
+     * The PWM refresh rate.
+     */
+    rate: number;
+}
+/**
+ * This determines the maximum pulse width.
+ */
+export interface RpioPWMSetRangeAction extends AsyncAction {
+    type: 'rpio_pwm_setrange';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The PWM range for a pin.
+     */
+    range: number;
+}
+/**
+ * Set the width for a given pin.
+ */
+export interface RpioPWMSetDataAction extends AsyncAction {
+    type: 'rpio_pwm_setdata';
+
+    /**
+     * The pin that you want to use.
+     */
+    pin: number;
+
+    /**
+     * The PWM width for a pin.
+     */
+    width: number;
+}
+/**
+ * Initiate SPI mode.
+ */
+export interface RpioSPIBeginAction extends AsyncAction {
+    type: 'rpio_spi_begin';
+}
+/**
+ * Choose which of the chip select / chip enable pins to control.
+ */
+export interface RpioSPIChipSelectAction extends AsyncAction {
+    type: 'rpio_spi_chipselect';
+
+    /*
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     */
+    value: 0 | 1 | 2;
+}
+/**
+ * If your device's CE pin is active high, use this to change the polarity.
+ */
+export interface RpioSPISetCSPolarityAction extends AsyncAction {
+    type: 'rpio_spi_setcspolarity';
+
+    /*
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     */
+    value: 0 | 1 | 2;
+
+    /**
+     * Set the polarity it activates on. HIGH or LOW
+     */
+    polarity: 'HIGH' | 'LOW';
+}
+/**
+ * Set the SPI clock speed.
+ */
+export interface RpioSPISetClockDividerAction extends AsyncAction {
+    type: 'rpio_spi_setclockdivider';
+
+    /**
+     * It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+     */
+    rate: number;
+}
+/**
+ * Set the SPI Data Mode.
+ */
+export interface RpioSPISetDataModeAction extends AsyncAction {
+    type: 'rpio_spi_setdatamode';
+
+    /**
+     *  Mode | CPOL | CPHA
+     *  -----|------|-----
+     *    0  |  0   |  0
+     *    1  |  0   |  1
+     *    2  |  1   |  0
+     *    3  |  1   |  1
+     */
+    mode: 0 | 1 | 2 | 3;
+}
+/**
+ *
+ */
+export interface RpioSPITransferAction extends AsyncAction {
+    type: 'rpio_spi_transfer';
+
+    /**
+     *
+     */
+    tx: number[];
+}
+/**
+ *
+ */
+export interface RpioSPIWriteAction extends AsyncAction {
+    type: 'rpio_spi_write';
+
+    /**
+     *
+     */
+    tx: number[];
+}
+/**
+ * Release the pins back to general purpose use.
+ */
+export interface RpioSPIEndAction extends AsyncAction {
+    type: 'rpio_spi_end';
 }
 /**
  * Defines an event that sets some text on the user's clipboard.
@@ -2668,6 +3001,110 @@ export function rpioWriteSequencePin(
 }
 
 /**
+ * Read the current state of the GPIO pad control for the specified GPIO group.
+ * On current models of Raspberry Pi there are three groups.
+ *
+ * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+ * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+ * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+ *
+ * @param group The GPIO group to be read.
+ * @param bitmask The bitmask you want to check.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadpadPin(
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+    bitmask: 'slew' | 'hysteresis' | 'current',
+    taskId?: string | number,
+    playerId?: string
+): RpioReadpadAction {
+    return {
+        group,
+        bitmask,
+        type: 'rpio_readpad',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Write `control` settings to the pad control for `group`.
+ *
+ * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+ * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+ * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+ *
+ * @param group The GPIO group to be read.
+ * @param slew Slew rate unlimited if set to true.
+ * @param hysteresis Hysteresis is enabled if set to true.
+ * @param current Drive current set in mA. Must be an even number 2-16.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWritepadPin(
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+    slew?: boolean,
+    hysteresis?: boolean,
+    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16,
+    taskId?: string | number,
+    playerId?: string
+): RpioWritepadAction {
+    return {
+        group,
+        slew,
+        hysteresis,
+        current,
+        type: 'rpio_writepad',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Configure the pin's internal pullup or pulldown resistors.
+ * @param pin The pin that you want to use.
+ * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+ * @param taskId The ID of the async task.
+ */
+export function rpioPudPin(
+    pin: number,
+    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
+    taskId?: string | number,
+    playerId?: string
+): RpioPudAction {
+    return {
+        pin,
+        state,
+        type: 'rpio_pud',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Watch `pin` for changes and execute the callback `cb()` on events.
+ * @param pin The pin that you want to use.
+ * @param cb The callback executed on events.
+ * @param options Optional. Used to watch for specific events.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPollPin(
+    pin: number,
+    cb: any,
+    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH',
+    taskId?: string | number,
+    playerId?: string
+): RpioPollAction {
+    return {
+        pin,
+        cb,
+        options,
+        type: 'rpio_poll',
+        taskId,
+        playerId,
+    };
+}
+
+/**
  * Sends an event to the server to close a pin and what state to leave it in.
  * @param pin The physical pin number.
  * @param options The state to leave the pin in upon closing.
@@ -2683,6 +3120,377 @@ export function rpioClosePin(
         type: 'rpio_close',
         pin,
         options,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Initializes i2c for use.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CBeginPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CBeginAction {
+    return {
+        type: 'rpio_i2c_begin',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Configure the slave address.
+ * @param address The slave address to set.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetSlaveAddressPin(
+    address: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetSlaveAddressAction {
+    return {
+        address,
+        type: 'rpio_i2c_setslaveaddress',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the baud rate. Directly set the speed in hertz.
+ * @param rate The i2c refresh rate in hertz.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetBaudRatePin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetBaudRateAction {
+    return {
+        rate,
+        type: 'rpio_i2c_setbaudrate',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+ * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetClockDividerAction {
+    return {
+        rate,
+        type: 'rpio_i2c_setclockdivider',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Read from the i2c slave.
+ * @param rx Buffer to read.
+ * @param length Optional. Length of the buffer to read.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CReadPin(
+    rx: number[],
+    length?: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CReadAction {
+    return {
+        rx,
+        length,
+        type: 'rpio_i2c_read',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Write to the i2c slave.
+ * @param tx Buffer to write.
+ * @param length Optional. Length of the buffer to write.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CWritePin(
+    tx: number[],
+    length?: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CWriteAction {
+    return {
+        tx,
+        length,
+        type: 'rpio_i2c_write',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+// export function rpioI2CReadRegisterRestartPin(
+//     taskId?: string | number,
+//     playerId?: string
+// ): RpioI2CReadRegisterRestartAction {
+//     return {
+//         type: 'rpio_i2c_readregisterrestart',
+//         taskId,
+//         playerId,
+//     };
+// }
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+// export function rpioI2CWriteReadRestartPin(
+//     taskId?: string | number,
+//     playerId?: string
+// ): RpioI2CWriteReadRestartAction {
+//     return {
+//         type: 'rpio_i2c_writereadrestart',
+//         taskId,
+//         playerId,
+//     };
+// }
+
+/**
+ * Turn off the i²c interface and return the pins to GPIO.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CEndPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CEndAction {
+    return {
+        type: 'rpio_i2c_end',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+ * @param rate The PWM refresh rate.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetClockDividerAction {
+    return {
+        type: 'rpio_pwm_setclockdivider',
+        rate,
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * This determines the maximum pulse width.
+ * @param pin The physical pin number.
+ * @param range The PWM range for a pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetRangePin(
+    pin: number,
+    range: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetRangeAction {
+    return {
+        pin,
+        range,
+        type: 'rpio_pwm_setrange',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the width for a given pin.
+ * @param pin The physical pin number.
+ * @param width The PWM width for a pin.
+ * @param taskId The ID of the async task.
+ */
+export function rpioPWMSetDataPin(
+    pin: number,
+    width: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioPWMSetDataAction {
+    return {
+        pin,
+        width,
+        type: 'rpio_pwm_setdata',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Initiate SPI mode.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIBeginPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIBeginAction {
+    return {
+        type: 'rpio_spi_begin',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Choose which of the chip select / chip enable pins to control.
+ *  Value | Pin
+ *  ------|---------------------
+ *    0   | SPI_CE0 (24 / GPIO8)
+ *    1   | SPI_CE1 (26 / GPIO7)
+ *    2   | Both
+ * @param value The value correlating to pin(s) to control.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIChipSelectPin(
+    value: 0 | 1 | 2,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIChipSelectAction {
+    return {
+        value,
+        type: 'rpio_spi_chipselect',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * If your device's CE pin is active high, use this to change the polarity.
+ *  Value | Pin
+ *  ------|---------------------
+ *    0   | SPI_CE0 (24 / GPIO8)
+ *    1   | SPI_CE1 (26 / GPIO7)
+ *    2   | Both
+ * @param value The value correlating to pin(s) to control.
+ * @param polarity Set the polarity it activates on. HIGH or LOW
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetCSPolarityPin(
+    value: 0 | 1 | 2,
+    polarity: 'HIGH' | 'LOW',
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetCSPolarityAction {
+    return {
+        value,
+        polarity,
+        type: 'rpio_spi_setcspolarity',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the SPI clock speed.
+ * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetClockDividerPin(
+    rate: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetClockDividerAction {
+    return {
+        rate,
+        type: 'rpio_spi_setclockdivider',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Set the SPI Data Mode.
+ *  Mode | CPOL | CPHA
+ *  -----|------|-----
+ *    0  |  0   |  0
+ *    1  |  0   |  1
+ *    2  |  1   |  0
+ *    3  |  1   |  1
+ * @param mode The SPI Data Mode.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPISetDataModePin(
+    mode: 0 | 1 | 2 | 3,
+    taskId?: string | number,
+    playerId?: string
+): RpioSPISetDataModeAction {
+    return {
+        mode,
+        type: 'rpio_spi_setdatamode',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPITransferPin(
+    tx: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioSPITransferAction {
+    return {
+        tx,
+        type: 'rpio_spi_transfer',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIWritePin(
+    tx: number[],
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIWriteAction {
+    return {
+        tx,
+        type: 'rpio_spi_write',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Release the pins back to general purpose use.
+ * @param taskId The ID of the async task.
+ */
+export function rpioSPIEndPin(
+    taskId?: string | number,
+    playerId?: string
+): RpioSPIEndAction {
+    return {
+        type: 'rpio_spi_end',
         taskId,
         playerId,
     };
