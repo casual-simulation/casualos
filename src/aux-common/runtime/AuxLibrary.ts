@@ -101,12 +101,19 @@ import {
     rpioReadSequencePin,
     rpioWritePin,
     rpioWriteSequencePin,
+    rpioReadpadPin,
+    rpioWritepadPin,
     rpioPudPin,
     rpioPollPin,
     rpioClosePin,
     rpioI2CBeginPin,
+    rpioI2CSetSlaveAddressPin,
     rpioI2CSetBaudRatePin,
     rpioI2CSetClockDividerPin,
+    rpioI2CReadPin,
+    rpioI2CWritePin,
+    // rpioI2CReadRegisterRestartPin,
+    // rpioI2CWriteReadRestartPin,
     rpioI2CEndPin,
     rpioPWMSetClockDividerPin,
     rpioPWMSetRangePin,
@@ -424,12 +431,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioReadSequence,
                 rpioWrite,
                 rpioWriteSequence,
+                rpioReadpad,
+                rpioWritepad,
                 rpioPud,
                 rpioPoll,
                 rpioClose,
                 rpioI2CBegin,
+                rpioI2CSetSlaveAddress,
                 rpioI2CSetBaudRate,
                 rpioI2CSetClockDivider,
+                rpioI2CRead,
+                rpioI2CWrite,
+                // rpioI2CReadRegisterRestart,
+                // rpioI2CWriteReadRestart,
                 rpioI2CEnd,
                 rpioPWMSetClockDivider,
                 rpioPWMSetRange,
@@ -1697,6 +1711,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Read the current state of the GPIO pad control for the specified GPIO group.
+     * On current models of Raspberry Pi there are three groups.
+     *
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     *
+     * @param group The GPIO group to be read.
+     * @param bitmask The bitmask you want to check.
+     */
+    function rpioReadpad(
+        group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+        bitmask: 'slew' | 'hysteresis' | 'current'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadpadPin(group, bitmask),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Write `control` settings to the pad control for `group`.
+     *
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     *
+     * @param group The GPIO group to be read.
+     * @param slew Slew rate unlimited if set to true.
+     * @param hysteresis Hysteresis is enabled if set to true.
+     * @param current Drive current set in mA. Must be an even number 2-16.
+     */
+    function rpioWritepad(
+        group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+        slew?: boolean,
+        hysteresis?: boolean,
+        current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWritepadPin(group, slew, hysteresis, current),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
 
     /**
      * Configure the pin's internal pullup or pulldown resistors.
@@ -1720,7 +1786,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param cb The callback executed on events.
      * @param options Optional. Used to watch for specific events.
      */
-    function rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH') {
+    function rpioPoll(
+        pin: number,
+        cb: any,
+        options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'
+    ) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioPollPin(pin, cb, options),
@@ -1761,6 +1831,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Configure the slave address.
+     * @param address The slave address to set.
+     */
+    function rpioI2CSetSlaveAddress(address: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetSlaveAddressPin(address),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
 
     /**
      * Set the baud rate. Directly set the speed in hertz.
@@ -1792,6 +1876,65 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Read from the i2c slave.
+     * @param rx Buffer to read.
+     * @param length Optional. Length of the buffer to read.
+     */
+    function rpioI2CRead(rx: number[], length?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CReadPin(rx, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Write to the i2c slave.
+     * @param tx Buffer to write.
+     * @param length Optional. Length of the buffer to write.
+     */
+    function rpioI2CWrite(tx: number[], length?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CWritePin(tx, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    // function rpioI2CReadRegisterRestart() {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         rpioI2CReadRegisterRestartPin(),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    // function rpioI2CWriteReadRestart() {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         rpioI2CWriteReadRestartPin(),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
 
     /**
      * Turn off the i²c interface and return the pins to GPIO.

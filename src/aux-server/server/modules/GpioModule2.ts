@@ -15,12 +15,19 @@ import {
     RpioReadSequenceAction,
     RpioWriteAction,
     RpioWriteSequenceAction,
+    RpioReadpadAction,
+    RpioWritepadAction,
     RpioPudAction,
     RpioPollAction,
     RpioCloseAction,
     RpioI2CBeginAction,
+    RpioI2CSetSlaveAddressAction,
     RpioI2CSetBaudRateAction,
     RpioI2CSetClockDividerAction,
+    RpioI2CReadAction,
+    RpioI2CWriteAction,
+    // RpioI2CReadRegisterRestartAction,
+    // RpioI2CWriteReadRestartAction,
     RpioI2CEndAction,
     RpioPWMSetClockDividerAction,
     RpioPWMSetRangeAction,
@@ -74,14 +81,22 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_read') {
                             await this._rpioRead(simulation, event);
                         }
-                        if (event.type === 'rpio_read_sequence') { // Read Buffer
+                        if (event.type === 'rpio_read_sequence') {
+                            // Read Buffer
                             await this._rpioReadSequence(simulation, event);
                         }
                         if (event.type === 'rpio_write') {
                             await this._rpioWrite(simulation, event);
                         }
-                        if (event.type === 'rpio_write_sequence') { // Write Buffer
+                        if (event.type === 'rpio_write_sequence') {
+                            // Write Buffer
                             await this._rpioWriteSequence(simulation, event);
+                        }
+                        if (event.type === 'rpio_readpad') {
+                            await this._rpioReadpad(simulation, event);
+                        }
+                        if (event.type === 'rpio_writepad') {
+                            await this._rpioWritepad(simulation, event);
                         }
                         if (event.type === 'rpio_pud') {
                             await this._rpioPud(simulation, event);
@@ -96,18 +111,42 @@ export class GpioModule2 implements AuxModule2 {
                         if (event.type === 'rpio_i2c_begin') {
                             await this._rpioI2CBegin(simulation, event);
                         }
+                        if (event.type === 'rpio_i2c_setslaveaddress') {
+                            await this._rpioI2CSetSlaveAddress(
+                                simulation,
+                                event
+                            );
+                        }
                         if (event.type === 'rpio_i2c_setbaudrate') {
                             await this._rpioI2CSetBaudRate(simulation, event);
                         }
                         if (event.type === 'rpio_i2c_setclockdivider') {
-                            await this._rpioI2CSetClockDivider(simulation, event);
+                            await this._rpioI2CSetClockDivider(
+                                simulation,
+                                event
+                            );
                         }
-                        // if (event.type === 'rpio_i2c_end') {
-                        //     await this._rpioI2CEnd(simulation, event);
+                        if (event.type === 'rpio_i2c_read') {
+                            await this._rpioI2CRead(simulation, event);
+                        }
+                        if (event.type === 'rpio_i2c_write') {
+                            await this._rpioI2CWrite(simulation, event);
+                        }
+                        // if (event.type === 'rpio_i2c_readregisterrestart') {
+                        //     await this._rpioI2CReadRegisterRestart(simulation, event);
                         // }
+                        // if (event.type === 'rpio_i2c_writereadrestart') {
+                        //     await this._rpioI2CWriteReadRestart(simulation, event);
+                        // }
+                        if (event.type === 'rpio_i2c_end') {
+                            await this._rpioI2CEnd(simulation, event);
+                        }
                         // PWM
                         if (event.type === 'rpio_pwm_setclockdivider') {
-                            await this._rpioPWMSetClockDivider(simulation, event);
+                            await this._rpioPWMSetClockDivider(
+                                simulation,
+                                event
+                            );
                         }
                         if (event.type === 'rpio_pwm_setrange') {
                             await this._rpioPWMSetRange(simulation, event);
@@ -126,7 +165,10 @@ export class GpioModule2 implements AuxModule2 {
                             await this._rpioSPISetCSPolarity(simulation, event);
                         }
                         if (event.type === 'rpio_spi_setclockdivider') {
-                            await this._rpioSPISetClockDivider(simulation, event);
+                            await this._rpioSPISetClockDivider(
+                                simulation,
+                                event
+                            );
                         }
                         if (event.type === 'rpio_spi_setdatamode') {
                             await this._rpioSPISetDataMode(simulation, event);
@@ -409,7 +451,139 @@ export class GpioModule2 implements AuxModule2 {
             let pin = event.pin;
             let buffer = Buffer.from(event.buffer);
             rpio.writebuf(pin, buffer);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioReadpad(simulation: Simulation, event: RpioReadpadAction) {
+        try {
+            var group;
+            var control;
+            var result;
+            if (event.group == 'PAD_GROUP_0_27') {
+                group = rpio.PAD_GROUP_0_27;
+                control = rpio.readpad(group);
+            } else if (event.group == 'PAD_GROUP_28_45') {
+                group = rpio.PAD_GROUP_28_45;
+                control = rpio.readpad(group);
+            } else if (event.group == 'PAD_GROUP_46_53') {
+                group = rpio.PAD_GROUP_46_53;
+                control = rpio.readpad(group);
+            }
 
+            var slew =
+                (control & rpio.PAD_SLEW_UNLIMITED) == rpio.PAD_SLEW_UNLIMITED;
+            var hysteresis =
+                (control & rpio.PAD_HYSTERESIS) == rpio.PAD_HYSTERESIS;
+            var current = control & 0x7;
+
+            if (event.bitmask == 'slew') {
+                if (slew) {
+                    result = true;
+                } else {
+                    result = false;
+                }
+            }
+            if (event.bitmask == 'hysteresis') {
+                if (hysteresis) {
+                    result = true;
+                } else {
+                    result = false;
+                }
+            }
+            if (event.bitmask == 'current') {
+                result = current * 2 + 2;
+            }
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          result,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, result)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioWritepad(simulation: Simulation, event: RpioWritepadAction) {
+        try {
+            var group;
+            var control;
+            if (event.group == 'PAD_GROUP_0_27') {
+                group = rpio.PAD_GROUP_0_27;
+                control = rpio.readpad(group);
+            } else if (event.group == 'PAD_GROUP_28_45') {
+                group = rpio.PAD_GROUP_28_45;
+                control = rpio.readpad(group);
+            } else if (event.group == 'PAD_GROUP_46_53') {
+                group = rpio.PAD_GROUP_46_53;
+                control = rpio.readpad(group);
+            }
+
+            if (event.slew == true) {
+                control &= rpio.PAD_SLEW_UNLIMITED;
+            } else {
+                control &= ~rpio.PAD_SLEW_UNLIMITED;
+            }
+
+            if (event.hysteresis == true) {
+                control &= rpio.PAD_HYSTERESIS;
+            } else {
+                control &= ~rpio.PAD_HYSTERESIS;
+            }
+
+            if (event.current == 2) {
+                control &= rpio.PAD_DRIVE_2mA;
+            } else if (event.current == 4) {
+                control &= rpio.PAD_DRIVE_4mA;
+            } else if (event.current == 6) {
+                control &= rpio.PAD_DRIVE_6mA;
+            } else if (event.current == 8) {
+                control &= rpio.PAD_DRIVE_8mA;
+            } else if (event.current == 10) {
+                control &= rpio.PAD_DRIVE_10mA;
+            } else if (event.current == 12) {
+                control &= rpio.PAD_DRIVE_12mA;
+            } else if (event.current == 14) {
+                control &= rpio.PAD_DRIVE_14mA;
+            } else if (event.current == 16) {
+                control &= rpio.PAD_DRIVE_16mA;
+            }
+
+            rpio.writepad(group, control);
             simulation.helper.transaction(
                 hasValue(event.playerId)
                     ? remoteResult(
@@ -567,7 +741,40 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-    _rpioI2CSetBaudRate(simulation: Simulation, event: RpioI2CSetBaudRateAction) {
+    _rpioI2CSetSlaveAddress(
+        simulation: Simulation,
+        event: RpioI2CSetSlaveAddressAction
+    ) {
+        try {
+            rpio.i2cSetSlaveAddress(event.address);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioI2CSetBaudRate(
+        simulation: Simulation,
+        event: RpioI2CSetBaudRateAction
+    ) {
         try {
             rpio.i2cSetBaudRate(event.rate);
             simulation.helper.transaction(
@@ -594,7 +801,10 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-    _rpioI2CSetClockDivider(simulation: Simulation, event: RpioI2CSetClockDividerAction) {
+    _rpioI2CSetClockDivider(
+        simulation: Simulation,
+        event: RpioI2CSetClockDividerAction
+    ) {
         try {
             rpio.i2cSetClockDivider(event.rate);
             simulation.helper.transaction(
@@ -621,6 +831,117 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
+    _rpioI2CRead(simulation: Simulation, event: RpioI2CReadAction) {
+        try {
+            let rx = new Buffer(event.rx);
+            rpio.i2cRead(rx, event.length);
+            let array = [...rx.values()];
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          array,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, array)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    _rpioI2CWrite(simulation: Simulation, event: RpioI2CWriteAction) {
+        try {
+            let tx = Buffer.from(event.tx);
+            rpio.i2cWrite(tx, event.length);
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteResult(
+                          undefined,
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncResult(event.taskId, undefined)
+            );
+        } catch (error) {
+            simulation.helper.transaction(
+                hasValue(event.playerId)
+                    ? remoteError(
+                          {
+                              error: 'failure',
+                              exception: error.toString(),
+                          },
+                          { sessionId: event.playerId },
+                          event.taskId
+                      )
+                    : asyncError(event.taskId, error)
+            );
+        }
+    }
+    // _rpioI2CReadRegisterRestart(simulation: Simulation, event: RpioI2CReadRegisterRestartAction) {
+    //     try {
+    //         rpio.i2cReadRegisterRestart();
+    //         simulation.helper.transaction(
+    //             hasValue(event.playerId)
+    //                 ? remoteResult(
+    //                       undefined,
+    //                       { sessionId: event.playerId },
+    //                       event.taskId
+    //                   )
+    //                 : asyncResult(event.taskId, undefined)
+    //         );
+    //     } catch (error) {
+    //         simulation.helper.transaction(
+    //             hasValue(event.playerId)
+    //                 ? remoteError(
+    //                       {
+    //                           error: 'failure',
+    //                           exception: error.toString(),
+    //                       },
+    //                       { sessionId: event.playerId },
+    //                       event.taskId
+    //                   )
+    //                 : asyncError(event.taskId, error)
+    //         );
+    //     }
+    // }
+    // _rpioI2CWriteReadRestart(simulation: Simulation, event: RpioI2CWriteReadRestartAction) {
+    //     try {
+    //         rpio.i2cWriteReadRestart();
+    //         simulation.helper.transaction(
+    //             hasValue(event.playerId)
+    //                 ? remoteResult(
+    //                       undefined,
+    //                       { sessionId: event.playerId },
+    //                       event.taskId
+    //                   )
+    //                 : asyncResult(event.taskId, undefined)
+    //         );
+    //     } catch (error) {
+    //         simulation.helper.transaction(
+    //             hasValue(event.playerId)
+    //                 ? remoteError(
+    //                       {
+    //                           error: 'failure',
+    //                           exception: error.toString(),
+    //                       },
+    //                       { sessionId: event.playerId },
+    //                       event.taskId
+    //                   )
+    //                 : asyncError(event.taskId, error)
+    //         );
+    //     }
+    // }
     _rpioI2CEnd(simulation: Simulation, event: RpioI2CEndAction) {
         try {
             rpio.i2cEnd();
@@ -649,7 +970,10 @@ export class GpioModule2 implements AuxModule2 {
         }
     }
     // PWM
-    _rpioPWMSetClockDivider(simulation: Simulation, event: RpioPWMSetClockDividerAction) {
+    _rpioPWMSetClockDivider(
+        simulation: Simulation,
+        event: RpioPWMSetClockDividerAction
+    ) {
         try {
             rpio.pwmSetClockDivider(event.rate);
             simulation.helper.transaction(
@@ -785,7 +1109,10 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-    _rpioSPISetCSPolarity(simulation: Simulation, event: RpioSPISetCSPolarityAction) {
+    _rpioSPISetCSPolarity(
+        simulation: Simulation,
+        event: RpioSPISetCSPolarityAction
+    ) {
         try {
             var polarity;
             if (event.polarity == 'HIGH') {
@@ -818,7 +1145,10 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-    _rpioSPISetClockDivider(simulation: Simulation, event: RpioSPISetClockDividerAction) {
+    _rpioSPISetClockDivider(
+        simulation: Simulation,
+        event: RpioSPISetClockDividerAction
+    ) {
         try {
             rpio.spiSetClockDivider(event.rate);
             simulation.helper.transaction(
@@ -845,7 +1175,10 @@ export class GpioModule2 implements AuxModule2 {
             );
         }
     }
-    _rpioSPISetDataMode(simulation: Simulation, event: RpioSPISetDataModeAction) {
+    _rpioSPISetDataMode(
+        simulation: Simulation,
+        event: RpioSPISetDataModeAction
+    ) {
         try {
             rpio.spiSetDataMode(event.mode);
             simulation.helper.transaction(

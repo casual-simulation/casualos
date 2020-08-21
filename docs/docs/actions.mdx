@@ -2673,6 +2673,67 @@ server.rpioWriteSequence(13, [10, 10]);
 
 ```
 
+### `server.rpioReadpad(group, bitmask)`
+
+Read the current state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+The value returned will be true/false for 'slew' and 'hysteresis'.
+The value returned will be the drive current in mA for 'current'.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is the bitmask you want to check.
+
+#### Examples:
+
+1. Check if slew is unlimited or limited on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'slew'); // Returns true/false which is unlimited/limited
+```
+
+2. Check if hysteresis is enabled or disabled on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'hysteresis'); // Returns true/false which is enabled/disabled
+```
+
+3. Check the drive current in mA on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'current'); // Returns an even number 2-16 in mA
+```
+
+### `server.rpioWritepad(group, slew?, hysteresis?, current?)`
+
+Write the state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pad control has been written to.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is a boolean to set the slew rate to unlimited or limited.
+
+The **third parameter** is a boolean to enable or disable hysteresis.
+
+The **fourth parameter** is an even number between 2-16 to set the drive current.
+
+#### Examples:
+
+1. Change the gpio group 0-27 to enable hysteresis and set the drive current to 12mA. Slew rate is unchanged.
+```typescript
+server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
+```
+
 ### `server.rpioPud(pin, state)`
 
 
@@ -2779,6 +2840,22 @@ Returns a promise that resolves when i²c has been initialized.
 server.rpioI2CBegin();
 ```
 
+### `server.rpioI2CSetSlaveAddress()`
+
+Configure the slave address. This is between `0 - 0x7f`.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the slave address has been set.
+
+The **first parameter** is a number. The slave address to set.
+
+#### Examples:
+
+1. Set the slave address.
+```typescript
+server.rpioI2CSetSlaveAddress(0x20);
+```
+
 ### `server.rpioI2CSetBaudRate(rate)`
 
 Set the baud rate. Directly set the speed in hertz.
@@ -2809,6 +2886,42 @@ The **first parameter** is the i2c refresh rate based on a divisor of the base 2
 1. Set the rate to 100kHz. (250MHz / 2500 = 100kHz)
 ```typescript
 server.rpioI2CSetClockDivider(2500);
+```
+
+### `server.rpioI2CRead(rx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to read.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Reads 16 bytes.
+```typescript
+await server.rpioI2CRead([32], 16);
+```
+
+### `server.rpioI2CWrite(tx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to write.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Sends 4 bytes.
+```typescript
+server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
 ```
 
 ### `server.rpioI2CEnd()`
@@ -3001,7 +3114,7 @@ The **first parameter** is an array of 8bit chunks (bytes) of information to sen
 
 1. Send the bytes [0x01, 0x01] and recieve the response from the server.
 ```typescript
-server.rpioSPITransfer([1,1]);
+await server.rpioSPITransfer([1,1]);
 ```
 
 ### `server.rpioSPIWrite(tx)`

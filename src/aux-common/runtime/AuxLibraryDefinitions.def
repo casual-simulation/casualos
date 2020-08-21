@@ -2879,6 +2879,32 @@ declare global {
          */
         rpioWriteSequence(pin: number, buffer: number[], length?: number): Promise<void>;
 
+        /**
+         * Read the current state of the GPIO pad control for the specified GPIO group.
+         * On current models of Raspberry Pi there are three groups.
+         * 
+         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+         * 
+         * @param group The GPIO group to be read.
+         * @param bitmask The bitmask you want to check.
+         */
+        rpioReadpad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', bitmask: 'slew' | 'hysteresis' | 'current'): Promise<void>;
+
+        /**
+         * Write `control` settings to the pad control for `group`.
+         * 
+         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+         * 
+         * @param group The GPIO group to be read.
+         * @param slew Slew rate unlimited if set to true.
+         * @param hysteresis Hysteresis is enabled if set to true.
+         * @param current Drive current set in mA. Must be an even number 2-16.
+         */
+        rpioWritepad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', slew?: boolean, hysteresis?: boolean, current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16): Promise<void>;
 
         /**
          * Configure the pin's internal pullup or pulldown resistors.
@@ -2907,6 +2933,11 @@ declare global {
          */
         rpioI2CBegin(): Promise<void>;
         
+        /**
+         * Configure the slave address.
+         * @param address The slave address to set.
+         */
+        rpioI2CSetSlaveAddress(address: number): Promise<void>;
         
         /**
          * Set the baud rate. Directly set the speed in hertz.
@@ -2920,6 +2951,29 @@ declare global {
          */
         rpioI2CSetClockDivider(rate: number): Promise<void>;
         
+        /**
+         * Read from the i2c slave.
+         * @param rx Buffer to read.
+         * @param length Optional. Length of the buffer to read.
+         */
+        rpioI2CRead(rx: number[], length?: number): Promise<void>;
+        
+        /**
+         * Write to the i2c slave.
+         * @param tx Buffer to write.
+         * @param length Optional. Length of the buffer to write.
+         */
+        rpioI2CWrite(tx: number[], length?: number): Promise<void>;
+        
+        /**
+         * 
+         */
+        // rpioI2CReadRegisterRestart(): Promise<void>;
+        
+        /**
+         * 
+         */
+        // rpioI2CWriteReadRestart(): Promise<void>;
         
         /**
          * Turn off the i²c interface and return the pins to GPIO.

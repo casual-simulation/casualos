@@ -120,12 +120,19 @@ export type AsyncActions =
     | RpioReadSequenceAction
     | RpioWriteAction
     | RpioWriteSequenceAction
+    | RpioReadpadAction
+    | RpioWritepadAction
     | RpioPudAction
     | RpioPollAction
     | RpioCloseAction
     | RpioI2CBeginAction
+    | RpioI2CSetSlaveAddressAction
     | RpioI2CSetBaudRateAction
     | RpioI2CSetClockDividerAction
+    | RpioI2CReadAction
+    | RpioI2CWriteAction
+    // | RpioI2CReadRegisterRestartAction
+    // | RpioI2CWriteReadRestartAction
     | RpioI2CEndAction
     | RpioPWMSetClockDividerAction
     | RpioPWMSetRangeAction
@@ -1355,6 +1362,50 @@ export interface RpioWriteSequenceAction extends AsyncAction {
 }
 
 /**
+ * Read the current state of the GPIO pad control for the specified GPIO group.
+ * On current models of Raspberry Pi there are three groups.
+ */
+export interface RpioReadpadAction extends AsyncAction {
+    type: 'rpio_readpad';
+
+    /**
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     */
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
+    /**
+     * The bitmask you want to check.
+     */
+    bitmask: 'slew' | 'hysteresis' | 'current';
+}
+/**
+ * Write `control` settings to the pad control for `group`.
+ */
+export interface RpioWritepadAction extends AsyncAction {
+    type: 'rpio_writepad';
+
+    /**
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     */
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
+
+    /**
+     * Slew rate unlimited if set to true.
+     */
+    slew?: boolean;
+    /**
+     * Hysteresis is enabled if set to true.
+     */
+    hysteresis?: boolean;
+    /**
+     * Drive current set in mA. Must be an even number 2-16.
+     */
+    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16;
+}
+/**
  * Configure the pin's internal pullup or pulldown resistors.
  */
 export interface RpioPudAction extends AsyncAction {
@@ -1414,6 +1465,17 @@ export interface RpioI2CBeginAction extends AsyncAction {
     type: 'rpio_i2c_begin';
 }
 /**
+ * Configure the slave address.
+ */
+export interface RpioI2CSetSlaveAddressAction extends AsyncAction {
+    type: 'rpio_i2c_setslaveaddress';
+
+    /**
+     * The slave address to set.
+     */
+    address: number;
+}
+/**
  * Set the baud rate. Directly set the speed in hertz.
  */
 export interface RpioI2CSetBaudRateAction extends AsyncAction {
@@ -1435,6 +1497,50 @@ export interface RpioI2CSetClockDividerAction extends AsyncAction {
      */
     rate: number;
 }
+/**
+ * Read from the i2c slave.
+ */
+export interface RpioI2CReadAction extends AsyncAction {
+    type: 'rpio_i2c_read';
+
+    /**
+     * Buffer to read.
+     */
+    rx: number[];
+
+    /**
+     * Optional. Length of the buffer to read.
+     */
+    length?: number;
+}
+/**
+ * Write to the i2c slave.
+ */
+export interface RpioI2CWriteAction extends AsyncAction {
+    type: 'rpio_i2c_write';
+
+    /**
+     * Buffer to write.
+     */
+    tx: number[];
+
+    /**
+     * Optional. Length of the buffer to write.
+     */
+    length?: number;
+}
+/**
+ *
+ */
+// export interface RpioI2CReadRegisterRestartAction extends AsyncAction {
+//     type: 'rpio_i2c_readregisterrestart';
+// }
+/**
+ *
+ */
+// export interface RpioI2CWriteReadRestartAction extends AsyncAction {
+//     type: 'rpio_i2c_writereadrestart';
+// }
 /**
  * Turn off the i²c interface and return the pins to GPIO.
  */
@@ -2822,6 +2928,64 @@ export function rpioWriteSequencePin(
     };
 }
 
+/**
+ * Read the current state of the GPIO pad control for the specified GPIO group.
+ * On current models of Raspberry Pi there are three groups.
+ *
+ * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+ * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+ * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+ *
+ * @param group The GPIO group to be read.
+ * @param bitmask The bitmask you want to check.
+ * @param taskId The ID of the async task.
+ */
+export function rpioReadpadPin(
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+    bitmask: 'slew' | 'hysteresis' | 'current',
+    taskId?: string | number,
+    playerId?: string
+): RpioReadpadAction {
+    return {
+        group,
+        bitmask,
+        type: 'rpio_readpad',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Write `control` settings to the pad control for `group`.
+ *
+ * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+ * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+ * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+ *
+ * @param group The GPIO group to be read.
+ * @param slew Slew rate unlimited if set to true.
+ * @param hysteresis Hysteresis is enabled if set to true.
+ * @param current Drive current set in mA. Must be an even number 2-16.
+ * @param taskId The ID of the async task.
+ */
+export function rpioWritepadPin(
+    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+    slew?: boolean,
+    hysteresis?: boolean,
+    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16,
+    taskId?: string | number,
+    playerId?: string
+): RpioWritepadAction {
+    return {
+        group,
+        slew,
+        hysteresis,
+        current,
+        type: 'rpio_writepad',
+        taskId,
+        playerId,
+    };
+}
 
 /**
  * Configure the pin's internal pullup or pulldown resistors.
@@ -2904,6 +3068,23 @@ export function rpioI2CBeginPin(
     };
 }
 
+/**
+ * Configure the slave address.
+ * @param address The slave address to set.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CSetSlaveAddressPin(
+    address: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CSetSlaveAddressAction {
+    return {
+        address,
+        type: 'rpio_i2c_setslaveaddress',
+        taskId,
+        playerId,
+    };
+}
 
 /**
  * Set the baud rate. Directly set the speed in hertz.
@@ -2941,6 +3122,77 @@ export function rpioI2CSetClockDividerPin(
     };
 }
 
+/**
+ * Read from the i2c slave.
+ * @param rx Buffer to read.
+ * @param length Optional. Length of the buffer to read.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CReadPin(
+    rx: number[],
+    length?: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CReadAction {
+    return {
+        rx,
+        length,
+        type: 'rpio_i2c_read',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ * Write to the i2c slave.
+ * @param tx Buffer to write.
+ * @param length Optional. Length of the buffer to write.
+ * @param taskId The ID of the async task.
+ */
+export function rpioI2CWritePin(
+    tx: number[],
+    length?: number,
+    taskId?: string | number,
+    playerId?: string
+): RpioI2CWriteAction {
+    return {
+        tx,
+        length,
+        type: 'rpio_i2c_write',
+        taskId,
+        playerId,
+    };
+}
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+// export function rpioI2CReadRegisterRestartPin(
+//     taskId?: string | number,
+//     playerId?: string
+// ): RpioI2CReadRegisterRestartAction {
+//     return {
+//         type: 'rpio_i2c_readregisterrestart',
+//         taskId,
+//         playerId,
+//     };
+// }
+
+/**
+ *
+ * @param taskId The ID of the async task.
+ */
+// export function rpioI2CWriteReadRestartPin(
+//     taskId?: string | number,
+//     playerId?: string
+// ): RpioI2CWriteReadRestartAction {
+//     return {
+//         type: 'rpio_i2c_writereadrestart',
+//         taskId,
+//         playerId,
+//     };
+// }
 
 /**
  * Turn off the i²c interface and return the pins to GPIO.
