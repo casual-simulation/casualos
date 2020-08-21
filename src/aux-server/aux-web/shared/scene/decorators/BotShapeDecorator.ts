@@ -63,6 +63,7 @@ import { getGLTFPool } from '../GLTFHelpers';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
 import { GameObject } from '../GameObject';
+import { FrustumHelper } from '../helpers/FrustumHelper';
 
 const gltfPool = getGLTFPool('main');
 
@@ -87,7 +88,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     private _game: Game;
 
     container: Group;
-    mesh: Mesh;
+    mesh: Mesh | FrustumHelper;
 
     collider: Object3D;
     scene: Group;
@@ -97,7 +98,11 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
     }
 
     get allowMaterialModifications() {
-        return this._subShape === null && this._shape !== 'iframe';
+        return (
+            this._subShape === null &&
+            this._shape !== 'iframe' &&
+            this._shape !== 'frustum'
+        );
     }
 
     /**
@@ -469,6 +474,8 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         } else if (this._shape === 'nothing') {
             this.stroke = null;
             this._canHaveStroke = false;
+        } else if (this._shape === 'frustum') {
+            this._createFrustum();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -614,6 +621,13 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         // Stroke
         this.stroke = null;
         this._canHaveStroke = true;
+    }
+
+    private _createFrustum() {
+        this.mesh = new FrustumHelper();
+        this.container.add(this.mesh);
+        this.stroke = null;
+        this._canHaveStroke = false;
     }
 }
 

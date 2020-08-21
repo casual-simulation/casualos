@@ -271,6 +271,7 @@ export type BotShape =
     | 'sprite'
     | 'mesh'
     | 'iframe'
+    | 'frustum'
     | 'nothing';
 
 /**
