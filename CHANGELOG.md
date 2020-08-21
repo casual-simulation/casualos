@@ -8,6 +8,11 @@
 
 -   Added the `tagPortalShowExitButton` tag to control whether the exit button is available in the tag portal.
     -   Defaults to `false`.
+-   Added the `frustum` form.
+
+### :bug: Bug Fixes
+
+-   Fixed to safely allow editing multiline scripts in the sheet cells.
 
 ## V1.2.3
 
