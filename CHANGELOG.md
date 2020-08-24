@@ -18,6 +18,8 @@
 -   Improved the multiline editor to have a "Docs" button that links to the documentation for the current tag.
 -   Improved the tag portal to support using `@` and `#` symbols at the beginning of the tag.
     -   Implemented for consistency with functions like `getBot()`, `getTag()`, etc.
+-   Added the `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` listen tags.
+    -   These are shouts that happen whenever a `@onPointerEnter` or `@onPointerExit` whisper occurs.
 
 ### :bug: Bug Fixes
 
