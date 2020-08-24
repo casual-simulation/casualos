@@ -1304,17 +1304,48 @@ Note that we wrap the curly braces in parenthesis to tell JavaScript that we wan
 })
 ```
 
-### `tagPortalShowExitButton`
+### `tagPortalShowButton`
 
-Whether the tag portal should show a button that allows the player to close it.
+Whether the tag portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the tag portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal config bot.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='false'>
-    No exit button is shown. (Default)
+    No button is shown. (Default)
   </PossibleValueCode>
-  <PossibleValue value='true'>
-    The exit button is shown.
+  <PossibleValueCode value='true'>
+    The button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `tagPortalButtonIcon`
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `tagPortalButtonHint`
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No hint. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
   </PossibleValue>
 </PossibleValuesTable>
 
