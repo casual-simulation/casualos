@@ -80,7 +80,31 @@ import {
     rpioReadSequencePin,
     rpioWritePin,
     rpioWriteSequencePin,
+    rpioReadpadPin,
+    rpioWritepadPin,
+    rpioPudPin,
+    rpioPollPin,
     rpioClosePin,
+    rpioI2CBeginPin,
+    rpioI2CSetSlaveAddressPin,
+    rpioI2CSetBaudRatePin,
+    rpioI2CSetClockDividerPin,
+    rpioI2CReadPin,
+    rpioI2CWritePin,
+    // rpioI2CReadRegisterRestartPin,
+    // rpioI2CWriteReadRestartPin,
+    rpioI2CEndPin,
+    rpioPWMSetClockDividerPin,
+    rpioPWMSetRangePin,
+    rpioPWMSetDataPin,
+    rpioSPIBeginPin,
+    rpioSPIChipSelectPin,
+    rpioSPISetCSPolarityPin,
+    rpioSPISetClockDividerPin,
+    rpioSPISetDataModePin,
+    rpioSPITransferPin,
+    rpioSPIWritePin,
+    rpioSPIEndPin,
     createCertificate,
     signTag,
     revokeCertificate,
@@ -2684,6 +2708,111 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('server.rpioReadpad()', () => {
+            it('should send a RpioReadpadAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioReadpad(
+                    'PAD_GROUP_0_27',
+                    'slew'
+                );
+                const expected = remote(
+                    rpioReadpadPin('PAD_GROUP_0_27', 'slew'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioReadpad('PAD_GROUP_0_27', 'slew');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioWritepad()', () => {
+            it('should send a RpioWritepadAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioWritepad(
+                    'PAD_GROUP_0_27',
+                    undefined,
+                    true,
+                    2
+                );
+                const expected = remote(
+                    rpioWritepadPin('PAD_GROUP_0_27', undefined, true, 2),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioWritepad(
+                    'PAD_GROUP_0_27',
+                    undefined,
+                    true,
+                    2
+                );
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioPud()', () => {
+            it('should send a RpioPudAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioPud(11, 'PULL_OFF');
+                const expected = remote(
+                    rpioPudPin(11, 'PULL_OFF'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioPud(11, 'PULL_OFF');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioPoll()', () => {
+            it('should send a RpioPollAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioPoll(11, null);
+                const expected = remote(
+                    rpioPollPin(11, null),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioPoll(11, null);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('server.rpioClose()', () => {
             it('should send a RpioCloseAction in a RemoteAction', () => {
                 uuidMock.mockReturnValueOnce('task1');
@@ -2704,6 +2833,487 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.server.rpioClose(99, 'PIN_RESET');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CBegin()', () => {
+            it('should send a RpioI2CBeginAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CBegin();
+                const expected = remote(
+                    rpioI2CBeginPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CBegin();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CSetSlaveAddress()', () => {
+            it('should send a RpioI2CSetSlaveAddressAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CSetSlaveAddress(
+                    0xff
+                );
+                const expected = remote(
+                    rpioI2CSetSlaveAddressPin(0xff),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CSetSlaveAddress(0xff);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CSetBaudRate()', () => {
+            it('should send a RpioI2CSetBaudRateAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CSetBaudRate(
+                    100000
+                );
+                const expected = remote(
+                    rpioI2CSetBaudRatePin(100000),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CSetBaudRate(100000);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CSetClockDivider()', () => {
+            it('should send a RpioI2CSetClockDividerAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CSetClockDivider(
+                    2500
+                );
+                const expected = remote(
+                    rpioI2CSetClockDividerPin(2500),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CSetClockDivider(2500);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CRead()', () => {
+            it('should send a RpioI2CReadAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CRead([32], 16);
+                const expected = remote(
+                    rpioI2CReadPin([32], 16),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CRead([32], 16);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioI2CWrite()', () => {
+            it('should send a RpioI2CWriteAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CWrite([
+                    0x0b,
+                    0x0e,
+                    0x0e,
+                    0x0f,
+                ]);
+                const expected = remote(
+                    rpioI2CWritePin([0x0b, 0x0e, 0x0e, 0x0f]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        // describe('server.rpioI2CReadRegisterRestart()', () => {
+        //     it('should send a RpioI2CReadRegisterRestartAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.rpioI2CReadRegisterRestart();
+        //         const expected = remote(
+        //             rpioI2CReadRegisterRestartPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.rpioI2CReadRegisterRestart();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        // describe('server.rpioI2CWriteReadRestart()', () => {
+        //     it('should send a RpioI2CWriteReadRestartAction in a RemoteAction', () => {
+        //         uuidMock.mockReturnValueOnce('task1');
+        //         const action: any = library.api.server.rpioI2CWriteReadRestart();
+        //         const expected = remote(
+        //             rpioI2CWriteReadRestartPin(),
+        //             undefined,
+        //             undefined,
+        //             'task1'
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+
+        //     it('should create tasks that can be resolved from a remote', () => {
+        //         uuidMock.mockReturnValueOnce('uuid');
+        //         library.api.server.rpioI2CWriteReadRestart();
+
+        //         const task = context.tasks.get('uuid');
+        //         expect(task.allowRemoteResolution).toBe(true);
+        //     });
+        // });
+
+        describe('server.rpioI2CEnd()', () => {
+            it('should send a RpioI2CEndAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioI2CEnd();
+                const expected = remote(
+                    rpioI2CEndPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioI2CEnd();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioPWMSetClockDivider()', () => {
+            it('should send a RpioPWMSetClockDividerAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioPWMSetClockDivider(
+                    64
+                );
+                const expected = remote(
+                    rpioPWMSetClockDividerPin(64),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioPWMSetClockDivider(64);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioPWMSetRange()', () => {
+            it('should send a RpioPWMSetRangeAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioPWMSetRange(
+                    12,
+                    1024
+                );
+                const expected = remote(
+                    rpioPWMSetRangePin(12, 1024),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioPWMSetRange(12, 1024);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioPWMSetData()', () => {
+            it('should send a RpioPWMSetDataAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioPWMSetData(12, 512);
+                const expected = remote(
+                    rpioPWMSetDataPin(12, 512),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioPWMSetData(12, 512);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPIBegin()', () => {
+            it('should send a RpioSPIBeginAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIBegin();
+                const expected = remote(
+                    rpioSPIBeginPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIBegin();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPIChipSelect()', () => {
+            it('should send a RpioSPIChipSelectAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIChipSelect(0);
+                const expected = remote(
+                    rpioSPIChipSelectPin(0),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIChipSelect(0);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPISetCSPolarity()', () => {
+            it('should send a RpioSPISetCSPolarityAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPISetCSPolarity(
+                    0,
+                    'HIGH'
+                );
+                const expected = remote(
+                    rpioSPISetCSPolarityPin(0, 'HIGH'),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPISetCSPolarity(0, 'HIGH');
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPISetClockDivider()', () => {
+            it('should send a RpioSPISetClockDividerAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPISetClockDivider(
+                    128
+                );
+                const expected = remote(
+                    rpioSPISetClockDividerPin(128),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPISetClockDivider(128);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPISetDataMode()', () => {
+            it('should send a RpioSPISetDataModeAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPISetDataMode(0);
+                const expected = remote(
+                    rpioSPISetDataModePin(0),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPISetDataMode(0);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPITransfer()', () => {
+            it('should send a RpioSPITransferAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPITransfer([1, 1]);
+                const expected = remote(
+                    rpioSPITransferPin([1, 1]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPITransfer([1, 1]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPIWrite()', () => {
+            it('should send a RpioSPIWriteAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIWrite([1, 1]);
+                const expected = remote(
+                    rpioSPIWritePin([1, 1]),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIWrite([1, 1]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('server.rpioSPIEnd()', () => {
+            it('should send a RpioSPIEndAction in a RemoteAction', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                const action: any = library.api.server.rpioSPIEnd();
+                const expected = remote(
+                    rpioSPIEndPin(),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.server.rpioSPIEnd();
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
