@@ -42,11 +42,11 @@
     padding: 0 8px;
 }
 
-.editor-breadcrumbs .editor-errors > .editor-button {
+.editor-breadcrumbs .editor-button {
     cursor: pointer;
 }
 
-.editor-breadcrumbs .editor-errors > .editor-button:hover {
+.editor-breadcrumbs .editor-button:hover {
     background-color: #999;
     color: #000;
 }
@@ -56,6 +56,11 @@
     height: 20px;
     font-size: 20px !important;
     color: #c22;
+}
+
+.editor-breadcrumbs .editor-docs {
+    flex: 0 1 auto;
+    text-align: right;
 }
 
 .editor-signed {
@@ -127,7 +132,7 @@
     font-weight: 700;
 }
 
-.editor-toggles .md-button.md-dense.md-theme-default {
+.editor-breadcrumbs .md-button.md-dense.md-theme-default {
     margin: 0;
     width: 32px;
     height: 22px;
@@ -135,6 +140,11 @@
     line-height: 22px;
 }
 
-.editor-toggles .md-button.active {
+.editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-default {
+    width: auto;
+    padding: 0 8px;
+}
+
+.editor-breadcrumbs .md-button.active {
     background-color: #dedede;
 }

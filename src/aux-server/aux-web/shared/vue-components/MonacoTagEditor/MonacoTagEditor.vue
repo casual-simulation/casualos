@@ -7,6 +7,11 @@
                 :isFormula="isFormula"
                 :allowCloning="false"
             ></bot-tag>
+            <div class="editor-docs">
+                <a class="md-button md-dense md-theme-default" :href="docsLink" target="_blank"
+                    >docs</a
+                >
+            </div>
             <div class="editor-toggles">
                 <md-button @click="makeNormalTag()" class="md-dense" :class="{ active: !isScript }">
                     <md-tooltip>Make Normal Tag</md-tooltip>
