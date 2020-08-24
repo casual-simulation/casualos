@@ -20,6 +20,7 @@ import {
     LoadSpaceAction,
     hasValue,
     asyncResult,
+    addDebugApi,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -37,7 +38,6 @@ import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
 import pick from 'lodash/pick';
 import flatMap from 'lodash/flatMap';
-import { addDebugApi } from '../DebugHelpers';
 import { RealtimeEditMode } from '@casual-simulation/aux-common/runtime/RuntimeBot';
 
 export interface AuxChannelOptions {}
