@@ -6,8 +6,12 @@
 
 ### :rocket: Improvements
 
--   Added the `tagPortalShowExitButton` tag to control whether the exit button is available in the tag portal.
-    -   Defaults to `false`.
+-   Added the `tagPortalShowButton` tag to control whether a button should be shown in the tag portal.
+    -   The button is placed at the lower right hand side of the tag portal.
+    -   Clicking the button will trigger a `@onClick` on the tag portal config bot.
+    -   Two additional tags can be used to customize the button:
+        -   `tagPortalButtonIcon` is the icon that is shown on the button and can be set to any [Material Icon](https://material.io/resources/icons/?style=baseline).
+        -   `tagPortalButtonHint` is the text that should be shown in the tooltip for the button.
 -   Added the `frustum` form.
 -   Improved `player.showInput()` to automatically save and close when a color is selected from the color picker.
     -   Applies to the `basic` and `swatch` subtypes but not `advanced`.
