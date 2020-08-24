@@ -40,6 +40,7 @@ export default class TagPortal extends Vue {
     private _currentConfig: TagPortalConfig;
     private _currentSim: BrowserSimulation;
     private _currentSub: Subscription;
+    private _currentPortal: string;
 
     showExitButton: boolean = false;
     currentBot: Bot = null;
@@ -139,7 +140,10 @@ export default class TagPortal extends Vue {
     private _updateCurrentPortal() {
         // If the current sim still exists, then keep it.
         if (this._currentSim && this._portals.has(this._currentSim)) {
-            return;
+            const targetPortal = this._portals.get(this._currentSim);
+            if (targetPortal === this._currentPortal) {
+                return;
+            }
         }
 
         // Use the first botAndTag
@@ -172,6 +176,7 @@ export default class TagPortal extends Vue {
                 .subscribe();
         }
         this._currentSim = sim;
+        this._currentPortal = botAndTag;
         if (sim) {
             if (!hasValue(botAndTag)) {
                 return false;
