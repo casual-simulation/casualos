@@ -19,6 +19,11 @@ import {
     calculateGridScale,
     BotTags,
     hasValue,
+    ON_POINTER_ENTER,
+    ON_POINTER_EXIT,
+    onPointerEnterExitArg,
+    ON_ANY_POINTER_ENTER,
+    ON_ANY_POINTER_EXIT,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -192,17 +197,39 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         bot: Bot,
         simulation: Simulation
     ): void {
-        simulation.helper.action('onPointerEnter', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        const dimension = [...bot3D.dimensionGroup.dimensions.values()][0];
+        const arg = onPointerEnterExitArg(bot, dimension);
+        const actions = simulation.helper.actions([
+            {
+                eventName: ON_POINTER_ENTER,
+                bots: [bot],
+                arg,
+            },
+            {
+                eventName: ON_ANY_POINTER_ENTER,
+                bots: null,
+                arg,
+            },
+        ]);
+        simulation.helper.transaction(...actions);
     }
 
     handlePointerExit(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerExit', [bot], {
-            dimension: [...bot3D.dimensionGroup.dimensions.values()][0],
-            bot: bot,
-        });
+        const dimension = [...bot3D.dimensionGroup.dimensions.values()][0];
+        const arg = onPointerEnterExitArg(bot, dimension);
+        const actions = simulation.helper.actions([
+            {
+                eventName: ON_POINTER_EXIT,
+                bots: [bot],
+                arg,
+            },
+            {
+                eventName: ON_ANY_POINTER_EXIT,
+                bots: null,
+                arg,
+            },
+        ]);
+        simulation.helper.transaction(...actions);
     }
 
     handlePointerDown(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {

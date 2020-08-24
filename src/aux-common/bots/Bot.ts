@@ -716,6 +716,26 @@ export const MOD_DROP_ENTER_ACTION_NAME: string = 'onModDropEnter';
 export const MOD_DROP_EXIT_ACTION_NAME: string = 'onModDropExit';
 
 /**
+ * The name of the event that is triggered when a pointer starts hovering a bot.
+ */
+export const ON_POINTER_ENTER: string = 'onPointerEnter';
+
+/**
+ * The name of the event that is triggered when a pointer stops hovering a bot.
+ */
+export const ON_POINTER_EXIT: string = 'onPointerExit';
+
+/**
+ * The name of the event that is triggered when a pointer starts hovering any bot.
+ */
+export const ON_ANY_POINTER_ENTER: string = 'onAnyBotPointerEnter';
+
+/**
+ * The name of the event that is triggered when a pointer stops hovering any bot.
+ */
+export const ON_ANY_POINTER_EXIT: string = 'onAnyBotPointerExit';
+
+/**
  * The name of the event that is triggered when a QR Code is scanned.
  */
 export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
@@ -1205,8 +1225,8 @@ export const KNOWN_TAGS: string[] = [
     'onBarcodeScanned',
     'onBarcodeScannerClosed',
     'onBarcodeScannerOpened',
-    'onPointerEnter',
-    'onPointerExit',
+    ON_ANY_POINTER_ENTER,
+    ON_ANY_POINTER_EXIT,
     'onPointerDown',
     'onPointerUp',
     ON_STORY_STREAMING_ACTION_NAME,
@@ -1341,6 +1361,13 @@ export function onPasteArg(text: string) {
 }
 
 export function onLODArg(bot: Bot, dimension: string) {
+    return {
+        bot,
+        dimension,
+    };
+}
+
+export function onPointerEnterExitArg(bot: Bot, dimension: string) {
     return {
         bot,
         dimension,
