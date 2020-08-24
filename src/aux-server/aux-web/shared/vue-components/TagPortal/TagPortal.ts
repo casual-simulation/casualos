@@ -11,6 +11,7 @@ import {
     TAG_PORTAL,
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
+    trimTag,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -191,7 +192,7 @@ export default class TagPortal extends Vue {
                 return false;
             }
             this.currentBot = sim.helper.botsState[botId];
-            this.currentTag = tag;
+            this.currentTag = trimTag(tag);
             this._currentSub = sim.watcher.botChanged(botId).subscribe(bot => {
                 this.currentBot = bot;
             });
