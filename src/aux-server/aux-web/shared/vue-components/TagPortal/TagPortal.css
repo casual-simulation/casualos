@@ -24,15 +24,15 @@
     height: 100%;
 }
 
-.md-button.md-fab.exit-sheet.md-theme-default {
+.md-button.md-fab.custom-button.md-theme-default {
     background-color: #fff;
 }
 
-.md-button.exit-sheet .md-icon.md-icon-font.md-theme-default {
+.md-button.custom-button .md-icon.md-icon-font.md-theme-default {
     color: #333;
 }
 
-.exit-sheet {
+.custom-button {
     position: absolute;
     bottom: 0;
     right: 0;

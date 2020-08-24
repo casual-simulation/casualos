@@ -18,6 +18,10 @@ import {
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     getBotTagPortalAnchorPointOffset,
+    calculateStringTagValue,
+    Bot,
+    CLICK_ACTION_NAME,
+    onClickArg,
 } from '@casual-simulation/aux-common';
 import { Color } from 'three';
 import {
@@ -27,6 +31,7 @@ import {
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { merge } from 'lodash';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -36,7 +41,11 @@ export class TagPortalConfig implements SubscriptionLike {
     private _portalTag: string;
     private _updated: Subject<void>;
     private _style: Object;
-    private _showExitButton: boolean;
+    private _showButton: boolean;
+    private _buttonIcon: string;
+    private _buttonHint: string;
+    private _configBot: Bot;
+    private _simulation: Simulation;
 
     /**
      * Gets the CSS style that should be applied.
@@ -50,11 +59,25 @@ export class TagPortalConfig implements SubscriptionLike {
         );
     }
 
-    get showExitButton(): boolean {
-        if (hasValue(this._showExitButton)) {
-            return this._showExitButton;
+    get showButton(): boolean {
+        if (hasValue(this._showButton)) {
+            return this._showButton;
         }
         return false;
+    }
+
+    get buttonIcon(): string {
+        if (hasValue(this._buttonIcon)) {
+            return this._buttonIcon;
+        }
+        return null;
+    }
+
+    get buttonHint(): string {
+        if (hasValue(this._buttonHint)) {
+            return this._buttonHint;
+        }
+        return null;
     }
 
     unsubscribe(): void {
@@ -73,13 +96,31 @@ export class TagPortalConfig implements SubscriptionLike {
         return this._updated;
     }
 
+    buttonClick() {
+        if (!this._simulation || !this._configBot) {
+            return;
+        }
+        const dimension = calculateBotValue(
+            null,
+            this._simulation.helper.userBot,
+            this._portalTag
+        );
+        this._simulation.helper.action(
+            CLICK_ACTION_NAME,
+            [this._configBot],
+            onClickArg(null, dimension)
+        );
+    }
+
     constructor(portalTag: string, simulation: BrowserSimulation) {
         this._portalTag = portalTag;
         this._updated = new Subject();
+        this._simulation = simulation;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
                 tap(update => {
                     const bot = update;
+                    this._configBot = bot;
 
                     if (bot) {
                         const calc = simulation.helper.createContext();
@@ -94,7 +135,7 @@ export class TagPortalConfig implements SubscriptionLike {
 
     protected _clearPortalValues() {
         this._style = null;
-        this._showExitButton = null;
+        this._showButton = null;
         this._updated.next();
     }
 
@@ -130,10 +171,22 @@ export class TagPortalConfig implements SubscriptionLike {
             merge(this._style, offset);
         }
 
-        this._showExitButton = calculateBooleanTagValue(
+        this._showButton = calculateBooleanTagValue(
             calc,
             bot,
-            'auxTagPortalShowExitButton',
+            'auxTagPortalShowButton',
+            null
+        );
+        this._buttonIcon = calculateStringTagValue(
+            calc,
+            bot,
+            'auxTagPortalButtonIcon',
+            null
+        );
+        this._buttonHint = calculateStringTagValue(
+            calc,
+            bot,
+            'auxTagPortalButtonHint',
             null
         );
         this._updated.next();

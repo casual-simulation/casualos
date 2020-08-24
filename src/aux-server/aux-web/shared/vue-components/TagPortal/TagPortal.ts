@@ -43,7 +43,9 @@ export default class TagPortal extends Vue {
     private _currentSub: Subscription;
     private _currentPortal: string;
 
-    showExitButton: boolean = false;
+    showButton: boolean = false;
+    buttonIcon: string = null;
+    buttonHint: string = null;
     currentBot: Bot = null;
     currentTag: string = null;
     extraStyle: Object = {};
@@ -91,6 +93,12 @@ export default class TagPortal extends Vue {
         if (this._currentSub) {
             this._currentSub.unsubscribe();
             this._currentSub = null;
+        }
+    }
+
+    buttonClick() {
+        if (this._currentConfig) {
+            this._currentConfig.buttonClick();
         }
     }
 
@@ -209,17 +217,23 @@ export default class TagPortal extends Vue {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
-            this.showExitButton = false;
+            this.showButton = false;
+            this.buttonIcon = null;
+            this.buttonHint = null;
             return;
         }
         if (this._currentConfig) {
             this.extraStyle = this._currentConfig.style;
-            this.showExitButton = this._currentConfig.showExitButton;
+            this.showButton = this._currentConfig.showButton;
+            this.buttonIcon = this._currentConfig.buttonIcon;
+            this.buttonHint = this._currentConfig.buttonHint;
         } else {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
-            this.showExitButton = false;
+            this.showButton = false;
+            this.buttonIcon = null;
+            this.buttonHint = null;
         }
     }
 }

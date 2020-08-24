@@ -1102,7 +1102,9 @@ export const KNOWN_TAGS: string[] = [
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',
-    'tagPortalShowExitButton',
+    'tagPortalShowButton',
+    'tagPortalButtonIcon',
+    'tagPortalButtonHint',
 
     'color',
     'creator',
