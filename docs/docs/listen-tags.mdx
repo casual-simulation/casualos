@@ -430,6 +430,30 @@ let that: {
 };
 ```
 
+### `@onAnyBotPointerEnter`
+
+A shout that is sent to all bots when the mouse cursor starts to hover over a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyBotPointerExit`
+
+A shout that is sent to all bots when the mouse cursor stops hovering over a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string1
+};
+```
+
 ### `@onChat`
 
 A shout that is sent to all bots when the player sends a chat message.
