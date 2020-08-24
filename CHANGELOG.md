@@ -11,10 +11,14 @@
 -   Added the `frustum` form.
 -   Improved `player.showInput()` to automatically save and close when a color is selected from the color picker.
     -   Applies to the `basic` and `swatch` subtypes but not `advanced`.
+-   Improved the multiline editor to have a "Docs" button that links to the documentation for the current tag.
+-   Improved the tag portal to support using `@` and `#` symbols at the beginning of the tag.
+    -   Implemented for consistency with functions like `getBot()`, `getTag()`, etc.
 
 ### :bug: Bug Fixes
 
 -   Fixed to safely allow editing multiline scripts in the sheet cells.
+-   Fixed an issue with the tag portal where it would not respond to changes with the `tagPortal` tag if it was already set.
 
 ## V1.2.3
 
