@@ -9,6 +9,8 @@
 -   Added the `tagPortalShowExitButton` tag to control whether the exit button is available in the tag portal.
     -   Defaults to `false`.
 -   Added the `frustum` form.
+-   Improved `player.showInput()` to automatically save and close when a color is selected from the color picker.
+    -   Applies to the `basic` and `swatch` subtypes but not `advanced`.
 
 ### :bug: Bug Fixes
 
