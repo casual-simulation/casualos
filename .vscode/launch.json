@@ -43,6 +43,14 @@
             "program": "${workspaceFolder}/src/causal-tree-cli/bin/causal-tree-cli.js",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Web Build",
+            "program": "${workspaceFolder}/node_modules/webpack/bin/webpack",
+            "runtimeArgs": ["--max_old_space_size=4096"],
+            "args": ["--config", "src/aux-server/aux-web/webpack.prod.js"]
         }
     ]
 }
