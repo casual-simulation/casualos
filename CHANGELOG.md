@@ -25,6 +25,7 @@
 
 -   Fixed to safely allow editing multiline scripts in the sheet cells.
 -   Fixed an issue with the tag portal where it would not respond to changes with the `tagPortal` tag if it was already set.
+-   Fixed an issue with the Deno sandbox where it wouldn't load due to missing dependencies.
 
 ## V1.2.3
 
