@@ -105,6 +105,7 @@ const routes: RouteConfig[] = [
         component: PlayerHome,
         props: route => ({
             query: route.query,
+            url: route.fullPath,
         }),
     },
 ];

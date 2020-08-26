@@ -563,9 +563,9 @@ The **first parameter** is time in ms to wait. 1 second is 1000ms.
 
 1. Wait 2 seconds before proceeding.
 ```typescript
-player.shout("Stop!");
+player.toast("Stop!");
 await sleep(2000);
-player.shout("Hammer Time!");
+player.toast("Hammer Time!");
 ```
 
 ## Bot Filters
@@ -1956,6 +1956,46 @@ const rotation = player.getPointerRotation("mouse");
 const rotation = player.getPointerRotation("left");
 ```
 
+### `player.getPointerDirection(pointer?)`
+
+Gets the direction that the given pointer is pointed in.
+
+Can be combined with <ActionLink action='math.intersectPlane(origin, direction)'/> to find where on the ground the pointer is pointing.
+
+The **first parameter** is optional and is the pointer that the direction should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The direction of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The direction of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The direction of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the direction of the mouse pointer.
+```typescript
+const direction = player.getPointerDirection("mouse");
+```
+
+2. Get the direction of the left pointer.
+```typescript
+const direction = player.getPointerDirection("left");
+```
+
+3. Find where the mouse is pointing on the ground.
+```typescript
+const position = player.getPointerPosition();
+const direction = player.getPointerDirection();
+const groundPosition = math.intersectPlane(position, direction);
+```
+
 ### `player.getInputState(controller, button)`
 
 Gets the state of the given button on the given controller.
@@ -2706,6 +2746,131 @@ server.rpioWriteSequence(13, [10, 10]);
 
 ```
 
+### `server.rpioReadpad(group, bitmask)`
+
+Read the current state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+The value returned will be true/false for 'slew' and 'hysteresis'.
+The value returned will be the drive current in mA for 'current'.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is the bitmask you want to check.
+
+#### Examples:
+
+1. Check if slew is unlimited or limited on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'slew'); // Returns true/false which is unlimited/limited
+```
+
+2. Check if hysteresis is enabled or disabled on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'hysteresis'); // Returns true/false which is enabled/disabled
+```
+
+3. Check the drive current in mA on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'current'); // Returns an even number 2-16 in mA
+```
+
+### `server.rpioWritepad(group, slew?, hysteresis?, current?)`
+
+Write the state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pad control has been written to.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is a boolean to set the slew rate to unlimited or limited.
+
+The **third parameter** is a boolean to enable or disable hysteresis.
+
+The **fourth parameter** is an even number between 2-16 to set the drive current.
+
+#### Examples:
+
+1. Change the gpio group 0-27 to enable hysteresis and set the drive current to 12mA. Slew rate is unchanged.
+```typescript
+server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
+```
+
+### `server.rpioPud(pin, state)`
+
+
+Configure the pin's internal pullup or pulldown resistors.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP' and can be used to configure the pin's resistors.
+
+#### Examples:
+
+1. Configure pin 11 to enable the pulldown resistor.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_DOWN');
+```
+
+2. Disable configured resistors on pin 11.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_OFF');
+```
+
+### `server.rpioPoll(pin, cb, options)`
+
+
+Watch `pin` for changes and execute the callback `cb()` on events.
+To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when 
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the callback executed on events.
+
+The **third parameter** is 'POLL_LOW', 'POLL_HIGH' or 'POLL_BOTH' and can be optionally used to watch for specific events.
+
+#### Examples:
+
+1. Poll pin 15 forever, and poll pin 16 to stop all polling.
+```typescript
+function nuke_button(pin) {
+        console.log('Nuke button on pin %d pressed', pin);
+        /* No need to nuke more than once. */
+        server.rpioPoll(pin, null);
+}
+ 
+function regular_button(pin) {
+        /* Watch pin 15 forever. */
+        console.log('Button event on pin %d, is now %d', pin, server.rpioRead(pin));
+}
+ 
+/*
+ * Pin 15 watches for both high and low transitions.  Pin 16 only watches for
+ * high transitions (e.g. the nuke button is pushed).
+ */
+server.rpioPoll(15, regular_button);
+server.rpioPoll(16, nuke_button, 'POLL_HIGH');
+```
+
 ### `server.rpioClose(pin, options)`
 
 
@@ -2732,6 +2897,327 @@ server.rpioClose(led_pin);
 var led_pin = 11;
 server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
 server.rpioClose(led_pin, 'PIN_PRESERVE');
+```
+
+### `server.rpioI2CBegin()`
+
+Initializes i²c for use.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been initialized.
+
+#### Examples:
+
+1. Initialize i²c.
+```typescript
+server.rpioI2CBegin();
+```
+
+### `server.rpioI2CSetSlaveAddress()`
+
+Configure the slave address. This is between `0 - 0x7f`.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the slave address has been set.
+
+The **first parameter** is a number. The slave address to set.
+
+#### Examples:
+
+1. Set the slave address.
+```typescript
+server.rpioI2CSetSlaveAddress(0x20);
+```
+
+### `server.rpioI2CSetBaudRate(rate)`
+
+Set the baud rate. Directly set the speed in hertz.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate in hertz.
+
+#### Examples:
+
+1. Set the rate to 100kHz.
+```typescript
+server.rpioI2CSetBaudRate(100000);
+```
+
+### `server.rpioI2CSetClockDivider(rate)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate based on a divisor of the base 250MHz rate.
+
+#### Examples:
+
+1. Set the rate to 100kHz. (250MHz / 2500 = 100kHz)
+```typescript
+server.rpioI2CSetClockDivider(2500);
+```
+
+### `server.rpioI2CRead(rx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to read.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Reads 16 bytes.
+```typescript
+await server.rpioI2CRead([32], 16);
+```
+
+### `server.rpioI2CWrite(tx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to write.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Sends 4 bytes.
+```typescript
+server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
+```
+
+### `server.rpioI2CEnd()`
+
+Turn off the i²c interface and return the pins to GPIO.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been turned off.
+
+#### Examples:
+
+1. Turn off i²c.
+```typescript
+server.rpioI2CEnd();
+```
+
+### `server.rpioPWMSetClockDivider(rate)`
+
+Set the PWM refresh rate.
+This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the rate has been set.
+
+The **first parameter** is a power-of-two divisor.
+
+#### Examples:
+
+1. Set PWM refresh rate to 300kHz
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetClockDivider(64);
+```
+
+### `server.rpioPWMSetRange(pin, range)`
+
+Set the PWM range for a pin.
+This determines the maximum pulse width.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when maximum width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the maximum width of your modulation.
+
+#### Examples:
+
+1. Set the max width to 1024.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetRange(12, 1024);
+```
+
+### `server.rpioPWMSetData(pin, width)`
+
+Set the PWM width for a pin.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the width of your modulation.
+
+#### Examples:
+
+1. Set the current width to 512.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetData(12, 512);
+```
+
+### `server.rpioSPIBegin()`
+
+Initiate SPI mode.
+Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
+SPI requires `gpiomem: false` and root privileges. 
+`server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI mode has been initiated.
+
+#### Examples:
+
+1. Initiate SPI mode.
+```typescript
+server.rpioSPIBegin();
+```
+
+### `server.rpioSPIChipSelect(value)`
+
+Choose which of the chip select / chip enable pins to control.
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI pin(s) have been enabled.
+
+The **first parameter** is the value that corresponds to the pin set you want.
+
+#### Examples:
+
+1. Enable SPI_CE0.
+```typescript
+server.rpioSPIChipSelect(0);
+```
+
+### `server.rpioSPISetCSPolarity(value, polarity)`
+
+If your device's CE pin is active high, use this to change the polarity.
+
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+
+Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
+Setting the polarity to 'LOW' means it will activate on 'LOW'.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when polarity has been set.
+
+The **first parameter** is the value that corresponds to the pin set you want.
+
+The **second parameter** is the polarity the pin will activate on.
+
+#### Examples:
+
+1. Set SPI_CE0 HIGH to activate.
+```typescript
+server.rpioSPISetCSPolarity(0, 'HIGH');
+```
+
+### `server.rpioSPISetClockDivider(rate)`
+
+Set the SPI clock speed.
+The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+The **first parameter** is an even divisor of the base 250MHz rate.
+
+#### Examples:
+
+1. Set SPI speed to 1.95MHz
+```typescript
+server.rpioSPISetClockDivider(128);
+```
+
+### `server.rpioSPISetDataMode(mode)`
+
+Set the SPI Data Mode.
+
+Mode | CPOL | CPHA
+-----|------|-----
+  0  |  0   |  0
+  1  |  0   |  1
+  2  |  1   |  0
+  3  |  1   |  1
+
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when a data mode has been set.
+
+The **first parameter** is the data mode you want to set.
+
+#### Examples:
+
+1. Set the data mode to 0.
+```typescript
+server.rpioSPISetDataMode(0);
+```
+
+### `server.rpioSPITransfer(tx)`
+
+Send and recieve data via SPI. 
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a buffer the same size as the buffer sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01] and recieve the response from the server.
+```typescript
+await server.rpioSPITransfer([1,1]);
+```
+
+### `server.rpioSPIWrite(tx)`
+
+Send data via SPI.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the buffer has been sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01].
+```typescript
+server.rpioSPIWrite([1,1]);
+```
+
+### `server.rpioSPIEnd()`
+
+Release the pins back to general purpose use.
+The action is only executed if <TagLink tag='@onStoryAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+#### Examples:
+
+1. Release the pins back to general purpose use.
+```typescript
+server.rpioSPIEnd();
 ```
 
 ### `server.browseHistory()`
@@ -3198,6 +3684,45 @@ The **second parameter** is the largest allowed value that can be generated.
 1. Generate a random number between `0` and `Math.PI`.
 ```typescript
 const number = math.random(0, Math.PI);
+```
+
+### `math.getForwardDirection(rotation)`
+
+Gets the forward direction for the given rotation.
+
+Useful for finding where a bot would be pointing if it has a custom rotation.
+
+The **first parameter** is an object containing the `x`, `y`, and `z` of the rotation in radians.
+
+#### Examples:
+
+1. Get the direction that a pointer is pointing.
+```typescript
+const pointerRotation = player.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+player.toast(pointerDirection);
+```
+
+### `math.intersectPlane(origin, direction)`
+
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the page portal ground plane.
+Returns null if the ray does not intersect the ground plane.
+
+Useful for calculating where on the ground something is pointing.
+
+The **first parameter** is the 3D point that the ray should start at.
+
+The **second parameter** is the direction that the ray is traveling along.
+
+#### Examples:
+
+1. Get the spot on the ground that a pointer is pointing at.
+```typescript
+const pointerPosition = player.getPointerPosition('mouse');
+const pointerRotation = player.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
+player.toast(groundPoint);
 ```
 
 ## Crypto Actions

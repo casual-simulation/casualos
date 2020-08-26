@@ -103,7 +103,31 @@ import {
     rpioReadSequencePin,
     rpioWritePin,
     rpioWriteSequencePin,
+    rpioReadpadPin,
+    rpioWritepadPin,
+    rpioPudPin,
+    rpioPollPin,
     rpioClosePin,
+    rpioI2CBeginPin,
+    rpioI2CSetSlaveAddressPin,
+    rpioI2CSetBaudRatePin,
+    rpioI2CSetClockDividerPin,
+    rpioI2CReadPin,
+    rpioI2CWritePin,
+    // rpioI2CReadRegisterRestartPin,
+    // rpioI2CWriteReadRestartPin,
+    rpioI2CEndPin,
+    rpioPWMSetClockDividerPin,
+    rpioPWMSetRangePin,
+    rpioPWMSetDataPin,
+    rpioSPIBeginPin,
+    rpioSPIChipSelectPin,
+    rpioSPISetCSPolarityPin,
+    rpioSPISetClockDividerPin,
+    rpioSPISetDataModePin,
+    rpioSPITransferPin,
+    rpioSPIWritePin,
+    rpioSPIEndPin,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -127,6 +151,7 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { Euler, Vector3, Plane, Ray } from 'three';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -393,6 +418,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCameraRotation,
                 getPointerPosition,
                 getPointerRotation,
+                getPointerDirection,
                 getInputState,
                 getInputList,
             },
@@ -411,7 +437,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 rpioReadSequence,
                 rpioWrite,
                 rpioWriteSequence,
+                rpioReadpad,
+                rpioWritepad,
+                rpioPud,
+                rpioPoll,
                 rpioClose,
+                rpioI2CBegin,
+                rpioI2CSetSlaveAddress,
+                rpioI2CSetBaudRate,
+                rpioI2CSetClockDivider,
+                rpioI2CRead,
+                rpioI2CWrite,
+                // rpioI2CReadRegisterRestart,
+                // rpioI2CWriteReadRestart,
+                rpioI2CEnd,
+                rpioPWMSetClockDivider,
+                rpioPWMSetRange,
+                rpioPWMSetData,
+                rpioSPIBegin,
+                rpioSPIChipSelect,
+                rpioSPISetCSPolarity,
+                rpioSPISetClockDivider,
+                rpioSPISetDataMode,
+                rpioSPITransfer,
+                rpioSPIWrite,
+                rpioSPIEnd,
                 shell,
                 backupToGithub,
                 backupAsDownload,
@@ -453,6 +503,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stdDev,
                 randomInt,
                 random,
+                getForwardDirection,
+                intersectPlane,
             },
 
             crypto: {
@@ -1706,6 +1758,96 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Read the current state of the GPIO pad control for the specified GPIO group.
+     * On current models of Raspberry Pi there are three groups.
+     *
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     *
+     * @param group The GPIO group to be read.
+     * @param bitmask The bitmask you want to check.
+     */
+    function rpioReadpad(
+        group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+        bitmask: 'slew' | 'hysteresis' | 'current'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioReadpadPin(group, bitmask),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Write `control` settings to the pad control for `group`.
+     *
+     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+     *
+     * @param group The GPIO group to be read.
+     * @param slew Slew rate unlimited if set to true.
+     * @param hysteresis Hysteresis is enabled if set to true.
+     * @param current Drive current set in mA. Must be an even number 2-16.
+     */
+    function rpioWritepad(
+        group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
+        slew?: boolean,
+        hysteresis?: boolean,
+        current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioWritepadPin(group, slew, hysteresis, current),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Configure the pin's internal pullup or pulldown resistors.
+     * @param pin The pin that you want to use.
+     * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+     */
+    function rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPudPin(pin, state),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Watch `pin` for changes and execute the callback `cb()` on events.
+     * @param pin The pin that you want to use.
+     * @param cb The callback executed on events.
+     * @param options Optional. Used to watch for specific events.
+     */
+    function rpioPoll(
+        pin: number,
+        cb: any,
+        options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'
+    ) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPollPin(pin, cb, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Sends an event to the server to close a pin and what state to leave it in.
      * @param pin The physical pin number.
      * @param options The state to leave the pin in upon closing.
@@ -1714,6 +1856,319 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             rpioClosePin(pin, options),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Initializes i2c for use.
+     */
+    function rpioI2CBegin() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CBeginPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Configure the slave address.
+     * @param address The slave address to set.
+     */
+    function rpioI2CSetSlaveAddress(address: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetSlaveAddressPin(address),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the baud rate. Directly set the speed in hertz.
+     * @param rate The i2c refresh rate in hertz.
+     */
+    function rpioI2CSetBaudRate(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetBaudRatePin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+     * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+     */
+    function rpioI2CSetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CSetClockDividerPin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Read from the i2c slave.
+     * @param rx Buffer to read.
+     * @param length Optional. Length of the buffer to read.
+     */
+    function rpioI2CRead(rx: number[], length?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CReadPin(rx, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Write to the i2c slave.
+     * @param tx Buffer to write.
+     * @param length Optional. Length of the buffer to write.
+     */
+    function rpioI2CWrite(tx: number[], length?: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CWritePin(tx, length),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    // function rpioI2CReadRegisterRestart() {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         rpioI2CReadRegisterRestartPin(),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     *
+     */
+    // function rpioI2CWriteReadRestart() {
+    //     const task = context.createTask(true, true);
+    //     const event = calcRemote(
+    //         rpioI2CWriteReadRestartPin(),
+    //         undefined,
+    //         undefined,
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
+
+    /**
+     * Turn off the i²c interface and return the pins to GPIO.
+     */
+    function rpioI2CEnd() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioI2CEndPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+     * @param rate The PWM refresh rate.
+     */
+    function rpioPWMSetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetClockDividerPin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * This determines the maximum pulse width.
+     * @param pin The physical pin number.
+     * @param range The PWM range for a pin.
+     */
+    function rpioPWMSetRange(pin: number, range: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetRangePin(pin, range),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the width for a given pin.
+     * @param pin The physical pin number.
+     * @param width The PWM width for a pin.
+     */
+    function rpioPWMSetData(pin: number, width: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioPWMSetDataPin(pin, width),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Initiate SPI mode.
+     */
+    function rpioSPIBegin() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIBeginPin(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Choose which of the chip select / chip enable pins to control.
+     *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     */
+    function rpioSPIChipSelect(value: 0 | 1 | 2) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIChipSelectPin(value),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * If your device's CE pin is active high, use this to change the polarity.
+     * *  Value | Pin
+     *  ------|---------------------
+     *    0   | SPI_CE0 (24 / GPIO8)
+     *    1   | SPI_CE1 (26 / GPIO7)
+     *    2   | Both
+     * @param value The value correlating to pin(s) to control.
+     * @param polarity Set the polarity it activates on. HIGH or LOW
+     */
+    function rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW') {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetCSPolarityPin(value, polarity),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the SPI clock speed.
+     * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+     */
+    function rpioSPISetClockDivider(rate: number) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetClockDividerPin(rate),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Set the SPI Data Mode.
+     *  Mode | CPOL | CPHA
+     *  -----|------|-----
+     *    0  |  0   |  0
+     *    1  |  0   |  1
+     *    2  |  1   |  0
+     *    3  |  1   |  1
+     * @param mode The SPI Data Mode.
+     */
+    function rpioSPISetDataMode(mode: 0 | 1 | 2 | 3) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPISetDataModePin(mode),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function rpioSPITransfer(tx: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPITransferPin(tx),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     *
+     */
+    function rpioSPIWrite(tx: number[]) {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIWritePin(tx),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Release the pins back to general purpose use.
+     */
+    function rpioSPIEnd() {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            rpioSPIEndPin(),
             undefined,
             undefined,
             task.taskId
@@ -2285,6 +2740,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return rand * (max - min) + min;
         } else {
             return rand + min;
+        }
+    }
+
+    /**
+     * Gets the forward direction for the given rotation.
+     * @param pointerRotation The rotation that the pointer has represented in radians.
+     */
+    function getForwardDirection(pointerRotation: {
+        x: number;
+        y: number;
+        z: number;
+    }): { x: number; y: number; z: number } {
+        let euler = new Euler(
+            pointerRotation.x,
+            pointerRotation.z,
+            pointerRotation.y,
+            'XYZ'
+        );
+        let direction = new Vector3(0, 0, -1);
+        direction.applyEuler(euler);
+        return {
+            x: direction.x,
+            y: -direction.z,
+            z: direction.y,
+        };
+    }
+
+    /**
+     * Finds the point at which the the given ray and ground plane intersect.
+     * @param origin The origin of the ray.
+     * @param direction The direction that the ray is pointing.
+     */
+    function intersectPlane(
+        origin: { x: number; y: number; z: number },
+        direction: { x: number; y: number; z: number }
+    ): { x: number; y: number; z: number } {
+        let plane = new Plane(new Vector3(0, 0, 1));
+        let final = new Vector3();
+        let ray = new Ray(
+            new Vector3(origin.x, origin.y, origin.z),
+            new Vector3(direction.x, direction.y, direction.z)
+        );
+        let result = ray.intersectPlane(plane, final);
+
+        if (result) {
+            return {
+                x: result.x,
+                y: result.y,
+                z: result.z,
+            };
+        } else {
+            return null;
         }
     }
 
@@ -3115,6 +3622,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: user.tags[`${pointer}PointerRotationY`],
             z: user.tags[`${pointer}PointerRotationZ`],
         };
+    }
+
+    /**
+     * Gets the 3D direction that the given pointer is pointing in.
+     * @param pointer The pointer to get the direction of.
+     */
+    function getPointerDirection(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const rotation = getPointerRotation(pointer);
+        if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
+        return getForwardDirection(rotation);
     }
 
     /**

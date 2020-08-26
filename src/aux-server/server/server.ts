@@ -77,6 +77,7 @@ import {
     CausalRepoClient,
     CausalRepoStore,
     CombinedCausalRepoStore,
+    CausalRepoStageStore,
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 import { map, first } from 'rxjs/operators';
@@ -94,6 +95,7 @@ import mime from 'mime';
 import sortBy from 'lodash/sortBy';
 import { GpioModule } from './modules/GpioModule';
 import { GpioModule2 } from './modules/GpioModule2';
+import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
 
 const connect = pify(MongoClient.connect);
 
@@ -914,7 +916,7 @@ export class Server {
     }
 
     private async _configureCausalRepoServices() {
-        const store = await this._setupRepoStore();
+        const [store, stageStore] = await this._setupRepoStore();
         const socketIOServer = new SocketIOConnectionServer(this._socket);
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
@@ -930,9 +932,6 @@ export class Server {
             fixedServer,
         ]);
 
-        const stageStore = this._redisClient
-            ? new RedisStageStore(this._redisClient)
-            : new MemoryStageStore();
         const repoServer = new CausalRepoServer(multiServer, store, stageStore);
         repoServer.defaultDeviceSelector = {
             username: serverDevice.claims[USERNAME_CLAIM],
@@ -1050,7 +1049,9 @@ export class Server {
         };
     }
 
-    private async _setupRepoStore() {
+    private async _setupRepoStore(): Promise<
+        [CausalRepoStore, CausalRepoStageStore]
+    > {
         const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
         const objectsCollection = db.collection('objects');
         const headsCollection = db.collection('heads');
@@ -1079,7 +1080,35 @@ export class Server {
             store = new CombinedCausalRepoStore(mongoStore, cassandraStore);
         }
 
-        return store;
+        let stageStore: CausalRepoStageStore;
+        if (
+            this._config.repos.mongodb &&
+            this._config.repos.mongodb.stage === true
+        ) {
+            console.log(
+                '[Server] Using MongoDB Stage support for Causal Repos.'
+            );
+            const stageCollection = db.collection('stage');
+            const mongoStage = (stageStore = new MongoDBStageStore(
+                stageCollection
+            ));
+            await mongoStage.init();
+        }
+        if (!stageStore) {
+            if (this._redisClient) {
+                console.log(
+                    '[Server] Using Redis Stage support for Causal Repos.'
+                );
+                stageStore = new RedisStageStore(this._redisClient);
+            } else {
+                console.log(
+                    '[Server] Using Memory Stage support for Causal Repos.'
+                );
+                stageStore = new MemoryStageStore();
+            }
+        }
+
+        return [store, stageStore];
     }
 }
 

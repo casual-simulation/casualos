@@ -1807,6 +1807,26 @@ declare interface WebhookResult {
  */
 declare type Mod = BotTags | Bot;
 
+/**
+ * Defines a point in 3D space.
+ */
+declare interface Point3D {
+    /**
+     * The X position of the point.
+     */
+    x: number;
+
+    /**
+     * The Y position of the point.
+     */
+    y: number;
+
+    /**
+     * The Z position of the point.
+     */
+    z: number;
+}
+
 declare global {
 
     /**
@@ -2437,6 +2457,12 @@ declare global {
         getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
 
         /**
+         * Gets the 3D direction that the given pointer is pointing in.
+         * @param pointer The pointer to get the direction of.
+         */
+        getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+
+        /**
          * Gets the input state of the given button on the mouse.
          * @param controller The name of the controller that should be checked.
          * @param button The name of the button on the controller.
@@ -2919,7 +2945,7 @@ declare global {
          * @param buffer The buffer to read.
          * @param length The length of the buffer.
          */
-        rpioReadBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioReadSequence(pin: number, buffer: number, length?: number): Promise<void>;
 
         /**
          * Sends an event to the server to write to a pin and set it as HIGH or LOW.
@@ -2934,7 +2960,49 @@ declare global {
          * @param buffer The buffer to write to.
          * @param length The length of the buffer.
          */
-        rpioWriteBuf(pin: number, buffer: Buffer, length?: number): Promise<void>;
+        rpioWriteSequence(pin: number, buffer: number[], length?: number): Promise<void>;
+
+        /**
+         * Read the current state of the GPIO pad control for the specified GPIO group.
+         * On current models of Raspberry Pi there are three groups.
+         * 
+         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+         * 
+         * @param group The GPIO group to be read.
+         * @param bitmask The bitmask you want to check.
+         */
+        rpioReadpad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', bitmask: 'slew' | 'hysteresis' | 'current'): Promise<void>;
+
+        /**
+         * Write `control` settings to the pad control for `group`.
+         * 
+         * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
+         * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
+         * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
+         * 
+         * @param group The GPIO group to be read.
+         * @param slew Slew rate unlimited if set to true.
+         * @param hysteresis Hysteresis is enabled if set to true.
+         * @param current Drive current set in mA. Must be an even number 2-16.
+         */
+        rpioWritepad(group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53', slew?: boolean, hysteresis?: boolean, current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16): Promise<void>;
+
+        /**
+         * Configure the pin's internal pullup or pulldown resistors.
+         * @param pin The pin that you want to use.
+         * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
+         */
+        rpioPud(pin: number, state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP'): Promise<void>;
+
+        /**
+         * Watch `pin` for changes and execute the callback `cb()` on events.
+         * @param pin The pin that you want to use.
+         * @param cb The callback executed on events.
+         * @param options Optional. Used to watch for specific events.
+         */
+        rpioPoll(pin: number, cb: any, options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH'): Promise<void>;
 
         /**
          * Sends an event to the server to close a pin and what state to leave it in.
@@ -2943,6 +3011,141 @@ declare global {
          */
         rpioClose(pin: number, options: 'PIN_RESET' | 'PIN_PRESERVE'): Promise<void>;
 
+        /**
+         * Initializes i2c for use.
+         */
+        rpioI2CBegin(): Promise<void>;
+        
+        /**
+         * Configure the slave address.
+         * @param address The slave address to set.
+         */
+        rpioI2CSetSlaveAddress(address: number): Promise<void>;
+        
+        /**
+         * Set the baud rate. Directly set the speed in hertz.
+         * @param rate The i2c refresh rate in hertz.
+         */
+        rpioI2CSetBaudRate(rate: number): Promise<void>;
+        
+        /**
+         * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+         * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
+         */
+        rpioI2CSetClockDivider(rate: number): Promise<void>;
+        
+        /**
+         * Read from the i2c slave.
+         * @param rx Buffer to read.
+         * @param length Optional. Length of the buffer to read.
+         */
+        rpioI2CRead(rx: number[], length?: number): Promise<void>;
+        
+        /**
+         * Write to the i2c slave.
+         * @param tx Buffer to write.
+         * @param length Optional. Length of the buffer to write.
+         */
+        rpioI2CWrite(tx: number[], length?: number): Promise<void>;
+        
+        /**
+         * 
+         */
+        // rpioI2CReadRegisterRestart(): Promise<void>;
+        
+        /**
+         * 
+         */
+        // rpioI2CWriteReadRestart(): Promise<void>;
+        
+        /**
+         * Turn off the i²c interface and return the pins to GPIO.
+         */
+        rpioI2CEnd(): Promise<void>;
+        
+        
+        /**
+         * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+         * @param rate The PWM refresh rate.
+         */
+        rpioPWMSetClockDivider(rate: number): Promise<void>;
+        
+        /**
+         * This determines the maximum pulse width.
+         * @param pin The physical pin number.
+         * @param range The PWM range for a pin.
+         */
+        rpioPWMSetRange(pin: number, range: number): Promise<void>;
+        
+        
+        /**
+         * Set the width for a given pin.
+         * @param pin The physical pin number.
+         * @param width The PWM width for a pin.
+         */
+        rpioPWMSetData(pin: number, width: number): Promise<void>;
+        
+        /**
+         * Initiate SPI mode.
+         */
+        rpioSPIBegin(): Promise<void>;
+        
+        /**
+         * Choose which of the chip select / chip enable pins to control.
+         *  Value | Pin
+         *  ------|---------------------
+         *    0   | SPI_CE0 (24 / GPIO8)
+         *    1   | SPI_CE1 (26 / GPIO7)
+         *    2   | Both
+         * @param value The value correlating to pin(s) to control.
+         */
+        rpioSPIChipSelect(value: 0 | 1 | 2): Promise<void>;
+        
+        /**
+         * If your device's CE pin is active high, use this to change the polarity.
+         * *  Value | Pin
+         *  ------|---------------------
+         *    0   | SPI_CE0 (24 / GPIO8)
+         *    1   | SPI_CE1 (26 / GPIO7)
+         *    2   | Both
+         * @param value The value correlating to pin(s) to control.
+         * @param polarity Set the polarity it activates on. HIGH or LOW
+         */
+        rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW'): Promise<void>;
+        
+        /**
+         * Set the SPI clock speed.
+         * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+         */
+        rpioSPISetClockDivider(rate: number): Promise<void>;
+        
+        /**
+         * Set the SPI Data Mode.
+         *  Mode | CPOL | CPHA
+         *  -----|------|-----
+         *    0  |  0   |  0
+         *    1  |  0   |  1
+         *    2  |  1   |  0
+         *    3  |  1   |  1
+         * @param mode The SPI Data Mode.
+         */
+        rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
+        
+        /**
+         * 
+         */
+        rpioSPITransfer(tx: number[]): Promise<void>;
+        
+        /**
+         * 
+         */
+        rpioSPIWrite(tx: number[]): Promise<void>;
+        
+        /**
+         * Release the pins back to general purpose use.
+         */
+        rpioSPIEnd(): Promise<void>;
+        
         /**
          * Executes the given shell script on the server.
          * @param script The shell script that should be executed.
@@ -3158,6 +3361,20 @@ declare global {
          * @param max The largest allowed value.
          */
         random(min?: number, max?: number): number;
+
+        /**
+         * Gets the forward direction for the given rotation.
+         * @param pointerRotation The rotation that the pointer has represented in radians.
+         */
+        getForwardDirection(pointerRotation: Point3D): Point3D;
+
+        /**
+         * Finds the point at which the the given ray and ground plane intersect.
+         * Returns null if the ray does not intersect the ground plane.
+         * @param origin The origin of the ray.
+         * @param direction The direction that the ray is pointing.
+         */
+        intersectPlane(origin: Point3D, direction: Point3D): Point3D;
     };
 
     // @ts-ignore: Ignore redeclaration

@@ -5,6 +5,7 @@ import {
     Vector2,
 } from 'three';
 import { HtmlMixer } from './HtmlMixer';
+import Bowser from 'bowser';
 
 export function createHtmlMixerContext(
     renderer: WebGLRenderer,
@@ -40,6 +41,20 @@ export function createHtmlMixerContext(
     webglCanvas.style.width = '100%';
     webglCanvas.style.height = '100%';
     webglCanvas.style.pointerEvents = 'none';
+
+    const browser = Bowser.getParser(navigator.userAgent);
+    const isIOS14OrNewer = browser.satisfies({
+        mobile: {
+            safari: '>=14',
+        },
+        macos: {
+            safari: '>=14',
+        },
+        safari: '>=14',
+    });
+    if (!isIOS14OrNewer) {
+        css3dElement.appendChild(webglCanvas);
+    }
 
     return mixerContext;
 }

@@ -11,6 +11,7 @@ import {
     TAG_PORTAL,
     calculateMeetPortalAnchorPointOffset,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
+    trimTag,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -40,7 +41,11 @@ export default class TagPortal extends Vue {
     private _currentConfig: TagPortalConfig;
     private _currentSim: BrowserSimulation;
     private _currentSub: Subscription;
+    private _currentPortal: string;
 
+    showButton: boolean = false;
+    buttonIcon: string = null;
+    buttonHint: string = null;
     currentBot: Bot = null;
     currentTag: string = null;
     extraStyle: Object = {};
@@ -91,6 +96,12 @@ export default class TagPortal extends Vue {
         }
     }
 
+    buttonClick() {
+        if (this._currentConfig) {
+            this._currentConfig.buttonClick();
+        }
+    }
+
     exitSheet() {
         if (this._currentSim) {
             this._currentSim.helper.updateBot(this._currentSim.helper.userBot, {
@@ -138,7 +149,10 @@ export default class TagPortal extends Vue {
     private _updateCurrentPortal() {
         // If the current sim still exists, then keep it.
         if (this._currentSim && this._portals.has(this._currentSim)) {
-            return;
+            const targetPortal = this._portals.get(this._currentSim);
+            if (targetPortal === this._currentPortal) {
+                return;
+            }
         }
 
         // Use the first botAndTag
@@ -171,6 +185,7 @@ export default class TagPortal extends Vue {
                 .subscribe();
         }
         this._currentSim = sim;
+        this._currentPortal = botAndTag;
         if (sim) {
             if (!hasValue(botAndTag)) {
                 return false;
@@ -185,7 +200,7 @@ export default class TagPortal extends Vue {
                 return false;
             }
             this.currentBot = sim.helper.botsState[botId];
-            this.currentTag = tag;
+            this.currentTag = trimTag(tag);
             this._currentSub = sim.watcher.botChanged(botId).subscribe(bot => {
                 this.currentBot = bot;
             });
@@ -202,14 +217,23 @@ export default class TagPortal extends Vue {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
+            this.showButton = false;
+            this.buttonIcon = null;
+            this.buttonHint = null;
             return;
         }
         if (this._currentConfig) {
             this.extraStyle = this._currentConfig.style;
+            this.showButton = this._currentConfig.showButton;
+            this.buttonIcon = this._currentConfig.buttonIcon;
+            this.buttonHint = this._currentConfig.buttonHint;
         } else {
             this.extraStyle = calculateMeetPortalAnchorPointOffset(
                 DEFAULT_TAG_PORTAL_ANCHOR_POINT
             );
+            this.showButton = false;
+            this.buttonIcon = null;
+            this.buttonHint = null;
         }
     }
 }

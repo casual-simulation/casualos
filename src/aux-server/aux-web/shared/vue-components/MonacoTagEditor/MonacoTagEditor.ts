@@ -64,6 +64,22 @@ export default class MonacoTagEditor extends Vue {
         this._updateModel();
     }
 
+    get docsLink() {
+        if (this.isListenTag) {
+            const tagLink = this.tag
+                .replace(/[\.\(\)\@\[\]]/g, '')
+                .toLowerCase();
+            return `https://docs.casualsimulation.com/docs/listen-tags#${encodeURIComponent(
+                tagLink
+            )}`;
+        } else {
+            const tagLink = this.tag.replace(/\./g, '').toLowerCase();
+            return `https://docs.casualsimulation.com/docs/tags#${encodeURIComponent(
+                tagLink
+            )}`;
+        }
+    }
+
     get errorsCount() {
         return sumBy(this.scriptErrors, e => e.count);
     }
@@ -72,6 +88,10 @@ export default class MonacoTagEditor extends Vue {
         return this.errorsCount > 1
             ? `${this.errorsCount} Errors`
             : `${this.errorsCount} Error`;
+    }
+
+    get isListenTag() {
+        return this.tag && this.tag.startsWith('on');
     }
 
     get isScript() {

@@ -123,6 +123,13 @@ export default class ShowInputModal extends Vue {
         } else {
             this.currentValue = newColor;
         }
+
+        if (this.currentSubtype !== 'advanced') {
+            // The advanced color subtype has a full color picker.
+            // Chosing a color from it should not automatically close the sheet
+            // since it is common to click around to find something you like.
+            this.saveInputDialog();
+        }
     }
 
     autoFocusInputDialog() {

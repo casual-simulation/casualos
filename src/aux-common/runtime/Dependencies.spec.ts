@@ -2221,6 +2221,29 @@ describe('Dependencies', () => {
                 ]);
             });
 
+            // TODO: Implement
+            it.skip('should support using the tags variable after getting a bot', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBot("myBot").${name}.abc`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'bot',
+                        name: 'myBot',
+                        dependencies: [
+                            {
+                                type: 'tag_value',
+                                name: 'abc',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+
             it('should support using the tagName variable in an indexer', () => {
                 const tree = dependencies.dependencyTree(`${name}[tagName]`);
                 const simple = dependencies.simplify(tree);

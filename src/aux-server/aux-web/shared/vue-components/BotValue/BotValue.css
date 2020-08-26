@@ -1,3 +1,11 @@
+.value-input {
+    overflow: hidden;
+    resize: none;
+    white-space: nowrap;
+    font: 400 13.3333px Arial;
+    line-height: 30px;
+}
+
 .value-input.formula:focus {
     font-family: Consolas, 'Courier New', monospace;
     letter-spacing: 0;
