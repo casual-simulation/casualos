@@ -222,5 +222,11 @@ describe('Transpiler', () => {
                 });
             });
         });
+
+        it('should support dynamic import statements', () => {
+            const transpiler = new Transpiler();
+            const result = transpiler.transpile('import("test");');
+            expect(result.trim()).toEqual('import("test");');
+        });
     });
 });
