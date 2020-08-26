@@ -3357,10 +3357,10 @@ declare global {
         random(min?: number, max?: number): number;
 
         /**
-         * Gets the direction that the pointer is facing.
+         * Gets the forward direction for the given rotation.
          * @param pointerRotation The rotation that the pointer has represented in radians.
          */
-        getPointerDirection(pointerRotation: Point3D): Point3D;
+        getForwardDirection(pointerRotation: Point3D): Point3D;
 
         /**
          * Finds the point at which the the given ray and ground plane intersect.

@@ -502,7 +502,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stdDev,
                 randomInt,
                 random,
-                getPointerDirection,
+                getForwardDirection,
                 intersectPlane,
             },
 
@@ -2743,10 +2743,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the direction that the pointer is facing.
+     * Gets the forward direction for the given rotation.
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
-    function getPointerDirection(pointerRotation: {
+    function getForwardDirection(pointerRotation: {
         x: number;
         y: number;
         z: number;

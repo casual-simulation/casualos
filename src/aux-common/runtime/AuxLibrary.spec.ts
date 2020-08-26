@@ -5850,9 +5850,9 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('math.getPointerDirection()', () => {
+    describe('math.getForwardDirection()', () => {
         it('should map no rotation to the forward direction', () => {
-            let dir = library.api.math.getPointerDirection({
+            let dir = library.api.math.getForwardDirection({
                 x: 0,
                 y: 0,
                 z: 0,
@@ -5864,7 +5864,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should map a 90 degree yaw rotation to the right hand direction', () => {
-            let dir = library.api.math.getPointerDirection({
+            let dir = library.api.math.getForwardDirection({
                 x: 0,
                 y: 0,
                 z: -Math.PI / 2,
@@ -5876,7 +5876,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should map a 90 degree pitch rotation to the down direction', () => {
-            let dir = library.api.math.getPointerDirection({
+            let dir = library.api.math.getForwardDirection({
                 x: -Math.PI / 2,
                 y: 0,
                 z: 0,
