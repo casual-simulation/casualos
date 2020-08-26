@@ -3632,6 +3632,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
     ): { x: number; y: number; z: number } {
         const rotation = getPointerRotation(pointer);
+        if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
+            return {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            };
+        }
         return getForwardDirection(rotation);
     }
 
