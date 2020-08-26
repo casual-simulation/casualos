@@ -1956,6 +1956,46 @@ const rotation = player.getPointerRotation("mouse");
 const rotation = player.getPointerRotation("left");
 ```
 
+### `player.getPointerDirection(pointer?)`
+
+Gets the direction that the given pointer is pointed in.
+
+Can be combined with <ActionLink action='math.intersectPlane(origin, direction)'/> to find where on the ground the pointer is pointing.
+
+The **first parameter** is optional and is the pointer that the direction should be retrieved for.
+Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='mouse'>
+    The direction of the mouse pointer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The direction of the left pointer.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The direction of the right pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Get the direction of the mouse pointer.
+```typescript
+const direction = player.getPointerDirection("mouse");
+```
+
+2. Get the direction of the left pointer.
+```typescript
+const direction = player.getPointerDirection("left");
+```
+
+3. Find where the mouse is pointing on the ground.
+```typescript
+const position = player.getPointerPosition();
+const direction = player.getPointerDirection();
+const groundPosition = math.intersectPlane(position, direction);
+```
+
 ### `player.getInputState(controller, button)`
 
 Gets the state of the given button on the given controller.
