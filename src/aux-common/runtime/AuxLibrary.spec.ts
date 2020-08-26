@@ -5721,6 +5721,73 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('player.getPointerDirection()', () => {
+        let player: RuntimeBot;
+
+        beforeEach(() => {
+            player = createDummyRuntimeBot(
+                'player',
+                {
+                    leftPointerRotationX: 0,
+                    leftPointerRotationY: 0,
+                    leftPointerRotationZ: -Math.PI / 2,
+                    rightPointerRotationX: -Math.PI / 2,
+                    rightPointerRotationY: 0,
+                    rightPointerRotationZ: 0,
+                    mousePointerRotationX: 0,
+                    mousePointerRotationY: 0,
+                    mousePointerRotationZ: 0,
+                },
+                'tempLocal'
+            );
+            addToContext(context, player);
+            context.playerBot = player;
+        });
+
+        it('should return NaN for x, y, and z if the player bot is null', () => {
+            context.playerBot = null;
+            const result = library.api.player.getPointerDirection();
+
+            expect(result).toEqual({
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            });
+        });
+
+        it('should return the x, y, and z of the player camera for the mouse', () => {
+            const result = library.api.player.getPointerDirection();
+
+            expect(result.x).toBeCloseTo(0);
+            expect(result.y).toBeCloseTo(1);
+            expect(result.z).toBeCloseTo(0);
+        });
+
+        it('should be able to get the left pointer position', () => {
+            const result = library.api.player.getPointerDirection('left');
+
+            expect(result.x).toBeCloseTo(1);
+            expect(result.y).toBeCloseTo(0);
+            expect(result.z).toBeCloseTo(0);
+        });
+
+        it('should be able to get the right pointer position', () => {
+            const result = library.api.player.getPointerDirection('right');
+
+            expect(result.x).toBeCloseTo(0);
+            expect(result.y).toBeCloseTo(0);
+            expect(result.z).toBeCloseTo(-1);
+        });
+
+        it('should be able to get the mouse pointer position', () => {
+            const result = library.api.player.getPointerDirection('mouse');
+
+            expect(result.x).toBeCloseTo(0);
+            expect(result.y).toBeCloseTo(1);
+            expect(result.z).toBeCloseTo(0);
+        });
+    });
+
     describe('player.getInputState()', () => {
         let player: RuntimeBot;
 

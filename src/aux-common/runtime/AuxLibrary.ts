@@ -418,6 +418,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCameraRotation,
                 getPointerPosition,
                 getPointerRotation,
+                getPointerDirection,
                 getInputState,
                 getInputList,
             },
@@ -3621,6 +3622,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: user.tags[`${pointer}PointerRotationY`],
             z: user.tags[`${pointer}PointerRotationZ`],
         };
+    }
+
+    /**
+     * Gets the 3D direction that the given pointer is pointing in.
+     * @param pointer The pointer to get the direction of.
+     */
+    function getPointerDirection(
+        pointer: 'mouse' | 'left' | 'right' = 'mouse'
+    ): { x: number; y: number; z: number } {
+        const rotation = getPointerRotation(pointer);
+        return getForwardDirection(rotation);
     }
 
     /**

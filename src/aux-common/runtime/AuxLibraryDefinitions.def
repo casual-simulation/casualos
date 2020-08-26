@@ -2457,6 +2457,12 @@ declare global {
         getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): {x: number, y: number, z: number};
 
         /**
+         * Gets the 3D direction that the given pointer is pointing in.
+         * @param pointer The pointer to get the direction of.
+         */
+        getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+
+        /**
          * Gets the input state of the given button on the mouse.
          * @param controller The name of the controller that should be checked.
          * @param button The name of the button on the controller.
