@@ -20,12 +20,16 @@
     -   Implemented for consistency with functions like `getBot()`, `getTag()`, etc.
 -   Added the `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` listen tags.
     -   These are shouts that happen whenever a `@onPointerEnter` or `@onPointerExit` whisper occurs.
+-   Added the ability to store uncommitted atoms in MongoDB.
+    -   Can be configred with the `STAGE_TYPE` environment variable. Can be set to either `redis` or `mongodb`. Currently defaults to `redis` until a migration path is implemented.
 
 ### :bug: Bug Fixes
 
 -   Fixed to safely allow editing multiline scripts in the sheet cells.
 -   Fixed an issue with the tag portal where it would not respond to changes with the `tagPortal` tag if it was already set.
 -   Fixed an issue with the Deno sandbox where it wouldn't load due to missing dependencies.
+-   Fixed an issue where 3D content would not occlude iframe forms.
+    -   Only fixed for non-Safari web browsers.
 
 ## V1.2.3
 
