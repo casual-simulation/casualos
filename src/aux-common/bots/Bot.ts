@@ -1225,6 +1225,8 @@ export const KNOWN_TAGS: string[] = [
     'onBarcodeScanned',
     'onBarcodeScannerClosed',
     'onBarcodeScannerOpened',
+    ON_POINTER_ENTER,
+    ON_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
     'onPointerDown',
