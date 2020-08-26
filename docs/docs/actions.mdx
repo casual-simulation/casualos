@@ -3646,6 +3646,45 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+### `math.getForwardDirection(rotation)`
+
+Gets the forward direction for the given rotation.
+
+Useful for finding where a bot would be pointing if it has a custom rotation.
+
+The **first parameter** is an object containing the `x`, `y`, and `z` of the rotation in radians.
+
+#### Examples:
+
+1. Get the direction that a pointer is pointing.
+```typescript
+const pointerRotation = player.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+player.toast(pointerDirection);
+```
+
+### `math.intersectPlane(origin, direction)`
+
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the page portal ground plane.
+Returns null if the ray does not intersect the ground plane.
+
+Useful for calculating where on the ground something is pointing.
+
+The **first parameter** is the 3D point that the ray should start at.
+
+The **second parameter** is the direction that the ray is traveling along.
+
+#### Examples:
+
+1. Get the spot on the ground that a pointer is pointing at.
+```typescript
+const pointerPosition = player.getPointerPosition('mouse');
+const pointerRotation = player.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
+player.toast(groundPoint);
+```
+
 ## Crypto Actions
 
 ### `crypto.sha256(...data)`
