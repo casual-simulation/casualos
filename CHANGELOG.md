@@ -1,8 +1,64 @@
 # CasualOS Changelog
 
-## V1.2.3
+## V1.2.4
 
 #### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `tagPortalShowButton` tag to control whether a button should be shown in the tag portal.
+    -   The button is placed at the lower right hand side of the tag portal.
+    -   Clicking the button will trigger a `@onClick` on the tag portal config bot.
+    -   Two additional tags can be used to customize the button:
+        -   `tagPortalButtonIcon` is the icon that is shown on the button and can be set to any [Material Icon](https://material.io/resources/icons/?style=baseline).
+        -   `tagPortalButtonHint` is the text that should be shown in the tooltip for the button.
+-   Added the `frustum` form.
+-   Improved `player.showInput()` to automatically save and close when a color is selected from the color picker.
+    -   Applies to the `basic` and `swatch` subtypes but not `advanced`.
+-   Improved the multiline editor to have a "Docs" button that links to the documentation for the current tag.
+-   Improved the tag portal to support using `@` and `#` symbols at the beginning of the tag.
+    -   Implemented for consistency with functions like `getBot()`, `getTag()`, etc.
+-   Added the `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` listen tags.
+    -   These are shouts that happen whenever a `@onPointerEnter` or `@onPointerExit` whisper occurs.
+-   Added the `math.getForwardDirection()` and `math.intersectPlane()` functinos.
+    -   These are useful for calculating where a pointer is pointing.
+-   Added the ability to store uncommitted atoms in MongoDB.
+    -   Can be configred with the `STAGE_TYPE` environment variable. Can be set to either `redis` or `mongodb`. Currently defaults to `redis` until a migration path is implemented.
+-   Added a bunch of extra GPIO-related functions.
+    -   `server.rpioReadpad()`
+    -   `server.rpioWritepad()`
+    -   `server.rpioPud()`
+    -   `server.rpioPoll()`
+    -   `server.rpioI2CBegin()`
+    -   `server.rpioI2CSetSlaveAddress()`
+    -   `server.rpioI2CSetBaudRate()`
+    -   `server.rpioI2CSetClockDivider()`
+    -   `server.rpioI2CRead()`
+    -   `server.rpioI2CWrite()`
+    -   `server.rpioI2CEnd()`
+    -   `server.rpioPWMSetClockDivider()`
+    -   `server.rpioPWMSetRange()`
+    -   `server.rpioPWMSetData()`
+    -   `server.rpioSPIBegin()`
+    -   `server.rpioSPIChipSelect()`
+    -   `server.rpioSPISetCSPolarity()`
+    -   `server.rpioSPISetClockDivider()`
+    -   `server.rpioSPISetDataMode()`
+    -   `server.rpioSPITransfer()`
+    -   `server.rpioSPIWrite()`,
+    -   `server.rpioSPIEnd()`
+
+### :bug: Bug Fixes
+
+-   Fixed to safely allow editing multiline scripts in the sheet cells.
+-   Fixed an issue with the tag portal where it would not respond to changes with the `tagPortal` tag if it was already set.
+-   Fixed an issue with the Deno sandbox where it wouldn't load due to missing dependencies.
+-   Fixed an issue where 3D content would not occlude iframe forms.
+    -   Only fixed for non-Safari web browsers.
+
+## V1.2.3
+
+#### Date: 8/20/2020
 
 ### :rocket: Improvements
 

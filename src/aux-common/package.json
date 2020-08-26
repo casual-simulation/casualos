@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -47,7 +47,8 @@
         "lru-cache": "^5.1.1",
         "rxjs": "^6.5.2",
         "uuid": "^3.3.2",
-        "zone.js": "0.10.3"
+        "zone.js": "0.10.3",
+        "three": "0.117.1"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

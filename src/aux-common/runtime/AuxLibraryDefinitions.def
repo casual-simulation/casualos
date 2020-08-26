@@ -1807,6 +1807,26 @@ declare interface WebhookResult {
  */
 declare type Mod = BotTags | Bot;
 
+/**
+ * Defines a point in 3D space.
+ */
+declare interface Point3D {
+    /**
+     * The X position of the point.
+     */
+    x: number;
+
+    /**
+     * The Y position of the point.
+     */
+    y: number;
+
+    /**
+     * The Z position of the point.
+     */
+    z: number;
+}
+
 declare global {
 
     /**
@@ -3335,6 +3355,20 @@ declare global {
          * @param max The largest allowed value.
          */
         random(min?: number, max?: number): number;
+
+        /**
+         * Gets the forward direction for the given rotation.
+         * @param pointerRotation The rotation that the pointer has represented in radians.
+         */
+        getForwardDirection(pointerRotation: Point3D): Point3D;
+
+        /**
+         * Finds the point at which the the given ray and ground plane intersect.
+         * Returns null if the ray does not intersect the ground plane.
+         * @param origin The origin of the ray.
+         * @param direction The direction that the ray is pointing.
+         */
+        intersectPlane(origin: Point3D, direction: Point3D): Point3D;
     };
 
     // @ts-ignore: Ignore redeclaration

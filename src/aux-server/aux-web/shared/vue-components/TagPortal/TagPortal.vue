@@ -13,9 +13,9 @@
                 :showDesktopEditor="true"
                 :showResize="false"
             ></tag-value-editor>
-            <md-button class="md-fab exit-sheet" @click="exitSheet()">
-                <md-icon>web_asset</md-icon>
-                <md-tooltip>Page Portal</md-tooltip>
+            <md-button v-if="showButton" class="md-fab custom-button" @click="buttonClick()">
+                <md-icon v-if="buttonIcon">{{ buttonIcon }}</md-icon>
+                <md-tooltip v-if="buttonHint">{{ buttonHint }}</md-tooltip>
             </md-button>
         </div>
     </div>

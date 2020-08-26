@@ -91,6 +91,12 @@ if (sandboxType !== 'deno' && sandboxType !== 'none') {
     throw new Error('The Sandbox Type must be either "deno" or "none".');
 }
 
+const stageType = process.env.STAGE_TYPE || 'redis';
+
+if (stageType !== 'redis' && stageType !== 'mongodb') {
+    throw new Error('The Stage Type must be either "redis" or "mongodb".');
+}
+
 // Defaults to a week.
 const botsTimeToLive =
     parseInt(process.env.BOTS_TIME_TO_LIVE) || 60 * 60 * 24 * 7;
@@ -129,6 +135,7 @@ const config: Config = {
     repos: {
         mongodb: {
             dbName: 'aux-repos',
+            stage: stageType === 'mongodb',
         },
         cassandra: cassandraReposConfig,
     },

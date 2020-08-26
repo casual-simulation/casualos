@@ -31,6 +31,7 @@ const config: Config = {
     repos: {
         mongodb: {
             dbName: 'aux-repos',
+            stage: true,
         },
         cassandra: null,
     },

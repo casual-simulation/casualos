@@ -524,6 +524,9 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='mesh'>
     A mesh loaded from the web. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
+  <PossibleValueCode value='frustum'>
+    A camera frustum mesh.
+  </PossibleValueCode>
   <PossibleValueCode id="iframe-form" value='iframe'>
     A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
   </PossibleValueCode>
@@ -1301,6 +1304,51 @@ Note that we wrap the curly braces in parenthesis to tell JavaScript that we wan
 })
 ```
 
+### `tagPortalShowButton`
+
+Whether the tag portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the tag portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal config bot.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    No button is shown. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `tagPortalButtonIcon`
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `tagPortalButtonHint`
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No hint. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ## History Tags
 
 History tags are tags that are automatically applied to bots in the `history` space.
@@ -1947,6 +1995,18 @@ If the story is loaded with `forceSignedScripts` set to `true`, then scripts wil
   <PossibleValueCode value='true'>
     Scripts have to be signed in order to be executed.
   </PossibleValueCode>
+</PossibleValuesTable>
+
+### `url`
+
+The URL that is currently specified in the tab.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The URL that is loaded in the tab.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ## Hidden Tags

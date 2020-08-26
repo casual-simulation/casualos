@@ -151,6 +151,7 @@ import {
     verify as realVerify,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
+import { Euler, Vector3, Plane, Ray } from 'three';
 
 /**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
@@ -501,6 +502,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stdDev,
                 randomInt,
                 random,
+                getForwardDirection,
+                intersectPlane,
             },
 
             crypto: {
@@ -2736,6 +2739,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return rand * (max - min) + min;
         } else {
             return rand + min;
+        }
+    }
+
+    /**
+     * Gets the forward direction for the given rotation.
+     * @param pointerRotation The rotation that the pointer has represented in radians.
+     */
+    function getForwardDirection(pointerRotation: {
+        x: number;
+        y: number;
+        z: number;
+    }): { x: number; y: number; z: number } {
+        let euler = new Euler(
+            pointerRotation.x,
+            pointerRotation.z,
+            pointerRotation.y,
+            'XYZ'
+        );
+        let direction = new Vector3(0, 0, -1);
+        direction.applyEuler(euler);
+        return {
+            x: direction.x,
+            y: -direction.z,
+            z: direction.y,
+        };
+    }
+
+    /**
+     * Finds the point at which the the given ray and ground plane intersect.
+     * @param origin The origin of the ray.
+     * @param direction The direction that the ray is pointing.
+     */
+    function intersectPlane(
+        origin: { x: number; y: number; z: number },
+        direction: { x: number; y: number; z: number }
+    ): { x: number; y: number; z: number } {
+        let plane = new Plane(new Vector3(0, 0, 1));
+        let final = new Vector3();
+        let ray = new Ray(
+            new Vector3(origin.x, origin.y, origin.z),
+            new Vector3(direction.x, direction.y, direction.z)
+        );
+        let result = ray.intersectPlane(plane, final);
+
+        if (result) {
+            return {
+                x: result.x,
+                y: result.y,
+                z: result.z,
+            };
+        } else {
+            return null;
         }
     }
 

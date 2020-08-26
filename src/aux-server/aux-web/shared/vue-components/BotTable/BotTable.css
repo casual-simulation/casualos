@@ -126,11 +126,16 @@
     font-size: 1.3rem !important;
 }
 
-.bot-cell input {
+.bot-cell textarea {
     width: 100%;
-    height: 100%;
+    height: 30px;
+    max-height: 30px;
     padding: 2px;
     border: none;
+}
+
+.bot-cell.value {
+    height: 0;
 }
 
 .bot-cell.new-tag {

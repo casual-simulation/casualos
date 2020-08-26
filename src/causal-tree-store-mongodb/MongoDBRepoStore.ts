@@ -209,29 +209,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
         try {
             await op.execute();
         } catch (err) {
-            if (err instanceof MongoError) {
-                // Check if every error is a duplicate.
-                const errors = (<any>err).writeErrors as MongoError[];
-                let valid = false;
-                if (errors && Array.isArray(errors)) {
-                    if (
-                        errors.every(
-                            e => e.code === MONGO_CODE_DUPLICATE_OBJECT
-                        )
-                    ) {
-                        // If every error is a duplicate, then ignore the error
-                        valid = true;
-                    }
-                }
-
-                // If the error is not all duplicates
-                // then rethrow the error.
-                if (!valid) {
-                    throw err;
-                }
-            } else {
-                throw err;
-            }
+            handleMongoDBDuplicateErrors(err);
         }
     }
 
@@ -290,6 +268,28 @@ export class MongoDBRepoStore implements CausalRepoStore {
         await this._heads.deleteOne({
             name: head.name,
         });
+    }
+}
+
+export function handleMongoDBDuplicateErrors(err: any) {
+    if (err instanceof MongoError) {
+        // Check if every error is a duplicate.
+        const errors = (<any>err).writeErrors as MongoError[];
+        let valid = false;
+        if (errors && Array.isArray(errors)) {
+            if (errors.every(e => e.code === MONGO_CODE_DUPLICATE_OBJECT)) {
+                // If every error is a duplicate, then ignore the error
+                valid = true;
+            }
+        }
+
+        // If the error is not all duplicates
+        // then rethrow the error.
+        if (!valid) {
+            throw err;
+        }
+    } else {
+        throw err;
     }
 }
 

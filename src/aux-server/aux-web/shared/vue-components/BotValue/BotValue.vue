@@ -1,5 +1,5 @@
 <template>
-    <input
+    <textarea
         @input="valueChanged(bot, tag, $event.target.value)"
         @focus="focus()"
         @blur="blur()"

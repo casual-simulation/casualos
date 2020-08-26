@@ -5850,6 +5850,59 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('math.getForwardDirection()', () => {
+        it('should map no rotation to the forward direction', () => {
+            let dir = library.api.math.getForwardDirection({
+                x: 0,
+                y: 0,
+                z: 0,
+            });
+
+            expect(dir.x).toBeCloseTo(0);
+            expect(dir.y).toBeCloseTo(1);
+            expect(dir.z).toBeCloseTo(0);
+        });
+
+        it('should map a 90 degree yaw rotation to the right hand direction', () => {
+            let dir = library.api.math.getForwardDirection({
+                x: 0,
+                y: 0,
+                z: -Math.PI / 2,
+            });
+
+            expect(dir.x).toBeCloseTo(1);
+            expect(dir.y).toBeCloseTo(0);
+            expect(dir.z).toBeCloseTo(0);
+        });
+
+        it('should map a 90 degree pitch rotation to the down direction', () => {
+            let dir = library.api.math.getForwardDirection({
+                x: -Math.PI / 2,
+                y: 0,
+                z: 0,
+            });
+
+            expect(dir.x).toBeCloseTo(0);
+            expect(dir.y).toBeCloseTo(0);
+            expect(dir.z).toBeCloseTo(-1);
+        });
+    });
+
+    describe('math.intersectPlane()', () => {
+        // TODO: Add more tests
+        it('should return the intersection point between a ground plane and the given ray', () => {
+            // Pointing straight down
+            let point = library.api.math.intersectPlane(
+                { x: 0, y: 0, z: 1 },
+                { x: 0, y: 0, z: -1 }
+            );
+
+            expect(point.x).toBeCloseTo(0);
+            expect(point.y).toBeCloseTo(0);
+            expect(point.z).toBeCloseTo(0);
+        });
+    });
+
     describe('crypto.sha256()', () => {
         const cases = [
             [

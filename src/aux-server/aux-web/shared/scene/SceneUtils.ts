@@ -33,6 +33,8 @@ import {
     Sphere,
     PerspectiveCamera,
     Group,
+    LineSegments,
+    LineBasicMaterial,
 } from 'three';
 import flatMap from 'lodash/flatMap';
 import {
@@ -591,11 +593,13 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
  * @param mesh The mesh.
  * @param color The color in sRGB space.
  */
-export function setColor(mesh: Mesh | Sprite, color: string) {
+export function setColor(mesh: Mesh | Sprite | LineSegments, color: string) {
     if (!mesh) {
         return;
     }
-    const shapeMat = <MeshStandardMaterial | MeshToonMaterial>mesh.material;
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
     if (color) {
         shapeMat.visible = !isTransparent(color);
         if (shapeMat.visible) {
