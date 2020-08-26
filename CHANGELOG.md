@@ -20,7 +20,7 @@
     -   Implemented for consistency with functions like `getBot()`, `getTag()`, etc.
 -   Added the `@onAnyBotPointerEnter` and `@onAnyBotPointerExit` listen tags.
     -   These are shouts that happen whenever a `@onPointerEnter` or `@onPointerExit` whisper occurs.
--   Added the `math.getForwardDirection()` and `math.intersectPlane()` functinos.
+-   Added the `player.getPointerDirection()`, `math.getForwardDirection()` and `math.intersectPlane()` functions.
     -   These are useful for calculating where a pointer is pointing.
 -   Added the ability to store uncommitted atoms in MongoDB.
     -   Can be configred with the `STAGE_TYPE` environment variable. Can be set to either `redis` or `mongodb`. Currently defaults to `redis` until a migration path is implemented.
