@@ -22,6 +22,29 @@
     -   These are shouts that happen whenever a `@onPointerEnter` or `@onPointerExit` whisper occurs.
 -   Added the ability to store uncommitted atoms in MongoDB.
     -   Can be configred with the `STAGE_TYPE` environment variable. Can be set to either `redis` or `mongodb`. Currently defaults to `redis` until a migration path is implemented.
+-   Added a bunch of extra GPIO-related functions.
+    -   `server.rpioReadpad()`
+    -   `server.rpioWritepad()`
+    -   `server.rpioPud()`
+    -   `server.rpioPoll()`
+    -   `server.rpioI2CBegin()`
+    -   `server.rpioI2CSetSlaveAddress()`
+    -   `server.rpioI2CSetBaudRate()`
+    -   `server.rpioI2CSetClockDivider()`
+    -   `server.rpioI2CRead()`
+    -   `server.rpioI2CWrite()`
+    -   `server.rpioI2CEnd()`
+    -   `server.rpioPWMSetClockDivider()`
+    -   `server.rpioPWMSetRange()`
+    -   `server.rpioPWMSetData()`
+    -   `server.rpioSPIBegin()`
+    -   `server.rpioSPIChipSelect()`
+    -   `server.rpioSPISetCSPolarity()`
+    -   `server.rpioSPISetClockDivider()`
+    -   `server.rpioSPISetDataMode()`
+    -   `server.rpioSPITransfer()`
+    -   `server.rpioSPIWrite()`,
+    -   `server.rpioSPIEnd()`
 
 ### :bug: Bug Fixes
 
