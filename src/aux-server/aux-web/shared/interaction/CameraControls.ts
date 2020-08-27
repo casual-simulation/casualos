@@ -78,8 +78,9 @@ export class CameraControls {
     public position0: Vector3;
     public zoom0: number;
 
-    // Offset the apply to the camera this frame.
-    public cameraOffset: Vector3 = new Vector3();
+    // Offset to apply to the camera this frame.
+    // Automatically reset once it has been applied to the camera.
+    public cameraFrameOffset: Vector3 = new Vector3();
 
     // The viewport we are applying control inside of for this camera.
     public viewport: Viewport;
@@ -889,8 +890,8 @@ export class CameraControls {
 
         // move target to panned location
         this.target.add(this.panOffset);
-        this.target.add(this.cameraOffset);
-        if (this.cameraOffset.length() > 0) {
+        this.target.add(this.cameraFrameOffset);
+        if (this.cameraFrameOffset.length() > 0) {
             this.currentDistX = this.target.x;
             this.currentDistY = this.target.y;
         }
@@ -924,7 +925,7 @@ export class CameraControls {
             this.sphericalDelta.set(0, 0, 0);
             this.panOffset.set(0, 0, 0);
         }
-        this.cameraOffset.set(0, 0, 0);
+        this.cameraFrameOffset.set(0, 0, 0);
 
         this.scale = 1;
 
