@@ -913,9 +913,14 @@ export class CameraControls {
         // rotate offset back to "camera-up-vector-is-up" space
         offset.applyQuaternion(quatInverse);
 
-        position.copy(this.target).add(offset);
+        let finalTarget = this.target.clone();
+        position.copy(finalTarget).add(offset);
 
-        this._camera.lookAt(this.target);
+        if (this._camera.parent) {
+            this._camera.parent.localToWorld(finalTarget);
+        }
+
+        this._camera.lookAt(finalTarget);
 
         if (this.enableDamping === true) {
             this.sphericalDelta.theta *= 1 - this.dampingFactor;
