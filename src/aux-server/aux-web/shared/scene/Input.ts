@@ -997,7 +997,9 @@ export class Input {
 
         // Reset all the keyboard keys
         for (let key of this._keyData.values()) {
-            key.state.setUpFrame(this.time.frameCount);
+            if (key.state.isHeldOnFrame(this.time.frameCount)) {
+                key.state.setUpFrame(this.time.frameCount);
+            }
         }
     }
 
