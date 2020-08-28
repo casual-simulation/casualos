@@ -39,6 +39,7 @@ export class Input {
     private _touchListenerCounts: Map<EventTarget, number>;
     private _wheelData: WheelData;
     private _targetData: TargetData;
+    private _hasFocus: boolean;
 
     private _xrSession: XRSession;
     private _xrSubscription: Subscription;
@@ -263,6 +264,8 @@ export class Input {
             ray: new Group(),
         };
 
+        this._handleFocus = this._handleFocus.bind(this);
+        this._handleBlur = this._handleBlur.bind(this);
         this._handleMouseDown = this._handleMouseDown.bind(this);
         this._handleMouseMove = this._handleMouseMove.bind(this);
         this._handleMouseUp = this._handleMouseUp.bind(this);
@@ -292,6 +295,8 @@ export class Input {
         element.addEventListener('touchstart', this._handleTouchStart);
         document.addEventListener('keydown', this._handleKeyDown);
         document.addEventListener('keyup', this._handleKeyUp);
+        window.addEventListener('focus', this._handleFocus);
+        window.addEventListener('blur', this._handleBlur);
 
         // Context menu is only important on the game view
         this._game.gameView.gameView.addEventListener(
@@ -315,6 +320,8 @@ export class Input {
         element.removeEventListener('touchstart', this._handleTouchStart);
         document.removeEventListener('keydown', this._handleKeyDown);
         document.removeEventListener('keyup', this._handleKeyUp);
+        window.removeEventListener('focus', this._handleFocus);
+        window.removeEventListener('blur', this._handleBlur);
 
         // Context menu is only important on the game view
         this._game.gameView.gameView.removeEventListener(
@@ -969,6 +976,29 @@ export class Input {
             new Vector2(pageX, pageY),
             this._game.gameView.gameView
         );
+    }
+
+    private _handleFocus(event: FocusEvent) {
+        this._hasFocus = true;
+        if (this.debugLevel >= 1) {
+            console.log(
+                'focus gained. fireInputOnFrame: ' + this.time.frameCount
+            );
+        }
+    }
+
+    private _handleBlur(event: FocusEvent) {
+        this._hasFocus = false;
+        if (this.debugLevel >= 1) {
+            console.log(
+                'focus lost. fireInputOnFrame: ' + this.time.frameCount
+            );
+        }
+
+        // Reset all the keyboard keys
+        for (let key of this._keyData.values()) {
+            key.state.setUpFrame(this.time.frameCount);
+        }
     }
 
     private _handleMouseDown(event: MouseEvent) {
