@@ -6,6 +6,7 @@ import {
     Quaternion,
     Euler,
     Matrix4,
+    Vector2,
 } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -25,6 +26,8 @@ import {
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
     calculateNumericalTagValue,
+    getBotPosition,
+    isBot,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -63,6 +66,8 @@ import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import isEqual from 'lodash/isEqual';
+import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
+import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -100,6 +105,44 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     keys: keysUp,
                 });
             }
+        }
+    }
+
+    createBotDragOperation(
+        simulation: Simulation,
+        bot: Bot | BotTags,
+        dimension: string,
+        controller: InputMethod
+    ): IOperation {
+        const pageSimulation = this._game.findPlayerSimulation3D(simulation);
+        const inventorySimulation = this._game.findInventorySimulation3D(
+            simulation
+        );
+        if (isBot(bot)) {
+            let tempPos = getBotPosition(null, bot, dimension);
+            let startBotPos = new Vector2(
+                Math.round(tempPos.x),
+                Math.round(tempPos.y)
+            );
+            let botDragOp = new PlayerBotDragOperation(
+                pageSimulation,
+                inventorySimulation,
+                this,
+                [bot],
+                dimension,
+                controller,
+                startBotPos
+            );
+            return botDragOp;
+        } else {
+            let modDragOp = new PlayerModDragOperation(
+                pageSimulation,
+                inventorySimulation,
+                this,
+                bot,
+                controller
+            );
+            return modDragOp;
         }
     }
 
