@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V1.2.5
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `pageCameraPositionOffset[X,Y,Z]`, `inventoryCameraPositionOffset[X,Y,Z]`, `pageCameraRotationOffset[X,Y,Z]`, and `inventoryCameraRotationOffset[X,Y,Z]` tags.
+    -   These can be used to move the camera apart from the player's input.
+    -   The position offset tags are especially useful for warping the player around in VR.
+
 ## V1.2.4
 
 #### Date: 8/26/2020
