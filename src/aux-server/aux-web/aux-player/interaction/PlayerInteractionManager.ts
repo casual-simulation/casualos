@@ -24,6 +24,7 @@ import {
     onPointerEnterExitArg,
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -330,6 +331,59 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return [mainCameraRigControls, invCameraRigControls];
     }
 
+    protected _updateCameraOffsets() {
+        for (let sim of this._game.getSimulations()) {
+            const rig = sim.getMainCameraRig();
+            const userBot = sim.simulation.helper.userBot;
+            if (!userBot) {
+                continue;
+            }
+            const [portal, gridScale] = portalInfoForSim(sim);
+
+            rig.cameraParent.position.set(
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetX`,
+                    0
+                ) * gridScale,
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetZ`,
+                    0
+                ) * gridScale,
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetY`,
+                    0
+                ) * -gridScale
+            );
+            rig.cameraParent.rotation.set(
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetX`,
+                    0
+                ),
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetZ`,
+                    0
+                ),
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetY`,
+                    0
+                )
+            );
+            rig.cameraParent.updateMatrixWorld();
+        }
+    }
+
     // This function is kinda the worst but should be fine
     // as long as performance doesn't become an issue.
     protected _updatePlayerBotTags() {
@@ -497,21 +551,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
         }
 
-        function portalInfoForSim(sim: Simulation3D) {
-            let portal: PortalType;
-            let gridScale: number;
-            if (sim instanceof PlayerPageSimulation3D) {
-                portal = 'page';
-                gridScale = sim.pageConfig.gridScale;
-            } else if (sim instanceof InventorySimulation3D) {
-                portal = 'inventory';
-                gridScale = sim.inventoryConfig.gridScale;
-            }
-            let inverseScale = 1 / gridScale;
-
-            return [portal, gridScale, inverseScale] as const;
-        }
-
         function checkInput(state: InputState, name: string, update: any) {
             if (!state) {
                 return false;
@@ -537,4 +576,19 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     ): ContextMenuAction[] {
         return null;
     }
+}
+
+function portalInfoForSim(sim: Simulation3D) {
+    let portal: PortalType;
+    let gridScale: number;
+    if (sim instanceof PlayerPageSimulation3D) {
+        portal = 'page';
+        gridScale = sim.pageConfig.gridScale;
+    } else if (sim instanceof InventorySimulation3D) {
+        portal = 'inventory';
+        gridScale = sim.inventoryConfig.gridScale;
+    }
+    let inverseScale = 1 / gridScale;
+
+    return [portal, gridScale, inverseScale] as const;
 }

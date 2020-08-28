@@ -210,6 +210,7 @@ export abstract class BaseInteractionManager {
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
+        this._updateCameraOffsets();
         this._updateCameraControls();
 
         // Detect left click.
@@ -226,6 +227,8 @@ export abstract class BaseInteractionManager {
     }
 
     protected _updatePlayerBotTags() {}
+
+    protected _updateCameraOffsets() {}
 
     protected _updateCameraControls() {
         for (let controller of this._cameraRigControllers) {
