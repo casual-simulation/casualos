@@ -103,6 +103,21 @@ export class Input {
     }
 
     /**
+     * Gets the controller that is currently set as the primary.
+     * Generally, this is the most recently used controller, however if none is available then this is the first controller.
+     * Returns null if no controller is available.
+     */
+    get primaryController(): ControllerData {
+        if (this._lastPrimaryControllerData.identifier) {
+            return this._lastPrimaryControllerData;
+        } else if (this.controllers.length > 0) {
+            return this.controllers[0];
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
      * @param event The mouse event to get the viewport position out of.
