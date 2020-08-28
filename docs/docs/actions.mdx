@@ -1028,12 +1028,14 @@ player.toast(result);
 
 ### `player.replaceDragBot(botOrMod)`
 
-
 Replaces the bot that the user is dragging with the given bot or mod.
-Only works if called from inside a <TagLink tag='@onDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
+
+If called when the user is not dragging anything, then the given bot or mod will be dragged using the current input method.
+When in VR, the current input method is the most recently used VR controller. Otherwise it is the mouse/touchscreen.
 
 The **first parameter** is the bot or mod that should be dragged. 
-If given a bot, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
+If given a bot while dragging, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
+If given a bot when not dragging, then that bot's <TagLink tag='@onDrag'/> and <TagLink tag='@onDrop'/> will be called.
 
 #### Examples:
 
