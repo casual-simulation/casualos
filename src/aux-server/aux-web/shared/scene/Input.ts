@@ -1522,7 +1522,7 @@ export class Input {
 
     private async _setupControllerMesh(controller: ControllerData) {
         let mesh: WebXRControllerMesh = controller.mesh;
-        this._game.getScene().add(mesh.group);
+        this._game.getMainCameraRig().cameraParent.add(mesh.group);
         const motionController = await createMotionController(
             controller.inputSource
         );
@@ -1654,11 +1654,20 @@ export class Input {
             this._xrReferenceSpace
         );
         copyPose(pose, controller.ray);
+        if (controller.mesh.group.parent) {
+            const worldMatrix = controller.mesh.group.parent.matrixWorld;
+            const obj = controller.ray;
+            obj.matrix.premultiply(worldMatrix);
+            obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
+            obj.updateMatrixWorld();
+        }
     }
 
     private _disposeController(controller: ControllerData) {
         if (controller.mesh) {
-            this._game.getScene().remove(controller.mesh.group);
+            if (controller.mesh.group.parent) {
+                controller.mesh.group.parent.remove(controller.mesh.group);
+            }
             controller.mesh.unsubscribe();
         }
     }
