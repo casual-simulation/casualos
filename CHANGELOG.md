@@ -17,6 +17,7 @@
 -   Fixed the dataPortal to always return raw tag values unless they are formulas.
     -   Issue with returning incorrect JSON data was caused by the built-in CasualOS array parsing.
     -   This fixes it by skipping any parsing of the data.
+-   Fixed an issue where keyboard states would not be reset when the player removed focus from the story.
 
 ## V1.2.4
 
