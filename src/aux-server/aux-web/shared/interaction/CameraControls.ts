@@ -137,6 +137,7 @@ export class CameraControls {
     private dollyStart = new Vector2();
     private dollyEnd = new Vector2();
     private dollyDelta = new Vector2();
+    private dollyBegin = new Vector2();
 
     private sphereRadiusSetter: number = 10;
     private zoomSetValue: number = 10;
@@ -370,6 +371,7 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
+            const currentZoom = this._camera.zoom;
             if (this.viewport.name != 'inventory') {
                 this._camera.zoom = Math.max(
                     this.minZoom,
@@ -381,6 +383,9 @@ export class CameraControls {
                     Math.min(191, this._camera.zoom * dollyScale)
                 );
             }
+
+            this._dollyPan(currentZoom);
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
@@ -414,6 +419,7 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale *= dollyScale;
         } else {
+            const currentZoom = this._camera.zoom;
             if (this.viewport.name != 'inventory') {
                 this._camera.zoom = Math.max(
                     this.minZoom,
@@ -426,9 +432,31 @@ export class CameraControls {
                 );
             }
 
+            this._dollyPan(currentZoom);
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
+    }
+
+    private _dollyPan(currentZoom: number) {
+        const element = this._game.gameView.gameView;
+        const centerX = element.clientWidth / 2;
+        const centerY = element.clientHeight / 2;
+        const offsetX = this.dollyBegin.x - centerX;
+        const offsetY = this.dollyBegin.y - centerY;
+        const currentX = offsetX * currentZoom;
+        const currentY = offsetY * currentZoom;
+        const nextX = offsetX * this._camera.zoom;
+        const nextY = offsetY * this._camera.zoom;
+
+        const deltaX = currentX - nextX;
+        const deltaY = currentY - nextY;
+
+        const normalizedDeltaX = deltaX / currentZoom;
+        const normalizedDeltaY = deltaY / currentZoom;
+
+        this.pan(normalizedDeltaX, normalizedDeltaY);
     }
 
     public saveCameraState() {
@@ -615,6 +643,10 @@ export class CameraControls {
                     const pagePosB = input.getTouchPagePos(1);
                     const distance = pagePosA.distanceTo(pagePosB);
                     this.dollyStart.set(0, distance);
+                    this.dollyBegin.set(
+                        (pagePosA.x + pagePosB.x) / 2,
+                        (pagePosA.y + pagePosB.y) / 2
+                    );
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
                 if (this.enableRotate) {
@@ -679,6 +711,8 @@ export class CameraControls {
             let wheelData = input.getWheelData();
             let zoomScale =
                 Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
+            this.dollyStart.copy(input.getMouseClientPos());
+            this.dollyBegin.copy(this.dollyStart);
             if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
             else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
         } else if (
@@ -722,6 +756,7 @@ export class CameraControls {
             this.setRot = false;
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
+            this.dollyBegin.copy(this.dollyStart);
             this.state = STATE.DOLLY;
         } else if (
             input.getWheelMoved() &&
