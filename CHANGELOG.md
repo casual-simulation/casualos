@@ -9,6 +9,8 @@
 -   Added the `pageCameraPositionOffset[X,Y,Z]`, `inventoryCameraPositionOffset[X,Y,Z]`, `pageCameraRotationOffset[X,Y,Z]`, and `inventoryCameraRotationOffset[X,Y,Z]` tags.
     -   These can be used to move the camera apart from the player's input.
     -   The position offset tags are especially useful for warping the player around in VR.
+-   Added the ability to use the dynamic `import()` keyword to import arbitrary JavaScript modules.
+    -   Useful with https://www.skypack.dev/ to import modules from [NPM](https://www.npmjs.com/).
 
 ## V1.2.4
 
