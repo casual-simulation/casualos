@@ -12,6 +12,12 @@
 -   Added the ability to use the dynamic `import()` keyword to import arbitrary JavaScript modules.
     -   Useful with https://www.skypack.dev/ to import modules from [NPM](https://www.npmjs.com/).
 
+### :bug: Bug Fixes
+
+-   Fixed the dataPortal to always return raw tag values unless they are formulas.
+    -   Issue with returning incorrect JSON data was caused by the built-in CasualOS array parsing.
+    -   This fixes it by skipping any parsing of the data.
+
 ## V1.2.4
 
 #### Date: 8/26/2020
