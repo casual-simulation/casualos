@@ -11,6 +11,8 @@
     -   The position offset tags are especially useful for warping the player around in VR.
 -   Added the ability to use the dynamic `import()` keyword to import arbitrary JavaScript modules.
     -   Useful with https://www.skypack.dev/ to import modules from [NPM](https://www.npmjs.com/).
+-   Added the ability to use `player.replaceDragBot()` even when not dragging.
+-   Improved the camera zoom functionality to zoom the camera towards and away from the mouse.
 
 ### :bug: Bug Fixes
 
