@@ -2421,6 +2421,24 @@ describe('AuxLibrary', () => {
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
             });
+
+            it('should convert the given bot to a copiable value', () => {
+                uuidMock.mockReturnValueOnce('task1');
+                bot1.tags.abc = true;
+                const action: any = library.api.server.setupStory('channel', {
+                    botTag: bot1,
+                });
+                const expected = remote(
+                    setupStory('channel', {
+                        botTag: createBot(bot1.id, bot1.tags),
+                    }),
+                    undefined,
+                    undefined,
+                    'task1'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('server.exportGpio()', () => {

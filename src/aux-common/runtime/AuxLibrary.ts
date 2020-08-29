@@ -1544,7 +1544,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setupStory(story: string, botOrMod?: Mod) {
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcSetupStory(story, context.unwrapBot(botOrMod)),
+            calcSetupStory(story, convertToCopiableValue(botOrMod)),
             undefined,
             undefined,
             task.taskId
