@@ -1476,6 +1476,68 @@ declare interface LocalFormAnimationAction {
     animation: number | string;
 }
 
+declare type TweenType = 'position' | 'rotation';
+
+declare type EaseType = 'linear' | 'quadratic' | 'cubic' | 'quartic' | 'quintic' | 'sinusoidal' | 'exponential' | 'circular' | 'elastic';
+
+declare type EaseMode = 'in' | 'out' | 'inout';
+
+declare interface Easing {
+    type: EaseType;
+    mode: EaseMode;
+}
+
+/**
+ * Defines an event that runs a tween locally.
+ */
+declare interface LocalTweenAction extends Action {
+    type: 'local_tween';
+
+    /**
+     * The bot to run the tween on.
+     */
+    botId: string;
+
+    /**
+     * The dimension that the bot should be tweened in.
+     */
+    dimension: string;
+
+    /**
+     * The type of the tween.
+     */
+    tweenType: TweenType;
+
+    /**
+     * The easing that should be used.
+     */
+    easing: Easing;
+}
+
+/**
+ * Defines an event that runs a position tween locally.
+ */
+declare interface LocalPositionTweenAction extends LocalTweenAction {
+    tweenType: 'position';
+
+    /**
+     * The target position of the tween.
+     */
+    position: { x?: number, y?: number, z?: number };
+}
+
+/**
+ * Defines an event that runs a rotation tween locally.
+ */
+declare interface LocalRotationTweenAction extends LocalTweenAction {
+    tweenType: 'rotation';
+
+    /**
+     * The target rotation of the tween.
+     */
+    rotation: { x?: number, y?: number, z?: number };
+}
+
 /**
  * Defines an event that enables AR on the device.
  */
@@ -3547,5 +3609,33 @@ declare global {
             bot: Bot | string,
             animation: string | number
         ): LocalFormAnimationAction;
+
+        /**
+         * Tweens the position of the given bot.
+         * @param bot The bot or bot ID to tween.
+         * @param dimension The dimension that the bot should be tweened in.
+         * @param position The position that the bot should be tweened to.
+         * @param easing The easing that should be used for the tween.
+         */
+        localPositionTween(
+            bot: Bot | string,
+            dimension: string,
+            position: { x?: number, y?: number, z?: number },
+            easing?: Easing
+        ): LocalPositionTweenAction;
+
+        /**
+         * Tweens the rotation of the given bot.
+         * @param bot The bot or bot ID to tween.
+         * @param dimension The dimension that the bot should be tweened in.
+         * @param rotation The rotation that the bot should be tweened to.
+         * @param easing The easing that should be used for the tween.
+         */
+        localRotationTween(
+            bot: Bot | string,
+            dimension: string,
+            rotation: { x?: number, y?: number, z?: number },
+            easing?: Easing
+        ): LocalRotationTweenAction;
     };
 }

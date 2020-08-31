@@ -56,6 +56,8 @@ import {
     createCertificate as calcCreateCertificate,
     signTag as calcSignTag,
     revokeCertificate as calcRevokeCertificate,
+    localPositionTween as calcLocalPositionTween,
+    localRotationTween as calcLocalRotationTween,
     clearSpace,
     loadBots,
     BotAction,
@@ -128,6 +130,9 @@ import {
     rpioSPITransferPin,
     rpioSPIWritePin,
     rpioSPIEndPin,
+    Easing,
+    LocalPositionTweenAction,
+    LocalRotationTweenAction,
 } from '../bots';
 import sortBy from 'lodash/sortBy';
 import every from 'lodash/every';
@@ -493,6 +498,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             experiment: {
                 localFormAnimation,
+                localPositionTween,
+                localRotationTween,
             },
 
             math: {
@@ -2637,6 +2644,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         animation: string | number
     ): LocalFormAnimationAction {
         return addAction(calcLocalFormAnimation(getID(bot), animation));
+    }
+
+    /**
+     * Tweens the position of the given bot.
+     * @param bot The bot or bot ID to tween.
+     * @param dimension The dimension that the bot should be tweened in.
+     * @param position The position that the bot should be tweened to.
+     * @param easing The easing that should be used for the tween.
+     */
+    function localPositionTween(
+        bot: Bot | string,
+        dimension: string,
+        position: { x: number; y: number; z?: number },
+        easing?: Easing
+    ): LocalPositionTweenAction {
+        return addAction(
+            calcLocalPositionTween(getID(bot), dimension, position, easing)
+        );
+    }
+
+    /**
+     * Tweens the rotation of the given bot.
+     * @param bot The bot or bot ID to tween.
+     * @param dimension The dimension that the bot should be tweened in.
+     * @param rotation The rotation that the bot should be tweened to.
+     * @param easing The easing that should be used for the tween.
+     */
+    function localRotationTween(
+        bot: Bot | string,
+        dimension: string,
+        rotation: { x: number; y: number; z?: number },
+        easing?: Easing
+    ): LocalRotationTweenAction {
+        return addAction(
+            calcLocalRotationTween(getID(bot), dimension, rotation, easing)
+        );
     }
 
     /**

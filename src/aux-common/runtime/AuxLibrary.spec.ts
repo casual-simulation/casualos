@@ -111,6 +111,8 @@ import {
     setSpacePassword,
     bufferSound,
     cancelSound,
+    localPositionTween,
+    localRotationTween,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4089,6 +4091,110 @@ describe('AuxLibrary', () => {
                     'test'
                 );
                 const expected = localFormAnimation('abc', 'test');
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.localPositionTween()', () => {
+            it('should emit a LocalPositionTweenAction', () => {
+                const action = library.api.experiment.localPositionTween(
+                    bot1,
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                const expected = localPositionTween(
+                    bot1.id,
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing a bot ID directly', () => {
+                const action = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default the easing to linear inout', () => {
+                const action = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.localRotationTween()', () => {
+            it('should emit a LocalRotationTweenAction', () => {
+                const action = library.api.experiment.localRotationTween(
+                    bot1,
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                const expected = localRotationTween(
+                    bot1.id,
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support passing a bot ID directly', () => {
+                const action = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'quadratic', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default the easing to linear inout', () => {
+                const action = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' }
+                );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

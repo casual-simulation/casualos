@@ -364,6 +364,14 @@ export abstract class Simulation3D extends Object3D
             for (let b of bots) {
                 b.localEvent(e, calc);
             }
+        } else if (e.type === 'local_tween') {
+            const calc = this._currentContext;
+            for (let dim of this.dimensions) {
+                const b = dim.getBotInDimension(e.dimension, e.botId);
+                if (b) {
+                    b.localEvent(e, calc);
+                }
+            }
         }
     }
 

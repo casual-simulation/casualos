@@ -59,6 +59,7 @@ import {
     Simulation,
 } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
+import TWEEN from '@tweenjs/tween.js';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -906,6 +907,7 @@ export class PlayerGame extends Game {
 
     protected frameUpdate(xrFrame?: any) {
         super.frameUpdate(xrFrame);
+        TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
