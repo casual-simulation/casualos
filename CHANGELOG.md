@@ -13,6 +13,11 @@
     -   Useful with https://www.skypack.dev/ to import modules from [NPM](https://www.npmjs.com/).
 -   Added the ability to use `player.replaceDragBot()` even when not dragging.
 -   Improved the camera zoom functionality to zoom the camera towards and away from the mouse.
+-   Added the `experiment.localPositionTween()` and `experiment.localRotationTween()` functions.
+    -   Locally animates a bot's position/rotation using the given easing type.
+    -   During the animation, changes to the bot position will be ignored.
+    -   Once the animation is done, changes to the bot will reset the position/rotation to the value that is currently stored.
+    -   Check out the docs for detailed usage information and examples.
 
 ### :bug: Bug Fixes
 
