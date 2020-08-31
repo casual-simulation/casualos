@@ -20,6 +20,11 @@ import {
     getBotIndex,
     getBotScale,
     getAnchorPointOffset,
+    LocalActions,
+    RemoteCausalRepoPartitionImpl,
+    Easing,
+    EaseMode,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -35,6 +40,7 @@ import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale, objectForwardRay } from '../SceneUtils';
 import { Game } from '../Game';
+import TWEEN, { Tween } from '@tweenjs/tween.js';
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -61,6 +67,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _orientationMode: BotOrientationMode;
     private _rotationObj: Object3D;
     private _game: Game;
+    private _tween: any;
 
     constructor(
         bot3D: AuxBot3D,
@@ -73,6 +80,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     }
 
     botUpdated(calc: BotCalculationContext): void {
+        if (!!this._tween) {
+            return;
+        }
         const nextOrientationMode = getBotOrientationMode(calc, this.bot3D.bot);
         const anchorPointOffset = getAnchorPointOffset(calc, this.bot3D.bot);
         const gridScale = this.bot3D.gridScale;
@@ -283,7 +293,97 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             }
         }
     }
+
+    localEvent(event: LocalActions, calc: BotCalculationContext) {
+        if (event.type === 'local_tween') {
+            const currentTime = this._game.getTime().timeSinceStart * 1000;
+            if (event.tweenType === 'position') {
+                const gridScale = this.bot3D.gridScale;
+                let targetPosition = {} as any;
+                if (hasValue(event.position.x)) {
+                    targetPosition.x = event.position.x * gridScale;
+                }
+                if (hasValue(event.position.y)) {
+                    targetPosition.z = event.position.y * -gridScale;
+                }
+                if (hasValue(event.position.z)) {
+                    targetPosition.y = event.position.z * gridScale;
+                }
+                const easing = getEasing(event.easing);
+                this._tween = new TWEEN.Tween<any>(this.bot3D.position)
+                    .to(<any>targetPosition)
+                    .easing(easing)
+                    .onUpdate(() => this.bot3D.updateMatrixWorld())
+                    .onComplete(() => (this._tween = null))
+                    .start(currentTime);
+            } else if (event.tweenType === 'rotation') {
+                let targetRotation = {} as any;
+                if (hasValue(event.rotation.x)) {
+                    targetRotation.x = event.rotation.x;
+                }
+                if (hasValue(event.rotation.y)) {
+                    targetRotation.z = event.rotation.y;
+                }
+                if (hasValue(event.rotation.z)) {
+                    targetRotation.y = event.rotation.z;
+                }
+                const easing = getEasing(event.easing);
+                this._tween = new TWEEN.Tween<any>(
+                    this.bot3D.container.rotation
+                )
+                    .to(<any>targetRotation)
+                    .easing(easing)
+                    .onUpdate(() => this.bot3D.updateMatrixWorld())
+                    .onComplete(() => (this._tween = null))
+                    .start(currentTime);
+            }
+        }
+    }
+
     dispose(): void {}
+}
+
+function getEasing(easing: Easing): any {
+    switch (easing.type) {
+        case 'linear':
+        default:
+            return TWEEN.Easing.Linear.None;
+        case 'circular':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
+        case 'cubic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
+        case 'exponential':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
+        case 'elastic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
+        case 'quadratic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
+        case 'quartic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
+        case 'quintic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
+        case 'sinusoidal':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
+    }
+}
+
+function resolveEaseType(
+    mode: EaseMode,
+    val: (typeof TWEEN.Easing.Circular) | typeof TWEEN.Easing.Linear
+): any {
+    if ('None' in val) {
+        return val.None;
+    } else {
+        switch (mode) {
+            case 'in':
+                return val.In;
+            case 'out':
+                return val.Out;
+            case 'inout':
+            default:
+                return val.InOut;
+        }
+    }
 }
 
 /**

@@ -39,6 +39,7 @@ export class Input {
     private _touchListenerCounts: Map<EventTarget, number>;
     private _wheelData: WheelData;
     private _targetData: TargetData;
+    private _hasFocus: boolean;
 
     private _xrSession: XRSession;
     private _xrSubscription: Subscription;
@@ -99,6 +100,21 @@ export class Input {
      */
     get controllerRemoved(): Observable<ControllerData> {
         return this._controllerRemoved;
+    }
+
+    /**
+     * Gets the controller that is currently set as the primary.
+     * Generally, this is the most recently used controller, however if none is available then this is the first controller.
+     * Returns null if no controller is available.
+     */
+    get primaryController(): ControllerData {
+        if (this._lastPrimaryControllerData.identifier) {
+            return this._lastPrimaryControllerData;
+        } else if (this.controllers.length > 0) {
+            return this.controllers[0];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -263,6 +279,8 @@ export class Input {
             ray: new Group(),
         };
 
+        this._handleFocus = this._handleFocus.bind(this);
+        this._handleBlur = this._handleBlur.bind(this);
         this._handleMouseDown = this._handleMouseDown.bind(this);
         this._handleMouseMove = this._handleMouseMove.bind(this);
         this._handleMouseUp = this._handleMouseUp.bind(this);
@@ -292,6 +310,8 @@ export class Input {
         element.addEventListener('touchstart', this._handleTouchStart);
         document.addEventListener('keydown', this._handleKeyDown);
         document.addEventListener('keyup', this._handleKeyUp);
+        window.addEventListener('focus', this._handleFocus);
+        window.addEventListener('blur', this._handleBlur);
 
         // Context menu is only important on the game view
         this._game.gameView.gameView.addEventListener(
@@ -315,6 +335,8 @@ export class Input {
         element.removeEventListener('touchstart', this._handleTouchStart);
         document.removeEventListener('keydown', this._handleKeyDown);
         document.removeEventListener('keyup', this._handleKeyUp);
+        window.removeEventListener('focus', this._handleFocus);
+        window.removeEventListener('blur', this._handleBlur);
 
         // Context menu is only important on the game view
         this._game.gameView.gameView.removeEventListener(
@@ -971,6 +993,31 @@ export class Input {
         );
     }
 
+    private _handleFocus(event: FocusEvent) {
+        this._hasFocus = true;
+        if (this.debugLevel >= 1) {
+            console.log(
+                'focus gained. fireInputOnFrame: ' + this.time.frameCount
+            );
+        }
+    }
+
+    private _handleBlur(event: FocusEvent) {
+        this._hasFocus = false;
+        if (this.debugLevel >= 1) {
+            console.log(
+                'focus lost. fireInputOnFrame: ' + this.time.frameCount
+            );
+        }
+
+        // Reset all the keyboard keys
+        for (let key of this._keyData.values()) {
+            if (key.state.isHeldOnFrame(this.time.frameCount)) {
+                key.state.setUpFrame(this.time.frameCount);
+            }
+        }
+    }
+
     private _handleMouseDown(event: MouseEvent) {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Mouse;
@@ -1522,7 +1569,7 @@ export class Input {
 
     private async _setupControllerMesh(controller: ControllerData) {
         let mesh: WebXRControllerMesh = controller.mesh;
-        this._game.getScene().add(mesh.group);
+        this._game.getMainCameraRig().cameraParent.add(mesh.group);
         const motionController = await createMotionController(
             controller.inputSource
         );
@@ -1654,11 +1701,20 @@ export class Input {
             this._xrReferenceSpace
         );
         copyPose(pose, controller.ray);
+        if (controller.mesh.group.parent) {
+            const worldMatrix = controller.mesh.group.parent.matrixWorld;
+            const obj = controller.ray;
+            obj.matrix.premultiply(worldMatrix);
+            obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
+            obj.updateMatrixWorld();
+        }
     }
 
     private _disposeController(controller: ControllerData) {
         if (controller.mesh) {
-            this._game.getScene().remove(controller.mesh.group);
+            if (controller.mesh.group.parent) {
+                controller.mesh.group.parent.remove(controller.mesh.group);
+            }
             controller.mesh.unsubscribe();
         }
     }

@@ -1028,12 +1028,14 @@ player.toast(result);
 
 ### `player.replaceDragBot(botOrMod)`
 
-
 Replaces the bot that the user is dragging with the given bot or mod.
-Only works if called from inside a <TagLink tag='@onDrag'/> or <TagLink tag='@onAnyBotDrag'/> listen tag.
+
+If called when the user is not dragging anything, then the given bot or mod will be dragged using the current input method.
+When in VR, the current input method is the most recently used VR controller. Otherwise it is the mouse/touchscreen.
 
 The **first parameter** is the bot or mod that should be dragged. 
-If given a bot, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
+If given a bot while dragging, then that bot's <TagLink tag='@onDrag'/> will be skippped but <TagLink tag='@onDrop'/> will be called.
+If given a bot when not dragging, then that bot's <TagLink tag='@onDrag'/> and <TagLink tag='@onDrop'/> will be called.
 
 #### Examples:
 
@@ -4195,6 +4197,140 @@ The **second parameter** is the name or index of the animation that should be pl
 1. Play the "jump" animation on this bot.
 ```typescript
 experiment.localFormAnimation(this, "jump");
+```
+
+### `experiment.localPositionTween(bot, dimension, position, easing?)`
+
+Locally plays a tween that moves the given bot in the given dimension to the given position.
+Optionally allows customizing the easing of the tween.
+
+While the tween is playing, any updates to the bot's position and rotation are ignored.
+Once the tween is done playing, any change to the bot will reset the position/rotation.
+
+The **first parameter** is the bot or ID of the bot that should be tweened.
+
+The **second parameter** is the dimension that the bot should be tweened in.
+Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+
+The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+
+The **fourth parameter** is optional and is the easing options that should be used.
+It is an object with the following properties:
+
+```typescript
+let easing: {
+    /**
+     * The type of easing.
+     */
+    type: 'linear'
+        | 'quadratic'
+        | 'cubic'
+        | 'quartic'
+        | 'quintic'
+        | 'sinusoidal'
+        | 'exponential'
+        | 'circular'
+        | 'elastic';
+
+    /**
+     * Whether to apply the easing at the
+     * start (in), end (out), or start and end (inout) of the tween.
+     */
+    mode: 'in' | 'out' | 'inout';
+};
+```
+
+#### Examples:
+
+1. Tween the bot to X = 10 in the `home` dimension.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    });
+```
+
+2. Tween the bot with quadratic easing.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    },
+    {
+        type: 'quadratic',
+        mode: 'inout'
+    });
+```
+
+### `experiment.localRotationTween(bot, dimension, rotation, easing?)`
+
+Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
+Optionally allows customizing the easing of the tween.
+
+While the tween is playing, any updates to the bot's position and rotation are ignored.
+Once the tween is done playing, any change to the bot will reset the position/rotation.
+
+The **first parameter** is the bot or ID of the bot that should be tweened.
+
+The **second parameter** is the dimension that the bot should be tweened in.
+Note that the tween will only work if the given dimension is currently in the page portal or inventory portal.
+
+The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+
+The **fourth parameter** is optional and is the easing options that should be used.
+It is an object with the following properties:
+
+```typescript
+let easing: {
+    /**
+     * The type of easing.
+     */
+    type: 'linear'
+        | 'quadratic'
+        | 'cubic'
+        | 'quartic'
+        | 'quintic'
+        | 'sinusoidal'
+        | 'exponential'
+        | 'circular'
+        | 'elastic';
+
+    /**
+     * Whether to apply the easing at the
+     * start (in), end (out), or start and end (inout) of the tween.
+     */
+    mode: 'in' | 'out' | 'inout';
+};
+```
+
+#### Examples:
+
+1. Tween the bot 90 degrees around the Z axis in the `home` dimension.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    });
+```
+
+2. Tween the bot with quadratic easing.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    },
+    {
+        type: 'quadratic',
+        mode: 'inout'
+    });
 ```
 
 [listen-tag]: docs/listen-tags

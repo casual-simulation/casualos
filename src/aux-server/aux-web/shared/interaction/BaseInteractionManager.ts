@@ -8,7 +8,11 @@ import {
     Color,
 } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
+import {
+    BotCalculationContext,
+    Bot,
+    BotTags,
+} from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import flatMap from 'lodash/flatMap';
 import remove from 'lodash/remove';
@@ -44,6 +48,9 @@ import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
 import { Viewport } from '../scene/Viewport';
 import { Grid3D } from 'aux-web/aux-player/Grid3D';
+import { BaseBotDragOperation } from './DragOperation/BaseBotDragOperation';
+import { BaseModDragOperation } from './DragOperation/BaseModDragOperation';
+import { BaseClickOperation } from './ClickOperation/BaseClickOperation';
 
 interface HoveredBot {
     /**
@@ -210,6 +217,7 @@ export abstract class BaseInteractionManager {
             this.setCameraControlsEnabled(this._cameraControlsEnabled);
         }
 
+        this._updateCameraOffsets();
         this._updateCameraControls();
 
         // Detect left click.
@@ -226,6 +234,8 @@ export abstract class BaseInteractionManager {
     }
 
     protected _updatePlayerBotTags() {}
+
+    protected _updateCameraOffsets() {}
 
     protected _updateCameraControls() {
         for (let controller of this._cameraRigControllers) {
@@ -419,6 +429,55 @@ export abstract class BaseInteractionManager {
 
     clearPressedBot(inputMethodIdentifier: string) {
         return this._inputMethodMap.delete(inputMethodIdentifier);
+    }
+
+    dragBot(simulation: Simulation, bot: Bot | BotTags, dimension: string) {
+        if (
+            this._operations.some(op => {
+                const isDrag =
+                    op instanceof BaseBotDragOperation ||
+                    op instanceof BaseModDragOperation;
+                const isReplaced =
+                    op instanceof BaseClickOperation && op.replaced;
+                return isDrag || isReplaced;
+            })
+        ) {
+            // Skip because the base bot/mod drag operation should handle the event.
+            return;
+        }
+
+        const input = this._game.getInput();
+        let inputMethod: InputMethod = null;
+        if (input.currentInputType === InputType.Controller) {
+            if (input.primaryController) {
+                inputMethod = {
+                    type: 'controller',
+                    identifier: input.primaryController.identifier,
+                    controller: input.primaryController,
+                };
+            }
+        } else if (
+            input.currentInputType === InputType.Mouse ||
+            input.currentInputType === InputType.Touch
+        ) {
+            inputMethod = {
+                type: 'mouse_or_touch',
+                identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+            };
+        }
+
+        if (inputMethod) {
+            const botDragOperation = this.createBotDragOperation(
+                simulation,
+                bot,
+                dimension,
+                inputMethod
+            );
+            if (botDragOperation !== null) {
+                this.setCameraControlsEnabled(false);
+                this._operations.push(botDragOperation);
+            }
+        }
     }
 
     private _startClickingEmptySpace(inputMethod: InputMethod) {
@@ -897,6 +956,12 @@ export abstract class BaseInteractionManager {
     // Abstractions
     //
 
+    abstract createBotDragOperation(
+        simulation: Simulation,
+        bot: Bot | BotTags,
+        dimension: string,
+        controller: InputMethod
+    ): IOperation;
     abstract createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection,

@@ -1,8 +1,35 @@
 # CasualOS Changelog
 
-## V1.2.4
+## V1.2.5
 
 #### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `pageCameraPositionOffset[X,Y,Z]`, `inventoryCameraPositionOffset[X,Y,Z]`, `pageCameraRotationOffset[X,Y,Z]`, and `inventoryCameraRotationOffset[X,Y,Z]` tags.
+    -   These can be used to move the camera apart from the player's input.
+    -   The position offset tags are especially useful for warping the player around in VR.
+-   Added the ability to use the dynamic `import()` keyword to import arbitrary JavaScript modules.
+    -   Useful with https://www.skypack.dev/ to import modules from [NPM](https://www.npmjs.com/).
+-   Added the ability to use `player.replaceDragBot()` even when not dragging.
+-   Improved the camera zoom functionality to zoom the camera towards and away from the mouse.
+-   Added the `experiment.localPositionTween()` and `experiment.localRotationTween()` functions.
+    -   Locally animates a bot's position/rotation using the given easing type.
+    -   During the animation, changes to the bot position will be ignored.
+    -   Once the animation is done, changes to the bot will reset the position/rotation to the value that is currently stored.
+    -   Check out the docs for detailed usage information and examples.
+
+### :bug: Bug Fixes
+
+-   Fixed the dataPortal to always return raw tag values unless they are formulas.
+    -   Issue with returning incorrect JSON data was caused by the built-in CasualOS array parsing.
+    -   This fixes it by skipping any parsing of the data.
+-   Fixed an issue where keyboard states would not be reset when the player removed focus from the story.
+-   Fixed an issue where `server.setupStory()` would crash the deno process due to incorrectly handling deserialized data.
+
+## V1.2.4
+
+#### Date: 8/26/2020
 
 ### :rocket: Improvements
 

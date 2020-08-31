@@ -48,6 +48,13 @@ export abstract class BaseClickOperation implements IOperation {
         return this._simulation3D.simulation;
     }
 
+    /**
+     * Gets whether this click operation has been replaced by a drag operation.
+     */
+    get replaced() {
+        return !!this._dragOperation;
+    }
+
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,

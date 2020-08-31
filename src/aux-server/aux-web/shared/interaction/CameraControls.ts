@@ -78,8 +78,9 @@ export class CameraControls {
     public position0: Vector3;
     public zoom0: number;
 
-    // Offset the apply to the camera this frame.
-    public cameraOffset: Vector3 = new Vector3();
+    // Offset to apply to the camera this frame.
+    // Automatically reset once it has been applied to the camera.
+    public cameraFrameOffset: Vector3 = new Vector3();
 
     // The viewport we are applying control inside of for this camera.
     public viewport: Viewport;
@@ -136,6 +137,7 @@ export class CameraControls {
     private dollyStart = new Vector2();
     private dollyEnd = new Vector2();
     private dollyDelta = new Vector2();
+    private dollyBegin = new Vector2();
 
     private sphereRadiusSetter: number = 10;
     private zoomSetValue: number = 10;
@@ -369,6 +371,7 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
+            const currentZoom = this._camera.zoom;
             if (this.viewport.name != 'inventory') {
                 this._camera.zoom = Math.max(
                     this.minZoom,
@@ -380,6 +383,9 @@ export class CameraControls {
                     Math.min(191, this._camera.zoom * dollyScale)
                 );
             }
+
+            this._dollyPan(currentZoom);
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
@@ -413,6 +419,7 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale *= dollyScale;
         } else {
+            const currentZoom = this._camera.zoom;
             if (this.viewport.name != 'inventory') {
                 this._camera.zoom = Math.max(
                     this.minZoom,
@@ -425,9 +432,31 @@ export class CameraControls {
                 );
             }
 
+            this._dollyPan(currentZoom);
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
+    }
+
+    private _dollyPan(currentZoom: number) {
+        const element = this._game.gameView.gameView;
+        const centerX = element.clientWidth / 2;
+        const centerY = element.clientHeight / 2;
+        const offsetX = this.dollyBegin.x - centerX;
+        const offsetY = this.dollyBegin.y - centerY;
+        const currentX = offsetX * currentZoom;
+        const currentY = offsetY * currentZoom;
+        const nextX = offsetX * this._camera.zoom;
+        const nextY = offsetY * this._camera.zoom;
+
+        const deltaX = currentX - nextX;
+        const deltaY = currentY - nextY;
+
+        const normalizedDeltaX = deltaX / currentZoom;
+        const normalizedDeltaY = deltaY / currentZoom;
+
+        this.pan(normalizedDeltaX, normalizedDeltaY);
     }
 
     public saveCameraState() {
@@ -614,6 +643,10 @@ export class CameraControls {
                     const pagePosB = input.getTouchPagePos(1);
                     const distance = pagePosA.distanceTo(pagePosB);
                     this.dollyStart.set(0, distance);
+                    this.dollyBegin.set(
+                        (pagePosA.x + pagePosB.x) / 2,
+                        (pagePosA.y + pagePosB.y) / 2
+                    );
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
                 if (this.enableRotate) {
@@ -678,6 +711,8 @@ export class CameraControls {
             let wheelData = input.getWheelData();
             let zoomScale =
                 Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
+            this.dollyStart.copy(input.getMouseClientPos());
+            this.dollyBegin.copy(this.dollyStart);
             if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
             else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
         } else if (
@@ -721,6 +756,7 @@ export class CameraControls {
             this.setRot = false;
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
+            this.dollyBegin.copy(this.dollyStart);
             this.state = STATE.DOLLY;
         } else if (
             input.getWheelMoved() &&
@@ -889,8 +925,8 @@ export class CameraControls {
 
         // move target to panned location
         this.target.add(this.panOffset);
-        this.target.add(this.cameraOffset);
-        if (this.cameraOffset.length() > 0) {
+        this.target.add(this.cameraFrameOffset);
+        if (this.cameraFrameOffset.length() > 0) {
             this.currentDistX = this.target.x;
             this.currentDistY = this.target.y;
         }
@@ -912,9 +948,14 @@ export class CameraControls {
         // rotate offset back to "camera-up-vector-is-up" space
         offset.applyQuaternion(quatInverse);
 
-        position.copy(this.target).add(offset);
+        let finalTarget = this.target.clone();
+        position.copy(finalTarget).add(offset);
 
-        this._camera.lookAt(this.target);
+        if (this._camera.parent) {
+            this._camera.parent.localToWorld(finalTarget);
+        }
+
+        this._camera.lookAt(finalTarget);
 
         if (this.enableDamping === true) {
             this.sphericalDelta.theta *= 1 - this.dampingFactor;
@@ -924,7 +965,7 @@ export class CameraControls {
             this.sphericalDelta.set(0, 0, 0);
             this.panOffset.set(0, 0, 0);
         }
-        this.cameraOffset.set(0, 0, 0);
+        this.cameraFrameOffset.set(0, 0, 0);
 
         this.scale = 1;
 

@@ -37,6 +37,9 @@ import {
     enqueueAsyncError,
     PlaySoundAction,
     CancelSoundAction,
+    Bot,
+    BotTags,
+    isBot,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -56,6 +59,7 @@ import {
     Simulation,
 } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
+import TWEEN from '@tweenjs/tween.js';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -341,7 +345,7 @@ export class PlayerGame extends Game {
      * Find Inventory Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findInventorySimulation3D(sim: BrowserSimulation): InventorySimulation3D {
+    findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
         return this.inventorySimulations.find(s => s.simulation === sim);
     }
 
@@ -349,7 +353,7 @@ export class PlayerGame extends Game {
      * Find Player Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findPlayerSimulation3D(sim: BrowserSimulation): PlayerPageSimulation3D {
+    findPlayerSimulation3D(sim: Simulation): PlayerPageSimulation3D {
         return this.playerSimulations.find(s => s.simulation === sim);
     }
 
@@ -452,9 +456,38 @@ export class PlayerGame extends Game {
                     } else {
                         this.stopVR();
                     }
+                } else if (e.type === 'replace_drag_bot') {
+                    this.dragBot(playerSim3D, inventorySim3D, e.bot);
                 }
             })
         );
+    }
+
+    dragBot(
+        pageSim: PlayerPageSimulation3D,
+        inventorySim: InventorySimulation3D,
+        bot: Bot | BotTags
+    ) {
+        let dimension: string;
+        if (isBot(bot)) {
+            // Try to find the dimension that the bot is already in from the page and inventory simulations.
+            const pageBots = pageSim.findBotsById(bot.id);
+            if (pageBots.length > 0) {
+                dimension = pageSim.dimension;
+            } else {
+                const inventoryBots = inventorySim.findBotsById(bot.id);
+                if (inventoryBots.length > 0) {
+                    dimension = inventorySim.dimension;
+                }
+            }
+        }
+
+        // Default to the page portal dimension
+        if (!dimension) {
+            dimension = pageSim.dimension;
+        }
+
+        this.interaction.dragBot(pageSim.simulation, bot, dimension);
     }
 
     playAudio(sim: Simulation, event: PlaySoundAction) {
@@ -874,6 +907,7 @@ export class PlayerGame extends Game {
 
     protected frameUpdate(xrFrame?: any) {
         super.frameUpdate(xrFrame);
+        TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
