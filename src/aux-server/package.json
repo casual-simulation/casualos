@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -43,11 +43,11 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^1.2.4",
-        "@casual-simulation/aux-vm": "^1.2.4",
-        "@casual-simulation/aux-vm-browser": "^1.2.4",
-        "@casual-simulation/aux-vm-deno": "^1.2.4",
-        "@casual-simulation/aux-vm-node": "^1.2.4",
+        "@casual-simulation/aux-common": "^1.2.5",
+        "@casual-simulation/aux-vm": "^1.2.5",
+        "@casual-simulation/aux-vm-browser": "^1.2.5",
+        "@casual-simulation/aux-vm-deno": "^1.2.5",
+        "@casual-simulation/aux-vm-node": "^1.2.5",
         "@casual-simulation/causal-tree-client-socketio": "^1.2.2",
         "@casual-simulation/causal-tree-server": "^1.2.3",
         "@casual-simulation/causal-tree-server-socketio": "^1.2.3",
@@ -63,6 +63,7 @@
         "@juggle/resize-observer": "2.3.0",
         "@octokit/rest": "16.35.2",
         "@sentry/browser": "^4.4.2",
+        "@tweenjs/tween.js": "18.6.0",
         "@webxr-input-profiles/assets": "~1.0.1",
         "@webxr-input-profiles/motion-controllers": "~1.0.0",
         "acorn": "^8.0.1",
@@ -117,7 +118,6 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "^3.0.1",
-        "vue-shortkey": "^3.1.6",
-        "@tweenjs/tween.js": "18.6.0"
+        "vue-shortkey": "^3.1.6"
     }
 }
