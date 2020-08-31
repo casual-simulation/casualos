@@ -98,14 +98,14 @@ export class TweenCameraToOperation implements IOperation {
                     .multiplyScalar(0.1);
             }
 
-            this._rigControls.controls.cameraOffset.copy(dir);
+            this._rigControls.controls.cameraFrameOffset.copy(dir);
         } else {
             // This tween operation is finished.
             this._finished = true;
 
             // Set camera offset value so that camera snaps to final target destination.
             const dir = this._target.clone().sub(camPos);
-            this._rigControls.controls.cameraOffset.copy(dir);
+            this._rigControls.controls.cameraFrameOffset.copy(dir);
 
             if (this._rotValue != null) {
                 this._rigControls.controls.setRotValues = this._rotValue;

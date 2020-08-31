@@ -73,6 +73,7 @@ export class SetupChannelModule2 implements AuxModule2 {
                 );
 
                 // TODO: Rework so that other modules can be used like webhooks.
+                // TODO: Also rework to support Deno
                 const simulation = nodeSimulationForBranch(
                     this._user,
                     this._client,

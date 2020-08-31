@@ -6,6 +6,7 @@ import {
     Quaternion,
     Euler,
     Matrix4,
+    Vector2,
 } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -24,6 +25,9 @@ import {
     onPointerEnterExitArg,
     ON_ANY_POINTER_ENTER,
     ON_ANY_POINTER_EXIT,
+    calculateNumericalTagValue,
+    getBotPosition,
+    isBot,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -62,6 +66,8 @@ import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import isEqual from 'lodash/isEqual';
+import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
+import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -99,6 +105,44 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     keys: keysUp,
                 });
             }
+        }
+    }
+
+    createBotDragOperation(
+        simulation: Simulation,
+        bot: Bot | BotTags,
+        dimension: string,
+        controller: InputMethod
+    ): IOperation {
+        const pageSimulation = this._game.findPlayerSimulation3D(simulation);
+        const inventorySimulation = this._game.findInventorySimulation3D(
+            simulation
+        );
+        if (isBot(bot)) {
+            let tempPos = getBotPosition(null, bot, dimension);
+            let startBotPos = new Vector2(
+                Math.round(tempPos.x),
+                Math.round(tempPos.y)
+            );
+            let botDragOp = new PlayerBotDragOperation(
+                pageSimulation,
+                inventorySimulation,
+                this,
+                [bot],
+                dimension,
+                controller,
+                startBotPos
+            );
+            return botDragOp;
+        } else {
+            let modDragOp = new PlayerModDragOperation(
+                pageSimulation,
+                inventorySimulation,
+                this,
+                bot,
+                controller
+            );
+            return modDragOp;
         }
     }
 
@@ -330,6 +374,59 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return [mainCameraRigControls, invCameraRigControls];
     }
 
+    protected _updateCameraOffsets() {
+        for (let sim of this._game.getSimulations()) {
+            const rig = sim.getMainCameraRig();
+            const userBot = sim.simulation.helper.userBot;
+            if (!userBot) {
+                continue;
+            }
+            const [portal, gridScale] = portalInfoForSim(sim);
+
+            rig.cameraParent.position.set(
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetX`,
+                    0
+                ) * gridScale,
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetZ`,
+                    0
+                ) * gridScale,
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraPositionOffsetY`,
+                    0
+                ) * -gridScale
+            );
+            rig.cameraParent.rotation.set(
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetX`,
+                    0
+                ),
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetZ`,
+                    0
+                ),
+                calculateNumericalTagValue(
+                    null,
+                    userBot,
+                    `${portal}CameraRotationOffsetY`,
+                    0
+                )
+            );
+            rig.cameraParent.updateMatrixWorld();
+        }
+    }
+
     // This function is kinda the worst but should be fine
     // as long as performance doesn't become an issue.
     protected _updatePlayerBotTags() {
@@ -497,21 +594,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
         }
 
-        function portalInfoForSim(sim: Simulation3D) {
-            let portal: PortalType;
-            let gridScale: number;
-            if (sim instanceof PlayerPageSimulation3D) {
-                portal = 'page';
-                gridScale = sim.pageConfig.gridScale;
-            } else if (sim instanceof InventorySimulation3D) {
-                portal = 'inventory';
-                gridScale = sim.inventoryConfig.gridScale;
-            }
-            let inverseScale = 1 / gridScale;
-
-            return [portal, gridScale, inverseScale] as const;
-        }
-
         function checkInput(state: InputState, name: string, update: any) {
             if (!state) {
                 return false;
@@ -537,4 +619,19 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     ): ContextMenuAction[] {
         return null;
     }
+}
+
+function portalInfoForSim(sim: Simulation3D) {
+    let portal: PortalType;
+    let gridScale: number;
+    if (sim instanceof PlayerPageSimulation3D) {
+        portal = 'page';
+        gridScale = sim.pageConfig.gridScale;
+    } else if (sim instanceof InventorySimulation3D) {
+        portal = 'inventory';
+        gridScale = sim.inventoryConfig.gridScale;
+    }
+    let inverseScale = 1 / gridScale;
+
+    return [portal, gridScale, inverseScale] as const;
 }

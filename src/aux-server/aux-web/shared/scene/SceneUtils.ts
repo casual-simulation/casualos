@@ -656,6 +656,10 @@ export function objectForwardRay(obj: Object3D): Ray {
     return objectDirectionRay(new Vector3(0, 0, -1), obj);
 }
 
+export function objectWorldForwardRay(obj: Object3D): Ray {
+    return objectWorldDirectionRay(new Vector3(0, 0, -1), obj);
+}
+
 // The width and height of clip space
 // See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
 const clipWidth = 2;

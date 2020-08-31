@@ -63,6 +63,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
+    private _dragStartFrame: number;
 
     protected get game() {
         return this._simulation3D.game;
@@ -113,6 +114,7 @@ export abstract class BaseModDragOperation implements IOperation {
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
+        this._dragStartFrame = this.game.getTime().frameCount;
 
         if (this._controller) {
             this._lastVRControllerPose = this._controller.ray.clone();
@@ -136,11 +138,28 @@ export abstract class BaseModDragOperation implements IOperation {
         }
 
         const input = this.game.getInput();
-        const buttonHeld: boolean = this._controller
-            ? input.getControllerPrimaryButtonHeld(this._controller)
-            : input.getMouseButtonHeld(0);
+        let keepDragging = false;
+        if (this._controller) {
+            const startedAfterLastClick =
+                this._dragStartFrame >
+                this._controller.primaryInputState.getUpFrame();
 
-        if (buttonHeld) {
+            // Keep dragging if the button is held or if we started dragging after the last click finished.
+            // This will make sure that we keep dragging even if the operation started when the button was not being held.
+            keepDragging =
+                startedAfterLastClick ||
+                input.getControllerPrimaryButtonHeld(this._controller);
+        } else {
+            const state = input.getButtonInputState(0);
+            const startedAfterLastClick =
+                !state || this._dragStartFrame > state.getUpFrame();
+
+            // Keep dragging if the button is held or if we started dragging after the last click finished.
+            // This will make sure that we keep dragging even if the operation started when the button was not being held.
+            keepDragging = startedAfterLastClick || input.getMouseButtonHeld(0);
+        }
+
+        if (keepDragging) {
             let shouldUpdateDrag: boolean;
 
             if (this._controller) {

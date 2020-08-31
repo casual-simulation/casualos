@@ -49,7 +49,13 @@ export interface ObjectValueNode extends Acorn.Node {
     identifier: Acorn.Node;
 }
 
-const exJsGenerator = Object.assign({}, baseGenerator, {});
+const exJsGenerator = Object.assign({}, baseGenerator, {
+    ImportExpression: function(node: any, state: any) {
+        state.write('import(');
+        this[node.source.type](node.source, state);
+        state.write(')');
+    },
+});
 
 export interface TranspilerMacro {
     test: RegExp;
@@ -112,7 +118,9 @@ export class Transpiler {
      */
     parse(code: string): any {
         const macroed = this.replaceMacros(code);
-        const node = this._parser.parse(macroed);
+        const node = this._parser.parse(macroed, {
+            ecmaVersion: <any>11,
+        });
         return node;
     }
 

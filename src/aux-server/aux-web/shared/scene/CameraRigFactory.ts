@@ -1,4 +1,10 @@
-import { PerspectiveCamera, OrthographicCamera, Scene, Vector3 } from 'three';
+import {
+    PerspectiveCamera,
+    OrthographicCamera,
+    Scene,
+    Vector3,
+    Group,
+} from 'three';
 import { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
@@ -19,6 +25,7 @@ export interface CameraRig {
     name: string;
     viewport: Viewport;
     mainCamera: PerspectiveCamera | OrthographicCamera;
+    cameraParent: Group;
 }
 
 export function createCameraRig(
@@ -31,6 +38,7 @@ export function createCameraRig(
         name: name,
         viewport: viewport,
         mainCamera: null,
+        cameraParent: new Group(),
     };
 
     // Setup main camera
@@ -52,7 +60,9 @@ export function createCameraRig(
         );
     }
 
-    scene.add(rig.mainCamera);
+    rig.cameraParent.add(rig.mainCamera);
+
+    scene.add(rig.cameraParent);
 
     resetCameraRigToDefaultPosition(rig);
     resizeCameraRig(rig);

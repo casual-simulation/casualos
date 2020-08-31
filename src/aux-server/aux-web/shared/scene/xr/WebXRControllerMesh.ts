@@ -14,7 +14,12 @@ import {
 } from 'three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
-import { disposeGroup, objectForwardRay } from '../SceneUtils';
+import {
+    disposeGroup,
+    objectForwardRay,
+    objectWorldDirectionRay,
+    objectWorldForwardRay,
+} from '../SceneUtils';
 import values from 'lodash/values';
 import { XRFrame, XRPose, XRSpace, XRInputSource } from './WebXRTypes';
 import { copyPose } from './WebXRHelpers';
@@ -29,6 +34,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
     inputSource: XRInputSource;
     group: Group;
 
+    private _mesh: Group;
     private _scene: Group;
     private _root: Object3D;
     private _nodes: Map<string, Object3D>;
@@ -39,10 +45,13 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this.inputSource = inputSource;
         this._nodes = new Map();
         this.group = new Group();
+        this._mesh = new Group();
         this._pointer = new PointerRay3D();
         this._dummy = new Object3D();
 
-        this.group.add(this._pointer);
+        this.group.add(this._mesh);
+        this.group.add(this._dummy);
+        this._mesh.add(this._pointer);
     }
 
     async init(controller: MotionController) {
@@ -54,7 +63,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this._scene = gltf.scene;
         this._root = this._scene;
 
-        this.group.add(this._root);
+        this._mesh.add(this._root);
         this._addTouchDots();
         this._findNodes();
     }
@@ -71,11 +80,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
             inputSource.targetRaySpace,
             referenceSpace
         );
-        copyPose(gripPose, this.group);
+        copyPose(gripPose, this._mesh);
 
         this._updateMotionControllerModel(gripPose);
         this._updatePointer(rayPose);
-        this.group.updateMatrixWorld();
+        this._mesh.updateMatrixWorld();
     }
 
     /**
@@ -92,7 +101,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
     private _updatePointer(pose: XRPose) {
         copyPose(pose, this._dummy);
-        const ray = objectForwardRay(this._dummy);
+        const ray = objectWorldForwardRay(this._dummy);
         this._pointer.ray = ray;
         this._pointer.update();
     }

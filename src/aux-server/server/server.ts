@@ -26,6 +26,7 @@ import {
     DATA_PORTAL,
     createBot,
     calculateBotValue,
+    isFormula,
 } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
@@ -696,7 +697,13 @@ export class Server {
                 simulation.index.findBotsWithTag(portal),
                 b => b.id
             );
-            const values = bots.map(b => calculateBotValue(null, b, portal));
+            const values = bots.map(b => {
+                if (isFormula(b.tags[portal])) {
+                    return calculateBotValue(null, b, portal);
+                } else {
+                    return b.tags[portal];
+                }
+            });
             const portalContentType = mime.getType(portal);
             const contentType =
                 req.query[`${DATA_PORTAL}ContentType`] ||
