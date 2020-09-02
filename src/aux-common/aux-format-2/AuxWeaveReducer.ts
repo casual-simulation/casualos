@@ -25,6 +25,7 @@ import {
     SignatureOp,
     validateSignedValue,
     tagValueHash,
+    TagMaskOp,
 } from './AuxOpTypes';
 import uuidv5 from 'uuid/v5';
 import { Bot, PartialBotsState, BotSpace } from '../bots/Bot';
@@ -71,7 +72,7 @@ function atomAddedReducer(
     if (value.type === AuxOpType.Bot) {
         return botAtomAddedReducer(atom, value, state, space);
     } else if (value.type === AuxOpType.Value) {
-        return valueAtomAddedReducer(weave, atom, value, state);
+        return valueAtomAddedReducer(weave, atom, value, state, space);
     } else if (value.type === AuxOpType.Delete) {
         return deleteAtomAddedReducer(weave, atom, value, state);
     } else if (value.type === AuxOpType.Certificate) {
@@ -117,11 +118,27 @@ function valueAtomAddedReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
     value: ValueOp,
-    state: PartialBotsState
+    state: PartialBotsState,
+    space: string
 ) {
     const [val, tag, bot] = weave.referenceChain(atom.id);
 
-    if (!tag || !bot) {
+    if (!tag) {
+        return state;
+    }
+
+    if (tag.atom.value.type === AuxOpType.TagMask) {
+        return tagMaskValueAtomAddedReducer(
+            weave,
+            atom,
+            value,
+            <WeaveNode<TagMaskOp>>tag,
+            state,
+            space
+        );
+    }
+
+    if (!bot) {
         return state;
     }
 
@@ -177,6 +194,55 @@ function valueAtomAddedReducer(
         [id]: {
             tags: {
                 [tagName]: value.value,
+            },
+        },
+    });
+    return state;
+}
+
+function tagMaskValueAtomAddedReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: ValueOp,
+    tag: WeaveNode<TagMaskOp>,
+    state: PartialBotsState,
+    space: string
+) {
+    if (!hasValue(space)) {
+        return state;
+    }
+
+    if (!hasValue(tag.atom.value.name)) {
+        return state;
+    }
+
+    const tagName = tag.atom.value.name;
+    const id = tag.atom.value.botId;
+
+    const firstValue = first(iterateCausalGroup(tag));
+    if (firstValue && firstValue.atom.hash !== atom.hash) {
+        return state;
+    }
+
+    if (!hasValue(value.value)) {
+        lodashMerge(state, {
+            [id]: {
+                masks: {
+                    [space]: {
+                        [tagName]: null as any,
+                    },
+                },
+            },
+        });
+        return state;
+    }
+
+    lodashMerge(state, {
+        [id]: {
+            masks: {
+                [space]: {
+                    [tagName]: value.value,
+                },
             },
         },
     });

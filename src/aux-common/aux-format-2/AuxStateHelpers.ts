@@ -43,6 +43,19 @@ export function apply(
         if (!!bot.signatures && Object.keys(bot.signatures).length <= 0) {
             delete bot.signatures;
         }
+        for (let space in botUpdate.masks) {
+            for (let tag in botUpdate.masks[space]) {
+                if (bot.masks[space][tag] === null) {
+                    delete bot.masks[space][tag];
+                }
+            }
+            if (Object.keys(bot.masks[space]).length <= 0) {
+                delete bot.masks[space];
+            }
+        }
+        if (!!bot.masks && Object.keys(bot.masks).length <= 0) {
+            delete bot.masks;
+        }
     }
 
     return updatedState;
