@@ -68,22 +68,22 @@ function atomAddedReducer(
     const atom: Atom<AuxOp> = result.atom;
     const value: AuxOp = atom.value;
 
-    if (value.type === AuxOpType.bot) {
+    if (value.type === AuxOpType.Bot) {
         return botAtomAddedReducer(atom, value, state, space);
-    } else if (value.type === AuxOpType.value) {
+    } else if (value.type === AuxOpType.Value) {
         return valueAtomAddedReducer(weave, atom, value, state);
-    } else if (value.type === AuxOpType.delete) {
+    } else if (value.type === AuxOpType.Delete) {
         return deleteAtomAddedReducer(weave, atom, value, state);
-    } else if (value.type === AuxOpType.certificate) {
+    } else if (value.type === AuxOpType.Certificate) {
         return certificateAtomAddedReducer(
             weave,
             <Atom<CertificateOp>>atom,
             value,
             state
         );
-    } else if (value.type === AuxOpType.revocation) {
+    } else if (value.type === AuxOpType.Revocation) {
         return revokeAtomAddedReducer(weave, atom, value, state);
-    } else if (value.type === AuxOpType.signature) {
+    } else if (value.type === AuxOpType.Signature) {
         return signatureAtomAddedReducer(weave, atom, value, state);
     }
 
@@ -125,11 +125,11 @@ function valueAtomAddedReducer(
         return state;
     }
 
-    if (bot.atom.value.type !== AuxOpType.bot) {
+    if (bot.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (tag.atom.value.type !== AuxOpType.tag) {
+    if (tag.atom.value.type !== AuxOpType.Tag) {
         return state;
     }
 
@@ -152,7 +152,7 @@ function valueAtomAddedReducer(
     }
 
     const sibling = first(iterateSiblings(firstValue));
-    if (sibling && sibling.atom.value.type === AuxOpType.value) {
+    if (sibling && sibling.atom.value.type === AuxOpType.Value) {
         lodashMerge(state, {
             [id]: {
                 signatures: {
@@ -195,7 +195,7 @@ function deleteAtomAddedReducer(
         return state;
     }
 
-    if (parent.atom.value.type === AuxOpType.bot) {
+    if (parent.atom.value.type === AuxOpType.Bot) {
         return deleteBotReducer(weave, <WeaveNode<BotOp>>parent, atom, state);
     }
 
@@ -248,7 +248,7 @@ function isCertificateChainValid(
         let signer = chain[i];
 
         // Ensure that the tree is structured properly
-        if (signer.atom.value.type !== AuxOpType.certificate) {
+        if (signer.atom.value.type !== AuxOpType.Certificate) {
             return false;
         }
 
@@ -293,7 +293,7 @@ function revokeAtomAddedReducer(
         return state;
     }
 
-    if (parent.atom.value.type === AuxOpType.certificate) {
+    if (parent.atom.value.type === AuxOpType.Certificate) {
         if (
             !isRevocationValid(
                 weave,
@@ -311,7 +311,7 @@ function revokeAtomAddedReducer(
             parent,
             state
         );
-    } else if (parent.atom.value.type === AuxOpType.signature) {
+    } else if (parent.atom.value.type === AuxOpType.Signature) {
         // The signing certificate must be the same as the one that created the signature
         if (
             !isRevocationValid(
@@ -346,7 +346,7 @@ function signatureAtomAddedReducer(
         return state;
     }
 
-    if (parent.atom.value.type !== AuxOpType.certificate) {
+    if (parent.atom.value.type !== AuxOpType.Certificate) {
         return state;
     }
 
@@ -362,11 +362,11 @@ function signatureAtomAddedReducer(
         return state;
     }
 
-    if (bot.atom.value.type !== AuxOpType.bot) {
+    if (bot.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (tag.atom.value.type !== AuxOpType.tag) {
+    if (tag.atom.value.type !== AuxOpType.Tag) {
         return state;
     }
 
@@ -413,7 +413,7 @@ function isCertDirectlyRevoked(weave: Weave<AuxOp>, cert: WeaveNode<AuxOp>) {
     // Check if the certificate has been revoked.
     for (let child of iterateChildren(cert)) {
         if (
-            child.atom.value.type === AuxOpType.revocation &&
+            child.atom.value.type === AuxOpType.Revocation &&
             isRevocationValid(
                 weave,
                 <Atom<RevocationOp>>child.atom,
@@ -436,7 +436,7 @@ function isRevocationValid(
     let signingCert: WeaveNode<CertificateOp>;
     for (let node of chain) {
         if (
-            node.atom.value.type === AuxOpType.certificate &&
+            node.atom.value.type === AuxOpType.Certificate &&
             node.atom.hash === revocation.value.certHash
         ) {
             signingCert = <WeaveNode<CertificateOp>>node;
@@ -483,21 +483,21 @@ function conflictReducer(
 
     let update = state;
 
-    if (result.loser.value.type === AuxOpType.bot) {
+    if (result.loser.value.type === AuxOpType.Bot) {
         // Iterate all the tags of the loser
         // and delete them.
         for (let node of iterateChildren(result.loserRef)) {
-            if (node.atom.value.type === AuxOpType.tag) {
+            if (node.atom.value.type === AuxOpType.Tag) {
                 deleteTag(node.atom, result.loser, update);
             }
         }
-    } else if (result.loser.value.type === AuxOpType.tag) {
+    } else if (result.loser.value.type === AuxOpType.Tag) {
         const bot = weave.getNode(result.loser.cause).atom;
 
-        if (bot.value.type === AuxOpType.bot) {
+        if (bot.value.type === AuxOpType.Bot) {
             deleteTag(result.loser, <Atom<BotOp>>bot, update);
         }
-    } else if (result.loser.value.type === AuxOpType.certificate) {
+    } else if (result.loser.value.type === AuxOpType.Certificate) {
         certificateRemovedAtomReducer(
             weave,
             result.loser,
@@ -505,14 +505,14 @@ function conflictReducer(
             result.loserRef,
             update
         );
-    } else if (result.loser.value.type === AuxOpType.revocation) {
+    } else if (result.loser.value.type === AuxOpType.Revocation) {
         revocationRemovedAtomReducer(
             weave,
             result.loser,
             result.loser.value,
             update
         );
-    } else if (result.loser.value.type === AuxOpType.signature) {
+    } else if (result.loser.value.type === AuxOpType.Signature) {
         signatureRemovedAtomReducer(
             weave,
             result.loser,
@@ -587,7 +587,7 @@ function deleteTag(
 
 function isBotDeleted(bot: WeaveNode<AuxOp>): boolean {
     const firstValue = first(iterateCausalGroup(bot));
-    return firstValue.atom.value.type === AuxOpType.delete;
+    return firstValue.atom.value.type === AuxOpType.Delete;
 }
 
 function removeAtom(
@@ -596,11 +596,11 @@ function removeAtom(
     node: WeaveNode<AuxOp>,
     state: PartialBotsState
 ) {
-    if (atom.value.type === AuxOpType.bot) {
+    if (atom.value.type === AuxOpType.Bot) {
         return deleteBot(weave, atom.value.id, state);
-    } else if (atom.value.type === AuxOpType.value) {
+    } else if (atom.value.type === AuxOpType.Value) {
         return valueRemovedAtomReducer(weave, atom, atom.value, state);
-    } else if (atom.value.type === AuxOpType.certificate) {
+    } else if (atom.value.type === AuxOpType.Certificate) {
         return certificateRemovedAtomReducer(
             weave,
             atom,
@@ -608,9 +608,9 @@ function removeAtom(
             node,
             state
         );
-    } else if (atom.value.type === AuxOpType.revocation) {
+    } else if (atom.value.type === AuxOpType.Revocation) {
         return revocationRemovedAtomReducer(weave, atom, atom.value, state);
-    } else if (atom.value.type === AuxOpType.signature) {
+    } else if (atom.value.type === AuxOpType.Signature) {
         return signatureRemovedAtomReducer(weave, atom, atom.value, state);
     } else {
         return state;
@@ -629,11 +629,11 @@ function valueRemovedAtomReducer(
         return state;
     }
 
-    if (bot.atom.value.type !== AuxOpType.bot) {
+    if (bot.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
-    if (tag.atom.value.type !== AuxOpType.tag) {
+    if (tag.atom.value.type !== AuxOpType.Tag) {
         return state;
     }
 
@@ -651,7 +651,7 @@ function valueRemovedAtomReducer(
     const firstValue = first(iterateCausalGroup(tag));
     if (
         firstValue &&
-        firstValue.atom.value.type === AuxOpType.value &&
+        firstValue.atom.value.type === AuxOpType.Value &&
         firstValue.atom.hash !== atom.hash
     ) {
         if (firstValue.atom.id.timestamp <= atom.id.timestamp) {
@@ -698,7 +698,7 @@ function certificateRemovedAtomReducer(
     });
 
     for (let child of iterateCausalGroup(node)) {
-        if (child.atom.value.type === AuxOpType.certificate) {
+        if (child.atom.value.type === AuxOpType.Certificate) {
             certificateRemovedAtomReducer(
                 weave,
                 child.atom,
@@ -706,7 +706,7 @@ function certificateRemovedAtomReducer(
                 child,
                 state
             );
-        } else if (child.atom.value.type === AuxOpType.signature) {
+        } else if (child.atom.value.type === AuxOpType.Signature) {
             signatureRemovedAtomReducer(
                 weave,
                 child.atom,
@@ -732,13 +732,13 @@ function signatureRemovedAtomReducer(
     if (val.atom.hash !== value.valueHash) {
         return state;
     }
-    if (val.atom.value.type !== AuxOpType.value) {
+    if (val.atom.value.type !== AuxOpType.Value) {
         return state;
     }
-    if (tag.atom.value.type !== AuxOpType.tag) {
+    if (tag.atom.value.type !== AuxOpType.Tag) {
         return state;
     }
-    if (bot.atom.value.type !== AuxOpType.bot) {
+    if (bot.atom.value.type !== AuxOpType.Bot) {
         return state;
     }
 
@@ -775,7 +775,7 @@ function revocationRemovedAtomReducer(
         return state;
     }
 
-    if (parent.atom.value.type === AuxOpType.certificate) {
+    if (parent.atom.value.type === AuxOpType.Certificate) {
         return certificateAtomAddedReducer(
             weave,
             <Atom<CertificateOp>>parent.atom,

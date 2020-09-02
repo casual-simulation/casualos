@@ -7,15 +7,16 @@ import stringify from 'fast-json-stable-stringify';
  * The list of operation types.
  */
 export enum AuxOpType {
-    root = 0,
-    bot = 1,
-    tag = 2,
-    value = 3,
-    delete = 4,
-    insert = 5,
-    certificate = 6,
-    revocation = 7,
-    signature = 8,
+    Root = 0,
+    Bot = 1,
+    Tag = 2,
+    Value = 3,
+    Delete = 4,
+    Insert = 5,
+    Certificate = 6,
+    Revocation = 7,
+    Signature = 8,
+    TagMask = 9,
 }
 
 /**
@@ -29,7 +30,8 @@ export type AuxOp =
     | DeleteOp
     | CertificateOp
     | SignatureOp
-    | RevocationOp;
+    | RevocationOp
+    | TagMaskOp;
 
 /**
  * Defines an interface for all the AUX atom values.
@@ -45,7 +47,7 @@ export interface AuxOpBase {
  * Defines an atom value that instructs the system to create a bot.
  */
 export interface BotOp extends AuxOpBase {
-    type: AuxOpType.bot;
+    type: AuxOpType.Bot;
 
     /**
      * Gets the ID of the bot.
@@ -54,12 +56,10 @@ export interface BotOp extends AuxOpBase {
 }
 
 /**
- * Defines an atom value that instructs the system to create or rename a tag on a bot.
- *
- * When two tags exist with the same name
+ * Defines an atom value that instructs the system to create a tag on a bot.
  */
 export interface TagOp extends AuxOpBase {
-    type: AuxOpType.tag;
+    type: AuxOpType.Tag;
 
     /**
      * The name of the tag.
@@ -71,7 +71,7 @@ export interface TagOp extends AuxOpBase {
  * Defines an atom value that serves as the root for changes to the value of a tag.
  */
 export interface ValueOp extends AuxOpBase {
-    type: AuxOpType.value;
+    type: AuxOpType.Value;
 
     /**
      * The initial value.
@@ -85,7 +85,7 @@ export interface ValueOp extends AuxOpBase {
  * When inserting into a TagOp this acts as inserting text into the name part of a tag.
  */
 export interface InsertOp extends AuxOpBase {
-    type: AuxOpType.insert;
+    type: AuxOpType.Insert;
 
     /**
      * The index that the text should be inserted into.
@@ -106,7 +106,7 @@ export interface InsertOp extends AuxOpBase {
  * If applied to an insert operation, the specified substring will be deleted from that insertion's text.
  */
 export interface DeleteOp extends AuxOpBase {
-    type: AuxOpType.delete;
+    type: AuxOpType.Delete;
 
     /**
      * The start index of the substring to delete.
@@ -125,7 +125,7 @@ export interface DeleteOp extends AuxOpBase {
  * Certificates create a chain of trust (https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to validate that specific tag values have been created by a particular certificate.
  */
 export interface CertificateOp extends AuxOpBase {
-    type: AuxOpType.certificate;
+    type: AuxOpType.Certificate;
 
     /**
      * The keypair that is stored in the certificate.
@@ -147,7 +147,7 @@ export interface CertificateOp extends AuxOpBase {
  * Defines an atom value that represents a signature applied to a value.
  */
 export interface SignatureOp extends AuxOpBase {
-    type: AuxOpType.signature;
+    type: AuxOpType.Signature;
 
     /**
      * The ID of the atom that created this signature was created for.
@@ -169,7 +169,7 @@ export interface SignatureOp extends AuxOpBase {
  * Defines an atom value that represents the revocation of a certificate.
  */
 export interface RevocationOp extends AuxOpBase {
-    type: AuxOpType.revocation;
+    type: AuxOpType.Revocation;
 
     /**
      * The ID of the certificate that created this revocation.
@@ -188,10 +188,27 @@ export interface RevocationOp extends AuxOpBase {
 }
 
 /**
+ * Defines an atom value that instructs the system to create a tag mask.
+ */
+export interface TagMaskOp extends AuxOpBase {
+    type: AuxOpType.TagMask;
+
+    /**
+     * The ID of the bot that this tag mask applies to.
+     */
+    botId: string;
+
+    /**
+     * The name of the tag.
+     */
+    name: string;
+}
+
+/**
  * Creates a bot atom op.
  */
 export function bot(id: string): BotOp {
-    return op<BotOp>(AuxOpType.bot, {
+    return op<BotOp>(AuxOpType.Bot, {
         id,
     });
 }
@@ -200,7 +217,7 @@ export function bot(id: string): BotOp {
  * Creates a tag atom op.
  */
 export function tag(name: string): TagOp {
-    return op<TagOp>(AuxOpType.tag, {
+    return op<TagOp>(AuxOpType.Tag, {
         name,
     });
 }
@@ -210,7 +227,7 @@ export function tag(name: string): TagOp {
  * @param value The initial value for the tag.
  */
 export function value(value: any): ValueOp {
-    return op<ValueOp>(AuxOpType.value, {
+    return op<ValueOp>(AuxOpType.Value, {
         value,
     });
 }
@@ -221,7 +238,7 @@ export function value(value: any): ValueOp {
  * @param text The text to insert.
  */
 export function insert(index: number, text: string): InsertOp {
-    return op<InsertOp>(AuxOpType.insert, {
+    return op<InsertOp>(AuxOpType.Insert, {
         index,
         text,
     });
@@ -232,7 +249,7 @@ export function insert(index: number, text: string): InsertOp {
  * @param index The index to insert the text at.
  */
 export function del(start?: number, end?: number): DeleteOp {
-    return op<DeleteOp>(AuxOpType.delete, {
+    return op<DeleteOp>(AuxOpType.Delete, {
         start,
         end,
     });
@@ -244,7 +261,7 @@ export function del(start?: number, end?: number): DeleteOp {
  * @param signature The signature for the certificate.
  */
 export function cert(keypair: string, signature?: string): CertificateOp {
-    return op<CertificateOp>(AuxOpType.certificate, {
+    return op<CertificateOp>(AuxOpType.Certificate, {
         keypair,
         signature: signature || null,
     });
@@ -261,7 +278,7 @@ export function sig(
     valueHash: string,
     signature: string
 ): SignatureOp {
-    return op<SignatureOp>(AuxOpType.signature, {
+    return op<SignatureOp>(AuxOpType.Signature, {
         valueId,
         valueHash,
         signature,
@@ -279,10 +296,22 @@ export function revocation(
     certHash: string,
     signature: string
 ): RevocationOp {
-    return op<RevocationOp>(AuxOpType.revocation, {
+    return op<RevocationOp>(AuxOpType.Revocation, {
         certId,
         certHash,
         signature,
+    });
+}
+
+/**
+ * Creates a tag mask op.
+ * @param botId The ID of the bot that the tag mask is for.
+ * @param name The name of the tag.
+ */
+export function tagMask(botId: string, name: string): TagMaskOp {
+    return op<TagMaskOp>(AuxOpType.TagMask, {
+        botId,
+        name,
     });
 }
 

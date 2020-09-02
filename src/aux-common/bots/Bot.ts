@@ -50,12 +50,37 @@ export interface Bot {
      * The set of signatures that the bot contains.
      */
     signatures?: BotSignatures;
+
+    /**
+     * The set of tag masks that have been applied to the bot.
+     */
+    masks?: BotTagMasks;
 }
 
+/**
+ * Defines an interface that indicates a bot was updated.
+ */
 export interface UpdatedBot {
+    /**
+     * The updated bot.
+     */
     bot: Bot;
+
+    /**
+     * The tags that were updated on the bot.
+     */
     tags: string[];
+
+    /**
+     * The signatures that were updated on the bot.
+     */
     signatures?: string[];
+
+    /**
+     * The tag masks that were updated on the bot.
+     * In each element, the first value is the space of the tag and the second is the tag name.
+     */
+    masks?: [string, string][];
 }
 
 /**
@@ -109,6 +134,20 @@ export interface ScriptTags extends PrecalculatedTags {
  */
 export interface BotSignatures {
     [hash: string]: string;
+}
+
+/**
+ * Defines an interface for a map of tag masks to tag names.
+ *
+ * Tag masks are special tags that can exist in a different space from the bot they are applied to.
+ * This makes it possible to have some local-only data applied to a shared bot for example.
+ *
+ * The actual data structure is similar to the bot tags structure except that tags are additionally
+ * split by the space that they originated from. This makes it possible to identify which space a tag came from and also
+ * prevents cross-space conflicts.
+ */
+export interface BotTagMasks {
+    [space: string]: BotTags;
 }
 
 export interface BotTags {
