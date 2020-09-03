@@ -638,6 +638,56 @@ describe('AuxWeaveReducer', () => {
                         expect(state).toEqual({});
                     }
                 );
+
+                it('should preserve other tag values when deleting a tag', () => {
+                    const tag1 = atom(
+                        atomId('a', 2),
+                        null,
+                        tagMask('test', 'abc')
+                    );
+                    const value1 = atom(atomId('a', 3), tag1, value('def'));
+                    const value2 = atom(atomId('a', 6), tag1, value(null));
+
+                    const otherTag1 = atom(
+                        atomId('a', 4),
+                        null,
+                        tagMask('test', 'test')
+                    );
+                    const otherValue1 = atom(
+                        atomId('a', 5),
+                        otherTag1,
+                        value(true)
+                    );
+
+                    state = add(tag1, value1, otherTag1, otherValue1, value2);
+
+                    expect(state).toEqual({
+                        ['test']: {
+                            masks: {
+                                [space]: {
+                                    test: true,
+                                },
+                            },
+                        },
+                    });
+                });
+
+                it('should ignore values whose direct cause is nonexistent', () => {
+                    const value1 = atom(atomId('a', 3), null, value('haha'));
+
+                    state = add(value1);
+
+                    expect(state).toEqual({});
+                });
+
+                it('should ignore values whose cause is not a tag mask', () => {
+                    const tag1 = atom(atomId('a', 2), null, tag('test2'));
+                    const value1 = atom(atomId('a', 3), tag1, value('haha'));
+
+                    state = add(tag1, value1);
+
+                    expect(state).toEqual({});
+                });
             });
         });
 
