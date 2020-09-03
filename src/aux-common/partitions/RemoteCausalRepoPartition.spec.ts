@@ -1026,7 +1026,7 @@ describe('RemoteCausalRepoPartition', () => {
                 );
                 const newBotAtom = addedAtoms.find(
                     a =>
-                        a.value.type === AuxOpType.bot &&
+                        a.value.type === AuxOpType.Bot &&
                         a.value.id === 'newBot'
                 );
 
@@ -1065,7 +1065,7 @@ describe('RemoteCausalRepoPartition', () => {
                 );
                 const oldValueAtom = addedAtoms.find(
                     a =>
-                        a.value.type === AuxOpType.value &&
+                        a.value.type === AuxOpType.Value &&
                         a.value.value === 'def'
                 );
 
