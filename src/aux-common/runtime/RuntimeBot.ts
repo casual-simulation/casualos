@@ -8,6 +8,7 @@ import {
     getBotSpace,
     createPrecalculatedBot,
     BotSignatures,
+    BotTagMasks,
 } from '../bots';
 import {
     CompiledBot,
@@ -19,6 +20,21 @@ import {
  * Defines a symbol that is used to clear changes on a runtime bot.
  */
 export const CLEAR_CHANGES_SYMBOL = Symbol('clear_changes');
+
+/**
+ * Defines a symbol that is used to set a tag mask on a runtime bot.
+ */
+export const SET_TAG_MASK_SYMBOL = Symbol('set_tag_mask');
+
+/**
+ * Defines a symbol that is used to get a tag mask on a runtime bot.
+ */
+export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
+
+/**
+ * Defines a symbol that is used to get all the tag masks on a runtime bot.
+ */
+export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -44,9 +60,19 @@ export interface RuntimeBot {
     raw: BotTags;
 
     /**
+     * The tag masks that have been applied to this bot.
+     */
+    mask: BotTags;
+
+    /**
      * The changes that have been made to the bot.
      */
     changes: BotTags;
+
+    /**
+     * The tag mask changes that have been made to the bot.
+     */
+    maskChanges: BotTagMasks;
 
     /**
      * The signatures that are on the bot.
@@ -63,6 +89,21 @@ export interface RuntimeBot {
      * A function that can clear all the changes from the runtime bot.
      */
     [CLEAR_CHANGES_SYMBOL]: () => void;
+
+    /**
+     * A function that can set a tag mask on the bot.
+     */
+    // [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
+
+    // /**
+    //  * A function that can get the value of a tag mask on the bot.
+    //  */
+    // [GET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => any;
+
+    // /**
+    //  * A function that can get the tag masks on the bot.
+    //  */
+    // [GET_TAG_MASKS_SYMBOL]: () => BotTagMasks;
 }
 
 /**
@@ -83,12 +124,49 @@ export function isRuntimeBot(bot: any): bot is RuntimeBot {
             !!bot.id &&
             typeof bot.tags === 'object' &&
             typeof bot.raw === 'object' &&
+            typeof bot.mask === 'object' &&
             typeof bot.tags.toJSON === 'function' &&
             typeof bot.listeners === 'object' &&
-            typeof bot.changes === 'object'
+            typeof bot.changes === 'object' &&
+            typeof bot.maskChanges === 'object'
         );
     }
     return false;
+}
+
+/**
+ * The space that tag masks get placed in by default.
+ */
+export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ * Listed in reverse order of where they actually end up applied.
+ */
+export const TAG_MASK_SPACE_PRIORITIES = [
+    'admin',
+    'shared',
+    'otherPlayers',
+    'player',
+    'local',
+    'tempLocal',
+] as BotSpace[];
+
+/**
+ * Flattens the given tag masks into a normal tags object.
+ * Spaces are prioritized accoring to the TAG_MASK_SPACE_PRIORITIES list.
+ * @param masks The masks to flatten.
+ */
+export function flattenTagMasks(masks: BotTagMasks): BotTags {
+    let result = {} as BotTags;
+    if (masks) {
+        for (let space of TAG_MASK_SPACE_PRIORITIES) {
+            if (!!masks[space]) {
+                Object.assign(result, masks[space]);
+            }
+        }
+    }
+    return result;
 }
 
 /**
@@ -116,6 +194,8 @@ export function createRuntimeBot(
     let rawTags: ScriptTags = <ScriptTags>{
         ...bot.tags,
     };
+    let rawMasks: BotTags = flattenTagMasks(bot.masks || {});
+    let changedMasks: BotTagMasks = {};
     const tagsProxy = new Proxy(rawTags, {
         get(target, key: string, proxy) {
             if (key === 'toJSON') {
@@ -223,6 +303,9 @@ export function createRuntimeBot(
 
     const signaturesProxy = new Proxy(bot.signatures || {}, {
         get(target, key: string, proxy) {
+            if (key in constantTags) {
+                return constantTags[<keyof typeof constantTags>key];
+            }
             return manager.getSignature(bot, key);
         },
         set(target, key: string, proxy) {
@@ -230,6 +313,40 @@ export function createRuntimeBot(
         },
         deleteProperty(target: any, key: any) {
             return true;
+        },
+    });
+    const maskProxy = new Proxy(rawMasks, {
+        get(target, key: string, proxy) {
+            return manager.getTagMask(bot, key);
+        },
+        set(target, key: string, value, proxy) {
+            if (key in constantTags) {
+                return true;
+            }
+            const space = DEFAULT_TAG_MASK_SPACE;
+            const mode = manager.updateTagMask(bot, key, space, value);
+            if (mode === RealtimeEditMode.Immediate) {
+                rawMasks[key] = value;
+                changeTagMask(key, value, space);
+            } else if (mode === RealtimeEditMode.Delayed) {
+                changeTagMask(key, value, space);
+            }
+            return true;
+        },
+        deleteProperty(target: any, key: string) {
+            return true;
+        },
+        ownKeys(target) {
+            const keys = Object.keys(flattenTagMasks(bot.masks));
+            return keys;
+        },
+        getOwnPropertyDescriptor(target, property) {
+            if (property === 'toJSON') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
+
+            const flat = flattenTagMasks(bot.masks);
+            return Reflect.getOwnPropertyDescriptor(flat, property);
         },
     });
 
@@ -250,7 +367,9 @@ export function createRuntimeBot(
         id: bot.id,
         tags: tagsProxy,
         raw: rawProxy,
+        mask: maskProxy,
         changes: changedRawTags,
+        maskChanges: changedMasks,
         listeners: listenersProxy,
         signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
@@ -294,6 +413,13 @@ export function createRuntimeBot(
     }
 
     return script;
+
+    function changeTagMask(tag: string, value: string, space: string) {
+        if (!changedMasks[space]) {
+            changedMasks[space] = {};
+        }
+        changedMasks[space][tag] = value;
+    }
 }
 
 /**
@@ -311,6 +437,20 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
     updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode;
 
     /**
+     * Updates the tag mask of the given bot.
+     * @param bot The bot.
+     * @param tag The tag that should be updated.
+     * @param space The space that the tag mask should be applied in.
+     * @param value The new tag value.
+     */
+    updateTagMask(
+        bot: CompiledBot,
+        tag: string,
+        space: any,
+        value: any
+    ): RealtimeEditMode;
+
+    /**
      * Gets the value for the given tag on the given bot.
      * @param bot The bot.
      * @param tag The tag.
@@ -323,6 +463,14 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param tag The tag.
      */
     getRawValue(bot: CompiledBot, tag: string): any;
+
+    /**
+     * Gets the raw tag mask value for the given tag.
+     * @param bot The bot.
+     * @param tag The tag.
+     * @param space The space.
+     */
+    getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode;
 
     /**
      * Gets the listener for the given bot and tag, resolving any formulas that may be present.

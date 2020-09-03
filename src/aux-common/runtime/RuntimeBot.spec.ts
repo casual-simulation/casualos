@@ -1,4 +1,12 @@
-import { BOT_SPACE_TAG, PrecalculatedBot } from '../bots';
+import {
+    BOT_SPACE_TAG,
+    PrecalculatedBot,
+    BotTagMasks,
+    TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
+    PLAYER_PARTITION_ID,
+    OTHER_PLAYERS_PARTITION_ID,
+} from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     createRuntimeBot,
@@ -7,6 +15,8 @@ import {
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
+    TAG_MASK_SPACE_PRIORITIES,
+    flattenTagMasks,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -25,6 +35,8 @@ describe('RuntimeBot', () => {
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
     let notifyChangeMock: jest.Mock;
+    let updateTagMaskMock: jest.Mock;
+    let getTagMaskMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -43,6 +55,31 @@ describe('RuntimeBot', () => {
             bot.values[tag] = value;
             bot.tags[tag] = value;
             return RealtimeEditMode.Immediate;
+        });
+
+        updateTagMaskMock = jest.fn();
+        updateTagMaskMock.mockImplementation((bot, tag, space, value) => {
+            if (!bot.masks) {
+                bot.masks = {};
+            }
+            if (!bot.masks[space]) {
+                bot.masks[space] = {};
+            }
+            bot.masks[space][tag] = value;
+            return RealtimeEditMode.Immediate;
+        });
+
+        getTagMaskMock = jest.fn();
+        getTagMaskMock.mockImplementation((bot, tag) => {
+            if (!bot.masks) {
+                return undefined;
+            }
+            for (let space in bot.masks) {
+                if (tag in bot.masks[space]) {
+                    return bot.masks[space][tag];
+                }
+            }
+            return undefined;
         });
 
         getListenerMock = jest.fn(
@@ -66,6 +103,8 @@ describe('RuntimeBot', () => {
             getListener: getListenerMock,
             getSignature: getSignatureMock,
             notifyChange: notifyChangeMock,
+            updateTagMask: updateTagMaskMock,
+            getTagMask: getTagMaskMock,
         };
         context = new MemoryGlobalContext(
             version,
@@ -194,7 +233,7 @@ describe('RuntimeBot', () => {
             expect(script.changes.abc).toEqual(null);
         });
 
-        it('should Object.keys() for tags that were added after the bot was created', () => {
+        it('should support Object.keys() for tags that were added after the bot was created', () => {
             const keys1 = Object.keys(script.tags);
             keys1.sort();
 
@@ -445,6 +484,51 @@ describe('RuntimeBot', () => {
         });
     });
 
+    describe('mask', () => {
+        it('should set the tag mask for the given tag in the tempLocal space by default', () => {
+            script.mask.abc = true;
+
+            expect(script.mask.abc).toEqual(true);
+            expect(script.maskChanges).toEqual({
+                tempLocal: {
+                    abc: true,
+                },
+            });
+        });
+
+        it('should get the tag mask from the manager', () => {
+            precalc.masks = {
+                test: {
+                    abc: true,
+                },
+            };
+
+            expect(script.mask.abc).toEqual(true);
+        });
+
+        it('should suppport Object.keys() for tags added after the runtime bot was created', () => {
+            precalc.masks = {
+                shared: {
+                    abc: 'def',
+                },
+                tempLocal: {
+                    ghi: 'jkl',
+                },
+            };
+            expect(Object.keys(script.mask)).toEqual(['abc', 'ghi']);
+        });
+
+        // it('should support the delete keyword', () => {
+        //     delete script.tags.abc;
+        //     expect(script.raw.abc).toEqual(null);
+        //     expect(manager.updateTag).toHaveBeenCalledWith(
+        //         precalc,
+        //         'abc',
+        //         null
+        //     );
+        // });
+    });
+
     describe('clear_changes', () => {
         it('should be able to clear changes from the script bot', () => {
             script.tags.abc = 123;
@@ -495,6 +579,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(true);
 
@@ -508,6 +594,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(true);
     });
@@ -520,6 +608,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -534,6 +624,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -547,6 +639,8 @@ describe('isRuntimeBot()', () => {
                 },
                 raw: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -558,6 +652,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -572,6 +668,40 @@ describe('isRuntimeBot()', () => {
                 },
                 raw: {},
                 listeners: {},
+                mask: {},
+                maskChanges: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the mask property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+                maskChanges: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the maskChanges property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function() {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+                mask: {},
             })
         ).toBe(false);
     });
@@ -586,6 +716,8 @@ describe('isRuntimeBot()', () => {
                 },
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -608,5 +740,62 @@ describe('isRuntimeBot()', () => {
 
     it('should return false when given a boolean', () => {
         expect(isRuntimeBot(true)).toBe(false);
+    });
+});
+
+describe('flattenTagMasks()', () => {
+    it('should follow the tag mask space priority list', () => {
+        let tagMasks: BotTagMasks = {
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                abc: 1,
+            },
+            [COOKIE_BOT_PARTITION_ID]: {
+                abc: 2,
+                def: 1,
+            },
+            [PLAYER_PARTITION_ID]: {
+                abc: 3,
+                def: 2,
+                ghi: 1,
+            },
+            [OTHER_PLAYERS_PARTITION_ID]: {
+                abc: 4,
+                def: 3,
+                ghi: 2,
+                jkl: 1,
+            },
+            ['shared']: {
+                abc: 5,
+                def: 4,
+                ghi: 3,
+                jkl: 2,
+                mno: 1,
+            },
+            ['admin']: {
+                abc: 6,
+                def: 5,
+                ghi: 4,
+                jkl: 3,
+                mno: 2,
+                pqr: 1,
+            },
+        };
+
+        const flat = flattenTagMasks(tagMasks);
+
+        expect(flat).toEqual({
+            abc: 1,
+            def: 1,
+            ghi: 1,
+            jkl: 1,
+            mno: 1,
+            pqr: 1,
+        });
+    });
+
+    it('should return an empty object if given undefined', () => {
+        const flat = flattenTagMasks(undefined);
+
+        expect(flat).toEqual({});
     });
 });
