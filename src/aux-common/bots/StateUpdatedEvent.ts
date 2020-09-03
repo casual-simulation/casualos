@@ -1,6 +1,7 @@
 import omitBy from 'lodash/omitBy';
 import { PrecalculatedBotsState, Bot } from './Bot';
 import { merge } from '../utils';
+import { apply } from '../aux-format-2/AuxStateHelpers';
 
 /**
  * Defines an event for state updates from the VM.
@@ -40,37 +41,7 @@ export function applyUpdates(
     update: StateUpdatedEvent
 ): PrecalculatedBotsState {
     if (currentState) {
-        let updatedState = omitBy(
-            merge(currentState, update.state),
-            val => val === null
-        );
-
-        for (let id in update.state) {
-            let botUpdate: Partial<Bot> = update.state[id];
-            if (!botUpdate) {
-                continue;
-            }
-            let bot = updatedState[id];
-            for (let tag in botUpdate.tags) {
-                if (bot.tags[tag] === null) {
-                    delete bot.tags[tag];
-                    delete bot.values[tag];
-                }
-            }
-            if (botUpdate.signatures) {
-                for (let sig in botUpdate.signatures) {
-                    if (bot.signatures[sig] === null) {
-                        delete bot.signatures[sig];
-                    }
-                }
-
-                if (Object.keys(bot.signatures).length <= 0) {
-                    delete bot.signatures;
-                }
-            }
-        }
-
-        return updatedState;
+        return apply(currentState, update.state);
     } else {
         return update.state;
     }

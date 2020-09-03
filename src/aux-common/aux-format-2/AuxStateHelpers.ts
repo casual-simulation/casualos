@@ -14,10 +14,10 @@ import { isBot } from '../bots/BotCalculations';
  * @param state The state.
  * @param update The update.
  */
-export function apply(
-    state: BotsState | PrecalculatedBotsState,
-    update: PartialBotsState | PartialPrecalculatedBotsState
-): BotsState {
+export function apply<T extends BotsState, U extends PartialBotsState>(
+    state: T,
+    update: U
+): T {
     let updatedState = merge(state, update);
 
     for (let id in update) {
