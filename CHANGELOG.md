@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where whispering to a bot that is null or undefined would end up sending a shout to all bots.
+
 ## V1.2.5
 
 #### Date: 8/31/2020
