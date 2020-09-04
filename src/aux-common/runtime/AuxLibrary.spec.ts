@@ -5345,13 +5345,12 @@ describe('AuxLibrary', () => {
             expect(context.errors).toEqual([new Error('abc')]);
         });
 
-        it('should send a onListen whisper to all the targeted bots', () => {
+        it('should send a onListen whisper to all the listening bots', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
                 throw new Error('abc');
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -5363,12 +5362,12 @@ describe('AuxLibrary', () => {
                 that: 123,
                 responses: [undefined, undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3, bot4],
-                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
             };
             expect(onListen1).toBeCalledWith(expected);
             expect(onListen2).toBeCalledWith(expected);
             expect(onListen3).toBeCalledWith(expected);
-            expect(onListen4).toBeCalledWith(expected);
+            expect(onListen4).not.toBeCalledWith(expected);
         });
 
         it('should send a onAnyListen shout', () => {
@@ -5384,9 +5383,14 @@ describe('AuxLibrary', () => {
             const expected = {
                 name: 'sayHello',
                 that: 123,
-                responses: [undefined, undefined, undefined] as any[],
+                responses: [
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                ] as any[],
                 targets: [bot1, bot2, bot3, bot4],
-                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
             };
             expect(onAnyListen4).toBeCalledWith(expected);
         });
@@ -5540,7 +5544,6 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
                 throw new Error('abc');
             }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
@@ -5553,11 +5556,11 @@ describe('AuxLibrary', () => {
                 that: 123,
                 responses: [undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot3], // should exclude erroring listeners
+                listeners: [bot1, bot2], // should exclude erroring listeners
             };
             expect(onListen1).toBeCalledWith(expected);
             expect(onListen2).toBeCalledWith(expected);
-            expect(onListen3).toBeCalledWith(expected);
+            expect(onListen3).not.toBeCalledWith(expected);
             expect(onListen4).not.toBeCalled();
         });
 
@@ -5574,9 +5577,9 @@ describe('AuxLibrary', () => {
             const expected = {
                 name: 'sayHello',
                 that: 123,
-                responses: [undefined, undefined] as any[],
+                responses: [undefined, undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot3], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
             };
             expect(onAnyListen4).toBeCalledWith(expected);
         });

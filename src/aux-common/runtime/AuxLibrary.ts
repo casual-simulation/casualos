@@ -3770,12 +3770,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     __energyCheck();
                 }
                 try {
-                    // TODO: Handle exceptions
-                    results.push(listener(arg));
-                    listeners.push(bot);
+                    const result = listener(arg);
+                    results.push(result);
                 } catch (ex) {
                     context.enqueueError(ex);
+                    results.push(undefined);
                 }
+                listeners.push(bot);
             }
         }
 
@@ -3787,7 +3788,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', targets, listenArg, false);
+            event('onListen', listeners, listenArg, false);
             event('onAnyListen', null, listenArg, false);
         }
 
