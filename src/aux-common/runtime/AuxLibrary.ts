@@ -3730,6 +3730,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         arg?: any,
         sendListenEvents: boolean = true
     ) {
+        __energyCheck();
         let ids = !!bots
             ? bots.map(bot => {
                   return !!bot

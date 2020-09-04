@@ -132,6 +132,7 @@ import { shuffle } from 'lodash';
 import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { tagValueHash } from '../aux-format-2';
+import { RanOutOfEnergyError } from './AuxResults';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -5389,6 +5390,13 @@ describe('AuxLibrary', () => {
             };
             expect(onAnyListen4).toBeCalledWith(expected);
         });
+
+        it('should perform an energy check', () => {
+            context.energy = 1;
+            expect(() => {
+                library.api.shout('sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
     });
 
     describe('whisper()', () => {
@@ -5568,6 +5576,13 @@ describe('AuxLibrary', () => {
                 expect(sayHello3).not.toBeCalled();
             }
         );
+
+        it('should perform an energy check', () => {
+            context.energy = 1;
+            expect(() => {
+                library.api.whisper(bot1, 'sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
     });
 
     describe('player.inSheet()', () => {
