@@ -703,6 +703,48 @@ describe('AuxRuntime', () => {
                     ],
                 ]);
             });
+
+            it('should not reset the context energy', async () => {
+                runtime.context.energy = 3;
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotAdded: `@player.toast("Added 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotAdded: `@player.toast("Added 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(2);
+            });
+
+            it('should not crash when running out of energy', async () => {
+                runtime.context.energy = 1;
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotAdded: `@player.toast("Added 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotAdded: `@player.toast("Added 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(0);
+            });
         });
 
         describe('onAnyBotsAdded', () => {
@@ -787,6 +829,48 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+
+            it('should not reset the context energy', async () => {
+                runtime.context.energy = 3;
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsAdded: `@player.toast("Added 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsAdded: `@player.toast("Added 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(2);
+            });
+
+            it('should not crash when running out of energy', async () => {
+                runtime.context.energy = 1;
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsAdded: `@player.toast("Added 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsAdded: `@player.toast("Added 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(0);
             });
         });
 
@@ -1052,6 +1136,50 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should not reset the context energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                    }),
+                ]);
+
+                runtime.context.energy = 2;
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(1);
+            });
+
+            it('should not crash when running out of energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                        onAnyBotsRemoved: `@player.toast(that.botIDs)`,
+                    }),
+                ]);
+
+                runtime.context.energy = 1;
+                runtime.botsRemoved(['test1', 'test2']);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(0);
             });
         });
     });
@@ -1672,6 +1800,86 @@ describe('AuxRuntime', () => {
                     ],
                 ]);
             });
+
+            it('should not reset the context energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotChanged: `@player.toast("Changed 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotChanged: `@player.toast("Changed 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.context.energy = 3;
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            onBotChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi1',
+                            onBotChanged: `@player.toast("Changed 2!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                // One separate shout per individual bot listener
+                expect(runtime.context.energy).toBe(1);
+            });
+
+            it('should not crash when running out of energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onBotChanged: `@player.toast("Changed 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onBotChanged: `@player.toast("Changed 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.context.energy = 1;
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            onBotChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi1',
+                            onBotChanged: `@player.toast("Changed 2!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                // One separate shout per individual bot listener
+                expect(runtime.context.energy).toBe(0);
+            });
         });
 
         describe('onAnyBotsChanged', () => {
@@ -1764,6 +1972,85 @@ describe('AuxRuntime', () => {
                         }),
                     ],
                 ]);
+            });
+
+            it('should not reset the context energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.context.energy = 2;
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi1',
+                            onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                // One shout for all listeners
+                expect(runtime.context.energy).toBe(1);
+            });
+
+            it('should not crash when running out of energy', async () => {
+                runtime.botsAdded([
+                    createBot('test1', {
+                        abc: 'def',
+                        onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                    }),
+                    createBot('test2', {
+                        abc: 'ghi',
+                        onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                    }),
+                    createBot('test3', {
+                        abc: '999',
+                    }),
+                ]);
+
+                runtime.context.energy = 1;
+
+                runtime.botsUpdated([
+                    {
+                        bot: createBot('test1', {
+                            abc: 'def1',
+                            onAnyBotsChanged: `@player.toast("Changed 1!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                    {
+                        bot: createBot('test2', {
+                            abc: 'ghi1',
+                            onAnyBotsChanged: `@player.toast("Changed 2!")`,
+                        }),
+                        tags: ['abc'],
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.context.energy).toBe(0);
             });
         });
 

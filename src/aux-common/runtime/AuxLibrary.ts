@@ -3745,6 +3745,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
+        let checkedEnergy = false;
 
         for (let id of ids) {
             if (!id) {
@@ -3764,13 +3765,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             let listener = bot.listeners[tag];
             if (listener) {
+                if (!checkedEnergy) {
+                    checkedEnergy = true;
+                    __energyCheck();
+                }
                 try {
-                    // TODO: Handle exceptions
-                    results.push(listener(arg));
-                    listeners.push(bot);
+                    const result = listener(arg);
+                    results.push(result);
                 } catch (ex) {
                     context.enqueueError(ex);
+                    results.push(undefined);
                 }
+                listeners.push(bot);
             }
         }
 
@@ -3782,7 +3788,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', targets, listenArg, false);
+            event('onListen', listeners, listenArg, false);
             event('onAnyListen', null, listenArg, false);
         }
 

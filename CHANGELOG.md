@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V1.2.7
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed `@onListen` to only be sent to bots which have a listener for the shout/whisper.
+    -   Previously `@onListen` would be sent to all bots that were targeted by the shout/whisper.
+-   Changed `shout()` and `whisper()` to cost 1 energy point.
+    -   This helps prevent infinite loops.
+    -   The energy point is only deducted if a bot has a listener for the event.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `onBotAdded`, `onAnyBotsAdded`, `onAnyBotsRemoved`, `onBotChanged`, and `onAnyBotsChanged` would reset the energy counter.
+
 ## V1.2.6
 
 #### Date: 9/4/2020
