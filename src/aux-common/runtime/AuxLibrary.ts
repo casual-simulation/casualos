@@ -168,6 +168,7 @@ export interface AuxLibrary {
             eventName: string,
             arg?: any
         ): any[];
+        shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
     };
@@ -3563,6 +3564,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bots = bot;
         } else if (hasValue(bot)) {
             bots = [bot];
+        } else {
+            return [];
         }
 
         return event(eventName, bots, arg);
