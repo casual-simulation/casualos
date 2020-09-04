@@ -386,7 +386,9 @@ export class AuxRuntime
             arg = err;
         }
         const { result, actions, errors } = this._batchScriptResults(() => {
-            const results = this._library.api.whisper(botIds, eventName, arg);
+            const results = hasValue(botIds)
+                ? this._library.api.whisper(botIds, eventName, arg)
+                : this._library.api.shout(eventName, arg);
 
             return results;
         }, batch);

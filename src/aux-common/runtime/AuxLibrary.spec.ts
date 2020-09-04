@@ -5549,6 +5549,25 @@ describe('AuxLibrary', () => {
             library.api.whisper([bot1, null], 'sayHello');
             expect(sayHello1).toBeCalledTimes(1);
         });
+
+        const nullCases = [
+            ['null', null],
+            ['empty string', ''],
+            ['undefined', undefined],
+        ];
+        it.each(nullCases)(
+            'should do nothing when given a %s bot',
+            (desc, bot) => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+                library.api.whisper(bot, 'sayHello');
+
+                expect(sayHello1).not.toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            }
+        );
     });
 
     describe('player.inSheet()', () => {
