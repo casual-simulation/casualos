@@ -75,7 +75,7 @@ $ ./install-aux.sh
 
 You're done!
 
-To access your AUX, simply visit `http://{your_ip_address}/?auxUniverse=test&auxPagePortal=home` in a web browser.
+To access your AUX, simply visit `http://{your_ip_address}` in a web browser.
 
 ## Configuration
 
@@ -94,6 +94,12 @@ The AUX Server Docker image can be configured using the following environment va
 -   `SANDBOX_TYPE`: The type of sandboxing that should be used to separate AUX Scripts from the host environment. Possible options are `none` and `deno`. `none` provides no sandboxing and therefore no security guarentees. `deno` uses the [Deno](https://deno.land/) runtime. Defaults to `none` while the sandbox is in testing.
 -   `STAGE_TYPE`: The type of stage store that should be used for atoms that have not yet been committed. Possible options are `mongodb` and `redis`. `mongodb` uses MongoDB to store atoms while `redis` uses Redis. Note that `redis` is not persistent which makes data loss more likely. Defaults to `redis`.
 -   `GPIO`: Whether to enable GPIO support. Enabled by default on ARM. Disabled by default otherwise.
+
+## Security Note
+
+In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.
+
+Therefore, it is highly recommended to isolate the web server from other sensitive networks and components to ensure malicious scripts cannot infect them.
 
 [docker]: https://www.docker.com/
 [docker-install]: https://docs.docker.com/install/
