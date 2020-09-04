@@ -3730,7 +3730,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         arg?: any,
         sendListenEvents: boolean = true
     ) {
-        __energyCheck();
         let ids = !!bots
             ? bots.map(bot => {
                   return !!bot
@@ -3746,6 +3745,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
+        let checkedEnergy = false;
 
         for (let id of ids) {
             if (!id) {
@@ -3765,6 +3765,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             let listener = bot.listeners[tag];
             if (listener) {
+                if (!checkedEnergy) {
+                    checkedEnergy = true;
+                    __energyCheck();
+                }
                 try {
                     // TODO: Handle exceptions
                     results.push(listener(arg));

@@ -5392,9 +5392,38 @@ describe('AuxLibrary', () => {
         });
 
         it('should perform an energy check', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             context.energy = 1;
             expect(() => {
                 library.api.shout('sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        it('should only take 1 energy for multiple listeners', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 2;
+            library.api.shout('sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should not perform an energy check if there are no listeners', () => {
+            context.energy = 1;
+            library.api.shout('sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should run out of energy when listeners shout to each other', () => {
+            const first = (bot1.listeners.first = jest.fn(() => {
+                library.api.shout('second');
+            }));
+            const second = (bot2.listeners.second = jest.fn(() => {
+                library.api.shout('first');
+            }));
+            context.energy = 20;
+            expect(() => {
+                library.api.shout('first');
             }).toThrowError(new RanOutOfEnergyError());
         });
     });
@@ -5578,9 +5607,37 @@ describe('AuxLibrary', () => {
         );
 
         it('should perform an energy check', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             context.energy = 1;
             expect(() => {
                 library.api.whisper(bot1, 'sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        it('should only take 1 energy for multiple listeners', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 2;
+            library.api.whisper([bot1, bot2], 'sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should not perform an energy check if there are no listeners', () => {
+            context.energy = 1;
+            library.api.whisper(bot1, 'sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should run out of energy when listeners shout to each other', () => {
+            const first = (bot1.listeners.first = jest.fn(() => {
+                library.api.whisper(bot2, 'second');
+            }));
+            const second = (bot2.listeners.second = jest.fn(() => {
+                library.api.whisper(bot1, 'first');
+            }));
+            context.energy = 20;
+            expect(() => {
+                library.api.whisper(bot1, 'first');
             }).toThrowError(new RanOutOfEnergyError());
         });
     });
