@@ -1488,6 +1488,21 @@ declare interface Easing {
 }
 
 /**
+ * Defines the set of possible options for tweens.
+ */
+declare interface TweenOptions {
+    /**
+     * The easing type and mode that the tween should use.
+     */
+    easing?: Easing;
+
+    /**
+     * The amount of time that the tween should take in seconds.
+     */
+    duration?: number;
+}
+
+/**
  * Defines an event that runs a tween locally.
  */
 declare interface LocalTweenAction extends Action {
@@ -3615,13 +3630,13 @@ declare global {
          * @param bot The bot or bot ID to tween.
          * @param dimension The dimension that the bot should be tweened in.
          * @param position The position that the bot should be tweened to.
-         * @param easing The easing that should be used for the tween.
+         * @param options The options that should be used for the tween.
          */
         localPositionTween(
             bot: Bot | string,
             dimension: string,
             position: { x?: number, y?: number, z?: number },
-            easing?: Easing
+            options?: TweenOptions
         ): LocalPositionTweenAction;
 
         /**
@@ -3629,13 +3644,13 @@ declare global {
          * @param bot The bot or bot ID to tween.
          * @param dimension The dimension that the bot should be tweened in.
          * @param rotation The rotation that the bot should be tweened to.
-         * @param easing The easing that should be used for the tween.
+         * @param options The options that should be used for the tween.
          */
         localRotationTween(
             bot: Bot | string,
             dimension: string,
             rotation: { x?: number, y?: number, z?: number },
-            easing?: Easing
+            options?: TweenOptions
         ): LocalRotationTweenAction;
     };
 }
