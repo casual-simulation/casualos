@@ -103,6 +103,11 @@ export abstract class Simulation3D extends Object3D
     private isLoaded: boolean = false;
 
     /**
+     * The bot events that are waiting for the corresponding bot to be added to the simulation.
+     */
+    private _waitingEvents: QueuedBotEvent[] = [];
+
+    /**
      * Gets the list of bots that are in this simulation.
      */
     get bots() {
@@ -359,18 +364,53 @@ export abstract class Simulation3D extends Object3D
 
     private _localEvent(e: LocalActions): void {
         if (e.type === 'local_form_animation') {
-            const calc = this._currentContext;
-            const bots = this.findBotsById(e.botId);
-            for (let b of bots) {
-                b.localEvent(e, calc);
-            }
+            this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
-            const calc = this._currentContext;
+            this._queueEventForBot(e, e.botId, e.dimension);
+        }
+    }
+
+    /**
+     * Queues the given event to be sent to the bot visualizers with the given ID and optionally
+     * in the given dimension. If the dimension is being visualized but the bot does not exist, then
+     * the event is queued for playback when the bot is added to the simulation.
+     * @param event The event.
+     * @param id The ID of the bot.
+     * @param dimension The dimension that the bot should be in.
+     */
+    private _queueEventForBot(
+        event: LocalActions,
+        id: string,
+        dimension?: string
+    ) {
+        let bots = null;
+        let canHandleEvent = false;
+        if (hasValue(dimension)) {
+            bots = [];
             for (let dim of this.dimensions) {
-                const b = dim.getBotInDimension(e.dimension, e.botId);
-                if (b) {
-                    b.localEvent(e, calc);
+                if (dim.dimensions.has(dimension)) {
+                    canHandleEvent = true;
                 }
+                const b = dim.getBotInDimension(dimension, id);
+                if (b) {
+                    bots.push(b);
+                }
+            }
+        } else {
+            bots = this.findBotsById(id);
+        }
+
+        if (bots.length <= 0 && canHandleEvent) {
+            // queue
+            this._waitingEvents.push({
+                event,
+                botId: id,
+                dimension,
+            });
+        } else {
+            const calc = this._currentContext;
+            for (let b of bots) {
+                b.localEvent(event, calc);
             }
         }
     }
@@ -535,6 +575,28 @@ export abstract class Simulation3D extends Object3D
             meshes.push(mesh);
             mesh.botUpdated(bot, new Set(), calc);
             this.onBotAdded.invoke(bot);
+
+            // Check events that haven't been sent to a bot yet
+            for (let i = 0; i < this._waitingEvents.length; i++) {
+                const e = this._waitingEvents[i];
+                let used = false;
+                if (e.botId === bot.id) {
+                    if (hasValue(e.dimension)) {
+                        if (e.dimension === dimension) {
+                            mesh.localEvent(e.event, this._currentContext);
+                            used = true;
+                        }
+                    } else {
+                        mesh.localEvent(e.event, this._currentContext);
+                        used = true;
+                    }
+                }
+
+                if (used) {
+                    this._waitingEvents.splice(i, 1);
+                    i--;
+                }
+            }
         }
     }
 
@@ -657,4 +719,10 @@ function countChildren(obj: Object3D) {
 
     console.log(`[${obj.constructor.name}] ${count}`);
     return count;
+}
+
+interface QueuedBotEvent {
+    botId: string;
+    dimension?: string;
+    event: LocalActions;
 }
