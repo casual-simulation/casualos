@@ -11,8 +11,10 @@
 -   Changed `shout()` and `whisper()` to cost 1 energy point.
     -   This helps prevent infinite loops.
     -   The energy point is only deducted if a bot has a listener for the event.
--   Changed `experiment.localPositionTween()` and `experiment.localRotationTween()` to take an options object as the 4th parameter instead of the easing options.
+-   Changed `experiment.localPositionTween()` and `experiment.localRotationTween()` to take different arguments and return a promise.
+    -   the 4th parameter is now an options object instead of the easing options.
     -   This options object is able to accept easing and duration values.
+    -   Additionally the functions now return promises.
     -   See the docs for examples.
 
 ### :bug: Bug Fixes
