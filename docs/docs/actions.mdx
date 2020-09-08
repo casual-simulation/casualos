@@ -4204,6 +4204,8 @@ experiment.localFormAnimation(this, "jump");
 Locally plays a tween that moves the given bot in the given dimension to the given position.
 Optionally allows customizing the easing of the tween.
 
+Returns a promise that resolves when the tween is finished.
+
 While the tween is playing, any updates to the bot's position and rotation are ignored.
 Once the tween is done playing, any change to the bot will reset the position/rotation.
 
@@ -4214,29 +4216,44 @@ Note that the tween will only work if the given dimension is currently in the pa
 
 The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
-The **fourth parameter** is optional and is the easing options that should be used.
+The **fourth parameter** is optional and is the options that should be used.
 It is an object with the following properties:
 
 ```typescript
-let easing: {
-    /**
-     * The type of easing.
-     */
-    type: 'linear'
-        | 'quadratic'
-        | 'cubic'
-        | 'quartic'
-        | 'quintic'
-        | 'sinusoidal'
-        | 'exponential'
-        | 'circular'
-        | 'elastic';
+let options: {
 
     /**
-     * Whether to apply the easing at the
-     * start (in), end (out), or start and end (inout) of the tween.
+     * The amount of time that the tween takes to complete in seconds.
+     * The maximum duration is 24 hours (86,400 seconds).
+     * The minimum duration is 0.
+     * Defaults to 1 if not specified.
      */
-    mode: 'in' | 'out' | 'inout';
+    duration?: number;
+
+    /**
+     * The options for easing.
+     * Defaults to "linear" "inout" if not specified.
+     */
+    easing?: {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
 };
 ```
 
@@ -4252,7 +4269,7 @@ experiment.localPositionTween(
     });
 ```
 
-2. Tween the bot with quadratic easing.
+2. Tween the bot over 5 seconds.
 ```typescript
 experiment.localPositionTween(
     this,
@@ -4261,8 +4278,23 @@ experiment.localPositionTween(
         x: 10,
     },
     {
-        type: 'quadratic',
-        mode: 'inout'
+        duration: 5
+    });
+```
+
+3. Tween the bot with quadratic easing.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    },
+    { 
+        easing: {
+            type: 'quadratic',
+            mode: 'inout'
+        }
     });
 ```
 
@@ -4270,6 +4302,8 @@ experiment.localPositionTween(
 
 Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
 Optionally allows customizing the easing of the tween.
+
+Returns a promise that resolves when the tween is finished.
 
 While the tween is playing, any updates to the bot's position and rotation are ignored.
 Once the tween is done playing, any change to the bot will reset the position/rotation.
@@ -4281,29 +4315,44 @@ Note that the tween will only work if the given dimension is currently in the pa
 
 The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
 
-The **fourth parameter** is optional and is the easing options that should be used.
+The **fourth parameter** is optional and is the options that should be used.
 It is an object with the following properties:
 
 ```typescript
-let easing: {
-    /**
-     * The type of easing.
-     */
-    type: 'linear'
-        | 'quadratic'
-        | 'cubic'
-        | 'quartic'
-        | 'quintic'
-        | 'sinusoidal'
-        | 'exponential'
-        | 'circular'
-        | 'elastic';
+let options: {
 
     /**
-     * Whether to apply the easing at the
-     * start (in), end (out), or start and end (inout) of the tween.
+     * The amount of time that the tween takes to complete in seconds.
+     * The maximum duration is 24 hours (86,400 seconds).
+     * The minimum duration is 0.
+     * Defaults to 1.
      */
-    mode: 'in' | 'out' | 'inout';
+    duration?: number;
+
+    /**
+     * The options for easing.
+     * Defaults to "linear" "inout" if not specified.
+     */
+    easing?: {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
 };
 ```
 
@@ -4319,7 +4368,7 @@ experiment.localRotationTween(
     });
 ```
 
-2. Tween the bot with quadratic easing.
+2. Tween the bot for 5 seconds.
 ```typescript
 experiment.localRotationTween(
     this,
@@ -4328,8 +4377,23 @@ experiment.localRotationTween(
         z: Math.PI / 2,
     },
     {
-        type: 'quadratic',
-        mode: 'inout'
+        duration: 5
+    });
+```
+
+3. Tween the bot with quadratic easing.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    },
+    {
+        easing: {
+            type: 'quadratic',
+            mode: 'inout'
+        }
     });
 ```
 

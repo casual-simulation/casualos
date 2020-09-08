@@ -307,6 +307,21 @@ export interface BotFilterFunction {
 }
 
 /**
+ * Defines a set of options for a tween.
+ */
+export interface TweenOptions {
+    /**
+     * The easing for the tween.
+     */
+    easing?: Easing;
+
+    /**
+     * The duration of the tween in seconds.
+     */
+    duration?: number;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -2652,17 +2667,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot or bot ID to tween.
      * @param dimension The dimension that the bot should be tweened in.
      * @param position The position that the bot should be tweened to.
-     * @param easing The easing that should be used for the tween.
+     * @param options The options that should be used for the tween.
      */
     function localPositionTween(
         bot: Bot | string,
         dimension: string,
         position: { x: number; y: number; z?: number },
-        easing?: Easing
-    ): LocalPositionTweenAction {
-        return addAction(
-            calcLocalPositionTween(getID(bot), dimension, position, easing)
+        options?: TweenOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalPositionTween(
+            getID(bot),
+            dimension,
+            position,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -2670,17 +2692,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot or bot ID to tween.
      * @param dimension The dimension that the bot should be tweened in.
      * @param rotation The rotation that the bot should be tweened to.
-     * @param easing The easing that should be used for the tween.
+     * @param options The options that should be used for the tween.
      */
     function localRotationTween(
         bot: Bot | string,
         dimension: string,
         rotation: { x: number; y: number; z?: number },
-        easing?: Easing
-    ): LocalRotationTweenAction {
-        return addAction(
-            calcLocalRotationTween(getID(bot), dimension, rotation, easing)
+        options?: TweenOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalRotationTween(
+            getID(bot),
+            dimension,
+            rotation,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**

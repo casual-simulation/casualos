@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V1.2.8
+
+#### Date: 9/8/2020
+
+### :boom: Breaking Changes
+
+-   Changed `experiment.localPositionTween()` and `experiment.localRotationTween()` to take different arguments and return a promise.
+    -   the 4th parameter is now an options object instead of the easing options.
+    -   This options object is able to accept easing and duration values.
+    -   Additionally the functions now return promises.
+    -   See the docs for examples.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `experiment.localPositionTween()` and `experiment.localRotationTween()` may not execute if triggered during `@onCreate()`.
+
 ## V1.2.7
 
 #### Date: 9/4/2020
