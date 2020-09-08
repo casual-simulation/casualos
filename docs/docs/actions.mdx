@@ -4204,6 +4204,8 @@ experiment.localFormAnimation(this, "jump");
 Locally plays a tween that moves the given bot in the given dimension to the given position.
 Optionally allows customizing the easing of the tween.
 
+Returns a promise that resolves when the tween is finished.
+
 While the tween is playing, any updates to the bot's position and rotation are ignored.
 Once the tween is done playing, any change to the bot will reset the position/rotation.
 
@@ -4300,6 +4302,8 @@ experiment.localPositionTween(
 
 Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
 Optionally allows customizing the easing of the tween.
+
+Returns a promise that resolves when the tween is finished.
 
 While the tween is playing, any updates to the bot's position and rotation are ignored.
 Once the tween is done playing, any change to the bot will reset the position/rotation.
