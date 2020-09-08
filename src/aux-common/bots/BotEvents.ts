@@ -1972,6 +1972,11 @@ export interface Easing {
 }
 
 /**
+ * The maximum allowed duration for tweens.
+ */
+export const MAX_TWEEN_DURATION = 60 * 60 * 24;
+
+/**
  * Defines an event that runs a tween locally.
  */
 export interface LocalTweenAction extends Action {
@@ -3870,7 +3875,7 @@ export function localPositionTween(
         dimension,
         easing,
         position,
-        duration,
+        duration: clamp(duration, 0, MAX_TWEEN_DURATION),
     };
 }
 
@@ -3897,7 +3902,7 @@ export function localRotationTween(
         dimension,
         easing,
         rotation,
-        duration,
+        duration: clamp(duration, 0, MAX_TWEEN_DURATION),
     };
 }
 

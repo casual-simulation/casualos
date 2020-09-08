@@ -4171,6 +4171,46 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should clamp the duration to 0 if it is negative', () => {
+                const action = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: -1,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    0
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 24 hours if it is too large', () => {
+                const action = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: Infinity,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    60 * 60 * 24 // 24 hours in seconds
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('experiment.localRotationTween()', () => {
@@ -4243,6 +4283,46 @@ describe('AuxLibrary', () => {
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
                     99
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 0 if it is negative', () => {
+                const action = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: -1,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    0
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 24 hours if it is too large', () => {
+                const action = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: Infinity,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    60 * 60 * 24 // 24 hours in seconds
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
