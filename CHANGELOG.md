@@ -15,6 +15,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `onBotAdded`, `onAnyBotsAdded`, `onAnyBotsRemoved`, `onBotChanged`, and `onAnyBotsChanged` would reset the energy counter.
+-   Fixed an issue where `experiment.localPositionTween()` and `experiment.localRotationTween()` may not execute if triggered during `@onCreate()`.
 
 ## V1.2.6
 
