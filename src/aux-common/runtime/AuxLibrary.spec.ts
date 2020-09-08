@@ -4099,7 +4099,7 @@ describe('AuxLibrary', () => {
 
         describe('experiment.localPositionTween()', () => {
             it('should emit a LocalPositionTweenAction', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4111,14 +4111,16 @@ describe('AuxLibrary', () => {
                     bot1.id,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support passing a bot ID directly', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4130,14 +4132,16 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should default the easing to linear inout', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 }
@@ -4146,14 +4150,16 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'linear', mode: 'inout' }
+                    { type: 'linear', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support a custom duration', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4166,14 +4172,15 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     undefined,
-                    99
+                    99,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should clamp the duration to 0 if it is negative', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4186,14 +4193,15 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
-                    0
+                    0,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should clamp the duration to 24 hours if it is too large', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4206,16 +4214,17 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
-                    60 * 60 * 24 // 24 hours in seconds
+                    60 * 60 * 24, // 24 hours in seconds
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('experiment.localRotationTween()', () => {
             it('should emit a LocalRotationTweenAction', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4227,14 +4236,16 @@ describe('AuxLibrary', () => {
                     bot1.id,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support passing a bot ID directly', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4246,14 +4257,16 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should default the easing to linear inout', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 }
@@ -4262,14 +4275,16 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'linear', mode: 'inout' }
+                    { type: 'linear', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support a custum duration', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4282,14 +4297,15 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
-                    99
+                    99,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should clamp the duration to 0 if it is negative', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4302,14 +4318,15 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
-                    0
+                    0,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should clamp the duration to 24 hours if it is too large', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
@@ -4322,9 +4339,10 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' },
-                    60 * 60 * 24 // 24 hours in seconds
+                    60 * 60 * 24, // 24 hours in seconds
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

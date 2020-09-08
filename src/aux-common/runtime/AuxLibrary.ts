@@ -2674,16 +2674,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         dimension: string,
         position: { x: number; y: number; z?: number },
         options?: TweenOptions
-    ): LocalPositionTweenAction {
-        return addAction(
-            calcLocalPositionTween(
-                getID(bot),
-                dimension,
-                position,
-                options ? options.easing : undefined,
-                options ? options.duration : undefined
-            )
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalPositionTween(
+            getID(bot),
+            dimension,
+            position,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -2698,16 +2699,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         dimension: string,
         rotation: { x: number; y: number; z?: number },
         options?: TweenOptions
-    ): LocalRotationTweenAction {
-        return addAction(
-            calcLocalRotationTween(
-                getID(bot),
-                dimension,
-                rotation,
-                options ? options.easing : undefined,
-                options ? options.duration : undefined
-            )
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalRotationTween(
+            getID(bot),
+            dimension,
+            rotation,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**

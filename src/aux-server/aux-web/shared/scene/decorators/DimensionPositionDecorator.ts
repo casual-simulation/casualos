@@ -25,6 +25,12 @@ import {
     Easing,
     EaseMode,
     hasValue,
+    enqueueAsyncResult,
+    BotAction,
+    LocalTweenAction,
+    LocalRotationTweenAction,
+    LocalPositionTweenAction,
+    enqueueAsyncError,
 } from '@casual-simulation/aux-common';
 import {
     Vector3,
@@ -296,6 +302,16 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
     localEvent(event: LocalActions, calc: BotCalculationContext) {
         if (event.type === 'local_tween') {
+            this._startTween(event);
+        }
+    }
+
+    dispose(): void {}
+
+    private _startTween(
+        event: LocalPositionTweenAction | LocalRotationTweenAction
+    ) {
+        try {
             const currentTime = this._game.getTime().timeSinceStart * 1000;
             if (event.tweenType === 'position') {
                 const gridScale = this.bot3D.gridScale;
@@ -315,7 +331,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     .easing(easing)
                     .duration(event.duration * 1000)
                     .onUpdate(() => this.bot3D.updateMatrixWorld())
-                    .onComplete(() => (this._tween = null))
+                    .onComplete(() => {
+                        this._tween = null;
+
+                        let list = [] as BotAction[];
+                        enqueueAsyncResult(list, event, undefined);
+                        this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+                            ...list
+                        );
+                    })
                     .start(currentTime);
             } else if (event.tweenType === 'rotation') {
                 let targetRotation = {} as any;
@@ -336,13 +360,25 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     .easing(easing)
                     .duration(event.duration * 1000)
                     .onUpdate(() => this.bot3D.updateMatrixWorld())
-                    .onComplete(() => (this._tween = null))
+                    .onComplete(() => {
+                        this._tween = null;
+
+                        let list = [] as BotAction[];
+                        enqueueAsyncResult(list, event, undefined);
+                        this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+                            ...list
+                        );
+                    })
                     .start(currentTime);
             }
+        } catch (ex) {
+            let list = [] as BotAction[];
+            enqueueAsyncError(list, event, new Error('Unable to play tween.'));
+            this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+                ...list
+            );
         }
     }
-
-    dispose(): void {}
 }
 
 function getEasing(easing: Easing): any {
