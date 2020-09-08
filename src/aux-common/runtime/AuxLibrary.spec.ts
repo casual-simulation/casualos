@@ -4103,7 +4103,9 @@ describe('AuxLibrary', () => {
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localPositionTween(
                     bot1.id,
@@ -4120,7 +4122,9 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localPositionTween(
                     'abc',
@@ -4143,6 +4147,26 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a custom duration', () => {
+                const action = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: 99,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    undefined,
+                    99
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -4155,7 +4179,9 @@ describe('AuxLibrary', () => {
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localRotationTween(
                     bot1.id,
@@ -4172,7 +4198,9 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localRotationTween(
                     'abc',
@@ -4195,6 +4223,26 @@ describe('AuxLibrary', () => {
                     'dim',
                     { x: 1, y: 2, z: 3 },
                     { type: 'linear', mode: 'inout' }
+                );
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a custum duration', () => {
+                const action = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: 99,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    99
                 );
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

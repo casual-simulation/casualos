@@ -313,6 +313,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 this._tween = new TWEEN.Tween<any>(this.bot3D.position)
                     .to(<any>targetPosition)
                     .easing(easing)
+                    .duration(event.duration * 1000)
                     .onUpdate(() => this.bot3D.updateMatrixWorld())
                     .onComplete(() => (this._tween = null))
                     .start(currentTime);
@@ -333,6 +334,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 )
                     .to(<any>targetRotation)
                     .easing(easing)
+                    .duration(event.duration * 1000)
                     .onUpdate(() => this.bot3D.updateMatrixWorld())
                     .onComplete(() => (this._tween = null))
                     .start(currentTime);

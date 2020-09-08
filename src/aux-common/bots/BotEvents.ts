@@ -1996,6 +1996,11 @@ export interface LocalTweenAction extends Action {
      * The easing that should be used.
      */
     easing: Easing;
+
+    /**
+     * The duration of the tween in seconds.
+     */
+    duration: number;
 }
 
 /**
@@ -3849,12 +3854,14 @@ export function localFormAnimation(
  * @param dimension The dimension that the bot should be tweened in.
  * @param position The position of the bot.
  * @param easing The easing to use.
+ * @param duration The duration of the tween in seconds.
  */
 export function localPositionTween(
     botId: string,
     dimension: string,
     position: { x?: number; y?: number; z?: number },
-    easing: Easing = { type: 'linear', mode: 'inout' }
+    easing: Easing = { type: 'linear', mode: 'inout' },
+    duration: number = 1
 ): LocalPositionTweenAction {
     return {
         type: 'local_tween',
@@ -3863,6 +3870,7 @@ export function localPositionTween(
         dimension,
         easing,
         position,
+        duration,
     };
 }
 
@@ -3872,12 +3880,15 @@ export function localPositionTween(
  * @param dimension The dimension that the bot should be tweened in.
  * @param position The position of the bot.
  * @param easing The easing to use.
+ * @param duration The duration of the tween in seconds.
+ *
  */
 export function localRotationTween(
     botId: string,
     dimension: string,
     rotation: { x?: number; y?: number; z?: number },
-    easing: Easing = { type: 'linear', mode: 'inout' }
+    easing: Easing = { type: 'linear', mode: 'inout' },
+    duration: number = 1
 ): LocalRotationTweenAction {
     return {
         type: 'local_tween',
@@ -3886,6 +3897,7 @@ export function localRotationTween(
         dimension,
         easing,
         rotation,
+        duration,
     };
 }
 
