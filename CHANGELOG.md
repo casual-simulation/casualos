@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.10
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with the multiline editor getting cut off inside the tag portal.
+
 ## V1.2.9
 
 #### Date: 9/8/2020
