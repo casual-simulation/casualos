@@ -647,6 +647,10 @@ export class CameraControls {
                         (pagePosA.x + pagePosB.x) / 2,
                         (pagePosA.y + pagePosB.y) / 2
                     );
+                    this.dollyBegin = Input.offsetPosition(
+                        this.dollyBegin,
+                        this._game.gameView.gameView
+                    );
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
                 if (this.enableRotate) {
@@ -713,6 +717,10 @@ export class CameraControls {
                 Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
+            this.dollyBegin = Input.offsetPosition(
+                this.dollyBegin,
+                this._game.gameView.gameView
+            );
             if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
             else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
         } else if (
@@ -757,6 +765,10 @@ export class CameraControls {
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
             this.dollyBegin.copy(this.dollyStart);
+            this.dollyBegin = Input.offsetPosition(
+                this.dollyBegin,
+                this._game.gameView.gameView
+            );
             this.state = STATE.DOLLY;
         } else if (
             input.getWheelMoved() &&
