@@ -18,6 +18,11 @@
     max-height: 80vh;
 }
 
+.tag-portal-editor-wrapper {
+    height: 100%;
+    width: 100%;
+}
+
 .other-container {
     position: absolute;
     width: 100%;
