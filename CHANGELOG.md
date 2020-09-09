@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.9
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Changed the page portal to resize around the tag portal instead of being hidden behind it.
+
 ## V1.2.8
 
 #### Date: 9/8/2020
