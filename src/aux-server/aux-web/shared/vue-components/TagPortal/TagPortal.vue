@@ -6,7 +6,7 @@
             class="tag-portal"
             :class="{ invisible: !(currentBot && currentTag) }"
         >
-            <div v-if="currentBot && currentTag">
+            <div class="tag-portal-editor-wrapper" v-if="currentBot && currentTag">
                 <tag-value-editor
                     ref="multilineEditor"
                     :bot="currentBot"
