@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V1.2.11
+
+#### Date: 9/9/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where zooming was broken when the page portal is not anchored to the top left of the screen.
+
 ## V1.2.10
 
 #### Date: 9/8/2020
