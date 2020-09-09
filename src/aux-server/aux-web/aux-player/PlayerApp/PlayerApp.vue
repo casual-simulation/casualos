@@ -1,21 +1,22 @@
 <template>
     <div id="app">
         <load-app>
-            <tag-portal></tag-portal>
             <meet-portal>
-                <md-toolbar v-if="showChatBar">
-                    <div class="md-toolbar-section-start">
-                        <bot-chat
-                            ref="chatBar"
-                            :prefill="chatBarPrefill"
-                            :placeholder="chatBarPlaceholder"
-                        ></bot-chat>
-                    </div>
-                </md-toolbar>
-                <bot-sheet></bot-sheet>
-                <md-content id="app-game-container">
-                    <router-view></router-view>
-                </md-content>
+                <tag-portal>
+                    <md-toolbar v-if="showChatBar">
+                        <div class="md-toolbar-section-start">
+                            <bot-chat
+                                ref="chatBar"
+                                :prefill="chatBarPrefill"
+                                :placeholder="chatBarPlaceholder"
+                            ></bot-chat>
+                        </div>
+                    </md-toolbar>
+                    <bot-sheet></bot-sheet>
+                    <md-content id="app-game-container">
+                        <router-view></router-view>
+                    </md-content>
+                </tag-portal>
             </meet-portal>
 
             <upload-files></upload-files>
