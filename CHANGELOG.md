@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V1.2.12
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `helix` form.
+    -   Displays a DNA strand mesh whose color can be customized.
+
 ## V1.2.11
 
 #### Date: 9/9/2020
