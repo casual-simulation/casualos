@@ -309,7 +309,7 @@ export class AuxRuntime
             );
             this.process(result.actions);
         } else if (action.type === 'run_script') {
-            const result = this._execute(action.script, false);
+            const result = this._execute(action.script, false, false);
             this.process(result.actions);
             if (hasValue(action.taskId)) {
                 this._globalContext.resolveTask(
@@ -378,18 +378,25 @@ export class AuxRuntime
         eventName: string,
         botIds: string[],
         arg: any,
-        batch: boolean
+        batch: boolean,
+        resetEnergy: boolean = true
     ): ActionResult {
         try {
             arg = this._mapBotsToRuntimeBots(arg);
         } catch (err) {
             arg = err;
         }
-        const { result, actions, errors } = this._batchScriptResults(() => {
-            const results = this._library.api.whisper(botIds, eventName, arg);
+        const { result, actions, errors } = this._batchScriptResults(
+            () => {
+                const results = hasValue(botIds)
+                    ? this._library.api.whisper(botIds, eventName, arg)
+                    : this._library.api.shout(eventName, arg);
 
-            return results;
-        }, batch);
+                return results;
+            },
+            batch,
+            resetEnergy
+        );
 
         return {
             actions,
@@ -404,10 +411,10 @@ export class AuxRuntime
      * @param script The script to run.
      */
     execute(script: string) {
-        return this._execute(script, true);
+        return this._execute(script, true, true);
     }
 
-    private _execute(script: string, batch: boolean) {
+    private _execute(script: string, batch: boolean, resetEnergy: boolean) {
         let fn: () => any;
 
         try {
@@ -432,13 +439,17 @@ export class AuxRuntime
             };
         }
 
-        return this._batchScriptResults(() => {
-            try {
-                return fn();
-            } catch (ex) {
-                this._globalContext.enqueueError(ex);
-            }
-        }, batch);
+        return this._batchScriptResults(
+            () => {
+                try {
+                    return fn();
+                } catch (ex) {
+                    this._globalContext.enqueueError(ex);
+                }
+            },
+            batch,
+            resetEnergy
+        );
     }
 
     /**
@@ -505,10 +516,30 @@ export class AuxRuntime
         this._updateDependentBots(changes, update, newBotIDs);
 
         if (update.addedBots.length > 0) {
-            this.shout(ON_BOT_ADDED_ACTION_NAME, update.addedBots);
-            this.shout(ON_ANY_BOTS_ADDED_ACTION_NAME, null, {
-                bots: newBots.map(([bot, precalc]) => bot),
-            });
+            try {
+                this._shout(
+                    ON_BOT_ADDED_ACTION_NAME,
+                    update.addedBots,
+                    undefined,
+                    true,
+                    false
+                );
+                this._shout(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME,
+                    null,
+                    {
+                        bots: newBots.map(([bot, precalc]) => bot),
+                    },
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
         }
 
         return update;
@@ -540,9 +571,23 @@ export class AuxRuntime
         this._updateDependentBots(changes, update, new Set());
 
         if (botIds.length > 0) {
-            this.shout(ON_ANY_BOTS_REMOVED_ACTION_NAME, null, {
-                botIDs: botIds,
-            });
+            try {
+                this._shout(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                    null,
+                    {
+                        botIDs: botIds,
+                    },
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
         }
 
         return update;
@@ -611,12 +656,32 @@ export class AuxRuntime
         const changes = this._dependencies.updateBots(updates);
         this._updateDependentBots(changes, update, new Set());
 
-        for (let update of updates) {
-            this.shout(ON_BOT_CHANGED_ACTION_NAME, [update.bot.id], {
-                tags: update.tags,
-            });
+        try {
+            for (let update of updates) {
+                this._shout(
+                    ON_BOT_CHANGED_ACTION_NAME,
+                    [update.bot.id],
+                    {
+                        tags: update.tags,
+                    },
+                    true,
+                    false
+                );
+            }
+            this._shout(
+                ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                null,
+                updates,
+                true,
+                false
+            );
+        } catch (err) {
+            if (!(err instanceof RanOutOfEnergyError)) {
+                throw err;
+            } else {
+                console.warn(err);
+            }
         }
-        this.shout(ON_ANY_BOTS_CHANGED_ACTION_NAME, null, updates);
 
         return update;
     }
@@ -687,10 +752,11 @@ export class AuxRuntime
 
     private _batchScriptResults<T>(
         callback: () => T,
-        batch: boolean
+        batch: boolean,
+        resetEnergy: boolean
     ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
         return this._zone.run(() => {
-            const results = this._calculateScriptResults(callback);
+            const results = this._calculateScriptResults(callback, resetEnergy);
 
             if (batch) {
                 this._actionBatch.push(...results.actions);
@@ -702,10 +768,13 @@ export class AuxRuntime
     }
 
     private _calculateScriptResults<T>(
-        callback: () => T
+        callback: () => T,
+        resetEnergy: boolean
     ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
         this._globalContext.playerBot = this.userBot;
-        this._globalContext.energy = DEFAULT_ENERGY;
+        if (resetEnergy) {
+            this._globalContext.energy = DEFAULT_ENERGY;
+        }
         const result = callback();
 
         const actions = this._processUnbatchedActions();

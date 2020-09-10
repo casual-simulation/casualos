@@ -47,7 +47,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Debug Web Build",
+            "name": "Debug Webpack",
             "program": "${workspaceFolder}/node_modules/webpack/bin/webpack",
             "runtimeArgs": ["--max_old_space_size=4096"],
             "args": ["--config", "src/aux-server/aux-web/webpack.prod.js"]

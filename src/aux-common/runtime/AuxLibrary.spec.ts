@@ -132,6 +132,7 @@ import { shuffle } from 'lodash';
 import { decryptV1, keypair } from '@casual-simulation/crypto';
 import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
 import { tagValueHash } from '../aux-format-2';
+import { RanOutOfEnergyError } from './AuxResults';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -4098,41 +4099,49 @@ describe('AuxLibrary', () => {
 
         describe('experiment.localPositionTween()', () => {
             it('should emit a LocalPositionTweenAction', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localPositionTween(
                     bot1.id,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support passing a bot ID directly', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should default the easing to linear inout', () => {
-                const action = library.api.experiment.localPositionTween(
+                const action: any = library.api.experiment.localPositionTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 }
@@ -4141,50 +4150,123 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'linear', mode: 'inout' }
+                    { type: 'linear', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a custom duration', () => {
+                const action: any = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: 99,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    undefined,
+                    99,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 0 if it is negative', () => {
+                const action: any = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: -1,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    0,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 24 hours if it is too large', () => {
+                const action: any = library.api.experiment.localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: Infinity,
+                    }
+                );
+                const expected = localPositionTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    60 * 60 * 24, // 24 hours in seconds
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('experiment.localRotationTween()', () => {
             it('should emit a LocalRotationTweenAction', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     bot1,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localRotationTween(
                     bot1.id,
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should support passing a bot ID directly', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    {
+                        easing: { type: 'quadratic', mode: 'inout' },
+                    }
                 );
                 const expected = localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'quadratic', mode: 'inout' }
+                    { type: 'quadratic', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
             it('should default the easing to linear inout', () => {
-                const action = library.api.experiment.localRotationTween(
+                const action: any = library.api.experiment.localRotationTween(
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 }
@@ -4193,9 +4275,74 @@ describe('AuxLibrary', () => {
                     'abc',
                     'dim',
                     { x: 1, y: 2, z: 3 },
-                    { type: 'linear', mode: 'inout' }
+                    { type: 'linear', mode: 'inout' },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a custum duration', () => {
+                const action: any = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: 99,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    99,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 0 if it is negative', () => {
+                const action: any = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: -1,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    0,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should clamp the duration to 24 hours if it is too large', () => {
+                const action: any = library.api.experiment.localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    {
+                        duration: Infinity,
+                    }
+                );
+                const expected = localRotationTween(
+                    'abc',
+                    'dim',
+                    { x: 1, y: 2, z: 3 },
+                    { type: 'linear', mode: 'inout' },
+                    60 * 60 * 24, // 24 hours in seconds
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
@@ -5344,13 +5491,12 @@ describe('AuxLibrary', () => {
             expect(context.errors).toEqual([new Error('abc')]);
         });
 
-        it('should send a onListen whisper to all the targeted bots', () => {
+        it('should send a onListen whisper to all the listening bots', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
                 throw new Error('abc');
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
             const onListen3 = (bot3.listeners.onListen = jest.fn());
@@ -5362,12 +5508,12 @@ describe('AuxLibrary', () => {
                 that: 123,
                 responses: [undefined, undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3, bot4],
-                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
             };
             expect(onListen1).toBeCalledWith(expected);
             expect(onListen2).toBeCalledWith(expected);
             expect(onListen3).toBeCalledWith(expected);
-            expect(onListen4).toBeCalledWith(expected);
+            expect(onListen4).not.toBeCalledWith(expected);
         });
 
         it('should send a onAnyListen shout', () => {
@@ -5383,11 +5529,52 @@ describe('AuxLibrary', () => {
             const expected = {
                 name: 'sayHello',
                 that: 123,
-                responses: [undefined, undefined, undefined] as any[],
+                responses: [
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                ] as any[],
                 targets: [bot1, bot2, bot3, bot4],
-                listeners: [bot1, bot3, bot4], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
             };
             expect(onAnyListen4).toBeCalledWith(expected);
+        });
+
+        it('should perform an energy check', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 1;
+            expect(() => {
+                library.api.shout('sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        it('should only take 1 energy for multiple listeners', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 2;
+            library.api.shout('sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should not perform an energy check if there are no listeners', () => {
+            context.energy = 1;
+            library.api.shout('sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should run out of energy when listeners shout to each other', () => {
+            const first = (bot1.listeners.first = jest.fn(() => {
+                library.api.shout('second');
+            }));
+            const second = (bot2.listeners.second = jest.fn(() => {
+                library.api.shout('first');
+            }));
+            context.energy = 20;
+            expect(() => {
+                library.api.shout('first');
+            }).toThrowError(new RanOutOfEnergyError());
         });
     });
 
@@ -5503,7 +5690,6 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
                 throw new Error('abc');
             }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
             const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
@@ -5516,11 +5702,11 @@ describe('AuxLibrary', () => {
                 that: 123,
                 responses: [undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot3], // should exclude erroring listeners
+                listeners: [bot1, bot2], // should exclude erroring listeners
             };
             expect(onListen1).toBeCalledWith(expected);
             expect(onListen2).toBeCalledWith(expected);
-            expect(onListen3).toBeCalledWith(expected);
+            expect(onListen3).not.toBeCalledWith(expected);
             expect(onListen4).not.toBeCalled();
         });
 
@@ -5537,9 +5723,9 @@ describe('AuxLibrary', () => {
             const expected = {
                 name: 'sayHello',
                 that: 123,
-                responses: [undefined, undefined] as any[],
+                responses: [undefined, undefined, undefined] as any[],
                 targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot3], // should exclude erroring listeners
+                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
             };
             expect(onAnyListen4).toBeCalledWith(expected);
         });
@@ -5548,6 +5734,60 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             library.api.whisper([bot1, null], 'sayHello');
             expect(sayHello1).toBeCalledTimes(1);
+        });
+
+        const nullCases = [
+            ['null', null],
+            ['empty string', ''],
+            ['undefined', undefined],
+        ];
+        it.each(nullCases)(
+            'should do nothing when given a %s bot',
+            (desc, bot) => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+                library.api.whisper(bot, 'sayHello');
+
+                expect(sayHello1).not.toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            }
+        );
+
+        it('should perform an energy check', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 1;
+            expect(() => {
+                library.api.whisper(bot1, 'sayHello');
+            }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        it('should only take 1 energy for multiple listeners', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+            context.energy = 2;
+            library.api.whisper([bot1, bot2], 'sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should not perform an energy check if there are no listeners', () => {
+            context.energy = 1;
+            library.api.whisper(bot1, 'sayHello');
+            expect(context.energy).toBe(1);
+        });
+
+        it('should run out of energy when listeners shout to each other', () => {
+            const first = (bot1.listeners.first = jest.fn(() => {
+                library.api.whisper(bot2, 'second');
+            }));
+            const second = (bot2.listeners.second = jest.fn(() => {
+                library.api.whisper(bot1, 'first');
+            }));
+            context.energy = 20;
+            expect(() => {
+                library.api.whisper(bot1, 'first');
+            }).toThrowError(new RanOutOfEnergyError());
         });
     });
 

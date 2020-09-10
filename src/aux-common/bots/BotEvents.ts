@@ -95,8 +95,6 @@ export type ExtraActions =
     | RequestFullscreenAction
     | ExitFullscreenAction
     | LocalFormAnimationAction
-    | LocalPositionTweenAction
-    | LocalRotationTweenAction
     | GetPlayerCountAction;
 
 /**
@@ -164,7 +162,9 @@ export type AsyncActions =
     | DeviceActionError
     | PlaySoundAction
     | BufferSoundAction
-    | CancelSoundAction;
+    | CancelSoundAction
+    | LocalPositionTweenAction
+    | LocalRotationTweenAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1979,9 +1979,14 @@ export interface Easing {
 }
 
 /**
+ * The maximum allowed duration for tweens.
+ */
+export const MAX_TWEEN_DURATION = 60 * 60 * 24;
+
+/**
  * Defines an event that runs a tween locally.
  */
-export interface LocalTweenAction extends Action {
+export interface LocalTweenAction extends AsyncAction {
     type: 'local_tween';
 
     /**
@@ -2003,6 +2008,11 @@ export interface LocalTweenAction extends Action {
      * The easing that should be used.
      */
     easing: Easing;
+
+    /**
+     * The duration of the tween in seconds.
+     */
+    duration: number;
 }
 
 /**
@@ -3856,12 +3866,15 @@ export function localFormAnimation(
  * @param dimension The dimension that the bot should be tweened in.
  * @param position The position of the bot.
  * @param easing The easing to use.
+ * @param duration The duration of the tween in seconds.
  */
 export function localPositionTween(
     botId: string,
     dimension: string,
     position: { x?: number; y?: number; z?: number },
-    easing: Easing = { type: 'linear', mode: 'inout' }
+    easing: Easing = { type: 'linear', mode: 'inout' },
+    duration: number = 1,
+    taskId?: string | number
 ): LocalPositionTweenAction {
     return {
         type: 'local_tween',
@@ -3870,6 +3883,8 @@ export function localPositionTween(
         dimension,
         easing,
         position,
+        duration: clamp(duration, 0, MAX_TWEEN_DURATION),
+        taskId,
     };
 }
 
@@ -3879,12 +3894,16 @@ export function localPositionTween(
  * @param dimension The dimension that the bot should be tweened in.
  * @param position The position of the bot.
  * @param easing The easing to use.
+ * @param duration The duration of the tween in seconds.
+ *
  */
 export function localRotationTween(
     botId: string,
     dimension: string,
     rotation: { x?: number; y?: number; z?: number },
-    easing: Easing = { type: 'linear', mode: 'inout' }
+    easing: Easing = { type: 'linear', mode: 'inout' },
+    duration: number = 1,
+    taskId?: string | number
 ): LocalRotationTweenAction {
     return {
         type: 'local_tween',
@@ -3893,6 +3912,8 @@ export function localRotationTween(
         dimension,
         easing,
         rotation,
+        duration: clamp(duration, 0, MAX_TWEEN_DURATION),
+        taskId,
     };
 }
 

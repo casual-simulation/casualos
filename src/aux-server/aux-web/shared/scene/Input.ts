@@ -118,6 +118,18 @@ export class Input {
     }
 
     /**
+     * Calculates the "offset" coordinates relative to the given view using the given page position coordinates.
+     * @param pagePos The page position of the coordinates that we want converted.
+     * @param view The HTML element that we want the position to be relative to.
+     */
+    public static offsetPosition(pagePos: Vector2, view: HTMLElement) {
+        let globalPos = new Vector2(pagePos.x, pagePos.y);
+        let viewRect = view.getBoundingClientRect();
+        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        return viewPos;
+    }
+
+    /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
      * @param event The mouse event to get the viewport position out of.

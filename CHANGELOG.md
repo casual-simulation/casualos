@@ -1,5 +1,82 @@
 # CasualOS Changelog
 
+## V1.2.12
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `helix` form.
+    -   Displays a DNA strand mesh whose color can be customized.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `server.setupStory()` would load a simulation and never dispose it.
+
+## V1.2.11
+
+#### Date: 9/9/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where zooming was broken when the page portal is not anchored to the top left of the screen.
+
+## V1.2.10
+
+#### Date: 9/8/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with the multiline editor getting cut off inside the tag portal.
+
+## V1.2.9
+
+#### Date: 9/8/2020
+
+### :rocket: Improvements
+
+-   Changed the page portal to resize around the tag portal instead of being hidden behind it.
+
+## V1.2.8
+
+#### Date: 9/8/2020
+
+### :boom: Breaking Changes
+
+-   Changed `experiment.localPositionTween()` and `experiment.localRotationTween()` to take different arguments and return a promise.
+    -   the 4th parameter is now an options object instead of the easing options.
+    -   This options object is able to accept easing and duration values.
+    -   Additionally the functions now return promises.
+    -   See the docs for examples.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `experiment.localPositionTween()` and `experiment.localRotationTween()` may not execute if triggered during `@onCreate()`.
+
+## V1.2.7
+
+#### Date: 9/4/2020
+
+### :boom: Breaking Changes
+
+-   Changed `@onListen` to only be sent to bots which have a listener for the shout/whisper.
+    -   Previously `@onListen` would be sent to all bots that were targeted by the shout/whisper.
+-   Changed `shout()` and `whisper()` to cost 1 energy point.
+    -   This helps prevent infinite loops.
+    -   The energy point is only deducted if a bot has a listener for the event.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `onBotAdded`, `onAnyBotsAdded`, `onAnyBotsRemoved`, `onBotChanged`, and `onAnyBotsChanged` would reset the energy counter.
+
+## V1.2.6
+
+#### Date: 9/4/2020
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where whispering to a bot that is null or undefined would end up sending a shout to all bots.
+
 ## V1.2.5
 
 #### Date: 8/31/2020

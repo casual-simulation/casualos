@@ -168,6 +168,7 @@ export interface AuxLibrary {
             eventName: string,
             arg?: any
         ): any[];
+        shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
     };
@@ -303,6 +304,21 @@ export interface WebhookOptions {
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
+}
+
+/**
+ * Defines a set of options for a tween.
+ */
+export interface TweenOptions {
+    /**
+     * The easing for the tween.
+     */
+    easing?: Easing;
+
+    /**
+     * The duration of the tween in seconds.
+     */
+    duration?: number;
 }
 
 /**
@@ -2651,17 +2667,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot or bot ID to tween.
      * @param dimension The dimension that the bot should be tweened in.
      * @param position The position that the bot should be tweened to.
-     * @param easing The easing that should be used for the tween.
+     * @param options The options that should be used for the tween.
      */
     function localPositionTween(
         bot: Bot | string,
         dimension: string,
         position: { x: number; y: number; z?: number },
-        easing?: Easing
-    ): LocalPositionTweenAction {
-        return addAction(
-            calcLocalPositionTween(getID(bot), dimension, position, easing)
+        options?: TweenOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalPositionTween(
+            getID(bot),
+            dimension,
+            position,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -2669,17 +2692,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot or bot ID to tween.
      * @param dimension The dimension that the bot should be tweened in.
      * @param rotation The rotation that the bot should be tweened to.
-     * @param easing The easing that should be used for the tween.
+     * @param options The options that should be used for the tween.
      */
     function localRotationTween(
         bot: Bot | string,
         dimension: string,
         rotation: { x: number; y: number; z?: number },
-        easing?: Easing
-    ): LocalRotationTweenAction {
-        return addAction(
-            calcLocalRotationTween(getID(bot), dimension, rotation, easing)
+        options?: TweenOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcLocalRotationTween(
+            getID(bot),
+            dimension,
+            rotation,
+            options ? options.easing : undefined,
+            options ? options.duration : undefined,
+            task.taskId
         );
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -3563,6 +3593,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bots = bot;
         } else if (hasValue(bot)) {
             bots = [bot];
+        } else {
+            return [];
         }
 
         return event(eventName, bots, arg);
@@ -3742,6 +3774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         let targets = [] as RuntimeBot[];
         let listeners = [] as RuntimeBot[];
+        let checkedEnergy = false;
 
         for (let id of ids) {
             if (!id) {
@@ -3761,13 +3794,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             let listener = bot.listeners[tag];
             if (listener) {
+                if (!checkedEnergy) {
+                    checkedEnergy = true;
+                    __energyCheck();
+                }
                 try {
-                    // TODO: Handle exceptions
-                    results.push(listener(arg));
-                    listeners.push(bot);
+                    const result = listener(arg);
+                    results.push(result);
                 } catch (ex) {
                     context.enqueueError(ex);
+                    results.push(undefined);
                 }
+                listeners.push(bot);
             }
         }
 
@@ -3779,7 +3817,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', targets, listenArg, false);
+            event('onListen', listeners, listenArg, false);
             event('onAnyListen', null, listenArg, false);
         }
 
