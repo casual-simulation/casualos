@@ -58,14 +58,16 @@ describe('RuntimeBot', () => {
         });
 
         updateTagMaskMock = jest.fn();
-        updateTagMaskMock.mockImplementation((bot, tag, space, value) => {
+        updateTagMaskMock.mockImplementation((bot, tag, spaces, value) => {
             if (!bot.masks) {
                 bot.masks = {};
             }
-            if (!bot.masks[space]) {
-                bot.masks[space] = {};
+            for (let space of spaces) {
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                bot.masks[space][tag] = value;
             }
-            bot.masks[space][tag] = value;
             return RealtimeEditMode.Immediate;
         });
 
@@ -518,15 +520,37 @@ describe('RuntimeBot', () => {
             expect(Object.keys(script.mask)).toEqual(['abc', 'ghi']);
         });
 
-        // it('should support the delete keyword', () => {
-        //     delete script.tags.abc;
-        //     expect(script.raw.abc).toEqual(null);
-        //     expect(manager.updateTag).toHaveBeenCalledWith(
-        //         precalc,
-        //         'abc',
-        //         null
-        //     );
-        // });
+        it('should support the delete keyword', () => {
+            precalc.masks = {
+                shared: {
+                    abc: 'def',
+                },
+                tempLocal: {
+                    abc: 'jkl',
+                },
+                other: {
+                    different: 123,
+                },
+            };
+
+            delete script.mask.abc;
+
+            expect(script.mask.abc).toEqual(null);
+            expect(script.maskChanges).toEqual({
+                shared: {
+                    abc: null,
+                },
+                tempLocal: {
+                    abc: null,
+                },
+            });
+            expect(manager.updateTagMask).toHaveBeenCalledWith(
+                precalc,
+                'abc',
+                ['shared', 'tempLocal'],
+                null
+            );
+        });
     });
 
     describe('clear_changes', () => {

@@ -9,6 +9,9 @@ import {
     createPrecalculatedBot,
     BotSignatures,
     BotTagMasks,
+    getTag,
+    getTagMaskSpaces,
+    hasValue,
 } from '../bots';
 import {
     CompiledBot,
@@ -323,17 +326,26 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            const space = DEFAULT_TAG_MASK_SPACE;
-            const mode = manager.updateTagMask(bot, key, space, value);
+            const spaces = hasValue(value)
+                ? [DEFAULT_TAG_MASK_SPACE]
+                : getTagMaskSpaces(bot, key);
+            const mode = manager.updateTagMask(bot, key, spaces, value);
             if (mode === RealtimeEditMode.Immediate) {
                 rawMasks[key] = value;
-                changeTagMask(key, value, space);
-            } else if (mode === RealtimeEditMode.Delayed) {
-                changeTagMask(key, value, space);
             }
+            changeTagMask(key, value, spaces);
             return true;
         },
         deleteProperty(target: any, key: string) {
+            if (key in constantTags) {
+                return true;
+            }
+            const spaces = getTagMaskSpaces(bot, key);
+            const mode = manager.updateTagMask(bot, key, spaces, null);
+            if (mode === RealtimeEditMode.Immediate) {
+                delete rawMasks[key];
+            }
+            changeTagMask(key, null, spaces);
             return true;
         },
         ownKeys(target) {
@@ -414,11 +426,13 @@ export function createRuntimeBot(
 
     return script;
 
-    function changeTagMask(tag: string, value: string, space: string) {
-        if (!changedMasks[space]) {
-            changedMasks[space] = {};
+    function changeTagMask(tag: string, value: string, spaces: string[]) {
+        for (let space of spaces) {
+            if (!changedMasks[space]) {
+                changedMasks[space] = {};
+            }
+            changedMasks[space][tag] = value;
         }
-        changedMasks[space][tag] = value;
     }
 }
 
@@ -440,13 +454,13 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * Updates the tag mask of the given bot.
      * @param bot The bot.
      * @param tag The tag that should be updated.
-     * @param space The space that the tag mask should be applied in.
-     * @param value The new tag value.
+     * @param space The spaces that the tag mask should be applied in.
+     * @param value The new tag value. If null, then the mask will be deleted.
      */
     updateTagMask(
         bot: CompiledBot,
         tag: string,
-        space: any,
+        spaces: string[],
         value: any
     ): RealtimeEditMode;
 

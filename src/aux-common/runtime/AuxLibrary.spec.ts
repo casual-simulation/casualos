@@ -4674,6 +4674,8 @@ describe('AuxLibrary', () => {
                 changes: {
                     fun: true,
                 },
+                mask: {},
+                maskChanges: {},
                 listeners: {},
                 signatures: {},
             });
@@ -4701,6 +4703,8 @@ describe('AuxLibrary', () => {
                     abc: 'def',
                     onCreate: callback,
                 },
+                mask: {},
+                maskChanges: {},
                 changes: {},
                 listeners: {
                     onCreate: expect.any(Function),

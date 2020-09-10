@@ -66,6 +66,7 @@ import { merge, shortUuid } from '../utils';
 import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
 import { BotObjectsContext } from './BotObjectsContext';
+import { Object3D } from 'three';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -2625,4 +2626,33 @@ export function getOriginalObject(obj: any): any {
         return obj[ORIGINAL_OBJECT];
     }
     return obj;
+}
+
+export function getMaskSpaces(bot: Bot): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    return Object.keys(bot.masks);
+}
+
+/**
+ * Gets the list of spaces that the given tag mask exists in.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getTagMaskSpaces(bot: Bot, tag: string): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    let spaces = [] as string[];
+    for (let space in bot.masks) {
+        if (!bot.masks[space]) {
+            continue;
+        }
+        if (tag in bot.masks[space]) {
+            spaces.push(space);
+        }
+    }
+
+    return spaces;
 }

@@ -28,6 +28,7 @@ import {
     getUploadState,
     botHasLOD,
     calculateBotLOD,
+    getTagMaskSpaces,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
@@ -1586,6 +1587,33 @@ describe('BotCalculations', () => {
             const result = getUploadState(data);
 
             expect(result).toEqual(data.state);
+        });
+    });
+
+    describe('getTagMaskSpaces()', () => {
+        it('should return an empty array if the bot has no masks', () => {
+            const b = createBot('test1');
+            const spaces = getTagMaskSpaces(b, 'abc');
+
+            expect(spaces).toEqual([]);
+        });
+
+        it('should return the list of spaces that the given tag exists in', () => {
+            const b = createBot('test1');
+            b.masks = {
+                space1: {
+                    abc: true,
+                },
+                space2: {
+                    other: 123,
+                },
+                space3: {
+                    abc: null,
+                },
+            };
+            const spaces = getTagMaskSpaces(b, 'abc');
+
+            expect(spaces).toEqual(['space1', 'space3']);
         });
     });
 
