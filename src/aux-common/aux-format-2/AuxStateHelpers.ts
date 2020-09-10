@@ -102,6 +102,14 @@ export function updates(
                     ...existingBot.signatures,
                 };
             }
+            if (existingBot.masks) {
+                updatedBot.masks = {};
+                for (let space in existingBot.masks) {
+                    updatedBot.masks[space] = {
+                        ...existingBot.masks[space],
+                    };
+                }
+            }
 
             if (botUpdate.tags) {
                 for (let tag in botUpdate.tags) {
@@ -132,6 +140,26 @@ export function updates(
                     Object.keys(updatedBot.signatures).length <= 0
                 ) {
                     delete updatedBot.signatures;
+                }
+            }
+            if (botUpdate.masks) {
+                for (let space in botUpdate.masks) {
+                    const tags = botUpdate.masks[space];
+                    for (let tag in tags) {
+                        const value = tags[tag];
+                        if (value === null) {
+                            delete updatedBot.masks[space][tag];
+                        } else {
+                            if (!updatedBot.masks) {
+                                updatedBot.masks = {};
+                            }
+                            if (!updatedBot.masks[space]) {
+                                updatedBot.masks[space] = {};
+                            }
+                            updatedBot.masks[space][tag] = value;
+                        }
+                        updatedTags.add(tag);
+                    }
                 }
             }
             if (updatedTags.size > 0 || updatedSignatures.size > 0) {

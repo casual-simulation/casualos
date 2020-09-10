@@ -75,12 +75,6 @@ export interface UpdatedBot {
      * The signatures that were updated on the bot.
      */
     signatures?: string[];
-
-    /**
-     * The tag masks that were updated on the bot.
-     * In each element, the first value is the space of the tag and the second is the tag name.
-     */
-    masks?: [string, string][];
 }
 
 /**

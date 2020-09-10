@@ -2172,6 +2172,100 @@ describe('AuxRuntime', () => {
                 });
             });
         });
+
+        describe('masks', () => {
+            it('should handle adding masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {
+                                    def: 123,
+                                },
+                            },
+                        },
+                        tags: ['def'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                def: 123,
+                            },
+                            masks: {
+                                shared: {
+                                    def: 123,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should use the mask value for the tag value', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['def'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+        });
     });
 
     describe('process()', () => {

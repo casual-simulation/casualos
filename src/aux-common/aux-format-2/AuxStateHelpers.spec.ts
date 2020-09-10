@@ -377,6 +377,199 @@ describe('AuxStateHelpers', () => {
                     updatedBots: [],
                 });
             });
+
+            it('should record new tag masks', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            test: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    test: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                            tags: new Set(['abc']),
+                        },
+                    ],
+                });
+            });
+
+            it('should record updated tag masks', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            test: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            test: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    test: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            tags: new Set(['abc']),
+                        },
+                    ],
+                });
+            });
+
+            it('should ignore tag masks that were not updated', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            test: {
+                                abc: 'def',
+                                num: 987,
+                            },
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            test: {
+                                num: 123,
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    test: {
+                                        abc: 'def',
+                                        num: 123,
+                                    },
+                                },
+                            },
+                            tags: new Set(['num']),
+                        },
+                    ],
+                });
+            });
+
+            it('should delete tags masks that were set to null', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            test: {
+                                abc: 'def',
+                                num: 987,
+                            },
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            test: {
+                                num: null as any,
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    test: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                            tags: new Set(['num']),
+                        },
+                    ],
+                });
+            });
+
+            it('should not include the update if no tag masks were updated', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            test: {},
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        masks: {
+                            test: {},
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
         });
     });
 });

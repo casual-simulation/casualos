@@ -2656,3 +2656,19 @@ export function getTagMaskSpaces(bot: Bot, tag: string): string[] {
 
     return spaces;
 }
+
+/**
+ * Gets the value of the given tag mask in the given space.
+ * @param bot The bot.
+ * @param space The space that the tag mask is in.
+ * @param tag The tag.
+ */
+export function getTagMask(bot: Bot, space: string, tag: string): any {
+    if (!bot.masks) {
+        return undefined;
+    }
+    if (!bot.masks[space]) {
+        return undefined;
+    }
+    return bot.masks[space][tag];
+}

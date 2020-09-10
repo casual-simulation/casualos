@@ -33,6 +33,7 @@ import {
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
     BotSpace,
+    getTagMask,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -224,6 +225,19 @@ export class AuxRuntime
         };
 
         this._zone = batchingZone;
+    }
+
+    updateTagMask(
+        bot: CompiledBot,
+        tag: string,
+        spaces: string[],
+        value: any
+    ): RealtimeEditMode {
+        throw new Error('Method not implemented.');
+    }
+
+    getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
+        throw new Error('Method not implemented.');
     }
 
     get closed() {
@@ -647,6 +661,24 @@ export class AuxRuntime
                     } else if (val && !current) {
                         this._compileTag(compiled, val, compiled.tags[val]);
                     }
+                }
+            }
+
+            if (u.masks) {
+                if (!compiled.masks) {
+                    compiled.masks = {};
+                }
+                partial.masks = {};
+                for (let [space, tag] of u.masks) {
+                    const val = getTagMask(u.bot, space, tag);
+                    if (!compiled.masks[space]) {
+                        compiled.masks[space] = {};
+                    }
+                    if (!partial.masks[space]) {
+                        partial.masks[space] = {};
+                    }
+                    compiled.masks[space][tag] = val;
+                    partial.masks[space][tag] = val;
                 }
             }
 

@@ -29,6 +29,7 @@ import {
     botHasLOD,
     calculateBotLOD,
     getTagMaskSpaces,
+    getTagMask,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
@@ -1614,6 +1615,35 @@ describe('BotCalculations', () => {
             const spaces = getTagMaskSpaces(b, 'abc');
 
             expect(spaces).toEqual(['space1', 'space3']);
+        });
+    });
+
+    describe('getTagMask()', () => {
+        it('should return undefined if the bot has no masks', () => {
+            const b = createBot('test1');
+            const value = getTagMask(b, 'test', 'abc');
+
+            expect(value).toBeUndefined();
+        });
+
+        it('should return undefined if the bot has no masks for the given space', () => {
+            const b = createBot('test1');
+            b.masks = {};
+            const value = getTagMask(b, 'test', 'abc');
+
+            expect(value).toBeUndefined();
+        });
+
+        it('should return the stored value', () => {
+            const b = createBot('test1');
+            b.masks = {
+                test: {
+                    abc: 123,
+                },
+            };
+            const value = getTagMask(b, 'test', 'abc');
+
+            expect(value).toBe(123);
         });
     });
 
