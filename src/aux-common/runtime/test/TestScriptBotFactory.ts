@@ -84,8 +84,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         if (!bot.masks) {
             return undefined;
         }
-        for (let i = TAG_MASK_SPACE_PRIORITIES.length - 1; i >= 0; i--) {
-            const space = TAG_MASK_SPACE_PRIORITIES[i];
+        for (let space of TAG_MASK_SPACE_PRIORITIES) {
             if (!bot.masks[space]) {
                 continue;
             }
@@ -95,14 +94,16 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
         return undefined;
     },
-    updateTagMask(bot: CompiledBot, tag: string, space: string, value: any) {
+    updateTagMask(bot: CompiledBot, tag: string, spaces: string[], value: any) {
         if (!bot.masks) {
             bot.masks = {};
         }
-        if (!bot.masks[space]) {
-            bot.masks[space] = {};
+        for (let space of spaces) {
+            if (!bot.masks[space]) {
+                bot.masks[space] = {};
+            }
+            bot.masks[space][tag] = value;
         }
-        bot.masks[space][tag] = value;
         return RealtimeEditMode.Immediate;
     },
 };

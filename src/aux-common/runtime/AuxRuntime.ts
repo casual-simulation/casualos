@@ -34,6 +34,8 @@ import {
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
     BotSpace,
     getTagMask,
+    hasTagOrMask,
+    ON_STORY_STREAM_LOST_ACTION_NAME,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -54,6 +56,7 @@ import {
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
+    TAG_MASK_SPACE_PRIORITIES,
 } from './RuntimeBot';
 import {
     CompiledBot,
@@ -511,6 +514,9 @@ export class AuxRuntime
             if (hasValue(bot.signatures)) {
                 precalculated.signatures = bot.signatures;
             }
+            if (hasValue(bot.masks)) {
+                precalculated.masks = bot.masks;
+            }
             newBots.push([newBot, precalculated]);
             newBotIDs.add(newBot.id);
             update.state[bot.id] = precalculated;
@@ -628,15 +634,45 @@ export class AuxRuntime
             }
 
             // 2. update
-            this._compileTags(u.tags, compiled, u.bot);
+            let updates = this._compileTags(u.tags, compiled, u.bot);
 
             // 3. convert to precalculated
             let partial = {
                 tags: {},
                 values: {},
             } as Partial<PrecalculatedBot>;
-            for (let tag of u.tags) {
-                partial.tags[tag] = u.bot.tags[tag];
+            if (u.bot.masks) {
+                partial.masks = {};
+            }
+
+            for (let [space, tag] of updates) {
+                if (space) {
+                    if (u.bot.masks) {
+                        for (let space in u.bot.masks) {
+                            if (hasValue(u.bot.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] =
+                                    u.bot.masks[space][tag];
+                            }
+                        }
+                    }
+                } else if (space === undefined) {
+                    if (compiled.masks) {
+                        for (let space in compiled.masks) {
+                            if (hasValue(compiled.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] = null;
+                                delete compiled.masks[space][tag];
+                            }
+                        }
+                    }
+                } else {
+                    partial.tags[tag] = u.bot.tags[tag];
+                }
             }
 
             if (u.signatures) {
@@ -661,24 +697,6 @@ export class AuxRuntime
                     } else if (val && !current) {
                         this._compileTag(compiled, val, compiled.tags[val]);
                     }
-                }
-            }
-
-            if (u.masks) {
-                if (!compiled.masks) {
-                    compiled.masks = {};
-                }
-                partial.masks = {};
-                for (let [space, tag] of u.masks) {
-                    const val = getTagMask(u.bot, space, tag);
-                    if (!compiled.masks[space]) {
-                        compiled.masks[space] = {};
-                    }
-                    if (!partial.masks[space]) {
-                        partial.masks[space] = {};
-                    }
-                    compiled.masks[space][tag] = val;
-                    partial.masks[space][tag] = val;
                 }
             }
 
@@ -827,14 +845,14 @@ export class AuxRuntime
         const actions = this._globalContext.dequeueActions();
         const updatedBots = [...this._updatedBots.values()];
         const updates = updatedBots
-            .filter(bot => {
+            .filter((bot) => {
                 return (
                     Object.keys(bot.changes).length > 0 &&
                     !this._newBots.has(bot.id) &&
                     isInContext(this._globalContext, bot)
                 );
             })
-            .map(bot =>
+            .map((bot) =>
                 botUpdated(bot.id, {
                     tags: { ...bot.changes },
                 })
@@ -842,7 +860,7 @@ export class AuxRuntime
         for (let bot of updatedBots) {
             bot[CLEAR_CHANGES_SYMBOL]();
         }
-        const sortedUpdates = sortBy(updates, u => u.id);
+        const sortedUpdates = sortBy(updates, (u) => u.id);
         this._updatedBots.clear();
         this._newBots.clear();
         actions.push(...sortedUpdates);
@@ -870,8 +888,8 @@ export class AuxRuntime
             }
             const tags = updated[botId];
             for (let tag of tags) {
-                const originalTag = originalBot.tags[tag];
-                if (hasValue(originalTag)) {
+                let hasTag = hasTagOrMask(originalBot, tag);
+                if (hasTag) {
                     botUpdate.values[tag] = convertToCopiableValue(
                         this._updateTag(originalBot, tag, true)
                     );
@@ -889,10 +907,16 @@ export class AuxRuntime
         }
     }
 
-    private _compileTags(tags: string[], compiled: CompiledBot, bot: Bot) {
+    private _compileTags(
+        tags: string[],
+        compiled: CompiledBot,
+        bot: Bot
+    ): [string, string][] {
+        let updates = [] as [string, string][];
         for (let tag of tags) {
-            this._compileTag(compiled, tag, bot.tags[tag]);
+            updates.push(this._compileTagOrMask(compiled, bot, tag));
         }
+        return updates;
     }
 
     private _createCompiledBot(bot: Bot, fromFactory: boolean): CompiledBot {
@@ -910,6 +934,14 @@ export class AuxRuntime
         }
         if (hasValue(bot.signatures)) {
             compiledBot.signatures = bot.signatures;
+        }
+        if (hasValue(bot.masks)) {
+            compiledBot.masks = {};
+            for (let space in bot.masks) {
+                compiledBot.masks[space] = {
+                    ...bot.masks[space],
+                };
+            }
         }
         compiledBot.script = this._createRuntimeBot(compiledBot);
         const tags = tagsOnBot(compiledBot);
@@ -992,9 +1024,61 @@ export class AuxRuntime
         }
     }
 
-    private _compileTag(bot: CompiledBot, tag: string, tagValue: any) {
-        bot.tags[tag] = tagValue;
+    private _compileTagOrMask(
+        bot: CompiledBot,
+        existingBot: Bot,
+        tag: string
+    ): [string, string] {
+        let hadMask = false;
+        if (existingBot.masks) {
+            for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                const tagValue = existingBot.masks[space]?.[tag];
+                if (hasValue(tagValue)) {
+                    if (!bot.masks) {
+                        bot.masks = {};
+                    }
+                    if (!bot.masks[space]) {
+                        bot.masks[space] = {};
+                    }
+                    bot.masks[space][tag] = tagValue;
+                    this._compileTagValue(bot, tag, tagValue);
+                    return [space, tag];
+                } else if (hasValue(bot.masks?.[space]?.[tag])) {
+                    // Indicate that there used to be a value for the tag mask
+                    // but it has been removed.
+                    hadMask = true;
+                    break;
+                }
+            }
+        }
+        const tagValue = existingBot.tags[tag];
+        if (hasValue(tagValue) || tagValue === null) {
+            bot.tags[tag] = tagValue;
+            this._compileTagValue(bot, tag, tagValue);
+            if (hadMask) {
+                return [undefined, tag];
+            } else {
+                return [null, tag];
+            }
+        }
 
+        // Undefined means that a tag mask was removed.
+        return [undefined, tag];
+    }
+
+    private _compileTag(bot: CompiledBot, tag: string, tagValue: any) {
+        if (bot.masks) {
+            for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                if (hasValue(bot.masks[space]?.[tag])) {
+                    return;
+                }
+            }
+        }
+        bot.tags[tag] = tagValue;
+        this._compileTagValue(bot, tag, tagValue);
+    }
+
+    private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener } = this._compileValue(bot, tag, tagValue);
         if (listener) {
             bot.listeners[tag] = listener;
@@ -1046,7 +1130,7 @@ export class AuxRuntime
             // Note: Don't name isFormula because then webpack will be
             // confused and decide to not import the isFormula function above
             let isAFormula = false;
-            const values = split.map(s => {
+            const values = split.map((s) => {
                 const result = this._compileValue(bot, tag, s.trim());
                 if (typeof result.value === 'function') {
                     isAFormula = true;
@@ -1057,12 +1141,12 @@ export class AuxRuntime
             if (isAFormula) {
                 // TODO: Add the proper metadata for formulas in array elements
                 value = <any>(() => {
-                    return values.map(v =>
+                    return values.map((v) =>
                         typeof v.value === 'function' ? v.value() : v.value
                     );
                 });
             } else {
-                value = values.map(v => v.value);
+                value = values.map((v) => v.value);
             }
         }
 
@@ -1094,7 +1178,7 @@ export class AuxRuntime
                 creator: null as RuntimeBot,
                 config: null as RuntimeBot,
             },
-            before: ctx => {
+            before: (ctx) => {
                 // if (!options.allowsEditing) {
                 //     ctx.wasEditable = ctx.global.allowsEditing;
                 //     ctx.global.allowsEditing = false;
@@ -1163,13 +1247,13 @@ export class AuxRuntime
                 tagName: tag,
             },
             variables: {
-                this: ctx => (ctx.bot ? ctx.bot.script : null),
-                bot: ctx => (ctx.bot ? ctx.bot.script : null),
-                tags: ctx => (ctx.bot ? ctx.bot.script.tags : null),
-                raw: ctx => (ctx.bot ? ctx.bot.script.raw : null),
-                creator: ctx => ctx.creator,
-                config: ctx => ctx.config,
-                configTag: ctx =>
+                this: (ctx) => (ctx.bot ? ctx.bot.script : null),
+                bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
+                tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
+                raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
+                creator: (ctx) => ctx.creator,
+                config: (ctx) => ctx.config,
+                configTag: (ctx) =>
                     ctx.config ? ctx.config.tags[ctx.tag] : null,
             },
             arguments: [['that', 'data']],
@@ -1213,7 +1297,7 @@ export class AuxRuntime
         if (isBot(value)) {
             return this._globalContext.state[value.id] || value;
         } else if (Array.isArray(value) && value.some(isBot)) {
-            let arr = value.map(b =>
+            let arr = value.map((b) =>
                 isBot(b) ? this._globalContext.state[b.id] || b : b
             );
             (<any>arr)[ORIGINAL_OBJECT] = value;
@@ -1255,7 +1339,7 @@ export class AuxRuntime
                 const result = [] as any[];
                 map.set(value, result);
                 result.push(
-                    ...value.map(v =>
+                    ...value.map((v) =>
                         this._mapBotsToRuntimeBotsCore(v, depth + 1, map)
                     )
                 );

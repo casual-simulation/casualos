@@ -178,7 +178,7 @@ export function filterBotsBySelection<TBot extends Bot>(
     bots: TBot[],
     selectionId: string
 ) {
-    return bots.filter(f => {
+    return bots.filter((f) => {
         if (f.id === selectionId) {
             return true;
         }
@@ -241,7 +241,7 @@ export function botTags(
     extraTags: string[],
     tagWhitelist: (string | boolean)[][] = []
 ) {
-    const botTags = flatMap(bots, f => keys(f.tags));
+    const botTags = flatMap(bots, (f) => keys(f.tags));
     const tagsToKeep = union(botTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
@@ -275,7 +275,7 @@ export function botTags(
                 }
             }
         } else {
-            const initialTags = onlyTagsToKeep.filter(t => !isHiddenTag(t));
+            const initialTags = onlyTagsToKeep.filter((t) => !isHiddenTag(t));
             return initialTags;
         }
 
@@ -286,9 +286,11 @@ export function botTags(
 }
 
 export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
-    const botTags = flatMap(bots, f => keys(f.tags));
+    const botTags = flatMap(bots, (f) => keys(f.tags));
 
-    const nonHiddenTags = botTags.filter(t => includeHidden || !isHiddenTag(t));
+    const nonHiddenTags = botTags.filter(
+        (t) => includeHidden || !isHiddenTag(t)
+    );
 
     return nonHiddenTags;
 }
@@ -304,7 +306,7 @@ export function botsFromShortIds(
     shortIds: string[]
 ): Bot[] {
     var matches: Bot[] = [];
-    shortIds.forEach(shortId => {
+    shortIds.forEach((shortId) => {
         var bot = this.botFromShortId(bots, shortId);
         if (bot) matches.push(bot);
     });
@@ -463,7 +465,7 @@ export function parseScript(value: unknown): string | null {
 export function containsFormula(value: string): boolean {
     return (
         isFormula(value) ||
-        (isArray(value) && some(parseArray(value), v => isFormula(v)))
+        (isArray(value) && some(parseArray(value), (v) => isFormula(v)))
     );
 }
 
@@ -486,7 +488,7 @@ export function parseArray(value: string): string[] {
     var array: string[] = value.slice(1, value.length - 1).split(',');
     if (array && array.length > 0 && array[0].length > 0) {
         // trim all entries.
-        return array.map(s => {
+        return array.map((s) => {
             return s.trim();
         });
     } else {
@@ -567,7 +569,7 @@ export function doBotsAppearEqual(
     }
 
     const tags = union(keys(first.tags), keys(second.tags));
-    const usableTags = tags.filter(t => !isTagWellKnown(t));
+    const usableTags = tags.filter((t) => !isTagWellKnown(t));
 
     let allEqual = true;
     for (let t of usableTags) {
@@ -691,8 +693,10 @@ export function botsInDimension(
     calc: BotCalculationContext,
     dimension: string
 ): Bot[] {
-    const bots = calc.objects.filter(f => isBotInDimension(calc, f, dimension));
-    return sortBy(bots, f => botDimensionSortOrder(calc, f, dimension));
+    const bots = calc.objects.filter((f) =>
+        isBotInDimension(calc, f, dimension)
+    );
+    return sortBy(bots, (f) => botDimensionSortOrder(calc, f, dimension));
 }
 
 /**
@@ -819,8 +823,16 @@ export function removeBotFromMenu(
  * @param bot
  */
 export function tagsOnBot(bot: PartialBot): string[] {
-    let tags = keys(bot.tags);
-    return tags;
+    let tags = new Set(keys(bot.tags));
+    if (bot.masks) {
+        for (let space in bot.masks) {
+            let k = keys(bot.masks[space]);
+            for (let key of k) {
+                tags.add(key);
+            }
+        }
+    }
+    return [...tags.values()];
 }
 
 /**
@@ -962,7 +974,7 @@ export function calculateStateDiff(
 
     const ids = union(keys(prev), keys(current));
 
-    ids.forEach(id => {
+    ids.forEach((id) => {
         const prevVal = prev[id];
         const currVal = current[id];
 
@@ -1290,7 +1302,7 @@ export function getBotAnchorPoint(
     const mode = <BotAnchorPoint>calculateBotValue(calc, bot, 'auxAnchorPoint');
 
     if (Array.isArray(mode)) {
-        if (mode.length >= 3 && mode.every(v => typeof v === 'number')) {
+        if (mode.length >= 3 && mode.every((v) => typeof v === 'number')) {
             return mode;
         }
     } else if (possibleAnchorPoints.has(mode)) {
@@ -1374,7 +1386,7 @@ export function getBotMeetPortalAnchorPoint(
     );
 
     if (Array.isArray(mode)) {
-        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
             let result = mode.slice(0, 4);
             while (result.length < 4) {
                 result.push(0);
@@ -1401,7 +1413,7 @@ export function getBotTagPortalAnchorPoint(
     );
 
     if (Array.isArray(mode)) {
-        if (mode.every(v => ['string', 'number'].indexOf(typeof v) >= 0)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
             let result = mode.slice(0, 4);
             while (result.length < 4) {
                 result.push(0);
@@ -1907,7 +1919,7 @@ export function getBuilderDimensionGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(bot);
     const gridTags = tags.filter(
-        t =>
+        (t) =>
             t.indexOf('auxDimensionConfig.surface.grid.') === 0 &&
             t.indexOf(':') > 0
     );
@@ -2003,12 +2015,10 @@ export function objectsAtDimensionGridPosition(
                 [true, position.x, position.y],
                 [undefined, 0, 0]
             );
-            return <Bot[]>(
-                sortBy(
-                    botsAtPosition,
-                    o => getBotIndex(calc, o, dimension),
-                    o => o.id
-                )
+            return <Bot[]>sortBy(
+                botsAtPosition,
+                (o) => getBotIndex(calc, o, dimension),
+                (o) => o.id
             );
         },
         dimension,
@@ -2034,7 +2044,7 @@ export function calculateBotDragStackPosition(
     const objs = differenceBy(
         objectsAtDimensionGridPosition(calc, dimension, gridPosition),
         bots,
-        f => f.id
+        (f) => f.id
     );
 
     const canMerge = canMergeBots(calc, objs, bots);
@@ -2086,9 +2096,9 @@ export function nextAvailableObjectIndex(
     bots: (Bot | BotTags)[],
     objs: Bot[]
 ): number {
-    const except = differenceBy(objs, bots, f => f.id);
+    const except = differenceBy(objs, bots, (f) => f.id);
 
-    const indexes = except.map(o => ({
+    const indexes = except.map((o) => ({
         object: o,
         index: getBotIndex(calc, o, dimension),
     }));
@@ -2096,7 +2106,7 @@ export function nextAvailableObjectIndex(
     // TODO: Improve to handle other scenarios like:
     // - Reordering objects
     // - Filling in gaps that can be made by moving bots from the center of the list
-    const maxIndex = maxBy(indexes, i => i.index);
+    const maxIndex = maxBy(indexes, (i) => i.index);
     let nextIndex = 0;
     if (maxIndex) {
         nextIndex = maxIndex.index + 1;
@@ -2111,7 +2121,7 @@ export function nextAvailableObjectIndex(
  * @param workspaceId The ID of the workspace that the objects need to be on,
  */
 export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
-    return objects.filter(o => {
+    return objects.filter((o) => {
         return o.tags._workspace === workspaceId;
     });
 }
@@ -2134,7 +2144,7 @@ export function duplicateBot(
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
     const tagsToRemove = filterWellKnownAndDimensionTags(calc, tags);
-    tagsToRemove.forEach(t => {
+    tagsToRemove.forEach((t) => {
         delete copy.tags[t];
     });
 
@@ -2154,7 +2164,7 @@ export function filterWellKnownAndDimensionTags(
     tags: string[]
 ) {
     const contextsToRemove = getDimensions(calc);
-    const tagsToRemove = tags.filter(t =>
+    const tagsToRemove = tags.filter((t) =>
         isWellKnownOrDimension(t, contextsToRemove)
     );
     return tagsToRemove;
@@ -2165,7 +2175,7 @@ export function filterWellKnownAndDimensionTags(
  * @param calc The bot calculation context.
  */
 export function getDimensions(calc: BotCalculationContext) {
-    return union(...calc.objects.map(o => getBotConfigDimensions(calc, o)));
+    return union(...calc.objects.map((o) => getBotConfigDimensions(calc, o)));
 }
 
 /**
@@ -2174,7 +2184,7 @@ export function getDimensions(calc: BotCalculationContext) {
  * @param dimensions The dimensions to check the tag against.
  */
 export function isWellKnownOrDimension(tag: string, dimensions: string[]): any {
-    return isTagWellKnown(tag) || dimensions.some(c => tag.indexOf(c) === 0);
+    return isTagWellKnown(tag) || dimensions.some((c) => tag.indexOf(c) === 0);
 }
 
 /**
@@ -2450,7 +2460,7 @@ export function getBotChannel(
  * @param id The ID to search for.
  */
 export function getChannelBotById(calc: BotCalculationContext, id: string) {
-    const bots = calc.objects.filter(o => {
+    const bots = calc.objects.filter((o) => {
         return (
             isBotInDimension(calc, o, 'aux.channels') &&
             calculateBotValue(calc, o, 'story') === id
@@ -2547,7 +2557,7 @@ export function isUserActive(calc: BotCalculationContext, bot: Bot) {
 function _parseFilterValue(value: string): any {
     if (isArray(value)) {
         const split = parseArray(value);
-        return split.map(v => _parseFilterValue(v));
+        return split.map((v) => _parseFilterValue(v));
     } else if (isNumber(value)) {
         return parseFloat(value);
     } else if (value === 'true') {
@@ -2568,7 +2578,7 @@ export function formatValue(value: any): string {
         if (!value) {
             return null;
         } else if (Array.isArray(value)) {
-            return `[${value.map(v => formatValue(v)).join(',')}]`;
+            return `[${value.map((v) => formatValue(v)).join(',')}]`;
         } else if (value instanceof Error) {
             return value.toString();
         } else {
@@ -2598,7 +2608,7 @@ export function calculateValue(
 ): any {
     if (isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => calculateValue(object, tag, s.trim()));
+        return split.map((s) => calculateValue(object, tag, s.trim()));
     } else if (isNumber(formula)) {
         return parseFloat(formula);
     } else if (formula === 'true') {
@@ -2671,4 +2681,24 @@ export function getTagMask(bot: Bot, space: string, tag: string): any {
         return undefined;
     }
     return bot.masks[space][tag];
+}
+
+/**
+ * Determines whether the given bot has a tag or mask for the given tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function hasTagOrMask(bot: Bot, tag: string): boolean {
+    let hasTag = hasValue(bot.tags[tag]);
+    if (hasTag) {
+        return true;
+    }
+    if (bot.masks) {
+        for (let space in bot.masks) {
+            if (hasValue(bot.masks[space][tag])) {
+                return true;
+            }
+        }
+    }
+    return false;
 }

@@ -146,7 +146,7 @@ export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
  * The list of spaces that tag masks should be prioritized by.
  * Listed in reverse order of where they actually end up applied.
  */
-export const TAG_MASK_SPACE_PRIORITIES = [
+export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
     'admin',
     'shared',
     'otherPlayers',
@@ -156,14 +156,27 @@ export const TAG_MASK_SPACE_PRIORITIES = [
 ] as BotSpace[];
 
 /**
+ * The list of spaces that tag masks should be prioritized by.
+ * Listed in reverse order of where they actually end up applied.
+ */
+export const TAG_MASK_SPACE_PRIORITIES = [
+    'tempLocal',
+    'local',
+    'player',
+    'otherPlayers',
+    'shared',
+    'admin',
+] as BotSpace[];
+
+/**
  * Flattens the given tag masks into a normal tags object.
- * Spaces are prioritized accoring to the TAG_MASK_SPACE_PRIORITIES list.
+ * Spaces are prioritized accoring to the TAG_MASK_SPACE_PRIORITIES_REVERSE list.
  * @param masks The masks to flatten.
  */
 export function flattenTagMasks(masks: BotTagMasks): BotTags {
     let result = {} as BotTags;
     if (masks) {
-        for (let space of TAG_MASK_SPACE_PRIORITIES) {
+        for (let space of TAG_MASK_SPACE_PRIORITIES_REVERSE) {
             if (!!masks[space]) {
                 Object.assign(result, masks[space]);
             }

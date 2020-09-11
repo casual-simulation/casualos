@@ -139,11 +139,11 @@ describe('AuxRuntime', () => {
         errors = [];
         allErrors = [];
 
-        runtime.onActions.subscribe(a => {
+        runtime.onActions.subscribe((a) => {
             events.push(a);
             allEvents.push(...a);
         });
-        runtime.onErrors.subscribe(e => {
+        runtime.onErrors.subscribe((e) => {
             errors.push(e);
             allErrors.push(...e);
         });
@@ -159,11 +159,11 @@ describe('AuxRuntime', () => {
         let subs = [
             memory.onBotsAdded
                 .pipe(skip(1))
-                .subscribe(added => updates.push(runtime.botsAdded(added))),
-            memory.onBotsRemoved.subscribe(removed =>
+                .subscribe((added) => updates.push(runtime.botsAdded(added))),
+            memory.onBotsRemoved.subscribe((removed) =>
                 updates.push(runtime.botsRemoved(removed))
             ),
-            memory.onBotsUpdated.subscribe(updated =>
+            memory.onBotsUpdated.subscribe((updated) =>
                 updates.push(runtime.botsUpdated(updated))
             ),
         ];
@@ -910,6 +910,50 @@ describe('AuxRuntime', () => {
                 });
             });
         });
+
+        describe('masks', () => {
+            it('should add the masks to the precalculated bot', () => {
+                const update = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            shared: {
+                                abc: 123,
+                                def: 456,
+                            },
+                        },
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            id: 'test',
+                            precalculated: true,
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 123,
+                                def: 456,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: 123,
+                                    def: 456,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+        });
     });
 
     describe('botsRemoved()', () => {
@@ -1328,6 +1372,46 @@ describe('AuxRuntime', () => {
                     })
                 ),
             ]);
+        });
+
+        it('should handle removing tags', () => {
+            const update1 = runtime.botsAdded([
+                {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {
+                        abc: 123,
+                    },
+                },
+            ]);
+
+            const update2 = runtime.botsUpdated([
+                {
+                    bot: <any>{
+                        id: 'test',
+                        tags: {
+                            abc: null,
+                        },
+                    },
+                    tags: ['abc'],
+                },
+            ]);
+
+            expect(update2).toEqual({
+                state: {
+                    test: {
+                        tags: {
+                            abc: null,
+                        },
+                        values: {
+                            abc: null,
+                        },
+                    },
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test'],
+            });
         });
 
         describe('numbers', () => {
@@ -2189,7 +2273,9 @@ describe('AuxRuntime', () => {
                     {
                         bot: <any>{
                             id: 'test',
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                             masks: {
                                 shared: {
                                     def: 123,
@@ -2235,14 +2321,16 @@ describe('AuxRuntime', () => {
                     {
                         bot: <any>{
                             id: 'test',
-                            tags: {},
+                            tags: {
+                                abc: 'def',
+                            },
                             masks: {
                                 tempLocal: {
                                     abc: 123,
                                 },
                             },
                         },
-                        tags: ['def'],
+                        tags: ['abc'],
                     },
                 ]);
 
@@ -2256,6 +2344,264 @@ describe('AuxRuntime', () => {
                             masks: {
                                 tempLocal: {
                                     abc: 123,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should prefer tempLocal tag masks over local ones for values', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                local: {
+                                    abc: 456,
+                                },
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                                local: {
+                                    abc: 456,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should be able calculate formulas in tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: '=2 + 4',
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 6,
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: '=2 + 4',
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                            values: {
+                                abc: null,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should handle removing multiple tag masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {},
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                shared: {},
+                                tempLocal: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                            values: {
+                                abc: null,
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
+                                },
+                                tempLocal: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
+            it('should fall back to the tag value when a tag mask is deleted', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            shared: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {},
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            values: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {
+                                    abc: null,
                                 },
                             },
                         },
@@ -4132,7 +4478,10 @@ describe('AuxRuntime', () => {
             });
         });
 
-        const quoteCases = [['‘', '’'], ['“', '”']];
+        const quoteCases = [
+            ['‘', '’'],
+            ['“', '”'],
+        ];
 
         it.each(quoteCases)(
             'should support curly quotes by converting them to normal quotes',
@@ -4317,7 +4666,7 @@ describe('AuxRuntime', () => {
 
         it('should prevent scheduling tasks while in a formula', async () => {
             const test = jest.fn();
-            runtime = new AuxRuntime(version, auxDevice, ctx => ({
+            runtime = new AuxRuntime(version, auxDevice, (ctx) => ({
                 api: {
                     ...createDefaultLibrary(ctx).api,
                     test,
@@ -4540,7 +4889,7 @@ describe('AuxRuntime', () => {
             ]);
             let provider = new DefaultRealtimeEditModeProvider(map);
             runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe(a => events.push(a));
+            runtime.onActions.subscribe((a) => events.push(a));
 
             uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
             runtime.botsAdded([
@@ -4601,7 +4950,7 @@ describe('AuxRuntime', () => {
                 getEditMode: jest.fn(),
             };
             runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe(a => {
+            runtime.onActions.subscribe((a) => {
                 allEvents.push(...a);
             });
 
@@ -4689,7 +5038,7 @@ describe('AuxRuntime', () => {
             runtime = new AuxRuntime(
                 version,
                 auxDevice,
-                context => ({
+                (context) => ({
                     api: {
                         ...createDefaultLibrary(context).api,
                         test: test,
@@ -4725,7 +5074,7 @@ describe('AuxRuntime', () => {
     it('should not leak zones to callbacks', async () => {
         let root = Zone.root;
         const zones = [] as Zone[];
-        runtime.onActions.subscribe(e => {
+        runtime.onActions.subscribe((e) => {
             zones.push(Zone.current);
         });
         runtime.botsAdded([
@@ -4761,11 +5110,11 @@ describe('AuxRuntime', () => {
             errors = [];
             allErrors = [];
 
-            runtime.onActions.subscribe(a => {
+            runtime.onActions.subscribe((a) => {
                 events.push(a);
                 allEvents.push(...a);
             });
-            runtime.onErrors.subscribe(e => {
+            runtime.onErrors.subscribe((e) => {
                 errors.push(e);
                 allErrors.push(...e);
             });
@@ -8197,11 +8546,11 @@ describe('original action tests', () => {
             ]);
         });
 
-        const portalCases = [...KNOWN_PORTALS.map(p => [p])];
+        const portalCases = [...KNOWN_PORTALS.map((p) => [p])];
 
         it.each(portalCases)(
             'should return 1 when the dimension is in the %s portal',
-            portal => {
+            (portal) => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -10888,7 +11237,11 @@ describe('original action tests', () => {
         });
     });
 
-    const nonStringScriptCases = [['true', true], ['false', false], ['0', 0]];
+    const nonStringScriptCases = [
+        ['true', true],
+        ['false', false],
+        ['0', 0],
+    ];
     it.each(nonStringScriptCases)(
         'should include scripts that are formulas but return %s',
         (val, expected) => {
@@ -10923,7 +11276,7 @@ describe('original action tests', () => {
 
     it.each(nullScriptCases)(
         'should skip scripts that are formulas but return %s',
-        val => {
+        (val) => {
             expect.assertions(2);
 
             const state: BotsState = {
