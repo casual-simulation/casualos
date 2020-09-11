@@ -1,4 +1,11 @@
-import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
+import {
+    BotsState,
+    BotAction,
+    Bot,
+    UpdatedBot,
+    PartialBotsState,
+    StateUpdatedEvent,
+} from '../bots';
 import {
     StatusUpdate,
     RemoteAction,
@@ -112,6 +119,11 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * a bot is updated in this partition.
      */
     onBotsUpdated: Observable<UpdatedBot[]>;
+
+    /**
+     * Gets an observable list that resolves whenever the partition state is updated.
+     */
+    onStateUpdated: Observable<StateUpdatedEvent>;
 
     /**
      * Gets an observable list of errors from the partition.

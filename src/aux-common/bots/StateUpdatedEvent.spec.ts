@@ -1,6 +1,10 @@
-import { StateUpdatedEvent, applyUpdates } from './StateUpdatedEvent';
+import {
+    StateUpdatedEvent,
+    applyUpdates,
+    stateUpdatedEvent,
+} from './StateUpdatedEvent';
 import { PrecalculatedBotsState, PrecalculatedBot } from './Bot';
-import { createPrecalculatedBot } from './BotCalculations';
+import { createBot, createPrecalculatedBot } from './BotCalculations';
 
 describe('StateUpdatedEvent', () => {
     describe('applyUpdates()', () => {
@@ -178,6 +182,76 @@ describe('StateUpdatedEvent', () => {
                         sig: 'abc',
                     },
                 },
+            });
+        });
+    });
+
+    describe('stateUpdatedEvent()', () => {
+        it('should include bots with an ID property as added bots', () => {
+            const update = stateUpdatedEvent({
+                test: createBot('test'),
+            });
+
+            expect(update).toEqual({
+                state: {
+                    test: createBot('test'),
+                },
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
+            });
+        });
+
+        it('should include bots set to null as removed bots', () => {
+            const update = stateUpdatedEvent({
+                test: null,
+            });
+
+            expect(update).toEqual({
+                state: {
+                    test: null,
+                },
+                addedBots: [],
+                removedBots: ['test'],
+                updatedBots: [],
+            });
+        });
+
+        it('should include bots without an ID property as updated bots', () => {
+            const update = stateUpdatedEvent({
+                test: {
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+            });
+
+            expect(update).toEqual({
+                state: {
+                    test: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test'],
+            });
+        });
+
+        it('should ignore bots set to undefined', () => {
+            const update = stateUpdatedEvent({
+                test: undefined,
+            });
+
+            expect(update).toEqual({
+                state: {
+                    test: undefined,
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: [],
             });
         });
     });

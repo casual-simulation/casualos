@@ -15,6 +15,10 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
+    PartialBotsState,
+    BotSpace,
 } from '../bots';
 import { Observable, Subject } from 'rxjs';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
@@ -43,6 +47,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsAdded = new Subject<Bot[]>();
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
+    private _onStateUpdated = new Subject<StateUpdatedEvent>();
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
@@ -68,6 +73,12 @@ class MemoryPartitionImpl implements MemoryPartition {
         return this._onBotsUpdated;
     }
 
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
+    }
+
     get onError(): Observable<any> {
         return this._onError;
     }
@@ -86,7 +97,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        let finalEvents = flatMap(events, e => {
+        let finalEvents = flatMap(events, (e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (
@@ -138,15 +149,18 @@ class MemoryPartitionImpl implements MemoryPartition {
         let added = new Map<string, Bot>();
         let removed: string[] = [];
         let updated = new Map<string, UpdatedBot>();
+        let updatedState = {} as PartialBotsState;
         for (let event of events) {
             if (event.type === 'add_bot') {
                 // console.log('[MemoryPartition] Add bot', event.bot);
+                let bot = {
+                    ...event.bot,
+                    space: this.space as BotSpace,
+                };
                 this.state = Object.assign({}, this.state, {
-                    [event.bot.id]: {
-                        ...event.bot,
-                        space: this.space,
-                    },
+                    [event.bot.id]: bot,
                 });
+                updatedState[event.bot.id] = bot;
                 added.set(event.bot.id, event.bot);
             } else if (event.type === 'remove_bot') {
                 let { [event.id]: removedBot, ...state } = this.state;
@@ -154,6 +168,7 @@ class MemoryPartitionImpl implements MemoryPartition {
                 if (!added.delete(event.id)) {
                     removed.push(event.id);
                 }
+                updatedState[event.id] = null;
             } else if (event.type === 'update_bot') {
                 if (!event.update.tags || !this.state[event.id]) {
                     continue;
@@ -177,6 +192,7 @@ class MemoryPartitionImpl implements MemoryPartition {
                 }
 
                 this.state[event.id] = newBot;
+                updatedState[event.id] = event.update;
 
                 let update = updated.get(event.id);
                 if (update) {
@@ -199,6 +215,14 @@ class MemoryPartitionImpl implements MemoryPartition {
         }
         if (updated.size > 0) {
             this._onBotsUpdated.next([...updated.values()]);
+        }
+        const updateEvent = stateUpdatedEvent(updatedState);
+        if (
+            updateEvent.addedBots.length > 0 ||
+            updateEvent.removedBots.length > 0 ||
+            updateEvent.updatedBots.length > 0
+        ) {
+            this._onStateUpdated.next(updateEvent);
         }
     }
 }

@@ -592,7 +592,7 @@ export function applyAtoms(
 
     tree.state = finalState;
 
-    return { tree, updates, results };
+    return { tree, updates, results, update };
 }
 
 // /**

@@ -6,6 +6,7 @@ import {
     UpdatedBot,
     botRemoved,
     botUpdated,
+    StateUpdatedEvent,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
 import { StatusUpdate } from '@casual-simulation/causal-trees';
@@ -16,6 +17,7 @@ import {
     takeUntil,
     takeWhile,
     bufferCount,
+    skip,
 } from 'rxjs/operators';
 
 export function testPartitionImplementation(
@@ -26,6 +28,7 @@ export function testPartitionImplementation(
     let removed: string[];
     let updated: UpdatedBot[];
     let statuses: StatusUpdate[];
+    let updates: StateUpdatedEvent[];
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -35,17 +38,27 @@ export function testPartitionImplementation(
         removed = [];
         updated = [];
         statuses = [];
+        updates = [];
 
-        sub.add(partition.onBotsAdded.subscribe(bots => added.push(...bots)));
-        sub.add(partition.onBotsRemoved.subscribe(ids => removed.push(...ids)));
+        sub.add(partition.onBotsAdded.subscribe((bots) => added.push(...bots)));
         sub.add(
-            partition.onBotsUpdated.subscribe(updates =>
+            partition.onBotsRemoved.subscribe((ids) => removed.push(...ids))
+        );
+        sub.add(
+            partition.onBotsUpdated.subscribe((updates) =>
                 updated.push(...updates)
             )
         );
+        sub.add(
+            partition.onStateUpdated
+                .pipe(skip(1))
+                .subscribe((u) => updates.push(u))
+        );
 
         sub.add(
-            partition.onStatusUpdated.subscribe(update => statuses.push(update))
+            partition.onStatusUpdated.subscribe((update) =>
+                statuses.push(update)
+            )
         );
     });
 
@@ -63,6 +76,16 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(added).toEqual([bot]);
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test: bot,
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should be able to add multiple bots to the partition at a time', async () => {
@@ -90,9 +113,39 @@ export function testPartitionImplementation(
             await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
 
             let added: Bot[] = [];
-            partition.onBotsAdded.subscribe(a => added.push(...a));
+            partition.onBotsAdded.subscribe((a) => added.push(...a));
 
             expect(added).toEqual([bot1, bot2]);
+        });
+
+        it('should issue an state updated event for the existing state upon subscription', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            let updates: StateUpdatedEvent[] = [];
+            partition.onStateUpdated.subscribe((e) => updates.push(e));
+
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'xyz',
+                        }),
+                    },
+                    addedBots: ['test', 'test2'],
+                    removedBots: [],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should add bots to the configured space.', async () => {
@@ -107,7 +160,7 @@ export function testPartitionImplementation(
             await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
 
             let added: Bot[] = [];
-            partition.onBotsAdded.subscribe(a => added.push(...a));
+            partition.onBotsAdded.subscribe((a) => added.push(...a));
 
             expect(added).toEqual([
                 createBot(
@@ -510,7 +563,7 @@ export function testPartitionImplementation(
         it('should issue connection, authentication, authorization, and sync events in that order', async () => {
             const promise = partition.onStatusUpdated
                 .pipe(
-                    takeWhile(update => update.type !== 'sync', true),
+                    takeWhile((update) => update.type !== 'sync', true),
                     bufferCount(4)
                 )
                 .toPromise();
