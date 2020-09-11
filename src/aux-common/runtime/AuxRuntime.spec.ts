@@ -1788,6 +1788,57 @@ describe('AuxRuntime', () => {
                 const result = runtime.shout('test', ['thisBot']);
                 expect(result.actions).toEqual([toast('different')]);
             });
+
+            it('should support calculating tag masks that depend on all other bots', () => {
+                runtime.botsAdded([
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                numBots: '=getBots().length',
+                            },
+                        },
+                    },
+                    createBot('test2', {
+                        num: 123,
+                    }),
+                ]);
+
+                const update = runtime.botsUpdated([
+                    {
+                        bot: {
+                            id: 'test',
+                            tags: {},
+                            masks: {
+                                tempLocal: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                            },
+                        },
+                        tags: ['numBots'],
+                    },
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    numBots: '=getBots().length + 1',
+                                },
+                            },
+                            tags: {},
+                            values: {
+                                numBots: 3,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
         });
 
         describe('onBotChanged', () => {
