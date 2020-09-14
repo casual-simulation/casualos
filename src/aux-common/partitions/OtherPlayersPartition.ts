@@ -37,9 +37,11 @@ import {
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+    StateUpdatedEvent,
+    stateUpdatedEvent,
 } from '../bots';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { skip, startWith } from 'rxjs/operators';
 import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
 import sortBy from 'lodash/sortBy';
 
@@ -65,6 +67,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    protected _onStateUpdated = new Subject<StateUpdatedEvent>();
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -125,6 +128,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
     }
 
     get onError(): Observable<any> {
@@ -193,7 +202,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 const sessionIds = sortBy([
                     this._user.id,
                     ...connectedDevices.map(
-                        cd => cd.deviceInfo.claims[SESSION_ID_CLAIM]
+                        (cd) => cd.deviceInfo.claims[SESSION_ID_CLAIM]
                     ),
                 ]);
                 this._onEvents.next([asyncResult(event.taskId, sessionIds)]);
@@ -219,7 +228,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     connect(): void {
         this._sub.add(
-            this._client.connection.connectionState.subscribe(state => {
+            this._client.connection.connectionState.subscribe((state) => {
                 const connected = state.connected;
                 this._onStatusUpdated.next({
                     type: 'connection',
@@ -242,7 +251,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             })
         );
         this._sub.add(
-            this._client.watchBranchDevices(this._branch).subscribe(event => {
+            this._client.watchBranchDevices(this._branch).subscribe((event) => {
                 if (!this._synced) {
                     this._updateSynced(true);
                 }
@@ -319,9 +328,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         const branch = this._branchNameForDevice(device);
         if (!this._partitions.has(branch)) {
             console.log(
-                `[OtherPlayersPartitionImpl] Loading partition for ${
-                    device.claims[SESSION_ID_CLAIM]
-                }`
+                `[OtherPlayersPartitionImpl] Loading partition for ${device.claims[SESSION_ID_CLAIM]}`
             );
             const sub = new Subscription();
             const partition = await createCausalRepoClientPartition(
@@ -340,7 +347,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
             sub.add(
                 partition.onBotsAdded.subscribe(
-                    added => {
+                    (added) => {
                         this._state = Object.assign({}, this._state);
                         for (let bot of added) {
                             if (bot) {
@@ -349,34 +356,40 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                         }
                         this._onBotsAdded.next(added);
                     },
-                    err => this._onBotsAdded.error(err)
+                    (err) => this._onBotsAdded.error(err)
                 )
             );
             sub.add(
                 partition.onBotsRemoved.subscribe(
-                    removed => {
+                    (removed) => {
                         this._state = Object.assign({}, this._state);
                         for (let id of removed) {
                             delete this._state[id];
                         }
                         this._onBotsRemoved.next(removed);
                     },
-                    err => this._onBotsRemoved.error(err)
+                    (err) => this._onBotsRemoved.error(err)
                 )
             );
             sub.add(
                 partition.onBotsUpdated.subscribe(
-                    updated => {
+                    (updated) => {
                         this._state = Object.assign({}, this._state);
                         for (let update of updated) {
                             this._state[update.bot.id] = update.bot;
                         }
                         this._onBotsUpdated.next(updated);
                     },
-                    err => this._onBotsUpdated.error(err)
+                    (err) => this._onBotsUpdated.error(err)
                 )
             );
             sub.add(partition.onError.subscribe(this._onError));
+            sub.add(
+                partition.onStateUpdated.pipe(skip(1)).subscribe(
+                    (update) => this._onStateUpdated.next(update),
+                    (err) => this._onStateUpdated.error(err)
+                )
+            );
 
             partition.space = this.space;
             partition.connect();
@@ -391,9 +404,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         const branch = this._branchNameForDevice(device);
         if (this._partitions.has(branch)) {
             console.log(
-                `[OtherPlayersPartitionImpl] Unloading partition for ${
-                    device.claims[SESSION_ID_CLAIM]
-                }`
+                `[OtherPlayersPartitionImpl] Unloading partition for ${device.claims[SESSION_ID_CLAIM]}`
             );
             const partition = this._partitions.get(branch);
             this._partitions.delete(branch);
@@ -403,12 +414,22 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 sub.unsubscribe();
             }
 
+            let update = {} as BotsState;
             const state = partition.state;
             const ids = Object.keys(state);
             for (let id of ids) {
                 delete this._state[id];
+                update[id] = null;
             }
             this._onBotsRemoved.next(ids);
+            const event = stateUpdatedEvent(update);
+            if (
+                event.addedBots.length > 0 ||
+                event.removedBots.length > 0 ||
+                event.updatedBots.length > 0
+            ) {
+                this._onStateUpdated.next(event);
+            }
         }
     }
 

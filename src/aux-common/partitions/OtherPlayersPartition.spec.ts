@@ -32,11 +32,12 @@ import {
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+    StateUpdatedEvent,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { bot, tag, value, del } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
-import { takeWhile, bufferCount } from 'rxjs/operators';
+import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 
 console.log = jest.fn();
 
@@ -52,6 +53,7 @@ describe('OtherPlayersPartition', () => {
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
+        let updates: StateUpdatedEvent[];
         let sub: Subscription;
 
         let device1 = deviceInfo('device1', 'device1Id', 'device1SessionId');
@@ -76,6 +78,7 @@ describe('OtherPlayersPartition', () => {
             added = [];
             removed = [];
             updated = [];
+            updates = [];
 
             setupPartition({
                 type: 'other_players_repo',
@@ -95,7 +98,7 @@ describe('OtherPlayersPartition', () => {
         it('should issue connection, authentication, authorization, and sync events in that order', async () => {
             const promise = partition.onStatusUpdated
                 .pipe(
-                    takeWhile(update => update.type !== 'sync', true),
+                    takeWhile((update) => update.type !== 'sync', true),
                     bufferCount(4)
                 )
                 .toPromise();
@@ -160,7 +163,7 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     const info1 = deviceInfo(
                         'info1Username',
@@ -214,7 +217,7 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     const info1 = deviceInfo(
                         'info1Username',
@@ -272,7 +275,7 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     const events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     const info1 = deviceInfo(
                         'info1Username',
@@ -404,6 +407,18 @@ describe('OtherPlayersPartition', () => {
                 // Should make a new state object on updates.
                 // This is because AuxHelper expects this in order for its caching to work properly.
                 expect(partition.state).not.toBe(state);
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                ]);
             });
 
             it('should remove bots from the new players branch', async () => {
@@ -446,6 +461,27 @@ describe('OtherPlayersPartition', () => {
                 // Should make a new state object on updates.
                 // This is because AuxHelper expects this in order for its caching to work properly.
                 expect(partition.state).not.toBe(state);
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                    {
+                        state: {
+                            test1: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test1'],
+                        updatedBots: [],
+                    },
+                ]);
             });
 
             it('should update bots on the new players branch', async () => {
@@ -499,6 +535,31 @@ describe('OtherPlayersPartition', () => {
                 // Should make a new state object on updates.
                 // This is because AuxHelper expects this in order for its caching to work properly.
                 expect(partition.state).not.toBe(state);
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                    {
+                        state: {
+                            test1: {
+                                tags: {
+                                    abc: 'ghi',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
             });
 
             it('should stop watching the player branch when the device disconnects', async () => {
@@ -576,6 +637,26 @@ describe('OtherPlayersPartition', () => {
 
                 expect(removed).toEqual(['test1']);
                 expect(partition.state).toEqual({});
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                    {
+                        state: {
+                            test1: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test1'],
+                        updatedBots: [],
+                    },
+                ]);
             });
 
             it('should do nothing when given a bot event', async () => {
@@ -706,6 +787,23 @@ describe('OtherPlayersPartition', () => {
                 // Should make a new state object on updates.
                 // This is because AuxHelper expects this in order for its caching to work properly.
                 expect(partition.state).not.toBe(state);
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: createBot(
+                                'test1',
+                                {
+                                    abc: 'def',
+                                },
+                                <any>'test'
+                            ),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                    },
+                ]);
             });
 
             it('should send a onRemotePlayerSubscribed shout', async () => {
@@ -719,7 +817,7 @@ describe('OtherPlayersPartition', () => {
                 );
 
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
 
                 deviceConnected.next({
                     broadcast: false,
@@ -754,7 +852,7 @@ describe('OtherPlayersPartition', () => {
                 );
 
                 let events = [] as Action[];
-                partition.onEvents.subscribe(e => events.push(...e));
+                partition.onEvents.subscribe((e) => events.push(...e));
 
                 deviceConnected.next({
                     broadcast: false,
@@ -808,9 +906,18 @@ describe('OtherPlayersPartition', () => {
             );
 
             sub.add(partition);
-            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
-            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
-            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+            sub.add(partition.onBotsAdded.subscribe((b) => added.push(...b)));
+            sub.add(
+                partition.onBotsRemoved.subscribe((b) => removed.push(...b))
+            );
+            sub.add(
+                partition.onBotsUpdated.subscribe((b) => updated.push(...b))
+            );
+            sub.add(
+                partition.onStateUpdated
+                    .pipe(skip(1))
+                    .subscribe((b) => updates.push(b))
+            );
         }
     });
 });

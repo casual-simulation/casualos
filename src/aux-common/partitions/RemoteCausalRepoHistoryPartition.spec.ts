@@ -29,9 +29,11 @@ import {
     UpdatedBot,
     restoreHistoryMark,
     asyncResult,
+    StateUpdatedEvent,
 } from '../bots';
 import { CausalRepoHistoryClientPartitionConfig } from './AuxPartitionConfig';
 import uuid from 'uuid/v5';
+import { skip } from 'rxjs/operators';
 
 console.log = jest.fn();
 
@@ -45,6 +47,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
+        let updates: StateUpdatedEvent[];
         let sub: Subscription;
 
         beforeEach(async () => {
@@ -60,6 +63,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             added = [];
             removed = [];
             updated = [];
+            updates = [];
 
             setupPartition({
                 type: 'causal_repo_history_client',
@@ -235,7 +239,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     await waitAsync();
 
                     let events = [] as Action[];
-                    partition.onEvents.subscribe(e => events.push(...e));
+                    partition.onEvents.subscribe((e) => events.push(...e));
 
                     await partition.sendRemoteEvents([
                         remote(
@@ -327,6 +331,48 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     'history'
                 ),
             });
+            expect(updates).toEqual([
+                {
+                    state: {
+                        [uuid(c1.hash, COMMIT_ID_NAMESPACE)]: createBot(
+                            uuid(c1.hash, COMMIT_ID_NAMESPACE),
+                            {
+                                history: true,
+                                historyY: -0,
+                                label: 'commit1',
+                                labelSize: 0.25,
+                                scale: 0.8,
+                                scaleX: 2,
+                                markHash: c1.hash,
+                                previousMarkHash: null,
+                                markTime: new Date(1900, 1, 1),
+                            },
+                            'history'
+                        ),
+                        [uuid(c2.hash, COMMIT_ID_NAMESPACE)]: createBot(
+                            uuid(c2.hash, COMMIT_ID_NAMESPACE),
+                            {
+                                history: true,
+                                historyY: -1,
+                                label: 'commit2',
+                                labelSize: 0.25,
+                                scale: 0.8,
+                                scaleX: 2,
+                                markHash: c2.hash,
+                                previousMarkHash: c1.hash,
+                                markTime: new Date(1900, 1, 1),
+                            },
+                            'history'
+                        ),
+                    },
+                    addedBots: [
+                        uuid(c2.hash, COMMIT_ID_NAMESPACE),
+                        uuid(c1.hash, COMMIT_ID_NAMESPACE),
+                    ],
+                    removedBots: [],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should make a new state object when a bot is added', async () => {
@@ -384,9 +430,18 @@ describe('RemoteCausalRepoHistoryPartition', () => {
             );
 
             sub.add(partition);
-            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
-            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
-            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+            sub.add(partition.onBotsAdded.subscribe((b) => added.push(...b)));
+            sub.add(
+                partition.onBotsRemoved.subscribe((b) => removed.push(...b))
+            );
+            sub.add(
+                partition.onBotsUpdated.subscribe((b) => updated.push(...b))
+            );
+            sub.add(
+                partition.onStateUpdated
+                    .pipe(skip(1))
+                    .subscribe((e) => updates.push(e))
+            );
         }
     });
 });
