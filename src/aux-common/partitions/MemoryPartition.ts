@@ -170,39 +170,67 @@ class MemoryPartitionImpl implements MemoryPartition {
                 }
                 updatedState[event.id] = null;
             } else if (event.type === 'update_bot') {
-                if (!event.update.tags || !this.state[event.id]) {
-                    continue;
-                }
+                if (event.update.tags && this.state[event.id]) {
+                    let newBot = Object.assign({}, this.state[event.id]);
+                    let changedTags: string[] = [];
+                    for (let tag of tagsOnBot(event.update)) {
+                        const newVal = event.update.tags[tag];
+                        const oldVal = newBot.tags[tag];
 
-                let newBot = Object.assign({}, this.state[event.id]);
-                let changedTags: string[] = [];
-                for (let tag of tagsOnBot(event.update)) {
-                    const newVal = event.update.tags[tag];
-                    const oldVal = newBot.tags[tag];
+                        if (newVal !== oldVal) {
+                            changedTags.push(tag);
+                        }
 
-                    if (newVal !== oldVal) {
-                        changedTags.push(tag);
+                        if (hasValue(newVal)) {
+                            newBot.tags[tag] = newVal;
+                        } else {
+                            delete newBot.tags[tag];
+                        }
                     }
 
-                    if (hasValue(newVal)) {
-                        newBot.tags[tag] = newVal;
-                    } else {
-                        delete newBot.tags[tag];
+                    this.state[event.id] = newBot;
+                    updatedState[event.id] = event.update;
+
+                    let update = updated.get(event.id);
+                    if (update) {
+                        update.bot = newBot;
+                        update.tags = union(update.tags, changedTags);
+                    } else if (changedTags.length > 0) {
+                        updated.set(event.id, {
+                            bot: newBot,
+                            tags: changedTags,
+                        });
                     }
                 }
 
-                this.state[event.id] = newBot;
-                updatedState[event.id] = event.update;
+                if (event.update.masks && event.update.masks[this.space]) {
+                    const tags = event.update.masks[this.space];
+                    let newBot = Object.assign({}, this.state[event.id]);
+                    if (!newBot.masks) {
+                        newBot.masks = {};
+                    }
+                    if (!newBot.masks[this.space]) {
+                        newBot.masks[this.space] = {};
+                    }
+                    const masks = newBot.masks[this.space];
+                    let changedTags: string[] = [];
+                    for (let tag in tags) {
+                        const newVal = tags[tag];
+                        const oldVal = masks[tag];
 
-                let update = updated.get(event.id);
-                if (update) {
-                    update.bot = newBot;
-                    update.tags = union(update.tags, changedTags);
-                } else if (changedTags.length > 0) {
-                    updated.set(event.id, {
-                        bot: newBot,
-                        tags: changedTags,
-                    });
+                        if (newVal !== oldVal) {
+                            changedTags.push(tag);
+                        }
+
+                        if (hasValue(newVal)) {
+                            masks[tag] = newVal;
+                        } else {
+                            delete masks[tag];
+                        }
+                    }
+
+                    this.state[event.id] = newBot;
+                    updatedState[event.id] = event.update;
                 }
             }
         }

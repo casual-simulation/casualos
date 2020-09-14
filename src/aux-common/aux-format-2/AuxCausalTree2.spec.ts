@@ -756,6 +756,115 @@ describe('AuxCausalTree2', () => {
                     }),
                 });
             });
+
+            it('should add new tag masks to the bot', () => {
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test', {
+                            masks: {
+                                space: {
+                                    newTag: true,
+                                    abc: 123,
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            space: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                });
+                expect(updates).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: {
+                                id: 'test',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    space: {
+                                        newTag: true,
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            tags: new Set(['newTag', 'abc']),
+                        },
+                    ],
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        masks: {
+                            space: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                });
+            });
+
+            it('should add new tag masks for bots that are not in the tree', () => {
+                ({ tree, updates, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('different', {
+                            masks: {
+                                space: {
+                                    newTag: true,
+                                    abc: 123,
+                                },
+                            },
+                        }),
+                    ],
+                    'space'
+                ));
+
+                expect(tree.state).toEqual({
+                    different: {
+                        masks: {
+                            space: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+                expect(updates).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+                expect(result.update).toEqual({
+                    different: {
+                        masks: {
+                            space: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                });
+            });
         });
 
         describe('certificates', () => {

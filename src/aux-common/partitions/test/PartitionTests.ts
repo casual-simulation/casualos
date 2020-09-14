@@ -494,6 +494,46 @@ export function testPartitionImplementation(
 
             expect(updated).toEqual([]);
         });
+
+        describe('TagMasks', () => {
+            beforeEach(() => {
+                partition.space = 'testSpace';
+            });
+
+            it('should support tag mask updates for the partition space', async () => {
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(updated).toEqual([]);
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    },
+                ]);
+            });
+        });
     });
 
     describe('apply_state', () => {

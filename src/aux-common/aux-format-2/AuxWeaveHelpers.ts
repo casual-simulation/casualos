@@ -5,6 +5,7 @@ import {
     ValueOp,
     BotOp,
     CertificateOp,
+    TagMaskOp,
 } from './AuxOpTypes';
 import {
     Weave,
@@ -68,6 +69,31 @@ export function findTagNode(
     }
 
     return null;
+}
+
+/**
+ * Finds the tag mask node for the given bot ID and tag.
+ * @param weave The weave.
+ * @param botId The ID of the bot.
+ * @param tag The tag.
+ */
+export function* findTagMaskNodes(
+    weave: Weave<AuxOp>,
+    botId: string,
+    tag: string
+): IterableIterator<WeaveNode<TagMaskOp>> {
+    for (let root of weave.roots) {
+        if (
+            root.atom.value.type === AuxOpType.TagMask &&
+            root.atom.value.botId === botId &&
+            root.atom.value.name === tag
+        ) {
+            const firstAtom = first(iterateCausalGroup(root));
+            if (!firstAtom || firstAtom.atom.value.type !== AuxOpType.Delete) {
+                yield root as WeaveNode<TagMaskOp>;
+            }
+        }
+    }
 }
 
 /**
