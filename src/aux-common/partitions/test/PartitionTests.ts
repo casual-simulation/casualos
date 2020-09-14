@@ -197,6 +197,16 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(removed).toEqual(['test']);
+            expect(updates.slice(1)).toEqual([
+                {
+                    state: {
+                        test: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test'],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should be able to remove multiple bots from the partition', async () => {
@@ -220,6 +230,17 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(removed).toEqual(['test2', 'test']);
+            expect(updates.slice(1)).toEqual([
+                {
+                    state: {
+                        test: null,
+                        test2: null,
+                    },
+                    addedBots: [],
+                    removedBots: ['test2', 'test'],
+                    updatedBots: [],
+                },
+            ]);
         });
 
         it('should be able to remove a bot that was just added to the partition', async () => {
@@ -267,6 +288,21 @@ export function testPartitionImplementation(
                         abc: 'ghi',
                     }),
                     tags: ['abc'],
+                },
+            ]);
+
+            expect(updates.slice(1)).toEqual([
+                {
+                    state: {
+                        test: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
                 },
             ]);
         });

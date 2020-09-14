@@ -170,13 +170,33 @@ function valueAtomAddedReducer(
 
     const sibling = first(iterateSiblings(firstValue));
     if (sibling && sibling.atom.value.type === AuxOpType.Value) {
-        lodashMerge(state, {
-            [id]: {
-                signatures: {
-                    [tagValueHash(id, tagName, sibling.atom.value.value)]: null,
-                },
-            },
+        const certificates = weave.roots.filter(
+            (r) => r.atom.value.type === AuxOpType.Certificate
+        );
+        const signature = certificates.find((cert) => {
+            for (let node of iterateChildren(cert)) {
+                if (
+                    node.atom.value.type === AuxOpType.Signature &&
+                    node.atom.value.valueHash === sibling.atom.hash
+                ) {
+                    return true;
+                }
+            }
+            return false;
         });
+        if (signature) {
+            lodashMerge(state, {
+                [id]: {
+                    signatures: {
+                        [tagValueHash(
+                            id,
+                            tagName,
+                            sibling.atom.value.value
+                        )]: null,
+                    },
+                },
+            });
+        }
     }
 
     if (!hasValue(value.value)) {

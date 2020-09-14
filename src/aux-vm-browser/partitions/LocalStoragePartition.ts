@@ -16,6 +16,9 @@ import {
     LocalStoragePartition,
     LocalStoragePartitionConfig,
     AuxPartitionRealtimeStrategy,
+    stateUpdatedEvent,
+    StateUpdatedEvent,
+    PartialBotsState,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
@@ -28,6 +31,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    protected _onStateUpdated = new Subject<StateUpdatedEvent>();
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
@@ -50,6 +54,12 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
         return this._onBotsUpdated;
+    }
+
+    get onStateUpdated(): Observable<StateUpdatedEvent> {
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
     }
 
     get onError(): Observable<any> {
@@ -87,7 +97,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, e => {
+        const finalEvents = flatMap(events, (e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (
@@ -135,7 +145,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     private _watchLocalStorage() {
         this._sub.add(
-            storedBotUpdated(this.namespace).subscribe(event => {
+            storedBotUpdated(this.namespace).subscribe((event) => {
                 this._applyEvents([event], false);
             })
         );
@@ -160,13 +170,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         let addedBots = [] as Bot[];
         let removedBots = [] as string[];
         let updated = new Map<string, UpdatedBot>();
-
+        let updatedState = {} as PartialBotsState;
         for (let event of events) {
             if (event.type === 'add_bot') {
                 const bot = event.bot;
                 this._state = Object.assign({}, this._state, {
                     [event.bot.id]: event.bot,
                 });
+                updatedState[event.bot.id] = bot;
                 addedBots.push(bot);
                 if (updateStorage) {
                     const key = botKey(this.namespace, bot.id);
@@ -181,6 +192,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     const key = botKey(this.namespace, id);
                     storeBot(key, null);
                 }
+                updatedState[event.id] = null;
             } else if (event.type === 'update_bot') {
                 if (!event.update.tags) {
                     continue;
@@ -206,6 +218,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 this._state = Object.assign({}, this._state, {
                     [event.id]: newBot,
                 });
+                updatedState[event.id] = event.update;
 
                 let update = updated.get(event.id);
                 if (update) {
@@ -236,6 +249,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
             }
             this._onBotsUpdated.next(updatedBots);
         }
+        const updateEvent = stateUpdatedEvent(updatedState);
+        if (
+            updateEvent.addedBots.length > 0 ||
+            updateEvent.removedBots.length > 0 ||
+            updateEvent.updatedBots.length > 0
+        ) {
+            this._onStateUpdated.next(updateEvent);
+        }
     }
 }
 
@@ -243,8 +264,8 @@ function storedBotUpdated(
     namespace: string
 ): Observable<AddBotAction | RemoveBotAction | UpdateBotAction> {
     return storageUpdated().pipe(
-        filter(e => e.key.startsWith(namespace + '/')),
-        map(e => {
+        filter((e) => e.key.startsWith(namespace + '/')),
+        map((e) => {
             const newBot: Bot = JSON.parse(e.newValue) || null;
             const oldBot: Bot = JSON.parse(e.oldValue) || null;
             if (!oldBot && newBot) {
@@ -266,14 +287,14 @@ function storedBotUpdated(
 
             return null;
         }),
-        filter(event => event !== null)
+        filter((event) => event !== null)
     );
 }
 
 function storageUpdated(): Observable<StorageEvent> {
     return fromEventPattern(
-        h => window.addEventListener('storage', h),
-        h => window.removeEventListener('storage', h)
+        (h) => window.addEventListener('storage', h),
+        (h) => window.removeEventListener('storage', h)
     );
 }
 

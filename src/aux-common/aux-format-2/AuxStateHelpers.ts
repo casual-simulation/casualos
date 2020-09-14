@@ -35,8 +35,18 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                 }
             }
         }
+        let copiedSignatures = false;
         for (let hash in botUpdate.signatures) {
             if (bot.signatures[hash] === null) {
+                if (
+                    bot.signatures === botUpdate.signatures &&
+                    !copiedSignatures
+                ) {
+                    copiedSignatures = true;
+                    bot.signatures = {
+                        ...botUpdate.signatures,
+                    };
+                }
                 delete bot.signatures[hash];
             }
         }
@@ -126,7 +136,9 @@ export function updates(
                 for (let tag in botUpdate.signatures) {
                     const value = botUpdate.signatures[tag];
                     if (value === null) {
-                        delete updatedBot.signatures[tag];
+                        if (!!updatedBot.signatures) {
+                            delete updatedBot.signatures[tag];
+                        }
                     } else {
                         if (!updatedBot.signatures) {
                             updatedBot.signatures = {};

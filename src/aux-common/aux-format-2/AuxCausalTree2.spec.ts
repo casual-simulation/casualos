@@ -142,13 +142,6 @@ describe('AuxCausalTree2', () => {
                     tags: {
                         auxColor: '#89e',
                     },
-                    signatures: {
-                        [tagValueHash(
-                            '98b4f896-413d-4875-9ddc-dd394f16c034',
-                            'auxColor',
-                            '#89ead4'
-                        )]: null,
-                    },
                 },
             });
 
@@ -429,7 +422,7 @@ describe('AuxCausalTree2', () => {
             });
 
             it('should add new tags to the bot', () => {
-                ({ tree, updates } = applyEvents(tree, [
+                ({ tree, updates, result } = applyEvents(tree, [
                     botUpdated('test', {
                         tags: {
                             newTag: true,
@@ -455,6 +448,13 @@ describe('AuxCausalTree2', () => {
                             tags: new Set(['newTag']),
                         },
                     ],
+                });
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            newTag: true,
+                        },
+                    },
                 });
             });
 
@@ -1016,6 +1016,29 @@ describe('AuxCausalTree2', () => {
                                         some: 'object',
                                     }),
                                 ]),
+                            },
+                        ],
+                    });
+                });
+
+                it('should exclude signature updates if the previous tag value did not have a signature', () => {
+                    ({ tree, updates } = applyEvents(tree, [
+                        botUpdated('test', {
+                            tags: {
+                                abc: 'def',
+                            },
+                        }),
+                    ]));
+
+                    expect(updates).toEqual({
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [
+                            {
+                                bot: createBot('test', {
+                                    abc: 'def',
+                                }),
+                                tags: new Set(['abc']),
                             },
                         ],
                     });

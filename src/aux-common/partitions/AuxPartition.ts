@@ -149,6 +149,7 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onBotsAdded?: (bot: Bot[]) => void,
         onBotsRemoved?: (bot: string[]) => void,
         onBotsUpdated?: (bots: UpdatedBot[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
         onError?: (error: any) => void,
         onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void

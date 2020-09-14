@@ -150,6 +150,48 @@ describe('AuxStateHelpers', () => {
                         },
                     },
                 });
+                expect(update).toEqual({
+                    test: {
+                        signatures: {
+                            sig: null,
+                        },
+                    },
+                });
+            });
+
+            it('should not change the original signatures object if it was able to be copied', () => {
+                const current = {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+                const update = {
+                    test: {
+                        signatures: {
+                            sig: null as string,
+                        },
+                    },
+                };
+
+                const final = apply(current, update);
+                expect(final).toEqual({
+                    test: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+                expect(update).toEqual({
+                    test: {
+                        signatures: {
+                            sig: null,
+                        },
+                    },
+                });
             });
         });
     });

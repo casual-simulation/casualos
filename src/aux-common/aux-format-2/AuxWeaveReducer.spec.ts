@@ -1149,6 +1149,46 @@ describe('AuxWeaveReducer', () => {
                     },
                 });
             });
+
+            it('should not set the signature to null if there was no signature for the value', () => {
+                state = add(c1, bot1, tag1, value1);
+
+                expect(state).toEqual({
+                    [uuidv5(c1.hash, CERT_ID_NAMESPACE)]: {
+                        id: uuidv5(c1.hash, CERT_ID_NAMESPACE),
+                        space: CERTIFIED_SPACE,
+                        tags: {
+                            keypair: keypair1,
+                            signature: c1.value.signature,
+                            signingCertificate: uuidv5(
+                                c1.hash,
+                                CERT_ID_NAMESPACE
+                            ),
+                            atom: c1,
+                        },
+                    },
+                    ['test']: {
+                        id: 'test',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                let update = reduce(
+                    weave,
+                    weave.insert(value3),
+                    undefined,
+                    space
+                );
+                expect(update).toEqual({
+                    test: {
+                        tags: {
+                            abc: 'different',
+                        },
+                    },
+                });
+            });
         });
 
         describe('TagMask', () => {
