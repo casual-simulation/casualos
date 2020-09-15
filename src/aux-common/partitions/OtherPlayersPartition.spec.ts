@@ -35,7 +35,7 @@ import {
     StateUpdatedEvent,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
-import { bot, tag, value, del } from '../aux-format-2';
+import { bot, tag, value, del, tagMask } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 
@@ -562,6 +562,91 @@ describe('OtherPlayersPartition', () => {
                 ]);
             });
 
+            it('should add tag masks from other players', async () => {
+                partition.space = 'testSpace';
+                partition.connect();
+
+                await waitAsync();
+
+                deviceConnected.next({
+                    broadcast: false,
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                const state = partition.state;
+
+                const tag1 = atom(
+                    atomId('device1', 2),
+                    null,
+                    tagMask('test1', 'abc')
+                );
+                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+                const value2 = atom(atomId('device1', 4), tag1, value('ghi'));
+
+                addAtoms.next({
+                    branch: 'testBranch-player-device1SessionId',
+                    atoms: [tag1, value1],
+                });
+
+                await waitAsync();
+
+                addAtoms.next({
+                    branch: 'testBranch-player-device1SessionId',
+                    atoms: [value2],
+                });
+
+                expect(updated).toEqual([]);
+                expect(partition.state).toEqual({
+                    test1: {
+                        masks: {
+                            [partition.space]: {
+                                abc: 'ghi',
+                            },
+                        },
+                    },
+                });
+
+                // Should make a new state object on updates.
+                // This is because AuxHelper expects this in order for its caching to work properly.
+                expect(partition.state).not.toBe(state);
+
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                masks: {
+                                    [partition.space]: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                    {
+                        state: {
+                            test1: {
+                                masks: {
+                                    [partition.space]: {
+                                        abc: 'ghi',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                ]);
+            });
+
             it('should stop watching the player branch when the device disconnects', async () => {
                 partition.connect();
 
@@ -655,6 +740,78 @@ describe('OtherPlayersPartition', () => {
                         addedBots: [],
                         removedBots: ['test1'],
                         updatedBots: [],
+                    },
+                ]);
+            });
+
+            it('should remove the tag masks that were part of the player branch when the device disconnects', async () => {
+                partition.space = 'testSpace';
+                partition.connect();
+
+                await waitAsync();
+
+                deviceConnected.next({
+                    broadcast: false,
+                    branch: {
+                        branch: 'testBranch',
+                    },
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                const tag1 = atom(
+                    atomId('device1', 2),
+                    null,
+                    tagMask('test1', 'abc')
+                );
+                const value1 = atom(atomId('device1', 3), tag1, value('def'));
+
+                addAtoms.next({
+                    branch: 'testBranch-player-device1SessionId',
+                    atoms: [tag1, value1],
+                });
+
+                await waitAsync();
+
+                deviceDisconnected.next({
+                    broadcast: false,
+                    branch: 'testBranch',
+                    device: device1,
+                });
+
+                await waitAsync();
+
+                expect(removed).toEqual([]);
+                expect(partition.state).toEqual({});
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test1: {
+                                masks: {
+                                    [partition.space]: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
+                    },
+                    {
+                        state: {
+                            test1: {
+                                masks: {
+                                    [partition.space]: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test1'],
                     },
                 ]);
             });

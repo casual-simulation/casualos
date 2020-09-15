@@ -39,6 +39,10 @@ import {
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
     StateUpdatedEvent,
     stateUpdatedEvent,
+    applyUpdates,
+    PrecalculatedBotsState,
+    isBot,
+    PartialBotsState,
 } from '../bots';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
@@ -348,12 +352,6 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             sub.add(
                 partition.onBotsAdded.subscribe(
                     (added) => {
-                        this._state = Object.assign({}, this._state);
-                        for (let bot of added) {
-                            if (bot) {
-                                this._state[bot.id] = bot;
-                            }
-                        }
                         this._onBotsAdded.next(added);
                     },
                     (err) => this._onBotsAdded.error(err)
@@ -362,10 +360,6 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             sub.add(
                 partition.onBotsRemoved.subscribe(
                     (removed) => {
-                        this._state = Object.assign({}, this._state);
-                        for (let id of removed) {
-                            delete this._state[id];
-                        }
                         this._onBotsRemoved.next(removed);
                     },
                     (err) => this._onBotsRemoved.error(err)
@@ -374,10 +368,6 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             sub.add(
                 partition.onBotsUpdated.subscribe(
                     (updated) => {
-                        this._state = Object.assign({}, this._state);
-                        for (let update of updated) {
-                            this._state[update.bot.id] = update.bot;
-                        }
                         this._onBotsUpdated.next(updated);
                     },
                     (err) => this._onBotsUpdated.error(err)
@@ -386,7 +376,13 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             sub.add(partition.onError.subscribe(this._onError));
             sub.add(
                 partition.onStateUpdated.pipe(skip(1)).subscribe(
-                    (update) => this._onStateUpdated.next(update),
+                    (update) => {
+                        this._state = applyUpdates(
+                            this._state as PrecalculatedBotsState,
+                            update
+                        );
+                        this._onStateUpdated.next(update);
+                    },
                     (err) => this._onStateUpdated.error(err)
                 )
             );
@@ -414,14 +410,41 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 sub.unsubscribe();
             }
 
-            let update = {} as BotsState;
+            let update = {} as PartialBotsState;
             const state = partition.state;
             const ids = Object.keys(state);
+            let deleted = [] as string[];
             for (let id of ids) {
+                const bot = this._state[id];
+                if (bot.id) {
+                    deleted.push(id);
+                    update[id] = null;
+                } else {
+                    // Bot is partial, which means
+                    // it was not created by this partition.
+                    if (bot.masks) {
+                        // Delete tag masks
+                        const tags = bot.masks[this.space];
+                        if (tags) {
+                            for (let tag in tags) {
+                                if (!update[id]) {
+                                    update[id] = {};
+                                }
+                                const updatedBot = update[id];
+                                if (!updatedBot.masks) {
+                                    updatedBot.masks = {};
+                                }
+                                if (!updatedBot.masks[this.space]) {
+                                    updatedBot.masks[this.space] = {};
+                                }
+                                updatedBot.masks[this.space][tag] = null;
+                            }
+                        }
+                    }
+                }
                 delete this._state[id];
-                update[id] = null;
             }
-            this._onBotsRemoved.next(ids);
+            this._onBotsRemoved.next(deleted);
             const event = stateUpdatedEvent(update);
             if (
                 event.addedBots.length > 0 ||

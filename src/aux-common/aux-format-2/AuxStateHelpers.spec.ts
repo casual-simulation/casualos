@@ -420,7 +420,27 @@ describe('AuxStateHelpers', () => {
                 });
             });
 
-            it('should record new tag masks', () => {
+            it('should not include tag mask updates for bots that are not in the current state', () => {
+                const current = {};
+                const update = {
+                    test: {
+                        masks: {
+                            test: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should not include tag mask updates for bots that have no tag updates', () => {
                 const current = {
                     test: createBot('test'),
                 };
@@ -438,24 +458,51 @@ describe('AuxStateHelpers', () => {
                 expect(result).toEqual({
                     addedBots: [],
                     removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should include new tag masks when tags are updated', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: {
+                        tags: {
+                            newTag: true,
+                        },
+                        masks: {
+                            test: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
                     updatedBots: [
                         {
                             bot: {
                                 id: 'test',
-                                tags: {},
+                                tags: {
+                                    newTag: true,
+                                },
                                 masks: {
                                     test: {
                                         abc: 'def',
                                     },
                                 },
                             },
-                            tags: new Set(['abc']),
+                            tags: new Set(['newTag', 'abc']),
                         },
                     ],
                 });
             });
 
-            it('should record updated tag masks', () => {
+            it('should include updated tag masks when tags are updated', () => {
                 const current = {
                     test: {
                         id: 'test',
@@ -469,6 +516,9 @@ describe('AuxStateHelpers', () => {
                 };
                 const update = {
                     test: {
+                        tags: {
+                            newTag: true,
+                        },
                         masks: {
                             test: {
                                 abc: 123,
@@ -485,14 +535,16 @@ describe('AuxStateHelpers', () => {
                         {
                             bot: {
                                 id: 'test',
-                                tags: {},
+                                tags: {
+                                    newTag: true,
+                                },
                                 masks: {
                                     test: {
                                         abc: 123,
                                     },
                                 },
                             },
-                            tags: new Set(['abc']),
+                            tags: new Set(['newTag', 'abc']),
                         },
                     ],
                 });
@@ -513,6 +565,9 @@ describe('AuxStateHelpers', () => {
                 };
                 const update = {
                     test: {
+                        tags: {
+                            newTag: true,
+                        },
                         masks: {
                             test: {
                                 num: 123,
@@ -529,7 +584,9 @@ describe('AuxStateHelpers', () => {
                         {
                             bot: {
                                 id: 'test',
-                                tags: {},
+                                tags: {
+                                    newTag: true,
+                                },
                                 masks: {
                                     test: {
                                         abc: 'def',
@@ -537,7 +594,7 @@ describe('AuxStateHelpers', () => {
                                     },
                                 },
                             },
-                            tags: new Set(['num']),
+                            tags: new Set(['newTag', 'num']),
                         },
                     ],
                 });
@@ -558,6 +615,9 @@ describe('AuxStateHelpers', () => {
                 };
                 const update = {
                     test: {
+                        tags: {
+                            newTag: true,
+                        },
                         masks: {
                             test: {
                                 num: null as any,
@@ -574,14 +634,16 @@ describe('AuxStateHelpers', () => {
                         {
                             bot: {
                                 id: 'test',
-                                tags: {},
+                                tags: {
+                                    newTag: true,
+                                },
                                 masks: {
                                     test: {
                                         abc: 'def',
                                     },
                                 },
                             },
-                            tags: new Set(['num']),
+                            tags: new Set(['newTag', 'num']),
                         },
                     ],
                 });

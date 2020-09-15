@@ -154,6 +154,7 @@ export function updates(
                     delete updatedBot.signatures;
                 }
             }
+            const updatedMasks = new Set<string>();
             if (botUpdate.masks) {
                 for (let space in botUpdate.masks) {
                     const tags = botUpdate.masks[space];
@@ -170,11 +171,17 @@ export function updates(
                             }
                             updatedBot.masks[space][tag] = value;
                         }
-                        updatedTags.add(tag);
+                        updatedMasks.add(tag);
                     }
                 }
             }
             if (updatedTags.size > 0 || updatedSignatures.size > 0) {
+                if (updatedMasks.size > 0) {
+                    updatedTags = new Set([
+                        ...updatedTags.values(),
+                        ...updatedMasks.values(),
+                    ]);
+                }
                 result.updatedBots.push(
                     updatedSignatures.size <= 0
                         ? {

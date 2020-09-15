@@ -514,8 +514,94 @@ export function testPartitionImplementation(
 
                 await waitAsync();
 
+                expect(partition.state).toEqual({
+                    test: {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                });
                 expect(updated).toEqual([]);
                 expect(updates).toEqual([
+                    {
+                        state: {
+                            test: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    },
+                ]);
+            });
+
+            it('should ignore tag mask updates for different partition spaces', async () => {
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        masks: {
+                            ['different']: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({});
+                expect(updated).toEqual([]);
+                expect(updates).toEqual([]);
+            });
+
+            it('should support tag mask updates for bots in the same partition', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    test: {
+                        id: 'test',
+                        space: partition.space,
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                                abc: 123,
+                            },
+                        },
+                    },
+                });
+                expect(updated).toEqual([]);
+                expect(updates.slice(1)).toEqual([
                     {
                         state: {
                             test: {
