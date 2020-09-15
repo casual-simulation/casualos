@@ -790,23 +790,7 @@ describe('AuxCausalTree2', () => {
                 expect(updates).toEqual({
                     addedBots: [],
                     removedBots: [],
-                    updatedBots: [
-                        {
-                            bot: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    space: {
-                                        newTag: true,
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                            tags: new Set(['newTag', 'abc']),
-                        },
-                    ],
+                    updatedBots: [],
                 });
                 expect(result.update).toEqual({
                     test: {
