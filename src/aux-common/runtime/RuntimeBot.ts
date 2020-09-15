@@ -157,7 +157,6 @@ export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
 
 /**
  * The list of spaces that tag masks should be prioritized by.
- * Listed in reverse order of where they actually end up applied.
  */
 export const TAG_MASK_SPACE_PRIORITIES = [
     'tempLocal',
@@ -403,7 +402,9 @@ export function createRuntimeBot(
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
         value: () => {
             changedRawTags = {};
+            changedMasks = {};
             script.changes = changedRawTags;
+            script.maskChanges = changedMasks;
         },
         configurable: false,
         enumerable: false,

@@ -86,9 +86,9 @@ export class DependencyManager {
         if (!bots || bots.length === 0) {
             return {};
         }
-        const results = bots.map(f => this.addBot(f));
+        const results = bots.map((f) => this.addBot(f));
         return reduce(results, (first, second) =>
-            this._mergeDependents(first, second)
+            mergeDependents(first, second)
         );
     }
 
@@ -104,10 +104,10 @@ export class DependencyManager {
         const tags = ['id', ...tagsOnBot(bot)];
         let deps: BotDependencyInfo = {};
 
-        const dependents = tags.map(t => this.getDependents(t));
+        const dependents = tags.map((t) => this.getDependents(t));
         const updates =
             reduce(dependents, (first, second) =>
-                this._mergeDependents(first, second)
+                mergeDependents(first, second)
             ) || {};
 
         for (let tag of tags) {
@@ -142,9 +142,9 @@ export class DependencyManager {
         if (!botIds || botIds.length === 0) {
             return {};
         }
-        const results = botIds.map(id => this.removeBot(id));
+        const results = botIds.map((id) => this.removeBot(id));
         const result = reduce(results, (first, second) =>
-            this._mergeDependents(first, second)
+            mergeDependents(first, second)
         );
 
         for (let id in result) {
@@ -185,9 +185,9 @@ export class DependencyManager {
                 }
             }
 
-            const dependents = tags.map(t => this.getDependents(t));
+            const dependents = tags.map((t) => this.getDependents(t));
             const updates = reduce(dependents, (first, second) =>
-                this._mergeDependents(first, second)
+                mergeDependents(first, second)
             );
 
             return updates;
@@ -204,9 +204,9 @@ export class DependencyManager {
         if (!updates || updates.length === 0) {
             return {};
         }
-        const results = updates.map(u => this.updateBot(u));
+        const results = updates.map((u) => this.updateBot(u));
         return reduce(results, (first, second) =>
-            this._mergeDependents(first, second)
+            mergeDependents(first, second)
         );
     }
 
@@ -280,7 +280,7 @@ export class DependencyManager {
                 }
             }
 
-            const updates = this._mergeDependents(
+            const updates = mergeDependents(
                 {
                     [update.bot.id]: new Set(update.tags),
                 },
@@ -298,11 +298,11 @@ export class DependencyManager {
     }
 
     private _resolveDependencies(update: UpdatedBot) {
-        const dependents = update.tags.map(t =>
+        const dependents = update.tags.map((t) =>
             this.getDependents(t, update.bot.id)
         );
         const updates = reduce(dependents, (first, second) =>
-            this._mergeDependents(first, second)
+            mergeDependents(first, second)
         );
 
         return this._deepDependencies(update.tags, updates, 0);
@@ -327,7 +327,7 @@ export class DependencyManager {
             // We can skip "all dependencies" in our call to
             // _getDependents because they should already be included
             // by the time we call _deepDependencies
-            const dependents = botTags.map(t =>
+            const dependents = botTags.map((t) =>
                 this._getDependents(t, key, false)
             );
             for (let dep of dependents) {
@@ -337,7 +337,7 @@ export class DependencyManager {
             }
             finalUpdate = reduce(
                 dependents,
-                (first, second) => this._mergeDependents(first, second),
+                (first, second) => mergeDependents(first, second),
                 finalUpdate
             );
         }
@@ -359,12 +359,12 @@ export class DependencyManager {
         // We can skip "all dependencies" in our call to
         // _getDependents because they should already be included
         // by the time we call _deepDependencies
-        const dependents = tagsArray.map(t =>
+        const dependents = tagsArray.map((t) =>
             this._getDependents(t, undefined, false)
         );
         const updates = reduce(
             dependents,
-            (first, second) => this._mergeDependents(first, second),
+            (first, second) => mergeDependents(first, second),
             update
         );
 
@@ -413,23 +413,12 @@ export class DependencyManager {
         if (id) {
             const bot = this._dependentMap.get(`${id}:${tag}`);
 
-            general = this._mergeDependents(general, bot);
+            general = mergeDependents(general, bot);
         }
         if (includeAll) {
-            general = this._mergeDependents(general, this._allMap);
+            general = mergeDependents(general, this._allMap);
         }
         return general || {};
-    }
-
-    private _mergeDependents(
-        general: BotDependentInfo,
-        bot: BotDependentInfo
-    ): BotDependentInfo {
-        return mergeWith(general, bot, (first, second) => {
-            if (first instanceof Set && second instanceof Set) {
-                return new Set([...first, ...second]);
-            }
-        });
     }
 
     /**
@@ -549,4 +538,20 @@ export class DependencyManager {
             }
         }
     }
+}
+
+/**
+ * Merges the two given BotDependentInfo objects.
+ * @param first The first object.
+ * @param second The second object.
+ */
+export function mergeDependents(
+    first: BotDependentInfo,
+    second: BotDependentInfo
+): BotDependentInfo {
+    return mergeWith(first, second, (first, second) => {
+        if (first instanceof Set && second instanceof Set) {
+            return new Set([...first, ...second]);
+        }
+    });
 }
