@@ -20,6 +20,7 @@ import {
     StateUpdatedEvent,
     PartialBotsState,
     BotSpace,
+    merge,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
@@ -219,7 +220,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     }
 
                     this.state[event.id] = newBot;
-                    updatedState[event.id] = event.update;
+                    updatedState[event.id] = merge(
+                        updatedState[event.id] || {},
+                        event.update
+                    );
 
                     let update = updated.get(event.id);
                     if (update) {
@@ -260,7 +264,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     }
 
                     this.state[event.id] = newBot;
-                    updatedState[event.id] = event.update;
+                    updatedState[event.id] = merge(
+                        updatedState[event.id] || {},
+                        event.update
+                    );
                 }
             }
         }
