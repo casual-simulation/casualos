@@ -479,33 +479,7 @@ export class AuxRuntime
         );
 
         this._updateDependentBots(changes, update, newBotIDs);
-
-        if (update.addedBots.length > 0) {
-            try {
-                this._shout(
-                    ON_BOT_ADDED_ACTION_NAME,
-                    update.addedBots,
-                    undefined,
-                    true,
-                    false
-                );
-                this._shout(
-                    ON_ANY_BOTS_ADDED_ACTION_NAME,
-                    null,
-                    {
-                        bots: newBots.map(([bot, precalc]) => bot),
-                    },
-                    true,
-                    false
-                );
-            } catch (err) {
-                if (!(err instanceof RanOutOfEnergyError)) {
-                    throw err;
-                } else {
-                    console.warn(err);
-                }
-            }
-        }
+        this._sendOnBotsAddedShouts(newBots, update);
 
         return update;
     }
@@ -525,25 +499,7 @@ export class AuxRuntime
         const { changes } = this._removeBotsFromState(botIds, update);
         this._updateDependentBots(changes, update, new Set());
 
-        if (botIds.length > 0) {
-            try {
-                this._shout(
-                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
-                    null,
-                    {
-                        botIDs: botIds,
-                    },
-                    true,
-                    false
-                );
-            } catch (err) {
-                if (!(err instanceof RanOutOfEnergyError)) {
-                    throw err;
-                } else {
-                    console.warn(err);
-                }
-            }
-        }
+        this._sendOnBotsRemovedShouts(botIds);
 
         return update;
     }
@@ -685,9 +641,10 @@ export class AuxRuntime
 
         let changes = {} as BotDependentInfo;
         let newBotIds = null as Set<string>;
+        let newBots = null as [CompiledBot, PrecalculatedBot][];
         if (update.addedBots.length > 0) {
             const {
-                newBots,
+                newBots: addedNewBots,
                 newBotIDs: addedBotIds,
                 changes: addBotChanges,
             } = this._addBotsToState(
@@ -696,6 +653,7 @@ export class AuxRuntime
             );
 
             newBotIds = addedBotIds;
+            newBots = addedNewBots;
             changes = mergeDependents(changes, addBotChanges);
         }
 
@@ -709,7 +667,64 @@ export class AuxRuntime
 
         this._updateDependentBots(changes, nextUpdate, newBotIds || new Set());
 
+        this._sendOnBotsAddedShouts(newBots, nextUpdate);
+        this._sendOnBotsRemovedShouts(update.removedBots);
+
         return nextUpdate;
+    }
+
+    private _sendOnBotsAddedShouts(
+        newBots: [CompiledBot, PrecalculatedBot][],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        if (newBots && nextUpdate.addedBots.length > 0) {
+            try {
+                this._shout(
+                    ON_BOT_ADDED_ACTION_NAME,
+                    nextUpdate.addedBots,
+                    undefined,
+                    true,
+                    false
+                );
+                this._shout(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME,
+                    null,
+                    {
+                        bots: newBots.map(([bot, precalc]) => bot),
+                    },
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
+        }
+    }
+
+    private _sendOnBotsRemovedShouts(botIds: string[]) {
+        if (botIds.length > 0) {
+            try {
+                this._shout(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                    null,
+                    {
+                        botIDs: botIds,
+                    },
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
+        }
     }
 
     private _addBotsToState(bots: Bot[], nextUpdate: StateUpdatedEvent) {
