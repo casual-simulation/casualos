@@ -158,15 +158,11 @@ describe('AuxRuntime', () => {
         let updates = [] as StateUpdatedEvent[];
 
         let subs = [
-            memory.onBotsAdded
+            memory.onStateUpdated
                 .pipe(skip(1))
-                .subscribe((added) => updates.push(runtime.botsAdded(added))),
-            memory.onBotsRemoved.subscribe((removed) =>
-                updates.push(runtime.botsRemoved(removed))
-            ),
-            memory.onBotsUpdated.subscribe((updated) =>
-                updates.push(runtime.botsUpdated(updated))
-            ),
+                .subscribe((update) =>
+                    updates.push(runtime.stateUpdated(update))
+                ),
         ];
 
         try {
@@ -6599,6 +6595,7 @@ describe('AuxRuntime', () => {
 
             it('should be able to update tag masks which get accepted to the partition', async () => {
                 uuidMock.mockReturnValue('uuid');
+                memory.space = DEFAULT_TAG_MASK_SPACE;
                 const bot = createBot('test1', {
                     update: `@bot.mask.abc = "def"`,
                 });
@@ -6634,6 +6631,7 @@ describe('AuxRuntime', () => {
                                 values: {
                                     abc: 'def',
                                 },
+                                tags: {},
                                 masks: {
                                     [DEFAULT_TAG_MASK_SPACE]: {
                                         abc: 'def',
