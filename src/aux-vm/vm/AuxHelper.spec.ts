@@ -27,6 +27,7 @@ import {
     signTag,
     revokeCertificate,
     setSpacePassword,
+    updatedBot,
 } from '@casual-simulation/aux-common';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
@@ -122,7 +123,7 @@ describe('AuxHelper', () => {
             subs.push(
                 partition.onBotsAdded
                     .pipe(
-                        tap(e => {
+                        tap((e) => {
                             if (e.length === 0) {
                                 return;
                             }
@@ -132,7 +133,7 @@ describe('AuxHelper', () => {
                     .subscribe(null, (e: any) => console.error(e)),
                 partition.onBotsRemoved
                     .pipe(
-                        tap(e => {
+                        tap((e) => {
                             if (e.length === 0) {
                                 return;
                             }
@@ -142,7 +143,7 @@ describe('AuxHelper', () => {
                     .subscribe(null, (e: any) => console.error(e)),
                 partition.onBotsUpdated
                     .pipe(
-                        tap(e => {
+                        tap((e) => {
                             if (e.length === 0) {
                                 return;
                             }
@@ -207,7 +208,7 @@ describe('AuxHelper', () => {
             helper.userId = 'test';
 
             let events: BotAction[] = [];
-            helper.localEvents.subscribe(e => events.push(...e));
+            helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(
                 botUpdated('test', {
@@ -419,6 +420,117 @@ describe('AuxHelper', () => {
             expect(Object.keys(helper.botsState)).toEqual(['normal', 'abc']);
             expect(Object.keys(mem.state)).toEqual(['abc']);
             expect(Object.keys(shared.state)).toEqual(['normal']);
+        });
+
+        it('should split new bot tag masks into the correct partitions', async () => {
+            let test = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            test.space = 'TEST';
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            shared.space = 'shared';
+            helper = createHelper({
+                shared: shared,
+                TEST: test,
+            });
+
+            await helper.transaction(
+                botAdded({
+                    id: 'test',
+                    tags: {},
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                        TEST: {
+                            num: 123,
+                        },
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(shared.state).toEqual({
+                test: {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {},
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            });
+            expect(test.state).toEqual({
+                test: {
+                    masks: {
+                        TEST: {
+                            num: 123,
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should split updated tag masks into the correct partitions', async () => {
+            let test = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            test.space = 'TEST';
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            shared.space = 'shared';
+            helper = createHelper({
+                shared: shared,
+                TEST: test,
+            });
+
+            await helper.transaction(
+                botAdded(createBot('test')),
+                botUpdated('test', {
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                        TEST: {
+                            num: 123,
+                        },
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(shared.state).toEqual({
+                test: {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {},
+                    masks: {
+                        shared: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            });
+            expect(test.state).toEqual({
+                test: {
+                    masks: {
+                        TEST: {
+                            num: 123,
+                        },
+                    },
+                },
+            });
         });
 
         it('should set the correct space on bots from partitions', async () => {
@@ -655,7 +767,7 @@ describe('AuxHelper', () => {
     describe('transaction()', () => {
         it('should emit local events that are sent via transaction()', async () => {
             let events: LocalActions[] = [];
-            helper.localEvents.subscribe(e => events.push(...e));
+            helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(toast('test'));
 
@@ -715,10 +827,10 @@ describe('AuxHelper', () => {
 
         it('should emit local events from actions', async () => {
             let events: LocalActions[] = [];
-            helper.localEvents.subscribe(e =>
+            helper.localEvents.subscribe((e) =>
                 events.push(
                     ...e.filter(
-                        e =>
+                        (e) =>
                             e.type !== 'add_bot' &&
                             e.type !== 'update_bot' &&
                             e.type !== 'remove_bot'
@@ -737,7 +849,7 @@ describe('AuxHelper', () => {
 
         it('should not calculate assignment formulas', async () => {
             let events: LocalActions[] = [];
-            helper.localEvents.subscribe(e => events.push(...e));
+            helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.createBot('test', {});
 
@@ -759,7 +871,7 @@ describe('AuxHelper', () => {
 
         it('should emit remote events that are sent via transaction()', async () => {
             let events: RemoteActions[] = [];
-            helper.remoteEvents.subscribe(e => events.push(...e));
+            helper.remoteEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(remote(toast('test')));
 
@@ -768,7 +880,7 @@ describe('AuxHelper', () => {
 
         it('should emit remote_result events that are sent via transaction()', async () => {
             let events: RemoteActions[] = [];
-            helper.remoteEvents.subscribe(e => events.push(...e));
+            helper.remoteEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(remoteResult('test'));
 
@@ -777,7 +889,7 @@ describe('AuxHelper', () => {
 
         it('should emit remote_error events that are sent via transaction()', async () => {
             let events: RemoteActions[] = [];
-            helper.remoteEvents.subscribe(e => events.push(...e));
+            helper.remoteEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(remoteError('test'));
 
@@ -786,7 +898,7 @@ describe('AuxHelper', () => {
 
         it('should not batch remote events that have allowBatching set to false', async () => {
             let events: RemoteActions[][] = [];
-            helper.remoteEvents.subscribe(e => events.push(e));
+            helper.remoteEvents.subscribe((e) => events.push(e));
 
             await helper.transaction(
                 remote(toast('test'), {}, false),
@@ -807,7 +919,7 @@ describe('AuxHelper', () => {
 
         it('should emit device events that are sent via transaction()', async () => {
             let events: DeviceAction[] = [];
-            helper.deviceEvents.subscribe(e => events.push(...e));
+            helper.deviceEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction({
                 type: 'device',
@@ -988,7 +1100,7 @@ describe('AuxHelper', () => {
             it('should be rejected if sent to a non-existant space', async () => {
                 let events = [] as BotAction[];
 
-                helper.localEvents.subscribe(e => events.push(...e));
+                helper.localEvents.subscribe((e) => events.push(...e));
                 await helper.transaction(
                     unlockSpace(<any>'missing', 'passcode', 123)
                 );
@@ -1072,7 +1184,7 @@ describe('AuxHelper', () => {
             it('should be rejected if sent to a non-existant space', async () => {
                 let events = [] as BotAction[];
 
-                helper.localEvents.subscribe(e => events.push(...e));
+                helper.localEvents.subscribe((e) => events.push(...e));
                 await helper.transaction(
                     setSpacePassword(<any>'missing', 'passcode', 'new', 123)
                 );
@@ -1168,7 +1280,7 @@ describe('AuxHelper', () => {
 
             it.each(falsyTests)(
                 'should allow actions that onStoryAction() returns %s for',
-                async val => {
+                async (val) => {
                     await helper.createBot('abc', {
                         onStoryAction: `@return ${val};`,
                     });
@@ -1393,7 +1505,7 @@ describe('AuxHelper', () => {
 
                 await waitAsync();
 
-                const matching = helper.objects.filter(o => 'test' in o.tags);
+                const matching = helper.objects.filter((o) => 'test' in o.tags);
                 expect(matching.length).toBe(1);
             });
 
@@ -1422,7 +1534,7 @@ describe('AuxHelper', () => {
                     })
                 );
 
-                const matching = helper.objects.filter(o => 'test' in o.tags);
+                const matching = helper.objects.filter((o) => 'test' in o.tags);
                 expect(matching.length).toBe(1);
             });
         });

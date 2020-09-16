@@ -479,6 +479,21 @@ export function testPartitionImplementation(
                     tags: ['abc', 'example'],
                 },
             ]);
+            expect(updates.slice(1)).toEqual([
+                {
+                    state: {
+                        test: {
+                            tags: {
+                                abc: 'rgb',
+                                example: 456,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                },
+            ]);
         });
 
         it('should ignore updates to bots that dont exist', async () => {
