@@ -2,6 +2,7 @@ import {
     StateUpdatedEvent,
     applyUpdates,
     stateUpdatedEvent,
+    updatedBot,
 } from './StateUpdatedEvent';
 import { PrecalculatedBotsState, PrecalculatedBot } from './Bot';
 import { createBot, createPrecalculatedBot } from './BotCalculations';
@@ -252,6 +253,115 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 removedBots: [],
                 updatedBots: [],
+            });
+        });
+    });
+
+    describe('updatedBot()', () => {
+        it('should return an updated bot with the given tag changes', () => {
+            const updated = updatedBot(
+                {
+                    tags: {
+                        num: 456,
+                        newTag: true,
+                        abc: null,
+                    },
+                },
+                createBot('test', {
+                    abc: 'def',
+                    num: 123,
+                })
+            );
+
+            expect(updated).toEqual({
+                bot: createBot('test', {
+                    abc: null,
+                    num: 456,
+                    newTag: true,
+                }),
+                tags: ['num', 'newTag', 'abc'],
+            });
+        });
+
+        it('should return an updated bot with the given tag mask changes', () => {
+            const updated = updatedBot(
+                {
+                    masks: {
+                        first: {
+                            abc: null,
+                            num: 456,
+                            newTag: true,
+                        },
+                        second: {
+                            abc: null,
+                            num: 456,
+                            newTag: true,
+                        },
+                    },
+                },
+                {
+                    id: 'test',
+                    tags: {},
+                    masks: {
+                        first: {
+                            abc: 'def',
+                        },
+                        second: {
+                            num: 123,
+                        },
+                    },
+                }
+            );
+
+            expect(updated).toEqual({
+                bot: {
+                    id: 'test',
+                    tags: {},
+                    masks: {
+                        first: {
+                            num: 456,
+                            newTag: true,
+                        },
+                        second: {
+                            num: 456,
+                            newTag: true,
+                        },
+                    },
+                },
+                tags: ['abc', 'num', 'newTag'],
+            });
+        });
+
+        it('should return an updated bot with the given signature changes', () => {
+            const updated = updatedBot(
+                {
+                    signatures: {
+                        abc: null,
+                        num: 'c',
+                        newTag: 'd',
+                    },
+                },
+                {
+                    id: 'test',
+                    tags: {},
+                    signatures: {
+                        abc: 'a',
+                        num: 'b',
+                    },
+                }
+            );
+
+            expect(updated).toEqual({
+                bot: {
+                    id: 'test',
+                    tags: {},
+                    signatures: {
+                        num: 'c',
+                        newTag: 'd',
+                    },
+                },
+                tags: [],
+                signatures: ['abc', 'num', 'newTag'],
             });
         });
     });

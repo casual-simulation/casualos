@@ -3,10 +3,13 @@ import {
     PrecalculatedBotsState,
     Bot,
     PartialPrecalculatedBotsState,
+    PartialBot,
+    UpdatedBot,
 } from './Bot';
 import { merge } from '../utils';
 import { apply } from '../aux-format-2/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
+import { cloneDeep, partial } from 'lodash';
 
 /**
  * Defines an event for state updates from the VM.
@@ -81,4 +84,72 @@ export function stateUpdatedEvent(
     }
 
     return update;
+}
+
+export function updatedBot(
+    partialBot: PartialBot,
+    currentBot: Bot
+): UpdatedBot {
+    let tags = new Set<string>();
+    let signatures = [] as string[];
+    const bot = cloneDeep(currentBot);
+
+    if (partialBot.tags) {
+        for (let tag in partialBot.tags) {
+            const val = partialBot.tags[tag];
+            bot.tags[tag] = val;
+            tags.add(tag);
+        }
+    }
+
+    if (partialBot.signatures) {
+        for (let sig in partialBot.signatures) {
+            if (!signatures) {
+                signatures = [];
+            }
+            if (!bot.signatures) {
+                bot.signatures = {};
+            }
+            const val = partialBot.signatures[sig];
+            if (hasValue(val)) {
+                bot.signatures[sig] = val;
+            } else {
+                delete bot.signatures[sig];
+            }
+            signatures.push(sig);
+        }
+    }
+
+    if (partialBot.masks) {
+        for (let space in partialBot.masks) {
+            for (let tag in partialBot.masks[space]) {
+                tags.add(tag);
+                if (!bot.masks) {
+                    bot.masks = {};
+                }
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                const val = partialBot.masks[space][tag];
+                if (hasValue(val)) {
+                    bot.masks[space][tag] = val;
+                } else {
+                    delete bot.masks[space][tag];
+                }
+            }
+        }
+    }
+
+    if (signatures.length > 0) {
+        return {
+            bot,
+            tags: [...tags.values()],
+            signatures,
+        };
+    } else {
+        return {
+            bot,
+            tags: [...tags.values()],
+        };
+    }
 }

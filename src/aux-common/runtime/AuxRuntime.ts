@@ -37,6 +37,7 @@ import {
     hasTagOrMask,
     ON_STORY_STREAM_LOST_ACTION_NAME,
     PartialBot,
+    updatedBot,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -81,7 +82,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { forOwn } from 'lodash';
+import { forOwn, merge } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 
 /**
@@ -516,113 +517,10 @@ export class AuxRuntime
             removedBots: [],
         } as StateUpdatedEvent;
 
-        for (let u of updates) {
-            // 1. get compiled bot
-            let compiled = this._compiledState[u.bot.id];
-
-            if (!compiled) {
-                continue;
-            }
-
-            // 2. update
-            let updates = this._compileTags(u.tags, compiled, u.bot);
-
-            // 3. convert to precalculated
-            let partial = {
-                tags: {},
-                values: {},
-            } as Partial<PrecalculatedBot>;
-            if (u.bot.masks) {
-                partial.masks = {};
-            }
-
-            for (let [space, tag] of updates) {
-                if (space) {
-                    if (u.bot.masks) {
-                        for (let space in u.bot.masks) {
-                            if (hasValue(u.bot.masks[space][tag])) {
-                                if (!partial.masks[space]) {
-                                    partial.masks[space] = {};
-                                }
-                                partial.masks[space][tag] =
-                                    u.bot.masks[space][tag];
-                            }
-                        }
-                    }
-                } else if (space === undefined) {
-                    if (compiled.masks) {
-                        for (let space in compiled.masks) {
-                            if (hasValue(compiled.masks[space][tag])) {
-                                if (!partial.masks[space]) {
-                                    partial.masks[space] = {};
-                                }
-                                partial.masks[space][tag] = null;
-                                delete compiled.masks[space][tag];
-                            }
-                        }
-                    }
-                } else {
-                    partial.tags[tag] = u.bot.tags[tag];
-                }
-            }
-
-            if (u.signatures) {
-                if (!compiled.signatures) {
-                    compiled.signatures = {};
-                }
-                partial.signatures = {};
-                for (let sig of u.signatures) {
-                    const val = !!u.bot.signatures
-                        ? u.bot.signatures[sig] || null
-                        : null;
-                    const current = compiled.signatures[sig];
-                    compiled.signatures[sig] = val;
-                    partial.signatures[sig] = val;
-
-                    if (!val && current) {
-                        this._compileTag(
-                            compiled,
-                            current,
-                            compiled.tags[current]
-                        );
-                    } else if (val && !current) {
-                        this._compileTag(compiled, val, compiled.tags[val]);
-                    }
-                }
-            }
-
-            update.state[u.bot.id] = <any>partial;
-        }
-
-        const changes = this._dependencies.updateBots(updates);
+        const { changes } = this._updateBotsInState(updates, update);
         this._updateDependentBots(changes, update, new Set());
 
-        try {
-            for (let update of updates) {
-                this._shout(
-                    ON_BOT_CHANGED_ACTION_NAME,
-                    [update.bot.id],
-                    {
-                        tags: update.tags,
-                    },
-                    true,
-                    false
-                );
-            }
-            this._shout(
-                ON_ANY_BOTS_CHANGED_ACTION_NAME,
-                null,
-                updates,
-                true,
-                false
-            );
-        } catch (err) {
-            if (!(err instanceof RanOutOfEnergyError)) {
-                throw err;
-            } else {
-                console.warn(err);
-            }
-        }
+        this._sendOnBotsChangedShouts(updates);
 
         return update;
     }
@@ -642,6 +540,7 @@ export class AuxRuntime
         let changes = {} as BotDependentInfo;
         let newBotIds = null as Set<string>;
         let newBots = null as [CompiledBot, PrecalculatedBot][];
+        let updates = null as UpdatedBot[];
         if (update.addedBots.length > 0) {
             const {
                 newBots: addedNewBots,
@@ -665,10 +564,28 @@ export class AuxRuntime
             changes = mergeDependents(changes, removeBotChanges);
         }
 
+        if (update.updatedBots.length > 0) {
+            updates = update.updatedBots.map((id) => {
+                const partial = update.state[id];
+                const current = this.currentState[id];
+                if (!current) {
+                    return null;
+                }
+                return updatedBot(partial, current);
+            });
+
+            const { changes: updateBotChanges } = this._updateBotsInState(
+                updates,
+                nextUpdate
+            );
+            changes = merge(changes, updateBotChanges);
+        }
+
         this._updateDependentBots(changes, nextUpdate, newBotIds || new Set());
 
         this._sendOnBotsAddedShouts(newBots, nextUpdate);
         this._sendOnBotsRemovedShouts(update.removedBots);
+        this._sendOnBotsChangedShouts(updates);
 
         return nextUpdate;
     }
@@ -714,6 +631,40 @@ export class AuxRuntime
                     {
                         botIDs: botIds,
                     },
+                    true,
+                    false
+                );
+            } catch (err) {
+                if (!(err instanceof RanOutOfEnergyError)) {
+                    throw err;
+                } else {
+                    console.warn(err);
+                }
+            }
+        }
+    }
+
+    private _sendOnBotsChangedShouts(updates: UpdatedBot[]) {
+        if (updates && updates.length > 0) {
+            try {
+                for (let update of updates) {
+                    if (!update) {
+                        continue;
+                    }
+                    this._shout(
+                        ON_BOT_CHANGED_ACTION_NAME,
+                        [update.bot.id],
+                        {
+                            tags: update.tags,
+                        },
+                        true,
+                        false
+                    );
+                }
+                this._shout(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                    null,
+                    updates,
                     true,
                     false
                 );
@@ -804,6 +755,98 @@ export class AuxRuntime
 
         const changes = this._dependencies.removeBots(botIds);
 
+        return {
+            changes,
+        };
+    }
+
+    private _updateBotsInState(
+        updates: UpdatedBot[],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        for (let u of updates) {
+            if (!u) {
+                continue;
+            }
+
+            // 1. get compiled bot
+            let compiled = this._compiledState[u.bot.id];
+
+            if (!compiled) {
+                continue;
+            }
+
+            // 2. update
+            let updates = this._compileTags(u.tags, compiled, u.bot);
+
+            // 3. convert to precalculated
+            let partial = {
+                tags: {},
+                values: {},
+            } as Partial<PrecalculatedBot>;
+            if (u.bot.masks) {
+                partial.masks = {};
+            }
+
+            for (let [space, tag] of updates) {
+                if (space) {
+                    if (u.bot.masks) {
+                        for (let space in u.bot.masks) {
+                            if (hasValue(u.bot.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] =
+                                    u.bot.masks[space][tag];
+                            }
+                        }
+                    }
+                } else if (space === undefined) {
+                    if (compiled.masks) {
+                        for (let space in compiled.masks) {
+                            if (hasValue(compiled.masks[space][tag])) {
+                                if (!partial.masks[space]) {
+                                    partial.masks[space] = {};
+                                }
+                                partial.masks[space][tag] = null;
+                                delete compiled.masks[space][tag];
+                            }
+                        }
+                    }
+                } else {
+                    partial.tags[tag] = u.bot.tags[tag];
+                }
+            }
+
+            if (u.signatures) {
+                if (!compiled.signatures) {
+                    compiled.signatures = {};
+                }
+                partial.signatures = {};
+                for (let sig of u.signatures) {
+                    const val = !!u.bot.signatures
+                        ? u.bot.signatures[sig] || null
+                        : null;
+                    const current = compiled.signatures[sig];
+                    compiled.signatures[sig] = val;
+                    partial.signatures[sig] = val;
+
+                    if (!val && current) {
+                        this._compileTag(
+                            compiled,
+                            current,
+                            compiled.tags[current]
+                        );
+                    } else if (val && !current) {
+                        this._compileTag(compiled, val, compiled.tags[val]);
+                    }
+                }
+            }
+
+            nextUpdate.state[u.bot.id] = <any>partial;
+        }
+
+        const changes = this._dependencies.updateBots(updates);
         return {
             changes,
         };
