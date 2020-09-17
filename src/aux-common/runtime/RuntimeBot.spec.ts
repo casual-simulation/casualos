@@ -17,6 +17,7 @@ import {
     isRuntimeBot,
     TAG_MASK_SPACE_PRIORITIES,
     flattenTagMasks,
+    DEFAULT_TAG_MASK_SPACE,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -486,11 +487,11 @@ describe('RuntimeBot', () => {
         });
     });
 
-    describe('mask', () => {
+    describe('masks', () => {
         it('should set the tag mask for the given tag in the tempLocal space by default', () => {
-            script.mask.abc = true;
+            script.masks.abc = true;
 
-            expect(script.mask.abc).toEqual(true);
+            expect(script.masks.abc).toEqual(true);
             expect(script.maskChanges).toEqual({
                 tempLocal: {
                     abc: true,
@@ -505,7 +506,7 @@ describe('RuntimeBot', () => {
                 },
             };
 
-            expect(script.mask.abc).toEqual(true);
+            expect(script.masks.abc).toEqual(true);
         });
 
         it('should suppport Object.keys() for tags added after the runtime bot was created', () => {
@@ -517,7 +518,7 @@ describe('RuntimeBot', () => {
                     ghi: 'jkl',
                 },
             };
-            expect(Object.keys(script.mask)).toEqual(['abc', 'ghi']);
+            expect(Object.keys(script.masks)).toEqual(['abc', 'ghi']);
         });
 
         it('should support the delete keyword', () => {
@@ -533,9 +534,9 @@ describe('RuntimeBot', () => {
                 },
             };
 
-            delete script.mask.abc;
+            delete script.masks.abc;
 
-            expect(script.mask.abc).toEqual(null);
+            expect(script.masks.abc).toEqual(null);
             expect(script.maskChanges).toEqual({
                 shared: {
                     abc: null,
@@ -557,6 +558,7 @@ describe('RuntimeBot', () => {
         it('should be able to clear changes from the script bot', () => {
             script.tags.abc = 123;
             script.tags.def = 'hello';
+            script.masks.test = 'value';
 
             expect(script.raw.abc).toEqual(123);
 
@@ -565,17 +567,30 @@ describe('RuntimeBot', () => {
                 abc: 123,
                 def: 'hello',
             });
+            const maskChanges = script.maskChanges;
+            expect(maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    test: 'value',
+                },
+            });
 
             script[CLEAR_CHANGES_SYMBOL]();
 
             expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({});
             expect(script.changes).not.toEqual(changes);
             expect(script.raw.abc).toEqual(123);
             expect(script.raw.def).toEqual('hello');
 
             script.raw.abc = 456;
+            script.masks.test = 'value';
             expect(script.changes).toEqual({
                 abc: 456,
+            });
+            expect(script.maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    test: 'value',
+                },
             });
             expect(script.raw.abc).toEqual(456);
         });
@@ -598,12 +613,12 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: 'test',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
-                mask: {},
+                masks: {},
                 maskChanges: {},
             })
         ).toBe(true);
@@ -613,12 +628,12 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
-                mask: {},
+                masks: {},
                 maskChanges: {},
             })
         ).toBe(true);
@@ -643,7 +658,7 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: '',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
@@ -659,7 +674,7 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: 'test',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 changes: {},
@@ -688,7 +703,7 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
@@ -698,13 +713,13 @@ describe('isRuntimeBot()', () => {
         ).toBe(false);
     });
 
-    it('should require the mask property', () => {
+    it('should require the masks property', () => {
         expect(
             isRuntimeBot({
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
@@ -720,12 +735,12 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
-                mask: {},
+                masks: {},
             })
         ).toBe(false);
     });
@@ -736,11 +751,11 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 listeners: {},
                 changes: {},
-                mask: {},
+                masks: {},
                 maskChanges: {},
             })
         ).toBe(false);

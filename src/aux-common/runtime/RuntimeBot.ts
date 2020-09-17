@@ -65,7 +65,7 @@ export interface RuntimeBot {
     /**
      * The tag masks that have been applied to this bot.
      */
-    mask: BotTags;
+    masks: BotTags;
 
     /**
      * The changes that have been made to the bot.
@@ -127,7 +127,7 @@ export function isRuntimeBot(bot: any): bot is RuntimeBot {
             !!bot.id &&
             typeof bot.tags === 'object' &&
             typeof bot.raw === 'object' &&
-            typeof bot.mask === 'object' &&
+            typeof bot.masks === 'object' &&
             typeof bot.tags.toJSON === 'function' &&
             typeof bot.listeners === 'object' &&
             typeof bot.changes === 'object' &&
@@ -391,7 +391,7 @@ export function createRuntimeBot(
         id: bot.id,
         tags: tagsProxy,
         raw: rawProxy,
-        mask: maskProxy,
+        masks: maskProxy,
         changes: changedRawTags,
         maskChanges: changedMasks,
         listeners: listenersProxy,

@@ -1422,6 +1422,7 @@ export class AuxRuntime
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 tags: (ctx) => (ctx.bot ? ctx.bot.script.tags : null),
                 raw: (ctx) => (ctx.bot ? ctx.bot.script.raw : null),
+                masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creator: (ctx) => ctx.creator,
                 config: (ctx) => ctx.config,
                 configTag: (ctx) =>

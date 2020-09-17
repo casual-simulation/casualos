@@ -6597,7 +6597,7 @@ describe('AuxRuntime', () => {
                 uuidMock.mockReturnValue('uuid');
                 memory.space = DEFAULT_TAG_MASK_SPACE;
                 const bot = createBot('test1', {
-                    update: `@bot.mask.abc = "def"`,
+                    update: `@bot.masks.abc = "def"`,
                 });
                 runtime.botsAdded([bot]);
                 await memory.applyEvents([botAdded(bot)]);
@@ -7108,6 +7108,31 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should define a masks variable that equals this.masks', () => {
+                const update = runtime.botsAdded([
+                    createBot('test', {
+                        formula: '=masks === this.masks',
+                    }),
+                ]);
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                formula: true,
+                            },
+                            {
+                                formula: '=masks === this.masks',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
             it.skip('should define a creator variable which is the bot that created this', () => {
                 runtime.botsAdded([createBot('test', {})]);
 
@@ -7194,6 +7219,95 @@ describe('AuxRuntime', () => {
                                     num2: '456',
                                 }
                             ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('masks', () => {
+                it('should contain tag mask values', () => {
+                    const update = runtime.botsAdded([
+                        {
+                            id: 'test',
+                            tags: {
+                                formula: '=this.masks.num1 + this.masks.num2',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    num1: '123',
+                                    num2: '456',
+                                },
+                            },
+                        },
+                    ]);
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    formula:
+                                        '=this.masks.num1 + this.masks.num2',
+                                },
+                                values: {
+                                    formula: '123456',
+                                    num1: 123,
+                                    num2: 456,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        num1: '123',
+                                        num2: '456',
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should be able to use tag mask values for tags', () => {
+                    const update = runtime.botsAdded([
+                        {
+                            id: 'test',
+                            tags: {
+                                formula: '=this.tags.num1 + this.tags.num2',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    num1: '123',
+                                    num2: '456',
+                                },
+                            },
+                        },
+                    ]);
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                id: 'test',
+                                precalculated: true,
+                                tags: {
+                                    formula: '=this.tags.num1 + this.tags.num2',
+                                },
+                                values: {
+                                    formula: 123 + 456,
+                                    num1: 123,
+                                    num2: 456,
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        num1: '123',
+                                        num2: '456',
+                                    },
+                                },
+                            },
                         },
                         addedBots: ['test'],
                         removedBots: [],

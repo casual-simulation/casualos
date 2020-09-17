@@ -1786,6 +1786,11 @@ declare interface Bot {
     tags: BotTags;
 
     /**
+     * The tag masks that are applied to the bot.
+     */
+    masks: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
      * Otherwise, use the tags property.
@@ -1796,6 +1801,13 @@ declare interface Bot {
      * The tags that have been changed on this bot.
      */
     changes: BotTags;
+
+    /**
+     * The tag masks that have been changed on this bot.
+     */
+    maskChanges: {
+        [space: string]: BotTags;
+    };
 }
 
 /**
