@@ -30,6 +30,7 @@ import {
     calculateBotLOD,
     getTagMaskSpaces,
     getTagMask,
+    tagMasksOnBot,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
@@ -1363,6 +1364,69 @@ describe('BotCalculations', () => {
             expect(tags).toEqual(['_position', '_workspace', 'tag', 'other']);
         });
 
+        it('should include tag masks', () => {
+            const bots: Bot[] = [
+                {
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                    },
+                    masks: {
+                        tempLocal: {
+                            tag2: 1,
+                        },
+                    },
+                },
+                {
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello',
+                    },
+                    masks: {
+                        shared: {
+                            tag3: 1,
+                        },
+                    },
+                },
+                {
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again',
+                    },
+                    masks: {
+                        player: {
+                            tag4: 1,
+                        },
+                    },
+                },
+                {
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag',
+                    },
+                },
+            ];
+
+            const tags = botTags(bots, [], []);
+
+            expect(tags).toEqual([
+                '_position',
+                '_workspace',
+                'tag',
+                'other',
+                'tag2',
+                'tag3',
+                'tag4',
+            ]);
+        });
+
         it('should preserve the order of the current tags', () => {
             const bots: Bot[] = [
                 {
@@ -1664,6 +1728,27 @@ describe('BotCalculations', () => {
             const value = getTagMask(b, 'test', 'abc');
 
             expect(value).toBe(123);
+        });
+    });
+
+    describe('tagMasksOnBot()', () => {
+        it('should return the list of tag masks that are on the given bot', () => {
+            const tags = tagMasksOnBot({
+                id: 'test',
+                tags: {
+                    tag1: 'value',
+                },
+                masks: {
+                    tempLocal: {
+                        tag2: 'value',
+                    },
+                    shared: {
+                        tag3: 'value',
+                    },
+                },
+            });
+
+            expect(tags).toEqual(['tag2', 'tag3']);
         });
     });
 

@@ -242,7 +242,9 @@ export function botTags(
     tagWhitelist: (string | boolean)[][] = []
 ) {
     const botTags = flatMap(bots, (f) => keys(f.tags));
-    const tagsToKeep = union(botTags, extraTags);
+    const botMasks = flatMap(bots, (b) => tagMasksOnBot(b));
+    const allBotTags = union(botTags, botMasks);
+    const tagsToKeep = union(allBotTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
@@ -2665,6 +2667,24 @@ export function getTagMaskSpaces(bot: Bot, tag: string): string[] {
     }
 
     return spaces;
+}
+
+/**
+ * Gets the list of tags that are tag masks on the given bot.
+ * @param bot The bot.
+ */
+export function tagMasksOnBot(bot: Bot): string[] {
+    if (!bot.masks) {
+        return [];
+    }
+    let tags = new Set<string>();
+    for (let space in bot.masks) {
+        for (let tag in bot.masks[space]) {
+            tags.add(tag);
+        }
+    }
+
+    return [...tags.values()];
 }
 
 /**
