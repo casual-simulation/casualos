@@ -15,7 +15,7 @@
         ]"
         autocapitalize="none"
         autocorrect="off"
-        @keydown.enter="triggerNewTag()"
+        @keydown.enter.prevent="triggerNewTag()"
     />
 </template>
 <script src="./BotValue.ts"></script>
