@@ -13,6 +13,7 @@
 
 -   Fixed an issue where `server.setupStory()` would load a simulation and never dispose it.
 -   Fixed an issue where wrist portals were not being anchored properly.
+-   Fixed an issue where pressing enter to make a new tag would put a new line in the current tag value.
 
 ## V1.2.11
 
