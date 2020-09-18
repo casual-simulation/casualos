@@ -272,6 +272,7 @@ export type BotShape =
     | 'mesh'
     | 'iframe'
     | 'frustum'
+    | 'helix'
     | 'nothing';
 
 /**

@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V1.2.12
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `helix` form.
+    -   Displays a DNA strand mesh whose color can be customized.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `server.setupStory()` would load a simulation and never dispose it.
+
 ## V1.2.11
 
 #### Date: 9/9/2020

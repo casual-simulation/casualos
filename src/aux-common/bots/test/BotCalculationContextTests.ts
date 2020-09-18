@@ -907,6 +907,7 @@ export function botCalculationContextTests(
             ['iframe'],
             ['nothing'],
             ['frustum'],
+            ['helix'],
         ];
         const tagCases = ['auxForm', 'form'];
 

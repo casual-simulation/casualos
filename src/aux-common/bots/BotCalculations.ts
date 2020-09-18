@@ -1148,7 +1148,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'mesh' ||
         shape === 'iframe' ||
         shape === 'nothing' ||
-        shape === 'frustum'
+        shape === 'frustum' ||
+        shape === 'helix'
     ) {
         return shape;
     }

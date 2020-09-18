@@ -988,7 +988,8 @@ export class Server {
                           'http://localhost:3000'
                       )
                 : (user, client, branch) =>
-                      nodeSimulationForBranch(user, client, branch)
+                      nodeSimulationForBranch(user, client, branch),
+            SERVER_USER_IDS
         );
         return {
             connections: [
@@ -1118,6 +1119,14 @@ export class Server {
         return [store, stageStore];
     }
 }
+
+const SERVER_USER_IDS = [
+    'server',
+    'server-checkout',
+    'server-backup',
+    'server-setup-channel',
+    'server-webhooks',
+];
 
 function getServerUser(): AuxUser {
     return {
