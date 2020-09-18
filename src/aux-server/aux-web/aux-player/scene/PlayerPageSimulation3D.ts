@@ -278,11 +278,11 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             controllerAdded,
             controllerRemoved,
             controller => {
-                controller.mesh.group.add(config.grid3D);
+                controller.mesh.mesh.add(config.grid3D);
                 applyWristControllerOffset(hand, config.grid3D);
 
                 return new Subscription(() => {
-                    controller.mesh.group.remove(config.grid3D);
+                    controller.mesh.mesh.remove(config.grid3D);
                 });
             }
         );
@@ -324,7 +324,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 // if (config) {
                 //     config.grid3D.enabled = true;
                 // }
-                controller.mesh.group.add(group);
+                controller.mesh.mesh.add(group);
                 applyWristControllerOffset(hand, group);
                 group.updateMatrixWorld(true);
 
@@ -336,7 +336,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                     if (config) {
                         config.grid3D.enabled = false;
                     }
-                    controller.mesh.group.remove(group);
+                    controller.mesh.mesh.remove(group);
                 });
             }
         );

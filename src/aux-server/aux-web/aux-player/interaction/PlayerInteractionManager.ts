@@ -383,47 +383,67 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
             const [portal, gridScale] = portalInfoForSim(sim);
 
-            rig.cameraParent.position.set(
+            const targetXPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetX`,
                     0
-                ) * gridScale,
+                ) * gridScale;
+            const targetYPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetZ`,
                     0
-                ) * gridScale,
+                ) * gridScale;
+            const targetZPos =
                 calculateNumericalTagValue(
                     null,
                     userBot,
                     `${portal}CameraPositionOffsetY`,
                     0
-                ) * -gridScale
+                ) * -gridScale;
+
+            const targetXRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetX`,
+                0
             );
-            rig.cameraParent.rotation.set(
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetX`,
-                    0
-                ),
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetZ`,
-                    0
-                ),
-                calculateNumericalTagValue(
-                    null,
-                    userBot,
-                    `${portal}CameraRotationOffsetY`,
-                    0
-                )
+            const targetYRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetZ`,
+                0
             );
-            rig.cameraParent.updateMatrixWorld();
+            const targetZRot = calculateNumericalTagValue(
+                null,
+                userBot,
+                `${portal}CameraRotationOffsetY`,
+                0
+            );
+
+            if (
+                rig.cameraParent.position.x !== targetXPos ||
+                rig.cameraParent.position.y !== targetYPos ||
+                rig.cameraParent.position.z !== targetZPos ||
+                rig.cameraParent.rotation.x !== targetXRot ||
+                rig.cameraParent.rotation.y !== targetYRot ||
+                rig.cameraParent.rotation.z !== targetZRot
+            ) {
+                rig.cameraParent.position.set(
+                    targetXPos,
+                    targetYPos,
+                    targetZPos
+                );
+                rig.cameraParent.rotation.set(
+                    targetXRot,
+                    targetYRot,
+                    targetZRot
+                );
+                rig.cameraParent.updateMatrixWorld();
+            }
         }
     }
 
