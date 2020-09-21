@@ -5,6 +5,7 @@ import {
     Bot,
     BotSignatures,
     botsFromShortIds,
+    TAG_MASK_SPACE_PRIORITIES,
 } from '../../bots';
 import {
     createRuntimeBot,
@@ -12,7 +13,6 @@ import {
     RuntimeBotFactory,
     RuntimeBot,
     RealtimeEditMode,
-    TAG_MASK_SPACE_PRIORITIES,
 } from '../RuntimeBot';
 import {
     createCompiledBot,

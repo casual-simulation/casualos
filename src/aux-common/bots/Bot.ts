@@ -664,6 +664,36 @@ export const BOOTSTRAP_PARTITION_ID = 'bootstrap';
 export const OTHER_PLAYERS_PARTITION_ID = 'otherPlayers';
 
 /**
+ * The space that tag masks get placed in by default.
+ */
+export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ * Listed in reverse order of where they actually end up applied.
+ */
+export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
+    'admin',
+    'shared',
+    'otherPlayers',
+    'player',
+    'local',
+    'tempLocal',
+] as BotSpace[];
+
+/**
+ * The list of spaces that tag masks should be prioritized by.
+ */
+export const TAG_MASK_SPACE_PRIORITIES = [
+    'tempLocal',
+    'local',
+    'player',
+    'otherPlayers',
+    'shared',
+    'admin',
+] as BotSpace[];
+
+/**
  * The name of the branch that contains admin space.
  */
 export const ADMIN_BRANCH_NAME = '$admin';

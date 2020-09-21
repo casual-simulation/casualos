@@ -12,6 +12,8 @@ import {
     getTag,
     getTagMaskSpaces,
     hasValue,
+    DEFAULT_TAG_MASK_SPACE,
+    TAG_MASK_SPACE_PRIORITIES_REVERSE,
 } from '../bots';
 import {
     CompiledBot,
@@ -136,36 +138,6 @@ export function isRuntimeBot(bot: any): bot is RuntimeBot {
     }
     return false;
 }
-
-/**
- * The space that tag masks get placed in by default.
- */
-export const DEFAULT_TAG_MASK_SPACE: BotSpace = 'tempLocal';
-
-/**
- * The list of spaces that tag masks should be prioritized by.
- * Listed in reverse order of where they actually end up applied.
- */
-export const TAG_MASK_SPACE_PRIORITIES_REVERSE = [
-    'admin',
-    'shared',
-    'otherPlayers',
-    'player',
-    'local',
-    'tempLocal',
-] as BotSpace[];
-
-/**
- * The list of spaces that tag masks should be prioritized by.
- */
-export const TAG_MASK_SPACE_PRIORITIES = [
-    'tempLocal',
-    'local',
-    'player',
-    'otherPlayers',
-    'shared',
-    'admin',
-] as BotSpace[];
 
 /**
  * Flattens the given tag masks into a normal tags object.

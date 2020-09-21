@@ -6,6 +6,7 @@ import {
     COOKIE_BOT_PARTITION_ID,
     PLAYER_PARTITION_ID,
     OTHER_PLAYERS_PARTITION_ID,
+    DEFAULT_TAG_MASK_SPACE,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -15,9 +16,7 @@ import {
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
-    TAG_MASK_SPACE_PRIORITIES,
     flattenTagMasks,
-    DEFAULT_TAG_MASK_SPACE,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';

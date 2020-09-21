@@ -38,6 +38,7 @@ import {
     ON_STORY_STREAM_LOST_ACTION_NAME,
     PartialBot,
     updatedBot,
+    TAG_MASK_SPACE_PRIORITIES,
 } from '../bots';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -62,7 +63,6 @@ import {
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
-    TAG_MASK_SPACE_PRIORITIES,
 } from './RuntimeBot';
 import {
     CompiledBot,

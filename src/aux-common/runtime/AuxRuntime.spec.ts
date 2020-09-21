@@ -69,6 +69,7 @@ import {
     asyncError,
     getPlayerCount,
     stateUpdatedEvent,
+    DEFAULT_TAG_MASK_SPACE,
 } from '../bots';
 import uuid from 'uuid/v4';
 import { waitAsync } from '../test/TestHelpers';
@@ -81,7 +82,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import values from 'lodash/values';
-import { DEFAULT_TAG_MASK_SPACE, RealtimeEditMode } from './RuntimeBot';
+import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import { createDefaultLibrary } from './AuxLibrary';
 import { ActionResult, ScriptError } from './AuxResults';
