@@ -58,7 +58,7 @@
 
                     <!-- Other tags -->
                     <div
-                        v-for="(tag, index) in tags"
+                        v-for="({ tag }, index) in tags"
                         :key="index"
                         class="bot-cell header"
                         @click="searchForTag(tag)"
@@ -124,7 +124,7 @@
 
                         <!-- Bot Tags -->
                         <div
-                            v-for="(tag, tagIndex) in tags"
+                            v-for="({ tag, space }, tagIndex) in tags"
                             :key="`${bot.id}-${tagIndex}`"
                             class="bot-cell value"
                             :class="getTagCellClass(bot, tag)"
@@ -134,6 +134,7 @@
                                 :readOnly="readOnly || isBotReadOnly(bot)"
                                 :bot="bot"
                                 :tag="tag"
+                                :space="space"
                                 @tagChanged="onTagChanged"
                                 @focusChanged="onTagFocusChanged(bot, tag, $event)"
                             ></bot-value>

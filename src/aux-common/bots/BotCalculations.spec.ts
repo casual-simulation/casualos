@@ -31,6 +31,9 @@ import {
     getTagMaskSpaces,
     getTagMask,
     tagMasksOnBot,
+    getTagValueForSpace,
+    getSpaceForTag,
+    getUpdateForTagAndSpace,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
@@ -1361,7 +1364,12 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, [], []);
 
-            expect(tags).toEqual(['_position', '_workspace', 'tag', 'other']);
+            expect(tags).toEqual([
+                { tag: '_position', space: null },
+                { tag: '_workspace', space: null },
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+            ]);
         });
 
         it('should include tag masks', () => {
@@ -1417,13 +1425,13 @@ describe('BotCalculations', () => {
             const tags = botTags(bots, [], []);
 
             expect(tags).toEqual([
-                '_position',
-                '_workspace',
-                'tag',
-                'other',
-                'tag2',
-                'tag3',
-                'tag4',
+                { tag: '_position', space: null },
+                { tag: '_workspace', space: null },
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+                { tag: 'tag2', space: 'tempLocal' },
+                { tag: 'tag3', space: 'shared' },
+                { tag: 'tag4', space: 'player' },
             ]);
         });
 
@@ -1464,7 +1472,12 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, ['other', 'tag'], []);
 
-            expect(tags).toEqual(['other', 'tag', '_position', '_workspace']);
+            expect(tags).toEqual([
+                { tag: 'other', space: null },
+                { tag: 'tag', space: null },
+                { tag: '_position', space: null },
+                { tag: '_workspace', space: null },
+            ]);
         });
 
         it('should include the given extra tags', () => {
@@ -1505,11 +1518,11 @@ describe('BotCalculations', () => {
             const tags = botTags(bots, [], ['abc', '_position']);
 
             expect(tags).toEqual([
-                '_position',
-                '_workspace',
-                'tag',
-                'other',
-                'abc',
+                { tag: '_position', space: null },
+                { tag: '_workspace', space: null },
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+                { tag: 'abc', space: null },
             ]);
         });
 
@@ -1550,7 +1563,12 @@ describe('BotCalculations', () => {
 
             const tags = botTags(bots, ['notIncluded'], []);
 
-            expect(tags).toEqual(['_position', '_workspace', 'tag', 'other']);
+            expect(tags).toEqual([
+                { tag: '_position', space: null },
+                { tag: '_workspace', space: null },
+                { tag: 'tag', space: null },
+                { tag: 'other', space: null },
+            ]);
         });
 
         it('should include hidden tags if specified', () => {
@@ -1587,12 +1605,12 @@ describe('BotCalculations', () => {
             const tags = botTags(bots, ['notIncluded'], []);
 
             expect(tags).toEqual([
-                '_hiddenTag1',
-                '_hiddenTag2',
-                'tag',
-                '_hiddenTag3',
-                '_hiddenTag4',
-                'other',
+                { tag: '_hiddenTag1', space: null },
+                { tag: '_hiddenTag2', space: null },
+                { tag: 'tag', space: null },
+                { tag: '_hiddenTag3', space: null },
+                { tag: '_hiddenTag4', space: null },
+                { tag: 'other', space: null },
             ]);
         });
     });
@@ -1749,6 +1767,148 @@ describe('BotCalculations', () => {
             });
 
             expect(tags).toEqual(['tag2', 'tag3']);
+        });
+    });
+
+    describe('getTagValueForSpace()', () => {
+        it('should return the tag mask value for the given space', () => {
+            const val = getTagValueForSpace(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        tempLocal: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                'abc',
+                'tempLocal'
+            );
+
+            expect(val).toEqual('def');
+        });
+
+        it('should return the tag value if given null for the space', () => {
+            const val = getTagValueForSpace(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        tempLocal: {},
+                    },
+                },
+                'abc',
+                null
+            );
+
+            expect(val).toEqual(123);
+        });
+
+        it('should return undefined if there is no tag for the value', () => {
+            const val = getTagValueForSpace(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        tempLocal: {},
+                    },
+                },
+                'abc',
+                'tempLocal'
+            );
+
+            expect(val).toBeUndefined();
+        });
+    });
+
+    describe('getSpaceForTag()', () => {
+        it('should return the first space that the tag mask is in', () => {
+            const space = getSpaceForTag(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        tempLocal: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                'abc'
+            );
+
+            expect(space).toEqual('tempLocal');
+        });
+
+        it('should prioritize tempLocal over local', () => {
+            const space = getSpaceForTag(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        local: {
+                            abc: 'ghi',
+                        },
+                        tempLocal: {
+                            abc: 'def',
+                        },
+                    },
+                },
+                'abc'
+            );
+
+            expect(space).toEqual('tempLocal');
+        });
+
+        it('should return null if there is no mask space that the tag is in', () => {
+            const space = getSpaceForTag(
+                {
+                    id: 'test',
+                    tags: {
+                        abc: 123,
+                    },
+                    masks: {
+                        tempLocal: {},
+                    },
+                },
+                'abc'
+            );
+
+            expect(space).toEqual(null);
+        });
+    });
+
+    describe('getUpdateForTagAndSpace()', () => {
+        it('should return an update object with the given tag set to the value', () => {
+            const update = getUpdateForTagAndSpace('abc', 'def', null);
+
+            expect(update).toEqual({
+                tags: {
+                    abc: 'def',
+                },
+            });
+        });
+
+        it('should return an update object with the given tag mask set to the value', () => {
+            const update = getUpdateForTagAndSpace('abc', 'def', 'tempLocal');
+
+            expect(update).toEqual({
+                masks: {
+                    tempLocal: {
+                        abc: 'def',
+                    },
+                },
+            });
         });
     });
 

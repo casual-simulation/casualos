@@ -7,6 +7,8 @@ import {
     merge,
     hasValue,
     isScript,
+    getTagValueForSpace,
+    getSpaceForTag,
 } from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
 import { appManager } from '../../AppManager';
@@ -18,6 +20,8 @@ export default class BotValue extends Vue {
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
+    @Prop() space: string;
+
     @Prop({ default: true })
     showFormulaWhenFocused: boolean;
 
@@ -27,6 +31,14 @@ export default class BotValue extends Vue {
 
     private _focused: boolean = false;
     private _simulation: BrowserSimulation;
+
+    get spaceAbbreviation() {
+        if (this.space) {
+            return this.space.slice(0, 1);
+        } else {
+            return 'N/A';
+        }
+    }
 
     getBotManager() {
         return this._simulation;
@@ -50,14 +62,14 @@ export default class BotValue extends Vue {
         if (!hasValue(this.value)) {
             this.value = value;
             this.$emit('tagChanged', this.bot, this.tag, value);
-            this.getBotManager().editBot(this.bot, this.tag, value);
+            this.getBotManager().editBot(this.bot, this.tag, value, this.space);
         }
     }
 
     valueChanged(bot: Bot, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', bot, tag, value);
-        this.getBotManager().editBot(bot, tag, value);
+        this.getBotManager().editBot(bot, tag, value, this.space);
     }
 
     focus() {
@@ -94,13 +106,16 @@ export default class BotValue extends Vue {
     }
 
     private _updateVisibleValue() {
-        if (!this._focused || !this.showFormulaWhenFocused) {
+        if (
+            !hasValue(this.space) &&
+            (!this._focused || !this.showFormulaWhenFocused)
+        ) {
             this.value = this.getBotManager().helper.calculateFormattedBotValue(
                 this.bot,
                 this.tag
             );
         } else {
-            const val = this.bot.tags[this.tag];
+            const val = getTagValueForSpace(this.bot, this.tag, this.space);
             if (typeof val === 'object') {
                 this.value = JSON.stringify(val);
             } else {

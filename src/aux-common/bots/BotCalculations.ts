@@ -41,6 +41,7 @@ import {
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     BotSignatures,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
+    TAG_MASK_SPACE_PRIORITIES,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -66,7 +67,7 @@ import { merge, shortUuid } from '../utils';
 import differenceBy from 'lodash/differenceBy';
 import maxBy from 'lodash/maxBy';
 import { BotObjectsContext } from './BotObjectsContext';
-import { Object3D } from 'three';
+import { intersectionBy, unionBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -240,14 +241,40 @@ export function botTags(
     currentTags: string[],
     extraTags: string[],
     tagWhitelist: (string | boolean)[][] = []
-) {
-    const botTags = flatMap(bots, (f) => keys(f.tags));
-    const botMasks = flatMap(bots, (b) => tagMasksOnBot(b));
-    const allBotTags = union(botTags, botMasks);
-    const tagsToKeep = union(allBotTags, extraTags);
-    const allTags = union(currentTags, tagsToKeep);
+): { tag: string; space: string }[] {
+    const botTags = flatMap(bots, (f) => keys(f.tags)).map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+    const botMasks = flatMap(bots, (b) => {
+        if (!b.masks) {
+            return [];
+        }
+        let tags = [] as { tag: string; space: string }[];
+        for (let space in b.masks) {
+            let spaceTags = keys(b.masks[space]).map(
+                (k) =>
+                    ({
+                        tag: k,
+                        space: space,
+                    } as const)
+            );
+            tags.push(...spaceTags);
+        }
+        return tags;
+    });
+    const allBotTags = unionBy(botTags, botMasks, tagComparer);
 
-    const onlyTagsToKeep = intersection(allTags, tagsToKeep);
+    const extraTagPairs = extraTags.map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+    const currentTagPairs = currentTags.map(
+        (t) => ({ tag: t, space: null as string } as const)
+    );
+
+    const tagsToKeep = unionBy(allBotTags, extraTagPairs, tagComparer);
+    const allTags = unionBy(currentTagPairs, tagsToKeep, tagComparer);
+
+    const onlyTagsToKeep = intersectionBy(allTags, tagsToKeep, tagComparer);
 
     let allInactive = true;
 
@@ -267,7 +294,8 @@ export function botTags(
                     for (let j = 2; j < tagWhitelist[i].length; j++) {
                         for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
                             if (
-                                onlyTagsToKeep[k] === <string>tagWhitelist[i][j]
+                                onlyTagsToKeep[k].tag ===
+                                <string>tagWhitelist[i][j]
                             ) {
                                 onlyTagsToKeep.splice(k, 1);
                                 break;
@@ -277,13 +305,19 @@ export function botTags(
                 }
             }
         } else {
-            const initialTags = onlyTagsToKeep.filter((t) => !isHiddenTag(t));
+            const initialTags = onlyTagsToKeep.filter(
+                (t) => !isHiddenTag(t.tag)
+            );
             return initialTags;
         }
 
         return onlyTagsToKeep;
     } else {
         return onlyTagsToKeep;
+    }
+
+    function tagComparer(tagPair: { tag: string; space: string }) {
+        return `${tagPair.tag}.${!tagPair.space ? 'null' : tagPair.space}`;
     }
 }
 
@@ -2721,4 +2755,66 @@ export function hasTagOrMask(bot: Bot, tag: string): boolean {
         }
     }
     return false;
+}
+
+/**
+ * Gets the tag value for the given space.
+ * If the space is null, then the tag value is retrieved from the tags.
+ * If the space is specified, then the tag value is retrieved from the corresponding tag masks.
+ * @param bot The bot.
+ * @param tag The tag.
+ * @param space The space.
+ */
+export function getTagValueForSpace(bot: Bot, tag: string, space: string): any {
+    if (hasValue(space)) {
+        return bot.masks?.[space]?.[tag];
+    } else {
+        return bot.tags[tag];
+    }
+}
+
+/**
+ * Gets the first space that the given tag exists in.
+ * If the tag has a value in a tag mask, then the space that the mask exists in is returned.
+ * If the tag does not have a value in a tag mask, then null is returned.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getSpaceForTag(bot: Bot, tag: string): string {
+    for (let space of TAG_MASK_SPACE_PRIORITIES) {
+        if (hasValue(bot.masks?.[space]?.[tag])) {
+            return space;
+        }
+    }
+    return null;
+}
+
+/**
+ * Calculates the bot update that is needed to set the given tag in the given space to the given value.
+ * If the given space is null, then the tag will be set in the bot'ss tags.
+ * If the given space has a value, then the tag will be set as a tag mask in the given space.
+ * @param tag The tag to change.
+ * @param value The value to set.
+ * @param space The space.
+ */
+export function getUpdateForTagAndSpace(
+    tag: string,
+    value: any,
+    space: string
+): Partial<Bot> {
+    if (hasValue(space)) {
+        return {
+            masks: {
+                [space]: {
+                    [tag]: value,
+                },
+            },
+        };
+    } else {
+        return {
+            tags: {
+                [tag]: value,
+            },
+        };
+    }
 }

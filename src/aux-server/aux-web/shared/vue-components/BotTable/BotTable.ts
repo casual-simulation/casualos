@@ -49,6 +49,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import sumBy from 'lodash/sumBy';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
+import { sortBy } from 'lodash';
 
 @Component({
     components: {
@@ -84,7 +85,7 @@ export default class BotTable extends Vue {
     @Prop({ required: true })
     showNewBot: boolean;
 
-    tags: string[] = [];
+    tags: { tag: string; space: string }[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
     focusedBot: Bot = null;
@@ -399,10 +400,10 @@ export default class BotTable extends Vue {
 
             if (this.newTagPlacement === 'top') {
                 this.addedTags.unshift(this.newTag);
-                this.tags.unshift(this.newTag);
+                this.tags.unshift({ tag: this.newTag, space: null });
             } else {
                 this.addedTags.push(this.newTag);
-                this.tags.push(this.newTag);
+                this.tags.push({ tag: this.newTag, space: null });
             }
 
             const addedTag = this.newTag;
@@ -494,7 +495,7 @@ export default class BotTable extends Vue {
         }
 
         this.addedTags.push(this.newTag);
-        this.tags.push(this.newTag);
+        this.tags.push({ tag: this.newTag, space: null });
 
         const addedTag = this.newTag;
 
@@ -608,7 +609,7 @@ export default class BotTable extends Vue {
     }
 
     tagExists(tag: string): boolean {
-        return this.tags.indexOf(tag, 0) !== -1;
+        return this.tags.some((t) => t.tag === tag && t.space === null);
     }
 
     tagNotEmpty(tag: string): boolean {
@@ -680,12 +681,15 @@ export default class BotTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
 
-        this.tags = botTags(
-            this.bots,
-            this.tags,
-            allExtraTags,
-            this.tagWhitelist
-        ).sort();
+        this.tags = sortBy(
+            botTags(
+                this.bots,
+                this.tags.map((t) => t.tag),
+                allExtraTags,
+                this.tagWhitelist
+            ),
+            (t) => t.tag
+        );
     }
 
     toggleWhitelistIndex(index: number) {
