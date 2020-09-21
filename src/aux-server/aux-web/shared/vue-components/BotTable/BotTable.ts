@@ -77,11 +77,6 @@ export default class BotTable extends Vue {
     diffSelected: boolean;
     @Prop({ default: false })
     isSearch: boolean;
-    /**
-     * A property that can be set to indicate to the table that its values should be updated.
-     */
-    @Prop({})
-    updateTime: number;
 
     @Prop({ default: null })
     dimension: string;
@@ -123,9 +118,9 @@ export default class BotTable extends Vue {
         if (this.$refs.tags) {
             return [
                 ...(<BotTag[]>this.$refs.tags)
-                    .filter(t => t.allowCloning)
-                    .map(t => t.$el),
-                ...(<BotID[]>this.$refs.tags).map(t => t.$el),
+                    .filter((t) => t.allowCloning)
+                    .map((t) => t.$el),
+                ...(<BotID[]>this.$refs.tags).map((t) => t.$el),
             ];
         } else {
             return [];
@@ -155,7 +150,7 @@ export default class BotTable extends Vue {
             }
             return <boolean>this.tagWhitelist[index][1];
         } else {
-            const idx = this.tagWhitelist.findIndex(bl => bl[0] === index);
+            const idx = this.tagWhitelist.findIndex((bl) => bl[0] === index);
             return this.isWhitelistTagActive(idx);
         }
     }
@@ -169,20 +164,20 @@ export default class BotTable extends Vue {
     }
 
     isTagOnlyScripts(tag: string) {
-        const numScripts = sumBy(this.bots, b =>
+        const numScripts = sumBy(this.bots, (b) =>
             isScript(b.tags[tag]) ? 1 : 0
         );
-        const emptyTags = sumBy(this.bots, b =>
+        const emptyTags = sumBy(this.bots, (b) =>
             !hasValue(b.tags[tag]) ? 1 : 0
         );
         return numScripts > 0 && this.bots.length === numScripts + emptyTags;
     }
 
     isTagOnlyFormulas(tag: string) {
-        const numFormulas = sumBy(this.bots, b =>
+        const numFormulas = sumBy(this.bots, (b) =>
             isFormula(b.tags[tag]) ? 1 : 0
         );
-        const emptyTags = sumBy(this.bots, b =>
+        const emptyTags = sumBy(this.bots, (b) =>
             !hasValue(b.tags[tag]) ? 1 : 0
         );
         return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
@@ -204,8 +199,9 @@ export default class BotTable extends Vue {
         }
 
         return {
-            [`grid-template-${sizeType}`]: `auto ${idTemplate} repeat(${this
-                .tags.length + this.readOnlyTags.length}, auto) auto`,
+            [`grid-template-${sizeType}`]: `auto ${idTemplate} repeat(${
+                this.tags.length + this.readOnlyTags.length
+            }, auto) auto`,
         };
     }
 
@@ -252,7 +248,7 @@ export default class BotTable extends Vue {
         this.numBotsSelected = this.bots.length;
         if (this.focusedBot) {
             this.focusedBot =
-                this.bots.find(f => f.id === this.focusedBot.id) || null;
+                this.bots.find((f) => f.id === this.focusedBot.id) || null;
         }
 
         this._updateEditable();
@@ -550,7 +546,7 @@ export default class BotTable extends Vue {
     async downloadBots() {
         if (this.hasBots) {
             const stored = await this.getBotManager().exportBots(
-                this.bots.map(f => f.id)
+                this.bots.map((f) => f.id)
             );
             downloadAuxState(stored, `selection-${Date.now()}`);
         }
@@ -604,7 +600,7 @@ export default class BotTable extends Vue {
     }
 
     tagHasValue(tag: string): boolean {
-        return some(this.bots, f => hasValue(f.tags[tag]));
+        return some(this.bots, (f) => hasValue(f.tags[tag]));
     }
 
     isHiddenTag(tag: string): boolean {
@@ -701,7 +697,7 @@ export default class BotTable extends Vue {
         let sortedArray: string[] = getAllBotTags(this.bots, true).sort();
 
         // remove any duplicates from the array to fix multiple bots adding in duplicate tags
-        sortedArray = sortedArray.filter(function(elem, index, self) {
+        sortedArray = sortedArray.filter(function (elem, index, self) {
             return index === self.indexOf(elem);
         });
 
@@ -769,7 +765,7 @@ export default class BotTable extends Vue {
                 let activeCheck = false;
                 // add the section visibility in slot 1
                 if (this.tagWhitelist.length > 0) {
-                    this.tagWhitelist.forEach(element => {
+                    this.tagWhitelist.forEach((element) => {
                         if (element[0] === tempArray[0]) {
                             activeCheck = <boolean>element[1];
                         }
@@ -800,7 +796,7 @@ export default class BotTable extends Vue {
             let activeCheck = false;
 
             if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach(element => {
+                this.tagWhitelist.forEach((element) => {
                     if (element[0] === 'hidden') {
                         activeCheck = <boolean>element[1];
                     }
@@ -811,7 +807,7 @@ export default class BotTable extends Vue {
             hiddenList.unshift('hidden');
             whitelist.unshift(hiddenList);
         } else {
-            hiddenList.forEach(hiddenTags => {
+            hiddenList.forEach((hiddenTags) => {
                 sortedArray.push(<string>hiddenTags);
             });
         }
@@ -820,7 +816,7 @@ export default class BotTable extends Vue {
             let activeCheck = false;
 
             if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach(element => {
+                this.tagWhitelist.forEach((element) => {
                     if (element[0] === '@') {
                         activeCheck = <boolean>element[1];
                     }
@@ -836,7 +832,7 @@ export default class BotTable extends Vue {
             let activeCheck = false;
 
             if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach(element => {
+                this.tagWhitelist.forEach((element) => {
                     if (element[0] === '@') {
                         activeCheck = <boolean>element[1];
                     }
@@ -852,7 +848,7 @@ export default class BotTable extends Vue {
             let activeCheck = true;
 
             if (this.tagWhitelist.length > 0) {
-                this.tagWhitelist.forEach(element => {
+                this.tagWhitelist.forEach((element) => {
                     if (element[0] === '#') {
                         activeCheck = <boolean>element[1];
                     }
@@ -862,7 +858,7 @@ export default class BotTable extends Vue {
             generalList.unshift(activeCheck);
             generalList.unshift('#');
 
-            sortedArray.forEach(generalTags => {
+            sortedArray.forEach((generalTags) => {
                 generalList.push(<string>generalTags);
             });
 
@@ -875,7 +871,7 @@ export default class BotTable extends Vue {
     getTagWhitelist(): string[] {
         let tagList: string[] = [];
 
-        this.tagWhitelist.forEach(element => {
+        this.tagWhitelist.forEach((element) => {
             tagList.push(<string>element[0]);
         });
 

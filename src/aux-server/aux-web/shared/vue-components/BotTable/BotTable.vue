@@ -134,7 +134,6 @@
                                 :readOnly="readOnly || isBotReadOnly(bot)"
                                 :bot="bot"
                                 :tag="tag"
-                                :updateTime="updateTime"
                                 @tagChanged="onTagChanged"
                                 @focusChanged="onTagFocusChanged(bot, tag, $event)"
                             ></bot-value>
