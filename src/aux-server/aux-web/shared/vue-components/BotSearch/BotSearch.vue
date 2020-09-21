@@ -19,7 +19,7 @@
             <md-button class="md-icon-button num-bots">
                 <div ref="botQueue">
                     <div v-if="recentBot" class="toolbar-layout">
-                        <mini-bot :bot="recentBot" ref="mini" :isSearch="true"></mini-bot>
+                        <mini-bot :bot="recentBot" ref="mini"></mini-bot>
                     </div>
                 </div>
             </md-button>

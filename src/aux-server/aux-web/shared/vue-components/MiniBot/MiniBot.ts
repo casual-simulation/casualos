@@ -40,12 +40,6 @@ export default class MiniBot extends Vue {
 
     @Inject() botRenderer: BotRenderer;
 
-    get tags() {
-        let tags = botTags([this.bot], [], []);
-        tags.sort();
-        return ['id', ...tags];
-    }
-
     @Watch('bot')
     private _botChanged(bot: Bot) {
         this._updateBot();
