@@ -5390,6 +5390,56 @@ describe('AuxRuntime', () => {
                     });
                 });
 
+                it('should be able to update tag masks without affecting the tag', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    tempLocal: {
+                                        abc: 12,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {},
+                                masks: {
+                                    tempLocal: {
+                                        abc: 12,
+                                    },
+                                },
+                                values: {
+                                    abc: 12,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
                 it('should fall back to the tag value when a tag mask is deleted', () => {
                     const update1 = runtime.stateUpdated(
                         stateUpdatedEvent({

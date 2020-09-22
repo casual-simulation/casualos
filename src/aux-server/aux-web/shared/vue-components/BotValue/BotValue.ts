@@ -61,14 +61,14 @@ export default class BotValue extends Vue {
     setInitialValue(value: string) {
         if (!hasValue(this.value)) {
             this.value = value;
-            this.$emit('tagChanged', this.bot, this.tag, value);
+            this.$emit('tagChanged', this.bot, this.tag, value, this.space);
             this.getBotManager().editBot(this.bot, this.tag, value, this.space);
         }
     }
 
     valueChanged(bot: Bot, tag: string, value: string) {
         this.value = value;
-        this.$emit('tagChanged', bot, tag, value);
+        this.$emit('tagChanged', bot, tag, value, this.space);
         this.getBotManager().editBot(bot, tag, value, this.space);
     }
 

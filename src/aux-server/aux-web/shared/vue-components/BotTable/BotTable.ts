@@ -90,6 +90,7 @@ export default class BotTable extends Vue {
     lastEditedTag: string = null;
     focusedBot: Bot = null;
     focusedTag: string = null;
+    focusedSpace: string = null;
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
     isMakingNewTag: boolean = false;
@@ -285,11 +286,12 @@ export default class BotTable extends Vue {
                     },
                 });
             } else {
-                this.getBotManager().helper.updateBot(this.focusedBot, {
-                    tags: {
-                        [this.focusedTag]: this.multilineValue,
-                    },
-                });
+                this.getBotManager().editBot(
+                    this.focusedBot,
+                    this.focusedTag,
+                    this.multilineValue,
+                    this.focusedSpace
+                );
             }
         }
     }
@@ -553,17 +555,19 @@ export default class BotTable extends Vue {
         }
     }
 
-    onTagChanged(bot: Bot, tag: string, value: string) {
+    onTagChanged(bot: Bot, tag: string, value: string, space: string) {
         this.lastEditedTag = this.focusedTag = tag;
         this.focusedBot = bot;
+        this.focusedSpace = space;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(bot: Bot, tag: string, focused: boolean) {
+    onTagFocusChanged(bot: Bot, tag: string, space: string, focused: boolean) {
         if (focused) {
             this.focusedBot = bot;
             this.focusedTag = tag;
+            this.focusedSpace = space;
             this.multilineValue = this.focusedBot.tags[this.focusedTag];
             this.isFocusedTagFormula = isFormula(this.multilineValue);
 

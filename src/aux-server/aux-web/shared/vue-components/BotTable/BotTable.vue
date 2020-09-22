@@ -136,7 +136,7 @@
                                 :tag="tag"
                                 :space="space"
                                 @tagChanged="onTagChanged"
-                                @focusChanged="onTagFocusChanged(bot, tag, $event)"
+                                @focusChanged="onTagFocusChanged(bot, tag, space, $event)"
                             ></bot-value>
                         </div>
 
