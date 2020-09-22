@@ -204,6 +204,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 if (event.update.tags && this.state[event.id]) {
                     let newBot = Object.assign({}, this.state[event.id]);
                     let changedTags: string[] = [];
+                    const updatedBot = (updatedState[event.id] = merge(
+                        updatedState[event.id] || {},
+                        event.update
+                    ));
                     for (let tag of tagsOnBot(event.update)) {
                         const newVal = event.update.tags[tag];
                         const oldVal = newBot.tags[tag];
@@ -214,16 +218,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
                         if (hasValue(newVal)) {
                             newBot.tags[tag] = newVal;
+                            updatedBot.tags[tag] = newVal;
                         } else {
                             delete newBot.tags[tag];
+                            updatedBot.tags[tag] = null;
                         }
                     }
 
                     this.state[event.id] = newBot;
-                    updatedState[event.id] = merge(
-                        updatedState[event.id] || {},
-                        event.update
-                    );
 
                     let update = updated.get(event.id);
                     if (update) {
@@ -247,6 +249,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         newBot.masks[this.space] = {};
                     }
                     const masks = newBot.masks[this.space];
+                    const updatedBot = (updatedState[event.id] = merge(
+                        updatedState[event.id] || {},
+                        event.update
+                    ));
                     let changedTags: string[] = [];
                     for (let tag in tags) {
                         const newVal = tags[tag];
@@ -260,14 +266,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             masks[tag] = newVal;
                         } else {
                             delete masks[tag];
+                            updatedBot.masks[this.space][tag] = null;
                         }
                     }
 
                     this.state[event.id] = newBot;
-                    updatedState[event.id] = merge(
-                        updatedState[event.id] || {},
-                        event.update
-                    );
                 }
             }
         }

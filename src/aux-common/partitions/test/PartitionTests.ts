@@ -510,6 +510,115 @@ export function testPartitionImplementation(
             expect(updated).toEqual([]);
         });
 
+        let deleteValueCases = [
+            ['null', null],
+            ['undefined', undefined],
+            ['empty string', ''],
+        ];
+
+        let preserveValueCases = [
+            ['0', 0],
+            ['false', false],
+            ['whitespace', ' '],
+        ];
+
+        it.each(deleteValueCases)(
+            'should delete tags with %s values',
+            async (desc, val) => {
+                const bot = createBot('test', {
+                    abc: 'def',
+                    example: 123,
+                });
+
+                // Run the bot added and updated
+                // events in separate batches
+                // because partitions may combine the events
+                await partition.applyEvents([botAdded(bot)]);
+
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            example: val,
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(updated).toEqual([
+                    {
+                        bot: createBot('test', {
+                            abc: 'def',
+                        }),
+                        tags: ['example'],
+                    },
+                ]);
+                expect(updates.slice(1)).toEqual([
+                    {
+                        state: {
+                            test: {
+                                tags: {
+                                    example: null,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    },
+                ]);
+            }
+        );
+
+        it.each(preserveValueCases)(
+            'should preserve tags with %s values',
+            async (desc, val) => {
+                const bot = createBot('test', {
+                    abc: 'def',
+                    example: 123,
+                });
+
+                // Run the bot added and updated
+                // events in separate batches
+                // because partitions may combine the events
+                await partition.applyEvents([botAdded(bot)]);
+
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            example: val,
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(updated).toEqual([
+                    {
+                        bot: createBot('test', {
+                            abc: 'def',
+                            example: val,
+                        }),
+                        tags: ['example'],
+                    },
+                ]);
+                expect(updates.slice(1)).toEqual([
+                    {
+                        state: {
+                            test: {
+                                tags: {
+                                    example: val,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    },
+                ]);
+            }
+        );
+
         describe('TagMasks', () => {
             beforeEach(() => {
                 partition.space = 'testSpace';
