@@ -1,4 +1,13 @@
-import { BOT_SPACE_TAG, PrecalculatedBot } from '../bots';
+import {
+    BOT_SPACE_TAG,
+    PrecalculatedBot,
+    BotTagMasks,
+    TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
+    PLAYER_PARTITION_ID,
+    OTHER_PLAYERS_PARTITION_ID,
+    DEFAULT_TAG_MASK_SPACE,
+} from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     createRuntimeBot,
@@ -7,6 +16,9 @@ import {
     RealtimeEditMode,
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
+    flattenTagMasks,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -25,6 +37,8 @@ describe('RuntimeBot', () => {
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
     let notifyChangeMock: jest.Mock;
+    let updateTagMaskMock: jest.Mock;
+    let getTagMaskMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -43,6 +57,33 @@ describe('RuntimeBot', () => {
             bot.values[tag] = value;
             bot.tags[tag] = value;
             return RealtimeEditMode.Immediate;
+        });
+
+        updateTagMaskMock = jest.fn();
+        updateTagMaskMock.mockImplementation((bot, tag, spaces, value) => {
+            if (!bot.masks) {
+                bot.masks = {};
+            }
+            for (let space of spaces) {
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                bot.masks[space][tag] = value;
+            }
+            return RealtimeEditMode.Immediate;
+        });
+
+        getTagMaskMock = jest.fn();
+        getTagMaskMock.mockImplementation((bot, tag) => {
+            if (!bot.masks) {
+                return undefined;
+            }
+            for (let space in bot.masks) {
+                if (tag in bot.masks[space]) {
+                    return bot.masks[space][tag];
+                }
+            }
+            return undefined;
         });
 
         getListenerMock = jest.fn(
@@ -66,6 +107,8 @@ describe('RuntimeBot', () => {
             getListener: getListenerMock,
             getSignature: getSignatureMock,
             notifyChange: notifyChangeMock,
+            updateTagMask: updateTagMaskMock,
+            getTagMask: getTagMaskMock,
         };
         context = new MemoryGlobalContext(
             version,
@@ -194,7 +237,7 @@ describe('RuntimeBot', () => {
             expect(script.changes.abc).toEqual(null);
         });
 
-        it('should Object.keys() for tags that were added after the bot was created', () => {
+        it('should support Object.keys() for tags that were added after the bot was created', () => {
             const keys1 = Object.keys(script.tags);
             keys1.sort();
 
@@ -445,10 +488,78 @@ describe('RuntimeBot', () => {
         });
     });
 
+    describe('masks', () => {
+        it('should set the tag mask for the given tag in the tempLocal space by default', () => {
+            script.masks.abc = true;
+
+            expect(script.masks.abc).toEqual(true);
+            expect(script.maskChanges).toEqual({
+                tempLocal: {
+                    abc: true,
+                },
+            });
+        });
+
+        it('should get the tag mask from the manager', () => {
+            precalc.masks = {
+                test: {
+                    abc: true,
+                },
+            };
+
+            expect(script.masks.abc).toEqual(true);
+        });
+
+        it('should suppport Object.keys() for tags added after the runtime bot was created', () => {
+            precalc.masks = {
+                shared: {
+                    abc: 'def',
+                },
+                tempLocal: {
+                    ghi: 'jkl',
+                },
+            };
+            expect(Object.keys(script.masks)).toEqual(['abc', 'ghi']);
+        });
+
+        it('should support the delete keyword', () => {
+            precalc.masks = {
+                shared: {
+                    abc: 'def',
+                },
+                tempLocal: {
+                    abc: 'jkl',
+                },
+                other: {
+                    different: 123,
+                },
+            };
+
+            delete script.masks.abc;
+
+            expect(script.masks.abc).toEqual(null);
+            expect(script.maskChanges).toEqual({
+                shared: {
+                    abc: null,
+                },
+                tempLocal: {
+                    abc: null,
+                },
+            });
+            expect(manager.updateTagMask).toHaveBeenCalledWith(
+                precalc,
+                'abc',
+                ['shared', 'tempLocal'],
+                null
+            );
+        });
+    });
+
     describe('clear_changes', () => {
         it('should be able to clear changes from the script bot', () => {
             script.tags.abc = 123;
             script.tags.def = 'hello';
+            script.masks.test = 'value';
 
             expect(script.raw.abc).toEqual(123);
 
@@ -457,17 +568,30 @@ describe('RuntimeBot', () => {
                 abc: 123,
                 def: 'hello',
             });
+            const maskChanges = script.maskChanges;
+            expect(maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    test: 'value',
+                },
+            });
 
             script[CLEAR_CHANGES_SYMBOL]();
 
             expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({});
             expect(script.changes).not.toEqual(changes);
             expect(script.raw.abc).toEqual(123);
             expect(script.raw.def).toEqual('hello');
 
             script.raw.abc = 456;
+            script.masks.test = 'value';
             expect(script.changes).toEqual({
                 abc: 456,
+            });
+            expect(script.maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    test: 'value',
+                },
             });
             expect(script.raw.abc).toEqual(456);
         });
@@ -482,6 +606,112 @@ describe('RuntimeBot', () => {
             expect(descriptor.configurable).toBe(false);
         });
     });
+
+    describe('set_tag_mask', () => {
+        it('should be able to set a tag mask in the specified space', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: 123,
+                },
+            });
+            expect(script.masks.abc).toEqual(123);
+        });
+
+        it('should use the default space if no space is specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 123);
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    abc: 123,
+                },
+            });
+            expect(script.masks.abc).toEqual(123);
+        });
+
+        it('should be able to delete a tag mask in the specified space', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'custom');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', null, 'local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                },
+                custom: {
+                    abc: 'def',
+                },
+            });
+            expect(script.masks.abc).toEqual('def');
+        });
+
+        it('should be able to delete the tag mask in all spaces if no space is specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'custom');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', null);
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                },
+                custom: {
+                    abc: null,
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+        });
+    });
+
+    describe('clear_tag_masks', () => {
+        it('should be able to clear tag masks from the given space', () => {
+            script[SET_TAG_MASK_SYMBOL]('value', true, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('other', 'era', 'tempLocal');
+
+            script[CLEAR_TAG_MASKS_SYMBOL]('local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                    value: null,
+                },
+                tempLocal: {
+                    other: 'era',
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.value).toEqual(null);
+            expect(script.masks.other).toEqual('era');
+        });
+
+        it('should be able to clear tag masks from all spaces', () => {
+            script[SET_TAG_MASK_SYMBOL]('value', true, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('other', 'era', 'tempLocal');
+
+            script[CLEAR_TAG_MASKS_SYMBOL]();
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                    value: null,
+                },
+                tempLocal: {
+                    other: null,
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.value).toEqual(null);
+            expect(script.masks.other).toEqual(null);
+        });
+    });
 });
 
 describe('isRuntimeBot()', () => {
@@ -490,11 +720,13 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: 'test',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
+                masks: {},
+                maskChanges: {},
             })
         ).toBe(true);
 
@@ -503,11 +735,13 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
+                masks: {},
+                maskChanges: {},
             })
         ).toBe(true);
     });
@@ -520,6 +754,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -529,11 +765,13 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: '',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -543,10 +781,12 @@ describe('isRuntimeBot()', () => {
             isRuntimeBot({
                 id: 'test',
                 tags: {
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -558,6 +798,8 @@ describe('isRuntimeBot()', () => {
                 raw: {},
                 listeners: {},
                 changes: {},
+                mask: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -568,10 +810,44 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 raw: {},
                 listeners: {},
+                mask: {},
+                maskChanges: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the masks property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function () {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+                maskChanges: {},
+            })
+        ).toBe(false);
+    });
+
+    it('should require the maskChanges property', () => {
+        expect(
+            isRuntimeBot({
+                id: 'false',
+                tags: {
+                    test: 'abc',
+                    toJSON: function () {},
+                },
+                raw: {},
+                listeners: {},
+                changes: {},
+                masks: {},
             })
         ).toBe(false);
     });
@@ -582,10 +858,12 @@ describe('isRuntimeBot()', () => {
                 id: 'false',
                 tags: {
                     test: 'abc',
-                    toJSON: function() {},
+                    toJSON: function () {},
                 },
                 listeners: {},
                 changes: {},
+                masks: {},
+                maskChanges: {},
             })
         ).toBe(false);
     });
@@ -608,5 +886,62 @@ describe('isRuntimeBot()', () => {
 
     it('should return false when given a boolean', () => {
         expect(isRuntimeBot(true)).toBe(false);
+    });
+});
+
+describe('flattenTagMasks()', () => {
+    it('should follow the tag mask space priority list', () => {
+        let tagMasks: BotTagMasks = {
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                abc: 1,
+            },
+            [COOKIE_BOT_PARTITION_ID]: {
+                abc: 2,
+                def: 1,
+            },
+            [PLAYER_PARTITION_ID]: {
+                abc: 3,
+                def: 2,
+                ghi: 1,
+            },
+            [OTHER_PLAYERS_PARTITION_ID]: {
+                abc: 4,
+                def: 3,
+                ghi: 2,
+                jkl: 1,
+            },
+            ['shared']: {
+                abc: 5,
+                def: 4,
+                ghi: 3,
+                jkl: 2,
+                mno: 1,
+            },
+            ['admin']: {
+                abc: 6,
+                def: 5,
+                ghi: 4,
+                jkl: 3,
+                mno: 2,
+                pqr: 1,
+            },
+        };
+
+        const flat = flattenTagMasks(tagMasks);
+
+        expect(flat).toEqual({
+            abc: 1,
+            def: 1,
+            ghi: 1,
+            jkl: 1,
+            mno: 1,
+            pqr: 1,
+        });
+    });
+
+    it('should return an empty object if given undefined', () => {
+        const flat = flattenTagMasks(undefined);
+
+        expect(flat).toEqual({});
     });
 });

@@ -14,10 +14,10 @@ import { isBot } from '../bots/BotCalculations';
  * @param state The state.
  * @param update The update.
  */
-export function apply(
-    state: BotsState | PrecalculatedBotsState,
-    update: PartialBotsState | PartialPrecalculatedBotsState
-): BotsState {
+export function apply<T extends BotsState, U extends PartialBotsState>(
+    state: T,
+    update: U
+): T {
     let updatedState = merge(state, update);
 
     for (let id in update) {
@@ -35,13 +35,36 @@ export function apply(
                 }
             }
         }
+        let copiedSignatures = false;
         for (let hash in botUpdate.signatures) {
             if (bot.signatures[hash] === null) {
+                if (
+                    bot.signatures === botUpdate.signatures &&
+                    !copiedSignatures
+                ) {
+                    copiedSignatures = true;
+                    bot.signatures = {
+                        ...botUpdate.signatures,
+                    };
+                }
                 delete bot.signatures[hash];
             }
         }
         if (!!bot.signatures && Object.keys(bot.signatures).length <= 0) {
             delete bot.signatures;
+        }
+        for (let space in botUpdate.masks) {
+            for (let tag in botUpdate.masks[space]) {
+                if (bot.masks[space][tag] === null) {
+                    delete bot.masks[space][tag];
+                }
+            }
+            if (Object.keys(bot.masks[space]).length <= 0) {
+                delete bot.masks[space];
+            }
+        }
+        if (!!bot.masks && Object.keys(bot.masks).length <= 0) {
+            delete bot.masks;
         }
     }
 
@@ -89,6 +112,14 @@ export function updates(
                     ...existingBot.signatures,
                 };
             }
+            if (existingBot.masks) {
+                updatedBot.masks = {};
+                for (let space in existingBot.masks) {
+                    updatedBot.masks[space] = {
+                        ...existingBot.masks[space],
+                    };
+                }
+            }
 
             if (botUpdate.tags) {
                 for (let tag in botUpdate.tags) {
@@ -105,7 +136,9 @@ export function updates(
                 for (let tag in botUpdate.signatures) {
                     const value = botUpdate.signatures[tag];
                     if (value === null) {
-                        delete updatedBot.signatures[tag];
+                        if (!!updatedBot.signatures) {
+                            delete updatedBot.signatures[tag];
+                        }
                     } else {
                         if (!updatedBot.signatures) {
                             updatedBot.signatures = {};
@@ -121,7 +154,34 @@ export function updates(
                     delete updatedBot.signatures;
                 }
             }
+            const updatedMasks = new Set<string>();
+            if (botUpdate.masks) {
+                for (let space in botUpdate.masks) {
+                    const tags = botUpdate.masks[space];
+                    for (let tag in tags) {
+                        const value = tags[tag];
+                        if (value === null) {
+                            delete updatedBot.masks[space][tag];
+                        } else {
+                            if (!updatedBot.masks) {
+                                updatedBot.masks = {};
+                            }
+                            if (!updatedBot.masks[space]) {
+                                updatedBot.masks[space] = {};
+                            }
+                            updatedBot.masks[space][tag] = value;
+                        }
+                        updatedMasks.add(tag);
+                    }
+                }
+            }
             if (updatedTags.size > 0 || updatedSignatures.size > 0) {
+                if (updatedMasks.size > 0) {
+                    updatedTags = new Set([
+                        ...updatedTags.values(),
+                        ...updatedMasks.values(),
+                    ]);
+                }
                 result.updatedBots.push(
                     updatedSignatures.size <= 0
                         ? {

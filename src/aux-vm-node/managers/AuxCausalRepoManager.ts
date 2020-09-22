@@ -20,6 +20,7 @@ export class AuxCausalRepoManager {
     private _branches: Map<string, BranchInfo>;
     private _user: AuxUser;
     private _serverDevice: DeviceInfo;
+    private _ignoredUserIds: Set<string>;
     private _factory: (
         user: AuxUser,
         client: CausalRepoClient,
@@ -34,12 +35,14 @@ export class AuxCausalRepoManager {
             user: AuxUser,
             client: CausalRepoClient,
             branch: string
-        ) => Simulation
+        ) => Simulation,
+        userIdsToIgnore?: string[]
     ) {
         this._client = client;
         this._modules = modules;
         this._branches = new Map();
         this._user = user;
+        this._ignoredUserIds = new Set([user.id, ...(userIdsToIgnore || [])]);
         this._factory =
             simulationFactory ||
             ((user, client, branch) =>
@@ -65,15 +68,18 @@ export class AuxCausalRepoManager {
         branch: WatchBranchEvent,
         device: DeviceInfo
     ) {
-        if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
+        const id = device.claims[SESSION_ID_CLAIM];
+        if (id === this._user.id) {
             this._serverDevice = device;
+        }
+        if (this._ignoredUserIds.has(id)) {
+            return;
         }
         if (branch.temporary === true) {
             return;
         }
 
         let info = await this._loadBranch(branch.branch, true);
-        const id = device.claims[SESSION_ID_CLAIM];
         info.connections.add(id);
 
         for (let mod of this._modules) {
@@ -82,7 +88,7 @@ export class AuxCausalRepoManager {
     }
 
     private async _deviceDisconnected(branch: string, device: DeviceInfo) {
-        if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
+        if (this._ignoredUserIds.has(device.claims[SESSION_ID_CLAIM])) {
             return;
         }
 

@@ -141,7 +141,12 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuidv4 from 'uuid/v4';
-import { RuntimeBot, isRuntimeBot } from './RuntimeBot';
+import {
+    RuntimeBot,
+    isRuntimeBot,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
+} from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -326,7 +331,11 @@ export interface TweenOptions {
  * @param context The global context that should be used.
  */
 export function createDefaultLibrary(context: AuxGlobalContext) {
-    webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
+    webhook.post = function (
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ) {
         return webhook({
             ...options,
             method: 'POST',
@@ -346,6 +355,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             getTag,
             setTag,
+            setTagMask,
+            clearTagMasks,
             removeTags,
             renameTag,
             applyMod,
@@ -557,11 +568,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getBots(...args: any[]): RuntimeBot[] {
         if (args.length > 0 && typeof args[0] === 'function') {
-            const filtered = context.bots.filter(b => args.every(f => f(b)));
+            const filtered = context.bots.filter((b) =>
+                args.every((f) => f(b))
+            );
 
             const sortFuncs = args
-                .filter(f => typeof f.sort === 'function')
-                .map(f => f.sort);
+                .filter((f) => typeof f.sort === 'function')
+                .map((f) => f.sort);
             const sorted =
                 sortFuncs.length > 0
                     ? sortBy(filtered, ...sortFuncs)
@@ -581,12 +594,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
-                return context.bots.filter(b => filter(b.tags[tag]));
+                return context.bots.filter((b) => filter(b.tags[tag]));
             } else {
-                return context.bots.filter(b => b.tags[tag] === filter);
+                return context.bots.filter((b) => b.tags[tag] === filter);
             }
         } else {
-            return context.bots.filter(b => hasValue(b.tags[tag]));
+            return context.bots.filter((b) => hasValue(b.tags[tag]));
         }
     }
 
@@ -609,13 +622,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getBotTagValues(tag: string, filter?: TagFilter): any[] {
         const values = context.bots
-            .map(b => getTag(b, tag))
-            .filter(t => hasValue(t));
+            .map((b) => getTag(b, tag))
+            .filter((t) => hasValue(t));
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
-                return values.filter(val => filter(val));
+                return values.filter((val) => filter(val));
             } else {
-                return values.filter(val => val === filter);
+                return values.filter((val) => val === filter);
             }
         } else {
             return values;
@@ -685,22 +698,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
         tag = trimTag(tag);
         if (filter && typeof filter === 'function') {
-            return bot => {
+            return (bot) => {
                 let val = bot.tags[tag];
                 return hasValue(val) && filter(val);
             };
         } else if (hasValue(filter)) {
-            return bot => {
+            return (bot) => {
                 let val = bot.tags[tag];
                 return hasValue(val) && filter === val;
             };
         } else if (filter === null) {
-            return bot => {
+            return (bot) => {
                 let val = bot.tags[tag];
                 return !hasValue(val);
             };
         } else {
-            return bot => {
+            return (bot) => {
                 let val = bot.tags[tag];
                 return hasValue(val);
             };
@@ -720,8 +733,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function byMod(mod: Mod): BotFilterFunction {
         let tags = isBot(mod) ? mod.tags : mod;
-        let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
-        return bot => filters.every(f => f(bot));
+        let filters = Object.keys(tags).map((k) => byTag(k, tags[k]));
+        return (bot) => filters.every((f) => f(bot));
     }
 
     /**
@@ -756,8 +769,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const inCtx = inDimension(dimension);
         const atX = byTag(`${dimension}X`, x);
         const atY = byTag(`${dimension}Y`, y);
-        const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-        filter.sort = b => getTag(b, `${dimension}SortOrder`) || 0;
+        const filter: BotFilterFunction = (b) => inCtx(b) && atX(b) && atY(b);
+        filter.sort = (b) => getTag(b, `${dimension}SortOrder`) || 0;
         return filter;
     }
 
@@ -859,7 +872,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * );
      */
     function either(...filters: BotFilterFunction[]): BotFilterFunction {
-        return bot => filters.some(f => f(bot));
+        return (bot) => filters.some((f) => f(bot));
     }
 
     /**
@@ -871,7 +884,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * let bots = getBots(not(inDimension("test")));
      */
     function not(filter: BotFilterFunction): BotFilterFunction {
-        return bot => !filter(bot);
+        return (bot) => !filter(bot);
     }
 
     /**
@@ -1356,7 +1369,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (getTag(bot, dimension) === true) {
             return 0;
         } else if (
-            KNOWN_PORTALS.some(portal => getTag(bot, portal) === dimension)
+            KNOWN_PORTALS.some((portal) => getTag(bot, portal) === dimension)
         ) {
             return 1;
         }
@@ -1546,7 +1559,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!hasValue(inventoryDimension)) {
             return false;
         }
-        return every(bots, f => getTag(f, inventoryDimension) === true);
+        return every(bots, (f) => getTag(f, inventoryDimension) === true);
     }
 
     /**
@@ -2567,7 +2580,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param time The Time to sleep in ms. 1 second is 1000 ms.
      */
     function sleep(time: number) {
-        let sleepy = new Promise(resolve => setTimeout(resolve, time));
+        let sleepy = new Promise((resolve) => setTimeout(resolve, time));
         return sleepy;
     }
 
@@ -3189,6 +3202,56 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sets the value of the given tag mask in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     *
+     * @example
+     * // Set a bot's color to "green".
+     * setTagMask(this, "color", "green")
+     */
+    function setTagMask(
+        bot: RuntimeBot | RuntimeBot[],
+        tag: string,
+        value: any,
+        space?: string
+    ): any {
+        tag = trimTag(tag);
+        if (tag === 'id' || tag === BOT_SPACE_TAG) {
+            return value;
+        }
+        if (Array.isArray(bot) && bot.length > 0) {
+            for (let b of bot) {
+                setTagMask(b, tag, value, space);
+            }
+            return value;
+        } else if (bot && isRuntimeBot(bot)) {
+            bot[SET_TAG_MASK_SYMBOL](tag, value, space);
+            return value;
+        }
+    }
+
+    /**
+     * Clears the tag masks from the given bot.
+     * @param bot The bot or bots that the tag masks should be cleared from.
+     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     */
+    function clearTagMasks(
+        bot: RuntimeBot | RuntimeBot[],
+        space?: string
+    ): void {
+        if (Array.isArray(bot) && bot.length > 0) {
+            for (let b of bot) {
+                clearTagMasks(b, space);
+            }
+        } else if (bot && isRuntimeBot(bot)) {
+            bot[CLEAR_TAG_MASKS_SYMBOL](space);
+        }
+    }
+
+    /**
      * Removes tags from the given list of bots.
      * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
      * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
@@ -3368,7 +3431,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
 
-        let bots: Bot[] = variants.map(v => {
+        let bots: Bot[] = variants.map((v) => {
             let bot: Bot = {
                 id: idFactory(),
                 tags: {},
@@ -3438,7 +3501,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bot: RuntimeBot | string | Bot | (RuntimeBot | string | Bot)[]
     ) {
         if (typeof bot === 'object' && Array.isArray(bot)) {
-            bot.forEach(f => destroyBot(f));
+            bot.forEach((f) => destroyBot(f));
         } else {
             destroyBot(bot);
         }
@@ -3760,14 +3823,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         sendListenEvents: boolean = true
     ) {
         let ids = !!bots
-            ? bots.map(bot => {
+            ? bots.map((bot) => {
                   return !!bot
                       ? typeof bot === 'string'
                           ? bot
                           : bot.id
                       : null;
               })
-            : context.bots.map(b => b.id);
+            : context.bots.map((b) => b.id);
 
         let results = [] as any[];
         let tag = trimEvent(name);

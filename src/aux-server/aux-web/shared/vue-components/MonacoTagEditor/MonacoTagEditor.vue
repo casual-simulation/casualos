@@ -7,6 +7,10 @@
                 :isFormula="isFormula"
                 :allowCloning="false"
             ></bot-tag>
+            <div v-if="!!space" class="bot-space">
+                {{ space }}
+            </div>
+            <div class="editor-spacing"></div>
             <div class="editor-docs">
                 <a class="md-button md-dense md-theme-default" :href="docsLink" target="_blank"
                     >docs</a
@@ -23,9 +27,7 @@
                 </md-button>
             </div>
             <div class="editor-errors">
-                <div v-if="scriptErrors.length === 0">
-                    No Errors
-                </div>
+                <div v-if="scriptErrors.length === 0">No Errors</div>
                 <div
                     v-else
                     class="editor-button"

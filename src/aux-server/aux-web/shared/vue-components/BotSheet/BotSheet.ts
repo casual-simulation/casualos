@@ -16,7 +16,6 @@ export default class BotSheet extends Vue {
     bots: Bot[] = [];
     dimension: string = '';
     isDiff: boolean = false;
-    updateTime: number = -1;
     hasPortal: boolean = false;
     showNewBot: boolean = true;
 
@@ -31,17 +30,14 @@ export default class BotSheet extends Vue {
             let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.bots = [];
-            this.updateTime = -1;
 
             subs.push(
-                this._simulation.botPanel.botsUpdated.subscribe(e => {
+                this._simulation.botPanel.botsUpdated.subscribe((e) => {
                     this.bots = e.bots;
                     this.isDiff = e.isDiff;
                     this.hasPortal = e.hasPortal;
                     this.dimension = e.dimension;
                     this.showNewBot = !e.isSingleBot;
-                    const now = Date.now();
-                    this.updateTime = now;
                 })
             );
             return subs;

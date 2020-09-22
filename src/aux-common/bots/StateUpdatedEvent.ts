@@ -1,6 +1,15 @@
 import omitBy from 'lodash/omitBy';
-import { PrecalculatedBotsState, Bot } from './Bot';
+import {
+    PrecalculatedBotsState,
+    Bot,
+    PartialPrecalculatedBotsState,
+    PartialBot,
+    UpdatedBot,
+} from './Bot';
 import { merge } from '../utils';
+import { apply } from '../aux-format-2/AuxStateHelpers';
+import { hasValue } from './BotCalculations';
+import { cloneDeep, partial } from 'lodash';
 
 /**
  * Defines an event for state updates from the VM.
@@ -12,7 +21,7 @@ export interface StateUpdatedEvent {
      *
      * You can use the merge() function from aux-common or lodash to do this.
      */
-    state: Partial<PrecalculatedBotsState>;
+    state: PartialPrecalculatedBotsState;
 
     /**
      * The list of Bot IDs that were added.
@@ -40,38 +49,107 @@ export function applyUpdates(
     update: StateUpdatedEvent
 ): PrecalculatedBotsState {
     if (currentState) {
-        let updatedState = omitBy(
-            merge(currentState, update.state),
-            val => val === null
-        );
+        return apply(currentState, update.state);
+    } else {
+        return update.state as PrecalculatedBotsState;
+    }
+}
 
-        for (let id in update.state) {
-            let botUpdate: Partial<Bot> = update.state[id];
-            if (!botUpdate) {
-                continue;
-            }
-            let bot = updatedState[id];
-            for (let tag in botUpdate.tags) {
-                if (bot.tags[tag] === null) {
-                    delete bot.tags[tag];
-                    delete bot.values[tag];
-                }
-            }
-            if (botUpdate.signatures) {
-                for (let sig in botUpdate.signatures) {
-                    if (bot.signatures[sig] === null) {
-                        delete bot.signatures[sig];
-                    }
-                }
+/**
+ * Calculates the StateUpdatedEvent from the given partial bots state.
+ * @param state The state update.
+ */
+export function stateUpdatedEvent(
+    state: PartialPrecalculatedBotsState
+): StateUpdatedEvent {
+    let update = {
+        addedBots: [],
+        removedBots: [],
+        updatedBots: [],
+        state: state,
+    } as StateUpdatedEvent;
 
-                if (Object.keys(bot.signatures).length <= 0) {
-                    delete bot.signatures;
+    for (let id in state) {
+        const bot = state[id];
+        if (bot === null) {
+            update.removedBots.push(id);
+        } else if (!hasValue(bot)) {
+            // Do nothing for this bot.
+            // Incorrectly formatted state.
+        } else if (bot.id === id) {
+            update.addedBots.push(bot.id);
+        } else {
+            update.updatedBots.push(id);
+        }
+    }
+
+    return update;
+}
+
+export function updatedBot(
+    partialBot: PartialBot,
+    currentBot: Bot
+): UpdatedBot {
+    let tags = new Set<string>();
+    let signatures = [] as string[];
+    const bot = cloneDeep(currentBot);
+
+    if (partialBot.tags) {
+        for (let tag in partialBot.tags) {
+            const val = partialBot.tags[tag];
+            bot.tags[tag] = val;
+            tags.add(tag);
+        }
+    }
+
+    if (partialBot.signatures) {
+        for (let sig in partialBot.signatures) {
+            if (!signatures) {
+                signatures = [];
+            }
+            if (!bot.signatures) {
+                bot.signatures = {};
+            }
+            const val = partialBot.signatures[sig];
+            if (hasValue(val)) {
+                bot.signatures[sig] = val;
+            } else {
+                delete bot.signatures[sig];
+            }
+            signatures.push(sig);
+        }
+    }
+
+    if (partialBot.masks) {
+        for (let space in partialBot.masks) {
+            for (let tag in partialBot.masks[space]) {
+                tags.add(tag);
+                if (!bot.masks) {
+                    bot.masks = {};
+                }
+                if (!bot.masks[space]) {
+                    bot.masks[space] = {};
+                }
+                const val = partialBot.masks[space][tag];
+                if (hasValue(val)) {
+                    bot.masks[space][tag] = val;
+                } else {
+                    delete bot.masks[space][tag];
                 }
             }
         }
+    }
 
-        return updatedState;
+    if (signatures.length > 0) {
+        return {
+            bot,
+            tags: [...tags.values()],
+            signatures,
+        };
     } else {
-        return update.state;
+        return {
+            bot,
+            tags: [...tags.values()],
+        };
     }
 }

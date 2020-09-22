@@ -31,6 +31,11 @@ console.log = jest.fn();
 
 const device1Info = deviceInfo('device1', 'device1', 'device1');
 const serverInfo = deviceInfo('server', 'server', 'server');
+const ignoredDevice1Info = deviceInfo(
+    'ignoredDevice1',
+    'ignoredDevice1',
+    'ignoredDevice1'
+);
 
 describe('AuxCausalRepoManager', () => {
     let manager: AuxCausalRepoManager;
@@ -53,7 +58,9 @@ describe('AuxCausalRepoManager', () => {
                 token: 'token',
             },
             new CausalRepoClient(connection),
-            [testModule]
+            [testModule],
+            undefined,
+            ['ignoredDevice1', 'ignoredDevice2']
         );
 
         loadBranch = new Subject<LoadBranchEvent>();
@@ -293,6 +300,31 @@ describe('AuxCausalRepoManager', () => {
         expect([...testModule.simulations.keys()]).toEqual(['abc']);
     });
 
+    it('should ignore connection events from the given user IDs', async () => {
+        manager.init();
+        connection.connect();
+        await waitAsync();
+
+        deviceConnected.next({
+            broadcast: true,
+            branch: {
+                branch: 'abc',
+            },
+            device: ignoredDevice1Info,
+        });
+        deviceConnected.next({
+            broadcast: false,
+            branch: {
+                branch: 'abc',
+            },
+            device: ignoredDevice1Info,
+        });
+        await waitAsync();
+
+        expect(connection.sentMessages.slice(1)).toEqual([]);
+        expect([...testModule.simulations.keys()]).toEqual([]);
+    });
+
     it('should dispose of the subscription returned by setup() when the simulation is unloaded', async () => {
         manager.init();
         connection.connect();
@@ -396,7 +428,7 @@ describe('AuxCausalRepoManager', () => {
         });
         await waitAsync();
 
-        expect([...testModule.devices.keys()]).toEqual(['device1', 'server']);
+        expect([...testModule.devices.keys()]).toEqual(['device1']);
     });
 
     it('should call deviceDisconnected() on each of the modules', async () => {
