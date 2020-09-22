@@ -14,6 +14,7 @@ import {
     hasValue,
     DEFAULT_TAG_MASK_SPACE,
     TAG_MASK_SPACE_PRIORITIES_REVERSE,
+    TAG_MASK_SPACE_PRIORITIES,
 } from '../bots';
 import {
     CompiledBot,
@@ -98,7 +99,7 @@ export interface RuntimeBot {
     /**
      * A function that can set a tag mask on the bot.
      */
-    // [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
+    [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
 
     // /**
     //  * A function that can get the value of a tag mask on the bot.
@@ -369,6 +370,7 @@ export function createRuntimeBot(
         listeners: listenersProxy,
         signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
+        [SET_TAG_MASK_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -377,6 +379,28 @@ export function createRuntimeBot(
             changedMasks = {};
             script.changes = changedRawTags;
             script.maskChanges = changedMasks;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, SET_TAG_MASK_SYMBOL, {
+        value: (key: string, value: any, space: string) => {
+            if (key in constantTags) {
+                return true;
+            }
+            const spaces = !hasValue(space)
+                ? hasValue(value)
+                    ? [DEFAULT_TAG_MASK_SPACE]
+                    : getTagMaskSpaces(bot, key)
+                : [space];
+            const mode = manager.updateTagMask(bot, key, spaces, value);
+            if (mode === RealtimeEditMode.Immediate) {
+                rawMasks[key] = value;
+            }
+            changeTagMask(key, value, spaces);
+            return value;
         },
         configurable: false,
         enumerable: false,

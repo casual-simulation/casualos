@@ -2423,6 +2423,19 @@ declare global {
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
 
     /**
+     * Sets the value of the given tag mask in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     * 
+     * @example
+     * // Set a bot's color to "green".
+     * setTagMask(this, "color", "green")
+     */
+    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: string): any;
+
+    /**
      * Creates a mod from declareed mod data.
      * @param bot The mod data that should be loaded.
      * @param tags The tags that should be included in the output mod.

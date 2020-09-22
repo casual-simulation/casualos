@@ -17,6 +17,8 @@ import {
     CLEAR_CHANGES_SYMBOL,
     isRuntimeBot,
     flattenTagMasks,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -604,6 +606,67 @@ describe('RuntimeBot', () => {
             expect(descriptor.configurable).toBe(false);
         });
     });
+
+    describe('set_tag_mask', () => {
+        it('should be able to set a tag mask in the specified space', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: 123,
+                },
+            });
+            expect(script.masks.abc).toEqual(123);
+        });
+
+        it('should use the default space if no space is specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 123);
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                [DEFAULT_TAG_MASK_SPACE]: {
+                    abc: 123,
+                },
+            });
+            expect(script.masks.abc).toEqual(123);
+        });
+
+        it('should be able to delete a tag mask in the specified space', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'custom');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', null, 'local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                },
+                custom: {
+                    abc: 'def',
+                },
+            });
+            expect(script.masks.abc).toEqual('def');
+        });
+
+        it('should be able to delete the tag mask in all spaces if no space is specified', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 'def', 'custom');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', null);
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                },
+                custom: {
+                    abc: null,
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+        });
+    });
+
 });
 
 describe('isRuntimeBot()', () => {

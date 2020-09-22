@@ -4437,6 +4437,93 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('setTagMask()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should change the given tag mask on the given bot', () => {
+            library.api.setTagMask(bot1, '#name', 'bob', 'local');
+            expect(bot1.masks.name).toEqual('bob');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+        });
+
+        it('should change the tag masks on the given bots', () => {
+            library.api.setTagMask([bot1, bot2], '#name', 'bob', 'local');
+            expect(bot1.masks.name).toEqual('bob');
+            expect(bot2.masks.name).toEqual('bob');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+        });
+
+        it('should recursively set the tags on the given bots', () => {
+            let bot3 = createDummyRuntimeBot('test3');
+            let bot4 = createDummyRuntimeBot('test4');
+            addToContext(context, bot3, bot4);
+
+            library.api.setTagMask(
+                [bot1, [bot3, bot4] as any, bot2],
+                '#name',
+                'bob',
+                'local'
+            );
+            expect(bot1.masks.name).toEqual('bob');
+            expect(bot2.masks.name).toEqual('bob');
+            expect(bot3.masks.name).toEqual('bob');
+            expect(bot4.masks.name).toEqual('bob');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+            expect(bot3.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+            expect(bot4.maskChanges).toEqual({
+                local: {
+                    name: 'bob',
+                },
+            });
+        });
+
+        it('should not allow setting the ID', () => {
+            library.api.setTagMask(bot1, '#id', 'bob', 'local');
+            expect(bot1.tags.id).not.toEqual('bob');
+            expect(bot1.maskChanges).toEqual({});
+        });
+
+        it('should not allow setting the space', () => {
+            library.api.setTagMask(bot1, '#space', 'bob', 'local');
+            expect(bot1.tags.space).not.toEqual('bob');
+            expect(bot1.maskChanges).toEqual({});
+        });
+    });
+
     describe('removeTags()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
