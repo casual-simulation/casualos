@@ -950,39 +950,6 @@ export class AuxRuntime
                 }
             }
 
-            // 2. update
-            // let updates = this._compileTags(u.tags, compiled, u.bot);
-
-            // for (let [space, tag] of updates) {
-            //     if (space) {
-            //         if (u.bot.masks) {
-            //             for (let space in u.bot.masks) {
-            //                 if (hasValue(u.bot.masks[space][tag])) {
-            //                     if (!partial.masks[space]) {
-            //                         partial.masks[space] = {};
-            //                     }
-            //                     partial.masks[space][tag] =
-            //                         u.bot.masks[space][tag];
-            //                 }
-            //             }
-            //         }
-            //     } else if (space === undefined) {
-            //         if (compiled.masks) {
-            //             for (let space in compiled.masks) {
-            //                 if (hasValue(compiled.masks[space][tag])) {
-            //                     if (!partial.masks[space]) {
-            //                         partial.masks[space] = {};
-            //                     }
-            //                     partial.masks[space][tag] = null;
-            //                     delete compiled.masks[space][tag];
-            //                 }
-            //             }
-            //         }
-            //     } else {
-            //         partial.tags[tag] = u.tags[tag];
-            //     }
-            // }
-
             if (u.signatures) {
                 if (!compiled.signatures) {
                     compiled.signatures = {};
