@@ -22,6 +22,7 @@ import {
     BotSpace,
     merge,
     BotTagMasks,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
@@ -216,6 +217,9 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         event.update
                     ));
                     for (let tag of Object.keys(event.update.tags)) {
+                        if (!newBot.tags) {
+                            newBot.tags = {};
+                        }
                         const newVal = event.update.tags[tag];
                         const oldVal = newBot.tags[tag];
 
@@ -334,31 +338,30 @@ function storedBotUpdated(
             } else if (!newBot && oldBot && oldBot.id) {
                 return botRemoved(id);
             } else if (newBot) {
-                const differentTags = pickBy(
+                let differentTags = calculateDifferentTags(
                     newBot.tags,
-                    (val, tag) => oldBot?.tags[tag] !== val
+                    oldBot?.tags
                 );
                 let differentMasks = null as BotTagMasks;
                 if (newBot.masks) {
                     if (newBot.masks[space]) {
                         differentMasks = {
-                            [space]: pickBy(
+                            [space]: calculateDifferentTags(
                                 newBot.masks[space],
-                                (val, tag) => oldBot?.masks?.[space] !== val
+                                oldBot?.masks?.[space]
                             ),
                         };
                     }
                 }
 
-                if (
-                    Object.keys(differentTags).length > 0 ||
-                    differentMasks !== null
-                ) {
-                    return botUpdated(id, {
-                        tags: differentTags,
-                        masks: differentMasks,
-                    });
+                let update = {} as Partial<Bot>;
+                if (Object.keys(differentTags).length > 0) {
+                    update.tags = differentTags;
                 }
+                if (differentMasks !== null) {
+                    update.masks = differentMasks;
+                }
+                return botUpdated(id, update);
             }
 
             return null;
@@ -395,4 +398,19 @@ function storeBot(key: string, bot: Bot) {
     } else {
         localStorage.removeItem(key);
     }
+}
+
+function calculateDifferentTags(newTags: BotTags, oldTags: BotTags) {
+    const allTags = union(
+        Object.keys(newTags || {}),
+        Object.keys(oldTags || {})
+    );
+    let differentTags = {} as BotTags;
+    for (let t of allTags) {
+        const newTag = newTags?.[t];
+        if (newTag !== oldTags?.[t]) {
+            differentTags[t] = newTag;
+        }
+    }
+    return differentTags;
 }

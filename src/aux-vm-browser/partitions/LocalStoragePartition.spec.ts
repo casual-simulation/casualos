@@ -271,6 +271,116 @@ describe('LocalStoragePartition', () => {
                 },
             ]);
         });
+
+        it('should support when a tag is removed via storage', async () => {
+            partition.connect();
+            await partition.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            const updates = [] as StateUpdatedEvent[];
+            partition.onStateUpdated
+                .pipe(skip(1))
+                .subscribe((u) => updates.push(u));
+
+            sendStorageEvent(
+                'name/space/test',
+                JSON.stringify(createBot('test')),
+                JSON.stringify(
+                    createBot('test', {
+                        abc: 'def',
+                    })
+                )
+            );
+
+            await waitAsync();
+
+            expect(partition.state).toEqual({
+                test: createBot('test', {}, 'local'),
+            });
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test: {
+                            tags: {
+                                abc: null,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                },
+            ]);
+        });
+
+        it('should support when a tag mask is removed via storage', async () => {
+            partition.connect();
+            await partition.applyEvents([
+                botUpdated('test', {
+                    masks: {
+                        local: {
+                            abc: 'def',
+                        },
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            const updates = [] as StateUpdatedEvent[];
+            partition.onStateUpdated
+                .pipe(skip(1))
+                .subscribe((u) => updates.push(u));
+
+            sendStorageEvent(
+                'name/space/test',
+                JSON.stringify({
+                    masks: {
+                        local: {},
+                    },
+                }),
+                JSON.stringify({
+                    masks: {
+                        local: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(partition.state).toEqual({
+                test: {
+                    masks: {
+                        local: {},
+                    },
+                },
+            });
+            expect(updates).toEqual([
+                {
+                    state: {
+                        test: {
+                            masks: {
+                                local: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                },
+            ]);
+        });
     });
 });
 

@@ -21,7 +21,6 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';
-import { startsWith } from 'lodash';
 
 /**
  * Attempts to create a proxy client partition that is loaded from a remote server.
