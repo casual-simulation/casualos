@@ -8,6 +8,24 @@
 
 -   Added the `helix` form.
     -   Displays a DNA strand mesh whose color can be customized.
+-   Added tag masks.
+    -   Tag masks are special tags that can live in a separate space from their bot.
+    -   This makes it possible to create a temporary tag on a shared bot.
+    -   Tag masks do not replace tags. Instead, they exist in addition to normal tags and can be used to temporarily hide a normal tag value.
+    -   Like bots, tag masks live in a space. This means that a bot can have multiple masks for a particular tag. Currently the supported spaces are:
+        -   `tempLocal`
+        -   `local`
+        -   `player`/`otherPlayers`
+        -   `shared`
+    -   New scripting features:
+        -   All bots now have a `masks` property which works like `tags` except that it creates tag masks in the `tempLocal` space.
+        -   All scripts also have a `masks` property which is a shortcut for `bot.masks`.
+        -   `setTagMask(bot, tag, value, space?)` is a new function that is able to set the value of a tag mask on the given bot and in the given space. See the documentation for more info.
+        -   `clearTagMasks(bot, space?)` is a new function that is able to clear all the tag masks in the given space from a given bot. See the documentation for more info.
+    -   Example use cases:
+        -   Local click/hover states.
+        -   Animations.
+        -   Storing decrypted data.
 
 ### :bug: Bug Fixes
 
