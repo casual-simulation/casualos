@@ -2433,14 +2433,14 @@ declare global {
      * // Set a bot's color to "green".
      * setTagMask(this, "color", "green")
      */
-    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: string): any;
+    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
 
     /**
      * Clears the tag masks from the given bot.
      * @param bot The bot or bots that the tag masks should be cleared from.
      * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
      */
-    function clearTagMasks(bot: Bot | Bot[], space?: string): void;
+    function clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
 
     /**
      * Creates a mod from declareed mod data.
