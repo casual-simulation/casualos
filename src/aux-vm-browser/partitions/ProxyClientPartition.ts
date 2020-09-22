@@ -48,8 +48,16 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     private _onStatusUpdated: Subject<StatusUpdate>;
     private _proxies: readonly any[];
     private _sub: Subscription;
+    private _space: string;
 
-    space: string;
+    get space(): string {
+        return this._space;
+    }
+    set space(value: string) {
+        this._space = value;
+        this._bridge.setSpace(value);
+    }
+
     type: 'proxy_client';
     state: BotsState;
     private: boolean;

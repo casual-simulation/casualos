@@ -21,6 +21,7 @@ import {
     PartialBotsState,
     BotSpace,
     merge,
+    BotTagMasks,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
@@ -147,19 +148,25 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     private _watchLocalStorage() {
         this._sub.add(
-            storedBotUpdated(this.namespace).subscribe((event) => {
+            storedBotUpdated(this.namespace, this.space).subscribe((event) => {
                 this._applyEvents([event], false);
             })
         );
     }
 
     private _loadExistingBots() {
-        let events = [] as AddBotAction[];
+        let events = [] as (AddBotAction | UpdateBotAction)[];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key.startsWith(this.namespace + '/')) {
                 // it is a bot
-                events.push(botAdded(getStoredBot(key)));
+                const stored = getStoredBot(key);
+                if (stored.id) {
+                    events.push(botAdded(stored));
+                } else {
+                    const id = key.substring(this.namespace.length + 1);
+                    events.push(botUpdated(id, stored));
+                }
             }
         }
         this._applyEvents(events, false);
@@ -208,7 +215,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         updatedState[event.id] || {},
                         event.update
                     ));
-                    for (let tag of tagsOnBot(event.update)) {
+                    for (let tag of Object.keys(event.update.tags)) {
                         const newVal = event.update.tags[tag];
                         const oldVal = newBot.tags[tag];
 
@@ -272,6 +279,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
                     this.state[event.id] = newBot;
                 }
+
+                const updatedBot = updatedState[event.id];
+                if (
+                    updatedBot?.tags &&
+                    Object.keys(updatedBot.tags).length <= 0
+                ) {
+                    delete updatedBot.tags;
+                }
             }
         }
 
@@ -283,12 +298,6 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         }
         if (updated.size > 0) {
             let updatedBots = [...updated.values()];
-            if (updateStorage) {
-                for (let updated of updatedBots) {
-                    const key = botKey(this.namespace, updated.bot.id);
-                    storeBot(key, updated.bot);
-                }
-            }
             this._onBotsUpdated.next(updatedBots);
         }
         const updateEvent = stateUpdatedEvent(updatedState);
@@ -297,32 +306,57 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
             updateEvent.removedBots.length > 0 ||
             updateEvent.updatedBots.length > 0
         ) {
+            if (updateStorage && updateEvent.updatedBots.length > 0) {
+                for (let id of updateEvent.updatedBots) {
+                    let bot = this.state[id];
+                    const key = botKey(this.namespace, id);
+                    storeBot(key, bot);
+                }
+            }
+
             this._onStateUpdated.next(updateEvent);
         }
     }
 }
 
 function storedBotUpdated(
-    namespace: string
+    namespace: string,
+    space: string
 ): Observable<AddBotAction | RemoveBotAction | UpdateBotAction> {
     return storageUpdated().pipe(
         filter((e) => e.key.startsWith(namespace + '/')),
         map((e) => {
             const newBot: Bot = JSON.parse(e.newValue) || null;
             const oldBot: Bot = JSON.parse(e.oldValue) || null;
-            if (!oldBot && newBot) {
+            const id = e.key.substring(namespace.length + 1);
+            if (!oldBot && newBot && newBot.id) {
                 return botAdded(newBot);
-            } else if (!newBot && oldBot) {
-                return botRemoved(oldBot.id);
-            } else if (newBot && oldBot) {
+            } else if (!newBot && oldBot && oldBot.id) {
+                return botRemoved(id);
+            } else if (newBot) {
                 const differentTags = pickBy(
                     newBot.tags,
-                    (val, tag) => oldBot.tags[tag] !== val
+                    (val, tag) => oldBot?.tags[tag] !== val
                 );
+                let differentMasks = null as BotTagMasks;
+                if (newBot.masks) {
+                    if (newBot.masks[space]) {
+                        differentMasks = {
+                            [space]: pickBy(
+                                newBot.masks[space],
+                                (val, tag) => oldBot?.masks?.[space] !== val
+                            ),
+                        };
+                    }
+                }
 
-                if (Object.keys(differentTags).length > 0) {
-                    return botUpdated(oldBot.id, {
+                if (
+                    Object.keys(differentTags).length > 0 ||
+                    differentMasks !== null
+                ) {
+                    return botUpdated(id, {
                         tags: differentTags,
+                        masks: differentMasks,
                     });
                 }
             }

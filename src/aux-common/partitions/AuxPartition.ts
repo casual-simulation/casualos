@@ -154,6 +154,8 @@ export interface ProxyBridgePartition extends AuxPartitionBase {
         onEvents?: (actions: Action[]) => void,
         onStatusUpdated?: (status: StatusUpdate) => void
     ): Promise<void>;
+
+    setSpace(space: string): Promise<void>;
 }
 
 /**

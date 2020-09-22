@@ -178,7 +178,7 @@ class MemoryPartitionImpl implements MemoryPartition {
                         updatedState[event.id] || {},
                         event.update
                     ));
-                    for (let tag of tagsOnBot(event.update)) {
+                    for (let tag of Object.keys(event.update.tags)) {
                         const newVal = event.update.tags[tag];
                         const oldVal = newBot.tags[tag];
 
@@ -241,6 +241,14 @@ class MemoryPartitionImpl implements MemoryPartition {
                     }
 
                     this.state[event.id] = newBot;
+                }
+
+                const updatedBot = updatedState[event.id];
+                if (
+                    updatedBot?.tags &&
+                    Object.keys(updatedBot.tags).length <= 0
+                ) {
+                    delete updatedBot.tags;
                 }
             }
         }

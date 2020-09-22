@@ -743,6 +743,48 @@ export function testPartitionImplementation(
                     },
                 ]);
             });
+
+            it('should not confuse tag masks and tags when given an empty tags object in an update', async () => {
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {},
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                            },
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    test: {
+                        masks: {
+                            [partition.space]: {
+                                newTag: true,
+                            },
+                        },
+                    },
+                });
+                expect(updated).toEqual([]);
+                expect(updates).toEqual([
+                    {
+                        state: {
+                            test: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                    },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    },
+                ]);
+            });
         });
     });
 

@@ -131,6 +131,10 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
         }
     }
 
+    async setSpace(space: string) {
+        this._partition.space = space;
+    }
+
     get closed(): boolean {
         return this._partition.closed;
     }
