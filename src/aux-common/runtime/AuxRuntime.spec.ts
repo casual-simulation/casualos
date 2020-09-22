@@ -2610,6 +2610,60 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            // Not supported with botsUpdated().
+            // the provided arguments don't specify whether a tag or a mask is being updated
+            // so there is no reasonable way to tell if one or both were.
+            it.skip('should be able to update normal tags that are hidden by masks', () => {
+                const update1 = runtime.botsAdded([
+                    {
+                        id: 'test',
+                        space: 'shared',
+                        tags: {
+                            abc: 'def',
+                        },
+                        masks: {
+                            tempLocal: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                ]);
+
+                const update2 = runtime.botsUpdated([
+                    {
+                        bot: <any>{
+                            id: 'test',
+                            tags: {
+                                abc: 'ghi',
+                            },
+                            masks: {
+                                tempLocal: {
+                                    abc: 123,
+                                },
+                            },
+                        },
+                        tags: ['abc'],
+                    },
+                ]);
+
+                expect(update2).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                            values: {
+                                abc: 123,
+                            },
+                            masks: {},
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
+                });
+            });
+
             it('should fall back to the tag value when a tag mask is deleted', () => {
                 const update1 = runtime.botsAdded([
                     {
@@ -5282,6 +5336,51 @@ describe('AuxRuntime', () => {
                                     tempLocal: {
                                         abc: null,
                                     },
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should be able to update normal tags that are hidden by masks', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 'def',
+                                },
+                                masks: {
+                                    tempLocal: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: 'ghi',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: 'ghi',
+                                },
+                                values: {
+                                    abc: 123,
                                 },
                             },
                         },

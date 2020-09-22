@@ -34,6 +34,7 @@ import {
     getTagValueForSpace,
     getSpaceForTag,
     getUpdateForTagAndSpace,
+    hasMaskForTag,
 } from './BotCalculations';
 import { Bot, BotsState } from './Bot';
 import uuid from 'uuid/v4';
@@ -1767,6 +1768,89 @@ describe('BotCalculations', () => {
             });
 
             expect(tags).toEqual(['tag2', 'tag3']);
+        });
+    });
+
+    describe('hasMaskForTag()', () => {
+        it('should return true if there is a mask defined for the given tag', () => {
+            expect(
+                hasMaskForTag(
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            space: {
+                                abc: true,
+                            },
+                        },
+                    },
+                    'abc'
+                )
+            ).toEqual(true);
+        });
+
+        it('should return false if there are multiple masks defined for the given tag', () => {
+            expect(
+                hasMaskForTag(
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            space: {
+                                abc: true,
+                            },
+                            other: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                    'abc'
+                )
+            ).toEqual(true);
+        });
+
+        it('should return false if there is no mask defined for the given tag', () => {
+            expect(
+                hasMaskForTag(
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            space: {},
+                        },
+                    },
+                    'abc'
+                )
+            ).toEqual(false);
+        });
+
+        it('should return false if there is no mask defined for the given tag but there are masks defined', () => {
+            expect(
+                hasMaskForTag(
+                    {
+                        id: 'test',
+                        tags: {},
+                        masks: {
+                            space: {
+                                other: 984,
+                            },
+                        },
+                    },
+                    'abc'
+                )
+            ).toEqual(false);
+        });
+
+        it('should return false if there are no masks defined', () => {
+            expect(
+                hasMaskForTag(
+                    {
+                        id: 'test',
+                        tags: {},
+                    },
+                    'abc'
+                )
+            ).toEqual(false);
         });
     });
 

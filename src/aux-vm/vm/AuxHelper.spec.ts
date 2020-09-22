@@ -533,6 +533,55 @@ describe('AuxHelper', () => {
             });
         });
 
+        it('should be able to update normal tags that have tag masks', async () => {
+            let test = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            test.space = 'TEST';
+            let shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            shared.space = 'shared';
+            helper = createHelper({
+                shared: shared,
+                TEST: test,
+            });
+
+            await helper.transaction(
+                botAdded({
+                    id: 'test',
+                    tags: {},
+                    masks: {
+                        TEST: {
+                            abc: 'def',
+                        },
+                    },
+                })
+            );
+
+            await helper.transaction(
+                botUpdated('test', {
+                    tags: {
+                        abc: 123,
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(shared.state).toEqual({
+                test: {
+                    id: 'test',
+                    space: 'shared',
+                    tags: {
+                        abc: 123,
+                    },
+                },
+            });
+        });
+
         it('should set the correct space on bots from partitions', async () => {
             let TEST = createMemoryPartition({
                 type: 'memory',

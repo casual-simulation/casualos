@@ -465,6 +465,7 @@ export class AuxRuntime
     /**
      * Signals to the runtime that the given bots were added.
      * @param bots The bots.
+     * @deprecated Use stateUpdated() instead.
      */
     botsAdded(bots: Bot[]): StateUpdatedEvent {
         let update = {
@@ -488,6 +489,7 @@ export class AuxRuntime
     /**
      * Signals to the runtime that the given bots were removed.
      * @param botIds The IDs of the bots that were removed.
+     * @deprecated Use stateUpdated() instead.
      */
     botsRemoved(botIds: string[]): StateUpdatedEvent {
         let update = {
@@ -508,6 +510,7 @@ export class AuxRuntime
     /**
      * Signals to the runtime that the given bots were updated.
      * @param updates The bot updates.
+     * @deprecated Use stateUpdated() instead.
      */
     botsUpdated(updates: UpdatedBot[]): StateUpdatedEvent {
         let update = {
@@ -574,7 +577,8 @@ export class AuxRuntime
                 return updatedBot(partial, current);
             });
 
-            const { changes: updateBotChanges } = this._updateBotsInState(
+            const { changes: updateBotChanges } = this._updateBotsWithState(
+                update,
                 updates,
                 nextUpdate
             );
@@ -844,6 +848,160 @@ export class AuxRuntime
             }
 
             nextUpdate.state[u.bot.id] = <any>partial;
+        }
+
+        const changes = this._dependencies.updateBots(updates);
+        return {
+            changes,
+        };
+    }
+
+    private _updateBotsWithState(
+        update: StateUpdatedEvent,
+        updates: UpdatedBot[],
+        nextUpdate: StateUpdatedEvent
+    ) {
+        for (let id of update.updatedBots) {
+            if (!id) {
+                continue;
+            }
+            const u = update.state[id];
+
+            // 1. get compiled bot
+            let compiled = this._compiledState[id];
+
+            if (!compiled) {
+                continue;
+            }
+
+            let partial = {
+                tags: {},
+                values: {},
+            } as Partial<PrecalculatedBot>;
+
+            let updatedTags = new Set<string>();
+            if (u.tags) {
+                for (let tag in u.tags) {
+                    const tagValue = u.tags[tag];
+                    if (hasValue(tagValue) || tagValue === null) {
+                        compiled.tags[tag] = tagValue;
+                        updatedTags.add(tag);
+                        partial.tags[tag] = tagValue;
+                    }
+                }
+            }
+
+            if (u.masks) {
+                for (let space in u.masks) {
+                    const tags = u.masks[space];
+                    for (let tag in tags) {
+                        const tagValue = u.masks[space][tag];
+                        if (hasValue(tagValue) || tagValue === null) {
+                            if (!compiled.masks) {
+                                compiled.masks = {};
+                            }
+                            if (!compiled.masks[space]) {
+                                compiled.masks[space] = {};
+                            }
+                            if (!partial.masks) {
+                                partial.masks = {};
+                            }
+                            if (!partial.masks[space]) {
+                                partial.masks[space] = {};
+                            }
+
+                            if (tagValue === null) {
+                                delete compiled.masks[space][tag];
+                            } else {
+                                compiled.masks[space][tag] = tagValue;
+                            }
+                            updatedTags.add(tag);
+                            partial.masks[space][tag] = tagValue;
+                        }
+                    }
+                }
+            }
+
+            for (let tag of updatedTags) {
+                let hasMask = false;
+                if (compiled.masks) {
+                    for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                        const tagValue = compiled.masks[space]?.[tag];
+                        if (hasValue(tagValue)) {
+                            this._compileTagValue(compiled, tag, tagValue);
+                            hasMask = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasMask) {
+                    const tagValue = compiled.tags[tag];
+                    if (hasValue(tagValue) || tagValue === null) {
+                        this._compileTagValue(compiled, tag, tagValue);
+                    }
+                }
+            }
+
+            // 2. update
+            // let updates = this._compileTags(u.tags, compiled, u.bot);
+
+            // for (let [space, tag] of updates) {
+            //     if (space) {
+            //         if (u.bot.masks) {
+            //             for (let space in u.bot.masks) {
+            //                 if (hasValue(u.bot.masks[space][tag])) {
+            //                     if (!partial.masks[space]) {
+            //                         partial.masks[space] = {};
+            //                     }
+            //                     partial.masks[space][tag] =
+            //                         u.bot.masks[space][tag];
+            //                 }
+            //             }
+            //         }
+            //     } else if (space === undefined) {
+            //         if (compiled.masks) {
+            //             for (let space in compiled.masks) {
+            //                 if (hasValue(compiled.masks[space][tag])) {
+            //                     if (!partial.masks[space]) {
+            //                         partial.masks[space] = {};
+            //                     }
+            //                     partial.masks[space][tag] = null;
+            //                     delete compiled.masks[space][tag];
+            //                 }
+            //             }
+            //         }
+            //     } else {
+            //         partial.tags[tag] = u.tags[tag];
+            //     }
+            // }
+
+            if (u.signatures) {
+                if (!compiled.signatures) {
+                    compiled.signatures = {};
+                }
+                partial.signatures = {};
+                for (let sig in u.signatures) {
+                    const val = !!u.signatures
+                        ? u.signatures[sig] || null
+                        : null;
+                    const current = compiled.signatures[sig];
+                    compiled.signatures[sig] = val;
+                    partial.signatures[sig] = val;
+
+                    if (!val && current) {
+                        this._compileTag(
+                            compiled,
+                            current,
+                            compiled.tags[current]
+                        );
+                    } else if (val && !current) {
+                        this._compileTag(compiled, val, compiled.tags[val]);
+                    }
+                }
+            }
+
+            nextUpdate.state[id] = <any>partial;
         }
 
         const changes = this._dependencies.updateBots(updates);

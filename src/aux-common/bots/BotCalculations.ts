@@ -2758,6 +2758,20 @@ export function hasTagOrMask(bot: Bot, tag: string): boolean {
 }
 
 /**
+ * Determines if the given bot has a mask for the given tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function hasMaskForTag(bot: Bot, tag: string): boolean {
+    for (let space in bot.masks) {
+        if (hasValue(bot.masks[space][tag])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Gets the tag value for the given space.
  * If the space is null, then the tag value is retrieved from the tags.
  * If the space is specified, then the tag value is retrieved from the corresponding tag masks.
