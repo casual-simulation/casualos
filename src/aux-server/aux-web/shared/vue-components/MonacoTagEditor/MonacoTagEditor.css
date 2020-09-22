@@ -29,6 +29,17 @@
 }
 
 .editor-breadcrumbs .bot-tag {
+    flex: 0 1;
+}
+
+.editor-breadcrumbs .bot-space {
+    flex: 0 1;
+    background-color: #dedede;
+    margin: 0 8px;
+    padding: 0 8px;
+}
+
+.editor-breadcrumbs .editor-spacing {
     flex: 1 1;
 }
 
