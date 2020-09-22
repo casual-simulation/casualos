@@ -40,7 +40,7 @@ export const GET_TAG_MASK_SYMBOL = Symbol('get_tag_mask');
 /**
  * Defines a symbol that is used to get all the tag masks on a runtime bot.
  */
-export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
+export const CLEAR_TAG_MASKS_SYMBOL = Symbol('clear_tag_masks');
 
 /**
  * Defines an interface for a bot in a script/formula.
@@ -101,15 +101,11 @@ export interface RuntimeBot {
      */
     [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
 
-    // /**
-    //  * A function that can get the value of a tag mask on the bot.
-    //  */
-    // [GET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => any;
-
-    // /**
-    //  * A function that can get the tag masks on the bot.
-    //  */
-    // [GET_TAG_MASKS_SYMBOL]: () => BotTagMasks;
+    /**
+     * A function that can clear the tag masks from the bot.
+     * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
+     */
+    [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
 }
 
 /**
@@ -371,6 +367,7 @@ export function createRuntimeBot(
         signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
         [SET_TAG_MASK_SYMBOL]: null,
+        [CLEAR_TAG_MASKS_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -401,6 +398,21 @@ export function createRuntimeBot(
             }
             changeTagMask(key, value, spaces);
             return value;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, CLEAR_TAG_MASKS_SYMBOL, {
+        value: (space: string) => {
+            let spaces = hasValue(space) ? [space] : TAG_MASK_SPACE_PRIORITIES;
+            for (let space of spaces) {
+                const tags = bot.masks[space];
+                for (let tag in tags) {
+                    script[SET_TAG_MASK_SYMBOL](tag, null, space);
+                }
+            }
         },
         configurable: false,
         enumerable: false,

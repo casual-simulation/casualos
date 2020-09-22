@@ -125,7 +125,7 @@ import {
     TestScriptBotFactory,
     createDummyRuntimeBot,
 } from './test/TestScriptBotFactory';
-import { RuntimeBot, RuntimeBatcher } from './RuntimeBot';
+import { RuntimeBot, RuntimeBatcher, SET_TAG_MASK_SYMBOL } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -4521,6 +4521,215 @@ describe('AuxLibrary', () => {
             library.api.setTagMask(bot1, '#space', 'bob', 'local');
             expect(bot1.tags.space).not.toEqual('bob');
             expect(bot1.maskChanges).toEqual({});
+        });
+    });
+
+    describe('clearTagMasks()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should remove the tag masks from the given bot', () => {
+            bot1[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            library.api.clearTagMasks(bot1);
+
+            expect(bot1.masks.name).toEqual(null);
+            expect(bot1.masks.other).toEqual(null);
+            expect(bot1.masks.final).toEqual(null);
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: null,
+                },
+            });
+        });
+
+        it('should remove the tag masks from the given bot and space', () => {
+            bot1[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            library.api.clearTagMasks(bot1, 'local');
+
+            expect(bot1.masks.name).toEqual(null);
+            expect(bot1.masks.other).toEqual(null);
+            expect(bot1.masks.final).toEqual('bob');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: 'bob',
+                },
+            });
+        });
+
+        it('should recursively remove the tag masks on the given bots', () => {
+            let bot3 = createDummyRuntimeBot('test3');
+            let bot4 = createDummyRuntimeBot('test4');
+            addToContext(context, bot3, bot4);
+
+            bot1[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot2[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot2[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot2[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot3[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot3[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot3[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot4[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot4[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot4[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            library.api.clearTagMasks([bot1, [bot2, bot3] as any, bot4]);
+
+            expect(bot1.masks.name).toEqual(null);
+            expect(bot1.masks.other).toEqual(null);
+            expect(bot1.masks.final).toEqual(null);
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: null,
+                },
+            });
+
+            expect(bot2.masks.name).toEqual(null);
+            expect(bot2.masks.other).toEqual(null);
+            expect(bot2.masks.final).toEqual(null);
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: null,
+                },
+            });
+
+            expect(bot3.masks.name).toEqual(null);
+            expect(bot3.masks.other).toEqual(null);
+            expect(bot3.masks.final).toEqual(null);
+            expect(bot3.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: null,
+                },
+            });
+
+            expect(bot4.masks.name).toEqual(null);
+            expect(bot4.masks.other).toEqual(null);
+            expect(bot4.masks.final).toEqual(null);
+            expect(bot4.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: null,
+                },
+            });
+        });
+
+        it('should recursively remove the tag masks on the given bots in the given space', () => {
+            let bot3 = createDummyRuntimeBot('test3');
+            let bot4 = createDummyRuntimeBot('test4');
+            addToContext(context, bot3, bot4);
+
+            bot1[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot1[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot2[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot2[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot2[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot3[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot3[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot3[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            bot4[SET_TAG_MASK_SYMBOL]('name', 'bob', 'local');
+            bot4[SET_TAG_MASK_SYMBOL]('other', 'bob', 'local');
+            bot4[SET_TAG_MASK_SYMBOL]('final', 'bob', 'tempLocal');
+
+            library.api.clearTagMasks(
+                [bot1, [bot2, bot3] as any, bot4],
+                'local'
+            );
+
+            expect(bot1.masks.name).toEqual(null);
+            expect(bot1.masks.other).toEqual(null);
+            expect(bot1.masks.final).toEqual('bob');
+            expect(bot1.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: 'bob',
+                },
+            });
+
+            expect(bot2.masks.name).toEqual(null);
+            expect(bot2.masks.other).toEqual(null);
+            expect(bot2.masks.final).toEqual('bob');
+            expect(bot2.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: 'bob',
+                },
+            });
+
+            expect(bot3.masks.name).toEqual(null);
+            expect(bot3.masks.other).toEqual(null);
+            expect(bot3.masks.final).toEqual('bob');
+            expect(bot3.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: 'bob',
+                },
+            });
+
+            expect(bot4.masks.name).toEqual(null);
+            expect(bot4.masks.other).toEqual(null);
+            expect(bot4.masks.final).toEqual('bob');
+            expect(bot4.maskChanges).toEqual({
+                local: {
+                    name: null,
+                    other: null,
+                },
+                tempLocal: {
+                    final: 'bob',
+                },
+            });
         });
     });
 

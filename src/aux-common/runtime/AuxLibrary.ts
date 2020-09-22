@@ -141,7 +141,12 @@ import {
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import uuidv4 from 'uuid/v4';
-import { RuntimeBot, isRuntimeBot, SET_TAG_MASK_SYMBOL } from './RuntimeBot';
+import {
+    RuntimeBot,
+    isRuntimeBot,
+    SET_TAG_MASK_SYMBOL,
+    CLEAR_TAG_MASKS_SYMBOL,
+} from './RuntimeBot';
 import { RanOutOfEnergyError } from './AuxResults';
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
@@ -351,6 +356,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getTag,
             setTag,
             setTagMask,
+            clearTagMasks,
             removeTags,
             renameTag,
             applyMod,
@@ -3224,6 +3230,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (bot && isRuntimeBot(bot)) {
             bot[SET_TAG_MASK_SYMBOL](tag, value, space);
             return value;
+        }
+    }
+
+    /**
+     * Clears the tag masks from the given bot.
+     * @param bot The bot or bots that the tag masks should be cleared from.
+     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     */
+    function clearTagMasks(
+        bot: RuntimeBot | RuntimeBot[],
+        space?: string
+    ): void {
+        if (Array.isArray(bot) && bot.length > 0) {
+            for (let b of bot) {
+                clearTagMasks(b, space);
+            }
+        } else if (bot && isRuntimeBot(bot)) {
+            bot[CLEAR_TAG_MASKS_SYMBOL](space);
         }
     }
 

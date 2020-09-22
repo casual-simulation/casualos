@@ -667,6 +667,51 @@ describe('RuntimeBot', () => {
         });
     });
 
+    describe('clear_tag_masks', () => {
+        it('should be able to clear tag masks from the given space', () => {
+            script[SET_TAG_MASK_SYMBOL]('value', true, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('other', 'era', 'tempLocal');
+
+            script[CLEAR_TAG_MASKS_SYMBOL]('local');
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                    value: null,
+                },
+                tempLocal: {
+                    other: 'era',
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.value).toEqual(null);
+            expect(script.masks.other).toEqual('era');
+        });
+
+        it('should be able to clear tag masks from all spaces', () => {
+            script[SET_TAG_MASK_SYMBOL]('value', true, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('other', 'era', 'tempLocal');
+
+            script[CLEAR_TAG_MASKS_SYMBOL]();
+
+            expect(script.changes).toEqual({});
+            expect(script.maskChanges).toEqual({
+                local: {
+                    abc: null,
+                    value: null,
+                },
+                tempLocal: {
+                    other: null,
+                },
+            });
+            expect(script.masks.abc).toEqual(null);
+            expect(script.masks.value).toEqual(null);
+            expect(script.masks.other).toEqual(null);
+        });
+    });
 });
 
 describe('isRuntimeBot()', () => {
