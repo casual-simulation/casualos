@@ -118,15 +118,6 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     constructor(user: User, config: CausalRepoPartitionConfig) {
         this.private = config.private || false;
     }
-    sendRemoteEvents?(events: RemoteActions[]): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    setUser?(user: User): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    setGrant?(grant: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         const finalEvents = flatMap(events, (e) => {

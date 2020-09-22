@@ -199,12 +199,6 @@ export class RemoteCausalRepoPartitionImpl
 
         this._synced = false;
     }
-    setUser?(user: User): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    setGrant?(grant: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 
     async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         if (this._readOnly || !this._remoteEvents) {
