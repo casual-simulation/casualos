@@ -10,6 +10,7 @@ import {
     StateUpdatedEvent,
     applyUpdates,
     PrecalculatedBotsState,
+    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import {
     DeviceAction,
@@ -20,6 +21,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import values from 'lodash/values';
+import { startsWith } from 'lodash';
 
 /**
  * Attempts to create a proxy client partition that is loaded from a remote server.
@@ -73,7 +75,9 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         return this._onBotsUpdated;
     }
     get onStateUpdated(): Observable<StateUpdatedEvent> {
-        return this._onStateUpdated;
+        return this._onStateUpdated.pipe(
+            startWith(stateUpdatedEvent(this.state))
+        );
     }
     get onError(): Observable<any> {
         return this._onError;
