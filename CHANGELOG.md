@@ -2,7 +2,7 @@
 
 ## V1.2.12
 
-#### Date: TBD
+#### Date: 9/22/2020
 
 ### :rocket: Improvements
 
